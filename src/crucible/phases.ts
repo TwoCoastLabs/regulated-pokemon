@@ -14,13 +14,9 @@
  */
 
 import type { ArticleId } from "../kernel/accord.js";
-import {
-  type Control,
-  type Mutation,
-  PHASE_1_ARTICLES,
-  PHASE_1_CONTROLS,
-  PHASE_1_MUTATIONS,
-} from "./mutations.js";
+import type { Control, Mutation } from "./harness.js";
+import { PHASE_1_ARTICLES, PHASE_1_CONTROLS, PHASE_1_MUTATIONS } from "./phase1.js";
+import { PHASE_2_ARTICLES, PHASE_2_CONTROLS, PHASE_2_MUTATIONS } from "./phase2.js";
 
 export interface CruciblePhase {
   /** Epic phase number, matching docs and the issue tracker. */
@@ -45,6 +41,13 @@ export const CRUCIBLE_PHASES: readonly CruciblePhase[] = [
     mutations: PHASE_1_MUTATIONS,
     controls: PHASE_1_CONTROLS,
   },
+  {
+    phase: 2,
+    title: "Answer compilation and manifest verification",
+    articles: PHASE_2_ARTICLES,
+    mutations: PHASE_2_MUTATIONS,
+    controls: PHASE_2_CONTROLS,
+  },
 ];
 
 /**
@@ -56,8 +59,6 @@ export const CRUCIBLE_PHASES: readonly CruciblePhase[] = [
  */
 export const NOT_YET_COVERED: Partial<Record<ArticleId, number>> = {
   "IA-1": 3, // scope resolution
-  "IA-5": 2, // restricted species, via the Accord pack
-  "IA-6": 4, // render affidavit
   "IA-7": 5, // read-to-act continuity
   "IA-8": 3, // only the trainer speaks for the trainer
   "IA-9": 5, // irreversible acts need informed consent

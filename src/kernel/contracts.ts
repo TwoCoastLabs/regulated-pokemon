@@ -39,6 +39,20 @@ export interface CertifiedSnapshot {
 }
 
 /**
+ * A resolved fact. `absent` is itself a certified answer — "this move has no
+ * power" is a fact, distinct from "this snapshot does not certify power".
+ *
+ * A contract rather than a registry detail because claims assert these values
+ * and verification compares them; both sides need the same vocabulary.
+ */
+export type FactValue =
+  | { kind: "number"; value: number }
+  | { kind: "boolean"; value: boolean }
+  | { kind: "text"; value: string }
+  | { kind: "list"; value: readonly string[] }
+  | { kind: "absent" };
+
+/**
  * A declarative set definition. Criteria are data, not code, so a roster can
  * be recomputed from its own definition during verification and replay.
  */
@@ -78,11 +92,33 @@ export type Resolution<T> =
   | { ok: true; value: T }
   | { ok: false; violations: readonly Violation[] };
 
+/**
+ * One regulated assertion, in a form that can be disagreed with.
+ *
+ * Every kind records *what was said*, not merely what was consulted. A fact
+ * claim that named only its fact id would be unfalsifiable: verification would
+ * re-resolve the fact, get the right answer, and have nothing to compare it
+ * to — a swapped stat would sail through. The asserted value is the thing the
+ * verifier is checking, so it is part of the record.
+ */
 export type Claim =
-  | { kind: "fact"; entityId: string; factId: string }
+  | { kind: "fact"; entityId: string; factId: string; asserted: FactValue }
   | { kind: "count"; rosterId: string; reported: number }
-  | { kind: "membership"; rosterId: string; entityId: string }
-  | { kind: "ranking"; rosterId: string; basis: string; selectedEntityId: string };
+  | { kind: "membership"; rosterId: string; entityId: string; asserted: boolean }
+  | {
+      kind: "ranking";
+      rosterId: string;
+      /** A certified fact id, e.g. "base-speed". Never a free-text basis. */
+      basis: string;
+      direction: "highest" | "lowest";
+      selectedEntityId: string;
+    }
+  /**
+   * A different speech act from `ranking`: "the fastest is Electrode" is a
+   * claim about a set, "go and catch Mewtwo" is advice. IA-5 gates the second,
+   * so it needs something of its own to gate.
+   */
+  | { kind: "recommendation"; entityId: string };
 
 /** A governed display unit (IA-6): fragments that must be customer-visible. */
 export interface Exhibit {
@@ -99,7 +135,17 @@ export interface AnswerManifest {
   transactionId: string;
   scopeGrantId: string;
   snapshotId: string;
+  /** The Accord pack version whose rules governed this answer (IA-5, IA-6). */
+  packId: string;
   claims: readonly Claim[];
+  /**
+   * Every roster a claim cites, carried in the record rather than referenced
+   * out of it. A count whose set lives elsewhere cannot be recomputed at
+   * verification time and cannot be replayed at all (IA-10) — it would have to
+   * be re-supplied from outside the record, which is the thing replay exists
+   * to forbid.
+   */
+  rosters: readonly ClosedRoster[];
   exhibits: readonly Exhibit[];
 }
 

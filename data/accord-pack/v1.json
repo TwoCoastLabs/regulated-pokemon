@@ -1,0 +1,41 @@
+{
+  "packVersion": 1,
+  "id": "indigo-accord-v1",
+  "restrictions": [
+    {
+      "id": "legendary-acquisition",
+      "article": "IA-5",
+      "rarity": "legendary",
+      "minimumBadgeLevel": 6
+    },
+    {
+      "id": "mythical-acquisition",
+      "article": "IA-5",
+      "rarity": "mythical",
+      "minimumBadgeLevel": 8
+    }
+  ],
+  "exhibits": [
+    {
+      "id": "selfdestruct-warning",
+      "article": "IA-6",
+      "kind": "warning",
+      "when": { "kind": "entity-claimed", "entityId": "self-destruct" },
+      "requiredFragments": ["Selfdestruct", "User faints"]
+    },
+    {
+      "id": "explosion-warning",
+      "article": "IA-6",
+      "kind": "warning",
+      "when": { "kind": "entity-claimed", "entityId": "explosion" },
+      "requiredFragments": ["Explosion", "User faints"]
+    },
+    {
+      "id": "provenance",
+      "article": "IA-2",
+      "kind": "provenance",
+      "when": { "kind": "always" },
+      "requiredFragments": ["PokeAPI", "BSD-3-Clause", "kanto-red-blue"]
+    }
+  ]
+}

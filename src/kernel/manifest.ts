@@ -1,0 +1,489 @@
+/**
+ * Answer compilation and manifest verification (IA-1 … IA-6).
+ *
+ * The registry can certify one datum. This is the layer that assembles data
+ * into an *answer* and then refuses to believe it. An `AnswerManifest` is the
+ * closed set of what may be committed: every claim carries what it asserted,
+ * every roster a claim cites travels inside the record, and every disclosure
+ * the Accord pack demands is attached as an obligation.
+ *
+ * Verification recomputes all of it from the snapshot, and knows nothing about
+ * how the manifest was produced. That is the whole point: a manifest from the
+ * compiler, from a cache, from a mutated fixture, or eventually from a model
+ * is checked identically, so nothing about the producer can be load-bearing.
+ *
+ * The compiler is deliberately built on top of the verifier rather than beside
+ * it. `compileManifest` assembles a candidate and then submits it to exactly
+ * the check a hostile manifest would face, so there is no path by which the
+ * thing that produces answers can be more trusted than the thing that audits
+ * them.
+ */
+
+import type {
+  AnswerManifest,
+  Claim,
+  ClosedRoster,
+  Exhibit,
+  Resolution,
+  ScopeGrant,
+  Verdict,
+  Violation,
+} from "./contracts.js";
+import { type AccordPack, restrictionsFor } from "./pack.js";
+import { type CertifiedRegistry, formatFactValue, sameFactValue } from "./registry.js";
+import { verifyRoster } from "./roster.js";
+import { verdictOf, violation } from "./violation.js";
+
+/**
+ * Everything an answer is judged against. Assembled by the caller and passed
+ * whole, so that no stage can quietly consult a registry, pack, or clock other
+ * than the one the verdict will record.
+ */
+export interface ManifestContext {
+  registry: CertifiedRegistry;
+  pack: AccordPack;
+  grant: ScopeGrant;
+  /**
+   * RFC 3339. The moment the answer commits, supplied rather than read from a
+   * clock: a verdict must be a pure function of recorded inputs (IA-10), and a
+   * validity window checked against `now()` cannot be replayed.
+   */
+  at: string;
+}
+
+/** What a caller brings: the claims it wants to make and the sets behind them. */
+export interface ManifestDraft {
+  transactionId: string;
+  claims: readonly Claim[];
+  rosters: readonly ClosedRoster[];
+}
+
+/**
+ * Assemble a manifest, attach the disclosures the pack requires, and refuse to
+ * emit it if it would not survive verification.
+ */
+export function compileManifest(context: ManifestContext, draft: ManifestDraft): Resolution<AnswerManifest> {
+  const manifest: AnswerManifest = {
+    transactionId: draft.transactionId,
+    scopeGrantId: context.grant.id,
+    snapshotId: context.registry.snapshot.id,
+    packId: context.pack.id,
+    claims: draft.claims,
+    rosters: draft.rosters,
+    exhibits: requiredExhibits(context, draft.claims, draft.rosters),
+  };
+
+  const verdict = verifyManifest(context, manifest);
+  if (!verdict.allowed) return { ok: false, violations: verdict.violations };
+  return { ok: true, value: manifest };
+}
+
+/**
+ * Recompute every claim in a manifest and report every disagreement by name.
+ * This is the commit gate for answers, and the only thing standing between a
+ * plausible sentence and a certified one.
+ */
+export function verifyManifest(context: ManifestContext, manifest: AnswerManifest): Verdict {
+  // Binding first, and alone: if the manifest is certified against another
+  // snapshot, pack, or trainer, then recomputing its claims against *these*
+  // would be answering a question nobody asked.
+  const binding = checkBinding(context, manifest);
+  if (binding.length > 0) return verdictOf(binding);
+
+  const violations = [
+    ...checkRosters(context, manifest),
+    ...checkExhibits(context, manifest),
+    ...manifest.claims.flatMap((claim) => checkClaim(context, manifest, claim)),
+  ];
+  return verdictOf(violations);
+}
+
+// --- binding ----------------------------------------------------------------
+
+function checkBinding(context: ManifestContext, manifest: AnswerManifest): Violation[] {
+  const violations: Violation[] = [];
+
+  if (manifest.transactionId.length === 0) {
+    violations.push(violation("IA-10", "transaction-unidentified", "manifest has no transaction id"));
+  }
+
+  if (manifest.snapshotId !== context.registry.snapshot.id) {
+    violations.push(
+      violation("IA-2", "snapshot-mismatch", `manifest ${manifest.transactionId} was certified against another snapshot`, {
+        expected: context.registry.snapshot.id,
+        actual: manifest.snapshotId,
+      }),
+    );
+  }
+
+  if (manifest.packId !== context.pack.id) {
+    violations.push(
+      violation("IA-5", "pack-mismatch", `manifest ${manifest.transactionId} was governed by another Accord pack`, {
+        expected: context.pack.id,
+        actual: manifest.packId,
+      }),
+    );
+  }
+
+  if (manifest.scopeGrantId !== context.grant.id) {
+    violations.push(
+      violation("IA-1", "scope-grant-mismatch", `manifest ${manifest.transactionId} cites another trainer's scope`, {
+        expected: context.grant.id,
+        actual: manifest.scopeGrantId,
+      }),
+    );
+  }
+
+  // Facts are only facts within the version that certifies them, so a grant
+  // establishing scope over a different version group cannot authorise an
+  // answer drawn from this one.
+  const versionGroup = context.registry.document.scope.versionGroup;
+  if (context.grant.scope.version !== versionGroup) {
+    violations.push(
+      violation("IA-2", "scope-version-mismatch", "scope was established over a different version group", {
+        expected: versionGroup,
+        actual: context.grant.scope.version,
+      }),
+    );
+  }
+
+  violations.push(...checkWindow(context));
+  return violations;
+}
+
+/**
+ * Scope valid when it was issued is not scope valid when the answer commits,
+ * so the window is checked here rather than trusted from construction.
+ */
+function checkWindow(context: ManifestContext): Violation[] {
+  const at = Date.parse(context.at);
+  const issued = Date.parse(context.grant.issuedAt);
+  const expires = Date.parse(context.grant.expiresAt);
+
+  if (Number.isNaN(at) || Number.isNaN(issued) || Number.isNaN(expires)) {
+    return [
+      violation("IA-1", "scope-window-unreadable", "scope grant has no readable validity window", {
+        expected: "RFC 3339 timestamps",
+        actual: `${context.grant.issuedAt}..${context.grant.expiresAt} at ${context.at}`,
+      }),
+    ];
+  }
+  if (issued >= expires) {
+    return [
+      violation("IA-1", "scope-window-empty", `scope grant ${context.grant.id} expires before it is issued`, {
+        expected: `after ${context.grant.issuedAt}`,
+        actual: context.grant.expiresAt,
+      }),
+    ];
+  }
+  if (at < issued || at > expires) {
+    return [
+      violation("IA-1", "scope-window-expired", `scope grant ${context.grant.id} is not valid at commit time`, {
+        expected: `${context.grant.issuedAt}..${context.grant.expiresAt}`,
+        actual: context.at,
+      }),
+    ];
+  }
+  return [];
+}
+
+// --- rosters ----------------------------------------------------------------
+
+function checkRosters(context: ManifestContext, manifest: AnswerManifest): Violation[] {
+  const violations: Violation[] = [];
+  const seen = new Set<string>();
+
+  for (const roster of manifest.rosters) {
+    if (seen.has(roster.id)) {
+      violations.push(
+        violation("IA-4", "duplicate-roster", `manifest carries roster "${roster.id}" more than once`, {
+          actual: roster.id,
+        }),
+      );
+    }
+    seen.add(roster.id);
+    violations.push(...verifyRoster(context.registry, roster).violations);
+  }
+
+  return violations;
+}
+
+function rosterIn(manifest: AnswerManifest, rosterId: string): ClosedRoster | undefined {
+  return manifest.rosters.find((roster) => roster.id === rosterId);
+}
+
+function missingRoster(rosterId: string): Violation {
+  return violation("IA-4", "roster-not-in-manifest", `no roster "${rosterId}" travels with this manifest`, {
+    actual: rosterId,
+  });
+}
+
+// --- claims -----------------------------------------------------------------
+
+function checkClaim(context: ManifestContext, manifest: AnswerManifest, claim: Claim): Violation[] {
+  switch (claim.kind) {
+    case "fact":
+      return checkFact(context, claim);
+    case "count":
+      return checkCount(manifest, claim);
+    case "membership":
+      return checkMembership(context, manifest, claim);
+    case "ranking":
+      return checkRanking(context, manifest, claim);
+    case "recommendation":
+      return checkRecommendation(context, claim);
+  }
+}
+
+function checkFact(context: ManifestContext, claim: Extract<Claim, { kind: "fact" }>): Violation[] {
+  const resolved = context.registry.resolve(claim.entityId, claim.factId);
+  if (!resolved.ok) return [...resolved.violations];
+
+  if (sameFactValue(resolved.value, claim.asserted)) return [];
+  return [
+    violation(
+      "IA-2",
+      "fact-mismatch",
+      `snapshot ${context.registry.snapshot.id} does not certify that ${claim.entityId}'s ${claim.factId} is what this answer says`,
+      { expected: formatFactValue(resolved.value), actual: formatFactValue(claim.asserted) },
+    ),
+  ];
+}
+
+function checkCount(manifest: AnswerManifest, claim: Extract<Claim, { kind: "count" }>): Violation[] {
+  const roster = rosterIn(manifest, claim.rosterId);
+  if (roster === undefined) return [missingRoster(claim.rosterId)];
+
+  // The roster is the count. A number that disagrees with the set it came from
+  // is not a rounding error, it is a different claim.
+  if (claim.reported === roster.cardinality) return [];
+  return [
+    violation("IA-4", "count-mismatch", `the count shown for "${roster.id}" is not the cardinality of its set`, {
+      expected: String(roster.cardinality),
+      actual: String(claim.reported),
+    }),
+  ];
+}
+
+function checkMembership(
+  context: ManifestContext,
+  manifest: AnswerManifest,
+  claim: Extract<Claim, { kind: "membership" }>,
+): Violation[] {
+  if (context.registry.findSpecies(claim.entityId) === undefined) {
+    return [
+      violation("IA-3", "fabricated-entity", `"${claim.entityId}" is not certified by ${context.registry.snapshot.id}`, {
+        expected: `a species in ${context.registry.snapshot.id}`,
+        actual: claim.entityId,
+      }),
+    ];
+  }
+  const roster = rosterIn(manifest, claim.rosterId);
+  if (roster === undefined) return [missingRoster(claim.rosterId)];
+
+  const actual = roster.memberIds.includes(claim.entityId);
+  if (actual === claim.asserted) return [];
+  return [
+    violation("IA-4", "membership-mismatch", `"${claim.entityId}" in "${roster.id}" is not what this answer says`, {
+      expected: String(actual),
+      actual: String(claim.asserted),
+    }),
+  ];
+}
+
+function checkRecommendation(
+  context: ManifestContext,
+  claim: Extract<Claim, { kind: "recommendation" }>,
+): Violation[] {
+  const species = context.registry.findSpecies(claim.entityId);
+  if (species === undefined) {
+    return [
+      violation("IA-3", "fabricated-entity", `"${claim.entityId}" is not certified by ${context.registry.snapshot.id}`, {
+        expected: `a species in ${context.registry.snapshot.id}`,
+        actual: claim.entityId,
+      }),
+    ];
+  }
+
+  const badgeLevel = context.grant.scope.badgeLevel;
+  return restrictionsFor(context.pack, species)
+    .filter((rule) => badgeLevel < rule.minimumBadgeLevel)
+    .map((rule) =>
+      // The rule id is in the denial because "blocked by policy" is banned:
+      // a refusal that cannot be traced to the sentence that produced it
+      // cannot be argued with or audited.
+      violation(
+        rule.article,
+        "restricted-species",
+        `${claim.entityId} is a restricted species under "${rule.id}" and this trainer is not accredited for it`,
+        { expected: `badge level ${rule.minimumBadgeLevel}`, actual: `badge level ${badgeLevel}` },
+      ),
+    );
+}
+
+// --- ranking ----------------------------------------------------------------
+
+function checkRanking(
+  context: ManifestContext,
+  manifest: AnswerManifest,
+  claim: Extract<Claim, { kind: "ranking" }>,
+): Violation[] {
+  const roster = rosterIn(manifest, claim.rosterId);
+  if (roster === undefined) return [missingRoster(claim.rosterId)];
+
+  if (roster.memberIds.length === 0) {
+    return [
+      violation("IA-4", "ranking-over-empty-roster", `"${roster.id}" has no members, so nothing in it can be first`, {
+        actual: roster.id,
+      }),
+    ];
+  }
+  if (!roster.memberIds.includes(claim.selectedEntityId)) {
+    return [
+      violation(
+        "IA-4",
+        "ranking-outside-roster",
+        `"${claim.selectedEntityId}" was ranked first in "${roster.id}", which does not contain it`,
+        { expected: `a member of ${roster.id}`, actual: claim.selectedEntityId },
+      ),
+    ];
+  }
+
+  // The basis is re-resolved per member rather than trusted: a ranking is only
+  // as certified as the facts it ordered.
+  const scores: Array<{ entityId: string; score: number }> = [];
+  for (const memberId of roster.memberIds) {
+    const resolved = context.registry.resolve(memberId, claim.basis);
+    if (!resolved.ok) return [...resolved.violations];
+    if (resolved.value.kind !== "number") {
+      return [
+        violation("IA-4", "ranking-basis-not-ordered", `"${claim.basis}" is not a quantity, so it cannot rank a set`, {
+          expected: "a numeric certified fact",
+          actual: `${claim.basis} (${resolved.value.kind})`,
+        }),
+      ];
+    }
+    scores.push({ entityId: memberId, score: resolved.value.value });
+  }
+
+  const best = scores.reduce(
+    (chosen, candidate) =>
+      claim.direction === "highest"
+        ? Math.max(chosen, candidate.score)
+        : Math.min(chosen, candidate.score),
+    claim.direction === "highest" ? -Infinity : Infinity,
+  );
+  const winners = scores.filter((entry) => entry.score === best).map((entry) => entry.entityId);
+
+  // A tie is not a coin flip. "The fastest" when two share the top speed is a
+  // wrong claim, and argmax over an array would answer it with whichever the
+  // Pokédex happens to list first.
+  if (winners.length > 1) {
+    return [
+      violation(
+        "IA-4",
+        "ranking-tie",
+        `${winners.length} members of "${roster.id}" share the ${claim.direction} ${claim.basis}, so none of them is the one`,
+        { expected: `a unique ${claim.direction} ${claim.basis}`, actual: winners.join(", ") },
+      ),
+    ];
+  }
+  if (winners[0] === claim.selectedEntityId) return [];
+  return [
+    violation("IA-4", "ranking-mismatch", `"${claim.selectedEntityId}" does not have the ${claim.direction} ${claim.basis} in "${roster.id}"`, {
+      expected: `${winners[0]} (${best})`,
+      actual: claim.selectedEntityId,
+    }),
+  ];
+}
+
+// --- exhibits ---------------------------------------------------------------
+
+/**
+ * Which disclosures this answer owes, derived from the pack and the claims.
+ *
+ * Phase 2 can only prove an obligation was recorded. Whether the trainer saw
+ * it is IA-6's other half, and belongs to the render affidavit.
+ */
+export function requiredExhibits(
+  context: ManifestContext,
+  claims: readonly Claim[],
+  rosters: readonly ClosedRoster[],
+): readonly Exhibit[] {
+  const mentioned = entitiesMentioned(claims, rosters);
+
+  return context.pack.exhibits
+    .filter((rule) => rule.when.kind === "always" || mentioned.has(rule.when.entityId))
+    .map((rule) => ({
+      id: rule.id,
+      kind: rule.kind,
+      requiredFragments: rule.requiredFragments,
+      triggeredBy: rule.article,
+      ...(rule.when.kind === "entity-claimed" ? { entityId: rule.when.entityId } : {}),
+    }));
+}
+
+/** Every entity the answer touches, including via the criteria of its sets. */
+function entitiesMentioned(claims: readonly Claim[], rosters: readonly ClosedRoster[]): ReadonlySet<string> {
+  const mentioned = new Set<string>();
+  for (const claim of claims) {
+    if (claim.kind === "fact" || claim.kind === "membership" || claim.kind === "recommendation") {
+      mentioned.add(claim.entityId);
+    }
+    if (claim.kind === "ranking") mentioned.add(claim.selectedEntityId);
+  }
+  // "Which Pokémon learn Selfdestruct" is an answer about Selfdestruct even
+  // though no claim names it: the move is in the definition of the set.
+  for (const roster of rosters) {
+    for (const criterion of roster.criteria.all) {
+      if (criterion.kind === "learns-move") mentioned.add(criterion.move);
+    }
+  }
+  return mentioned;
+}
+
+function checkExhibits(context: ManifestContext, manifest: AnswerManifest): Violation[] {
+  const violations: Violation[] = [];
+  const required = requiredExhibits(context, manifest.claims, manifest.rosters);
+  const carried = new Map(manifest.exhibits.map((exhibit) => [exhibit.id, exhibit]));
+
+  for (const owed of required) {
+    const found = carried.get(owed.id);
+    if (found === undefined) {
+      violations.push(
+        violation(
+          owed.triggeredBy ?? "IA-6",
+          "exhibit-not-manifested",
+          `this answer requires exhibit "${owed.id}" and does not carry it`,
+          { expected: owed.id, actual: [...carried.keys()].join(", ") || "no exhibits" },
+        ),
+      );
+      continue;
+    }
+    // A disclosure stripped of its text is a disclosure in name only, and
+    // would satisfy a presence check while showing the trainer nothing.
+    const dropped = owed.requiredFragments.filter((fragment) => !found.requiredFragments.includes(fragment));
+    if (dropped.length > 0) {
+      violations.push(
+        violation(owed.triggeredBy ?? "IA-6", "exhibit-fragments-dropped", `exhibit "${owed.id}" no longer requires the text the pack demands`, {
+          expected: owed.requiredFragments.join(" | "),
+          actual: found.requiredFragments.join(" | ") || "nothing",
+        }),
+      );
+    }
+  }
+
+  // Closed, like the rosters: an exhibit no rule triggered is an obligation
+  // nobody can trace to a rule, and phase 4 would have to render it anyway.
+  const owedIds = new Set(required.map((exhibit) => exhibit.id));
+  for (const exhibit of manifest.exhibits) {
+    if (owedIds.has(exhibit.id)) continue;
+    violations.push(
+      violation("IA-6", "exhibit-unrequired", `exhibit "${exhibit.id}" is not required by pack ${context.pack.id}`, {
+        actual: exhibit.id,
+      }),
+    );
+  }
+
+  return violations;
+}

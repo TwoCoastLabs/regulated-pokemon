@@ -15,7 +15,7 @@
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 
-import type { CertifiedSnapshot, Resolution, Violation } from "./contracts.js";
+import type { CertifiedSnapshot, FactValue, Resolution, Violation } from "./contracts.js";
 import {
   SNAPSHOT_SCHEMA_VERSION,
   type SnapshotDocument,
@@ -27,16 +27,9 @@ import {
 } from "./snapshot-format.js";
 import { AccordError, violation } from "./violation.js";
 
-/**
- * A resolved fact. `absent` is itself a certified answer — "this move has no
- * power" is a fact, distinct from "this snapshot does not certify power".
- */
-export type FactValue =
-  | { kind: "number"; value: number }
-  | { kind: "boolean"; value: boolean }
-  | { kind: "text"; value: string }
-  | { kind: "list"; value: readonly string[] }
-  | { kind: "absent" };
+// FactValue itself is a contract (claims assert one, verification compares
+// one); these are the registry's readers and formatters for it.
+export type { FactValue };
 
 export function sameFactValue(left: FactValue, right: FactValue): boolean {
   if (left.kind !== right.kind) return false;

@@ -1,16 +1,9 @@
 /**
- * The crucible: concrete sabotage of the pipeline, each piece of which must
- * be denied by its named article.
+ * Phase 1 crucible: sabotage of the certified registry and of closed rosters,
+ * each piece of which must be denied by its named article.
  *
- * These are values rather than test bodies for two reasons. A test can assert
- * that every mutation is denied and that the set of articles they cover is
- * exactly what the current phase claims — so a checkbox cannot be ticked by
- * assertion. And the same list drives the visitor-facing sabotage buttons
- * later: what a reader can trigger in the browser is the same mutation CI
- * runs, not a staged re-enactment of it.
- *
- * A mutation declares the denial it expects. If the kernel denies it for a
- * different reason, that is a finding, not a pass.
+ * The shapes these are written in — and why they are values rather than test
+ * bodies — live in harness.ts.
  */
 
 import type { ArticleId } from "../kernel/accord.js";
@@ -19,43 +12,7 @@ import { type CertifiedRegistry, loadRegistry } from "../kernel/registry.js";
 import { buildRoster, verifyRoster } from "../kernel/roster.js";
 import type { SnapshotDocument } from "../kernel/snapshot-format.js";
 import { verdictOf } from "../kernel/violation.js";
-
-export interface Mutation {
-  /** Stable slug, used by tests and by the sabotage buttons. */
-  id: string;
-  /** Short label for the compliance console. */
-  title: string;
-  description: string;
-  /** The article this sabotage must be denied under. */
-  article: ArticleId;
-  /** The rule slug the denial must carry, e.g. "fabricated-entity". */
-  rule: string;
-  /** Apply the sabotage and return the kernel's verdict on the result. */
-  run(registry: CertifiedRegistry): Verdict;
-}
-
-/**
- * A run that must be *allowed*. Two kinds, and a phase needs both.
- *
- * A `clean-path` control exercises the kernel's own entry points with nothing
- * tampered: it catches fail-closed theater, where a kernel that refuses
- * everything would look perfectly safe and be useless.
- *
- * A `no-op-sabotage` control runs the identical sabotage harness with the
- * sabotage removed. It catches the crucible's own failure mode: a harness that
- * denied by construction would make every mutation above it pass for free.
- */
-export interface Control {
-  id: string;
-  title: string;
-  description: string;
-  kind: "clean-path" | "no-op-sabotage";
-  run(registry: CertifiedRegistry): Verdict;
-}
-
-export function expectedDenial(mutation: Mutation): string {
-  return `${mutation.article}/${mutation.rule}`;
-}
+import { type Control, mutable, type Mutation } from "./harness.js";
 
 const ELECTRIC: RosterCriteria = { all: [{ kind: "has-type", type: "electric" }] };
 
@@ -74,17 +31,6 @@ function sabotageRoster(registry: CertifiedRegistry, sabotage: (roster: ClosedRo
   return verifyRoster(registry, sabotage(built.value));
 }
 
-/**
- * Sabotage means writing where the contracts say `readonly`. That is the
- * point of the exercise, so the unsafe cast lives here and nowhere else —
- * kernel code never gets a mutable view of a certified structure.
- */
-type Writable<T> = T extends object ? { -readonly [K in keyof T]: Writable<T[K]> } : T;
-
-function mutable<T>(value: T): Writable<T> {
-  return value as Writable<T>;
-}
-
 function speciesNamed(document: SnapshotDocument, id: string) {
   const found = document.species.find((species) => species.id === id);
   if (found === undefined) throw new Error(`crucible fixture expects species ${id}`);
@@ -101,7 +47,7 @@ export const PHASE_1_MUTATIONS: readonly Mutation[] = [
       "digest stands between an edited file and a certified answer.",
     article: "IA-2",
     rule: "snapshot-digest-mismatch",
-    run: (registry) =>
+    run: ({ registry }) =>
       sabotageSnapshot(registry, (document) => {
         const magnemite = speciesNamed(document, "magnemite");
         mutable(magnemite).types = ["electric", "steel"];
@@ -116,7 +62,7 @@ export const PHASE_1_MUTATIONS: readonly Mutation[] = [
       "is not so.",
     article: "IA-3",
     rule: "duplicate-entity",
-    run: (registry) =>
+    run: ({ registry }) =>
       sabotageSnapshot(registry, (document) => {
         const pikachu = speciesNamed(document, "pikachu");
         const impostor = mutable(structuredClone(pikachu));
@@ -132,7 +78,7 @@ export const PHASE_1_MUTATIONS: readonly Mutation[] = [
       "registry would happily report a species that learns nothing at all.",
     article: "IA-3",
     rule: "dangling-move-reference",
-    run: (registry) =>
+    run: ({ registry }) =>
       sabotageSnapshot(registry, (document) => {
         const pikachu = speciesNamed(document, "pikachu");
         mutable(pikachu).learnset.push({ move: "hyper-fang-blast", method: "machine", level: null });
@@ -146,7 +92,7 @@ export const PHASE_1_MUTATIONS: readonly Mutation[] = [
       "digest taken over a roster derived from it.",
     article: "IA-2",
     rule: "snapshot-inconsistent",
-    run: (registry) =>
+    run: ({ registry }) =>
       sabotageSnapshot(registry, (document) => {
         mutable(document).species.reverse();
       }),
@@ -159,7 +105,7 @@ export const PHASE_1_MUTATIONS: readonly Mutation[] = [
       "may guess at.",
     article: "IA-2",
     rule: "snapshot-schema-unsupported",
-    run: (registry) =>
+    run: ({ registry }) =>
       sabotageSnapshot(registry, (document) => {
         (document as { schemaVersion: number }).schemaVersion = 2;
       }),
@@ -172,7 +118,7 @@ export const PHASE_1_MUTATIONS: readonly Mutation[] = [
       "has never heard of.",
     article: "IA-3",
     rule: "fabricated-entity",
-    run: (registry) =>
+    run: ({ registry }) =>
       sabotageRoster(registry, (roster) => ({
         ...roster,
         memberIds: [...roster.memberIds, "missingno"],
@@ -187,7 +133,7 @@ export const PHASE_1_MUTATIONS: readonly Mutation[] = [
       "match, so the roster is internally consistent and still wrong.",
     article: "IA-4",
     rule: "roster-member-missing",
-    run: (registry) =>
+    run: ({ registry }) =>
       sabotageRoster(registry, (roster) => ({
         ...roster,
         memberIds: roster.memberIds.filter((id) => id !== "zapdos"),
@@ -200,7 +146,7 @@ export const PHASE_1_MUTATIONS: readonly Mutation[] = [
     description: "Snorlax is not Electric, and no amount of confident phrasing makes it so.",
     article: "IA-4",
     rule: "roster-member-extra",
-    run: (registry) =>
+    run: ({ registry }) =>
       sabotageRoster(registry, (roster) => ({
         ...roster,
         memberIds: [...roster.memberIds, "snorlax"],
@@ -215,7 +161,7 @@ export const PHASE_1_MUTATIONS: readonly Mutation[] = [
       "count, so the certificate contradicts itself.",
     article: "IA-4",
     rule: "cardinality-mismatch",
-    run: (registry) => sabotageRoster(registry, (roster) => ({ ...roster, cardinality: roster.cardinality - 1 })),
+    run: ({ registry }) => sabotageRoster(registry, (roster) => ({ ...roster, cardinality: roster.cardinality - 1 })),
   },
   {
     id: "foreign-snapshot",
@@ -225,7 +171,7 @@ export const PHASE_1_MUTATIONS: readonly Mutation[] = [
       "Red/Blue. Facts are only facts within the version that certifies them.",
     article: "IA-2",
     rule: "snapshot-mismatch",
-    run: (registry) => sabotageRoster(registry, (roster) => ({ ...roster, snapshotId: "kanto-yellow" })),
+    run: ({ registry }) => sabotageRoster(registry, (roster) => ({ ...roster, snapshotId: "kanto-yellow" })),
   },
 ];
 
@@ -242,7 +188,7 @@ export const PHASE_1_CONTROLS: readonly Control[] = [
     description:
       "The vendored snapshot loaded, a roster built from it and verified, " +
       "through the kernel's own entry points and no sabotage harness at all.",
-    run: (registry) => {
+    run: ({ registry }) => {
       const built = buildRoster(registry, "control", ELECTRIC);
       return built.ok ? verifyRoster(registry, built.value) : verdictOf(built.violations);
     },
@@ -254,7 +200,7 @@ export const PHASE_1_CONTROLS: readonly Control[] = [
     description:
       "The unmutated pipeline, run through the same sabotage functions every " +
       "mutation uses — with the sabotage itself a no-op.",
-    run: (registry) => {
+    run: ({ registry }) => {
       const loaded = sabotageSnapshot(registry, () => {});
       return loaded.allowed ? sabotageRoster(registry, (roster) => roster) : loaded;
     },
