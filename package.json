@@ -1,0 +1,20 @@
+{
+  "name": "regulated-pokemon",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "What if a Pokémon assistant were regulated like a bank? An enforcement-kernel demo of provably factual, compliant AI agents.",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^4.0.0"
+  }
+}
