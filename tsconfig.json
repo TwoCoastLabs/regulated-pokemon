@@ -9,7 +9,10 @@
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "noEmit": true,
+    // scripts/ is executed straight from source by `node --experimental-strip-types`,
+    // which resolves the real .ts file rather than a compiled .js sibling.
+    "allowImportingTsExtensions": true,
     "skipLibCheck": true
   },
-  "include": ["src"]
+  "include": ["src", "scripts"]
 }
