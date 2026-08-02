@@ -1,5 +1,5 @@
 {
-  "packVersion": 1,
+  "packVersion": 2,
   "id": "indigo-accord-v1",
   "restrictions": [
     {
@@ -37,5 +37,75 @@
       "when": { "kind": "always" },
       "requiredFragments": ["PokeAPI", "BSD-3-Clause", "kanto-red-blue"]
     }
-  ]
+  ],
+  "vocabulary": {
+    "contextWindow": 3,
+    "validitySeconds": 86400,
+    "markers": {
+      "negation": ["not", "no", "never", "isn't", "aren't", "wasn't", "don't", "doesn't", "didn't", "won't", "stopped", "quit", "without", "instead"],
+      "reported": ["says", "say", "said", "told", "tells", "wants", "wanted", "asked", "asks", "insists", "recommends", "recommended", "suggests", "suggested", "according", "rival", "friend", "guide", "walkthrough", "forum", "streamer", "someone", "everyone"],
+      "instruction": ["ignore", "disregard", "override", "overrule", "pretend", "assume", "system", "assistant", "advisor", "prompt", "instructions"],
+      "interrogative": ["what", "which", "who", "whom", "whose", "where", "when", "why", "how", "list", "tell", "show", "is", "are", "does", "do", "did", "can", "could", "should", "would"],
+      "conjunction": ["and", "but", "although", "though", "while", "because", "so", "however", "whereas"]
+    },
+    "dimensions": [
+      {
+        "dimension": "version",
+        "valueType": "text",
+        "question": "Which game version are you playing — Red/Blue, or Yellow?",
+        "terms": [
+          {
+            "value": "red-blue",
+            "tokens": ["red", "blue", "red-blue"],
+            "context": ["playing", "play", "playthrough", "replaying", "version", "game", "games", "copy", "cartridge", "save", "run", "my", "on"]
+          },
+          {
+            "value": "yellow",
+            "tokens": ["yellow"],
+            "context": ["playing", "play", "playthrough", "replaying", "version", "game", "games", "copy", "cartridge", "save", "run", "my", "on"]
+          }
+        ]
+      },
+      {
+        "dimension": "region",
+        "valueType": "text",
+        "question": "Which region are you playing through?",
+        "terms": [
+          {
+            "value": "kanto",
+            "tokens": ["kanto"],
+            "context": ["region", "playing", "play", "through", "across", "around", "in", "my", "travelling", "traveling"]
+          }
+        ]
+      },
+      {
+        "dimension": "badgeLevel",
+        "valueType": "number",
+        "question": "How many gym badges do you hold?",
+        "terms": [
+          { "value": 0, "tokens": ["0", "zero"], "context": ["badge", "badges"] },
+          { "value": 1, "tokens": ["1", "one"], "context": ["badge", "badges"] },
+          { "value": 2, "tokens": ["2", "two"], "context": ["badge", "badges"] },
+          { "value": 3, "tokens": ["3", "three"], "context": ["badge", "badges"] },
+          { "value": 4, "tokens": ["4", "four"], "context": ["badge", "badges"] },
+          { "value": 5, "tokens": ["5", "five"], "context": ["badge", "badges"] },
+          { "value": 6, "tokens": ["6", "six"], "context": ["badge", "badges"] },
+          { "value": 7, "tokens": ["7", "seven"], "context": ["badge", "badges"] },
+          { "value": 8, "tokens": ["8", "eight"], "context": ["badge", "badges"] }
+        ]
+      },
+      {
+        "dimension": "comparisonBasis",
+        "valueType": "text",
+        "question": "What should the comparison be based on — speed, attack, defense, HP, or base stat total?",
+        "terms": [
+          { "value": "base-speed", "tokens": ["speed"], "context": ["by", "base", "rank", "ranked", "ranking", "order", "ordered", "compare", "compared", "comparison", "basis", "highest", "lowest"] },
+          { "value": "base-attack", "tokens": ["attack"], "context": ["by", "base", "rank", "ranked", "ranking", "order", "ordered", "compare", "compared", "comparison", "basis", "highest", "lowest"] },
+          { "value": "base-defense", "tokens": ["defense", "defence"], "context": ["by", "base", "rank", "ranked", "ranking", "order", "ordered", "compare", "compared", "comparison", "basis", "highest", "lowest"] },
+          { "value": "base-hp", "tokens": ["hp", "hitpoints"], "context": ["by", "base", "rank", "ranked", "ranking", "order", "ordered", "compare", "compared", "comparison", "basis", "highest", "lowest"] },
+          { "value": "base-stat-total", "tokens": ["total", "bst"], "context": ["by", "base", "stat", "stats", "rank", "ranked", "ranking", "order", "ordered", "compare", "compared", "comparison", "basis", "highest", "lowest"] }
+        ]
+      }
+    ]
+  }
 }

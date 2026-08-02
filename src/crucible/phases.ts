@@ -17,6 +17,7 @@ import type { ArticleId } from "../kernel/accord.js";
 import type { Control, Mutation } from "./harness.js";
 import { PHASE_1_ARTICLES, PHASE_1_CONTROLS, PHASE_1_MUTATIONS } from "./phase1.js";
 import { PHASE_2_ARTICLES, PHASE_2_CONTROLS, PHASE_2_MUTATIONS } from "./phase2.js";
+import { PHASE_3_ARTICLES, PHASE_3_CONTROLS, PHASE_3_MUTATIONS } from "./phase3.js";
 
 export interface CruciblePhase {
   /** Epic phase number, matching docs and the issue tracker. */
@@ -48,6 +49,13 @@ export const CRUCIBLE_PHASES: readonly CruciblePhase[] = [
     mutations: PHASE_2_MUTATIONS,
     controls: PHASE_2_CONTROLS,
   },
+  {
+    phase: 3,
+    title: "Scope resolution and the propose/confirm ladder",
+    articles: PHASE_3_ARTICLES,
+    mutations: PHASE_3_MUTATIONS,
+    controls: PHASE_3_CONTROLS,
+  },
 ];
 
 /**
@@ -58,9 +66,7 @@ export const CRUCIBLE_PHASES: readonly CruciblePhase[] = [
  * that the gap is visible in review rather than absent from the test output.
  */
 export const NOT_YET_COVERED: Partial<Record<ArticleId, number>> = {
-  "IA-1": 3, // scope resolution
   "IA-7": 5, // read-to-act continuity
-  "IA-8": 3, // only the trainer speaks for the trainer
   "IA-9": 5, // irreversible acts need informed consent
   "IA-10": 6, // replay
 };
