@@ -1,3 +1,9 @@
+# The PR gate. Deterministic, key-free, offline: no network fetch, no model
+# call, no secret. Upstream drift is watched separately and never blocks a PR
+# (see upstream-drift.yml) — drift is not a regression in this repository.
+#
+# Actions are pinned to commit SHAs rather than tags. This repository may be
+# open-sourced with its history, and a tag is a mutable pointer.
 name: ci
 
 on:
@@ -5,15 +11,96 @@ on:
     branches: [main]
   pull_request:
 
+# A superseded run proves nothing about the head of the branch.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
+  # The gate. Runs on the pinned development Node, and is the only job whose
+  # failure means "this change is not admissible".
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - run: npm run lint
+
+      # CLAUDE.md: never weaken a crucible to go green. A `.skip` in an
+      # enforcement test is otherwise invisible — the suite stays green and
+      # the article it covered stops being covered. A grep is what makes that
+      # rule enforced rather than aspirational.
+      - name: crucible tests may not be skipped or narrowed
+        run: |
+          if grep -rnE '\b(it|test|describe)\.(skip|skipIf|only|todo|fails)\b|\b(xit|xdescribe)\b' src/crucible/; then
+            echo "::error::a crucible test is skipped, narrowed, or expected to fail; CLAUDE.md requires explicit approval"
+            exit 1
+          fi
+
+      # Coverage is enforced here, not merely reported: the thresholds in
+      # vitest.config.ts fail the run. The JSON report is kept for the next
+      # step, which checks the shape of the run itself.
+      - name: test with coverage
+        run: |
+          npm run test:coverage -- \
+            --reporter=default --reporter=json --outputFile.json=coverage/test-run.json
+
+      # Vitest refuses a run that matches no files at all, but it is perfectly
+      # happy with a glob that matches *some* of them — narrow the include to
+      # src/kernel and the entire crucible stops running, silently, green. So
+      # the run is asked what it actually did and checked against the disk.
+      - name: the run must have run everything
+        run: |
+          on_disk=$(find src -name '*.test.ts' -type f | wc -l)
+          ran=$(jq '.testResults | length' coverage/test-run.json)
+          tests=$(jq '.numTotalTests' coverage/test-run.json)
+          skipped=$(jq '.numPendingTests + .numTodoTests' coverage/test-run.json)
+
+          echo "test files on disk: $on_disk, executed: $ran; tests: $tests, skipped: $skipped"
+
+          if [ "$tests" -eq 0 ]; then
+            echo "::error::the suite reported zero tests"
+            exit 1
+          fi
+          if [ "$ran" -ne "$on_disk" ]; then
+            echo "::error::$on_disk test files exist under src/ but only $ran ran; the include glob is wrong"
+            exit 1
+          fi
+          # Complements the grep above, which is source-level and crucible-only:
+          # this catches a test skipped at runtime, anywhere in the repository.
+          if [ "$skipped" -ne 0 ]; then
+            echo "::error::$skipped test(s) were skipped or marked todo"
+            exit 1
+          fi
+
+      # The snapshot tool is never executed in CI — it is the one thing here
+      # that touches the network. Parsing it is not running it, and catches
+      # the case where the gate is green because a broken maintenance tool is
+      # simply never loaded.
+      - name: the snapshot tool still parses
+        run: node --experimental-strip-types --check scripts/fetch-snapshot.ts
+
+  # Forward check, deliberately separate from the gate. The kernel is Node
+  # version-agnostic; `scripts/fetch-snapshot.ts` is not, since it runs
+  # straight from source under type stripping. Kept as its own job so that
+  # ".nvmrc is what we develop on" stays a single fact, stated once above.
+  forward-compat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
       - run: npm test
+      - name: the snapshot tool still parses
+        run: node --experimental-strip-types --check scripts/fetch-snapshot.ts

@@ -10,11 +10,13 @@
   },
   "scripts": {
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "lint": "tsc --noEmit",
     "snapshot:fetch": "node --experimental-strip-types scripts/fetch-snapshot.ts"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "@vitest/coverage-v8": "^4.1.10",
     "typescript": "^5.7.0",
     "vitest": "^4.0.0"
   }

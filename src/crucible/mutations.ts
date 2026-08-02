@@ -34,6 +34,25 @@ export interface Mutation {
   run(registry: CertifiedRegistry): Verdict;
 }
 
+/**
+ * A run that must be *allowed*. Two kinds, and a phase needs both.
+ *
+ * A `clean-path` control exercises the kernel's own entry points with nothing
+ * tampered: it catches fail-closed theater, where a kernel that refuses
+ * everything would look perfectly safe and be useless.
+ *
+ * A `no-op-sabotage` control runs the identical sabotage harness with the
+ * sabotage removed. It catches the crucible's own failure mode: a harness that
+ * denied by construction would make every mutation above it pass for free.
+ */
+export interface Control {
+  id: string;
+  title: string;
+  description: string;
+  kind: "clean-path" | "no-op-sabotage";
+  run(registry: CertifiedRegistry): Verdict;
+}
+
 export function expectedDenial(mutation: Mutation): string {
   return `${mutation.article}/${mutation.rule}`;
 }
@@ -211,19 +230,36 @@ export const PHASE_1_MUTATIONS: readonly Mutation[] = [
 ];
 
 /**
- * The same harness with the sabotage removed. Every mutation above is only
- * evidence if this one passes: if the control ever denies, the crucible is
- * measuring a broken harness rather than a working kernel.
+ * The runs that must be allowed. Every mutation above is only evidence if
+ * both of these pass: if a control ever denies, the crucible is measuring a
+ * broken harness rather than a working kernel.
  */
-export const PHASE_1_CONTROL: Omit<Mutation, "article" | "rule"> = {
-  id: "clean-path",
-  title: "Change nothing",
-  description: "The unmutated pipeline, run through the identical harness.",
-  run: (registry) => {
-    const loaded = sabotageSnapshot(registry, () => {});
-    return loaded.allowed ? sabotageRoster(registry, (roster) => roster) : loaded;
+export const PHASE_1_CONTROLS: readonly Control[] = [
+  {
+    id: "clean-path",
+    kind: "clean-path",
+    title: "Certify and verify with nothing in the way",
+    description:
+      "The vendored snapshot loaded, a roster built from it and verified, " +
+      "through the kernel's own entry points and no sabotage harness at all.",
+    run: (registry) => {
+      const built = buildRoster(registry, "control", ELECTRIC);
+      return built.ok ? verifyRoster(registry, built.value) : verdictOf(built.violations);
+    },
   },
-};
+  {
+    id: "no-op-sabotage",
+    kind: "no-op-sabotage",
+    title: "Change nothing, through the identical harness",
+    description:
+      "The unmutated pipeline, run through the same sabotage functions every " +
+      "mutation uses — with the sabotage itself a no-op.",
+    run: (registry) => {
+      const loaded = sabotageSnapshot(registry, () => {});
+      return loaded.allowed ? sabotageRoster(registry, (roster) => roster) : loaded;
+    },
+  },
+];
 
-/** Articles the phase-1 crucible currently exercises. Pinned by test. */
+/** Articles the phase-1 crucible exercises. Pinned by test, both ways. */
 export const PHASE_1_ARTICLES: readonly ArticleId[] = ["IA-2", "IA-3", "IA-4"];

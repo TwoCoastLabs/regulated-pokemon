@@ -1,0 +1,126 @@
+# Watch PokeAPI for drift away from the pinned commit.
+#
+# Deliberately not a gate. Upstream changing is not a regression in this
+# repository, and the PR gate's determinism and key-free, network-free
+# property is a stated invariant rather than a convenience — so this lives in
+# its own scheduled workflow, and its only output is an issue.
+#
+# Re-pinning is a reviewed act. Nothing here edits the vendored snapshot.
+name: upstream-drift
+
+on:
+  schedule:
+    - cron: "17 6 * * 1" # Mondays, 06:17 UTC
+  workflow_dispatch:
+
+# Serialised rather than cancelled: two runs racing would fight over one issue.
+concurrency:
+  group: upstream-drift
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+
+      # Re-derives the whole snapshot from upstream's current head and
+      # compares both digests. Exit codes: 0 identical, 3 upstream documents
+      # moved but our projection did not, 4 the projection itself moved.
+      - name: re-derive the snapshot from upstream head
+        id: check
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          npm run --silent snapshot:fetch -- --check --head > drift-report.txt 2> drift-log.txt
+          code=$?
+          set -e
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "--- report ---"; cat drift-report.txt
+          echo "--- log ---"; cat drift-log.txt
+          exit "$code"
+
+      - name: open, update, or close the drift issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CODE: ${{ steps.check.outputs.code }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+
+          if [ "$CODE" != "0" ] && [ "$CODE" != "3" ] && [ "$CODE" != "4" ]; then
+            # A watch that cannot run is not a watch that found nothing.
+            echo "::error::the drift check failed to complete (exit $CODE)"
+            cat drift-log.txt || true
+            exit 1
+          fi
+
+          gh label create upstream-drift \
+            --description "PokeAPI has moved away from the pinned commit" \
+            --color BFD4F2 2>/dev/null || true
+
+          existing=$(gh issue list --label upstream-drift --state open --json number \
+            --jq '.[0].number // empty')
+
+          if [ "$CODE" = "0" ]; then
+            if [ -n "$existing" ]; then
+              gh issue comment "$existing" --body \
+                "Upstream matches the vendored snapshot again as of [this run]($RUN_URL). Closing."
+              gh issue close "$existing"
+            fi
+            echo "no drift"
+            exit 0
+          fi
+
+          if [ "$CODE" = "4" ]; then
+            headline="**\`contentDigest\` moved.** The projection this repository vendors has changed upstream. Re-pinning would change certified facts, so read the diff before accepting it."
+          else
+            headline="**Only \`documentsDigest\` moved.** Upstream churned in files this snapshot's narrow projection filters out; nothing certified has changed. Re-pin only to make the provenance name a newer commit."
+          fi
+
+          upstream=$(grep '^commit.upstream=' drift-report.txt | cut -d= -f2)
+
+          {
+            echo "$headline"
+            echo
+            echo "Re-pin deliberately, with a review of the resulting diff:"
+            echo
+            echo '```'
+            echo "npm run snapshot:fetch -- --commit $upstream"
+            echo '```'
+            echo
+            echo "Then update \`DEFAULT_COMMIT\` in \`scripts/fetch-snapshot.ts\` to match."
+            echo
+            echo "<details><summary>drift report</summary>"
+            echo
+            echo '```'
+            cat drift-report.txt
+            echo '```'
+            echo
+            echo "</details>"
+            echo
+            echo "Detected by [\`upstream-drift.yml\`]($RUN_URL)."
+          } > issue-body.md
+
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --body-file issue-body.md
+            gh issue comment "$existing" --body "Still drifting as of [this run]($RUN_URL); the body above is up to date."
+          else
+            gh issue create \
+              --title "Upstream PokeAPI has drifted from the pinned snapshot" \
+              --label upstream-drift \
+              --body-file issue-body.md
+          fi
