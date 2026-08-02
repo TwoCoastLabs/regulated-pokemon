@@ -11,6 +11,7 @@
  */
 
 import type { ArticleId } from "./accord.js";
+import type { StatName } from "./snapshot-format.js";
 
 /** Typed material scope (IA-1). Established, never inferred. */
 export interface TrainerScope {
@@ -37,13 +38,45 @@ export interface CertifiedSnapshot {
   sourceRepository: string;
 }
 
+/**
+ * A declarative set definition. Criteria are data, not code, so a roster can
+ * be recomputed from its own definition during verification and replay.
+ */
+export type RosterCriterion =
+  | { kind: "has-type"; type: string }
+  | { kind: "learns-move"; move: string }
+  | { kind: "rarity"; rarity: "legendary" | "mythical" }
+  | { kind: "stat-at-least"; stat: StatName; value: number }
+  | { kind: "stat-at-most"; stat: StatName; value: number };
+
+/** Conjunction: a species is a member exactly when it satisfies every term. */
+export interface RosterCriteria {
+  all: readonly RosterCriterion[];
+}
+
 /** Closed-world certified set (IA-4): the roster IS the count. */
 export interface ClosedRoster {
   id: string;
   snapshotId: string;
+  criteria: RosterCriteria;
+  /** Every member, in Pokédex order. Canonical order keeps replay exact. */
   memberIds: readonly string[];
-  criteria: string; // human-readable set definition
+  /**
+   * The stated count. Deliberately redundant with `memberIds.length`: a
+   * certificate that states its own cardinality can be caught disagreeing
+   * with the set it encloses, which is how a tampered count is detected.
+   */
+  cardinality: number;
 }
+
+/**
+ * The result of an operation that may refuse. Refusal carries named
+ * violations rather than an empty or default value — a stage that cannot
+ * prove, refuses (never returns "nothing found").
+ */
+export type Resolution<T> =
+  | { ok: true; value: T }
+  | { ok: false; violations: readonly Violation[] };
 
 export type Claim =
   | { kind: "fact"; entityId: string; factId: string }
