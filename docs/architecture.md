@@ -44,7 +44,11 @@ Two properties are non-negotiable and testable:
 
 ```ts
 TrainerScope        // typed dimensions: version, region, badge level, basis
-ScopeGrant          // scope + evidence digest + validity window
+ScopeTranscript     // the recorded conversation: utterances with the channel
+                    //   they arrived on, proposals, and confirmations
+ScopeBinding        // one dimension, its value, the evidence, and the route
+                    //   it took — matched directly, or confirmed
+ScopeGrant          // scope + bindings + evidence digest + validity window
 CertifiedSnapshot   // pinned registry version (PokeAPI commit)
 ClosedRoster        // closed-world certified set: members + cardinality
 Claim               // fact | count | membership | ranking | recommendation,
@@ -68,6 +72,8 @@ out of scope here by design.
 Every article ships with mutations — concrete sabotage of the pipeline that
 must be denied with that article's named violation:
 
+- Art. I / VIII: bind scope from a rival's reported wish, a quoted guide, an
+  injected tool result, a negation, or a catalogue question → each denied.
 - Art. III: inject MissingNo into the roster → denied by name.
 - Art. IV: change the visible count; drop a member → denied.
 - Art. VI: hide the Selfdestruct warning via `display:none`, `aria-hidden`,

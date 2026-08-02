@@ -18,14 +18,28 @@
 import { readFileSync } from "node:fs";
 
 import { ACCORD_ARTICLES, type ArticleId } from "./accord.js";
-import type { Exhibit, Resolution, Violation } from "./contracts.js";
+import type { Exhibit, Resolution, ScopeDimension, ScopeValue, Violation } from "./contracts.js";
 import type { CertifiedRegistry } from "./registry.js";
 import { AccordError, violation } from "./violation.js";
 
-export const PACK_SCHEMA_VERSION = 1;
+export const PACK_SCHEMA_VERSION = 2;
 
 /** The League's badge scale. Kanto issues eight; nothing above that exists. */
 export const MAX_BADGE_LEVEL = 8;
+
+/**
+ * The dimensions of material scope, in the order they are asked about.
+ *
+ * Listed here rather than derived from the type, because the loader has to
+ * refuse a vocabulary that names a dimension the kernel has never heard of,
+ * and a type cannot be consulted at load time.
+ */
+export const SCOPE_DIMENSIONS: readonly ScopeDimension[] = [
+  "version",
+  "region",
+  "badgeLevel",
+  "comparisonBasis",
+];
 
 /**
  * A restricted-instrument gate (IA-5). Rarity comes from the snapshot's own
@@ -61,12 +75,76 @@ export interface ExhibitRule {
   requiredFragments: readonly string[];
 }
 
+/**
+ * One way of saying one typed value (IA-1).
+ *
+ * `tokens` are the words that may express the value; `context` are the words
+ * at least one of which must appear near one of them. The second list is not
+ * decoration. A bare-noun alias carries full authority on a paraphrase or a
+ * misspelling — "yellow" alone would mint a game version out of a Pokémon's
+ * colour — so context is required of every term, and the loader refuses a
+ * term that declares none.
+ */
+export interface VocabularyTerm {
+  value: ScopeValue;
+  tokens: readonly string[];
+  context: readonly string[];
+}
+
+/** The approved vocabulary for one dimension of material scope. */
+export interface DimensionRule {
+  dimension: ScopeDimension;
+  /** The type a bound value must have. A term that disagrees is refused at load. */
+  valueType: "text" | "number";
+  /** Asked verbatim when this dimension is the one thing still missing. */
+  question: string;
+  terms: readonly VocabularyTerm[];
+}
+
+/**
+ * League-approved vocabulary: the closed list of things a trainer can say
+ * that establish typed scope, and the closed lists of things that stop a
+ * clause from establishing anything.
+ *
+ * A closed vocabulary is the whole guarantee. Whatever text arrives, the only
+ * value the resolver can emit is one written here, so there is no sentence
+ * anyone can compose that makes it produce something else. Everything below is
+ * word lists and a proximity window rather than patterns: a condition language
+ * here would be a policy engine, and a policy engine is a place for rules to
+ * hide.
+ */
+export interface ScopeVocabulary {
+  /**
+   * How far, in tokens, a required context word may sit from a value token.
+   * This is the specificity/recall dial. Narrowing it denies more paraphrases
+   * and sends them to the propose/confirm ladder; widening it lets a term
+   * bind on wording nobody meant.
+   */
+  contextWindow: number;
+  /** How long a grant minted from this vocabulary stays valid, in seconds. */
+  validitySeconds: number;
+  markers: {
+    /** Negation is respected (IA-8): "not Yellow" binds nothing. */
+    negation: readonly string[];
+    /** Reported speech: a rival's wish is not the trainer's (IA-8). */
+    reported: readonly string[];
+    /** Text addressed to the Advisor. Instruction is not intent (IA-8). */
+    instruction: readonly string[];
+    /** Asking about a thing is not being in it, so a question binds nothing. */
+    interrogative: readonly string[];
+    /** Words a sentence is cut at, so one poisoned clause cannot spoil a good one. */
+    conjunction: readonly string[];
+  };
+  dimensions: readonly DimensionRule[];
+}
+
 export interface AccordPack {
   packVersion: typeof PACK_SCHEMA_VERSION;
   /** Stable, versioned id recorded in every manifest this pack governed. */
   id: string;
   restrictions: readonly RestrictionRule[];
   exhibits: readonly ExhibitRule[];
+  vocabulary: ScopeVocabulary;
 }
 
 /**
@@ -102,9 +180,19 @@ export function loadPack(input: unknown, registry: CertifiedRegistry): Resolutio
       violations: [violation("IA-5", "pack-malformed", "Accord pack is missing restrictions or exhibits")],
     };
   }
+  if (
+    document.vocabulary === null ||
+    typeof document.vocabulary !== "object" ||
+    !Array.isArray(document.vocabulary.dimensions)
+  ) {
+    return {
+      ok: false,
+      violations: [violation("IA-1", "pack-vocabulary-missing", "Accord pack declares no approved vocabulary")],
+    };
+  }
 
   const pack = document as AccordPack;
-  const violations = checkRules(pack, registry);
+  const violations = [...checkRules(pack, registry), ...checkVocabulary(pack.vocabulary)];
   if (violations.length > 0) return { ok: false, violations };
   return { ok: true, value: pack };
 }
@@ -185,6 +273,99 @@ function checkRules(pack: AccordPack, registry: CertifiedRegistry): Violation[] 
           { actual: rule.when.entityId },
         ),
       );
+    }
+  }
+
+  return violations;
+}
+
+/**
+ * Validate the approved vocabulary.
+ *
+ * Same discipline the exhibit rules already get: a rule that can never fire is
+ * not a safe default, it is a hole nobody can see. A dimension with no terms
+ * never binds; a term with no context words binds far too much; a numeric
+ * dimension carrying a text value binds something the kernel cannot type.
+ */
+function checkVocabulary(vocabulary: ScopeVocabulary): Violation[] {
+  const violations: Violation[] = [];
+
+  if (!Number.isInteger(vocabulary.contextWindow) || vocabulary.contextWindow < 1) {
+    violations.push(
+      violation("IA-1", "pack-window-unusable", "the context window is not a positive whole number of tokens", {
+        actual: String(vocabulary.contextWindow),
+      }),
+    );
+  }
+  if (!Number.isInteger(vocabulary.validitySeconds) || vocabulary.validitySeconds <= 0) {
+    violations.push(
+      violation("IA-1", "pack-validity-unusable", "grants minted from this vocabulary would never be valid", {
+        actual: String(vocabulary.validitySeconds),
+      }),
+    );
+  }
+
+  // Every marker group must exist, including an empty one. A missing group
+  // would silently switch off a whole class of exclusion — the resolver would
+  // read a rival's reported wish as the trainer's own and never say why.
+  for (const group of ["negation", "reported", "instruction", "interrogative", "conjunction"] as const) {
+    if (!Array.isArray(vocabulary.markers?.[group])) {
+      violations.push(
+        violation("IA-8", "pack-markers-missing", `the vocabulary declares no "${group}" markers`, { actual: group }),
+      );
+    }
+  }
+
+  const seen = new Set<ScopeDimension>();
+  for (const rule of vocabulary.dimensions) {
+    if (!SCOPE_DIMENSIONS.includes(rule.dimension)) {
+      violations.push(
+        violation("IA-1", "pack-unknown-dimension", `the vocabulary declares "${rule.dimension}", which is not a dimension of material scope`, {
+          expected: SCOPE_DIMENSIONS.join(", "),
+          actual: String(rule.dimension),
+        }),
+      );
+      continue;
+    }
+    if (seen.has(rule.dimension)) {
+      violations.push(
+        violation("IA-1", "pack-duplicate-dimension", `the vocabulary declares "${rule.dimension}" more than once`, {
+          actual: rule.dimension,
+        }),
+      );
+    }
+    seen.add(rule.dimension);
+
+    if (rule.terms.length === 0 || rule.question.length === 0) {
+      violations.push(
+        violation("IA-1", "pack-dimension-unaskable", `"${rule.dimension}" has no terms to match or no question to ask`, {
+          actual: `${rule.terms.length} terms`,
+        }),
+      );
+    }
+
+    for (const term of rule.terms) {
+      const label = `${rule.dimension}=${String(term.value)}`;
+      if (term.tokens.length === 0) {
+        violations.push(
+          violation("IA-1", "pack-term-without-tokens", `term ${label} has no words that express it`, { actual: label }),
+        );
+      }
+      // The bare-noun ban, enforced where it cannot be forgotten.
+      if (term.context.length === 0) {
+        violations.push(
+          violation("IA-1", "pack-term-without-context", `term ${label} would bind on a bare noun`, { actual: label }),
+        );
+      }
+      const expected = rule.valueType === "number" ? "number" : "string";
+      if (typeof term.value !== expected) {
+        violations.push(
+          violation("IA-1", "pack-term-mistyped", `term ${label} is not the type "${rule.dimension}" declares`, {
+            expected,
+            actual: typeof term.value,
+          }),
+        );
+      }
     }
   }
 

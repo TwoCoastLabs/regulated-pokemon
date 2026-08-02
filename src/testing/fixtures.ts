@@ -6,10 +6,11 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import type { ScopeGrant } from "../kernel/contracts.js";
+import type { ScopeGrant, ScopeTranscript } from "../kernel/contracts.js";
 import type { ManifestContext } from "../kernel/manifest.js";
 import { type AccordPack, readPack } from "../kernel/pack.js";
 import { CertifiedRegistry, loadRegistry } from "../kernel/registry.js";
+import { candidateDigest, establishScope } from "../kernel/scope.js";
 import type { SnapshotDocument } from "../kernel/snapshot-format.js";
 import { AccordError } from "../kernel/violation.js";
 
@@ -44,21 +45,60 @@ export const ISSUED_AT = "2026-01-01T00:00:00Z";
 export const COMMIT_TIME = "2026-01-01T12:00:00Z";
 export const EXPIRES_AT = "2026-01-02T00:00:00Z";
 
+const PROPOSAL_ID = "proposal-basis-1";
+const BASIS_CANDIDATE = { comparisonBasis: "base-speed" };
+
 /**
- * A trainer whose scope was established over this snapshot's version group.
- * Phase 3 mints these through the propose/confirm ladder; phase 2 only has to
- * verify one, so the fixture constructs it directly.
+ * The conversation that establishes the fixture trainer's scope.
+ *
+ * Deliberately mixed: version, region and badge level come straight from the
+ * trainer's own words, while "whichever of them is quickest" is wording the
+ * approved vocabulary does not cover and therefore goes through the ladder —
+ * proposed as an untrusted candidate, bound only by the trainer's confirmation
+ * of that exact candidate. A conversation where everything matched directly
+ * would never exercise the half of IA-1 that matters.
+ */
+export function trainerTranscript(badgeLevel = 8): ScopeTranscript {
+  return [
+    {
+      kind: "utterance",
+      at: ISSUED_AT,
+      source: "trainer",
+      text: `I'm playing Red and Blue, travelling around the Kanto region, and I have ${badgeLevel} badges.`,
+    },
+    { kind: "utterance", at: ISSUED_AT, source: "trainer", text: "Which of them is the quickest?" },
+    {
+      kind: "proposal",
+      at: ISSUED_AT,
+      id: PROPOSAL_ID,
+      candidate: BASIS_CANDIDATE,
+      interpreting: "whichever of them is quickest",
+    },
+    {
+      kind: "confirmation",
+      at: ISSUED_AT,
+      source: "trainer",
+      proposalId: PROPOSAL_ID,
+      candidateDigest: candidateDigest(PROPOSAL_ID, BASIS_CANDIDATE),
+      decision: "confirm",
+    },
+  ];
+}
+
+/**
+ * A trainer whose scope was established over this snapshot's version group,
+ * minted through the propose/confirm ladder rather than typed out by hand.
+ *
+ * Phase 2's whole crucible runs against this grant, which is the only way to
+ * find out whether the two phases agree about what a grant is.
  */
 export function trainerGrant(badgeLevel = 8): ScopeGrant {
-  return {
-    id: "grant-kanto-trainer",
-    scope: { version: "red-blue", region: "kanto", badgeLevel },
-    // Stands in for a digest over the conversation that established scope;
-    // phase 3 derives it from real evidence.
-    evidenceDigest: `sha256:${"a1".repeat(32)}`,
-    issuedAt: ISSUED_AT,
-    expiresAt: EXPIRES_AT,
-  };
+  const established = establishScope(
+    { pack: kantoPack(), at: ISSUED_AT, required: ["version", "region", "badgeLevel", "comparisonBasis"] },
+    trainerTranscript(badgeLevel),
+  );
+  if (!established.ok) throw new AccordError(established.violations);
+  return established.value;
 }
 
 /** Registry, pack, grant and commit time, assembled the way the kernel wants. */

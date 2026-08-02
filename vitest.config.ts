@@ -30,11 +30,11 @@ export default defineConfig({
       include: ["src/**/*.ts"],
       exclude: ["src/**/*.test.ts", "src/testing/**"],
       reporter: ["text-summary", "json-summary"],
-      // Raised with phase 2, which took the real numbers to 94.3 / 88.9 / 95.5.
+      // Raised with phase 3, which took the real numbers to 95.7 / 90.6 / 96.9.
       thresholds: {
-        statements: 92,
-        branches: 85,
-        lines: 92,
+        statements: 93,
+        branches: 88,
+        lines: 94,
       },
     },
   },

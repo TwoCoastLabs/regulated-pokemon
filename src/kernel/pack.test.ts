@@ -63,7 +63,13 @@ describe("a pack that cannot be trusted is refused by name", () => {
   });
 
   it("refuses a schema version the kernel does not know how to read", () => {
-    expect(denials(loadWith((draft) => ((draft as { packVersion: number }).packVersion = 2)))).toEqual([
+    expect(denials(loadWith((draft) => ((draft as { packVersion: number }).packVersion = 99)))).toEqual([
+      "IA-5/pack-schema-unsupported",
+    ]);
+    // The schema before the approved vocabulary existed is not readable now:
+    // a pack that declares no vocabulary would establish no scope and say
+    // nothing about it.
+    expect(denials(loadWith((draft) => ((draft as { packVersion: number }).packVersion = 1)))).toEqual([
       "IA-5/pack-schema-unsupported",
     ]);
   });

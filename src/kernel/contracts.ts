@@ -21,11 +21,84 @@ export interface TrainerScope {
   comparisonBasis?: string; // e.g. "base-speed"
 }
 
+/** The dimensions of material scope, as things that can be talked about. */
+export type ScopeDimension = keyof TrainerScope;
+
+/** What a dimension may be bound to. Typed values only — never free text. */
+export type ScopeValue = string | number;
+
+/**
+ * The channel a piece of text arrived on, assigned by the transport and never
+ * inferred from the text itself (IA-8).
+ *
+ * This is the article's engineering consequence made structural: prompt
+ * injection is an authority problem, not a detection problem, so a pasted
+ * guide and a retrieved page are not classified as hostile — they arrive on a
+ * channel the trainer does not speak on, and the resolver never reads them.
+ */
+export type UtteranceSource = "trainer" | "quoted-document" | "third-party" | "tool";
+
+/** A typed interpretation offered for confirmation. Never authority itself. */
+export type ScopeCandidate = Partial<TrainerScope>;
+
+/**
+ * How one dimension came to be bound. Recorded because a grant that states
+ * only its conclusions is unfalsifiable: a scope established from the
+ * trainer's own sentence and one established from a rival's reported wish
+ * would be byte-identical, and IA-8 would have nothing to disagree with.
+ */
+export interface ScopeBinding {
+  dimension: ScopeDimension;
+  value: ScopeValue;
+  /** Index into the recorded transcript of the event that bound it. */
+  evidenceIndex: number;
+  /**
+   * `direct` — approved vocabulary in the trainer's own words.
+   * `confirmed` — the trainer's confirmation of one stated interpretation.
+   */
+  route: "direct" | "confirmed";
+  /** The exact wording this binding rests on, normalised for replay. */
+  matchedText: string;
+}
+
+/**
+ * One recorded conversational act. Proposals sit in the transcript beside
+ * utterances rather than off to one side: what the model offered is part of
+ * the record even when nothing came of it, and a verdict that depended on an
+ * unrecorded proposal could not be replayed (IA-10).
+ */
+export type ScopeEvent =
+  | { kind: "utterance"; at: string; source: UtteranceSource; text: string }
+  | {
+      kind: "proposal";
+      at: string;
+      id: string;
+      /** Typed values only, so a proposer cannot express one the vocabulary lacks. */
+      candidate: ScopeCandidate;
+      /** The wording this claims to interpret. Recorded, never binding. */
+      interpreting: string;
+    }
+  | {
+      kind: "confirmation";
+      at: string;
+      source: UtteranceSource;
+      proposalId: string;
+      /** Digest of the candidate as it was shown — not of the one on file now. */
+      candidateDigest: string;
+      decision: "confirm" | "reject";
+    };
+
+export type ScopeTranscript = readonly ScopeEvent[];
+
 /** Proof that scope was established, with a validity window. */
 export interface ScopeGrant {
   id: string;
+  /** The Accord pack whose approved vocabulary read the evidence. */
+  packId: string;
   scope: TrainerScope;
-  /** Digest of the conversation evidence that established the scope. */
+  /** One per bound dimension: the value, and the evidence it rests on. */
+  bindings: readonly ScopeBinding[];
+  /** Digest of the recorded transcript the bindings were derived from. */
   evidenceDigest: string;
   issuedAt: string; // RFC 3339
   expiresAt: string; // RFC 3339
