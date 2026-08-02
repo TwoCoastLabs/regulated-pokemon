@@ -10,7 +10,8 @@
   },
   "scripts": {
     "test": "vitest run",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "snapshot:fetch": "node --experimental-strip-types scripts/fetch-snapshot.ts"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
