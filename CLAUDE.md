@@ -19,8 +19,13 @@ public, it doesn't go in the repo at all.
 ## Commands
 
 - Node 22 (`nvm use`).
-- **Test:** `npm test` (vitest; deterministic, key-free — this is the CI gate)
+- **Test:** `npm test` (vitest; deterministic, key-free)
+- **Test with the coverage floor:** `npm run test:coverage` — this is the CI
+  gate. Thresholds live in `vitest.config.ts` and ratchet upward only.
 - **Typecheck:** `npm run lint` (`tsc --noEmit`)
+- **Upstream drift:** `npm run snapshot:fetch -- --check --head` re-derives the
+  snapshot from PokeAPI's current head. Needs the network, so it never runs in
+  the PR gate; a weekly workflow runs it and opens an issue.
 - Live-model harnesses (Phase 7+) are separate, explicitly billable scripts;
   they never run in CI and always write run artifacts.
 
@@ -42,7 +47,13 @@ public, it doesn't go in the repo at all.
   declarative Accord pack, not scattered through agent code.
 - **Never weaken a crucible to go green.** A failing mutation test is either
   a kernel bug or a wrong expectation — fix the root cause. Skips, xfails,
-  and loosened assertions in enforcement tests require explicit approval.
+  and loosened assertions in enforcement tests require explicit approval, and
+  CI greps `src/crucible/**` for them.
+- **Article coverage is the gate; the percentage is a backstop.** Every
+  Accord article has a mutation denying it by name, or is listed in
+  `NOT_YET_COVERED` (`src/crucible/phases.ts`) against the phase that will.
+  Shrinking that list is how a phase is finished — a phase cannot be ticked in
+  the epic while an article it owns is still in it.
 - Kernel stays small and readable; it is meant to be read. Prefer a boring
   explicit check over a clever abstraction.
 - The article registry (`src/kernel/accord.ts`) is pinned to the Accord

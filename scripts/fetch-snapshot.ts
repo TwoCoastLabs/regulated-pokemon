@@ -10,6 +10,12 @@
  *   npm run snapshot:fetch                        # refresh the pinned commit
  *   npm run snapshot:fetch -- --commit <40-sha>   # re-pin to another commit
  *   npm run snapshot:fetch -- --check             # verify, do not write
+ *   npm run snapshot:fetch -- --check --head      # verify against upstream head
+ *
+ * `--check` on its own re-derives from the pinned commit and can only fail if
+ * the vendored file was edited: a commit is immutable, so the bytes cannot
+ * move under it. `--check --head` re-derives from upstream's current default
+ * branch instead, which is the question the drift watch asks.
  *
  * The upstream projection is deliberately narrow: one Pokédex, one version
  * group, no artwork, no flavour text, no localisation. See data/README.md.
@@ -379,6 +385,81 @@ async function build(commit: string): Promise<SnapshotDocument> {
   };
 }
 
+// --- drift ------------------------------------------------------------------
+
+/**
+ * What `--check` found, as an exit code.
+ *
+ * Distinct codes rather than pass/fail because the two kinds of drift mean
+ * different things and deserve different responses. `content` means the
+ * projection this repository vendors has changed and a re-pin would change
+ * certified facts. `documents` means upstream churned in ways our narrow
+ * projection filters out — worth knowing, not worth acting on.
+ *
+ * Neither is a regression in this repository, so neither belongs in the PR
+ * gate; see .github/workflows/upstream-drift.yml.
+ */
+const DRIFT_EXIT = { none: 0, documents: 3, content: 4 } as const;
+
+type DriftKind = keyof typeof DRIFT_EXIT;
+
+/**
+ * Compare the vendored snapshot against a freshly derived one.
+ *
+ * The report goes to stdout as `key=value` lines while every other message in
+ * this script goes to stderr, so a caller can quote stdout verbatim into an
+ * issue body without scraping progress chatter out of it.
+ */
+function reportDrift(vendored: SnapshotDocument, upstream: SnapshotDocument): DriftKind {
+  const contentMoved = vendored.contentDigest !== upstream.contentDigest;
+  const documentsMoved = vendored.source.documentsDigest !== upstream.source.documentsDigest;
+  const kind: DriftKind = contentMoved ? "content" : documentsMoved ? "documents" : "none";
+
+  const report = [
+    `drift=${kind}`,
+    `commit.vendored=${vendored.source.commit}`,
+    `commit.upstream=${upstream.source.commit}`,
+    `content.vendored=${vendored.contentDigest}`,
+    `content.upstream=${upstream.contentDigest}`,
+    `documents.vendored=${vendored.source.documentsDigest}`,
+    `documents.upstream=${upstream.source.documentsDigest}`,
+    `species.vendored=${vendored.species.length}`,
+    `species.upstream=${upstream.species.length}`,
+    `moves.vendored=${vendored.moves.length}`,
+    `moves.upstream=${upstream.moves.length}`,
+  ];
+  console.log(report.join("\n"));
+
+  console.error(
+    kind === "none"
+      ? "check: vendored snapshot matches upstream, both digests"
+      : kind === "documents"
+        ? "check: upstream documents changed, but the projection we vendor did not"
+        : "check: the projection we vendor has changed upstream",
+  );
+  return kind;
+}
+
+/** The upstream default branch, resolved to a commit so the run is pinned. */
+async function resolveHead(): Promise<string> {
+  const token = process.env.GITHUB_TOKEN;
+  const response = await fetch("https://api.github.com/repos/PokeAPI/api-data/commits/HEAD", {
+    headers: {
+      accept: "application/vnd.github+json",
+      // Optional: only to stay clear of the unauthenticated rate limit on
+      // shared CI addresses. This repository's own token is enough; the
+      // request reads a public repository.
+      ...(token === undefined ? {} : { authorization: `Bearer ${token}` }),
+    },
+  });
+  if (!response.ok) {
+    throw new Error(`cannot resolve upstream head: HTTP ${response.status} ${response.statusText}`);
+  }
+  const { sha } = (await response.json()) as { sha: string };
+  if (!/^[0-9a-f]{40}$/.test(sha)) throw new Error(`upstream head is not a sha: ${sha}`);
+  return sha;
+}
+
 // --- entry point ------------------------------------------------------------
 
 function flagValue(argv: readonly string[], flag: string): string | undefined {
@@ -391,9 +472,15 @@ function flagValue(argv: readonly string[], flag: string): string | undefined {
 
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
-  const commit = flagValue(argv, "--commit") ?? DEFAULT_COMMIT;
-  if (!/^[0-9a-f]{40}$/.test(commit)) throw new Error(`--commit must be a 40-character sha: ${commit}`);
   const checkOnly = argv.includes("--check");
+  const againstHead = argv.includes("--head");
+  if (againstHead && !checkOnly) throw new Error("--head only makes sense with --check");
+  if (againstHead && flagValue(argv, "--commit") !== undefined) {
+    throw new Error("--head and --commit name different things to build from");
+  }
+
+  const commit = againstHead ? await resolveHead() : (flagValue(argv, "--commit") ?? DEFAULT_COMMIT);
+  if (!/^[0-9a-f]{40}$/.test(commit)) throw new Error(`--commit must be a 40-character sha: ${commit}`);
 
   const outputPath = resolve(
     dirname(fileURLToPath(import.meta.url)),
@@ -414,13 +501,7 @@ async function main(): Promise<void> {
     const existing = await readFile(outputPath, "utf8").catch(() => undefined);
     if (existing === undefined) throw new Error(`no vendored snapshot at ${outputPath}`);
     const vendored = JSON.parse(existing) as SnapshotDocument;
-    if (vendored.contentDigest !== snapshot.contentDigest) {
-      throw new Error(
-        `vendored snapshot differs from upstream\n` +
-          `  vendored ${vendored.contentDigest}\n  upstream ${snapshot.contentDigest}`,
-      );
-    }
-    console.error("check: vendored snapshot matches upstream");
+    process.exitCode = DRIFT_EXIT[reportDrift(vendored, snapshot)];
     return;
   }
 
