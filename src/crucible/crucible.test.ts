@@ -16,8 +16,8 @@ import { describe, expect, it } from "vitest";
 
 import { type AccordArticle, ACCORD_ARTICLES, type ArticleId } from "../kernel/accord.js";
 import { denialCode } from "../kernel/violation.js";
-import { kantoRegistry } from "../testing/fixtures.js";
-import { expectedDenial } from "./mutations.js";
+import { manifestContext } from "../testing/fixtures.js";
+import { expectedDenial } from "./harness.js";
 import {
   ALL_CONTROLS,
   ALL_MUTATIONS,
@@ -26,7 +26,9 @@ import {
   NOT_YET_COVERED,
 } from "./phases.js";
 
-const registry = kantoRegistry();
+// Mutations run against the same world a real answer is judged in: registry,
+// Accord pack, trainer scope and commit time — no private back door.
+const world = manifestContext();
 const KNOWN_ARTICLES = new Set<string>(ACCORD_ARTICLES.map((entry) => entry.id));
 
 const everyMutation = ALL_MUTATIONS.map((mutation) => [mutation.id, mutation] as const);
@@ -35,7 +37,7 @@ const everyPhase = CRUCIBLE_PHASES.map((phase) => [`phase ${phase.phase}`, phase
 
 describe("every mutation is denied under the exact denial it declares", () => {
   it.each(everyMutation)("%s", (_id, mutation) => {
-    const verdict = mutation.run(registry);
+    const verdict = mutation.run(world);
 
     expect(verdict.allowed, `${mutation.id} was allowed through`).toBe(false);
     // The declared denial, not merely *a* denial: a mutation refused for an
@@ -59,7 +61,7 @@ describe("every mutation is denied under the exact denial it declares", () => {
 
 describe("every control is allowed, with nothing denied at all", () => {
   it.each(everyControl)("%s", (_id, control) => {
-    expect(control.run(registry)).toEqual({ allowed: true, violations: [] });
+    expect(control.run(world)).toEqual({ allowed: true, violations: [] });
   });
 
   it.each(everyPhase)("%s carries both kinds of control", (_label, phase) => {

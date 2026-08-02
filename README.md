@@ -72,11 +72,11 @@ crucible by test, so it cannot drift from what actually runs.
 | Article | Title | Mutations |
 | --- | --- | --- |
 | IA-1 | Know Your Trainer | — phase 3 |
-| IA-2 | Certified Facts Only | 4 |
-| IA-3 | No Fabrication (the MissingNo Clause) | 3 |
-| IA-4 | Complete Answers Carry Certificates | 3 |
-| IA-5 | Restricted Species | — phase 2 |
-| IA-6 | Disclosures Must Be Seen | — phase 4 |
+| IA-2 | Certified Facts Only | 6 |
+| IA-3 | No Fabrication (the MissingNo Clause) | 4 |
+| IA-4 | Complete Answers Carry Certificates | 8 |
+| IA-5 | Restricted Species | 2 |
+| IA-6 | Disclosures Must Be Seen | 2 |
 | IA-7 | What Was Shown Is What Executes | — phase 5 |
 | IA-8 | Only the Trainer Speaks for the Trainer | — phase 3 |
 | IA-9 | Irreversible Acts Need Informed Consent | — phase 5 |

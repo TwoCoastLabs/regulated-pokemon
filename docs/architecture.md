@@ -47,9 +47,11 @@ TrainerScope        // typed dimensions: version, region, badge level, basis
 ScopeGrant          // scope + evidence digest + validity window
 CertifiedSnapshot   // pinned registry version (PokeAPI commit)
 ClosedRoster        // closed-world certified set: members + cardinality
-Claim               // fact | count | membership | ranking, bound to fact IDs
+Claim               // fact | count | membership | ranking | recommendation,
+                    //   each carrying what it asserted, bound to fact IDs
+AccordPack          // versioned policy data: badge gates, triggered exhibits
 Exhibit             // a governed display unit with required visible fragments
-AnswerManifest      // claims + exhibits + snapshot + scope grant, one txn id
+AnswerManifest      // claims + rosters + exhibits + snapshot + pack + grant
 RenderAffidavit     // derived from the final DOM: visibility + digest
 ConfirmationEvent   // trainer's confirmation of the exact artifact digest
 ActionGrant         // one action bound to txn + confirmation + entity + scope
