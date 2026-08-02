@@ -9,9 +9,12 @@
  * pending against the phase that will deny it.
  */
 
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
-import { ACCORD_ARTICLES, type ArticleId } from "../kernel/accord.js";
+import { type AccordArticle, ACCORD_ARTICLES, type ArticleId } from "../kernel/accord.js";
 import { denialCode } from "../kernel/violation.js";
 import { kantoRegistry } from "../testing/fixtures.js";
 import { expectedDenial } from "./mutations.js";
@@ -111,6 +114,33 @@ describe("article coverage", () => {
       const owned = phase.mutations.filter((mutation) => mutation.article === article);
       expect(owned.length, `${article} has no mutation in phase ${phase.phase}`).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("the README publishes what the crucible actually covers", () => {
+  // Same discipline as the article registry against the Accord document: a
+  // hand-written table is a claim, and an unpinned claim goes stale the first
+  // time a phase lands. Rows are compared verbatim, so the README's formatting
+  // is part of the contract.
+  const readme = readFileSync(resolve(import.meta.dirname, "../../README.md"), "utf8");
+
+  function expectedRow(entry: AccordArticle): string {
+    const mutations = ALL_MUTATIONS.filter((mutation) => mutation.article === entry.id).length;
+    const owed = NOT_YET_COVERED[entry.id as ArticleId];
+    const cell = mutations > 0 ? String(mutations) : `— phase ${owed}`;
+    return `| ${entry.id} | ${entry.title} | ${cell} |`;
+  }
+
+  it.each(ACCORD_ARTICLES.map((entry) => [entry.id, entry] as const))("%s", (_id, entry) => {
+    expect(readme, `README is missing or wrong for ${entry.id}`).toContain(expectedRow(entry));
+  });
+
+  it("publishes no coverage percentage", () => {
+    // A deliberate non-goal. Enforcement is reported as hard zeros and
+    // usefulness empirically per model; a hygiene figure blended into either
+    // muddies the distinction the project exists to draw.
+    const table = readme.slice(readme.indexOf("## How it is verified"));
+    expect(table, "a coverage percentage has appeared in the README").not.toMatch(/\d+(\.\d+)?\s*%/);
   });
 });
 
