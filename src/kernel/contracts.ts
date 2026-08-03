@@ -222,12 +222,19 @@ export interface AnswerManifest {
   exhibits: readonly Exhibit[];
 }
 
-/** Derived from the FINAL rendered DOM — never from renderer claims (IA-6). */
+/**
+ * Derived from the FINAL rendered DOM — never from renderer claims (IA-6).
+ *
+ * Every field is read out of the artifact, including which transaction it is:
+ * an affidavit that copied its subject from the manifest would agree with the
+ * manifest by construction and could never catch the artifact disagreeing.
+ */
 export interface RenderAffidavit {
   transactionId: string;
   artifactDigest: string;
   renderedAt: string; // RFC 3339
-  exhibits: ReadonlyArray<{ id: string; visible: boolean }>;
+  /** Every governed display unit the artifact marked, and whether it showed. */
+  units: ReadonlyArray<{ id: string; visible: boolean }>;
 }
 
 /** The trainer's confirmation of the exact artifact they saw (IA-7). */

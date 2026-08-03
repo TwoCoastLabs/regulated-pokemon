@@ -30,8 +30,11 @@ export default defineConfig({
       include: ["src/**/*.ts"],
       exclude: ["src/**/*.test.ts", "src/testing/**"],
       reporter: ["text-summary", "json-summary"],
-      // Raised with the transaction seam, which took the real numbers to
-      // 96.2 / 90.9 / 97.5. Branches barely moved, so its floor stays put.
+      // Raised with the transaction seam and held through phase 4, which took
+      // the real numbers to 96.4 / 90.1 / 98.1. Branches stay put: the render
+      // layer's named-fallback strings are branches nothing exercises, and
+      // inventing a test for each would be chasing the backstop rather than
+      // the gate.
       thresholds: {
         statements: 94,
         branches: 88,

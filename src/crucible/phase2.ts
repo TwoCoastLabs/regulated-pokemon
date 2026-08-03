@@ -35,8 +35,12 @@ function roster(world: CrucibleWorld, id: string, criteria: RosterCriteria): Clo
 /**
  * The answer every mutation starts from: one claim of each kind, over two
  * certified sets, for a trainer accredited to hear all of it.
+ *
+ * Exported because phase 4 renders this exact answer. The two phases sabotage
+ * different things about the same sentence, which is the only way to find out
+ * whether they agree about what an answer is.
  */
-function honestAnswer(world: CrucibleWorld): AnswerManifest {
+export function honestAnswer(world: CrucibleWorld): AnswerManifest {
   const electric = roster(world, "electric-kanto", ELECTRIC);
   const boomers = roster(world, "selfdestruct-learners", BOOMERS);
   const claims: Claim[] = [
