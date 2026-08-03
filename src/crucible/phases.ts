@@ -18,6 +18,7 @@ import type { Control, Mutation } from "./harness.js";
 import { PHASE_1_ARTICLES, PHASE_1_CONTROLS, PHASE_1_MUTATIONS } from "./phase1.js";
 import { PHASE_2_ARTICLES, PHASE_2_CONTROLS, PHASE_2_MUTATIONS } from "./phase2.js";
 import { PHASE_3_ARTICLES, PHASE_3_CONTROLS, PHASE_3_MUTATIONS } from "./phase3.js";
+import { PHASE_4_ARTICLES, PHASE_4_CONTROLS, PHASE_4_MUTATIONS } from "./phase4.js";
 
 export interface CruciblePhase {
   /** Epic phase number, matching docs and the issue tracker. */
@@ -55,6 +56,13 @@ export const CRUCIBLE_PHASES: readonly CruciblePhase[] = [
     articles: PHASE_3_ARTICLES,
     mutations: PHASE_3_MUTATIONS,
     controls: PHASE_3_CONTROLS,
+  },
+  {
+    phase: 4,
+    title: "Render affidavit",
+    articles: PHASE_4_ARTICLES,
+    mutations: PHASE_4_MUTATIONS,
+    controls: PHASE_4_CONTROLS,
   },
 ];
 

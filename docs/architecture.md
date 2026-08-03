@@ -33,7 +33,7 @@ Action gate (Art. VII)                  →  ActionGrant → execute
 Two properties are non-negotiable and testable:
 
 - **Fail closed.** Every stage that cannot prove, refuses. The refusal names
-  its article (`IA-3/fabricated-entity`, `IA-6/exhibit-hidden`, …).
+  its article (`IA-3/fabricated-entity`, `IA-6/exhibit-hidden-collapsed-details`, …).
 - **Model-agnostic guarantees.** The LLM sits only inside "propose" steps
   (interpret wording, draft prose, suggest candidates). No model output
   crosses a commit boundary without deterministic verification. Swapping a
@@ -56,6 +56,8 @@ Claim               // fact | count | membership | ranking | recommendation,
 AccordPack          // versioned policy data: badge gates, triggered exhibits
 Exhibit             // a governed display unit with required visible fragments
 AnswerManifest      // claims + rosters + exhibits + snapshot + pack + grant
+RenderPlan          // the closed list of units the artifact must show, and the
+                    //   bound fragments that must be legible inside each
 RenderAffidavit     // derived from the final DOM: visibility + digest
 ConfirmationEvent   // trainer's confirmation of the exact artifact digest
 ActionGrant         // one action bound to txn + confirmation + entity + scope
