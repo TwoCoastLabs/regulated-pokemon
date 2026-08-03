@@ -30,11 +30,12 @@ export default defineConfig({
       include: ["src/**/*.ts"],
       exclude: ["src/**/*.test.ts", "src/testing/**"],
       reporter: ["text-summary", "json-summary"],
-      // Raised with phase 3, which took the real numbers to 95.7 / 90.6 / 96.9.
+      // Raised with the transaction seam, which took the real numbers to
+      // 96.2 / 90.9 / 97.5. Branches barely moved, so its floor stays put.
       thresholds: {
-        statements: 93,
+        statements: 94,
         branches: 88,
-        lines: 94,
+        lines: 95,
       },
     },
   },

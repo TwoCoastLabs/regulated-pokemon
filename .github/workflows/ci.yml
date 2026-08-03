@@ -87,6 +87,15 @@ jobs:
       - name: the snapshot tool still parses
         run: node --experimental-strip-types --check scripts/fetch-snapshot.ts
 
+      # The demo's logic is covered by src/demo/demo.test.ts, which runs it in
+      # process. What that cannot catch is the emit: `npm run demo` is the only
+      # path that compiles to disk and resolves `.js` specifiers for real, and
+      # it would rot silently while every test stayed green. Deterministic,
+      # key-free and offline like everything else in this job — and it exits
+      # non-zero on its own if a conversation ends the wrong way.
+      - name: the demo still builds and runs
+        run: npm run demo
+
   # Forward check, deliberately separate from the gate. The kernel is Node
   # version-agnostic; `scripts/fetch-snapshot.ts` is not, since it runs
   # straight from source under type stripping. Kept as its own job so that

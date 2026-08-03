@@ -1,0 +1,27 @@
+// The demo is the first thing in this repository a person runs rather than
+// tests, and running it needs real JavaScript on disk: the kernel imports its
+// siblings with `.js` specifiers, which `node --experimental-strip-types`
+// resolves literally and cannot find. `scripts/` sidesteps that by importing
+// one leaf module with a `.ts` specifier; the kernel cannot, and should not
+// have its import style bent by how one consumer happens to be launched.
+//
+// So: a plain tsc emit into a gitignored dist/. The base config stays the
+// typecheck gate for everything including `scripts/`, and this one narrows to
+// the shippable source.
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    // `.ts` import specifiers are a source-only affordance for the type
+    // stripper. Emitted output imports emitted files.
+    "allowImportingTsExtensions": false,
+    "rootDir": "src",
+    "outDir": "dist",
+    "sourceMap": true
+  },
+  // Tests are not shipped, and `scripts/` is the network tool — deliberately
+  // never executed here, and written in the `.ts`-specifier style this config
+  // forbids.
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts"]
+}

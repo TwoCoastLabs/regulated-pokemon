@@ -23,6 +23,10 @@ public, it doesn't go in the repo at all.
 - **Test with the coverage floor:** `npm run test:coverage` — this is the CI
   gate. Thresholds live in `vitest.config.ts` and ratchet upward only.
 - **Typecheck:** `npm run lint` (`tsc --noEmit`)
+- **Run it:** `npm run demo` — the transaction seam played as a compliance
+  trace; `-- --list` for the conversations and sabotages. Self-checking, so CI
+  runs it. It builds to `dist/` first: the kernel imports with `.js`
+  specifiers, which `node --experimental-strip-types` cannot resolve.
 - **Upstream drift:** `npm run snapshot:fetch -- --check --head` re-derives the
   snapshot from PokeAPI's current head. Needs the network, so it never runs in
   the PR gate; a weekly workflow runs it and opens an issue.

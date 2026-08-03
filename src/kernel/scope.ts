@@ -82,8 +82,16 @@ export type BlockReason =
   | "digest-mismatch"
   | "unapproved";
 
-/** The article and rule each exclusion is denied under, and why in one line. */
-const BLOCK_DENIALS: Record<BlockReason, { article: "IA-1" | "IA-8"; rule: string; because: string }> = {
+/**
+ * The article and rule each exclusion is denied under, and why in one line.
+ *
+ * Exported because a match that was seen and not believed is the most
+ * instructive thing this module produces, and a console that could only say
+ * "ignored" would be hiding the interesting half: it is the difference between
+ * "the resolver missed the rival's wish" and "the resolver read it, and
+ * refused it under IA-8 for reporting somebody else's words".
+ */
+export const BLOCK_DENIALS: Record<BlockReason, { article: "IA-1" | "IA-8"; rule: string; because: string }> = {
   "foreign-channel": {
     article: "IA-8",
     rule: "unauthorized-speaker",
