@@ -1,6 +1,53 @@
 {
-  "packVersion": 2,
+  "packVersion": 3,
   "id": "indigo-accord-v1",
+  "presentation": {
+    "locales": ["en-US", "en-GB"],
+    "formats": ["entity-name", "integer", "list-oxford", "member-of", "no-value", "plain-text", "yes-no"],
+    "catalogue": [
+      {
+        "id": "page.title",
+        "text": {
+          "en-US": "Your certified answer",
+          "en-GB": "Your certified answer"
+        }
+      },
+      {
+        "id": "page.lead",
+        "text": {
+          "en-US": "Everything below was recomputed from the pinned registry before it reached this page.",
+          "en-GB": "Everything below was recomputed from the pinned registry before it reached this page."
+        }
+      },
+      {
+        "id": "lead-in.fact",
+        "text": { "en-US": "From the certified registry:", "en-GB": "From the certified registry:" }
+      },
+      {
+        "id": "lead-in.count",
+        "text": { "en-US": "Certified count for this set:", "en-GB": "Certified count for this set:" }
+      },
+      {
+        "id": "lead-in.membership",
+        "text": { "en-US": "Membership in this set:", "en-GB": "Membership in this set:" }
+      },
+      {
+        "id": "lead-in.selection",
+        "text": { "en-US": "The one that comes out on top:", "en-GB": "The one that comes out on top:" }
+      },
+      {
+        "id": "lead-in.recommendation",
+        "text": {
+          "en-US": "What I would go for, given your badges:",
+          "en-GB": "What I would go for, given your badges:"
+        }
+      },
+      {
+        "id": "provenance.snapshot",
+        "text": { "en-US": "Certified snapshot:", "en-GB": "Certified snapshot:" }
+      }
+    ]
+  },
   "restrictions": [
     {
       "id": "legendary-acquisition",
@@ -21,21 +68,67 @@
       "article": "IA-6",
       "kind": "warning",
       "when": { "kind": "entity-claimed", "entityId": "self-destruct" },
-      "requiredFragments": ["Selfdestruct", "User faints"]
+      "block": {
+        "id": "selfdestruct-handling",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Mandatory handling notice: Selfdestruct makes the user faint. Before traveling with a Pokémon that knows it, be sure you can afford to lose that Pokémon for the rest of the battle.",
+            "digest": "sha256:42ee625dd83e391cb7fd0013e2d301cf3394adcd0725e06503d2d13f7fbe4a65"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Mandatory handling notice: Selfdestruct makes the user faint. Before travelling with a Pokémon that knows it, be sure you can afford to lose that Pokémon for the rest of the battle.",
+            "digest": "sha256:aa5c294429c2bf599bd66a1bce7b13f02d36a62fe57cf9367b448e1206202ae1"
+          }
+        ]
+      }
     },
     {
       "id": "explosion-warning",
       "article": "IA-6",
       "kind": "warning",
       "when": { "kind": "entity-claimed", "entityId": "explosion" },
-      "requiredFragments": ["Explosion", "User faints"]
+      "block": {
+        "id": "explosion-handling",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Mandatory handling notice: Explosion makes the user faint. Before traveling with a Pokémon that knows it, be sure you can afford to lose that Pokémon for the rest of the battle.",
+            "digest": "sha256:9bd55d4327e2f88dee0d7c3e76a5fc891c906c0a0dd0e83befeb93b096ff3f23"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Mandatory handling notice: Explosion makes the user faint. Before travelling with a Pokémon that knows it, be sure you can afford to lose that Pokémon for the rest of the battle.",
+            "digest": "sha256:7ef791aa12d7798dfd5d2d39d513f6203c9b915f2cabfde3197ea02884063a2b"
+          }
+        ]
+      }
     },
     {
       "id": "provenance",
       "article": "IA-2",
       "kind": "provenance",
       "when": { "kind": "always" },
-      "requiredFragments": ["PokeAPI", "BSD-3-Clause", "kanto-red-blue"]
+      "block": {
+        "id": "pokeapi-attribution",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Certified from PokéAPI data, used under the BSD-3-Clause license. Nothing on this page was recalled from memory.",
+            "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Certified from PokéAPI data, used under the BSD-3-Clause licence. Nothing on this page was recalled from memory.",
+            "digest": "sha256:79a969e7fbd190f9d2b0209a1d6fb0e32226836ff4a529333d29189ae8710571"
+          }
+        ]
+      },
+      "slots": [{ "name": "snapshot", "source": "snapshot-id", "format": "plain-text" }]
     }
   ],
   "vocabulary": {

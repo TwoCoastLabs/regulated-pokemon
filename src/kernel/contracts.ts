@@ -193,12 +193,29 @@ export type Claim =
    */
   | { kind: "recommendation"; entityId: string };
 
-/** A governed display unit (IA-6): fragments that must be customer-visible. */
+/**
+ * The mandatory text a disclosure carries, named rather than quoted (IA-6).
+ *
+ * A manifest records which approved block it owes, not the words themselves.
+ * The words live in the Accord pack, where they are reviewed and versioned; a
+ * record that carried its own copy of them could be edited into agreement with
+ * whatever ended up on screen, which is the one thing a disclosure must not be
+ * able to do.
+ */
+export interface DisclosureBlockRef {
+  id: string;
+  version: number;
+  locale: string;
+  /** Digest over the block's normalised text in that locale. */
+  digest: string;
+}
+
+/** A governed display unit (IA-6): text that must be customer-visible. */
 export interface Exhibit {
   id: string;
   kind: "fact" | "count" | "selection" | "warning" | "provenance";
   entityId?: string;
-  requiredFragments: readonly string[];
+  block: DisclosureBlockRef;
   /** Article that triggered this exhibit, when it is a mandatory disclosure. */
   triggeredBy?: ArticleId;
 }
@@ -210,6 +227,16 @@ export interface AnswerManifest {
   snapshotId: string;
   /** The Accord pack version whose rules governed this answer (IA-5, IA-6). */
   packId: string;
+  /**
+   * The locale this answer was certified for presentation in.
+   *
+   * Part of the certified record rather than a display detail, because the
+   * locale decides two things a verifier has to know: which approved formatter
+   * turns a certified value into the string on the screen, and which approved
+   * translation of a disclosure block satisfies it. Chosen by the transport, so
+   * that nothing downstream can pick the locale whose rendering suits it.
+   */
+  locale: string;
   claims: readonly Claim[];
   /**
    * Every roster a claim cites, carried in the record rather than referenced

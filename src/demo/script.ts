@@ -51,6 +51,13 @@ export function demoWorld(): DemoWorld {
 export const ESTABLISHED_AT = "2026-01-01T00:00:00Z";
 export const COMMITTED_AT = "2026-01-01T12:00:00Z";
 
+/**
+ * The locale the demo's transport presents in. Fixed here rather than read
+ * from the environment, for the same reason the timestamps are: a verdict that
+ * changed with `LANG` would not replay.
+ */
+export const LOCALE = "en-US";
+
 /** A ranking answer is coming, so the comparison basis is material too. */
 export const REQUIRED: readonly ScopeDimension[] = [...REQUIRED_DIMENSIONS, "comparisonBasis"];
 

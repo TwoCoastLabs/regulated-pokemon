@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { AnswerManifest, Claim, ClosedRoster } from "./contracts.js";
+import { digestText } from "./digest.js";
 import { compileManifest, type ManifestContext, requiredExhibits, verifyManifest } from "./manifest.js";
 import { buildRoster } from "./roster.js";
 import { denialCode } from "./violation.js";
@@ -251,17 +252,55 @@ describe("the Accord pack decides who may be told what", () => {
     expect(denialsOf({ ...manifest, exhibits: stripped })).toContain("IA-6/exhibit-not-manifested");
   });
 
-  it("denies an exhibit hollowed out to nothing", () => {
+  it("denies an exhibit pointed at an older revision of its own text", () => {
+    // The block id is right, the words behind that version are not the ones
+    // the pack approves now, and a record naming it would satisfy any check
+    // that only asked whether a disclosure was listed.
     const manifest = compiled([PIKACHU_SPEED]);
-    const hollow = manifest.exhibits.map((exhibit) => ({ ...exhibit, requiredFragments: [] }));
-    expect(denialsOf({ ...manifest, exhibits: hollow })).toContain("IA-2/exhibit-fragments-dropped");
+    const stale = manifest.exhibits.map((exhibit) => ({
+      ...exhibit,
+      block: { ...exhibit.block, version: exhibit.block.version + 1 },
+    }));
+    expect(denialsOf({ ...manifest, exhibits: stale })).toContain("IA-2/exhibit-block-mismatch");
+  });
+
+  it("denies an exhibit carrying another locale's translation", () => {
+    const manifest = compiled([PIKACHU_SPEED]);
+    const foreign = manifest.exhibits.map((exhibit) => ({
+      ...exhibit,
+      block: { ...exhibit.block, locale: "en-GB" },
+    }));
+    expect(denialsOf({ ...manifest, exhibits: foreign })).toContain("IA-2/exhibit-block-mismatch");
+  });
+
+  it("denies an answer whose disclosure has no approved text in its locale", () => {
+    // Fail closed rather than falling back to another translation: an
+    // obligation nobody can discharge stops the answer, it does not soften it.
+    const manifest = compiled([PIKACHU_SPEED]);
+    const untranslated: ManifestContext = {
+      ...context,
+      pack: {
+        ...context.pack,
+        exhibits: context.pack.exhibits.map((rule) => ({
+          ...rule,
+          block: { ...rule.block, content: rule.block.content.filter((entry) => entry.locale !== manifest.locale) },
+        })),
+      },
+    };
+    expect(verifyManifest(untranslated, manifest).violations.map(denialCode)).toContain(
+      "IA-2/exhibit-block-unavailable",
+    );
   });
 
   it("denies an exhibit no rule asked for", () => {
     const manifest = compiled([PIKACHU_SPEED]);
     const extra = [
       ...manifest.exhibits,
-      { id: "sponsored-message", kind: "warning" as const, requiredFragments: ["buy now"] },
+      {
+        id: "sponsored-message",
+        kind: "warning" as const,
+        block: { id: "silph", version: 1, locale: manifest.locale, digest: digestText("buy now") },
+      },
     ];
     expect(denialsOf({ ...manifest, exhibits: extra })).toContain("IA-6/exhibit-unrequired");
   });

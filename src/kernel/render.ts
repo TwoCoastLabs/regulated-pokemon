@@ -11,23 +11,37 @@
  * Three pieces, deliberately separate.
  *
  * 1. {@link planRender} turns a verified manifest into the closed list of
- *    governed display units and, for each, the text that must be legible
- *    inside it. It is a pure function of the manifest, so the verifier
- *    re-derives it rather than being handed one — a plan supplied alongside
- *    an artifact would be the renderer marking its own homework.
+ *    governed display units, the exact strings each must show, and the
+ *    approved disclosure text each must carry. It is a pure function of the
+ *    manifest, so the verifier re-derives it rather than being handed one — a
+ *    plan supplied alongside an artifact would be the renderer marking its own
+ *    homework.
  * 2. `walkArtifact` (see ./dom.ts) reads the finished document and reports
  *    what it shows, knowing nothing about the plan.
  * 3. {@link verifyRender} puts the two beside each other and names every
  *    disagreement. {@link attestRender} produces the affidavit by doing
  *    exactly that and refusing to sign anything that would not survive it.
  *
- * What this layer can and cannot prove is worth stating plainly. It proves
- * that every bound value and every mandatory fragment was visible, in order,
- * inside the unit that owns it, adjacent to what triggered it. It does not
- * read the prose around them: copy is the renderer's, and a renderer is free
- * to be charming in the gaps. That is why every value that matters is a bound
- * fragment inside a marked unit rather than a sentence — the boundary is drawn
- * where a deterministic check can actually hold it.
+ * **Nothing here searches the page.** The first version of this layer hunted
+ * certified words in the unit's text, and that needed three rules — every
+ * fragment present, in order, not spelled out of two siblings — which still
+ * could not survive a thousands separator or a translation. Regulated
+ * industries bind instead of searching: Inline XBRL wraps the displayed figure
+ * in a tag naming its concept and a closed transformation; an FDA boxed
+ * warning is *the section carrying that code*, not a section whose text
+ * contains certain words. So a certified value is a marked slot compared by
+ * equality against a formatter's output, a disclosure is a marked block
+ * compared by digest, and everything else on the artifact must be a string
+ * from the pack's copy catalogue. Any other visible text is denied outright.
+ *
+ * That last rule — text closure — is what stops the renderer being able to
+ * write on the artifact at all. Copy is still the renderer's: it picks which
+ * catalogued lead-in goes where, and in what order the cards sit. It cannot
+ * compose a new sentence, which is the difference between a component library
+ * and a second, unverified author. The chat pane is deliberately not governed
+ * this way; the Advisor may charm in conversation. The certified artifact is a
+ * certificate, and that is the sales-call/prospectus split regulated
+ * industries already live with.
  */
 
 import type { ArticleId } from "./accord.js";
@@ -35,14 +49,26 @@ import type {
   AnswerManifest,
   Claim,
   ClosedRoster,
+  DisclosureBlockRef,
+  Exhibit,
+  FactValue,
   RenderAffidavit,
   Resolution,
   Verdict,
   Violation,
 } from "./contracts.js";
-import { type ArtifactWalk, type DomElement, walkArtifact, type WalkedUnit } from "./dom.js";
+import { digestText } from "./digest.js";
+import {
+  type ArtifactWalk,
+  type DomElement,
+  normalise,
+  walkArtifact,
+  type WalkedText,
+  type WalkedUnit,
+} from "./dom.js";
+import { formatForValue, type FormatId, formatValue } from "./format.js";
 import { type ManifestContext, verifyManifest } from "./manifest.js";
-import { formatFactValue } from "./registry.js";
+import { approvesFormat, copyFor } from "./pack.js";
 import { verdictOf, violation } from "./violation.js";
 
 /** What a governed unit is for. Drives nothing but the console and the copy. */
@@ -56,17 +82,34 @@ export type RenderUnitKind =
   | "provenance";
 
 /**
+ * One certified value, and the one string that displays it.
+ *
+ * `expected` is computed here, from the manifest, through the closed formatter
+ * registry. The renderer is told the name and fills the slot; the verifier
+ * recomputes the same string and compares. Neither of them searches, so there
+ * is no wording, spacing or grouping that makes 190 evidence of 90.
+ */
+export interface RenderSlot {
+  /** Unique within its unit. The mark the renderer places. */
+  name: string;
+  value: FactValue;
+  formatId: FormatId;
+  expected: string;
+}
+
+/**
  * One thing the trainer has to be able to read.
  *
- * `requiredFragments` are bound: they come from the certified answer or from
- * the Accord pack, and a renderer may surround them but not edit them. The
- * order is part of the requirement — a disclosure whose words are all present
- * in a shuffled order is a different sentence.
+ * A claim unit carries slots; a disclosure unit carries a block, and may carry
+ * slots too — a provenance notice has to name the snapshot it is attributing,
+ * and a snapshot id is data rather than words.
  */
 export interface RenderUnit {
   id: string;
   kind: RenderUnitKind;
-  requiredFragments: readonly string[];
+  slots: readonly RenderSlot[];
+  /** Mandatory text this unit must show verbatim, for disclosure units. */
+  block?: DisclosureBlockRef;
   /** The article a denial about this unit cites. */
   article: ArticleId;
   /**
@@ -79,6 +122,8 @@ export interface RenderUnit {
 
 export interface RenderPlan {
   transactionId: string;
+  /** The locale every slot and block in this plan was resolved for. */
+  locale: string;
   units: readonly RenderUnit[];
 }
 
@@ -93,112 +138,228 @@ export function planRender(context: ManifestContext, manifest: AnswerManifest): 
   const verdict = verifyManifest(context, manifest);
   if (!verdict.allowed) return { ok: false, violations: verdict.violations };
 
+  const violations: Violation[] = [];
   const claimUnits: Array<{ unit: RenderUnit; mentions: readonly string[] }> = [];
+
   for (const claim of manifest.claims) {
-    const built = unitForClaim(claim, manifest.rosters);
+    const built = unitForClaim(context, manifest, claim);
+    if (!built.ok) {
+      violations.push(...built.violations);
+      continue;
+    }
     // Two identical claims are one thing to show. They cannot disagree — the
     // verifier has already recomputed both against the snapshot — so the
     // second is a duplicate sentence, not a second obligation.
-    if (claimUnits.some((entry) => entry.unit.id === built.unit.id)) continue;
-    claimUnits.push(built);
+    if (claimUnits.some((entry) => entry.unit.id === built.value.unit.id)) continue;
+    claimUnits.push(built.value);
   }
 
   const units: RenderUnit[] = claimUnits.map((entry) => entry.unit);
-  const violations: Violation[] = [];
 
   for (const exhibit of manifest.exhibits) {
-    const article = exhibit.triggeredBy ?? "IA-6";
-    if (exhibit.entityId === undefined) {
-      units.push({ id: exhibit.id, kind: exhibit.kind, requiredFragments: exhibit.requiredFragments, article });
+    const built = unitForExhibit(context, manifest, exhibit, claimUnits);
+    if (!built.ok) {
+      violations.push(...built.violations);
       continue;
     }
-    const anchor = claimUnits.find((entry) => entry.mentions.includes(exhibit.entityId as string));
-    if (anchor === undefined) {
-      // Fail closed rather than quietly dropping the adjacency requirement:
-      // a warning with nothing on screen to be beside is a warning about
-      // nothing, and the answer that owes it is the thing to fix.
-      violations.push(
-        violation(article, "disclosure-without-anchor", `exhibit "${exhibit.id}" discloses "${exhibit.entityId}", which this answer shows nowhere`, {
-          expected: `a claim about ${exhibit.entityId}`,
-          actual: claimUnits.map((entry) => entry.unit.id).join(", ") || "no claims",
-        }),
-      );
-      continue;
-    }
-    units.push({
-      id: exhibit.id,
-      kind: exhibit.kind,
-      requiredFragments: exhibit.requiredFragments,
-      article,
-      discloses: anchor.unit.id,
-    });
+    units.push(built.value);
   }
 
   if (violations.length > 0) return { ok: false, violations };
-  return { ok: true, value: { transactionId: manifest.transactionId, units } };
+  return { ok: true, value: { transactionId: manifest.transactionId, locale: manifest.locale, units } };
+}
+
+/**
+ * One certified value as a slot, or a refusal.
+ *
+ * Two gates, and they are different questions. The pack decides whether this
+ * *Accord* permits a presentation at all; the formatter registry decides
+ * whether this kernel can produce it for this value in this locale. A pack that
+ * approved `list-oxford` would still not make a number presentable as a list.
+ */
+function slot(
+  context: ManifestContext,
+  locale: string,
+  name: string,
+  value: FactValue,
+  formatId: FormatId = formatForValue(value),
+): Resolution<RenderSlot> {
+  if (!approvesFormat(context.pack, formatId)) {
+    return {
+      ok: false,
+      violations: [
+        violation("IA-6", "slot-format-unapproved", `pack ${context.pack.id} does not approve the "${formatId}" presentation`, {
+          expected: context.pack.presentation.formats.join(", "),
+          actual: formatId,
+        }),
+      ],
+    };
+  }
+  const formatted = formatValue(formatId, locale, value);
+  if (!formatted.ok) return formatted;
+  return { ok: true, value: { name, value, formatId, expected: formatted.value } };
+}
+
+const entity = (id: string): FactValue => ({ kind: "text", value: id });
+
+/** Collect slot resolutions, keeping every refusal rather than the first. */
+function slots(...resolved: ReadonlyArray<Resolution<RenderSlot>>): Resolution<readonly RenderSlot[]> {
+  const violations = resolved.flatMap((entry) => (entry.ok ? [] : entry.violations));
+  if (violations.length > 0) return { ok: false, violations };
+  return { ok: true, value: resolved.map((entry) => (entry as { value: RenderSlot }).value) };
 }
 
 /**
  * One claim as a display unit, plus the entities it puts on screen.
  *
- * The bound fragments are what a trainer must be able to read: the entity by
- * name and the value asserted about it. `membership` carries a short bound
- * phrase for its polarity, because "Zapdos" alone on the screen is equally
- * consistent with the answer and with its negation.
+ * Every value that carries meaning is a slot, including the ones that look like
+ * prose. "Zapdos" beside the name of a set is equally consistent with the
+ * answer and with its negation, so the words that decide which are bound
+ * through the `member-of` formatter rather than left to the renderer.
  */
-function unitForClaim(claim: Claim, rosters: readonly ClosedRoster[]): { unit: RenderUnit; mentions: readonly string[] } {
-  switch (claim.kind) {
-    case "fact":
-      return {
-        unit: {
-          id: `fact:${claim.entityId}:${claim.factId}`,
-          kind: "fact",
-          requiredFragments: [claim.entityId, formatFactValue(claim.asserted)],
-          article: "IA-6",
-        },
-        mentions: [claim.entityId],
-      };
-    case "count":
-      return {
-        unit: {
-          id: `count:${claim.rosterId}`,
-          kind: "count",
-          requiredFragments: [String(claim.reported)],
-          article: "IA-6",
-        },
-        mentions: definedBy(claim.rosterId, rosters),
-      };
-    case "membership":
-      return {
-        unit: {
-          id: `membership:${claim.rosterId}:${claim.entityId}`,
-          kind: "membership",
-          requiredFragments: [claim.entityId, claim.asserted ? "is a member" : "is not a member"],
-          article: "IA-6",
-        },
-        mentions: [claim.entityId, ...definedBy(claim.rosterId, rosters)],
-      };
-    case "ranking":
-      return {
-        unit: {
-          id: `selection:${claim.rosterId}:${claim.basis}:${claim.direction}`,
-          kind: "selection",
-          requiredFragments: [claim.selectedEntityId],
-          article: "IA-6",
-        },
-        mentions: [claim.selectedEntityId, ...definedBy(claim.rosterId, rosters)],
-      };
-    case "recommendation":
-      return {
-        unit: {
-          id: `recommendation:${claim.entityId}`,
-          kind: "recommendation",
-          requiredFragments: [claim.entityId],
-          article: "IA-6",
-        },
-        mentions: [claim.entityId],
-      };
+function unitForClaim(
+  context: ManifestContext,
+  manifest: AnswerManifest,
+  claim: Claim,
+): Resolution<{ unit: RenderUnit; mentions: readonly string[] }> {
+  const locale = manifest.locale;
+  const built = ((): Resolution<{ id: string; kind: RenderUnitKind; slots: readonly RenderSlot[]; mentions: readonly string[] }> => {
+    switch (claim.kind) {
+      case "fact": {
+        const resolved = slots(
+          slot(context, locale, "entity", entity(claim.entityId), "entity-name"),
+          slot(context, locale, "fact", entity(claim.factId), "plain-text"),
+          slot(context, locale, "value", claim.asserted),
+        );
+        if (!resolved.ok) return resolved;
+        return {
+          ok: true,
+          value: {
+            id: `fact:${claim.entityId}:${claim.factId}`,
+            kind: "fact",
+            slots: resolved.value,
+            mentions: [claim.entityId],
+          },
+        };
+      }
+      case "count": {
+        const resolved = slots(
+          slot(context, locale, "set", entity(claim.rosterId), "plain-text"),
+          slot(context, locale, "count", { kind: "number", value: claim.reported }),
+        );
+        if (!resolved.ok) return resolved;
+        return {
+          ok: true,
+          value: {
+            id: `count:${claim.rosterId}`,
+            kind: "count",
+            slots: resolved.value,
+            mentions: definedBy(claim.rosterId, manifest.rosters),
+          },
+        };
+      }
+      case "membership": {
+        const resolved = slots(
+          slot(context, locale, "entity", entity(claim.entityId), "entity-name"),
+          slot(context, locale, "membership", { kind: "boolean", value: claim.asserted }, "member-of"),
+          slot(context, locale, "set", entity(claim.rosterId), "plain-text"),
+        );
+        if (!resolved.ok) return resolved;
+        return {
+          ok: true,
+          value: {
+            id: `membership:${claim.rosterId}:${claim.entityId}`,
+            kind: "membership",
+            slots: resolved.value,
+            mentions: [claim.entityId, ...definedBy(claim.rosterId, manifest.rosters)],
+          },
+        };
+      }
+      case "ranking": {
+        const resolved = slots(
+          slot(context, locale, "entity", entity(claim.selectedEntityId), "entity-name"),
+          slot(context, locale, "set", entity(claim.rosterId), "plain-text"),
+          slot(context, locale, "basis", entity(claim.basis), "plain-text"),
+        );
+        if (!resolved.ok) return resolved;
+        return {
+          ok: true,
+          value: {
+            id: `selection:${claim.rosterId}:${claim.basis}:${claim.direction}`,
+            kind: "selection",
+            slots: resolved.value,
+            mentions: [claim.selectedEntityId, ...definedBy(claim.rosterId, manifest.rosters)],
+          },
+        };
+      }
+      case "recommendation": {
+        const resolved = slots(slot(context, locale, "entity", entity(claim.entityId), "entity-name"));
+        if (!resolved.ok) return resolved;
+        return {
+          ok: true,
+          value: {
+            id: `recommendation:${claim.entityId}`,
+            kind: "recommendation",
+            slots: resolved.value,
+            mentions: [claim.entityId],
+          },
+        };
+      }
+    }
+  })();
+
+  if (!built.ok) return built;
+  const { id, kind, slots: unitSlots, mentions } = built.value;
+  return { ok: true, value: { unit: { id, kind, slots: unitSlots, article: "IA-6" }, mentions } };
+}
+
+/**
+ * One disclosure as a display unit: its approved text, its values, and the
+ * unit it has to sit beside.
+ */
+function unitForExhibit(
+  context: ManifestContext,
+  manifest: AnswerManifest,
+  exhibit: Exhibit,
+  claimUnits: ReadonlyArray<{ unit: RenderUnit; mentions: readonly string[] }>,
+): Resolution<RenderUnit> {
+  const article = exhibit.triggeredBy ?? "IA-6";
+  const rule = context.pack.exhibits.find((entry) => entry.id === exhibit.id);
+  const resolved = slots(
+    ...(rule?.slots ?? []).map((declared) =>
+      // One source today, and it is closed on purpose: the alternative is a
+      // little expression language, which is a place for display rules to hide.
+      slot(context, manifest.locale, declared.name, entity(manifest.snapshotId), declared.format),
+    ),
+  );
+  if (!resolved.ok) return resolved;
+
+  const unit: RenderUnit = {
+    id: exhibit.id,
+    kind: exhibit.kind,
+    slots: resolved.value,
+    block: exhibit.block,
+    article,
+  };
+
+  if (exhibit.entityId === undefined) return { ok: true, value: unit };
+
+  const anchor = claimUnits.find((entry) => entry.mentions.includes(exhibit.entityId as string));
+  if (anchor === undefined) {
+    // Fail closed rather than quietly dropping the adjacency requirement: a
+    // warning with nothing on screen to be beside is a warning about nothing,
+    // and the answer that owes it is the thing to fix.
+    return {
+      ok: false,
+      violations: [
+        violation(article, "disclosure-without-anchor", `exhibit "${exhibit.id}" discloses "${exhibit.entityId}", which this answer shows nowhere`, {
+          expected: `a claim about ${exhibit.entityId}`,
+          actual: claimUnits.map((entry) => entry.unit.id).join(", ") || "no claims",
+        }),
+      ],
+    };
   }
+  return { ok: true, value: { ...unit, discloses: anchor.unit.id } };
 }
 
 /**
@@ -258,23 +419,42 @@ export function verifyRender(
   const plan = planned.value;
   const walk = walkArtifact(artifact);
 
-  // Identity first and alone. An artifact rendered for another answer may be
-  // internally perfect, and reporting which of its fragments are missing would
-  // describe a document nobody is being asked about.
+  // Identity first and alone. An artifact rendered for another answer, or
+  // localised against another plan, may be internally perfect, and reporting
+  // which of its slots disagree would describe a document nobody is being
+  // asked about.
+  const identity = checkIdentity(plan, walk);
+  if (identity.length > 0) return verdictOf(identity);
+
+  return verdictOf([
+    ...checkUnits(plan, walk),
+    ...checkClosure(context, plan, walk),
+    ...checkAffidavit(walk, affidavit),
+  ]);
+}
+
+function checkIdentity(plan: RenderPlan, walk: ArtifactWalk): Violation[] {
   if (walk.transactionId !== plan.transactionId) {
-    return verdictOf([
+    return [
       violation("IA-6", "artifact-transaction-mismatch", "the rendered artifact is not the answer being verified", {
         expected: plan.transactionId,
         actual: walk.transactionId ?? "no transaction mark",
       }),
-    ]);
+    ];
   }
-
-  return verdictOf([
-    ...checkUnits(plan, walk),
-    ...checkClosure(plan, walk),
-    ...checkAffidavit(walk, affidavit),
-  ]);
+  // The hazard this retires: a page localised perfectly, into a locale this
+  // answer was never certified for. Every slot on it would be formatted by the
+  // wrong registry entry and every disclosure would be the wrong translation,
+  // and both would look immaculate to anyone reading the page alone.
+  if (walk.locale !== plan.locale) {
+    return [
+      violation("IA-6", "artifact-locale-mismatch", "the rendered artifact was localised against a different plan", {
+        expected: plan.locale,
+        actual: walk.locale ?? "no locale mark",
+      }),
+    ];
+  }
+  return [];
 }
 
 function checkUnits(plan: RenderPlan, walk: ArtifactWalk): Violation[] {
@@ -301,49 +481,145 @@ function checkUnits(plan: RenderPlan, walk: ArtifactWalk): Violation[] {
       );
       continue;
     }
-    violations.push(...checkFragments(unit, rendered));
+    violations.push(...checkSlots(unit, walk));
+    violations.push(...checkBlock(unit, walk));
     violations.push(...checkAdjacency(unit, rendered, shown));
   }
 
   return violations;
 }
 
-/**
- * Every required fragment legible inside this unit, in the order declared.
- *
- * Matching is over word tokens rather than raw substrings, and the difference
- * matters twice. A base speed of 90 is not shown by a card reading 190, which
- * a substring check would accept; and a fragment split across inline markup is
- * still shown, which a raw comparison would reject.
- */
-function checkFragments(unit: RenderUnit, rendered: WalkedUnit): Violation[] {
-  const shown = tokenize(rendered.text);
-  let cursor = 0;
+/** Everything the artifact attributed to one origin, inside one unit. */
+function marksIn(walk: ArtifactWalk, kind: WalkedText["kind"], unitId: string | undefined): readonly WalkedText[] {
+  return walk.attributed.filter((entry) => entry.kind === kind && entry.unitId === unitId);
+}
 
-  for (const fragment of unit.requiredFragments) {
-    const wanted = tokenize(fragment);
-    const at = indexOfSequence(shown, wanted, cursor);
-    if (at >= 0) {
-      cursor = at + wanted.length;
+/**
+ * Every planned slot filled with exactly the string the formatter produced.
+ *
+ * One rule, and it replaces three. There is no search, so a value cannot be
+ * proved by a longer one that contains it or assembled out of two siblings;
+ * there is no ordering rule, because a slot is a place rather than a position;
+ * and there is no locale tolerance, because the locale was already fixed by
+ * the plan and any other rendering is simply a different string.
+ */
+function checkSlots(unit: RenderUnit, walk: ArtifactWalk): Violation[] {
+  const violations: Violation[] = [];
+  const rendered = marksIn(walk, "slot", unit.id);
+
+  for (const planned of unit.slots) {
+    const [only, ...extra] = rendered.filter((entry) => entry.name === planned.name);
+    if (only === undefined) {
+      violations.push(
+        violation(unit.article, "slot-not-rendered", `"${unit.id}" shows no "${planned.name}" slot`, {
+          expected: `${planned.name} = "${planned.expected}"`,
+          actual: rendered.map((entry) => entry.name).join(", ") || "no slots",
+        }),
+      );
       continue;
     }
-    const anywhere = indexOfSequence(shown, wanted, 0);
-    if (anywhere >= 0) {
-      return [
-        violation(unit.article, "exhibit-fragments-out-of-order", `"${unit.id}" shows the words the Accord requires in an order that says something else`, {
-          expected: unit.requiredFragments.join(" | "),
-          actual: rendered.text || "nothing",
+    if (extra.length > 0) {
+      // Two elements claiming to be the same slot make the artifact ambiguous
+      // in exactly the way two elements claiming to be the same unit do.
+      violations.push(
+        violation(unit.article, "slot-marked-twice", `"${unit.id}" marks "${planned.name}" on more than one element`, {
+          actual: [only, ...extra].map((entry) => entry.text).join(" | "),
         }),
-      ];
+      );
+      continue;
     }
-    return [
-      violation(unit.article, "exhibit-fragment-not-visible", `"${unit.id}" does not show "${fragment}"`, {
-        expected: fragment,
-        actual: rendered.text || "nothing",
-      }),
-    ];
+    if (!only.visible) {
+      violations.push(
+        violation(unit.article, "slot-not-visible", `the "${planned.name}" of "${unit.id}" is in the document and not on the screen`, {
+          expected: planned.expected,
+          actual: "hidden",
+        }),
+      );
+      continue;
+    }
+    if (normalise(only.text) !== planned.expected) {
+      violations.push(
+        violation(unit.article, "slot-value-mismatch", `the "${planned.name}" of "${unit.id}" is not the certified value`, {
+          expected: `${planned.expected} (${planned.formatId}, ${walk.locale ?? "no locale"})`,
+          actual: normalise(only.text) || "nothing",
+        }),
+      );
+    }
   }
-  return [];
+
+  const planned = new Set(unit.slots.map((entry) => entry.name));
+  for (const entry of rendered) {
+    if (planned.has(entry.name)) continue;
+    violations.push(
+      violation(unit.article, "slot-unplanned", `"${unit.id}" fills a "${entry.name}" slot this answer does not certify`, {
+        expected: [...planned].join(", ") || "no slots",
+        actual: entry.name,
+      }),
+    );
+  }
+
+  return violations;
+}
+
+/**
+ * The mandatory text, present and unaltered.
+ *
+ * Digest equality over the block's visible text, so truncation, reordering and
+ * paraphrase are one failure rather than three. A translation does not soften
+ * this: it is a separately approved block with its own digest, and the plan
+ * already fixed which one this artifact owes.
+ */
+function checkBlock(unit: RenderUnit, walk: ArtifactWalk): Violation[] {
+  const violations: Violation[] = [];
+  const rendered = marksIn(walk, "block", unit.id);
+  const owed = unit.block;
+
+  if (owed !== undefined) {
+    const [carried, ...extra] = rendered.filter((entry) => entry.name === owed.id);
+    if (carried === undefined) {
+      violations.push(
+        violation(unit.article, "disclosure-block-missing", `"${unit.id}" carries no "${owed.id}" text`, {
+          expected: owed.id,
+          actual: rendered.map((entry) => entry.name).join(", ") || "no blocks",
+        }),
+      );
+    } else if (extra.length > 0) {
+      violations.push(
+        violation(unit.article, "disclosure-block-marked-twice", `"${unit.id}" marks "${owed.id}" on more than one element`, {
+          actual: owed.id,
+        }),
+      );
+    } else if (!carried.visible) {
+      violations.push(
+        violation(unit.article, "disclosure-block-not-visible", `the "${owed.id}" text is in the document and not on the screen`, {
+          expected: "visible in the final artifact",
+          actual: "hidden",
+        }),
+      );
+    } else {
+      const shown = digestText(carried.text);
+      if (shown !== owed.digest) {
+        violations.push(
+          violation(unit.article, "disclosure-block-altered", `the "${owed.id}" text on the screen is not the approved text`, {
+            expected: `${owed.id} v${owed.version} ${owed.locale} ${owed.digest}`,
+            actual: `${shown} — "${normalise(carried.text) || "nothing"}"`,
+          }),
+        );
+      }
+    }
+  }
+
+  for (const entry of rendered) {
+    if (owed !== undefined && entry.name === owed.id) continue;
+    violations.push(
+      violation(unit.article, "disclosure-block-unplanned", `"${unit.id}" shows a "${entry.name}" disclosure this answer does not owe`, {
+        expected: owed?.id ?? "no disclosure block",
+        actual: entry.name,
+      }),
+    );
+  }
+
+  return violations;
 }
 
 /**
@@ -385,13 +661,16 @@ function siblings(left: readonly number[], right: readonly number[]): boolean {
 }
 
 /**
- * The artifact carries the plan and nothing beyond it.
+ * The artifact carries the plan and nothing beyond it — no extra units, no
+ * stray certified values, and no prose at all.
  *
- * Closed, like the rosters and the manifest's exhibits. A governed unit nobody
- * can trace to the certified answer is a claim that entered at the last
- * possible moment, when every check upstream has already run.
+ * Closed, like the rosters and the manifest's exhibits, and closed over *text*
+ * as well as over units. A governed unit nobody can trace to the certified
+ * answer is a claim that entered at the last possible moment, when every check
+ * upstream has already run; a sentence nobody can trace to the pack is the same
+ * thing wearing no mark whatsoever.
  */
-function checkClosure(plan: RenderPlan, walk: ArtifactWalk): Violation[] {
+function checkClosure(context: ManifestContext, plan: RenderPlan, walk: ArtifactWalk): Violation[] {
   const violations: Violation[] = [];
   const planned = new Set(plan.units.map((unit) => unit.id));
 
@@ -412,6 +691,69 @@ function checkClosure(plan: RenderPlan, walk: ArtifactWalk): Violation[] {
         actual: unit.id,
       }),
     );
+  }
+
+  // A certified value or a disclosure outside every governed unit belongs to
+  // nothing, so no unit's rules apply to it and no unit's denial names it.
+  for (const stray of marksIn(walk, "slot", undefined)) {
+    violations.push(
+      violation("IA-6", "slot-unplanned", `the artifact fills a "${stray.name}" slot outside every governed unit`, {
+        actual: `${stray.name} = "${normalise(stray.text)}"`,
+      }),
+    );
+  }
+  for (const stray of marksIn(walk, "block", undefined)) {
+    violations.push(
+      violation("IA-6", "disclosure-block-unplanned", `the artifact shows a "${stray.name}" disclosure outside every governed unit`, {
+        actual: stray.name,
+      }),
+    );
+  }
+
+  violations.push(...checkCatalogue(context, plan, walk));
+
+  for (const stray of walk.unattributed) {
+    violations.push(
+      violation("IA-6", "unattributed-content", "the artifact shows text that comes from nothing the Accord approved", {
+        expected: "a certified slot, an approved disclosure, or a catalogued string",
+        actual: `"${stray.text}"${stray.unitId === undefined ? "" : ` in ${stray.unitId}`}`,
+      }),
+    );
+  }
+
+  return violations;
+}
+
+/**
+ * Renderer copy, as approved.
+ *
+ * Copy asserts nothing, which is exactly why it needs a check: an unpinned
+ * lead-in is a place to say "roughly" or "we think" beside a certified value,
+ * and nothing else on this page would notice.
+ */
+function checkCatalogue(context: ManifestContext, plan: RenderPlan, walk: ArtifactWalk): Violation[] {
+  const violations: Violation[] = [];
+
+  for (const entry of walk.attributed) {
+    if (entry.kind !== "copy" || !entry.visible) continue;
+    const approved = copyFor(context.pack, entry.name, plan.locale);
+    if (approved === undefined) {
+      violations.push(
+        violation("IA-6", "catalogue-entry-unknown", `the artifact shows copy "${entry.name}", which pack ${context.pack.id} does not carry in ${plan.locale}`, {
+          expected: context.pack.presentation.catalogue.map((item) => item.id).join(", "),
+          actual: entry.name,
+        }),
+      );
+      continue;
+    }
+    if (normalise(entry.text) !== normalise(approved)) {
+      violations.push(
+        violation("IA-6", "catalogue-drift", `the copy shown as "${entry.name}" is not what the catalogue approved`, {
+          expected: approved,
+          actual: normalise(entry.text) || "nothing",
+        }),
+      );
+    }
   }
 
   return violations;
@@ -464,22 +806,4 @@ function checkAffidavit(walk: ArtifactWalk, affidavit: RenderAffidavit): Violati
 function describeVisibility(visible: boolean | undefined): string {
   if (visible === undefined) return "not in the artifact";
   return visible ? "visible" : "hidden";
-}
-
-// --- token matching ---------------------------------------------------------
-
-/** Words, lowercased. Punctuation and case are the renderer's; words are not. */
-function tokenize(value: string): string[] {
-  return value
-    .toLowerCase()
-    .split(/[^a-z0-9]+/)
-    .filter((token) => token.length > 0);
-}
-
-function indexOfSequence(haystack: readonly string[], needle: readonly string[], from: number): number {
-  if (needle.length === 0) return from;
-  for (let at = from; at + needle.length <= haystack.length; at += 1) {
-    if (needle.every((token, offset) => haystack[at + offset] === token)) return at;
-  }
-  return -1;
 }

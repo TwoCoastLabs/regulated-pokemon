@@ -54,7 +54,10 @@ Private, work in progress.
 - [x] Answer compilation and manifest verification
 - [x] Scope resolution and the propose/confirm ladder
 - [x] A headless compliance trace you can run: `npm run demo`
-- [ ] Render affidavit: the final DOM walked independently for visibility
+- [x] Render affidavit: the final DOM walked independently for visibility,
+      with certified values bound to typed slots and mandatory text bound to
+      digested disclosure blocks — nothing on a certified artifact is proved
+      by searching the page for words
 - [ ] Read-to-act continuity, and replay as re-execution
 - [ ] Two-model evaluation with published numbers
 - [ ] Demo UI: chat + live compliance console + sabotage buttons
@@ -120,7 +123,7 @@ crucible by test, so it cannot drift from what actually runs.
 | IA-3 | No Fabrication (the MissingNo Clause) | 4 |
 | IA-4 | Complete Answers Carry Certificates | 8 |
 | IA-5 | Restricted Species | 2 |
-| IA-6 | Disclosures Must Be Seen | 18 |
+| IA-6 | Disclosures Must Be Seen | 21 |
 | IA-7 | What Was Shown Is What Executes | — phase 5 |
 | IA-8 | Only the Trainer Speaks for the Trainer | 5 |
 | IA-9 | Irreversible Acts Need Informed Consent | — phase 5 |

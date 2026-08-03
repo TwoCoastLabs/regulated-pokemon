@@ -23,13 +23,14 @@ import type {
   AnswerManifest,
   Claim,
   ClosedRoster,
+  DisclosureBlockRef,
   Exhibit,
   Resolution,
   ScopeGrant,
   Verdict,
   Violation,
 } from "./contracts.js";
-import { type AccordPack, restrictionsFor } from "./pack.js";
+import { type AccordPack, approvesLocale, blockFor, type ExhibitRule, restrictionsFor } from "./pack.js";
 import { type CertifiedRegistry, formatFactValue, sameFactValue } from "./registry.js";
 import { verifyRoster } from "./roster.js";
 import { verdictOf, violation } from "./violation.js";
@@ -43,6 +44,14 @@ export interface ManifestContext {
   registry: CertifiedRegistry;
   pack: AccordPack;
   grant: ScopeGrant;
+  /**
+   * The locale the answer will be presented in, assigned by the transport.
+   *
+   * Deliberately part of the context rather than of the draft: the thing that
+   * proposes an answer does not get to choose which approved translation of a
+   * mandatory disclosure it will have to satisfy.
+   */
+  locale: string;
   /**
    * RFC 3339. The moment the answer commits, supplied rather than read from a
    * clock: a verdict must be a pure function of recorded inputs (IA-10), and a
@@ -68,6 +77,7 @@ export function compileManifest(context: ManifestContext, draft: ManifestDraft):
     scopeGrantId: context.grant.id,
     snapshotId: context.registry.snapshot.id,
     packId: context.pack.id,
+    locale: context.locale,
     claims: draft.claims,
     rosters: draft.rosters,
     exhibits: requiredExhibits(context, draft.claims, draft.rosters),
@@ -121,6 +131,25 @@ function checkBinding(context: ManifestContext, manifest: AnswerManifest): Viola
       violation("IA-5", "pack-mismatch", `manifest ${manifest.transactionId} was governed by another Accord pack`, {
         expected: context.pack.id,
         actual: manifest.packId,
+      }),
+    );
+  }
+
+  // Which locale an answer was certified for decides which formatter turns its
+  // values into strings and which translation of a disclosure satisfies it, so
+  // an answer judged under another locale is an answer to a different question.
+  if (manifest.locale !== context.locale) {
+    violations.push(
+      violation("IA-6", "locale-mismatch", `manifest ${manifest.transactionId} was certified for another locale`, {
+        expected: context.locale,
+        actual: manifest.locale || "no locale",
+      }),
+    );
+  } else if (!approvesLocale(context.pack, manifest.locale)) {
+    violations.push(
+      violation("IA-6", "locale-unapproved", `pack ${context.pack.id} does not approve presentation in ${manifest.locale}`, {
+        expected: context.pack.presentation.locales.join(", "),
+        actual: manifest.locale || "no locale",
       }),
     );
   }
@@ -410,17 +439,39 @@ export function requiredExhibits(
   claims: readonly Claim[],
   rosters: readonly ClosedRoster[],
 ): readonly Exhibit[] {
-  const mentioned = entitiesMentioned(claims, rosters);
+  return triggeredRules(context, claims, rosters).flatMap((rule) => {
+    const content = blockFor(rule, context.locale);
+    // A rule with no approved text in this locale is denied by name in
+    // `checkExhibits` rather than quietly satisfied with the words from
+    // another one: a translation is separately approved, never substituted.
+    if (content === undefined) return [];
+    return [
+      {
+        id: rule.id,
+        kind: rule.kind,
+        block: {
+          id: rule.block.id,
+          version: rule.block.version,
+          locale: context.locale,
+          digest: content.digest,
+        },
+        triggeredBy: rule.article,
+        ...(rule.when.kind === "entity-claimed" ? { entityId: rule.when.entityId } : {}),
+      },
+    ];
+  });
+}
 
-  return context.pack.exhibits
-    .filter((rule) => rule.when.kind === "always" || mentioned.has(rule.when.entityId))
-    .map((rule) => ({
-      id: rule.id,
-      kind: rule.kind,
-      requiredFragments: rule.requiredFragments,
-      triggeredBy: rule.article,
-      ...(rule.when.kind === "entity-claimed" ? { entityId: rule.when.entityId } : {}),
-    }));
+/** The pack rules this answer fires, before any question of what they say. */
+function triggeredRules(
+  context: ManifestContext,
+  claims: readonly Claim[],
+  rosters: readonly ClosedRoster[],
+): readonly ExhibitRule[] {
+  const mentioned = entitiesMentioned(claims, rosters);
+  return context.pack.exhibits.filter(
+    (rule) => rule.when.kind === "always" || mentioned.has(rule.when.entityId),
+  );
 }
 
 /** Every entity the answer touches, including via the criteria of its sets. */
@@ -460,17 +511,31 @@ function checkExhibits(context: ManifestContext, manifest: AnswerManifest): Viol
       );
       continue;
     }
-    // A disclosure stripped of its text is a disclosure in name only, and
-    // would satisfy a presence check while showing the trainer nothing.
-    const dropped = owed.requiredFragments.filter((fragment) => !found.requiredFragments.includes(fragment));
-    if (dropped.length > 0) {
+    // A disclosure pointed at other words is a disclosure in name only, and
+    // would satisfy a presence check while showing the trainer something else.
+    // One comparison covers a stripped block, an older version of it, and a
+    // translation smuggled in from another locale.
+    if (!sameBlock(owed.block, found.block)) {
       violations.push(
-        violation(owed.triggeredBy ?? "IA-6", "exhibit-fragments-dropped", `exhibit "${owed.id}" no longer requires the text the pack demands`, {
-          expected: owed.requiredFragments.join(" | "),
-          actual: found.requiredFragments.join(" | ") || "nothing",
+        violation(owed.triggeredBy ?? "IA-6", "exhibit-block-mismatch", `exhibit "${owed.id}" no longer names the text the pack demands`, {
+          expected: describeBlock(owed.block),
+          actual: found.block === undefined ? "no block" : describeBlock(found.block),
         }),
       );
     }
+  }
+
+  // A rule that fires and has nothing approved to say in this locale is a
+  // disclosure obligation nobody can discharge, so the answer stops here
+  // rather than being released without it.
+  for (const rule of triggeredRules(context, manifest.claims, manifest.rosters)) {
+    if (blockFor(rule, manifest.locale) !== undefined) continue;
+    violations.push(
+      violation(rule.article, "exhibit-block-unavailable", `exhibit "${rule.id}" has no approved text in ${manifest.locale}`, {
+        expected: rule.block.content.map((entry) => entry.locale).join(", ") || "nothing",
+        actual: manifest.locale || "no locale",
+      }),
+    );
   }
 
   // Closed, like the rosters: an exhibit no rule triggered is an obligation
@@ -486,4 +551,18 @@ function checkExhibits(context: ManifestContext, manifest: AnswerManifest): Viol
   }
 
   return violations;
+}
+
+function sameBlock(owed: DisclosureBlockRef, found: DisclosureBlockRef | undefined): boolean {
+  if (found === undefined) return false;
+  return (
+    found.id === owed.id &&
+    found.version === owed.version &&
+    found.locale === owed.locale &&
+    found.digest === owed.digest
+  );
+}
+
+function describeBlock(block: DisclosureBlockRef): string {
+  return `${block.id} v${block.version} ${block.locale} ${block.digest}`;
 }

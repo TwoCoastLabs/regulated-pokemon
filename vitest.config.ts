@@ -30,11 +30,12 @@ export default defineConfig({
       include: ["src/**/*.ts"],
       exclude: ["src/**/*.test.ts", "src/testing/**"],
       reporter: ["text-summary", "json-summary"],
-      // Raised with the transaction seam and held through phase 4, which took
-      // the real numbers to 96.4 / 90.1 / 98.1. Branches stay put: the render
-      // layer's named-fallback strings are branches nothing exercises, and
-      // inventing a test for each would be chasing the backstop rather than
-      // the gate.
+      // Raised with the transaction seam and held through phase 4.1, which
+      // sits at 96.3 / 89.4 / 98.2. Deliberately not ratcheted here: 4.1
+      // replaced the fragment matcher with slot, block and catalogue binding,
+      // and each of those denials carries a named-fallback string ("no slots",
+      // "no locale mark") that nothing exercises. Inventing a test per
+      // fallback would be chasing the backstop rather than the gate.
       thresholds: {
         statements: 94,
         branches: 88,

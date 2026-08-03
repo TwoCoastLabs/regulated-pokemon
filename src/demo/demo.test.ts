@@ -26,6 +26,7 @@ import {
   demoPlan,
   demoWorld,
   ESTABLISHED_AT,
+  LOCALE,
   REQUIRED,
 } from "./script.js";
 import { describeDenial, describeTransaction } from "./trace.js";
@@ -63,7 +64,10 @@ describe("the seam runs the landed phases as one exchange", () => {
       transaction.transcript,
       grant,
     );
-    const answer = verifyManifest({ registry, pack, grant, at: COMMITTED_AT }, transaction.manifest!);
+    const answer = verifyManifest(
+      { registry, pack, grant, locale: LOCALE, at: COMMITTED_AT },
+      transaction.manifest!,
+    );
 
     expect(scope.violations).toEqual([]);
     expect(answer.violations).toEqual([]);
@@ -124,6 +128,7 @@ describe("the seam stops at the stage that could not proceed", () => {
       transcript: conversation("clean")!.transcript,
       establishedAt: ESTABLISHED_AT,
       committedAt: COMMITTED_AT,
+      locale: LOCALE,
       required: REQUIRED,
       plan: demoPlan,
       ...overrides,

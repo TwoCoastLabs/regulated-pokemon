@@ -19,8 +19,9 @@ Answer compilation (Art. II, III, IV)   →  AnswerManifest
    │   counts/lists from ClosedRoster objects; triggered Exhibits attached
    ▼
 Render + verification (Art. VI)         →  RenderAffidavit
-   │   the final DOM is walked independently; visibility and required
-   │   fragments verified; artifact digest derived from what is shown
+   │   the final DOM is walked independently; certified values bound to
+   │   typed slots, mandatory text to digested blocks, all other text to
+   │   a copy catalogue; artifact digest derived from what is shown
    ▼
 Confirmation (Art. VII, IX)             →  ConfirmationEvent
    │   binds the exact artifact digest the trainer saw
@@ -53,11 +54,14 @@ CertifiedSnapshot   // pinned registry version (PokeAPI commit)
 ClosedRoster        // closed-world certified set: members + cardinality
 Claim               // fact | count | membership | ranking | recommendation,
                     //   each carrying what it asserted, bound to fact IDs
-AccordPack          // versioned policy data: badge gates, triggered exhibits
-Exhibit             // a governed display unit with required visible fragments
+AccordPack          // versioned policy data: badge gates, triggered exhibits,
+                    //   approved locales, formats, and renderer copy
+Exhibit             // a governed display unit and the disclosure block it owes
+DisclosureBlockRef  // mandatory text named by id, version, locale and digest
 AnswerManifest      // claims + rosters + exhibits + snapshot + pack + grant
-RenderPlan          // the closed list of units the artifact must show, and the
-                    //   bound fragments that must be legible inside each
+RenderPlan          // the closed list of units the artifact must show, the
+                    //   exact string each slot must hold, and the block each
+                    //   disclosure must carry — all resolved for one locale
 RenderAffidavit     // derived from the final DOM: visibility + digest
 ConfirmationEvent   // trainer's confirmation of the exact artifact digest
 ActionGrant         // one action bound to txn + confirmation + entity + scope
@@ -79,7 +83,9 @@ must be denied with that article's named violation:
 - Art. III: inject MissingNo into the roster → denied by name.
 - Art. IV: change the visible count; drop a member → denied.
 - Art. VI: hide the Selfdestruct warning via `display:none`, `aria-hidden`,
-  a collapsed `<details>`, truncation → each denied.
+  a collapsed `<details>`; reword or truncate its approved text; print a
+  different number in a certified slot; smuggle in a sentence of the
+  renderer's own; localise a flawless page against another plan → each denied.
 - Art. VII: act on an entity never displayed; confirm a doctored digest;
   confirm before render; execute after scope expiry → each denied.
 - Clean-path control: the unmutated pipeline must pass with zero violations
