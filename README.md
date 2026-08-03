@@ -48,10 +48,54 @@ Private, work in progress.
 - [x] Repo scaffold, the Indigo Accord (draft), architecture note
 - [x] Mini-kernel: typed contracts + commit gate
 - [x] Certified snapshot vendoring from PokeAPI (pinned, attributed)
-- [ ] Mutation crucible: every Accord article gets failure injections that
-      must be denied with the article's named violation
+- [x] Mutation crucible: failure injections that must be denied with the
+      article's named violation, gating CI. Which articles it denies today,
+      and which are still owed, is the table below
+- [x] Answer compilation and manifest verification
+- [x] Scope resolution and the propose/confirm ladder
+- [x] A headless compliance trace you can run: `npm run demo`
+- [ ] Render affidavit: the final DOM walked independently for visibility
+- [ ] Read-to-act continuity, and replay as re-execution
 - [ ] Two-model evaluation with published numbers
 - [ ] Demo UI: chat + live compliance console + sabotage buttons
+
+## Seeing it
+
+The browser demo is later work. What runs today is the same exchange without
+the theatre — scope resolution and answer certification composed into one
+transaction, printed as a compliance trace:
+
+```
+npm run demo                                  # every scripted conversation
+npm run demo -- --list                        # and every sabotage
+npm run demo -- --sabotage recommend-missingno
+```
+
+Four conversations: one that establishes scope and gets a certified answer,
+one that has not said enough and is asked exactly one question, one where the
+trainer contradicts themselves and is asked again, and one where a pasted
+walkthrough, a relayed rival and an injected tool result all try to move the
+trainer's scope — and it reaches the identical answer to the clean one,
+because none of them ever had the authority to move anything.
+
+`--sabotage` runs a mutation out of the crucible against the scope that
+conversation actually established. It is the same value CI runs, not a
+re-enactment, and the trace shows the article, the real-world rule it stands
+in for, and the evidence:
+
+```
+DENIED  IA-5/restricted-species
+  article  IA-5 — Restricted Species
+  analog   Accredited-investor / complex-product gating
+  because  mewtwo is a restricted species under "legendary-acquisition" and
+           this trainer is not accredited for it
+  expected badge level 6
+  actual   badge level 2
+```
+
+The demo checks itself: each conversation declares how it must end and each
+sabotage declares the denial it must be refused under, so it exits non-zero
+rather than printing a plausible trace nobody reads closely. CI runs it.
 
 ## How it is verified
 
