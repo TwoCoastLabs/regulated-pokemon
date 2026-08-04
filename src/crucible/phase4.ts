@@ -14,10 +14,8 @@
  * because nothing about the manifest is wrong.
  *
  * The sabotage is applied to the finished document rather than to the
- * renderer. A real renderer is a component library and a stylesheet nobody in
- * this repository controls, so the attacks are written the way they would
- * actually arrive: as edits to the artifact after everything trustworthy has
- * already run.
+ * renderer, for the reason set out in ./artifact.ts, which is where the edits
+ * themselves live.
  *
  * Phase 4.1 replaced the matcher underneath these attacks — bound values are
  * marked slots compared by equality, mandatory text is a digested block, and
@@ -37,16 +35,15 @@ import {
   BLOCK_ATTRIBUTE,
   COPY_ATTRIBUTE,
   type DomElement,
-  type DomNode,
   element,
   SLOT_ATTRIBUTE,
   text,
   UNIT_ATTRIBUTE,
-  walkArtifact,
 } from "../kernel/dom.js";
 import { attestRender, planRender, verifyRender } from "../kernel/render.js";
 import { AccordError } from "../kernel/violation.js";
 import { renderAnswer } from "../render/reference.js";
+import { append, edit, exile, inside, paragraph, retext, swearTo, withAttributes } from "./artifact.js";
 import type { Control, CrucibleWorld, Mutation } from "./harness.js";
 import { honestAnswer } from "./phase2.js";
 
@@ -104,92 +101,6 @@ function sabotage(world: CrucibleWorld, change: (honest: Rendered) => Sabotaged)
     artifact,
     changed.affidavit ?? swearTo(artifact, honest.affidavit.renderedAt),
   );
-}
-
-/**
- * The affidavit a renderer would produce for the document in front of it.
- *
- * Deliberately not `attestRender`, which refuses to sign a page that will not
- * verify. This is the other side of that door: a witness with no scruples and
- * no policy, reporting exactly what the walk found. The kernel is not entitled
- * to assume the record was produced by something on its side.
- */
-function swearTo(artifact: DomElement, renderedAt: string): RenderAffidavit {
-  const walk = walkArtifact(artifact);
-  return {
-    transactionId: walk.transactionId ?? "",
-    artifactDigest: walk.digest,
-    renderedAt,
-    units: walk.units.map((unit) => ({ id: unit.id, visible: unit.visible })),
-  };
-}
-
-// --- editing a finished document --------------------------------------------
-
-/**
- * Replace the element marked as one unit. Returning `undefined` deletes it.
- * Everything else in the document is left byte-identical, so each mutation
- * below is exactly one edit.
- */
-function editUnit(node: DomNode, unitId: string, edit: (found: DomElement) => DomNode | undefined): DomNode | undefined {
-  if (node.kind === "text") return node;
-  if (node.attributes[UNIT_ATTRIBUTE] === unitId) return edit(node);
-  const children = node.children
-    .map((child) => editUnit(child, unitId, edit))
-    .filter((child): child is DomNode => child !== undefined);
-  return { ...node, children };
-}
-
-function edit(artifact: DomElement, unitId: string, change: (found: DomElement) => DomNode | undefined): DomElement {
-  return editUnit(artifact, unitId, change) as DomElement;
-}
-
-/** Add attributes to the unit's own element — the direct hiding techniques. */
-function withAttributes(artifact: DomElement, unitId: string, extra: Record<string, string>): DomElement {
-  return edit(artifact, unitId, (found) => ({ ...found, attributes: { ...found.attributes, ...extra } }));
-}
-
-/** Put the unit inside something. The unit itself is left untouched. */
-function inside(artifact: DomElement, unitId: string, wrapper: DomElement): DomElement {
-  return edit(artifact, unitId, (found) => ({ ...wrapper, children: [...wrapper.children, found] }));
-}
-
-/**
- * Rewrite the text inside the element carrying one attribution mark.
- *
- * The mark itself is left alone, which is the point: these are attacks by a
- * renderer that fills a slot, a block or a catalogue entry with something other
- * than what it was given, not by one that forgets to mark its output.
- */
-function rewriteMark(node: DomNode, attribute: string, name: string, replacement: string): DomNode {
-  if (node.kind === "text") return node;
-  if (node.attributes[attribute] === name) return { ...node, children: [text(replacement)] };
-  return { ...node, children: node.children.map((child) => rewriteMark(child, attribute, name, replacement)) };
-}
-
-/** Rewrite a mark inside one unit, so that repeated slot names stay distinct. */
-function retext(artifact: DomElement, unitId: string, attribute: string, name: string, to: string): DomElement {
-  return edit(artifact, unitId, (found) => rewriteMark(found, attribute, name, to));
-}
-
-/** Add a child to the element marked as one unit. */
-function append(artifact: DomElement, unitId: string, extra: DomNode): DomElement {
-  return edit(artifact, unitId, (found) => ({ ...found, children: [...found.children, extra] }));
-}
-
-/** Move a unit out of where it was rendered and onto the end of the page. */
-function exile(artifact: DomElement, unitId: string): DomElement {
-  let removed: DomElement | undefined;
-  const without = edit(artifact, unitId, (found) => {
-    removed = found;
-    return undefined;
-  });
-  if (removed === undefined) throw new Error(`nothing marked ${unitId} to exile`);
-  return { ...without, children: [...without.children, element("footer", {}, [removed])] };
-}
-
-function paragraph(...content: string[]): DomElement {
-  return element("p", {}, content.map((piece) => text(piece)));
 }
 
 export const PHASE_4_MUTATIONS: readonly Mutation[] = [

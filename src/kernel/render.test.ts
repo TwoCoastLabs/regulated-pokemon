@@ -36,6 +36,8 @@ const SPEED: Claim = {
   asserted: { kind: "number", value: 90 },
 };
 
+const RELEASE: Claim = { kind: "action", tool: "release", entityId: "pikachu" };
+
 function boomers(): ClosedRoster {
   const built = buildRoster(world.registry, "selfdestruct-learners", {
     all: [{ kind: "learns-move", move: "self-destruct" }],
@@ -156,6 +158,42 @@ describe("the plan derived from a manifest", () => {
     const manifest = answer([{ kind: "count", rosterId: "selfdestruct-learners", reported: boomers().cardinality }], [boomers()]);
     const warning = plan(manifest).units.find((entry) => entry.id === "selfdestruct-warning");
     expect(warning?.discloses).toBe("count:selfdestruct-learners");
+  });
+
+  it("binds both halves of a proposed act, the verb as well as the subject", () => {
+    // "Pikachu" beside a friendly sentence is equally consistent with adding
+    // it to the team and with releasing it forever, so which act it is comes
+    // out of the closed action registry through a slot.
+    const unit = plan(answer([RELEASE])).units.find((entry) => entry.id === "action:release:pikachu");
+    expect(unit?.kind).toBe("action");
+    expect(unit?.slots.map((entry) => [entry.name, entry.expected])).toEqual([
+      ["action", "release"],
+      ["entity", "Pikachu"],
+    ]);
+  });
+
+  it("puts an irreversible act's consent notice beside the act, not the noun", () => {
+    // The fact card mentions Pikachu too, and comes first. Anchoring to it
+    // would let a page that merely talks about a Pokémon satisfy the notice
+    // owed by a proposal to release it.
+    const notice = plan(answer([SPEED, RELEASE])).units.find(
+      (entry) => entry.id === "release-irreversibility:pikachu",
+    );
+    expect(notice?.discloses).toBe("action:release:pikachu");
+    expect(notice?.article).toBe("IA-9");
+  });
+
+  it("states what an irreversible act gives up, out of the certified registry", () => {
+    // Article IX's own sentence, made mechanical: the moves are read from the
+    // snapshot exactly as a fact claim would read them, and formatted through
+    // the same closed registry — so the serial comma is a provable input too.
+    const notice = plan(answer([RELEASE])).units.find((entry) => entry.id === "release-irreversibility:pikachu");
+    const givingUp = notice?.slots.find((entry) => entry.name === "giving-up");
+    const learnset = world.registry.resolve("pikachu", "learnset");
+
+    expect(givingUp?.value).toEqual(learnset.ok ? learnset.value : undefined);
+    expect(givingUp?.expected).toContain(", and toxic");
+    expect(notice?.slots.find((entry) => entry.name === "released")?.expected).toBe("Pikachu");
   });
 
   it("refuses to plan a disclosure with nothing on screen to sit beside", () => {

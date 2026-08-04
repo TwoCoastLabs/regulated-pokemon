@@ -267,3 +267,79 @@ describe("a pack that cannot be trusted is refused by name", () => {
     expect(() => readPack(`${PACK_PATH}.missing`, registry)).toThrow("IA-5/pack-unreadable");
   });
 });
+
+describe("the action registry is closed, and every irreversible act discloses", () => {
+  it("refuses a pack that never decided which acts exist", () => {
+    // An empty list is a coherent policy — an Advisor that may say things and
+    // do nothing. A missing one means every act is one nobody approved.
+    expect(denials(loadWith((draft) => delete (draft as { actions?: unknown }).actions))).toEqual([
+      "IA-7/pack-actions-missing",
+    ]);
+    // Emptying it is coherent only if nothing still refers to an act, which
+    // the shipped pack does: the consent notice would be left disclosing
+    // something the registry no longer contains.
+    expect(denials(loadWith((draft) => ((draft as unknown as { actions: unknown[] }).actions = [])))).toEqual([
+      "IA-7/pack-dangling-action",
+    ]);
+  });
+
+  it("refuses an action registry that declares one act twice or unnamed", () => {
+    expect(
+      denials(
+        loadWith((draft) => {
+          (draft.actions as unknown as unknown[]).push({ id: "release", irreversible: false });
+        }),
+      ),
+    ).toContain("IA-7/pack-action-unusable");
+  });
+
+  it("refuses an act that does not say whether it can be taken back", () => {
+    expect(
+      denials(
+        loadWith((draft) => {
+          delete (draft.actions[0] as { irreversible?: boolean }).irreversible;
+        }),
+      ),
+    ).toContain("IA-9/pack-action-reversibility-unstated");
+  });
+
+  it("refuses a disclosure triggered by an act the registry does not declare", () => {
+    expect(
+      denials(
+        loadWith((draft) => {
+          (draft.exhibits.find((rule) => rule.id === "release-irreversibility") as { when: unknown }).when = {
+            kind: "action-claimed",
+            tool: "trade-away",
+          };
+        }),
+      ),
+    ).toContain("IA-7/pack-dangling-action");
+  });
+
+  it("refuses an irreversible act with nothing attached to disclose it", () => {
+    // The load-time half of Article IX. Consent to something the trainer was
+    // never going to be told about is not consent, and the moment to catch
+    // that is before any answer is compiled against this pack.
+    expect(
+      denials(
+        loadWith((draft) => {
+          (draft as unknown as { exhibits: unknown[] }).exhibits = draft.exhibits.filter(
+            (rule) => rule.when.kind !== "action-claimed",
+          );
+        }),
+      ),
+    ).toEqual(["IA-9/pack-irreversible-undisclosed"]);
+  });
+
+  it("refuses a rule that reads the acted-on species and no act triggers", () => {
+    expect(
+      denials(
+        loadWith((draft) => {
+          (draft.exhibits.find((rule) => rule.id === "release-irreversibility") as { when: unknown }).when = {
+            kind: "always",
+          };
+        }),
+      ),
+    ).toContain("IA-6/pack-slot-source-unavailable");
+  });
+});

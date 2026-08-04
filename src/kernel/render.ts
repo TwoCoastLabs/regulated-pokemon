@@ -68,7 +68,7 @@ import {
 } from "./dom.js";
 import { formatForValue, type FormatId, formatValue } from "./format.js";
 import { type ManifestContext, verifyManifest } from "./manifest.js";
-import { approvesFormat, copyFor } from "./pack.js";
+import { approvesFormat, copyFor, type ExhibitSlotSource } from "./pack.js";
 import { verdictOf, violation } from "./violation.js";
 
 /** What a governed unit is for. Drives nothing but the console and the copy. */
@@ -78,6 +78,7 @@ export type RenderUnitKind =
   | "membership"
   | "selection"
   | "recommendation"
+  | "action"
   | "warning"
   | "provenance";
 
@@ -305,6 +306,27 @@ function unitForClaim(
           },
         };
       }
+      case "action": {
+        // Both halves are bound. "Pikachu" beside a friendly sentence is
+        // equally consistent with adding it to the team and with releasing it
+        // forever, and Article VII binds the trainer to the act as well as to
+        // the subject — so which act it is comes out of the closed action
+        // registry through a slot, not out of the renderer's prose.
+        const resolved = slots(
+          slot(context, locale, "action", entity(claim.tool), "plain-text"),
+          slot(context, locale, "entity", entity(claim.entityId), "entity-name"),
+        );
+        if (!resolved.ok) return resolved;
+        return {
+          ok: true,
+          value: {
+            id: actionUnitId(claim.tool, claim.entityId),
+            kind: "action",
+            slots: resolved.value,
+            mentions: [claim.entityId],
+          },
+        };
+      }
     }
   })();
 
@@ -324,13 +346,13 @@ function unitForExhibit(
   claimUnits: ReadonlyArray<{ unit: RenderUnit; mentions: readonly string[] }>,
 ): Resolution<RenderUnit> {
   const article = exhibit.triggeredBy ?? "IA-6";
-  const rule = context.pack.exhibits.find((entry) => entry.id === exhibit.id);
+  const rule = context.pack.exhibits.find((entry) => entry.id === exhibit.rule);
   const resolved = slots(
-    ...(rule?.slots ?? []).map((declared) =>
-      // One source today, and it is closed on purpose: the alternative is a
-      // little expression language, which is a place for display rules to hide.
-      slot(context, manifest.locale, declared.name, entity(manifest.snapshotId), declared.format),
-    ),
+    ...(rule?.slots ?? []).map((declared) => {
+      const value = exhibitSlotValue(context, manifest, exhibit, declared.source);
+      if (!value.ok) return value;
+      return slot(context, manifest.locale, declared.name, value.value, declared.format);
+    }),
   );
   if (!resolved.ok) return resolved;
 
@@ -344,7 +366,14 @@ function unitForExhibit(
 
   if (exhibit.entityId === undefined) return { ok: true, value: unit };
 
-  const anchor = claimUnits.find((entry) => entry.mentions.includes(exhibit.entityId as string));
+  // A consent notice belongs beside the act it is consent for, not beside
+  // whatever else on the page happens to name the same species. Anything else
+  // and a page recommending Pikachu would satisfy the disclosure owed by a
+  // proposal to release it.
+  const anchor =
+    exhibit.tool === undefined
+      ? claimUnits.find((entry) => entry.mentions.includes(exhibit.entityId as string))
+      : claimUnits.find((entry) => entry.unit.id === actionUnitId(exhibit.tool as string, exhibit.entityId as string));
   if (anchor === undefined) {
     // Fail closed rather than quietly dropping the adjacency requirement: a
     // warning with nothing on screen to be beside is a warning about nothing,
@@ -360,6 +389,49 @@ function unitForExhibit(
     };
   }
   return { ok: true, value: { ...unit, discloses: anchor.unit.id } };
+}
+
+/**
+ * The value behind one of an exhibit's declared slots.
+ *
+ * Three sources, closed and named in the pack, because some disclosures cannot
+ * be written as fixed words: an attribution has to name the snapshot it is
+ * attributing, and Article IX requires a consent notice to state what is being
+ * given up *drawn from the Certified Registry*. The last one is the article's
+ * own sentence made mechanical — the moves the species knows are read out of
+ * the snapshot here, exactly as a fact claim would read them, rather than
+ * summarised by whatever proposed the act.
+ */
+function exhibitSlotValue(
+  context: ManifestContext,
+  manifest: AnswerManifest,
+  exhibit: Exhibit,
+  source: ExhibitSlotSource,
+): Resolution<FactValue> {
+  if (source === "snapshot-id") return { ok: true, value: { kind: "text", value: manifest.snapshotId } };
+
+  const entityId = exhibit.entityId;
+  if (entityId === undefined) {
+    // Unreachable through the pack loader, which refuses a rule reading the
+    // acted-on species unless an action triggers it. Kept because the manifest
+    // is not required to have come from that loader's world.
+    return {
+      ok: false,
+      violations: [
+        violation("IA-6", "slot-source-unavailable", `exhibit "${exhibit.id}" reads the acted-on species and discloses none`, {
+          expected: `an entity for ${source}`,
+          actual: exhibit.id,
+        }),
+      ],
+    };
+  }
+  if (source === "action-entity") return { ok: true, value: { kind: "text", value: entityId } };
+  return context.registry.resolve(entityId, "learnset");
+}
+
+/** The unit an act is shown in. One spelling, used by the plan and by IA-7. */
+export function actionUnitId(tool: string, entityId: string): string {
+  return `action:${tool}:${entityId}`;
 }
 
 /**

@@ -1,5 +1,5 @@
 {
-  "packVersion": 3,
+  "packVersion": 4,
   "id": "indigo-accord-v1",
   "presentation": {
     "locales": ["en-US", "en-GB"],
@@ -43,6 +43,13 @@
         }
       },
       {
+        "id": "lead-in.action",
+        "text": {
+          "en-US": "What I will do, once you confirm:",
+          "en-GB": "What I will do, once you confirm:"
+        }
+      },
+      {
         "id": "provenance.snapshot",
         "text": { "en-US": "Certified snapshot:", "en-GB": "Certified snapshot:" }
       }
@@ -62,7 +69,37 @@
       "minimumBadgeLevel": 8
     }
   ],
+  "actions": [
+    { "id": "add-to-team", "irreversible": false },
+    { "id": "release", "irreversible": true }
+  ],
   "exhibits": [
+    {
+      "id": "release-irreversibility",
+      "article": "IA-9",
+      "kind": "warning",
+      "when": { "kind": "action-claimed", "tool": "release" },
+      "block": {
+        "id": "release-permanence",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Mandatory consent notice: releasing a Pokémon is permanent. The League cannot recover a released Pokémon, and every move it has learned goes with it. Named below is the Pokémon this release gives up, and everything it knows.",
+            "digest": "sha256:2324a1a4925c1936a1048d869f898c22a1a19dde27ade9a9ac06bfb62de7e37f"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Mandatory consent notice: releasing a Pokémon is permanent. The League cannot recover a released Pokémon, and every move it has learnt goes with it. Named below is the Pokémon this release gives up, and everything it knows.",
+            "digest": "sha256:3d5cdb54bb334cb95ad48691b6684e89f39275638797afe941c8bef110e935b3"
+          }
+        ]
+      },
+      "slots": [
+        { "name": "released", "source": "action-entity", "format": "entity-name" },
+        { "name": "giving-up", "source": "action-entity-learnset", "format": "list-oxford" }
+      ]
+    },
     {
       "id": "selfdestruct-warning",
       "article": "IA-6",

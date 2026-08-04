@@ -24,11 +24,14 @@ Render + verification (Art. VI)         →  RenderAffidavit
    │   a copy catalogue; artifact digest derived from what is shown
    ▼
 Confirmation (Art. VII, IX)             →  ConfirmationEvent
-   │   binds the exact artifact digest the trainer saw
+   │   binds the exact artifact digest the trainer saw, on the trainer's
+   │   own channel
    ▼
-Action gate (Art. VII)                  →  ActionGrant → execute
-       one proof identity across the whole chain; any break anywhere
-       denies the action with a named article violation
+Action gate (Art. VII, IX)              →  ActionGrant → execute
+       the act is a claim in the certified answer, so it is on the page the
+       trainer confirmed and an irreversible one owes its consent notice
+       under Art. VI; the chain is re-verified at the moment of execution,
+       and any break anywhere denies the action with a named violation
 ```
 
 Two properties are non-negotiable and testable:
@@ -52,10 +55,13 @@ ScopeBinding        // one dimension, its value, the evidence, and the route
 ScopeGrant          // scope + bindings + evidence digest + validity window
 CertifiedSnapshot   // pinned registry version (PokeAPI commit)
 ClosedRoster        // closed-world certified set: members + cardinality
-Claim               // fact | count | membership | ranking | recommendation,
-                    //   each carrying what it asserted, bound to fact IDs
-AccordPack          // versioned policy data: badge gates, triggered exhibits,
-                    //   approved locales, formats, and renderer copy
+Claim               // fact | count | membership | ranking | recommendation |
+                    //   action, each carrying what it asserted, bound to
+                    //   fact IDs — an act is part of the answer, not a
+                    //   message that follows one
+AccordPack          // versioned policy data: badge gates, the closed action
+                    //   registry and what is irreversible, triggered
+                    //   exhibits, approved locales, formats, renderer copy
 Exhibit             // a governed display unit and the disclosure block it owes
 DisclosureBlockRef  // mandatory text named by id, version, locale and digest
 AnswerManifest      // claims + rosters + exhibits + snapshot + pack + grant
@@ -63,8 +69,12 @@ RenderPlan          // the closed list of units the artifact must show, the
                     //   exact string each slot must hold, and the block each
                     //   disclosure must carry — all resolved for one locale
 RenderAffidavit     // derived from the final DOM: visibility + digest
-ConfirmationEvent   // trainer's confirmation of the exact artifact digest
+ConfirmationEvent   // trainer's confirmation of the exact artifact digest,
+                    //   carrying the channel it arrived on
 ActionGrant         // one action bound to txn + confirmation + entity + scope
+ActionRecord        // everything a verdict about an act may depend on: the
+                    //   manifest, the artifact, the affidavit, the
+                    //   confirmation, the grant, and the moment of execution
 Violation           // { article, rule, message, expected, actual }
 ```
 
@@ -86,8 +96,14 @@ must be denied with that article's named violation:
   a collapsed `<details>`; reword or truncate its approved text; print a
   different number in a certified slot; smuggle in a sentence of the
   renderer's own; localise a flawless page against another plan → each denied.
-- Art. VII: act on an entity never displayed; confirm a doctored digest;
-  confirm before render; execute after scope expiry → each denied.
+- Art. VII: act on something the answer only talked about; hide the card
+  naming the act; confirm a doctored digest; confirm before render; borrow a
+  confirmation from another transaction; execute after scope expiry → each
+  denied.
+- Art. IX: drop an irreversible act's consent notice, aim it at a reversible
+  act, hide it on the page; and a pack declaring an act irreversible with
+  nothing to disclose it, refused at load → each denied under IA-9 by the
+  Art. VI machinery, because the articles compose.
 - Clean-path control: the unmutated pipeline must pass with zero violations
   (no fail-closed theater).
 

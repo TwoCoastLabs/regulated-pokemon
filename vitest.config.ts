@@ -30,12 +30,14 @@ export default defineConfig({
       include: ["src/**/*.ts"],
       exclude: ["src/**/*.test.ts", "src/testing/**"],
       reporter: ["text-summary", "json-summary"],
-      // Raised with the transaction seam and held through phase 4.1, which
-      // sits at 96.3 / 89.4 / 98.2. Deliberately not ratcheted here: 4.1
-      // replaced the fragment matcher with slot, block and catalogue binding,
-      // and each of those denials carries a named-fallback string ("no slots",
-      // "no locale mark") that nothing exercises. Inventing a test per
-      // fallback would be chasing the backstop rather than the gate.
+      // Raised with the transaction seam and held through phases 4.1 and 5,
+      // which sit at 96.5 / 89.4 / 98.3. Deliberately not ratcheted: what is
+      // left uncovered is almost entirely named-fallback strings ("no slots",
+      // "no locale mark", "no confirmation") on denials whose real path is
+      // exercised, plus two guards the loader is supposed to make
+      // unreachable — a consent notice with no act to read, and a scope
+      // window nobody can parse. Inventing a test per fallback would be
+      // chasing the backstop rather than the gate.
       thresholds: {
         statements: 94,
         branches: 88,

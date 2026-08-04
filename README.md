@@ -124,9 +124,9 @@ crucible by test, so it cannot drift from what actually runs.
 | IA-4 | Complete Answers Carry Certificates | 8 |
 | IA-5 | Restricted Species | 2 |
 | IA-6 | Disclosures Must Be Seen | 21 |
-| IA-7 | What Was Shown Is What Executes | — phase 5 |
-| IA-8 | Only the Trainer Speaks for the Trainer | 5 |
-| IA-9 | Irreversible Acts Need Informed Consent | — phase 5 |
+| IA-7 | What Was Shown Is What Executes | 13 |
+| IA-8 | Only the Trainer Speaks for the Trainer | 6 |
+| IA-9 | Irreversible Acts Need Informed Consent | 4 |
 | IA-10 | The League May Replay | — phase 6 |
 
 Two controls run alongside every phase, because a kernel that refuses

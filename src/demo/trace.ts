@@ -123,6 +123,8 @@ function describeClaim(claim: Claim): string {
       return `ranking      ${claim.selectedEntityId} has the ${claim.direction} ${claim.basis} in ${claim.rosterId}`;
     case "recommendation":
       return `advice       ${claim.entityId}`;
+    case "action":
+      return `act          ${claim.tool} ${claim.entityId}`;
   }
 }
 

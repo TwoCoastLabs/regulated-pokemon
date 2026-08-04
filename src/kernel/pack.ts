@@ -25,7 +25,7 @@ import { formatCarriesLocale, type FormatId, IMPLEMENTED_LOCALES, isFormatId } f
 import type { CertifiedRegistry } from "./registry.js";
 import { AccordError, violation } from "./violation.js";
 
-export const PACK_SCHEMA_VERSION = 3;
+export const PACK_SCHEMA_VERSION = 4;
 
 /** The League's badge scale. Kanto issues eight; nothing above that exists. */
 export const MAX_BADGE_LEVEL = 8;
@@ -58,13 +58,29 @@ export interface RestrictionRule {
 }
 
 /**
+ * One consequential action the Advisor may perform (IA-7, IA-9).
+ *
+ * A closed list, for the same reason the fact vocabulary is one: a tool nobody
+ * approved is a way to change the trainer's state that no rule was written
+ * about. Whether an act can be taken back is policy rather than code — the
+ * League decides that releasing a Pokémon is forever — and it is the whole of
+ * what Article IX keys on.
+ */
+export interface ActionRule {
+  id: string;
+  irreversible: boolean;
+}
+
+/**
  * When a disclosure becomes mandatory. Deliberately a closed, tiny vocabulary:
  * a condition language here would be a policy engine, and a policy engine is
  * a place for rules to hide.
  */
 export type ExhibitTrigger =
   | { kind: "always" }
-  | { kind: "entity-claimed"; entityId: string };
+  | { kind: "entity-claimed"; entityId: string }
+  /** An answer that proposes this act owes the notice, once per act. */
+  | { kind: "action-claimed"; tool: string };
 
 /**
  * One approved rendering of a disclosure's mandatory text, for one locale.
@@ -98,14 +114,24 @@ export interface DisclosureBlockRule {
 }
 
 /**
- * Where an exhibit's non-fixed value comes from. A closed vocabulary of one:
- * the provenance notice has to name the snapshot it is attributing, and the
- * snapshot id is data rather than words. Anything richer would be the
- * transformation engine this design exists to avoid.
+ * Where an exhibit's non-fixed value comes from. A closed vocabulary of three,
+ * each named because some disclosure cannot be written as fixed words: the
+ * provenance notice has to name the snapshot it is attributing, and Article IX
+ * requires a consent notice to state what is being given up *drawn from the
+ * Certified Registry* — which is the acted-on species and what it knows.
+ * Anything richer would be the transformation engine this design exists to
+ * avoid.
  */
-export type ExhibitSlotSource = "snapshot-id";
+export type ExhibitSlotSource = "snapshot-id" | "action-entity" | "action-entity-learnset";
 
-export const EXHIBIT_SLOT_SOURCES: readonly ExhibitSlotSource[] = ["snapshot-id"];
+export const EXHIBIT_SLOT_SOURCES: readonly ExhibitSlotSource[] = [
+  "snapshot-id",
+  "action-entity",
+  "action-entity-learnset",
+];
+
+/** Sources that only mean anything for a disclosure attached to an act. */
+const ACTION_SLOT_SOURCES: readonly ExhibitSlotSource[] = ["action-entity", "action-entity-learnset"];
 
 export interface ExhibitSlotRule {
   /** Unique within the exhibit; the mark the renderer places. */
@@ -228,8 +254,14 @@ export interface AccordPack {
   id: string;
   presentation: Presentation;
   restrictions: readonly RestrictionRule[];
+  actions: readonly ActionRule[];
   exhibits: readonly ExhibitRule[];
   vocabulary: ScopeVocabulary;
+}
+
+/** The rule for one action, or nothing if this pack declares no such act. */
+export function actionRule(pack: AccordPack, tool: string): ActionRule | undefined {
+  return pack.actions.find((rule) => rule.id === tool);
 }
 
 /** The block a disclosure requires in one locale, or nothing. */
@@ -283,6 +315,15 @@ export function loadPack(input: unknown, registry: CertifiedRegistry): Resolutio
       violations: [violation("IA-5", "pack-malformed", "Accord pack is missing restrictions or exhibits")],
     };
   }
+  if (!Array.isArray(document.actions)) {
+    // An empty list is a pack under which the Advisor may say things and do
+    // nothing, which is a coherent policy. A missing list is a pack that never
+    // decided, and every act would then be one nobody approved.
+    return {
+      ok: false,
+      violations: [violation("IA-7", "pack-actions-missing", "Accord pack does not say which actions exist")],
+    };
+  }
   if (
     document.vocabulary === null ||
     typeof document.vocabulary !== "object" ||
@@ -312,6 +353,7 @@ export function loadPack(input: unknown, registry: CertifiedRegistry): Resolutio
   const violations = [
     ...checkPresentation(pack.presentation),
     ...checkRules(pack, registry),
+    ...checkActions(pack),
     ...checkVocabulary(pack.vocabulary),
   ];
   if (violations.length > 0) return { ok: false, violations };
@@ -390,6 +432,65 @@ function checkRules(pack: AccordPack, registry: CertifiedRegistry): Violation[] 
         ),
       );
     }
+  }
+
+  return violations;
+}
+
+/**
+ * Validate the action registry (IA-7, IA-9).
+ *
+ * The load-time rule that matters is the last one: an act the pack calls
+ * irreversible and no rule discloses is a consent the trainer could never have
+ * given, because there would be nothing to consent *to*. Article IX composes
+ * out of Article VI, so the composition has to exist in the data — and the one
+ * moment it can be checked for every act at once is here, before any answer is
+ * compiled against it.
+ */
+function checkActions(pack: AccordPack): Violation[] {
+  const violations: Violation[] = [];
+  const declared = new Set<string>();
+
+  for (const rule of pack.actions) {
+    if (typeof rule.id !== "string" || rule.id.length === 0 || declared.has(rule.id)) {
+      violations.push(
+        violation("IA-7", "pack-action-unusable", `the action registry declares "${String(rule.id)}" twice or unnamed`, {
+          actual: String(rule.id),
+        }),
+      );
+    }
+    declared.add(rule.id);
+
+    if (typeof rule.irreversible !== "boolean") {
+      violations.push(
+        violation("IA-9", "pack-action-reversibility-unstated", `action "${rule.id}" does not say whether it can be taken back`, {
+          expected: "true or false",
+          actual: String(rule.irreversible),
+        }),
+      );
+    }
+  }
+
+  const disclosed = new Set(
+    pack.exhibits.flatMap((rule) => (rule.when.kind === "action-claimed" ? [rule.when.tool] : [])),
+  );
+  for (const tool of disclosed) {
+    if (declared.has(tool)) continue;
+    violations.push(
+      violation("IA-7", "pack-dangling-action", `a disclosure triggers on "${tool}", which the action registry does not declare`, {
+        expected: [...declared].join(", ") || "no actions",
+        actual: tool,
+      }),
+    );
+  }
+  for (const rule of pack.actions) {
+    if (rule.irreversible !== true || disclosed.has(rule.id)) continue;
+    violations.push(
+      violation("IA-9", "pack-irreversible-undisclosed", `"${rule.id}" is irreversible and nothing in this pack discloses it`, {
+        expected: `an exhibit triggering on ${rule.id}`,
+        actual: [...disclosed].join(", ") || "no action disclosures",
+      }),
+    );
   }
 
   return violations;
@@ -559,6 +660,16 @@ function checkExhibitSlots(pack: AccordPack, rule: ExhibitRule): Violation[] {
         violation("IA-6", "pack-slot-source-unknown", `slot ${label} reads "${String(slot.source)}", which is not a source`, {
           expected: EXHIBIT_SLOT_SOURCES.join(", "),
           actual: String(slot.source),
+        }),
+      );
+    } else if (ACTION_SLOT_SOURCES.includes(slot.source) && rule.when.kind !== "action-claimed") {
+      // A notice that reads the acted-on species, attached to a rule no act
+      // triggers, has nothing to read. It would be planned and then refused at
+      // render time, which is a load-time error arriving three stages late.
+      violations.push(
+        violation("IA-6", "pack-slot-source-unavailable", `slot ${label} reads the acted-on species, and "${rule.id}" is not triggered by an action`, {
+          expected: "a rule triggered by an action",
+          actual: rule.when.kind,
         }),
       );
     }
