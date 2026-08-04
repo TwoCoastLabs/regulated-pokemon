@@ -14,6 +14,7 @@
     "lint": "tsc --noEmit",
     "build": "tsc -p tsconfig.build.json",
     "demo": "npm run build && node dist/demo/cli.js",
+    "harness": "npm run build && node dist/harness/cli.js",
     "snapshot:fetch": "node --experimental-strip-types scripts/fetch-snapshot.ts"
   },
   "devDependencies": {

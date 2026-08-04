@@ -96,6 +96,14 @@ jobs:
       - name: the demo still builds and runs
         run: npm run demo
 
+      # The live-model harness, run against its deterministic scripted models —
+      # no key, no network. Its logic is covered by src/harness/*.test.ts; this
+      # is the emit check, exactly as for the demo. It exits non-zero on its own
+      # if any model committed a forbidden thing, if the gate never fired on the
+      # adversarial model, or if a run ended other than it declared it would.
+      - name: the live-model harness still builds and runs (scripted, offline)
+        run: npm run harness
+
   # Forward check, deliberately separate from the gate. The kernel is Node
   # version-agnostic; `scripts/fetch-snapshot.ts` is not, since it runs
   # straight from source under type stripping. Kept as its own job so that
