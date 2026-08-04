@@ -128,7 +128,11 @@ function describeClaim(claim: Claim): string {
 
 function describeExhibit(exhibit: Exhibit): string {
   const owed = exhibit.triggeredBy === undefined ? "" : ` (owed under ${exhibit.triggeredBy})`;
-  return `${exhibit.id}${owed}: ${exhibit.requiredFragments.join(" | ")}`;
+  const block = exhibit.block;
+  // The block id and digest rather than the words: what a manifest owes is a
+  // named, versioned text, and printing a copy of it here would suggest the
+  // record carries the words it has to show.
+  return `${exhibit.id}${owed}: block ${block.id} v${block.version} ${block.locale} ${block.digest}`;
 }
 
 /** The whole exchange, top to bottom. */
@@ -137,6 +141,7 @@ export function describeTransaction(transaction: Transaction): string[] {
     `transaction  ${transaction.id}`,
     `snapshot     ${transaction.snapshotId}`,
     `pack         ${transaction.packId}`,
+    `locale       ${transaction.locale}`,
     `established  ${transaction.establishedAt}   committed ${transaction.committedAt}`,
     "",
     "RECORD",

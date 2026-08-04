@@ -25,6 +25,7 @@ import {
   demoPlan,
   demoWorld,
   ESTABLISHED_AT,
+  LOCALE,
   REQUIRED,
 } from "./script.js";
 import { describeDenials, describeTransaction } from "./trace.js";
@@ -46,6 +47,7 @@ export function play(entry: Conversation): Transaction {
     transcript: entry.transcript,
     establishedAt: ESTABLISHED_AT,
     committedAt: COMMITTED_AT,
+    locale: LOCALE,
     required: REQUIRED,
     plan: demoPlan,
   });
@@ -87,7 +89,7 @@ export function sabotageWorld(): ManifestContext {
     throw new Error(`the demo's clean conversation established no scope (${transaction.outcome.status})`);
   }
   const { registry, pack } = demoWorld();
-  return { registry, pack, grant: transaction.grant, at: COMMITTED_AT };
+  return { registry, pack, grant: transaction.grant, locale: LOCALE, at: COMMITTED_AT };
 }
 
 /**

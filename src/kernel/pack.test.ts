@@ -8,7 +8,9 @@
 import { describe, expect, it } from "vitest";
 
 import { ACCORD_ARTICLES } from "./accord.js";
-import { type AccordPack, loadPack, MAX_BADGE_LEVEL, readPack, restrictionsFor } from "./pack.js";
+import { digestText } from "./digest.js";
+import { formatCarriesLocale } from "./format.js";
+import { type AccordPack, blockFor, loadPack, MAX_BADGE_LEVEL, readPack, restrictionsFor } from "./pack.js";
 import { denialCode } from "./violation.js";
 import { kantoPack, kantoRegistry, PACK_PATH } from "../testing/fixtures.js";
 
@@ -49,9 +51,24 @@ describe("the shipped pack holds up", () => {
     expect(pikachu && restrictionsFor(pack, pikachu)).toEqual([]);
   });
 
-  it("requires visible text of every exhibit it demands", () => {
+  it("carries approved, self-naming text for every exhibit in every locale", () => {
     for (const rule of pack.exhibits) {
-      expect(rule.requiredFragments.length, `${rule.id} requires no text`).toBeGreaterThan(0);
+      for (const locale of pack.presentation.locales) {
+        const content = blockFor(rule, locale);
+        expect(content, `${rule.id} says nothing in ${locale}`).toBeDefined();
+        // The digest is the block's identity, carried into every manifest that
+        // owes it. A block whose digest does not name its own words would let
+        // an id drift away from the sentence it stands for.
+        expect(content && digestText(content.text), `${rule.id} misnames its ${locale} text`).toBe(content?.digest);
+      }
+    }
+  });
+
+  it("approves only formats this kernel can render in every approved locale", () => {
+    for (const formatId of pack.presentation.formats) {
+      for (const locale of pack.presentation.locales) {
+        expect(formatCarriesLocale(formatId, locale), `${formatId} cannot render ${locale}`).toBe(true);
+      }
     }
   });
 });
@@ -108,12 +125,130 @@ describe("a pack that cannot be trusted is refused by name", () => {
     ).toContain("IA-5/pack-threshold-unreachable");
   });
 
-  it("refuses a disclosure that requires no visible text", () => {
+  it("refuses a disclosure whose text says nothing", () => {
+    expect(denials(loadWith((draft) => ((draft.exhibits[0]!.block.content[0] as { text: string }).text = "  ")))).toContain(
+      "IA-6/pack-block-empty",
+    );
+  });
+
+  it("refuses a disclosure whose digest does not name its own text", () => {
+    // The whole point of carrying the digest: a block id that has drifted away
+    // from its words would be a manifest owing one disclosure and a page
+    // showing another, with both sides internally consistent.
+    expect(
+      denials(loadWith((draft) => ((draft.exhibits[0]!.block.content[0] as { text: string }).text += " Probably."))),
+    ).toContain("IA-6/pack-block-digest-mismatch");
+  });
+
+  it("refuses a disclosure with no approved text in a locale the pack sells", () => {
+    expect(
+      denials(loadWith((draft) => ((draft.exhibits[0] as unknown as { block: { content: unknown[] } }).block.content.length = 1))),
+    ).toContain("IA-6/pack-block-locale-missing");
+  });
+
+  it("refuses a locale no formatter in this kernel can render", () => {
+    const refused = denials(loadWith((draft) => (draft.presentation as unknown as { locales: string[] }).locales.push("de-DE")));
+    expect(refused).toContain("IA-6/pack-locale-unimplemented");
+  });
+
+  it("refuses a format this kernel does not implement", () => {
+    expect(
+      denials(loadWith((draft) => (draft.presentation as unknown as { formats: string[] }).formats.push("free-text"))),
+    ).toContain("IA-6/pack-format-unknown");
+  });
+
+  it("refuses a catalogue entry that is missing in one approved locale", () => {
     expect(
       denials(
-        loadWith((draft) => ((draft.exhibits[0] as unknown as { requiredFragments: string[] }).requiredFragments = [])),
+        loadWith((draft) => {
+          delete (draft.presentation.catalogue[0] as { text: Record<string, string> }).text["en-GB"];
+        }),
       ),
-    ).toContain("IA-6/pack-exhibit-without-fragments");
+    ).toContain("IA-6/pack-copy-incomplete");
+  });
+
+  it("refuses a pack that says nothing about how an answer may be presented", () => {
+    expect(
+      denials(loadWith((draft) => delete (draft as { presentation?: unknown }).presentation)),
+    ).toEqual(["IA-6/pack-presentation-missing"]);
+  });
+
+  it("refuses a pack that approves no locale or no format at all", () => {
+    // Both are rules that can never fire, and the failure mode is the worst
+    // kind: nothing could ever be presented, and nothing would say why.
+    expect(denials(loadWith((draft) => ((draft.presentation as unknown as { locales: string[] }).locales = [])))).toContain(
+      "IA-6/pack-no-locale",
+    );
+    expect(denials(loadWith((draft) => ((draft.presentation as unknown as { formats: string[] }).formats = [])))).toContain(
+      "IA-6/pack-no-format",
+    );
+  });
+
+  it("refuses a catalogue that carries one id twice", () => {
+    expect(
+      denials(
+        loadWith((draft) => {
+          const catalogue = draft.presentation.catalogue as unknown as unknown[];
+          catalogue.push(catalogue[0]);
+        }),
+      ),
+    ).toContain("IA-6/pack-copy-duplicated");
+  });
+
+  it("refuses a disclosure block with no usable version", () => {
+    expect(denials(loadWith((draft) => ((draft.exhibits[0]!.block as { version: number }).version = 0)))).toContain(
+      "IA-6/pack-block-unversioned",
+    );
+  });
+
+  it("refuses an exhibit with no disclosure block at all", () => {
+    expect(denials(loadWith((draft) => delete (draft.exhibits[0] as { block?: unknown }).block))).toContain(
+      "IA-6/pack-block-missing",
+    );
+  });
+
+  it("refuses a translation for a locale the pack never approved", () => {
+    expect(
+      denials(
+        loadWith((draft) => {
+          const content = draft.exhibits[0]!.block.content as unknown as Array<{ locale: string }>;
+          content.push({ ...content[0]!, locale: "fr-FR" });
+        }),
+      ),
+    ).toContain("IA-6/pack-block-locale-unapproved");
+  });
+
+  it("refuses an exhibit slot reading a source the kernel has never heard of", () => {
+    expect(
+      denials(
+        loadWith((draft) => {
+          const provenance = draft.exhibits.find((rule) => rule.id === "provenance")!;
+          (provenance.slots as unknown as Array<{ source: string }>)[0]!.source = "trainer-name";
+        }),
+      ),
+    ).toContain("IA-6/pack-slot-source-unknown");
+  });
+
+  it("refuses an exhibit that declares one slot name twice", () => {
+    expect(
+      denials(
+        loadWith((draft) => {
+          const provenance = draft.exhibits.find((rule) => rule.id === "provenance")!;
+          const slots = provenance.slots as unknown as unknown[];
+          slots.push(slots[0]);
+        }),
+      ),
+    ).toContain("IA-6/pack-slot-name-unusable");
+  });
+
+  it("refuses an exhibit slot presented by a format the pack does not approve", () => {
+    expect(
+      denials(
+        loadWith((draft) => {
+          (draft.presentation as unknown as { formats: string[] }).formats = ["integer"];
+        }),
+      ),
+    ).toContain("IA-6/pack-slot-format-unapproved");
   });
 
   it("refuses a disclosure triggered by an entity the snapshot never certified", () => {

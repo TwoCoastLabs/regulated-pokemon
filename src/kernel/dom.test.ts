@@ -108,6 +108,47 @@ describe("what a browser would show", () => {
   });
 });
 
+describe("where the walker says each piece of text came from", () => {
+  it("reads the locale the artifact says it is presented in", () => {
+    expect(walkArtifact(element("article", { ...TRANSACTION, "data-locale": "en-GB" }, [])).locale).toBe("en-GB");
+    expect(walkArtifact(page()).locale).toBeUndefined();
+  });
+
+  it("attributes a mark to the governed unit that encloses it", () => {
+    const artifact = page(
+      unit("card", {}, element("span", { "data-slot": "value" }, [text("90")])),
+      element("span", { "data-copy": "page.title" }, [text("Your certified answer")]),
+    );
+    expect(walkArtifact(artifact).attributed).toEqual([
+      { kind: "slot", name: "value", unitId: "card", text: "90", visible: true, path: [0, 0] },
+      // Outside every unit, and said so rather than guessed at: a page heading
+      // belongs to no card, and a *value* outside every card belongs nowhere.
+      { kind: "copy", name: "page.title", unitId: undefined, text: "Your certified answer", visible: true, path: [1] },
+    ]);
+  });
+
+  it("reports visible text that claims no origin at all", () => {
+    const artifact = page(unit("card", {}, text("bought to you by Silph Co.")));
+    expect(walkArtifact(artifact).unattributed).toEqual([
+      { text: "bought to you by Silph Co.", unitId: "card", path: [0, 0] },
+    ]);
+  });
+
+  it("says nothing about text nobody can see", () => {
+    const artifact = page(unit("card", { hidden: "" }, text("draft copy")));
+    expect(walkArtifact(artifact).unattributed).toEqual([]);
+  });
+
+  it("does not let a mark on one element launder the text of a sibling", () => {
+    // The attack closure exists for: one approved string, and a sentence
+    // beside it that inherits nothing from being in good company.
+    const artifact = page(
+      unit("card", {}, element("span", { "data-copy": "lead-in.fact" }, [text("From the registry:")]), text("probably")),
+    );
+    expect(walkArtifact(artifact).unattributed.map((entry) => entry.text)).toEqual(["probably"]);
+  });
+});
+
 describe("the artifact digest", () => {
   const shown = page(unit("u", {}, text("User faints")));
 
@@ -131,6 +172,20 @@ describe("the artifact digest", () => {
     const left = page(unit("card", {}, text("Selfdestruct")), unit("warning", {}, text("")));
     const right = page(unit("card", {}, text("")), unit("warning", {}, text("Selfdestruct")));
     expect(walkArtifact(left).digest).not.toBe(walkArtifact(right).digest);
+  });
+
+  it("changes when the artifact is localised differently", () => {
+    // The locale decides which formatter produced every value on the page and
+    // which translation of a disclosure satisfies it, so two pages that differ
+    // only in the locale they claim are two different artifacts.
+    const british = element("article", { ...TRANSACTION, "data-locale": "en-GB" }, [unit("u", {}, text("User faints"))]);
+    expect(walkArtifact(british).digest).not.toBe(walkArtifact(shown).digest);
+  });
+
+  it("changes when the same words stop claiming to be a certified value", () => {
+    const bound = page(unit("u", {}, element("span", { "data-slot": "value" }, [text("90")])));
+    const prose = page(unit("u", {}, element("span", {}, [text("90")])));
+    expect(walkArtifact(bound).digest).not.toBe(walkArtifact(prose).digest);
   });
 
   it("is the same for the same document walked twice", () => {

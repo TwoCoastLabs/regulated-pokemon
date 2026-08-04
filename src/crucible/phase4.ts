@@ -18,11 +18,32 @@
  * this repository controls, so the attacks are written the way they would
  * actually arrive: as edits to the artifact after everything trustworthy has
  * already run.
+ *
+ * Phase 4.1 replaced the matcher underneath these attacks — bound values are
+ * marked slots compared by equality, mandatory text is a digested block, and
+ * every other word must be a catalogued string — and the seven hiding
+ * mutations, the adjacency mutation, the closure mutations and both affidavit
+ * attacks came through unchanged. That is the claim worth making: none of them
+ * ever depended on searching the page, so removing the search cost nothing.
+ * Only the three that read words off the screen were rewritten, and they were
+ * joined by the attacks the old matcher had no way to see at all — a
+ * paraphrased disclosure, a smuggled sentence, a drifted lead-in, and a page
+ * localised flawlessly against a plan nobody made.
  */
 
 import type { ArticleId } from "../kernel/accord.js";
 import type { AnswerManifest, RenderAffidavit, Verdict } from "../kernel/contracts.js";
-import { type DomElement, type DomNode, element, text, UNIT_ATTRIBUTE, walkArtifact } from "../kernel/dom.js";
+import {
+  BLOCK_ATTRIBUTE,
+  COPY_ATTRIBUTE,
+  type DomElement,
+  type DomNode,
+  element,
+  SLOT_ATTRIBUTE,
+  text,
+  UNIT_ATTRIBUTE,
+  walkArtifact,
+} from "../kernel/dom.js";
 import { attestRender, planRender, verifyRender } from "../kernel/render.js";
 import { AccordError } from "../kernel/violation.js";
 import { renderAnswer } from "../render/reference.js";
@@ -52,7 +73,7 @@ function rendered(world: CrucibleWorld): Rendered {
   // so this fails loudly rather than degrading into a passing denial.
   if (!planned.ok) throw new AccordError(planned.violations);
 
-  const artifact = renderAnswer(planned.value);
+  const artifact = renderAnswer(world.pack, planned.value);
   const attested = attestRender(world, manifest, artifact, RENDERED_AT);
   if (!attested.ok) throw new AccordError(attested.violations);
   return { manifest, artifact, affidavit: attested.value };
@@ -133,13 +154,27 @@ function inside(artifact: DomElement, unitId: string, wrapper: DomElement): DomE
   return edit(artifact, unitId, (found) => ({ ...wrapper, children: [...wrapper.children, found] }));
 }
 
-/** Rewrite text inside one unit. Used to truncate and to swap bound values. */
-function retext(artifact: DomElement, unitId: string, from: string, to: string): DomElement {
-  const rewrite = (node: DomNode): DomNode =>
-    node.kind === "text"
-      ? { ...node, text: node.text.replace(from, to) }
-      : { ...node, children: node.children.map(rewrite) };
-  return edit(artifact, unitId, (found) => rewrite(found));
+/**
+ * Rewrite the text inside the element carrying one attribution mark.
+ *
+ * The mark itself is left alone, which is the point: these are attacks by a
+ * renderer that fills a slot, a block or a catalogue entry with something other
+ * than what it was given, not by one that forgets to mark its output.
+ */
+function rewriteMark(node: DomNode, attribute: string, name: string, replacement: string): DomNode {
+  if (node.kind === "text") return node;
+  if (node.attributes[attribute] === name) return { ...node, children: [text(replacement)] };
+  return { ...node, children: node.children.map((child) => rewriteMark(child, attribute, name, replacement)) };
+}
+
+/** Rewrite a mark inside one unit, so that repeated slot names stay distinct. */
+function retext(artifact: DomElement, unitId: string, attribute: string, name: string, to: string): DomElement {
+  return edit(artifact, unitId, (found) => rewriteMark(found, attribute, name, to));
+}
+
+/** Add a child to the element marked as one unit. */
+function append(artifact: DomElement, unitId: string, extra: DomNode): DomElement {
+  return edit(artifact, unitId, (found) => ({ ...found, children: [...found.children, extra] }));
 }
 
 /** Move a unit out of where it was rendered and onto the end of the page. */
@@ -272,34 +307,40 @@ export const PHASE_4_MUTATIONS: readonly Mutation[] = [
       })),
   },
   {
-    id: "scramble-the-disclosure",
-    title: "Show every word of the warning in the wrong order",
+    id: "doctor-the-disclosure-block",
+    title: "Reword the warning into something friendlier",
     description:
-      "Both required fragments are on the screen and the sentence they make " +
-      "is not the one the pack requires. Presence is not disclosure; order is " +
-      "part of the meaning.",
+      "Every word the old fragment matcher looked for is still on the screen, " +
+      "rearranged into a sentence the Accord never approved. A block is " +
+      "compared by digest, so a paraphrase, a reordering and a truncation are " +
+      "one failure rather than three separate rules to get right.",
     article: "IA-6",
-    rule: "exhibit-fragments-out-of-order",
+    rule: "disclosure-block-altered",
     run: (world) =>
       sabotage(world, (honest) => ({
-        artifact: edit(honest.artifact, WARNING, (found) => ({
-          ...found,
-          children: [paragraph("User faints — and that is what Selfdestruct is for.")],
-        })),
+        artifact: retext(
+          honest.artifact,
+          WARNING,
+          BLOCK_ATTRIBUTE,
+          "selfdestruct-handling",
+          "Heads up: the user faints, but Selfdestruct is worth it.",
+        ),
       })),
   },
   {
     id: "swap-a-bound-value",
     title: "Print a different number from the one that was certified",
     description:
-      "The manifest still says 90 and verifies against the snapshot; the card " +
+      "The manifest still says 90 and verifies against the snapshot; the slot " +
       "on the page says 200. Every check upstream of the render passes, " +
-      "because nothing upstream of the render reads the page.",
+      "because nothing upstream of the render reads the page — and the slot " +
+      "is compared by equality, so the same number in an unapproved shape is " +
+      "refused by this identical rule.",
     article: "IA-6",
-    rule: "exhibit-fragment-not-visible",
+    rule: "slot-value-mismatch",
     run: (world) =>
       sabotage(world, (honest) => ({
-        artifact: retext(honest.artifact, SPEED_CARD, "90", "200"),
+        artifact: retext(honest.artifact, SPEED_CARD, SLOT_ATTRIBUTE, "value", "200"),
       })),
   },
   {
@@ -310,11 +351,71 @@ export const PHASE_4_MUTATIONS: readonly Mutation[] = [
       "short of naming the licence. Truncation is the failure that a presence " +
       "check cannot see, and it is what a narrow column does by default.",
     article: "IA-2",
-    rule: "exhibit-fragment-not-visible",
+    rule: "disclosure-block-altered",
     run: (world) =>
       sabotage(world, (honest) => ({
-        artifact: retext(honest.artifact, PROVENANCE, "BSD-3-Clause", "BSD-3…"),
+        artifact: retext(
+          honest.artifact,
+          PROVENANCE,
+          BLOCK_ATTRIBUTE,
+          "pokeapi-attribution",
+          "Certified from PokéAPI data, used under the BSD-3…",
+        ),
       })),
+  },
+  {
+    id: "smuggle-in-free-prose",
+    title: "Add a helpful sentence of the renderer's own",
+    description:
+      "Nothing certified is touched: every slot holds its exact value and " +
+      "every disclosure its approved text. One extra paragraph of advice is " +
+      "added beside them. Text on a certified artifact is default-deny, the " +
+      "way script is under a content security policy, so a sentence that " +
+      "traces to no slot, block or catalogue entry is refused for existing.",
+    article: "IA-6",
+    rule: "unattributed-content",
+    run: (world) =>
+      sabotage(world, (honest) => ({
+        artifact: append(
+          honest.artifact,
+          SPEED_CARD,
+          paragraph("Honestly, anything above 80 is fast enough to outrun most of Kanto."),
+        ),
+      })),
+  },
+  {
+    id: "drift-the-approved-copy",
+    title: "Soften the lead-in the catalogue approved",
+    description:
+      "Copy asserts nothing, which is exactly why it is worth attacking: " +
+      '"From the certified registry:" becomes "From memory, roughly:" and ' +
+      "the number beside it is still perfectly certified. The catalogue is " +
+      "versioned data for this reason — a renderer may choose which approved " +
+      "string to use and may not choose its words.",
+    article: "IA-6",
+    rule: "catalogue-drift",
+    run: (world) =>
+      sabotage(world, (honest) => ({
+        artifact: retext(honest.artifact, SPEED_CARD, COPY_ATTRIBUTE, "lead-in.fact", "From memory, roughly:"),
+      })),
+  },
+  {
+    id: "localise-against-another-plan",
+    title: "Serve a flawless page in the wrong locale",
+    description:
+      "The same answer, rendered honestly into en-GB: approved copy, the " +
+      "approved British translation of the warning, every slot filled. It is " +
+      "a compliant artifact for a plan nobody made. The locale is an input to " +
+      "the formatters and to the choice of disclosure text, so a page that " +
+      "moved it has moved what its own contents would have to prove.",
+    article: "IA-6",
+    rule: "artifact-locale-mismatch",
+    run: (world) =>
+      sabotage(world, (honest) => {
+        const planned = planRender(world, honest.manifest);
+        if (!planned.ok) throw new AccordError(planned.violations);
+        return { artifact: renderAnswer(world.pack, { ...planned.value, locale: "en-GB" }) };
+      }),
   },
   {
     id: "exile-the-warning-to-the-footer",
@@ -342,8 +443,14 @@ export const PHASE_4_MUTATIONS: readonly Mutation[] = [
           ...honest.artifact,
           children: [
             ...honest.artifact.children,
+            // Marked the way an honest card is, so the denial lands on the
+            // card's existence rather than on sloppy markup around it.
             element("section", { [UNIT_ATTRIBUTE]: "fact:missingno:base-speed" }, [
-              paragraph("From the certified registry: MissingNo — 136"),
+              element("p", {}, [
+                element("span", { [COPY_ATTRIBUTE]: "lead-in.fact" }, [text("From the certified registry:")]),
+                element("span", { [SLOT_ATTRIBUTE]: "entity" }, [text("Missingno")]),
+                element("span", { [SLOT_ATTRIBUTE]: "value" }, [text("136")]),
+              ]),
             ]),
           ],
         },
@@ -379,9 +486,11 @@ export const PHASE_4_MUTATIONS: readonly Mutation[] = [
       sabotage(world, (honest) => {
         const planned = planRender(world, honest.manifest);
         if (!planned.ok) throw new AccordError(planned.violations);
-        // The same answer, rendered for another transaction. Every fragment is
-        // present, in order, adjacent; the affidavit sworn over it is honest.
-        return { artifact: renderAnswer({ ...planned.value, transactionId: "txn-crucible-localised" }) };
+        // The same answer, rendered for another transaction. Every slot is
+        // filled and every disclosure shown; the affidavit over it is honest.
+        return {
+          artifact: renderAnswer(world.pack, { ...planned.value, transactionId: "txn-crucible-elsewhere" }),
+        };
       }),
   },
   {
@@ -405,21 +514,19 @@ export const PHASE_4_MUTATIONS: readonly Mutation[] = [
     id: "edit-the-page-after-swearing-to-it",
     title: "Change the artifact once the affidavit is signed",
     description:
-      "Only renderer copy is touched — one word of a heading, nothing bound, " +
-      "nothing certified. The digest is over what is visible, so 'we only " +
-      "changed the wording' is a detectable statement rather than an excuse.",
+      "Not one character on the page changes: the cards are wrapped in a " +
+      "layout div after the affidavit is signed. The digest is over the " +
+      "visible structure as well as the visible text, so 'we only touched the " +
+      "markup' is a detectable statement rather than an excuse.",
     article: "IA-6",
     rule: "affidavit-digest-mismatch",
     run: (world) =>
-      sabotage(world, (honest) => {
-        const reworded = (node: DomNode): DomNode =>
-          node.kind === "text"
-            ? { ...node, text: node.text.replace("Your certified answer", "Your answer") }
-            : { ...node, children: node.children.map(reworded) };
+      sabotage(world, (honest) => ({
+        artifact: { ...honest.artifact, children: [element("div", {}, honest.artifact.children)] },
         // The one mutation that keeps the original affidavit: the record is
         // honest about the page that was signed, and the page has moved on.
-        return { artifact: reworded(honest.artifact) as DomElement, affidavit: honest.affidavit };
-      }),
+        affidavit: honest.affidavit,
+      })),
   },
 ];
 
@@ -430,8 +537,10 @@ export const PHASE_4_CONTROLS: readonly Control[] = [
     title: "Plan, render, attest and verify one answer",
     description:
       "The certified answer from phase 2, through the reference renderer and " +
-      "the walker, with nothing tampered: every bound value and every " +
-      "mandatory fragment visible, in order, beside what triggered it.",
+      "the walker, with nothing tampered: every slot holding exactly what its " +
+      "formatter produced, every disclosure showing its approved text, every " +
+      "other word on the page traced to the catalogue, and each warning " +
+      "beside what triggered it.",
     run: (world) => {
       const { manifest, artifact, affidavit } = rendered(world);
       return verifyRender(world, manifest, artifact, affidavit);

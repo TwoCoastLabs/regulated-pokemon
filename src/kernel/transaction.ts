@@ -55,6 +55,12 @@ export interface TransactionInput {
    * of recorded inputs, and a clock is not one of them (IA-10). */
   establishedAt: string;
   committedAt: string;
+  /**
+   * The locale this exchange is presented in, assigned by the transport in the
+   * same breath as the channel each utterance arrived on. Not something the
+   * conversation, or the thing planning the answer, gets to move.
+   */
+  locale: string;
   /** Dimensions this exchange needs. A ranking answer also needs a basis. */
   required?: readonly ScopeDimension[];
   plan: AnswerPlan;
@@ -86,6 +92,8 @@ export interface Transaction {
   id: string;
   snapshotId: string;
   packId: string;
+  /** The locale the answer was certified for presentation in. */
+  locale: string;
   establishedAt: string;
   committedAt: string;
   /** The whole record the verdicts rest on, carried rather than referenced. */
@@ -120,6 +128,7 @@ export function runTransaction(input: TransactionInput): Transaction {
     id: input.id,
     snapshotId: input.registry.snapshot.id,
     packId: input.pack.id,
+    locale: input.locale,
     establishedAt: input.establishedAt,
     committedAt: input.committedAt,
     transcript: input.transcript,
@@ -152,6 +161,7 @@ export function runTransaction(input: TransactionInput): Transaction {
     registry: input.registry,
     pack: input.pack,
     grant: scope.grant,
+    locale: input.locale,
     at: input.committedAt,
   };
 

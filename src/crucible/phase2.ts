@@ -15,6 +15,7 @@
  */
 
 import type { AnswerManifest, Claim, ClosedRoster, Exhibit, RosterCriteria, Verdict } from "../kernel/contracts.js";
+import { digestText } from "../kernel/digest.js";
 import { compileManifest, verifyManifest } from "../kernel/manifest.js";
 import { buildRoster } from "../kernel/roster.js";
 import { AccordError } from "../kernel/violation.js";
@@ -104,18 +105,21 @@ export const PHASE_2_MUTATIONS: readonly Mutation[] = [
       ),
   },
   {
-    id: "strip-provenance-text",
-    title: "Keep the provenance exhibit, drop what it has to say",
+    id: "point-provenance-at-other-words",
+    title: "Keep the provenance exhibit, aim it at a different text",
     description:
-      "The disclosure is still listed, so a presence check passes. It no " +
-      "longer requires the licence or the snapshot it is there to disclose.",
+      "The disclosure is still listed, so a presence check passes. It now " +
+      "names a block that is not the approved attribution — the shape a " +
+      "stale translation, an older revision or a hand-edited record takes.",
     article: "IA-2",
-    rule: "exhibit-fragments-dropped",
+    rule: "exhibit-block-mismatch",
     run: (world) =>
       sabotageAnswer(world, (manifest) => ({
         ...manifest,
         exhibits: manifest.exhibits.map((exhibit) =>
-          exhibit.id === "provenance" ? { ...exhibit, requiredFragments: ["PokeAPI"] } : exhibit,
+          exhibit.id === "provenance"
+            ? { ...exhibit, block: { ...exhibit.block, digest: "sha256:0".padEnd(71, "0") } }
+            : exhibit,
         ),
       })),
   },
@@ -277,7 +281,12 @@ export const PHASE_2_MUTATIONS: readonly Mutation[] = [
         const injected: Exhibit = {
           id: "sponsored-message",
           kind: "warning",
-          requiredFragments: ["Brought to you by Silph Co."],
+          block: {
+            id: "silph-co-sponsorship",
+            version: 1,
+            locale: manifest.locale,
+            digest: digestText("Brought to you by Silph Co."),
+          },
         };
         return { ...manifest, exhibits: [...manifest.exhibits, injected] };
       }),

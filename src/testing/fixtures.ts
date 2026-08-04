@@ -101,12 +101,16 @@ export function trainerGrant(badgeLevel = 8): ScopeGrant {
   return established.value;
 }
 
-/** Registry, pack, grant and commit time, assembled the way the kernel wants. */
+/** The locale the fixture transport presents in. Approved by the shipped pack. */
+export const LOCALE = "en-US";
+
+/** Registry, pack, grant, locale and commit time, as the kernel wants them. */
 export function manifestContext(badgeLevel = 8): ManifestContext {
   return {
     registry: kantoRegistry(),
     pack: kantoPack(),
     grant: trainerGrant(badgeLevel),
+    locale: LOCALE,
     at: COMMIT_TIME,
   };
 }
