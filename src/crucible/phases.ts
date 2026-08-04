@@ -20,6 +20,7 @@ import { PHASE_2_ARTICLES, PHASE_2_CONTROLS, PHASE_2_MUTATIONS } from "./phase2.
 import { PHASE_3_ARTICLES, PHASE_3_CONTROLS, PHASE_3_MUTATIONS } from "./phase3.js";
 import { PHASE_4_ARTICLES, PHASE_4_CONTROLS, PHASE_4_MUTATIONS } from "./phase4.js";
 import { PHASE_5_ARTICLES, PHASE_5_CONTROLS, PHASE_5_MUTATIONS } from "./phase5.js";
+import { PHASE_6_ARTICLES, PHASE_6_CONTROLS, PHASE_6_MUTATIONS } from "./phase6.js";
 
 export interface CruciblePhase {
   /** Epic phase number, matching docs and the issue tracker. */
@@ -72,6 +73,13 @@ export const CRUCIBLE_PHASES: readonly CruciblePhase[] = [
     mutations: PHASE_5_MUTATIONS,
     controls: PHASE_5_CONTROLS,
   },
+  {
+    phase: 6,
+    title: "Replay",
+    articles: PHASE_6_ARTICLES,
+    mutations: PHASE_6_MUTATIONS,
+    controls: PHASE_6_CONTROLS,
+  },
 ];
 
 /**
@@ -82,7 +90,9 @@ export const CRUCIBLE_PHASES: readonly CruciblePhase[] = [
  * that the gap is visible in review rather than absent from the test output.
  */
 export const NOT_YET_COVERED: Partial<Record<ArticleId, number>> = {
-  "IA-10": 6, // replay
+  // Every Accord article is now denied by name in at least one mutation. The
+  // list stays — an empty crucible is a state the test still checks for — but
+  // there is nothing left owed to a future phase.
 };
 
 /** Every mutation the crucible knows about, across all landed phases. */
