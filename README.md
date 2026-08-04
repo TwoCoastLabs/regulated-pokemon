@@ -58,8 +58,12 @@ Private, work in progress.
       with certified values bound to typed slots and mandatory text bound to
       digested disclosure blocks — nothing on a certified artifact is proved
       by searching the page for words
-- [ ] Read-to-act continuity, and replay as re-execution
-- [ ] Two-model evaluation with published numbers
+- [x] Read-to-act continuity, and replay as re-execution
+- [x] A live-model harness spine (scripted, offline): a model behind the
+      propose steps, a truthful simulated trainer, and the enforcement-vs-
+      usefulness metric split — CI-run and key-free (`npm run harness`)
+- [ ] Two-model evaluation with published numbers (the billable OpenRouter run
+      behind the same seam)
 - [ ] Demo UI: chat + live compliance console + sabotage buttons
 
 ## Seeing it
@@ -99,6 +103,25 @@ DENIED  IA-5/restricted-species
 The demo checks itself: each conversation declares how it must end and each
 sabotage declares the denial it must be refused under, so it exits non-zero
 rather than printing a plausible trace nobody reads closely. CI runs it.
+
+The same seam, driven by scripted stand-in models instead of a live one, runs
+offline and key-free:
+
+```
+npm run harness
+```
+
+Three models take the corpus — a capable one, a deliberately weak one, and an
+adversarial one that tries to fabricate — and the result is two numbers kept
+strictly apart. **Enforcement** (committed fabrications, wrong-scope commits) is
+zero on every model, and *re-verified* rather than asserted: each committed
+answer is checked again against the snapshot, and the adversarial model is there
+so the gate is seen to fire rather than passing vacuously. **Usefulness**
+(resolution rate, turns to an answer, abstention) is allowed to differ between
+the strong and weak models — that difference is the whole point. It exits
+non-zero if any forbidden thing commits, if the adversary never triggers a
+denial, or if a run ends other than it declared. The live OpenRouter run that
+puts real models behind this seam is a separate, billable step.
 
 ## How it is verified
 
