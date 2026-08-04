@@ -127,7 +127,7 @@ crucible by test, so it cannot drift from what actually runs.
 | IA-7 | What Was Shown Is What Executes | 13 |
 | IA-8 | Only the Trainer Speaks for the Trainer | 6 |
 | IA-9 | Irreversible Acts Need Informed Consent | 4 |
-| IA-10 | The League May Replay | — phase 6 |
+| IA-10 | The League May Replay | 4 |
 
 Two controls run alongside every phase, because a kernel that refuses
 everything is trivially safe and useless. A clean path proves the kernel is not

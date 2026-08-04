@@ -98,6 +98,14 @@ export interface Transaction {
   committedAt: string;
   /** The whole record the verdicts rest on, carried rather than referenced. */
   transcript: ScopeTranscript;
+  /**
+   * The dimensions this exchange required, recorded exactly as they were
+   * supplied — absent when the caller took the default. Kept because scope
+   * resolution reads it: whether the same transcript answers or asks depends on
+   * what was required, so a replay that could not see it could not reproduce
+   * the outcome (IA-10).
+   */
+  required?: readonly ScopeDimension[];
   /** What the record establishes, what it contradicts, and what it says that
    * binds nothing — including wording the vocabulary never covered. */
   derivation: ScopeDerivation;
@@ -132,6 +140,7 @@ export function runTransaction(input: TransactionInput): Transaction {
     establishedAt: input.establishedAt,
     committedAt: input.committedAt,
     transcript: input.transcript,
+    ...(input.required === undefined ? {} : { required: input.required }),
     derivation: scope.derivation,
   };
 
