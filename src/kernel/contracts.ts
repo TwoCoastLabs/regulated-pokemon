@@ -191,7 +191,19 @@ export type Claim =
    * claim about a set, "go and catch Mewtwo" is advice. IA-5 gates the second,
    * so it needs something of its own to gate.
    */
-  | { kind: "recommendation"; entityId: string };
+  | { kind: "recommendation"; entityId: string }
+  /**
+   * A consequential act the Advisor proposes to perform (IA-7, IA-9).
+   *
+   * Part of the certified answer because of what Article VII binds: an action
+   * executes against "the exact certified answer the Trainer saw and
+   * confirmed", so the act itself has to be *in* that answer and on that page.
+   * An action assembled afterwards out of a chat message would be an act the
+   * trainer confirmed nothing about — and an irreversible one could never have
+   * triggered the disclosure Article IX owes, because nothing upstream of the
+   * confirmation would have known it was coming.
+   */
+  | { kind: "action"; tool: string; entityId: string };
 
 /**
  * The mandatory text a disclosure carries, named rather than quoted (IA-6).
@@ -212,9 +224,25 @@ export interface DisclosureBlockRef {
 
 /** A governed display unit (IA-6): text that must be customer-visible. */
 export interface Exhibit {
+  /** Unique in the manifest, and the unit id the artifact has to mark. */
   id: string;
+  /**
+   * The Accord pack rule that made it mandatory.
+   *
+   * Carried separately from `id` because one rule can owe more than one
+   * disclosure: an answer proposing two irreversible acts owes a consent
+   * notice for each, and the two are different units on the page.
+   */
+  rule: string;
   kind: "fact" | "count" | "selection" | "warning" | "provenance";
+  /** The entity this discloses about, when a rule triggered on one. */
   entityId?: string;
+  /**
+   * For the consent notice an irreversible act owes (IA-9): the action it
+   * discloses. The notice has to sit beside the act itself rather than beside
+   * anything that happens to mention the same species.
+   */
+  tool?: string;
   block: DisclosureBlockRef;
   /** Article that triggered this exhibit, when it is a mandatory disclosure. */
   triggeredBy?: ArticleId;
@@ -268,6 +296,14 @@ export interface RenderAffidavit {
 export interface ConfirmationEvent {
   id: string;
   transactionId: string;
+  /**
+   * The channel the transport assigned it. Only the trainer's binds (IA-8):
+   * an injected tool result reading "the user confirmed" arrives here as a
+   * recorded event on a channel that cannot consent, rather than as something
+   * anyone has to detect.
+   */
+  source: UtteranceSource;
+  /** Digest of the artifact as it was shown — not of the one on file now. */
   artifactDigest: string;
   confirmedAt: string; // RFC 3339
 }

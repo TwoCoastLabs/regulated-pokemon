@@ -16,7 +16,7 @@
 
 import type { AnswerManifest, Claim, ClosedRoster, Exhibit, RosterCriteria, Verdict } from "../kernel/contracts.js";
 import { digestText } from "../kernel/digest.js";
-import { compileManifest, verifyManifest } from "../kernel/manifest.js";
+import { compileManifest, type ManifestDraft, verifyManifest } from "../kernel/manifest.js";
 import { buildRoster } from "../kernel/roster.js";
 import { AccordError } from "../kernel/violation.js";
 import type { ArticleId } from "../kernel/accord.js";
@@ -34,14 +34,16 @@ function roster(world: CrucibleWorld, id: string, criteria: RosterCriteria): Clo
 }
 
 /**
- * The answer every mutation starts from: one claim of each kind, over two
- * certified sets, for a trainer accredited to hear all of it.
+ * The answer every mutation starts from: one claim of each kind the manifest
+ * layer knows how to check, over two certified sets, for a trainer accredited
+ * to hear all of it.
  *
- * Exported because phase 4 renders this exact answer. The two phases sabotage
- * different things about the same sentence, which is the only way to find out
- * whether they agree about what an answer is.
+ * Exported as a draft as well as a manifest because the later phases build on
+ * it: phase 4 renders this exact answer and phase 5 adds the act it leads to.
+ * The phases sabotage different things about the same sentence, which is the
+ * only way to find out whether they agree about what an answer is.
  */
-export function honestAnswer(world: CrucibleWorld): AnswerManifest {
+export function honestDraft(world: CrucibleWorld): ManifestDraft {
   const electric = roster(world, "electric-kanto", ELECTRIC);
   const boomers = roster(world, "selfdestruct-learners", BOOMERS);
   const claims: Claim[] = [
@@ -59,7 +61,11 @@ export function honestAnswer(world: CrucibleWorld): AnswerManifest {
     { kind: "recommendation", entityId: "mewtwo" },
   ];
 
-  const compiled = compileManifest(world, { transactionId: "txn-crucible", claims, rosters: [electric, boomers] });
+  return { transactionId: "txn-crucible", claims, rosters: [electric, boomers] };
+}
+
+export function honestAnswer(world: CrucibleWorld): AnswerManifest {
+  const compiled = compileManifest(world, honestDraft(world));
   // A crucible that cannot build an honest answer is not measuring anything,
   // so this fails loudly rather than degrading into a passing denial.
   if (!compiled.ok) throw new AccordError(compiled.violations);
@@ -280,6 +286,7 @@ export const PHASE_2_MUTATIONS: readonly Mutation[] = [
       sabotageAnswer(world, (manifest) => {
         const injected: Exhibit = {
           id: "sponsored-message",
+          rule: "silph-co-partnership",
           kind: "warning",
           block: {
             id: "silph-co-sponsorship",

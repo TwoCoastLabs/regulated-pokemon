@@ -45,6 +45,7 @@ const LEAD_IN: Record<RenderUnitKind, string | undefined> = {
   membership: "lead-in.membership",
   selection: "lead-in.selection",
   recommendation: "lead-in.recommendation",
+  action: "lead-in.action",
   warning: undefined,
   provenance: "provenance.snapshot",
 };

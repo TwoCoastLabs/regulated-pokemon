@@ -230,6 +230,52 @@ describe("the Accord pack decides who may be told what", () => {
     expect(compile([{ kind: "recommendation", entityId: "mew" }], [], sixBadges).ok).toBe(false);
   });
 
+  it("gates an act by the same accreditation as the advice to acquire one", () => {
+    // An act that hands over a restricted species is at least as consequential
+    // as being told to go and get one, so it meets the identical gate.
+    const novice = manifestContext(2);
+    const result = compile([{ kind: "action", tool: "add-to-team", entityId: "articuno" }], [], novice);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.violations.map(denialCode)).toContain("IA-5/restricted-species");
+  });
+
+  it("refuses an act the pack's closed action registry does not declare", () => {
+    const result = compile([{ kind: "action", tool: "delete-save-file", entityId: "pikachu" }]);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.violations.map(denialCode)).toEqual(["IA-7/unknown-action"]);
+  });
+
+  it("refuses to act on something that does not exist", () => {
+    const result = compile([{ kind: "action", tool: "release", entityId: "missingno" }]);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.violations.map(denialCode)).toContain("IA-3/fabricated-entity");
+  });
+
+  it("owes one consent notice per irreversible act, not per rule", () => {
+    const exhibits = requiredExhibits(
+      context,
+      [
+        { kind: "action", tool: "release", entityId: "pikachu" },
+        { kind: "action", tool: "release", entityId: "raichu" },
+        // Reversible: the same rule must not fire for it.
+        { kind: "action", tool: "add-to-team", entityId: "zapdos" },
+        // The same act twice is one thing to consent to.
+        { kind: "action", tool: "release", entityId: "pikachu" },
+      ],
+      [],
+    );
+    expect(exhibits.map((exhibit) => exhibit.id)).toEqual([
+      "release-irreversibility:pikachu",
+      "release-irreversibility:raichu",
+      "provenance",
+    ]);
+    expect(exhibits[0]?.tool).toBe("release");
+    expect(exhibits[0]?.rule).toBe("release-irreversibility");
+  });
+
   it("refuses to recommend something that does not exist", () => {
     const result = compile([{ kind: "recommendation", entityId: "missingno" }]);
     expect(result.ok).toBe(false);
@@ -298,6 +344,7 @@ describe("the Accord pack decides who may be told what", () => {
       ...manifest.exhibits,
       {
         id: "sponsored-message",
+        rule: "silph-co-partnership",
         kind: "warning" as const,
         block: { id: "silph", version: 1, locale: manifest.locale, digest: digestText("buy now") },
       },

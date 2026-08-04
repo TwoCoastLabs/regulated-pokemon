@@ -30,7 +30,7 @@ import type {
   Verdict,
   Violation,
 } from "./contracts.js";
-import { type AccordPack, approvesLocale, blockFor, type ExhibitRule, restrictionsFor } from "./pack.js";
+import { type AccordPack, actionRule, approvesLocale, blockFor, type ExhibitRule, restrictionsFor } from "./pack.js";
 import { type CertifiedRegistry, formatFactValue, sameFactValue } from "./registry.js";
 import { verifyRoster } from "./roster.js";
 import { verdictOf, violation } from "./violation.js";
@@ -261,6 +261,8 @@ function checkClaim(context: ManifestContext, manifest: AnswerManifest, claim: C
       return checkRanking(context, manifest, claim);
     case "recommendation":
       return checkRecommendation(context, claim);
+    case "action":
+      return checkAction(context, claim);
   }
 }
 
@@ -325,15 +327,56 @@ function checkRecommendation(
   claim: Extract<Claim, { kind: "recommendation" }>,
 ): Violation[] {
   const species = context.registry.findSpecies(claim.entityId);
-  if (species === undefined) {
+  if (species === undefined) return [fabricated(context, claim.entityId)];
+  return checkAccreditation(context, claim.entityId, species);
+}
+
+/**
+ * A consequential act, before anything about the trainer's page is known.
+ *
+ * Two questions here and one everywhere else. This layer asks whether the act
+ * is one the Accord declares and whether this trainer may be its subject; that
+ * it was shown, confirmed and executed in that order is Article VII's, and
+ * lives in ./action.ts.
+ */
+function checkAction(context: ManifestContext, claim: Extract<Claim, { kind: "action" }>): Violation[] {
+  const species = context.registry.findSpecies(claim.entityId);
+  if (species === undefined) return [fabricated(context, claim.entityId)];
+
+  const rule = actionRule(context.pack, claim.tool);
+  if (rule === undefined) {
+    // Closed, like every other list here. An unapproved tool is not an act the
+    // Accord happens not to mention; it is a way of changing the trainer's
+    // state that no rule — including Article IX's — was ever written about.
     return [
-      violation("IA-3", "fabricated-entity", `"${claim.entityId}" is not certified by ${context.registry.snapshot.id}`, {
-        expected: `a species in ${context.registry.snapshot.id}`,
-        actual: claim.entityId,
+      violation("IA-7", "unknown-action", `pack ${context.pack.id} declares no action "${claim.tool}"`, {
+        expected: context.pack.actions.map((entry) => entry.id).join(", ") || "no actions",
+        actual: claim.tool,
       }),
     ];
   }
 
+  // The same gate a recommendation faces. Advice to acquire a restricted
+  // species is gated, so an act that hands one over is gated identically — and
+  // where the direction of the transfer makes that read oddly (a trainer being
+  // refused permission to release what they already hold), the refusal is on
+  // the safe side of the error.
+  return checkAccreditation(context, claim.entityId, species);
+}
+
+function fabricated(context: ManifestContext, entityId: string): Violation {
+  return violation("IA-3", "fabricated-entity", `"${entityId}" is not certified by ${context.registry.snapshot.id}`, {
+    expected: `a species in ${context.registry.snapshot.id}`,
+    actual: entityId,
+  });
+}
+
+/** Whether this trainer is accredited to be advised of, or handed, a species. */
+function checkAccreditation(
+  context: ManifestContext,
+  entityId: string,
+  species: { isLegendary: boolean; isMythical: boolean },
+): Violation[] {
   const badgeLevel = context.grant.scope.badgeLevel;
   return restrictionsFor(context.pack, species)
     .filter((rule) => badgeLevel < rule.minimumBadgeLevel)
@@ -344,7 +387,7 @@ function checkRecommendation(
       violation(
         rule.article,
         "restricted-species",
-        `${claim.entityId} is a restricted species under "${rule.id}" and this trainer is not accredited for it`,
+        `${entityId} is a restricted species under "${rule.id}" and this trainer is not accredited for it`,
         { expected: `badge level ${rule.minimumBadgeLevel}`, actual: `badge level ${badgeLevel}` },
       ),
     );
@@ -439,27 +482,45 @@ export function requiredExhibits(
   claims: readonly Claim[],
   rosters: readonly ClosedRoster[],
 ): readonly Exhibit[] {
-  return triggeredRules(context, claims, rosters).flatMap((rule) => {
-    const content = blockFor(rule, context.locale);
+  return triggeredRules(context, claims, rosters).flatMap((triggered) => {
+    const content = blockFor(triggered.rule, context.locale);
     // A rule with no approved text in this locale is denied by name in
     // `checkExhibits` rather than quietly satisfied with the words from
     // another one: a translation is separately approved, never substituted.
     if (content === undefined) return [];
     return [
       {
-        id: rule.id,
-        kind: rule.kind,
+        id: triggered.id,
+        rule: triggered.rule.id,
+        kind: triggered.rule.kind,
         block: {
-          id: rule.block.id,
-          version: rule.block.version,
+          id: triggered.rule.block.id,
+          version: triggered.rule.block.version,
           locale: context.locale,
           digest: content.digest,
         },
-        triggeredBy: rule.article,
-        ...(rule.when.kind === "entity-claimed" ? { entityId: rule.when.entityId } : {}),
+        triggeredBy: triggered.rule.article,
+        ...(triggered.entityId === undefined ? {} : { entityId: triggered.entityId }),
+        ...(triggered.tool === undefined ? {} : { tool: triggered.tool }),
       },
     ];
   });
+}
+
+/**
+ * One firing of one pack rule: the rule, the unit it owes, and what fired it.
+ *
+ * A rule and an obligation are not the same thing once acts are in the picture.
+ * "Releasing is permanent" is one rule, and an answer proposing to release two
+ * Pokémon owes two notices — each naming its own species, each beside its own
+ * act — so the firing carries an id of its own rather than borrowing the
+ * rule's.
+ */
+interface TriggeredExhibit {
+  id: string;
+  rule: ExhibitRule;
+  entityId?: string;
+  tool?: string;
 }
 
 /** The pack rules this answer fires, before any question of what they say. */
@@ -467,18 +528,52 @@ function triggeredRules(
   context: ManifestContext,
   claims: readonly Claim[],
   rosters: readonly ClosedRoster[],
-): readonly ExhibitRule[] {
+): readonly TriggeredExhibit[] {
   const mentioned = entitiesMentioned(claims, rosters);
-  return context.pack.exhibits.filter(
-    (rule) => rule.when.kind === "always" || mentioned.has(rule.when.entityId),
-  );
+  const triggered: TriggeredExhibit[] = [];
+  const seen = new Set<string>();
+
+  const fire = (entry: TriggeredExhibit): void => {
+    // Two identical acts in one answer are one thing to consent to. The
+    // duplicate would otherwise reach the manifest as a second exhibit with
+    // the same id, which nothing downstream could tell apart.
+    if (seen.has(entry.id)) return;
+    seen.add(entry.id);
+    triggered.push(entry);
+  };
+
+  for (const rule of context.pack.exhibits) {
+    switch (rule.when.kind) {
+      case "always":
+        fire({ id: rule.id, rule });
+        break;
+      case "entity-claimed":
+        if (mentioned.has(rule.when.entityId)) fire({ id: rule.id, rule, entityId: rule.when.entityId });
+        break;
+      case "action-claimed": {
+        const tool = rule.when.tool;
+        for (const claim of claims) {
+          if (claim.kind !== "action" || claim.tool !== tool) continue;
+          fire({ id: `${rule.id}:${claim.entityId}`, rule, entityId: claim.entityId, tool });
+        }
+        break;
+      }
+    }
+  }
+
+  return triggered;
 }
 
 /** Every entity the answer touches, including via the criteria of its sets. */
 function entitiesMentioned(claims: readonly Claim[], rosters: readonly ClosedRoster[]): ReadonlySet<string> {
   const mentioned = new Set<string>();
   for (const claim of claims) {
-    if (claim.kind === "fact" || claim.kind === "membership" || claim.kind === "recommendation") {
+    if (
+      claim.kind === "fact" ||
+      claim.kind === "membership" ||
+      claim.kind === "recommendation" ||
+      claim.kind === "action"
+    ) {
       mentioned.add(claim.entityId);
     }
     if (claim.kind === "ranking") mentioned.add(claim.selectedEntityId);
@@ -523,12 +618,23 @@ function checkExhibits(context: ManifestContext, manifest: AnswerManifest): Viol
         }),
       );
     }
+    // What a disclosure is *about* is as load-bearing as what it says. A
+    // consent notice re-aimed at a reversible act would carry the right words
+    // and sit beside the wrong thing, and the page would look immaculate.
+    if (!sameAttribution(owed, found)) {
+      violations.push(
+        violation(owed.triggeredBy ?? "IA-6", "exhibit-misattributed", `exhibit "${owed.id}" no longer discloses what the pack attached it to`, {
+          expected: describeAttribution(owed),
+          actual: describeAttribution(found),
+        }),
+      );
+    }
   }
 
   // A rule that fires and has nothing approved to say in this locale is a
   // disclosure obligation nobody can discharge, so the answer stops here
   // rather than being released without it.
-  for (const rule of triggeredRules(context, manifest.claims, manifest.rosters)) {
+  for (const { rule } of triggeredRules(context, manifest.claims, manifest.rosters)) {
     if (blockFor(rule, manifest.locale) !== undefined) continue;
     violations.push(
       violation(rule.article, "exhibit-block-unavailable", `exhibit "${rule.id}" has no approved text in ${manifest.locale}`, {
@@ -565,4 +671,22 @@ function sameBlock(owed: DisclosureBlockRef, found: DisclosureBlockRef | undefin
 
 function describeBlock(block: DisclosureBlockRef): string {
   return `${block.id} v${block.version} ${block.locale} ${block.digest}`;
+}
+
+function sameAttribution(owed: Exhibit, found: Exhibit): boolean {
+  return (
+    found.rule === owed.rule &&
+    found.kind === owed.kind &&
+    found.entityId === owed.entityId &&
+    found.tool === owed.tool &&
+    found.triggeredBy === owed.triggeredBy
+  );
+}
+
+function describeAttribution(exhibit: Exhibit): string {
+  const about = [
+    exhibit.entityId === undefined ? undefined : `about ${exhibit.entityId}`,
+    exhibit.tool === undefined ? undefined : `for ${exhibit.tool}`,
+  ].filter((part) => part !== undefined);
+  return `${exhibit.rule} (${exhibit.kind}${about.length > 0 ? `, ${about.join(", ")}` : ""}) under ${exhibit.triggeredBy ?? "IA-6"}`;
 }
