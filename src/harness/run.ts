@@ -22,7 +22,7 @@ import type { CertifiedRegistry } from "../kernel/registry.js";
 import { resolveScope, type ScopeContext } from "../kernel/scope.js";
 import { runTransaction, type Transaction } from "../kernel/transaction.js";
 import { proposeAnswer, proposeScope } from "./advisor.js";
-import type { ModelProvider, Usage } from "./provider.js";
+import { addUsage, emptyUsage, type ModelProvider, type Usage } from "./provider.js";
 import { respondToProposal } from "./trainer.js";
 import { COMMITTED_AT, ESTABLISHED_AT, LOCALE, type Scenario } from "./corpus.js";
 
@@ -43,6 +43,8 @@ export type RunStatus = "answered" | "denied" | "unresolved";
 export interface HarnessRun {
   scenarioId: string;
   providerId: string;
+  /** Which sample this is, when a model is run over the corpus more than once. */
+  repetition: number;
   status: RunStatus;
   /** One human line on why it ended this way. */
   detail: string;
@@ -61,30 +63,33 @@ export interface HarnessRun {
 /** How many times the model may take a fresh run at establishing scope before
  * the exchange is abandoned as unresolved. Small on purpose: a real trainer's
  * patience is finite, and an unbounded loop is not a usefulness measurement. */
-const MAX_SCOPE_TURNS = 3;
+export const MAX_SCOPE_TURNS = 3;
 
-function addUsage(a: Usage, b: Usage): Usage {
-  return {
-    promptTokens: a.promptTokens + b.promptTokens,
-    completionTokens: a.completionTokens + b.completionTokens,
-  };
-}
-
+/**
+ * Which pass over the corpus this run belongs to.
+ *
+ * A live provider is nondeterministic even at temperature 0, so the same model
+ * on the same scenario is sampled more than once and each sample is its own
+ * run. The index is part of the transaction id, so two samples are two records
+ * rather than one overwriting the other.
+ */
 export async function runScenario(
   world: HarnessWorld,
   scenario: Scenario,
   provider: ModelProvider,
+  repetition = 0,
 ): Promise<HarnessRun> {
   const { registry, pack } = world;
   const scopeContext: ScopeContext = { pack, at: ESTABLISHED_AT, required: scenario.required };
-  const transactionId = `harness-${scenario.id}-${provider.id}`;
+  const suffix = repetition === 0 ? "" : `-r${repetition}`;
+  const transactionId = `harness-${scenario.id}-${provider.id}${suffix}`;
 
   let transcript: ScopeTranscript = scenario.opening;
   let turns = 0;
   let providerErrors = 0;
-  let usage: Usage = { promptTokens: 0, completionTokens: 0 };
+  let usage: Usage = emptyUsage();
 
-  const base = { scenarioId: scenario.id, providerId: provider.id };
+  const base = { scenarioId: scenario.id, providerId: provider.id, repetition };
   const abstain = (detail: string, grantScope?: TrainerScope): HarnessRun => ({
     ...base,
     status: "unresolved",

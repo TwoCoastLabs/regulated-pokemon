@@ -62,8 +62,11 @@ Private, work in progress.
 - [x] A live-model harness spine (scripted, offline): a model behind the
       propose steps, a truthful simulated trainer, and the enforcement-vs-
       usefulness metric split — CI-run and key-free (`npm run harness`)
-- [ ] Two-model evaluation with published numbers (the billable OpenRouter run
-      behind the same seam)
+- [x] Real models behind that same seam: an OpenRouter driver, a strong/weak/
+      adversarial line-up, cost reported apart from both other metrics, and a
+      filed run artifact (`npm run harness:live`)
+- [ ] Published two-model numbers and the results page generated from those
+      artifacts
 - [ ] Demo UI: chat + live compliance console + sabotage buttons
 
 ## Seeing it
@@ -120,8 +123,47 @@ so the gate is seen to fire rather than passing vacuously. **Usefulness**
 (resolution rate, turns to an answer, abstention) is allowed to differ between
 the strong and weak models — that difference is the whole point. It exits
 non-zero if any forbidden thing commits, if the adversary never triggers a
-denial, or if a run ends other than it declared. The live OpenRouter run that
-puts real models behind this seam is a separate, billable step.
+denial, or if a run ends other than it declared.
+
+### The billable run
+
+The same corpus, the same metrics and the same self-check, with real models
+behind the propose steps. It is the only thing here that touches a network or
+costs money, so it never runs in CI and it is a **dry run by default**:
+
+```
+npm run harness:live                     # prints the plan, calls nothing
+npm run harness:live -- --live           # spend: one pass over the corpus
+npm run harness:live -- --live --repetitions 3
+```
+
+A key goes in `.env` (see `.env.example`) and nowhere else. Three models run:
+a capable one, a deliberately weak and cheap one, and the capable slug again
+under a persona that genuinely tries to slip a false certified value past the
+kernel. All three are OpenRouter slugs you can override, because a slug is a
+moving target and a harness pinned to a retired one cannot be re-run.
+
+Three things the live run has to get right that a scripted one does not:
+
+- **A model can be too timid to be an adversary.** A scripted attacker always
+  attacks; a real one asked to may simply decline, and then a safety test
+  passes because nobody attacked it. So denials are attributed to the model
+  that provoked them, and a named adversary that never made the gate fire is a
+  failure, not a pass.
+- **Providers diverge at temperature 0.** So `--repetitions` samples each
+  model on each scenario more than once — and the first pass is checked before
+  the second is paid for. A run whose enforcement broke, or whose provider was
+  wholly down, stops rather than billing three times for the same finding.
+- **Cost is reported, not computed.** The figure is what OpenRouter priced the
+  call at; a price table vendored here would rot, and a wrong dollar figure
+  printed beside the enforcement zeros would devalue them. When a call comes
+  back unpriced the total is labelled a floor rather than a total.
+
+Every live run files an artifact under `runs/` — the whole record, not a
+summary: each run's transcript and, where one was reached, the transaction
+`replayTransaction` can re-execute, alongside the snapshot digest and pack id
+naming the certified world the numbers were measured in. Nothing in it is
+derived from the key, and a test asserts that on the serialised bytes.
 
 ## How it is verified
 

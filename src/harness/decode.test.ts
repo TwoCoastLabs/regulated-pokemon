@@ -54,6 +54,24 @@ describe("decodeCandidate", () => {
   });
 });
 
+describe("markdown fences — packaging, not a claim", () => {
+  const candidate = JSON.stringify({ candidate: { comparisonBasis: "base-speed" }, interpreting: "the quickest" });
+
+  it("unwraps a fenced reply, which is how a live model usually returns JSON", () => {
+    const decoded = decodeCandidate("```json\n" + candidate + "\n```", world.pack);
+    expect(decoded?.candidate).toEqual({ comparisonBasis: "base-speed" });
+  });
+
+  it("unwraps an unlabelled fence too", () => {
+    expect(decodeCandidate("```\n" + candidate + "\n```", world.pack)).not.toBeNull();
+  });
+
+  it("still refuses JSON buried in prose — leniency about shape is the one thing barred", () => {
+    expect(decodeCandidate(`Sure! Here you go: ${candidate}`, world.pack)).toBeNull();
+    expect(decodeCandidate("```json\n```", world.pack)).toBeNull();
+  });
+});
+
 describe("decodeAnswer", () => {
   it("decodes every claim kind and fact-value shape, carried verbatim", () => {
     const text = JSON.stringify({
