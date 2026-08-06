@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
 import type { Claim } from "../kernel/contracts.js";
-import { computeEnforcement, computeHealth, computeMetrics, computeUsefulness } from "./metrics.js";
+import { computeCost, computeEnforcement, computeHealth, computeMetrics, computeUsefulness } from "./metrics.js";
 import { harnessWorld, models, type Scenario, SCENARIOS } from "./corpus.js";
 import type { HarnessRun } from "./run.js";
 import { runScenario } from "./run.js";
@@ -30,6 +30,14 @@ describe("computeEnforcement — checked, not asserted", () => {
     expect(enforcement.answered).toBeGreaterThan(0);
     expect(enforcement.blockedDenials.length).toBeGreaterThan(0);
     expect(enforcement.blockedDenials.every((code) => code.startsWith("IA-"))).toBe(true);
+  });
+
+  it("attributes each denial to the model that provoked it", () => {
+    const enforcement = computeEnforcement(world, SCENARIOS, allRuns);
+    // The adversary is the one attacking, so it is the one that must be seen
+    // making the gate fire — "somebody was denied" is not the same claim.
+    expect(enforcement.blockedByProvider["scripted:adversarial"]?.length).toBeGreaterThan(0);
+    expect(enforcement.blockedByProvider["scripted:strong"]).toBeUndefined();
   });
 
   it("catches a committed answer that fails independent re-verification", () => {
@@ -63,7 +71,7 @@ describe("computeUsefulness — empirical, per model", () => {
   it("splits answered, denied and unresolved into rates and turns", () => {
     const runs = allRuns.filter((run) => run.providerId === "scripted:weak");
     const use = computeUsefulness("scripted:weak", runs);
-    expect(use.scenarios).toBe(2);
+    expect(use.runs).toBe(2);
     expect(use.answered).toBe(1);
     expect(use.unresolved).toBe(1);
     expect(use.resolutionRate).toBe(0.5);
@@ -73,7 +81,7 @@ describe("computeUsefulness — empirical, per model", () => {
 
   it("is all zeros for a model that ran nothing, without dividing by zero", () => {
     const use = computeUsefulness("scripted:ghost", []);
-    expect(use).toMatchObject({ scenarios: 0, resolutionRate: 0, abstentionRate: 0, avgTurnsToAnswer: 0 });
+    expect(use).toMatchObject({ runs: 0, resolutionRate: 0, abstentionRate: 0, avgTurnsToAnswer: 0 });
   });
 });
 
@@ -92,11 +100,30 @@ describe("computeHealth — outages counted, never averaged", () => {
   });
 });
 
+describe("computeCost — money, in its own section", () => {
+  it("sums a model's usage and calls a scripted run fully priced", () => {
+    const runs = allRuns.filter((run) => run.providerId === "scripted:strong");
+    const cost = computeCost("scripted:strong", runs);
+    expect(cost.usage.calls).toBeGreaterThan(0);
+    expect(cost.usage.costUsd).toBe(0);
+    expect(cost.fullyPriced).toBe(true);
+  });
+
+  it("reports a total as a floor when the provider left a call unpriced", () => {
+    const unpriced: HarnessRun = {
+      ...strongBasics,
+      usage: { promptTokens: 1, completionTokens: 1, calls: 2, costedCalls: 1, costUsd: 0.01 },
+    };
+    expect(computeCost("live:strong", [unpriced]).fullyPriced).toBe(false);
+  });
+});
+
 describe("computeMetrics", () => {
-  it("assembles the split and flags that an adversary was present", () => {
+  it("assembles the split and names the adversary that must be seen to fail", () => {
     const metrics = computeMetrics(world, SCENARIOS, modelList, allRuns);
-    expect(metrics.adversaryPresent).toBe(true);
+    expect(metrics.adversaries).toEqual(["scripted:adversarial"]);
     expect(metrics.usefulness).toHaveLength(3);
     expect(metrics.health).toHaveLength(3);
+    expect(metrics.cost).toHaveLength(3);
   });
 });

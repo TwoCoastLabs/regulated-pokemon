@@ -49,10 +49,26 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every(isString);
 }
 
+/**
+ * Unwrap a markdown code fence, and nothing else.
+ *
+ * A live model asked for JSON routinely returns it inside ```json … ```. That
+ * is packaging the chat transport put around the reply, not a claim the model
+ * made, so unwrapping it costs no strictness. Everything past this point is as
+ * strict as before — in particular there is deliberately no "find the first
+ * `{`" salvage: scanning prose for something JSON-shaped is being lenient about
+ * *shape*, which is the one thing this decoder may not be.
+ */
+function unfence(text: string): string {
+  const fenced = /^```[a-zA-Z0-9]*[ \t]*\r?\n([\s\S]*?)\r?\n?```$/.exec(text.trim());
+  return fenced === null ? text : fenced[1] ?? "";
+}
+
 function parse(text: string): unknown {
-  if (text.trim() === "") return undefined;
+  const source = unfence(text);
+  if (source.trim() === "") return undefined;
   try {
-    return JSON.parse(text) as unknown;
+    return JSON.parse(source) as unknown;
   } catch {
     return undefined;
   }

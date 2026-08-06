@@ -15,6 +15,7 @@
     "build": "tsc -p tsconfig.build.json",
     "demo": "npm run build && node dist/demo/cli.js",
     "harness": "npm run build && node dist/harness/cli.js",
+    "harness:live": "npm run build && node dist/harness/live-cli.js",
     "snapshot:fetch": "node --experimental-strip-types scripts/fetch-snapshot.ts"
   },
   "devDependencies": {

@@ -6,10 +6,10 @@
  * This file connects it to a terminal, so the only thing not covered by a test
  * is the connecting.
  *
- * Filing the artifact to disk lands with the billable OpenRouter slice, whose
- * whole product is published run artifacts. Here the artifact is built and
- * returned (its schema is `HarnessArtifact`); the scripted run's job is to
- * prove the harness holds, which it does in memory.
+ * Nothing is filed to disk. A published run artifact is the product of the
+ * billable live harness (`live-cli.ts`), which cannot be re-run to check it; a
+ * scripted run is reproducible by typing the command again, so writing a file
+ * on every CI run would be noise rather than evidence.
  */
 
 import { runHarness } from "./report.js";
