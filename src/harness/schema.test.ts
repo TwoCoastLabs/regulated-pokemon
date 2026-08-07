@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import type { ManifestContext } from "../kernel/manifest.js";
-import { SPECIES_FACT_IDS } from "../kernel/registry.js";
 import { harnessWorld } from "./corpus.js";
 import { decodeAnswer } from "./decode.js";
-import { ANSWER_SCHEMA } from "./schema.js";
+import { ANSWER_SCHEMA, FACT_IDS } from "./schema.js";
 
 const world = harnessWorld();
 const context = {
@@ -37,14 +36,14 @@ const criterionKinds = kindsOf(
 );
 
 describe("the answer grammar tracks the kernel, not a copy of it", () => {
-  it("offers exactly the fact ids the registry certifies", () => {
+  it("offers exactly the fact ids the registry certifies, species and move alike", () => {
     // The enum is what makes "national-dex-number" unrepresentable rather than
     // merely discouraged; if the registry grows a fact, this fails until the
     // grammar is widened in the same commit.
     const factClaim = (
       properties.claims?.items as { anyOf: { properties: Record<string, { enum?: string[] }> }[] }
     ).anyOf.find((entry) => entry.properties.kind?.enum?.[0] === "fact");
-    expect(factClaim?.properties.factId?.enum).toEqual([...SPECIES_FACT_IDS]);
+    expect(factClaim?.properties.factId?.enum).toEqual([...FACT_IDS]);
   });
 
   it("offers every claim kind the decoder accepts, so the grammar narrows nothing", () => {

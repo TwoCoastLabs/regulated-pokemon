@@ -32,8 +32,12 @@
  * widens this schema in the same commit, or a test fails.
  */
 
-import { SPECIES_FACT_IDS } from "../kernel/registry.js";
+import { MOVE_FACT_IDS, SPECIES_FACT_IDS } from "../kernel/registry.js";
 import { STAT_NAMES } from "../kernel/snapshot-format.js";
+
+/** Every certified fact id, species and move alike: a fact claim's `entityId`
+ * may name either, and the registry resolves each against its own vocabulary. */
+export const FACT_IDS: readonly string[] = [...SPECIES_FACT_IDS, ...MOVE_FACT_IDS];
 
 /** A JSON Schema document, as far as this module needs to describe one. */
 export type JsonSchema = Record<string, unknown>;
@@ -68,8 +72,9 @@ const BOOLEAN: JsonSchema = { type: "boolean" };
 
 /** A fact id the registry actually certifies — the enum that ends the
  * `type` vs `types`, `national-dex-number` vs `pokedex-number` class of
- * failure by making the wrong id unrepresentable. */
-const FACT_ID: JsonSchema = { type: "string", enum: [...SPECIES_FACT_IDS] };
+ * failure by making the wrong id unrepresentable. Species and move facts both,
+ * so a claim about a move's power is as expressible as one about a species. */
+const FACT_ID: JsonSchema = { type: "string", enum: [...FACT_IDS] };
 
 const FACT_VALUE: JsonSchema = {
   anyOf: [
