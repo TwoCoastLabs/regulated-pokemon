@@ -57,6 +57,9 @@ export interface HarnessOptions {
   /** How many times each model takes each scenario. More than one because a
    * live provider diverges across identical prompts even at temperature 0. */
   repetitions?: number;
+  /** Hand the proposer the certified registry to compose from, instead of
+   * asking it to recall. A measured variable; the scripted models ignore it. */
+  grounded?: boolean;
   title?: string;
   subtitle?: string;
 }
@@ -250,7 +253,7 @@ export async function runModels(options: HarnessOptions): Promise<HarnessReport>
   for (let repetition = 0; repetition < repetitions; repetition++) {
     for (const model of modelList) {
       for (const scenario of scenarios) {
-        runs.push(await runScenario(world, scenario, model.provider, repetition));
+        runs.push(await runScenario(world, scenario, model.provider, repetition, options.grounded));
       }
     }
     if (repetition + 1 < repetitions) {

@@ -87,6 +87,23 @@ describe("proposeAnswer", () => {
     expect(seen).not.toContain("Mewtwo");
   });
 
+  it("hands over the certified registry only when grounded, and it is facts not policy", async () => {
+    let grounded = "";
+    let plain = "";
+    const capture = (into: (text: string) => void) =>
+      new ScriptedProvider("m", (req) => {
+        into(req.prompt);
+        return JSON.stringify({ rosters: [], claims: [] });
+      });
+    await proposeAnswer({ provider: capture((t) => (grounded = t)), context, scenarioId: "s", transactionId: "t", transcript: [], grounded: true });
+    await proposeAnswer({ provider: capture((t) => (plain = t)), context, scenarioId: "s", transactionId: "t", transcript: [] });
+
+    expect(grounded).toContain("CERTIFIED REGISTRY");
+    expect(grounded).toContain("pikachu");
+    expect(grounded).not.toContain("minimumBadgeLevel"); // facts, never policy
+    expect(plain).not.toContain("CERTIFIED REGISTRY");
+  });
+
   it("names the certified fact vocabulary, so a plausible non-fact is not guessed", async () => {
     // The registry certifies "pokedex-number", not "national-dex-number"; the
     // menu is disclosed so a right value under a wrong id is not refused.
