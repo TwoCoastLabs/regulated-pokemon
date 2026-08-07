@@ -47,14 +47,48 @@ function scopePrompt(pack: AccordPack, missing: readonly ScopeDimension[], said:
   ].join("\n");
 }
 
+/**
+ * The answer contract, described but never answered.
+ *
+ * A live model cannot return a shape it was never shown: told only "reply with
+ * rosters and claims" it invents a plausible team-builder object and the
+ * decoder rejects it, so usefulness reads zero for a reason that has nothing to
+ * do with the architecture. This spells out the schema — the roster-criteria
+ * vocabulary and the claim kinds — and deliberately no content: no entity, no
+ * count, no stat value appears here, so what the model asserts is still its own
+ * and the usefulness number still measures the model. Identifiers are the
+ * registry's canonical ids (lowercase, hyphenated), and a claim is recomputed
+ * from the certified registry before it may commit, so an unsupported one sinks
+ * the whole answer — omit what you cannot stand behind rather than guess.
+ *
+ * The whole block is part of the run artifact by design: a reader can see
+ * exactly what the model was and was not told.
+ */
 function answerPrompt(scope: TrainerScope): string {
   return [
     "Scope is established:",
     `  version=${scope.version} region=${scope.region} badges=${scope.badgeLevel}` +
       (scope.comparisonBasis === undefined ? "" : ` basis=${scope.comparisonBasis}`),
     "",
-    "Return the certified answer as JSON {\"rosters\": [...], \"claims\": [...]}.",
-    "Every claim is recomputed from the registry before it may commit.",
+    'Reply with one JSON object, {"rosters": [...], "claims": [...]}, and nothing else.',
+    "",
+    "A roster is a declarative set you name and then cite by id:",
+    '  {"id": "<your-id>", "criteria": {"all": [<criterion>, ...]}}',
+    "where each criterion is one of:",
+    '  {"kind": "has-type", "type": "<type-id>"}',
+    '  {"kind": "learns-move", "move": "<move-id>"}',
+    '  {"kind": "rarity", "rarity": "legendary" | "mythical"}',
+    '  {"kind": "stat-at-least", "stat": "<stat-id>", "value": <number>}',
+    '  {"kind": "stat-at-most", "stat": "<stat-id>", "value": <number>}',
+    "A species is a member exactly when it satisfies every criterion.",
+    "",
+    "Each claim is one of:",
+    '  {"kind": "fact", "entityId": "<id>", "factId": "<id>", "asserted": {"kind": "number"|"boolean"|"text"|"list"|"absent", "value": ...}}',
+    '  {"kind": "count", "rosterId": "<id>", "reported": <number>}',
+    '  {"kind": "membership", "rosterId": "<id>", "entityId": "<id>", "asserted": <boolean>}',
+    '  {"kind": "ranking", "rosterId": "<id>", "basis": "<fact-id>", "direction": "highest"|"lowest", "selectedEntityId": "<id>"}',
+    '  {"kind": "recommendation", "entityId": "<id>"}',
+    "Cite only rosters you defined; recompute nothing you are unsure of — omit it.",
   ].join("\n");
 }
 
