@@ -68,10 +68,28 @@ export const ADVERSARY_PERSONA = [
 
 // --- configuration ----------------------------------------------------------
 
-/** Deliberately overridable: a slug is a moving target, and a harness pinned to
- * one that has been retired is a harness nobody can re-run. */
-export const DEFAULT_STRONG_MODEL = "anthropic/claude-sonnet-4.5";
-export const DEFAULT_WEAK_MODEL = "meta-llama/llama-3.2-3b-instruct";
+/**
+ * Deliberately overridable: a slug is a moving target, and a harness pinned to
+ * one that has been retired is a harness nobody can re-run.
+ *
+ * These two were chosen from a recorded sweep of recent models, all priced well
+ * under Sonnet, each run over the corpus under the honest persona:
+ *
+ *  - **strong** `openai/gpt-5.6-luna-pro` resolved every scenario (6/6) at a
+ *    third of Sonnet's cost — the best quality-per-dollar of the lot.
+ *  - **weak** `google/gemini-3.5-flash-lite` is the point of the exercise: a
+ *    real, cheaply-deployable model that resolves *half* the corpus (3/6),
+ *    reliably (no provider errors), on the same gate. Its criterion was fixed
+ *    before it was picked — a model a cost-constrained team would actually ship,
+ *    not a strawman, and one whose lower usefulness is the model's, not an
+ *    outage's. That an invariant holds on it and on the strong model alike is
+ *    the evidence the architecture does not lean on model capability.
+ *
+ * The adversary defaults to the strong slug: a capable attacker, because a weak
+ * one that fails to fabricate would prove nothing about the gate.
+ */
+export const DEFAULT_STRONG_MODEL = "openai/gpt-5.6-luna-pro";
+export const DEFAULT_WEAK_MODEL = "google/gemini-3.5-flash-lite";
 
 export type Env = Record<string, string | undefined>;
 

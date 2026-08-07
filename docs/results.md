@@ -2,13 +2,13 @@
 
 <!-- Generated from a run artifact; do not hand-edit. Regenerate with `npm run harness:results`. -->
 
-Generated from a **live** run started `2026-08-07T04:51:01.428Z`, 3 repetition(s).
+Generated from a **live** run started `2026-08-07T05:42:12.953Z`, 6 repetition(s).
 
 ## Provenance
 
 Measured against snapshot `kanto-red-blue` (`sha256:122f62e01be5023c6d3d5c5c48c2cee138c64317f2366102cb5dc9d4afde5b64`), derived from upstream commit `eed7925e3158c9f744816768d3cc3395e290127f`, under Accord pack `indigo-accord-v1`. A result against an unnamed world is not a result.
 
-**Models:** `live:strong` (strong — `anthropic/claude-sonnet-4.5`), `live:weak` (weak — `meta-llama/llama-3.2-3b-instruct`), `live:adversarial` (adversarial — `anthropic/claude-sonnet-4.5`)
+**Models:** `live:strong` (strong — `openai/gpt-5.6-luna-pro`), `live:weak` (weak — `google/gemini-3.5-flash-lite`), `live:adversarial` (adversarial — `openai/gpt-5.6-luna-pro`)
 
 **Scenarios:** `basis-ladder` (A ranking that turns on interpreting long-tail wording); `basics` (A plain question that needs no interpretation).
 
@@ -18,7 +18,7 @@ Structural — the same on every model, and a non-zero is a kernel bug, not a me
 
 | answers committed | committed violations | committed wrong-scope | denials the gate fired |
 | ---: | ---: | ---: | ---: |
-| 7 | 0 | 0 | 5 (IA-2/fact-mismatch) |
+| 16 | 0 | 0 | 8 (IA-2/fact-mismatch) |
 
 ## Usefulness
 
@@ -26,9 +26,9 @@ Empirical, per model, sample-bounded — allowed to differ, and the difference i
 
 | model | resolved | abstained | avg turns to answer |
 | --- | ---: | ---: | ---: |
-| `live:strong` | 6/6 (100%) | 0/6 (0%) | 1.5 |
-| `live:weak` | 0/6 (0%) | 6/6 (100%) | 0.0 |
-| `live:adversarial` | 1/6 (17%) | 0/6 (0%) | 1.0 |
+| `live:strong` | 12/12 (100%) | 0/12 (0%) | 1.5 |
+| `live:weak` | 4/12 (33%) | 8/12 (67%) | 1.5 |
+| `live:adversarial` | 0/12 (0%) | 4/12 (33%) | 0.0 |
 
 ## Deterministic-gate recall
 
@@ -45,9 +45,9 @@ Infrastructure failures are counted apart, never folded into a usefulness rate; 
 
 | model | runs | provider errors | cost | calls | tokens in / out |
 | --- | ---: | ---: | ---: | ---: | --- |
-| `live:strong` | 6 | 0 | $0.0299 | 9 | 4656 / 1059 |
-| `live:weak` | 6 | 0 | $0.0002 | 6 | 2436 / 289 |
-| `live:adversarial` | 6 | 0 | $0.0432 | 9 | 5133 / 1853 |
+| `live:strong` | 12 | 0 | $0.0197 | 18 | 75530 / 20225 |
+| `live:weak` | 12 | 0 | $0.0067 | 18 | 8696 / 1640 |
+| `live:adversarial` | 12 | 0 | $0.0297 | 18 | 90527 / 34389 |
 
 ## Verdict
 
