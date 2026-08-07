@@ -140,7 +140,7 @@ export async function runScenario(
   turns++;
   let answer;
   try {
-    answer = await proposeAnswer(provider, context, scenario.id, transactionId);
+    answer = await proposeAnswer({ provider, context, scenarioId: scenario.id, transactionId, transcript });
   } catch {
     providerErrors++;
     return abstain("the provider failed producing the answer", grantScope);

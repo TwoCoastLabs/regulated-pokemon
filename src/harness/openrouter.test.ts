@@ -94,6 +94,58 @@ describe("the request it sends", () => {
     });
   });
 
+  it("sends only ByteString-safe headers, so no attribution string can fail every call", async () => {
+    // A header value with a character > 255 makes the real `fetch` throw at the
+    // transport layer before any request goes out — which the run counts as a
+    // total provider outage. The stub fetch does not enforce this, so an em dash
+    // in an attribution header shipped and failed every live call; this asserts
+    // the property the stub cannot.
+    const { instance, calls } = provider([chat("ok")]);
+    await instance.complete(request);
+    for (const value of Object.values(calls[0]?.headers ?? {})) {
+      expect([...value].every((char) => char.charCodeAt(0) <= 255)).toBe(true);
+    }
+  });
+
+  it("sends no response_format by default — the grammar is a measured variable", async () => {
+    const { instance, calls } = provider([chat("ok")]);
+    await instance.complete({ ...request, schema: { name: "answer", schema: { type: "object" } } });
+    expect((calls[0]?.body as Record<string, unknown>).response_format).toBeUndefined();
+  });
+
+  it("hands the schema to the endpoint as a strict decoding constraint when asked", async () => {
+    const stubbed = stub([chat("{}")]);
+    const instance = new OpenRouterProvider({
+      id: "live:weak",
+      model: "vendor/model-x",
+      apiKey: KEY,
+      system: "be honest",
+      structured: true,
+      fetch: stubbed.fetch,
+    });
+    await instance.complete({ ...request, schema: { name: "certified_answer", schema: { type: "object" } } });
+    expect((stubbed.calls[0]?.body as Record<string, unknown>).response_format).toEqual({
+      type: "json_schema",
+      json_schema: { name: "certified_answer", strict: true, schema: { type: "object" } },
+    });
+  });
+
+  it("sends nothing extra on a step that carries no grammar, even when structured", async () => {
+    // The scope step has no schema; asking for one anyway would be inventing a
+    // constraint the advisor never stated.
+    const stubbed = stub([chat("{}")]);
+    const instance = new OpenRouterProvider({
+      id: "live:weak",
+      model: "vendor/model-x",
+      apiKey: KEY,
+      system: "be honest",
+      structured: true,
+      fetch: stubbed.fetch,
+    });
+    await instance.complete(request);
+    expect((stubbed.calls[0]?.body as Record<string, unknown>).response_format).toBeUndefined();
+  });
+
   it("refuses to exist without a key, rather than spending a run on 401s", () => {
     expect(
       () => new OpenRouterProvider({ id: "live:x", model: "m", apiKey: "  ", system: "s", fetch: stub([]).fetch }),

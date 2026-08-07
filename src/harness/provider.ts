@@ -16,6 +16,7 @@
  */
 
 import type { ScopeDimension, TrainerScope } from "../kernel/contracts.js";
+import type { JsonSchema } from "./schema.js";
 
 /** Which propose step a request belongs to. */
 export type Purpose = "scope" | "answer";
@@ -43,6 +44,16 @@ export interface CompletionRequest {
   /** What a live model would see. Deterministic, so a run replays. */
   prompt: string;
   hint: RequestHint;
+  /**
+   * The reply's grammar, when the step has one.
+   *
+   * Offered, never imposed: the advisor states the contract, and each provider
+   * decides what to do with it — a scripted model ignores it, a live one may
+   * hand it to the endpoint as a decoding constraint. Keeping the choice on the
+   * provider side is what lets structured output be measured as a variable
+   * without anything below the seam changing.
+   */
+  schema?: { name: string; schema: JsonSchema };
 }
 
 /** A rough, deterministic token proxy, so cost reporting has an input without

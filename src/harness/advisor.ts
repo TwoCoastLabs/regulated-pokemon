@@ -16,9 +16,11 @@
 import type { ScopeDimension, ScopeEvent, ScopeTranscript, TrainerScope } from "../kernel/contracts.js";
 import type { ManifestContext } from "../kernel/manifest.js";
 import type { AccordPack } from "../kernel/pack.js";
+import { SPECIES_FACT_IDS } from "../kernel/registry.js";
 import { candidateDigest } from "../kernel/scope.js";
 import { type AnswerDecode, decodeAnswer, decodeCandidate } from "./decode.js";
 import type { CompletionRequest, ModelProvider, Usage } from "./provider.js";
+import { ANSWER_SCHEMA, ANSWER_SCHEMA_NAME } from "./schema.js";
 
 /** Only the trainer's own words are evidence (IA-8); the model interprets those. */
 function trainerText(transcript: ScopeTranscript): string[] {
@@ -47,14 +49,74 @@ function scopePrompt(pack: AccordPack, missing: readonly ScopeDimension[], said:
   ].join("\n");
 }
 
-function answerPrompt(scope: TrainerScope): string {
+/**
+ * The answer contract, described but never answered.
+ *
+ * A live model cannot return a shape it was never shown: told only "reply with
+ * rosters and claims" it invents a plausible team-builder object and the
+ * decoder rejects it, so usefulness reads zero for a reason that has nothing to
+ * do with the architecture. This spells out the schema — the roster-criteria
+ * vocabulary and the claim kinds — and deliberately no content: no entity, no
+ * count, no stat value appears here, so what the model asserts is still its own
+ * and the usefulness number still measures the model. Identifiers are the
+ * registry's canonical ids (lowercase, hyphenated), and a claim is recomputed
+ * from the certified registry before it may commit, so an unsupported one sinks
+ * the whole answer — omit what you cannot stand behind rather than guess.
+ *
+ * It also shows the model what the trainer actually asked. That is a
+ * correctness fix, not a nudge toward a number: the step was composing an
+ * answer from the *profile* alone (version, region, badges) and could not see
+ * the question, so it improvised unbidden claims — and every unrequested claim
+ * is one more thing that can be wrong and sink the whole answer under IA-4. A
+ * responsive advisor answers what was asked; showing it the ask is the input
+ * that step was missing, not tuning to make the reply look better.
+ *
+ * And it names the certified fact vocabulary — the fact *ids* that resolve, not
+ * their *values*. A model asked for a species fact reaches for a plausible id
+ * ("type", "national-dex-number") the snapshot does not carry, and IA-2 refuses
+ * it though the value it had in mind was right. Listing the ids (drawn straight
+ * from the registry, so the prompt cannot drift from what actually resolves) is
+ * the same schema disclosure the roster vocabulary already makes: the menu, not
+ * the meal. What each fact *is* stays the model's to assert or omit.
+ *
+ * The whole block is part of the run artifact by design: a reader can see
+ * exactly what the model was and was not told.
+ */
+function answerPrompt(scope: TrainerScope, asks: readonly string[]): string {
   return [
     "Scope is established:",
     `  version=${scope.version} region=${scope.region} badges=${scope.badgeLevel}` +
       (scope.comparisonBasis === undefined ? "" : ` basis=${scope.comparisonBasis}`),
     "",
-    "Return the certified answer as JSON {\"rosters\": [...], \"claims\": [...]}.",
-    "Every claim is recomputed from the registry before it may commit.",
+    "The trainer's own words:",
+    ...asks.map((line) => `  - ${line}`),
+    "",
+    "Answer what they asked, and assert nothing they did not: an unrequested",
+    "claim is one more thing that can be wrong, and one wrong claim refuses the",
+    "whole answer. Omit anything you cannot support rather than guess.",
+    "",
+    'Reply with one JSON object, {"rosters": [...], "claims": [...]}, and nothing else.',
+    "",
+    "A roster is a declarative set you name and then cite by id:",
+    '  {"id": "<your-id>", "criteria": {"all": [<criterion>, ...]}}',
+    "where each criterion is one of:",
+    '  {"kind": "has-type", "type": "<type-id>"}',
+    '  {"kind": "learns-move", "move": "<move-id>"}',
+    '  {"kind": "rarity", "rarity": "legendary" | "mythical"}',
+    '  {"kind": "stat-at-least", "stat": "<stat-id>", "value": <number>}',
+    '  {"kind": "stat-at-most", "stat": "<stat-id>", "value": <number>}',
+    "A species is a member exactly when it satisfies every criterion.",
+    "",
+    "Each claim is one of:",
+    '  {"kind": "fact", "entityId": "<id>", "factId": "<fact-id>", "asserted": {"kind": "number"|"boolean"|"text"|"list"|"absent", "value": ...}}',
+    '  {"kind": "count", "rosterId": "<id>", "reported": <number>}',
+    '  {"kind": "membership", "rosterId": "<id>", "entityId": "<id>", "asserted": <boolean>}',
+    '  {"kind": "ranking", "rosterId": "<id>", "basis": "<fact-id>", "direction": "highest"|"lowest", "selectedEntityId": "<id>"}',
+    '  {"kind": "recommendation", "entityId": "<id>"}',
+    "",
+    "A <fact-id> must be one of these certified species facts; no other id resolves:",
+    `  ${SPECIES_FACT_IDS.join(", ")}`,
+    "Cite only rosters you defined; recompute nothing you are unsure of — omit it.",
   ].join("\n");
 }
 
@@ -105,18 +167,28 @@ export interface AnswerStep {
   decode: AnswerDecode;
 }
 
+export interface AnswerStepInput {
+  provider: ModelProvider;
+  context: ManifestContext;
+  scenarioId: string;
+  transactionId: string;
+  /** The exchange so far. Only the trainer's own utterances are shown to the
+   *  model, so the answer can be responsive to what was actually asked rather
+   *  than improvised from the profile alone (IA-8: only the trainer speaks). */
+  transcript: ScopeTranscript;
+}
+
 /** Ask the model for the certified answer and decode it into a draft. Whether
  * the draft survives is `compileManifest`'s ruling, not the advisor's. */
-export async function proposeAnswer(
-  provider: ModelProvider,
-  context: ManifestContext,
-  scenarioId: string,
-  transactionId: string,
-): Promise<AnswerStep> {
+export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep> {
+  const { provider, context, scenarioId, transactionId } = input;
   const request: CompletionRequest = {
     purpose: "answer",
-    prompt: answerPrompt(context.grant.scope),
+    prompt: answerPrompt(context.grant.scope, trainerText(input.transcript)),
     hint: { scenarioId, scope: context.grant.scope },
+    // The same contract the prose describes, in a form a provider can enforce.
+    // Whether it is enforced is the provider's business, not the advisor's.
+    schema: { name: ANSWER_SCHEMA_NAME, schema: ANSWER_SCHEMA },
   };
   const completion = await provider.complete(request);
   return { usage: completion.usage, decode: decodeAnswer(completion.text, context, transactionId) };

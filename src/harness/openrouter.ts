@@ -67,6 +67,17 @@ export interface OpenRouterConfig {
   url?: string;
   maxTokens?: number;
   timeoutMs?: number;
+  /**
+   * Hand the request's schema to the endpoint as a decoding constraint.
+   *
+   * The harness turns this on by default, having measured it: on the weak model
+   * it took resolution from 4/12 to 9/12 with committed violations still at
+   * zero, because it constrains *shape* and never content. It stays off unless
+   * asked here, so this driver remains a plain client and the comparison stays
+   * reproducible. It changes nothing downstream — every value still faces the
+   * same verification.
+   */
+  structured?: boolean;
   /** Retries *after* the first attempt, for transient failures only. */
   retries?: number;
   /** Fixed rather than jittered: a run artifact should be as reproducible as a
@@ -79,6 +90,7 @@ export interface OpenRouterConfig {
 const DEFAULTS = {
   maxTokens: 2048,
   timeoutMs: 60_000,
+  structured: false,
   retries: 2,
   backoffMs: [1_000, 4_000] as readonly number[],
 };
@@ -189,7 +201,19 @@ export class OpenRouterProvider implements ModelProvider {
   }
 
   private async attempt(request: CompletionRequest, attempt: number): Promise<Completion> {
-    const { url, apiKey, model, system, maxTokens, timeoutMs, fetch: send } = this.config;
+    const { url, apiKey, model, system, maxTokens, timeoutMs, structured, fetch: send } = this.config;
+
+    // Shape only. The grammar cannot make a claim true, and nothing downstream
+    // trusts it any more for having been well-formed.
+    const format =
+      structured && request.schema !== undefined
+        ? {
+            response_format: {
+              type: "json_schema",
+              json_schema: { name: request.schema.name, strict: true, schema: request.schema.schema },
+            },
+          }
+        : {};
 
     const body = JSON.stringify({
       model,
@@ -199,6 +223,7 @@ export class OpenRouterProvider implements ModelProvider {
       max_tokens: maxTokens,
       // OpenRouter only prices the call when asked to.
       usage: { include: true },
+      ...format,
       messages: [
         { role: "system", content: system },
         { role: "user", content: request.prompt },
@@ -213,8 +238,11 @@ export class OpenRouterProvider implements ModelProvider {
           authorization: `Bearer ${apiKey}`,
           "content-type": "application/json",
           // OpenRouter attributes traffic by these; both name this project.
+          // Header values are ByteString: ASCII only, so no em dash here — a
+          // character > 255 makes `fetch` reject every call at the transport
+          // layer, which reads downstream as a total provider outage.
           "http-referer": "https://github.com/smartnose/regulated-pokemon",
-          "x-title": "Regulated Pokemon — Indigo Accord harness",
+          "x-title": "Regulated Pokemon - Indigo Accord harness",
         },
         body,
         signal: AbortSignal.timeout(timeoutMs),

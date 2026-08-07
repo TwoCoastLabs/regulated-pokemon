@@ -64,6 +64,17 @@ export interface HarnessArtifact {
   startedAt: string;
   world: ArtifactWorld;
   repetitions: number;
+  /**
+   * Whether the answer's grammar was enforced at decode time.
+   *
+   * Recorded because it changes what the usefulness number means: a model that
+   * cannot emit malformed JSON is being measured on a different task from one
+   * that can. Enforcement is unaffected either way — the grammar constrains
+   * shape, and every value still faces the same verification — but a page that
+   * did not say which run it was would be comparing two things as though they
+   * were one.
+   */
+  structuredOutput: boolean;
   /** True when the run stopped before its last repetition; the corpus below is
    * then smaller than the one requested, and says so. */
   stoppedEarly: boolean;
@@ -78,6 +89,8 @@ export interface ArtifactInput {
   label: string;
   startedAt: string;
   world: HarnessWorld;
+  /** Defaults false: a scripted run has no endpoint to constrain. */
+  structured?: boolean;
 }
 
 export function buildArtifact(report: HarnessReport, input: ArtifactInput): HarnessArtifact {
@@ -93,6 +106,7 @@ export function buildArtifact(report: HarnessReport, input: ArtifactInput): Harn
       packId: input.world.pack.id,
     },
     repetitions: report.repetitions,
+    structuredOutput: input.structured ?? false,
     stoppedEarly: report.stoppedEarly,
     scenarios: report.scenarios.map((scenario) => ({ id: scenario.id, title: scenario.title })),
     models: report.models.map((model) => ({

@@ -20,9 +20,11 @@
  * into either would be the same category error twice.
  */
 
+import type { ScopeDimension } from "../kernel/contracts.js";
 import { verifyManifest } from "../kernel/manifest.js";
+import { deriveScope, resolveScope, type ScopeContext } from "../kernel/scope.js";
 import { denialCode } from "../kernel/violation.js";
-import { COMMITTED_AT, LOCALE, type HarnessModel, type Scenario } from "./corpus.js";
+import { COMMITTED_AT, ESTABLISHED_AT, LOCALE, type HarnessModel, type Scenario } from "./corpus.js";
 import { addUsage, emptyUsage, type Usage } from "./provider.js";
 import type { HarnessRun, HarnessWorld, RunStatus } from "./run.js";
 
@@ -176,6 +178,61 @@ export function computeCost(providerId: string, runs: readonly HarnessRun[]): Mo
   return { providerId, usage, fullyPriced: usage.costedCalls === usage.calls };
 }
 
+// --- deterministic-gate recall (which wordings reached the model) -----------
+
+/**
+ * How the deterministic front door handled one scenario's opening, before any
+ * model was asked to interpret anything.
+ *
+ * This is the number lesson 6 says to measure instead of assume: a regex front
+ * door that never engages is a silent usefulness ceiling, and it shows up in
+ * none of the metrics above — a dimension the resolver refuses to route looks
+ * identical to one it answered well. So for every scenario we record what the
+ * closed-vocabulary resolver bound on its own, what it had to escalate to the
+ * propose/confirm ladder (and so to the model), and the trainer wording it
+ * could not map at all — the ladder's inbox.
+ *
+ * It is a property of the corpus and the pack, not of any model: the opening is
+ * fixed, so the front door does the same thing whichever model runs behind it.
+ */
+export interface GateRecall {
+  scenarioId: string;
+  /** Required dimensions the front door bound from the opening, no model needed. */
+  boundDirectly: readonly ScopeDimension[];
+  /** Required dimensions the front door could not bind: the ladder — and so the
+   * model — must, or scope never closes. */
+  escalated: readonly ScopeDimension[];
+  /** Trainer wording that reached no dimension at all — what the model is handed
+   * to interpret when a dimension is escalated. Empty beside a non-empty
+   * {@link escalated} is the silent-ceiling case: a dimension routed to the
+   * model with nothing for it to interpret. */
+  unmatched: readonly string[];
+  /** True when the opening established every required dimension deterministically,
+   * so the model was never engaged for scope — the front door carried it alone. */
+  resolvedWithoutModel: boolean;
+}
+
+export function computeGateRecall(world: HarnessWorld, scenarios: readonly Scenario[]): readonly GateRecall[] {
+  return scenarios.map((scenario) => {
+    const context: ScopeContext = { pack: world.pack, at: ESTABLISHED_AT, required: scenario.required };
+    const derivation = deriveScope(world.pack, scenario.opening);
+    const bound = new Set(
+      derivation.bindings
+        .filter((binding) => !derivation.contradicted.includes(binding.dimension))
+        .map((binding) => binding.dimension),
+    );
+    const boundDirectly = scenario.required.filter((dimension) => bound.has(dimension));
+    const escalated = scenario.required.filter((dimension) => !bound.has(dimension));
+    return {
+      scenarioId: scenario.id,
+      boundDirectly,
+      escalated,
+      unmatched: derivation.unmatched,
+      resolvedWithoutModel: resolveScope(context, scenario.opening).status === "granted",
+    };
+  });
+}
+
 // --- the whole picture ------------------------------------------------------
 
 export interface Metrics {
@@ -183,6 +240,9 @@ export interface Metrics {
   usefulness: readonly Usefulness[];
   health: readonly ProviderHealth[];
   cost: readonly ModelCost[];
+  /** How the deterministic front door routed each scenario, before any model —
+   * the recall lesson 6 measures instead of assuming. Model-independent. */
+  gate: readonly GateRecall[];
   /** The models that ran under an adversarial persona. Each one has to be seen
    * making the gate fire, or the safety claim is vacuous for that model. */
   adversaries: readonly string[];
@@ -202,6 +262,7 @@ export function computeMetrics(
     usefulness: models.map((model) => computeUsefulness(model.provider.id, perModel(model))),
     health: models.map((model) => computeHealth(model.provider.id, perModel(model))),
     cost: models.map((model) => computeCost(model.provider.id, perModel(model))),
+    gate: computeGateRecall(world, scenarios),
     adversaries: models.filter((model) => model.role === "adversarial").map((model) => model.provider.id),
   };
 }

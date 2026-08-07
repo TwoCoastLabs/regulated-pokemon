@@ -68,10 +68,32 @@ export const ADVERSARY_PERSONA = [
 
 // --- configuration ----------------------------------------------------------
 
-/** Deliberately overridable: a slug is a moving target, and a harness pinned to
- * one that has been retired is a harness nobody can re-run. */
-export const DEFAULT_STRONG_MODEL = "anthropic/claude-sonnet-4.5";
-export const DEFAULT_WEAK_MODEL = "meta-llama/llama-3.2-3b-instruct";
+/**
+ * Deliberately overridable: a slug is a moving target, and a harness pinned to
+ * one that has been retired is a harness nobody can re-run.
+ *
+ * These two were chosen from a recorded sweep of recent models, all priced well
+ * under Sonnet, each run over the corpus under the honest persona:
+ *
+ *  - **strong** `openai/gpt-5.6-luna-pro` resolved every scenario (6/6) at a
+ *    third of Sonnet's cost — the best quality-per-dollar of the lot.
+ *  - **weak** `google/gemini-3.5-flash-lite` is the point of the exercise: a
+ *    real, cheaply-deployable model that resolves only part of the corpus,
+ *    reliably (no provider errors), on the same gate. Its criterion was fixed
+ *    before it was picked — a model a cost-constrained team would actually ship,
+ *    not a strawman, and one whose lower usefulness is the model's, not an
+ *    outage's. That an invariant holds on it and on the strong model alike is
+ *    the evidence the architecture does not lean on model capability.
+ *
+ * The sweep that chose them ran *unconstrained*, when the weak model's misses
+ * were mostly malformed shape rather than wrong facts; with the grammar enforced
+ * it does considerably better, and the gap that remains is the substantive one.
+ *
+ * The adversary defaults to the strong slug: a capable attacker, because a weak
+ * one that fails to fabricate would prove nothing about the gate.
+ */
+export const DEFAULT_STRONG_MODEL = "openai/gpt-5.6-luna-pro";
+export const DEFAULT_WEAK_MODEL = "google/gemini-3.5-flash-lite";
 
 export type Env = Record<string, string | undefined>;
 
@@ -80,6 +102,8 @@ export interface LiveConfig {
   strong: string;
   weak: string;
   adversary: string;
+  /** Hand the answer grammar to the endpoint as a decoding constraint. */
+  structured: boolean;
 }
 
 /**
@@ -115,7 +139,7 @@ export function loadEnv(processEnv: Env, path: string): Env {
 
 export type ConfigResult = { ok: true; config: LiveConfig } | { ok: false; reason: string };
 
-export function liveConfig(env: Env): ConfigResult {
+export function liveConfig(env: Env, structured = true): ConfigResult {
   const apiKey = (env.OPENROUTER_API_KEY ?? "").trim();
   if (apiKey === "") {
     return {
@@ -132,6 +156,7 @@ export function liveConfig(env: Env): ConfigResult {
       apiKey,
       strong,
       weak: env.HARNESS_WEAK_MODEL ?? DEFAULT_WEAK_MODEL,
+      structured,
       // The adversary is the capable model by default: a weak attacker that
       // fails to fabricate would prove nothing about the gate.
       adversary: env.HARNESS_ADVERSARY_MODEL ?? strong,
@@ -147,7 +172,7 @@ export type ProviderFactory = (config: LiveConfig) => readonly HarnessModel[];
  * The enforcement legs still apply — those are not predictions. */
 export const liveModels: ProviderFactory = (config) => {
   const live = (id: string, model: string, system: string): ModelProvider =>
-    new OpenRouterProvider({ id, model, system, apiKey: config.apiKey });
+    new OpenRouterProvider({ id, model, system, apiKey: config.apiKey, structured: config.structured });
 
   return [
     { provider: live("live:strong", config.strong, HONEST_PERSONA), role: "strong", slug: config.strong },
@@ -164,6 +189,15 @@ export const liveModels: ProviderFactory = (config) => {
 
 export interface LiveArgs {
   live: boolean;
+  /**
+   * Constrain the answer's shape at decode time. On by default.
+   *
+   * Measured before it was adopted: on the weak model it took resolution from
+   * 4/12 to 9/12 and left committed violations at zero, because it constrains
+   * shape and never content. `--no-structured` restores the old behaviour, and
+   * is how that comparison stays reproducible rather than becoming folklore.
+   */
+  structured: boolean;
   repetitions: number;
   out: string;
   roles: readonly string[];
@@ -174,12 +208,13 @@ export interface LiveArgs {
 export function parseArgs(argv: readonly string[]): LiveArgs {
   const args: {
     live: boolean;
+    structured: boolean;
     repetitions: number;
     out: string;
     roles: string[];
     help: boolean;
     errors: string[];
-  } = { live: false, repetitions: 1, out: "runs", roles: [], help: false, errors: [] };
+  } = { live: false, structured: true, repetitions: 1, out: "runs", roles: [], help: false, errors: [] };
 
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index];
@@ -187,6 +222,12 @@ export function parseArgs(argv: readonly string[]): LiveArgs {
     switch (flag) {
       case "--live":
         args.live = true;
+        break;
+      case "--structured":
+        args.structured = true;
+        break;
+      case "--no-structured":
+        args.structured = false;
         break;
       case "--help":
       case "-h":
@@ -228,6 +269,9 @@ const USAGE = [
   "  --repetitions N     samples per model per scenario (default 1). A provider is",
   "                      nondeterministic even at temperature 0; N=1 first, then N=3.",
   "  --models a,b,c      roles to run: strong, weak, adversarial (default: all three).",
+  "  --no-structured     stop enforcing the answer grammar at decode time. On by",
+  "                      default because it lifts a weak model (4/12 -> 9/12) while",
+  "                      leaving enforcement at zero: it constrains shape, not content.",
   "  --out DIR           where the run artifact is filed (default: runs/).",
   "",
   "The key is read from OPENROUTER_API_KEY, in the environment or in .env.",
@@ -267,7 +311,7 @@ export async function runLive(options: LiveOptions): Promise<LiveResult> {
   if (args.help) return { lines: [USAGE], exitCode: 0 };
   if (args.errors.length > 0) return { lines: [...args.errors, "", USAGE], exitCode: 1 };
 
-  const config = liveConfig(options.env);
+  const config = liveConfig(options.env, args.structured);
   if (!config.ok) return { lines: [config.reason], exitCode: 1 };
 
   const all = (options.makeModels ?? liveModels)(config.config);
@@ -280,6 +324,7 @@ export async function runLive(options: LiveOptions): Promise<LiveResult> {
     `models        ${selected.map((model) => `${model.provider.id} (${model.slug ?? "—"})`).join(", ")}`,
     `scenarios     ${SCENARIOS.map((scenario) => scenario.id).join(", ")}`,
     `repetitions   ${args.repetitions}`,
+    `structured    ${args.structured ? "yes — the answer grammar is enforced at decode time" : "no — prose only, the pre-grammar baseline"}`,
     `calls         at most ${plannedCalls(selected.length, SCENARIOS.length, args.repetitions)}`,
     "cost          unknown until it is spent — priced by the provider, never estimated here",
   ];
@@ -305,7 +350,12 @@ export async function runLive(options: LiveOptions): Promise<LiveResult> {
     title: "Indigo Accord — live-model harness (billable)",
   });
 
-  const artifact = buildArtifact(report, { label: "live", startedAt: options.now, world });
+  const artifact = buildArtifact(report, {
+    label: args.structured ? "live" : "live-unconstrained",
+    startedAt: options.now,
+    world,
+    structured: args.structured,
+  });
   const artifactPath = fileArtifact(artifact, resolve(args.out), options.write);
 
   return {

@@ -85,8 +85,22 @@ const CLEAN: Metrics = {
   usefulness: [],
   health: [],
   cost: [],
+  gate: [],
   adversaries: [],
 };
+
+/** A gate-recall entry: escalates a dimension and routes wording for it by
+ * default, which is the healthy shape the corpus is built to have. */
+function gate(over: Partial<Metrics["gate"][number]> = {}): Metrics["gate"][number] {
+  return {
+    scenarioId: "basis-ladder",
+    boundDirectly: ["version", "region", "badgeLevel"],
+    escalated: ["comparisonBasis"],
+    unmatched: ["which of the electric ones is the quickest"],
+    resolvedWithoutModel: false,
+    ...over,
+  };
+}
 
 function run(over: Partial<HarnessRun>): HarnessRun {
   return {
@@ -175,5 +189,21 @@ describe("selfCheck — each failure leg", () => {
   it("says nothing about a live model, which declares no outcome to check", () => {
     const live: HarnessModel = { provider: new ScriptedProvider("m", () => ""), role: "strong" };
     expect(selfCheck(CLEAN, [live], [run({ status: "unresolved" })], SCENARIOS)).toHaveLength(0);
+  });
+
+  it("fails when the front door never escalates — the ladder went untested", () => {
+    // Lesson 6: a deterministic gate that answers everything itself leaves the
+    // model, and the whole usefulness story, unexercised.
+    const metrics = { ...CLEAN, gate: [gate({ escalated: [], unmatched: [], resolvedWithoutModel: true })] };
+    expect(selfCheck(metrics, [], [], []).join("\n")).toContain("no scenario ever escalated to the model");
+  });
+
+  it("fails when a dimension is escalated with no wording to route — a silent ceiling", () => {
+    const metrics = { ...CLEAN, gate: [gate({ unmatched: [] })] };
+    expect(selfCheck(metrics, [], [], []).join("\n")).toContain("routed no wording");
+  });
+
+  it("passes a corpus that escalates and routes wording for it", () => {
+    expect(selfCheck({ ...CLEAN, gate: [gate()] }, [], [], [])).toHaveLength(0);
   });
 });
