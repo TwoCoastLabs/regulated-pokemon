@@ -115,7 +115,7 @@ function answerPrompt(scope: TrainerScope, asks: readonly string[], reference: s
     "",
     "Each claim is one of:",
     '  {"kind": "fact", "entityId": "<id>", "factId": "<fact-id>", "asserted": {"kind": "number"|"boolean"|"text"|"list"|"absent", "value": ...}}',
-    '  {"kind": "count", "rosterId": "<id>", "reported": <number>}',
+    '  {"kind": "count", "rosterId": "<id>"}  — defines a set to be counted; the system counts it, so state no number',
     '  {"kind": "membership", "rosterId": "<id>", "entityId": "<id>", "asserted": <boolean>}',
     '  {"kind": "ranking", "rosterId": "<id>", "basis": "<fact-id>", "direction": "highest"|"lowest", "selectedEntityId": "<id>"}',
     '  {"kind": "recommendation", "entityId": "<id>"}',

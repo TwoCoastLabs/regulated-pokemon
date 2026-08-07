@@ -145,9 +145,16 @@ function asClaim(value: unknown): Claim | null {
       if (asserted === null || !isString(value.entityId) || !isString(value.factId)) return null;
       return { kind: "fact", entityId: value.entityId, factId: value.factId, asserted };
     }
-    case "count":
-      if (!isString(value.rosterId) || !isNumber(value.reported)) return null;
-      return { kind: "count", rosterId: value.rosterId, reported: value.reported };
+    case "count": {
+      // `reported` is optional: a model that defines the set need not count it,
+      // and the kernel derives the number. A present-but-non-numeric one is
+      // still malformed; an absent one is the intended, grounded shape.
+      if (!isString(value.rosterId)) return null;
+      if (value.reported !== undefined && !isNumber(value.reported)) return null;
+      return value.reported === undefined
+        ? { kind: "count", rosterId: value.rosterId }
+        : { kind: "count", rosterId: value.rosterId, reported: value.reported };
+    }
     case "membership":
       if (!isString(value.rosterId) || !isString(value.entityId) || !isBoolean(value.asserted)) return null;
       return { kind: "membership", rosterId: value.rosterId, entityId: value.entityId, asserted: value.asserted };

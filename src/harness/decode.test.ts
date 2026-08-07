@@ -108,6 +108,16 @@ describe("decodeAnswer", () => {
     if (decoded.ok) expect(decoded.draft.claims[0]).toMatchObject({ asserted: { value: 999 } });
   });
 
+  it("accepts a count with no stated number — the set is the count, and the kernel derives it", () => {
+    const text = JSON.stringify({ rosters: [], claims: [{ kind: "count", rosterId: "electric-kanto" }] });
+    const decoded = decodeAnswer(text, context, "txn-1");
+    expect(decoded.ok).toBe(true);
+    if (decoded.ok) {
+      expect(decoded.draft.claims[0]).toEqual({ kind: "count", rosterId: "electric-kanto" });
+      expect((decoded.draft.claims[0] as { reported?: number }).reported).toBeUndefined();
+    }
+  });
+
   it("refuses a roster the registry cannot support, with the article it earned", () => {
     const text = JSON.stringify({
       rosters: [{ id: "r", criteria: { all: [{ kind: "has-type", type: "nonexistent-type" }] } }],
@@ -125,7 +135,12 @@ describe("decodeAnswer", () => {
     ["a malformed roster", JSON.stringify({ rosters: [{ id: 5 }], claims: [] }), "roster is malformed"],
     [
       "a malformed claim",
-      JSON.stringify({ rosters: [], claims: [{ kind: "count", rosterId: "r" }] }),
+      JSON.stringify({ rosters: [], claims: [{ kind: "count" }] }),
+      "claim is malformed",
+    ],
+    [
+      "a count with a non-numeric stated number",
+      JSON.stringify({ rosters: [], claims: [{ kind: "count", rosterId: "r", reported: "lots" }] }),
       "claim is malformed",
     ],
     [

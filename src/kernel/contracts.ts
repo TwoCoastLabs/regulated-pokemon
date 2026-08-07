@@ -176,7 +176,19 @@ export type Resolution<T> =
  */
 export type Claim =
   | { kind: "fact"; entityId: string; factId: string; asserted: FactValue }
-  | { kind: "count"; rosterId: string; reported: number }
+  /**
+   * A count over a certified roster.
+   *
+   * `reported` is derivable and therefore optional: the roster *is* the count
+   * (IA-4), so a proposer that defines the set has already fixed the number, and
+   * asking it to also state one is asking it to redo arithmetic the kernel
+   * performs from the same criteria. When omitted, `compileManifest` fills it
+   * from the certified cardinality; when present — a legacy answer, or an
+   * adversary asserting a wrong one — it is verified against that cardinality and
+   * refused on mismatch. Either way the committed count is the set's, never the
+   * model's memory of it.
+   */
+  | { kind: "count"; rosterId: string; reported?: number }
   | { kind: "membership"; rosterId: string; entityId: string; asserted: boolean }
   | {
       kind: "ranking";
