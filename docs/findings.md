@@ -52,6 +52,12 @@ Notes that don't fit the grid:
   on more models, is the enforcement column earning its zero rather than
   coasting on an untested one.
 
+- **Grounding was tried after row 5 and did not earn a row** (§10): handing the
+  proposer the whole certified registry moved usefulness within noise (strong
+  16/21 → 15/21) at ~2.5× the cost, because the residual failures are arithmetic
+  (`hard-count`) and policy (`restricted-species`), neither of which reading
+  facts fixes. It is off by default, so the published page is unchanged.
+
 The one-line version for the article: **five interventions, five different
 usefulness numbers, and the same two enforcement zeros under every one of them.**
 
@@ -333,6 +339,60 @@ Two things worth the article:
 
 **Publishable form:** *"The smarter model recommended the legendary. The gate
 said no. That's the product."*
+
+---
+
+## 10. Grounding the facts did not close the gap — because the gap is arithmetic
+
+The hypothesis, three times recommended: the remaining knowledge gap closes if
+you hand the proposer the certified facts to read instead of recall
+(`reference.ts`, ~12k tokens of the whole registry — stats, types, rarity,
+moves, learnsets — facts only, never policy). A/B on the seven-scenario corpus,
+same models, N=3 each leg:
+
+| | strong | weak | cost |
+| --- | ---: | ---: | ---: |
+| ungrounded | 16/21 (76%) | 14/21 (67%) | ~$0.11 |
+| grounded | 15/21 (71%) | 14/21 (67%) | ~$0.27 |
+
+Grounding moved nothing (the strong delta is one run of noise) and cost ~2.5×
+more. Enforcement held on both legs — 0 committed violations, 0 wrong-scope. The
+reason is in *what* the grounded strong model still failed, all three reps each:
+
+- **`hard-count`** — with all forty-two Surf-learners **listed in the reference**,
+  it still reported the wrong number. This is not a knowledge failure; it is a
+  *computation* failure. Counting forty-two items in a twelve-thousand-token
+  block is the thing language models cannot do, and reading beats recalling by
+  nothing when the task is arithmetic.
+- **`restricted-species`** — IA-5 refused it, grounded, exactly as ungrounded.
+  That is the **facts-not-policy line proving itself**: the reference gave the
+  model the rarity fact (`mewtwo … legendary`) and never the eligibility rule,
+  so it recommended the legendary and the gate still said no. Grounding the
+  facts left the policy article fully enforced — which is the property the whole
+  design turns on, now measured rather than asserted.
+
+The lesson corrects the roadmap a third time. The residual gap is not knowledge
+the model can read its way out of; it is **computation the architecture already
+performs**. The kernel builds a roster from the model's declarative criteria and
+counts it — the `count` claim's asserted number is *redundant* with the set the
+model already defined, and asking the model to also compute it is what sets it
+up to fail. The fix is not more data in the prompt. It is to stop asking the
+model to assert derived values at all: let it define the *set* and the
+*ordering*, and let the certified layer report the count and the extreme.
+**Ground the computation, not the data.**
+
+Grounding stays in the tree — off by default, tested, and correct for a future
+corpus whose gap is genuinely knowledge (a fact a model has no way to know)
+rather than arithmetic. Here it was the wrong tool, and the run says so.
+
+One more thing it proved, quietly: the adversary, handed the entire certified
+registry and told to lie anyway, still lied and was still caught. A model with
+the answer sheet in front of it does not get to commit a fabrication; the gate
+does not care that the truth was one line up.
+
+**Publishable form:** *"We gave the model the answer sheet. It still couldn't
+count to forty-two. The gap left isn't knowledge — it's arithmetic the system
+already does, and shouldn't be asking the model to redo."*
 
 ---
 
