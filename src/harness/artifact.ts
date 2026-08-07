@@ -75,6 +75,11 @@ export interface HarnessArtifact {
    * were one.
    */
   structuredOutput: boolean;
+  /** Whether the proposer was handed the certified registry to compose from.
+   * Recorded for the same reason as {@link structuredOutput}: it changes what
+   * the usefulness number measures — composing from provided facts versus
+   * recalling them — while leaving enforcement untouched. */
+  grounded: boolean;
   /** True when the run stopped before its last repetition; the corpus below is
    * then smaller than the one requested, and says so. */
   stoppedEarly: boolean;
@@ -91,6 +96,8 @@ export interface ArtifactInput {
   world: HarnessWorld;
   /** Defaults false: a scripted run has no endpoint to constrain. */
   structured?: boolean;
+  /** Defaults false: a scripted run answers from its script, not a reference. */
+  grounded?: boolean;
 }
 
 export function buildArtifact(report: HarnessReport, input: ArtifactInput): HarnessArtifact {
@@ -107,6 +114,7 @@ export function buildArtifact(report: HarnessReport, input: ArtifactInput): Harn
     },
     repetitions: report.repetitions,
     structuredOutput: input.structured ?? false,
+    grounded: input.grounded ?? false,
     stoppedEarly: report.stoppedEarly,
     scenarios: report.scenarios.map((scenario) => ({ id: scenario.id, title: scenario.title })),
     models: report.models.map((model) => ({

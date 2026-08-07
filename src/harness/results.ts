@@ -138,6 +138,9 @@ export function renderResultsPage(artifact: HarnessArtifact): string {
     artifact.structuredOutput
       ? "The answer grammar was **enforced at decode time**, so a malformed reply was not a reachable output. Shape only: every value still faced the same verification."
       : "The answer grammar was **described in the prompt but not enforced**, so emitting it correctly was part of what the model was measured on.",
+    artifact.grounded
+      ? "The proposer was **handed the certified registry** to compose from (facts only, never policy), so a wrong fact is a composition error, not a memory one. Every value was still re-verified independently."
+      : "The proposer answered **from its own knowledge**, ungrounded; a wrong fact here is the model misremembering the certified world.",
     "",
     "## Provenance",
     "",

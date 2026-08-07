@@ -78,6 +78,7 @@ export async function runScenario(
   scenario: Scenario,
   provider: ModelProvider,
   repetition = 0,
+  grounded = false,
 ): Promise<HarnessRun> {
   const { registry, pack } = world;
   const scopeContext: ScopeContext = { pack, at: ESTABLISHED_AT, required: scenario.required };
@@ -140,7 +141,7 @@ export async function runScenario(
   turns++;
   let answer;
   try {
-    answer = await proposeAnswer({ provider, context, scenarioId: scenario.id, transactionId, transcript });
+    answer = await proposeAnswer({ provider, context, scenarioId: scenario.id, transactionId, transcript, grounded });
   } catch {
     providerErrors++;
     return abstain("the provider failed producing the answer", grantScope);

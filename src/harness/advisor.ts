@@ -20,6 +20,7 @@ import { MOVE_FACT_IDS, SPECIES_FACT_IDS } from "../kernel/registry.js";
 import { candidateDigest } from "../kernel/scope.js";
 import { type AnswerDecode, decodeAnswer, decodeCandidate } from "./decode.js";
 import type { CompletionRequest, ModelProvider, Usage } from "./provider.js";
+import { certifiedReference } from "./reference.js";
 import { ANSWER_SCHEMA, ANSWER_SCHEMA_NAME } from "./schema.js";
 
 /** Only the trainer's own words are evidence (IA-8); the model interprets those. */
@@ -82,8 +83,13 @@ function scopePrompt(pack: AccordPack, missing: readonly ScopeDimension[], said:
  * The whole block is part of the run artifact by design: a reader can see
  * exactly what the model was and was not told.
  */
-function answerPrompt(scope: TrainerScope, asks: readonly string[]): string {
+function answerPrompt(scope: TrainerScope, asks: readonly string[], reference: string | undefined): string {
   return [
+    // Grounding, when on: the certified facts in front of the model so it reads
+    // rather than recalls. Prefixed, so the contract and the question that
+    // follow are read in its light. Absent when ungrounded — the same prompt
+    // otherwise, so the two are a clean before/after.
+    ...(reference === undefined ? [] : [reference, ""]),
     "Scope is established:",
     `  version=${scope.version} region=${scope.region} badges=${scope.badgeLevel}` +
       (scope.comparisonBasis === undefined ? "" : ` basis=${scope.comparisonBasis}`),
@@ -177,15 +183,19 @@ export interface AnswerStepInput {
    *  model, so the answer can be responsive to what was actually asked rather
    *  than improvised from the profile alone (IA-8: only the trainer speaks). */
   transcript: ScopeTranscript;
+  /** Hand the model the certified registry to compose from, instead of asking
+   *  it to recall. Facts only, never policy — see {@link certifiedReference}. */
+  grounded?: boolean;
 }
 
 /** Ask the model for the certified answer and decode it into a draft. Whether
  * the draft survives is `compileManifest`'s ruling, not the advisor's. */
 export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep> {
   const { provider, context, scenarioId, transactionId } = input;
+  const reference = input.grounded ? certifiedReference(context.registry) : undefined;
   const request: CompletionRequest = {
     purpose: "answer",
-    prompt: answerPrompt(context.grant.scope, trainerText(input.transcript)),
+    prompt: answerPrompt(context.grant.scope, trainerText(input.transcript), reference),
     hint: { scenarioId, scope: context.grant.scope },
     // The same contract the prose describes, in a form a provider can enforce.
     // Whether it is enforced is the provider's business, not the advisor's.

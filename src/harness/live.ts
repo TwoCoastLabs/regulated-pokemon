@@ -198,6 +198,11 @@ export interface LiveArgs {
    * is how that comparison stays reproducible rather than becoming folklore.
    */
   structured: boolean;
+  /** Hand the proposer the certified registry to compose from — a measured
+   * variable, facts only and never policy (see reference.ts). Off by default:
+   * ungrounded, a wrong fact is the model misremembering; grounded, it is a
+   * composition error, and the two are worth telling apart. */
+  grounded: boolean;
   repetitions: number;
   out: string;
   roles: readonly string[];
@@ -209,12 +214,13 @@ export function parseArgs(argv: readonly string[]): LiveArgs {
   const args: {
     live: boolean;
     structured: boolean;
+    grounded: boolean;
     repetitions: number;
     out: string;
     roles: string[];
     help: boolean;
     errors: string[];
-  } = { live: false, structured: true, repetitions: 1, out: "runs", roles: [], help: false, errors: [] };
+  } = { live: false, structured: true, grounded: false, repetitions: 1, out: "runs", roles: [], help: false, errors: [] };
 
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index];
@@ -228,6 +234,9 @@ export function parseArgs(argv: readonly string[]): LiveArgs {
         break;
       case "--no-structured":
         args.structured = false;
+        break;
+      case "--grounded":
+        args.grounded = true;
         break;
       case "--help":
       case "-h":
@@ -272,6 +281,9 @@ const USAGE = [
   "  --no-structured     stop enforcing the answer grammar at decode time. On by",
   "                      default because it lifts a weak model (4/12 -> 9/12) while",
   "                      leaving enforcement at zero: it constrains shape, not content.",
+  "  --grounded          hand the proposer the certified registry to compose from",
+  "                      instead of recall. Facts only, never policy; every value is",
+  "                      still re-verified, so enforcement is untouched.",
   "  --out DIR           where the run artifact is filed (default: runs/).",
   "",
   "The key is read from OPENROUTER_API_KEY, in the environment or in .env.",
@@ -325,6 +337,7 @@ export async function runLive(options: LiveOptions): Promise<LiveResult> {
     `scenarios     ${SCENARIOS.map((scenario) => scenario.id).join(", ")}`,
     `repetitions   ${args.repetitions}`,
     `structured    ${args.structured ? "yes — the answer grammar is enforced at decode time" : "no — prose only, the pre-grammar baseline"}`,
+    `grounded      ${args.grounded ? "yes — the certified registry is handed to the proposer (facts, not policy)" : "no — the model answers from its own knowledge"}`,
     `calls         at most ${plannedCalls(selected.length, SCENARIOS.length, args.repetitions)}`,
     "cost          unknown until it is spent — priced by the provider, never estimated here",
   ];
@@ -347,14 +360,16 @@ export async function runLive(options: LiveOptions): Promise<LiveResult> {
     models: selected,
     scenarios: SCENARIOS,
     repetitions: args.repetitions,
+    grounded: args.grounded,
     title: "Indigo Accord — live-model harness (billable)",
   });
 
   const artifact = buildArtifact(report, {
-    label: args.structured ? "live" : "live-unconstrained",
+    label: args.grounded ? "live-grounded" : args.structured ? "live" : "live-unconstrained",
     startedAt: options.now,
     world,
     structured: args.structured,
+    grounded: args.grounded,
   });
   const artifactPath = fileArtifact(artifact, resolve(args.out), options.write);
 
