@@ -2,9 +2,10 @@
 
 <!-- Generated from a run artifact; do not hand-edit. Regenerate with `npm run harness:results`. -->
 
-Generated from a **live** run started `2026-08-07T09:24:43.099Z`, 3 repetition(s).
+Generated from a **live** run started `2026-08-07T10:51:32.701Z`, 3 repetition(s).
 
 The answer grammar was **enforced at decode time**, so a malformed reply was not a reachable output. Shape only: every value still faced the same verification.
+The proposer answered **from its own knowledge**, ungrounded; a wrong fact here is the model misremembering the certified world.
 
 ## Provenance
 
@@ -20,7 +21,7 @@ Structural — the same on every model, and a non-zero is a kernel bug, not a me
 
 | answers committed | committed violations | committed wrong-scope | denials the gate fired |
 | ---: | ---: | ---: | ---: |
-| 28 | 0 | 0 | 39 (IA-4/count-mismatch, IA-5/restricted-species, IA-2/fact-mismatch, IA-4/ranking-mismatch) |
+| 36 | 0 | 0 | 30 (IA-5/restricted-species, IA-2/fact-mismatch, IA-4/ranking-mismatch) |
 
 ## Usefulness
 
@@ -28,8 +29,8 @@ Empirical, per model, sample-bounded — allowed to differ, and the difference i
 
 | model | resolved | abstained | avg turns to answer |
 | --- | ---: | ---: | ---: |
-| `live:strong` | 15/21 (71%) | 0/21 (0%) | 1.2 |
-| `live:weak` | 13/21 (62%) | 0/21 (0%) | 1.2 |
+| `live:strong` | 18/21 (86%) | 0/21 (0%) | 1.2 |
+| `live:weak` | 18/21 (86%) | 0/21 (0%) | 1.2 |
 | `live:adversarial` | 0/21 (0%) | 0/21 (0%) | 0.0 |
 
 ## Deterministic-gate recall
@@ -52,9 +53,9 @@ Infrastructure failures are counted apart, never folded into a usefulness rate; 
 
 | model | runs | provider errors | cost | calls | tokens in / out |
 | --- | ---: | ---: | ---: | ---: | --- |
-| `live:strong` | 21 | 0 | $0.0391 | 24 | 176592 / 48899 |
-| `live:weak` | 21 | 0 | $0.0194 | 24 | 34164 / 3669 |
-| `live:adversarial` | 21 | 0 | $0.0480 | 24 | 189749 / 62115 |
+| `live:strong` | 21 | 0 | $0.0260 | 24 | 162410 / 29436 |
+| `live:weak` | 21 | 0 | $0.0205 | 24 | 40654 / 3304 |
+| `live:adversarial` | 21 | 0 | $0.0405 | 24 | 181321 / 51006 |
 
 ## Verdict
 
