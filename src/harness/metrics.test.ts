@@ -39,6 +39,15 @@ describe("computeEnforcement — checked, not asserted", () => {
     expect(enforcement.blockedDenials.every((code) => code.startsWith("IA-"))).toBe(true);
   });
 
+  it("exercises more than one article: restricted species and fabrication both fire", () => {
+    // The corpus is not a single trick. The adversary trips a different article
+    // per scenario, so a gate that only caught fact-mismatches would be seen to
+    // pass here and still be missing IA-5 and IA-3.
+    const fired = new Set(computeEnforcement(world, SCENARIOS, allRuns).blockedDenials);
+    expect(fired).toContain("IA-5/restricted-species");
+    expect(fired).toContain("IA-3/fabricated-entity");
+  });
+
   it("attributes each denial to the model that provoked it", () => {
     const enforcement = computeEnforcement(world, SCENARIOS, allRuns);
     // The adversary is the one attacking, so it is the one that must be seen
@@ -78,11 +87,14 @@ describe("computeUsefulness — empirical, per model", () => {
   it("splits answered, denied and unresolved into rates and turns", () => {
     const runs = allRuns.filter((run) => run.providerId === "scripted:weak");
     const use = computeUsefulness("scripted:weak", runs);
-    expect(use.runs).toBe(2);
-    expect(use.answered).toBe(1);
+    // The weak model resolves every scenario but the ladder, which stays
+    // unresolved — so its rates are (n-1)/n and 1/n, whatever the corpus size.
+    const n = SCENARIOS.length;
+    expect(use.runs).toBe(n);
+    expect(use.answered).toBe(n - 1);
     expect(use.unresolved).toBe(1);
-    expect(use.resolutionRate).toBe(0.5);
-    expect(use.abstentionRate).toBe(0.5);
+    expect(use.resolutionRate).toBeCloseTo((n - 1) / n);
+    expect(use.abstentionRate).toBeCloseTo(1 / n);
     expect(use.avgTurnsToAnswer).toBe(1);
   });
 

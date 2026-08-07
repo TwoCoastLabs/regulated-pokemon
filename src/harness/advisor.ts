@@ -16,7 +16,7 @@
 import type { ScopeDimension, ScopeEvent, ScopeTranscript, TrainerScope } from "../kernel/contracts.js";
 import type { ManifestContext } from "../kernel/manifest.js";
 import type { AccordPack } from "../kernel/pack.js";
-import { SPECIES_FACT_IDS } from "../kernel/registry.js";
+import { MOVE_FACT_IDS, SPECIES_FACT_IDS } from "../kernel/registry.js";
 import { candidateDigest } from "../kernel/scope.js";
 import { type AnswerDecode, decodeAnswer, decodeCandidate } from "./decode.js";
 import type { CompletionRequest, ModelProvider, Usage } from "./provider.js";
@@ -114,8 +114,9 @@ function answerPrompt(scope: TrainerScope, asks: readonly string[]): string {
     '  {"kind": "ranking", "rosterId": "<id>", "basis": "<fact-id>", "direction": "highest"|"lowest", "selectedEntityId": "<id>"}',
     '  {"kind": "recommendation", "entityId": "<id>"}',
     "",
-    "A <fact-id> must be one of these certified species facts; no other id resolves:",
-    `  ${SPECIES_FACT_IDS.join(", ")}`,
+    "A <fact-id> must be one of these certified ids; no other resolves.",
+    `  about a species (entityId is a species id): ${SPECIES_FACT_IDS.join(", ")}`,
+    `  about a move (entityId is a move id): ${MOVE_FACT_IDS.join(", ")}`,
     "Cite only rosters you defined; recompute nothing you are unsure of — omit it.",
   ].join("\n");
 }

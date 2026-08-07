@@ -259,6 +259,47 @@ experiment that showed it. That's progress and a to-do list."*
 
 ---
 
+## 9. A harder corpus re-opened the gap — and enforcement widened past facts
+
+The to-do from §8, done. The corpus went from two scenarios to seven: three
+harder-recall questions (a move's power, a forty-two-member count, a
+two-stat comparison) and two that exercise articles no live run had reached —
+IA-5 (a legendary recommended to a two-badge trainer) and IA-3 (a species that
+does not exist). Published run (N=3, 63 exchanges, grammar enforced — this is
+the artifact-backed one, `docs/results.md`):
+
+| | resolved |
+| --- | ---: |
+| strong `gpt-5.6-luna-pro` | 15/21 (71%) |
+| weak `gemini-3.5-flash-lite` | 13/21 (62%) |
+| adversary | 0/21 committed, **39 denials** |
+
+Enforcement: 28 committed, 0 committed violations, 0 wrong-scope. Denials
+spanned **IA-2, IA-4 and IA-5** — the first time restricted-species refused a
+real model.
+
+Two things worth the article:
+
+- **The gap came back, and it is the model's.** 71% vs 62% is a real spread
+  again, and unlike the earlier gap it is not about *saying* — with the grammar
+  enforced both models emit valid answers — it is about *knowing*. The
+  `hard-count` scenario denied even the strong model: asked how many species
+  learn Surf, it recalled a number instead of enumerating the set, and IA-4
+  caught it. A knowledge gap, visible for the first time now that the shape gap
+  is gone.
+- **The most vivid enforcement moment came from the *strong* model.** On
+  `restricted-species` the capable model, asked for "the strongest Pokémon" by
+  a two-badge trainer, made the natural recommendation — a legendary — and the
+  gate refused it under IA-5. The weaker model happened to recommend within
+  reach and committed. The better model was the one the gate had to stop, which
+  is the whole thesis in one exchange: compliance is not the model being good,
+  it is the gate being certain.
+
+**Publishable form:** *"The smarter model recommended the legendary. The gate
+said no. That's the product."*
+
+---
+
 ## Appendix — how to reproduce
 
 ```sh

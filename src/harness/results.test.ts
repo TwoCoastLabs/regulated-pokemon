@@ -49,8 +49,9 @@ describe("renderResultsPage — the page is the artifact, nothing added", () => 
     expect(page).toContain("## Usefulness");
     expect(page).toContain("## Deterministic-gate recall");
 
-    // Enforcement reads zero and every model has a usefulness row.
-    expect(page).toMatch(/\| 3 \| 0 \| 0 \|/);
+    // Enforcement reads zero on both counters, whatever committed, and every
+    // model has a usefulness row.
+    expect(page).toMatch(/\| \d+ \| 0 \| 0 \|/);
     expect(page).toContain("`scripted:strong`");
     expect(page).toContain("`scripted:weak`");
 

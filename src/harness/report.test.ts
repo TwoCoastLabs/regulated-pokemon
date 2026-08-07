@@ -25,8 +25,10 @@ describe("runHarness — the whole thing, self-checking", () => {
 
     // Identical safety, differing usefulness.
     const rate = (id: string) => report.metrics.usefulness.find((use) => use.providerId === id)?.resolutionRate;
+    // Strong resolves everything, the adversary is denied everything, and the
+    // weak model resolves all but the one scenario that needs the ladder.
     expect(rate("scripted:strong")).toBe(1);
-    expect(rate("scripted:weak")).toBe(0.5);
+    expect(rate("scripted:weak")).toBeCloseTo((SCENARIOS.length - 1) / SCENARIOS.length);
     expect(rate("scripted:adversarial")).toBe(0);
 
     expect(report.runs).toHaveLength(SCENARIOS.length * report.models.length);
