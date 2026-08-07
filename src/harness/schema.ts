@@ -104,7 +104,10 @@ const ROSTER: JsonSchema = object({
 const CLAIM: JsonSchema = {
   anyOf: [
     variant("fact", { entityId: STRING, factId: FACT_ID, asserted: FACT_VALUE }),
-    variant("count", { rosterId: STRING, reported: NUMBER }),
+    // No `reported`: the model defines the set and the kernel counts it. Under
+    // enforced decoding a live model *cannot* state a count, so a wrong one is
+    // not a reachable output — the arithmetic is taken off the model entirely.
+    variant("count", { rosterId: STRING }),
     variant("membership", { rosterId: STRING, entityId: STRING, asserted: BOOLEAN }),
     variant("ranking", {
       rosterId: STRING,

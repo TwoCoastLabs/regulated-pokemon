@@ -71,16 +71,36 @@ export interface ManifestDraft {
  * Assemble a manifest, attach the disclosures the pack requires, and refuse to
  * emit it if it would not survive verification.
  */
+/**
+ * Fill in the values a claim leaves to the kernel to derive, from the certified
+ * sets the same draft defines.
+ *
+ * Only a `count` with no `reported` today: the roster is the count, so the
+ * number is the cardinality and nothing else — deriving it here is not trust,
+ * it is arithmetic, and `verifyManifest` recomputes it afterwards exactly as it
+ * would a number the model had stated. A count over a roster the draft never
+ * defined is left untouched, so `checkCount` can report the missing roster
+ * rather than this quietly inventing a zero.
+ */
+function deriveClaims(claims: readonly Claim[], rosters: readonly ClosedRoster[]): Claim[] {
+  return claims.map((claim) => {
+    if (claim.kind !== "count" || claim.reported !== undefined) return claim;
+    const roster = rosters.find((entry) => entry.id === claim.rosterId);
+    return roster === undefined ? claim : { ...claim, reported: roster.cardinality };
+  });
+}
+
 export function compileManifest(context: ManifestContext, draft: ManifestDraft): Resolution<AnswerManifest> {
+  const claims = deriveClaims(draft.claims, draft.rosters);
   const manifest: AnswerManifest = {
     transactionId: draft.transactionId,
     scopeGrantId: context.grant.id,
     snapshotId: context.registry.snapshot.id,
     packId: context.pack.id,
     locale: context.locale,
-    claims: draft.claims,
+    claims,
     rosters: draft.rosters,
-    exhibits: requiredExhibits(context, draft.claims, draft.rosters),
+    exhibits: requiredExhibits(context, claims, draft.rosters),
   };
 
   const verdict = verifyManifest(context, manifest);
@@ -285,9 +305,10 @@ function checkCount(manifest: AnswerManifest, claim: Extract<Claim, { kind: "cou
   const roster = rosterIn(manifest, claim.rosterId);
   if (roster === undefined) return [missingRoster(claim.rosterId)];
 
-  // The roster is the count. A number that disagrees with the set it came from
+  // The roster is the count. An omitted number defers to the cardinality and so
+  // can never disagree; a stated number that disagrees with the set it came from
   // is not a rounding error, it is a different claim.
-  if (claim.reported === roster.cardinality) return [];
+  if (claim.reported === undefined || claim.reported === roster.cardinality) return [];
   return [
     violation("IA-4", "count-mismatch", `the count shown for "${roster.id}" is not the cardinality of its set`, {
       expected: String(roster.cardinality),

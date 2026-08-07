@@ -244,9 +244,15 @@ function unitForClaim(
         };
       }
       case "count": {
+        // The rendered count is the certified set's cardinality — the count is
+        // the set (IA-4). `compileManifest` has already reconciled any stated
+        // number with it and filled an omitted one, so there is one true value
+        // to show, whether the model stated it or left it to be derived.
+        const roster = manifest.rosters.find((entry) => entry.id === claim.rosterId);
+        const shown = roster?.cardinality ?? claim.reported ?? 0;
         const resolved = slots(
           slot(context, locale, "set", entity(claim.rosterId), "plain-text"),
-          slot(context, locale, "count", { kind: "number", value: claim.reported }),
+          slot(context, locale, "count", { kind: "number", value: shown }),
         );
         if (!resolved.ok) return resolved;
         return {

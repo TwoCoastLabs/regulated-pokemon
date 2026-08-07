@@ -107,6 +107,18 @@ describe("claims are recomputed, not believed", () => {
     ).toContain("IA-4/count-mismatch");
   });
 
+  it("derives an unstated count from the certified set, so a set-definer cannot get it wrong", () => {
+    // The count with no number: the model defined the set and the kernel counts
+    // it. compileManifest fills the cardinality, and the committed count is the
+    // set's — arithmetic taken off the proposer entirely.
+    const result = compile([{ kind: "count", rosterId: "electric-kanto" }], [ELECTRIC]);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      const count = result.value.claims.find((claim) => claim.kind === "count");
+      expect(count).toEqual({ kind: "count", rosterId: "electric-kanto", reported: ELECTRIC.cardinality });
+    }
+  });
+
   it("denies membership asserted the wrong way round", () => {
     const claim: Claim = { kind: "membership", rosterId: "electric-kanto", entityId: "zapdos", asserted: true };
     const manifest = compiled([claim], [ELECTRIC]);

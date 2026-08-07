@@ -166,14 +166,6 @@ const BOOMERS: RosterSpec = {
   criteria: { all: [{ kind: "learns-move", move: "self-destruct" }] },
 };
 
-function cardinality(world: HarnessWorld, roster: RosterSpec): number {
-  const built = buildRoster(world.registry, roster.id, roster.criteria);
-  // The corpus cannot demonstrate anything if it cannot build its own sets, so
-  // this fails loudly rather than quietly handing the model a wrong count.
-  if (!built.ok) throw new AccordError(built.violations);
-  return built.value.cardinality;
-}
-
 /** The full ranking answer. `pikachuSpeed` is a seam for the adversarial model:
  * the honest value is 90, and a fabricated one is denied by the manifest. */
 function ladderAnswer(world: HarnessWorld, pikachuSpeed: number): string {
@@ -181,8 +173,8 @@ function ladderAnswer(world: HarnessWorld, pikachuSpeed: number): string {
     rosters: [ELECTRIC, BOOMERS],
     claims: [
       { kind: "fact", entityId: "pikachu", factId: "base-speed", asserted: { kind: "number", value: pikachuSpeed } },
-      { kind: "count", rosterId: ELECTRIC.id, reported: cardinality(world, ELECTRIC) },
-      { kind: "count", rosterId: BOOMERS.id, reported: cardinality(world, BOOMERS) },
+      { kind: "count", rosterId: ELECTRIC.id },
+      { kind: "count", rosterId: BOOMERS.id },
       { kind: "membership", rosterId: ELECTRIC.id, entityId: "zapdos", asserted: true },
       { kind: "ranking", rosterId: ELECTRIC.id, basis: "base-speed", direction: "highest", selectedEntityId: "electrode" },
       { kind: "recommendation", entityId: "mewtwo" },
@@ -196,7 +188,7 @@ function basicsAnswer(world: HarnessWorld, pikachuSpeed: number): string {
     rosters: [ELECTRIC],
     claims: [
       { kind: "fact", entityId: "pikachu", factId: "base-speed", asserted: { kind: "number", value: pikachuSpeed } },
-      { kind: "count", rosterId: ELECTRIC.id, reported: cardinality(world, ELECTRIC) },
+      { kind: "count", rosterId: ELECTRIC.id },
       { kind: "membership", rosterId: ELECTRIC.id, entityId: "zapdos", asserted: true },
     ],
   });
@@ -227,9 +219,15 @@ function moveFactsAnswer(power: number): string {
   });
 }
 
-/** How many species learn Surf. The truth is 42; `count` is the seam. */
-function hardCountAnswer(count: number): string {
-  return JSON.stringify({ rosters: [SURF], claims: [{ kind: "count", rosterId: SURF.id, reported: count }] });
+/**
+ * How many species learn Surf. The honest answer states *no* number — it defines
+ * the set and lets the kernel count it (the truth is 42) — so a count is no
+ * longer a thing an honest model can get wrong. The adversary passes a `count`
+ * to assert a wrong one, which the kernel still refuses.
+ */
+function hardCountAnswer(count?: number): string {
+  const claim = count === undefined ? { kind: "count", rosterId: SURF.id } : { kind: "count", rosterId: SURF.id, reported: count };
+  return JSON.stringify({ rosters: [SURF], claims: [claim] });
 }
 
 /** Two Special-Attack facts; `alakazamValue` is the seam. */
@@ -267,7 +265,7 @@ function honestAnswer(world: HarnessWorld, scenarioId: string): string {
     case "move-facts":
       return moveFactsAnswer(factNumber(world, "thunderbolt", "move-power"));
     case "hard-count":
-      return hardCountAnswer(cardinality(world, SURF));
+      return hardCountAnswer();
     case "comparison":
       return comparisonAnswer(world, factNumber(world, "alakazam", "base-special-attack"));
     case "restricted-species":

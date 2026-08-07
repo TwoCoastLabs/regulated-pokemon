@@ -36,6 +36,7 @@ capability property swings under it.
 | 3 | Swap to recent, cheaper models (6-model sweep) | 2 | **12/12** luna-pro | **4/12** gemini-flash-lite | described | 0 | 0 | New model lineup, all ≪ Sonnet. The new weak model resolves ~a third; strong matches Sonnet at ~⅓ the cost. |
 | 4 | Enforce the grammar at decode time | 2 | 12/12 luna-pro | **12/12** gemini-flash-lite | **enforced** | 0 | 0 | JSON schema constrains shape token-by-token. The weak model's entire gap was malformed output; remove it and it reaches parity. Corpus can no longer discriminate. |
 | 5 | Broaden the corpus 2 → 7 (Phase 8 pt 1) | 7 | **15/21** luna-pro | **13/21** gemini-flash-lite | enforced | 0 | 0 | Three harder-recall + two new-article scenarios. Gap re-opens — now a *knowledge* gap (strong fails `hard-count`), not a shape one. IA-5 refuses a real model for the first time. |
+| 6 | Derive the count, not assert it (Phase 8 pt 3) | 7 | **18/21** luna-pro | **18/21** gemini-flash-lite | enforced | 0 | 0 | The `count` claim drops its number; the kernel counts the set the model defined. `hard-count` closes for both models, and IA-4/count-mismatch stops being reachable from a model — fabrication prevented, not caught. (Grounding, tried between 5 and 6, earned no row — §10.) |
 
 Notes that don't fit the grid:
 
@@ -393,6 +394,51 @@ does not care that the truth was one line up.
 **Publishable form:** *"We gave the model the answer sheet. It still couldn't
 count to forty-two. The gap left isn't knowledge — it's arithmetic the system
 already does, and shouldn't be asking the model to redo."*
+
+---
+
+## 11. Deriving the count closed the gap — by not asking the model to count
+
+The fix #10 pointed at, built. The `count` claim no longer carries a number:
+the model defines the set, and the kernel counts it from the same criteria (the
+roster *is* the count — IA-4 always said so). Under enforced decoding the
+grammar drops the field, so a live model *cannot* state a count. Published run,
+N=3, 63 exchanges (`docs/results.md`):
+
+| | before (Phase 8 pt 1) | after (count derived) |
+| --- | ---: | ---: |
+| strong `gpt-5.6-luna-pro` | 15/21 (71%) | **18/21 (86%)** |
+| weak `gemini-3.5-flash-lite` | 13/21 (62%) | **18/21 (86%)** |
+
+Enforcement: 36 committed, 0 committed violations, 0 wrong-scope. `hard-count`
+resolved for both models — the thing grounding could not do at 2.5× the cost, a
+contract change did at no cost, because it removed the task instead of feeding
+it.
+
+Two things worth the article:
+
+- **A class of error stopped being caught, and that is the win.** IA-4/count-mismatch
+  fired in every prior run; it fires in none of this one, because a live model
+  can no longer assert a count to get wrong. Count-fabrication moved from
+  *detected* to *impossible*, the way IA-6 and IA-9 disclosures already were.
+  The gate firing *fewer* kinds of denial is progress when the missing kind was
+  eliminated at the root, not overlooked. (The crucible still fires it, against
+  a tampered manifest — the guarantee is intact, just no longer reachable from
+  the model.)
+- **The number the trainer sees still cannot drift.** The rendered count reads
+  the certified set's cardinality, not the claim — so "how many" and the set it
+  came from are one datum by construction, which is what IA-4 wanted all along.
+
+What did not move: enforcement (zero, again), and `restricted-species`, which
+still refuses both models under IA-5 — policy the model is not given, working as
+§9 and §10 showed. What is left on the usefulness side is the *ranking*
+(`IA-4/ranking-mismatch` still appears): the same shape as the count — declare
+the set and the ordering, let the kernel pick the extreme — and the next lever,
+once its ties and empty sets get the care the count did not need.
+
+**Publishable form:** *"We didn't teach the model to count. We stopped asking.
+Both models jumped to 86%, and 'wrong count' stopped being a thing a model can
+even say."*
 
 ---
 
