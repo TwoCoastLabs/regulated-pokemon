@@ -21,6 +21,42 @@ estimate from a handful of samples.
 
 ---
 
+## Timeline — every published measurement, and what moved it
+
+Each row is a committed `docs/results.md` artifact, in order. Read the two
+enforcement columns down the page: they never leave zero. Then read the two
+usefulness columns: they move at every step, and the last column says why. That
+contrast **is** the thesis — a safety property that holds flat while a
+capability property swings under it.
+
+| # | Change | Corpus | Strong | Weak | Grammar | Viol. | Wrong-scope | Why usefulness moved |
+|---|---|---|---|---|---|---|---|---|
+| 1 | First real run (Phase 7d) | 2 | **4/6** sonnet-4.5 | **0/6** llama-3.2-3b | described | 0 | 0 | Baseline. Strong loses 2/6 to over-answering (a false "Mew is legendary" → IA-4) and guessed fact-ids (`type` for `types` → IA-2). Weak can't emit valid JSON. |
+| 2 | Show the question + certified fact-ids | 2 | **6/6** sonnet-4.5 | 0/6 llama-3.2-3b | described | 0 | 0 | Gave the answer step the trainer's question and the fact-id menu (schema, never values). Strong's two blind spots close. Weak still can't format. |
+| 3 | Swap to recent, cheaper models (6-model sweep) | 2 | **12/12** luna-pro | **4/12** gemini-flash-lite | described | 0 | 0 | New model lineup, all ≪ Sonnet. The new weak model resolves ~a third; strong matches Sonnet at ~⅓ the cost. |
+| 4 | Enforce the grammar at decode time | 2 | 12/12 luna-pro | **12/12** gemini-flash-lite | **enforced** | 0 | 0 | JSON schema constrains shape token-by-token. The weak model's entire gap was malformed output; remove it and it reaches parity. Corpus can no longer discriminate. |
+| 5 | Broaden the corpus 2 → 7 (Phase 8 pt 1) | 7 | **15/21** luna-pro | **13/21** gemini-flash-lite | enforced | 0 | 0 | Three harder-recall + two new-article scenarios. Gap re-opens — now a *knowledge* gap (strong fails `hard-count`), not a shape one. IA-5 refuses a real model for the first time. |
+
+Notes that don't fit the grid:
+
+- **Sample sizes:** rows 1–2 are N=3 (18 exchanges), row 3 N=3 pooled to a note,
+  rows 4 N=6 (36), row 5 N=3 over 7 scenarios (63). Rates from 6 samples have
+  wide error bars; the weak model in row 3 was itself pooled from 0/6 and 3/6
+  passes (§6).
+- **A controlled A/B sits behind row 4** (§4/§5): the *same* gemini model on the
+  *same* two-scenario corpus went 4/12 → 9/12 purely by turning the grammar on —
+  the cleanest single-variable evidence in the project, and the reason row 4
+  adopted it.
+- **Denial breadth grew too:** rows 1–4 fired IA-2/IA-4 (and IA-3 incidentally);
+  row 5 added **IA-5/restricted-species**. The gate firing more kinds of denial,
+  on more models, is the enforcement column earning its zero rather than
+  coasting on an untested one.
+
+The one-line version for the article: **five interventions, five different
+usefulness numbers, and the same two enforcement zeros under every one of them.**
+
+---
+
 ## 1. Enforcement did not vary with the model. Usefulness varied enormously.
 
 The central claim, and the one with the most evidence behind it. Across every
