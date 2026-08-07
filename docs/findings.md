@@ -37,6 +37,7 @@ capability property swings under it.
 | 4 | Enforce the grammar at decode time | 2 | 12/12 luna-pro | **12/12** gemini-flash-lite | **enforced** | 0 | 0 | JSON schema constrains shape token-by-token. The weak model's entire gap was malformed output; remove it and it reaches parity. Corpus can no longer discriminate. |
 | 5 | Broaden the corpus 2 → 7 (Phase 8 pt 1) | 7 | **15/21** luna-pro | **13/21** gemini-flash-lite | enforced | 0 | 0 | Three harder-recall + two new-article scenarios. Gap re-opens — now a *knowledge* gap (strong fails `hard-count`), not a shape one. IA-5 refuses a real model for the first time. |
 | 6 | Derive the count, not assert it (Phase 8 pt 3) | 7 | **18/21** luna-pro | **18/21** gemini-flash-lite | enforced | 0 | 0 | The `count` claim drops its number; the kernel counts the set the model defined. `hard-count` closes for both models, and IA-4/count-mismatch stops being reachable from a model — fabrication prevented, not caught. (Grounding, tried between 5 and 6, earned no row — §10.) |
+| 7 | Derive the ranking too (Phase 8 pt 4) | 7 | **17/21** luna-pro | **19/21** gemini-flash-lite | enforced | 0 | 0 | The `ranking` drops its winner; the kernel picks the extreme. Neither IA-4 denial (count *or* ranking) is any longer reachable from a model. The only model-triggerable read-path denials left are IA-2 (a fact it stated wrong) and IA-5 (policy it was never told) — computed / asserted / policy, cleanly split (§12). |
 
 Notes that don't fit the grid:
 
@@ -439,6 +440,53 @@ once its ties and empty sets get the care the count did not need.
 **Publishable form:** *"We didn't teach the model to count. We stopped asking.
 Both models jumped to 86%, and 'wrong count' stopped being a thing a model can
 even say."*
+
+---
+
+## 12. Deriving the ranking too — and now no derived value can be wrong
+
+The count's twin, and the last of the arithmetic. A `ranking` no longer names
+its winner: the model declares the set, the basis and the direction, and the
+kernel picks the extreme they already fix (a tie or an unorderable basis is
+still refused by name — a shared winner is not a coin flip). Under enforced
+decoding the grammar drops the field, so a live model cannot name a winner to
+get wrong. Published run, N=3, 63 exchanges:
+
+| model | resolved |
+| --- | ---: |
+| strong `gpt-5.6-luna-pro` | 17/21 (81%) |
+| weak `gemini-3.5-flash-lite` | 19/21 (90%) |
+
+(The weak model above the strong one is sample noise; both sit around 85%.)
+Enforcement: 36 committed, 0 committed violations, 0 wrong-scope.
+
+The finding is in the denial list, and it is the culmination of the arc: the
+gate fired only **IA-5/restricted-species** and **IA-2/fact-mismatch**. Neither
+**IA-4** denial appears — not count-mismatch, not ranking-mismatch — because a
+live model can no longer state a count *or* a winner. **Every derived value is
+now the kernel's, and the whole class of "wrong computed answer" has been
+removed from what a model can even express.** What is left that a model can
+still get wrong is exactly what it *should* own:
+
+- **IA-2/fact-mismatch** — a fact it asserts and recalls wrong (a stat, a move's
+  power). A fact is a genuine assertion, "what was said"; deriving it would be
+  answering the question for the model rather than checking it. This one stays.
+- **IA-5/restricted-species** — policy the model is not given, refusing both
+  models exactly as it should (§9–§11).
+
+So the read path now divides cleanly in three: **computed** values the kernel
+derives and a model cannot misstate (counts, rankings); **asserted** values the
+model owns and the gate checks (facts); and **policy** the model never sees and
+the gate enforces (eligibility). "Ground the computation, not the data" (#21) is
+finished for reads. IA-4 is not gone — the crucible still fires both its
+mismatches against a tampered manifest — it is only unreachable from the model,
+which is the strongest state a safety property can be in: not merely caught, but
+impossible to attempt.
+
+**Publishable form:** *"By the end, the only things a model could still get
+wrong were a fact it stated and a rule it was never told. Everything the system
+could compute for itself, it did — and 'wrong count' and 'wrong winner' stopped
+being sentences a model could even form."*
 
 ---
 
