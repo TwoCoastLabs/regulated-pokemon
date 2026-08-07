@@ -32,6 +32,11 @@ public, it doesn't go in the repo at all.
   the PR gate; a weekly workflow runs it and opens an issue.
 - Live-model harnesses (Phase 7+) are separate, explicitly billable scripts;
   they never run in CI and always write run artifacts.
+- **Results page:** `npm run harness:results` renders a filed run artifact as
+  Markdown (newest in `runs/` by default; `-- <artifact.json>` for one,
+  `-- --out docs/results.md` to file it). Pure and key-free — it only reads an
+  artifact, so a published number is always traceable to the run that produced
+  it, never hand-transcribed.
 
 ## LLM keys
 

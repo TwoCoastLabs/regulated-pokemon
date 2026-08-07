@@ -1,7 +1,14 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
 import type { Claim } from "../kernel/contracts.js";
-import { computeCost, computeEnforcement, computeHealth, computeMetrics, computeUsefulness } from "./metrics.js";
+import {
+  computeCost,
+  computeEnforcement,
+  computeGateRecall,
+  computeHealth,
+  computeMetrics,
+  computeUsefulness,
+} from "./metrics.js";
 import { harnessWorld, models, type Scenario, SCENARIOS } from "./corpus.js";
 import type { HarnessRun } from "./run.js";
 import { runScenario } from "./run.js";
@@ -118,6 +125,32 @@ describe("computeCost — money, in its own section", () => {
   });
 });
 
+describe("computeGateRecall — what the front door routed, before any model", () => {
+  it("shows the ladder scenario escalating one dimension, with the wording it hands over", () => {
+    const gate = computeGateRecall(world, SCENARIOS).find((entry) => entry.scenarioId === "basis-ladder")!;
+    // The three plain dimensions come from the trainer's own words; the
+    // comparison basis is the one the model must interpret.
+    expect(gate.boundDirectly).toEqual(["version", "region", "badgeLevel"]);
+    expect(gate.escalated).toEqual(["comparisonBasis"]);
+    expect(gate.resolvedWithoutModel).toBe(false);
+    // The question really is routed to the model, not silently dropped — this is
+    // the number measured instead of assumed.
+    expect(gate.unmatched.some((wording) => wording.includes("quickest"))).toBe(true);
+  });
+
+  it("shows the plain scenario resolving without ever engaging the model for scope", () => {
+    const gate = computeGateRecall(world, SCENARIOS).find((entry) => entry.scenarioId === "basics")!;
+    expect(gate.boundDirectly).toEqual(["version", "region", "badgeLevel"]);
+    expect(gate.escalated).toEqual([]);
+    expect(gate.resolvedWithoutModel).toBe(true);
+  });
+
+  it("is a property of the corpus, not the model — same recall whichever runs", () => {
+    // Model-independent by construction: it reads the fixed opening, not runs.
+    expect(computeGateRecall(world, SCENARIOS)).toEqual(computeMetrics(world, SCENARIOS, modelList, allRuns).gate);
+  });
+});
+
 describe("computeMetrics", () => {
   it("assembles the split and names the adversary that must be seen to fail", () => {
     const metrics = computeMetrics(world, SCENARIOS, modelList, allRuns);
@@ -125,5 +158,6 @@ describe("computeMetrics", () => {
     expect(metrics.usefulness).toHaveLength(3);
     expect(metrics.health).toHaveLength(3);
     expect(metrics.cost).toHaveLength(3);
+    expect(metrics.gate).toHaveLength(SCENARIOS.length);
   });
 });

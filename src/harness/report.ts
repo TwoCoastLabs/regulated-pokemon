@@ -76,6 +76,25 @@ function renderRuns(scenarios: readonly Scenario[], runs: readonly HarnessRun[],
   return lines;
 }
 
+function renderGate(gate: Metrics["gate"]): string[] {
+  const lines = ["", "GATE RECALL  (what the deterministic front door routed, before any model)"];
+  for (const entry of gate) {
+    const bound = entry.boundDirectly.length === 0 ? "nothing" : entry.boundDirectly.join(", ");
+    const tail = entry.resolvedWithoutModel
+      ? "resolved without the model"
+      : `escalated ${entry.escalated.join(", ")} to the ladder`;
+    lines.push(`${INDENT}${pad(entry.scenarioId, 16)} bound ${bound}; ${tail}`);
+    if (!entry.resolvedWithoutModel) {
+      // The wording actually handed to the model. Named, not counted: a
+      // dimension escalated with nothing to route is the silent ceiling, and it
+      // is only visible if the inbox is printed rather than summarised to a "1".
+      const routed = entry.unmatched.length === 0 ? "(nothing — a silent ceiling)" : entry.unmatched.map((w) => `"${w}"`).join(", ");
+      lines.push(`${INDENT}${INDENT}routed to the model: ${routed}`);
+    }
+  }
+  return lines;
+}
+
 function renderMetrics(metrics: Metrics): string[] {
   const { enforcement, usefulness, health, cost } = metrics;
   const lines = [
@@ -116,6 +135,7 @@ function renderMetrics(metrics: Metrics): string[] {
         (item.fullyPriced ? "" : `  — a floor: ${usage.calls - usage.costedCalls} call(s) came back unpriced`),
     );
   }
+  lines.push(...renderGate(metrics.gate));
   return lines;
 }
 
@@ -155,6 +175,28 @@ export function selfCheck(
   }
   for (const item of metrics.health) {
     if (item.allFailed) failures.push(`HARNESS FAILED: every call to ${item.providerId} failed; the run proves nothing.`);
+  }
+  // Lesson 6, made structural. A deterministic front door that never escalates
+  // is a silent usefulness ceiling: the interpretive ladder — the whole reason
+  // the model is in the loop — goes untested, and a corpus that only asks
+  // plain questions would report a clean run while proving nothing about the
+  // path that matters. Require at least one scenario to reach the model.
+  if (metrics.gate.length > 0 && metrics.gate.every((entry) => entry.resolvedWithoutModel)) {
+    failures.push(
+      "HARNESS FAILED: no scenario ever escalated to the model; the ladder went untested " +
+        "and the usefulness numbers measure only the deterministic front door.",
+    );
+  }
+  // The other half of the same ceiling: a dimension routed to the model with no
+  // wording to interpret. That is the resolver refusing to route, and it looks
+  // identical to a question answered well unless it is caught here.
+  for (const entry of metrics.gate) {
+    if (!entry.resolvedWithoutModel && entry.unmatched.length === 0) {
+      failures.push(
+        `HARNESS FAILED: "${entry.scenarioId}" escalated ${entry.escalated.join(", ")} to the model ` +
+          "but routed no wording for it to interpret; the front door refused to route.",
+      );
+    }
   }
   for (const model of modelList) {
     for (const scenario of scenarios) {
