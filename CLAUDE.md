@@ -32,6 +32,11 @@ public, it doesn't go in the repo at all.
   the PR gate; a weekly workflow runs it and opens an issue.
 - Live-model harnesses (Phase 7+) are separate, explicitly billable scripts;
   they never run in CI and always write run artifacts.
+- **Findings log:** [docs/findings.md](docs/findings.md) — every claim this
+  project can defend, with the measurement behind it. When a live run teaches
+  something, record it there *with its numbers* in the same change; a claim
+  without a number is a note, not a finding. It is the evidence base for
+  anything published externally, so provenance is stated even when it is weak.
 - **Results page:** `npm run harness:results` renders a filed run artifact as
   Markdown (newest in `runs/` by default; `-- <artifact.json>` for one,
   `-- --out docs/results.md` to file it). Pure and key-free — it only reads an
