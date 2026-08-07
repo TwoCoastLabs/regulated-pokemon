@@ -78,12 +78,16 @@ export const ADVERSARY_PERSONA = [
  *  - **strong** `openai/gpt-5.6-luna-pro` resolved every scenario (6/6) at a
  *    third of Sonnet's cost — the best quality-per-dollar of the lot.
  *  - **weak** `google/gemini-3.5-flash-lite` is the point of the exercise: a
- *    real, cheaply-deployable model that resolves *half* the corpus (3/6),
+ *    real, cheaply-deployable model that resolves only part of the corpus,
  *    reliably (no provider errors), on the same gate. Its criterion was fixed
  *    before it was picked — a model a cost-constrained team would actually ship,
  *    not a strawman, and one whose lower usefulness is the model's, not an
  *    outage's. That an invariant holds on it and on the strong model alike is
  *    the evidence the architecture does not lean on model capability.
+ *
+ * The sweep that chose them ran *unconstrained*, when the weak model's misses
+ * were mostly malformed shape rather than wrong facts; with the grammar enforced
+ * it does considerably better, and the gap that remains is the substantive one.
  *
  * The adversary defaults to the strong slug: a capable attacker, because a weak
  * one that fails to fabricate would prove nothing about the gate.
@@ -135,7 +139,7 @@ export function loadEnv(processEnv: Env, path: string): Env {
 
 export type ConfigResult = { ok: true; config: LiveConfig } | { ok: false; reason: string };
 
-export function liveConfig(env: Env, structured = false): ConfigResult {
+export function liveConfig(env: Env, structured = true): ConfigResult {
   const apiKey = (env.OPENROUTER_API_KEY ?? "").trim();
   if (apiKey === "") {
     return {
@@ -185,7 +189,14 @@ export const liveModels: ProviderFactory = (config) => {
 
 export interface LiveArgs {
   live: boolean;
-  /** Constrain the answer's shape at decode time — a measured variable. */
+  /**
+   * Constrain the answer's shape at decode time. On by default.
+   *
+   * Measured before it was adopted: on the weak model it took resolution from
+   * 4/12 to 9/12 and left committed violations at zero, because it constrains
+   * shape and never content. `--no-structured` restores the old behaviour, and
+   * is how that comparison stays reproducible rather than becoming folklore.
+   */
   structured: boolean;
   repetitions: number;
   out: string;
@@ -203,7 +214,7 @@ export function parseArgs(argv: readonly string[]): LiveArgs {
     roles: string[];
     help: boolean;
     errors: string[];
-  } = { live: false, structured: false, repetitions: 1, out: "runs", roles: [], help: false, errors: [] };
+  } = { live: false, structured: true, repetitions: 1, out: "runs", roles: [], help: false, errors: [] };
 
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index];
@@ -214,6 +225,9 @@ export function parseArgs(argv: readonly string[]): LiveArgs {
         break;
       case "--structured":
         args.structured = true;
+        break;
+      case "--no-structured":
+        args.structured = false;
         break;
       case "--help":
       case "-h":
@@ -255,8 +269,9 @@ const USAGE = [
   "  --repetitions N     samples per model per scenario (default 1). A provider is",
   "                      nondeterministic even at temperature 0; N=1 first, then N=3.",
   "  --models a,b,c      roles to run: strong, weak, adversarial (default: all three).",
-  "  --structured        send the answer grammar as a decoding constraint. Shape only:",
-  "                      every value still faces the same verification.",
+  "  --no-structured     stop enforcing the answer grammar at decode time. On by",
+  "                      default because it lifts a weak model (4/12 -> 9/12) while",
+  "                      leaving enforcement at zero: it constrains shape, not content.",
   "  --out DIR           where the run artifact is filed (default: runs/).",
   "",
   "The key is read from OPENROUTER_API_KEY, in the environment or in .env.",
@@ -309,7 +324,7 @@ export async function runLive(options: LiveOptions): Promise<LiveResult> {
     `models        ${selected.map((model) => `${model.provider.id} (${model.slug ?? "—"})`).join(", ")}`,
     `scenarios     ${SCENARIOS.map((scenario) => scenario.id).join(", ")}`,
     `repetitions   ${args.repetitions}`,
-    `structured    ${args.structured ? "yes — the answer grammar is enforced at decode time" : "no"}`,
+    `structured    ${args.structured ? "yes — the answer grammar is enforced at decode time" : "no — prose only, the pre-grammar baseline"}`,
     `calls         at most ${plannedCalls(selected.length, SCENARIOS.length, args.repetitions)}`,
     "cost          unknown until it is spent — priced by the provider, never estimated here",
   ];
@@ -336,7 +351,7 @@ export async function runLive(options: LiveOptions): Promise<LiveResult> {
   });
 
   const artifact = buildArtifact(report, {
-    label: args.structured ? "live-structured" : "live",
+    label: args.structured ? "live" : "live-unconstrained",
     startedAt: options.now,
     world,
     structured: args.structured,

@@ -25,8 +25,8 @@ const context = {
 
 /** The `kind` literals a discriminated union in the schema offers. */
 function kindsOf(node: unknown): string[] {
-  const variants = (node as { anyOf?: { properties?: { kind?: { const?: string } } }[] }).anyOf ?? [];
-  return variants.map((entry) => entry.properties?.kind?.const).filter((kind): kind is string => kind !== undefined);
+  const variants = (node as { anyOf?: { properties?: { kind?: { enum?: string[] } } }[] }).anyOf ?? [];
+  return variants.map((entry) => entry.properties?.kind?.enum?.[0]).filter((kind): kind is string => kind !== undefined);
 }
 
 const properties = (ANSWER_SCHEMA as { properties: Record<string, { items: unknown }> }).properties;
@@ -42,8 +42,8 @@ describe("the answer grammar tracks the kernel, not a copy of it", () => {
     // merely discouraged; if the registry grows a fact, this fails until the
     // grammar is widened in the same commit.
     const factClaim = (
-      properties.claims?.items as { anyOf: { properties: Record<string, { enum?: string[]; const?: string }> }[] }
-    ).anyOf.find((entry) => entry.properties.kind?.const === "fact");
+      properties.claims?.items as { anyOf: { properties: Record<string, { enum?: string[] }> }[] }
+    ).anyOf.find((entry) => entry.properties.kind?.enum?.[0] === "fact");
     expect(factClaim?.properties.factId?.enum).toEqual([...SPECIES_FACT_IDS]);
   });
 
@@ -64,6 +64,30 @@ describe("the answer grammar tracks the kernel, not a copy of it", () => {
     expect(new Set(criterionKinds)).toEqual(
       new Set(["has-type", "learns-move", "rarity", "stat-at-least", "stat-at-most"]),
     );
+  });
+});
+
+describe("the grammar is portable across providers", () => {
+  it("gives every node an explicit type, which strict mode requires", () => {
+    // A bare `{const: "fact"}` is legal JSON Schema and one provider took it;
+    // another rejected the whole document — a 400 on every call, which the run
+    // then reports as a total outage. Cheap to assert, expensive to rediscover.
+    const offenders: string[] = [];
+    const walk = (node: unknown, path: string): void => {
+      if (node === null || typeof node !== "object") return;
+      const schema = node as Record<string, unknown>;
+      if (Array.isArray(schema.anyOf)) {
+        schema.anyOf.forEach((entry, index) => walk(entry, `${path}.anyOf[${index}]`));
+        return;
+      }
+      if (schema.type === undefined) offenders.push(path);
+      for (const [key, value] of Object.entries((schema.properties ?? {}) as Record<string, unknown>)) {
+        walk(value, `${path}.${key}`);
+      }
+      if (schema.items !== undefined) walk(schema.items, `${path}[]`);
+    };
+    walk(ANSWER_SCHEMA, "answer");
+    expect(offenders).toEqual([]);
   });
 });
 

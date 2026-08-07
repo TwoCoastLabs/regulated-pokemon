@@ -111,6 +111,15 @@ describe("arguments", () => {
     expect(parseArgs(["--live"]).live).toBe(true);
   });
 
+  it("enforces the answer grammar by default, and can be told not to", () => {
+    // On by default because it was measured, not assumed: it lifts a weak model
+    // and leaves enforcement at zero. The off switch keeps that comparison
+    // reproducible rather than folklore.
+    expect(parseArgs([]).structured).toBe(true);
+    expect(parseArgs(["--no-structured"]).structured).toBe(false);
+    expect(parseArgs(["--no-structured", "--structured"]).structured).toBe(true);
+  });
+
   it("reads repetitions, output directory and roles", () => {
     const args = parseArgs(["--live", "--repetitions", "3", "--out", "artifacts", "--models", "strong, weak"]);
     expect(args).toMatchObject({ live: true, repetitions: 3, out: "artifacts", roles: ["strong", "weak"] });

@@ -49,9 +49,17 @@ function object(properties: Record<string, JsonSchema>): JsonSchema {
   };
 }
 
-/** A discriminated variant: a literal `kind` plus its own fields. */
+/**
+ * A discriminated variant: a literal `kind` plus its own fields.
+ *
+ * The discriminator is written as a single-member `enum` *with* an explicit
+ * `type`, rather than the terser bare `const`. Providers disagree here — one
+ * accepted `{const: "fact"}` happily while another rejected the whole schema
+ * with "schema must have a 'type' key", which arrives as a 400 on every call
+ * and reads downstream as a total outage. The verbose form is the portable one.
+ */
 function variant(kind: string, fields: Record<string, JsonSchema> = {}): JsonSchema {
-  return object({ kind: { const: kind }, ...fields });
+  return object({ kind: { type: "string", enum: [kind] }, ...fields });
 }
 
 const STRING: JsonSchema = { type: "string" };
