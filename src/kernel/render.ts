@@ -283,8 +283,12 @@ function unitForClaim(
         };
       }
       case "ranking": {
+        // A rendered manifest is a verified one, and verification derives or
+        // confirms the winner, so it is present here — a ranking whose winner
+        // could not be resolved was refused and never reached render.
+        const selected = claim.selectedEntityId ?? "";
         const resolved = slots(
-          slot(context, locale, "entity", entity(claim.selectedEntityId), "entity-name"),
+          slot(context, locale, "entity", entity(selected), "entity-name"),
           slot(context, locale, "set", entity(claim.rosterId), "plain-text"),
           slot(context, locale, "basis", entity(claim.basis), "plain-text"),
         );
@@ -295,7 +299,7 @@ function unitForClaim(
             id: `selection:${claim.rosterId}:${claim.basis}:${claim.direction}`,
             kind: "selection",
             slots: resolved.value,
-            mentions: [claim.selectedEntityId, ...definedBy(claim.rosterId, manifest.rosters)],
+            mentions: [selected, ...definedBy(claim.rosterId, manifest.rosters)],
           },
         };
       }

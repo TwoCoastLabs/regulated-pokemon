@@ -117,7 +117,7 @@ function answerPrompt(scope: TrainerScope, asks: readonly string[], reference: s
     '  {"kind": "fact", "entityId": "<id>", "factId": "<fact-id>", "asserted": {"kind": "number"|"boolean"|"text"|"list"|"absent", "value": ...}}',
     '  {"kind": "count", "rosterId": "<id>"}  — defines a set to be counted; the system counts it, so state no number',
     '  {"kind": "membership", "rosterId": "<id>", "entityId": "<id>", "asserted": <boolean>}',
-    '  {"kind": "ranking", "rosterId": "<id>", "basis": "<fact-id>", "direction": "highest"|"lowest", "selectedEntityId": "<id>"}',
+    '  {"kind": "ranking", "rosterId": "<id>", "basis": "<fact-id>", "direction": "highest"|"lowest"}  — defines a set and an ordering; the system names the winner, so name none',
     '  {"kind": "recommendation", "entityId": "<id>"}',
     "",
     "A <fact-id> must be one of these certified ids; no other resolves.",

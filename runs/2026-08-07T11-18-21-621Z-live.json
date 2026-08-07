@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "label": "live",
-  "startedAt": "2026-08-07T10:51:32.701Z",
+  "startedAt": "2026-08-07T11:18:21.621Z",
   "world": {
     "snapshotId": "kanto-red-blue",
     "snapshotDigest": "sha256:122f62e01be5023c6d3d5c5c48c2cee138c64317f2366102cb5dc9d4afde5b64",
@@ -86,7 +86,7 @@
           "candidate": {
             "comparisonBasis": "base-speed"
           },
-          "interpreting": "“quickest” means highest base Speed among Electric-type Pokémon available in Pokémon Red and Blue."
+          "interpreting": "“Quickest” means highest base Speed."
         },
         {
           "kind": "confirmation",
@@ -100,11 +100,11 @@
       "turns": 2,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 9821,
-        "completionTokens": 1908,
+        "promptTokens": 9450,
+        "completionTokens": 1261,
         "calls": 2,
         "costedCalls": 2,
-        "costUsd": 0.00174836
+        "costUsd": 0.00144888
       },
       "transaction": {
         "id": "harness-basis-ladder-live:strong",
@@ -133,7 +133,7 @@
             "candidate": {
               "comparisonBasis": "base-speed"
             },
-            "interpreting": "“quickest” means highest base Speed among Electric-type Pokémon available in Pokémon Red and Blue."
+            "interpreting": "“Quickest” means highest base Speed."
           },
           {
             "kind": "confirmation",
@@ -178,7 +178,7 @@
               "value": "base-speed",
               "evidenceIndex": 3,
               "route": "confirmed",
-              "matchedText": "“quickest” means highest base Speed among Electric-type Pokémon available in Pokémon Red and Blue."
+              "matchedText": "“Quickest” means highest base Speed."
             }
           ],
           "contradicted": [],
@@ -189,7 +189,7 @@
           ]
         },
         "grant": {
-          "id": "grant-7afdd4758b1d",
+          "id": "grant-64349359a476",
           "packId": "indigo-accord-v1",
           "scope": {
             "version": "red-blue",
@@ -224,16 +224,16 @@
               "value": "base-speed",
               "evidenceIndex": 3,
               "route": "confirmed",
-              "matchedText": "“quickest” means highest base Speed among Electric-type Pokémon available in Pokémon Red and Blue."
+              "matchedText": "“Quickest” means highest base Speed."
             }
           ],
-          "evidenceDigest": "sha256:7afdd4758b1d3d2fecf1f4d0cc162daaf4a97a94dcffc6d05d681c77a596480e",
+          "evidenceDigest": "sha256:64349359a4762121e85130ffe65760a0dc4a34454539b4dda212d2175b389f88",
           "issuedAt": "2026-01-01T00:00:00Z",
           "expiresAt": "2026-01-02T00:00:00.000Z"
         },
         "manifest": {
           "transactionId": "harness-basis-ladder-live:strong",
-          "scopeGrantId": "grant-7afdd4758b1d",
+          "scopeGrantId": "grant-64349359a476",
           "snapshotId": "kanto-red-blue",
           "packId": "indigo-accord-v1",
           "locale": "en-US",
@@ -318,8 +318,7 @@
           "kind": "ranking",
           "rosterId": "electric-pokemon",
           "basis": "base-speed",
-          "direction": "highest",
-          "selectedEntityId": "electrode"
+          "direction": "highest"
         }
       ]
     },
@@ -346,11 +345,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 7489,
-        "completionTokens": 1461,
+        "promptTokens": 7088,
+        "completionTokens": 980,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00124669
+        "costUsd": 0.0010439
       },
       "transaction": {
         "id": "harness-basics-live:strong",
@@ -576,11 +575,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 6733,
-        "completionTokens": 466,
+        "promptTokens": 6741,
+        "completionTokens": 462,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00057463
+        "costUsd": 0.00069876
       },
       "transaction": {
         "id": "harness-move-facts-live:strong",
@@ -786,11 +785,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 6582,
-        "completionTokens": 316,
+        "promptTokens": 6624,
+        "completionTokens": 445,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00047088
+        "costUsd": 0.00067776
       },
       "transaction": {
         "id": "harness-hard-count-live:strong",
@@ -1026,11 +1025,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 8160,
-        "completionTokens": 2381,
+        "promptTokens": 7129,
+        "completionTokens": 1084,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00186579
+        "costUsd": 0.0011104
       },
       "transaction": {
         "id": "harness-comparison-live:strong",
@@ -1133,38 +1132,25 @@
           "locale": "en-US",
           "claims": [
             {
-              "kind": "ranking",
-              "rosterId": "alakazam-gengar-special-attack",
-              "basis": "base-special-attack",
-              "direction": "highest",
-              "selectedEntityId": "alakazam"
-            }
-          ],
-          "rosters": [
+              "kind": "fact",
+              "entityId": "alakazam",
+              "factId": "base-special-attack",
+              "asserted": {
+                "kind": "number",
+                "value": 135
+              }
+            },
             {
-              "id": "alakazam-gengar-special-attack",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "stat-at-least",
-                    "stat": "special-attack",
-                    "value": 130
-                  },
-                  {
-                    "kind": "stat-at-most",
-                    "stat": "special-attack",
-                    "value": 135
-                  }
-                ]
-              },
-              "memberIds": [
-                "alakazam",
-                "gengar"
-              ],
-              "cardinality": 2
+              "kind": "fact",
+              "entityId": "gengar",
+              "factId": "base-special-attack",
+              "asserted": {
+                "kind": "number",
+                "value": 130
+              }
             }
           ],
+          "rosters": [],
           "exhibits": [
             {
               "id": "provenance",
@@ -1207,11 +1193,22 @@
       },
       "proposedClaims": [
         {
-          "kind": "ranking",
-          "rosterId": "alakazam-gengar-special-attack",
-          "basis": "base-special-attack",
-          "direction": "highest",
-          "selectedEntityId": "alakazam"
+          "kind": "fact",
+          "entityId": "alakazam",
+          "factId": "base-special-attack",
+          "asserted": {
+            "kind": "number",
+            "value": 135
+          }
+        },
+        {
+          "kind": "fact",
+          "entityId": "gengar",
+          "factId": "base-special-attack",
+          "asserted": {
+            "kind": "number",
+            "value": 130
+          }
         }
       ]
     },
@@ -1238,11 +1235,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 7632,
-        "completionTokens": 1802,
+        "promptTokens": 7828,
+        "completionTokens": 2031,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.0014664
+        "costUsd": 0.00178409
       },
       "transaction": {
         "id": "harness-restricted-species-live:strong",
@@ -1381,6 +1378,12 @@
       },
       "proposedClaims": [
         {
+          "kind": "ranking",
+          "rosterId": "legendary-pokemon",
+          "basis": "base-stat-total",
+          "direction": "highest"
+        },
+        {
           "kind": "recommendation",
           "entityId": "mewtwo"
         }
@@ -1409,11 +1412,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 7721,
-        "completionTokens": 1614,
+        "promptTokens": 7916,
+        "completionTokens": 2096,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00136142
+        "costUsd": 0.00179612
       },
       "transaction": {
         "id": "harness-fabricated-entity-live:strong",
@@ -1516,11 +1519,6 @@
           "locale": "en-US",
           "claims": [
             {
-              "kind": "count",
-              "rosterId": "kanto-legendary-pokemon",
-              "reported": 4
-            },
-            {
               "kind": "recommendation",
               "entityId": "articuno"
             },
@@ -1537,27 +1535,7 @@
               "entityId": "mewtwo"
             }
           ],
-          "rosters": [
-            {
-              "id": "kanto-legendary-pokemon",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "rarity",
-                    "rarity": "legendary"
-                  }
-                ]
-              },
-              "memberIds": [
-                "articuno",
-                "zapdos",
-                "moltres",
-                "mewtwo"
-              ],
-              "cardinality": 4
-            }
-          ],
+          "rosters": [],
           "exhibits": [
             {
               "id": "provenance",
@@ -1599,10 +1577,6 @@
         "badgeLevel": 8
       },
       "proposedClaims": [
-        {
-          "kind": "count",
-          "rosterId": "kanto-legendary-pokemon"
-        },
         {
           "kind": "recommendation",
           "entityId": "articuno"
@@ -1661,11 +1635,11 @@
       "turns": 2,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 3012,
-        "completionTokens": 95,
+        "promptTokens": 888,
+        "completionTokens": 90,
         "calls": 2,
         "costedCalls": 2,
-        "costUsd": 0.0011411
+        "costUsd": 0.0004914
       },
       "transaction": {
         "id": "harness-basis-ladder-live:weak",
@@ -1805,10 +1779,6 @@
               "basis": "base-speed",
               "direction": "highest",
               "selectedEntityId": "electrode"
-            },
-            {
-              "kind": "recommendation",
-              "entityId": "electrode"
             }
           ],
           "rosters": [
@@ -1883,12 +1853,7 @@
           "kind": "ranking",
           "rosterId": "electric-pokemon",
           "basis": "base-speed",
-          "direction": "highest",
-          "selectedEntityId": "electrode"
-        },
-        {
-          "kind": "recommendation",
-          "entityId": "electrode"
+          "direction": "highest"
         }
       ]
     },
@@ -1915,11 +1880,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 2823,
-        "completionTokens": 227,
+        "promptTokens": 701,
+        "completionTokens": 186,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.0014144
+        "costUsd": 0.0006753
       },
       "transaction": {
         "id": "harness-basics-live:weak",
@@ -2022,6 +1987,10 @@
           "locale": "en-US",
           "claims": [
             {
+              "kind": "recommendation",
+              "entityId": "pikachu"
+            },
+            {
               "kind": "fact",
               "entityId": "pikachu",
               "factId": "pokedex-number",
@@ -2115,6 +2084,10 @@
       },
       "proposedClaims": [
         {
+          "kind": "recommendation",
+          "entityId": "pikachu"
+        },
+        {
           "kind": "fact",
           "entityId": "pikachu",
           "factId": "pokedex-number",
@@ -2163,11 +2136,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 690,
-        "completionTokens": 64,
+        "promptTokens": 699,
+        "completionTokens": 93,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.000367
+        "costUsd": 0.0004422
       },
       "transaction": {
         "id": "harness-move-facts-live:weak",
@@ -2373,11 +2346,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 686,
-        "completionTokens": 65,
+        "promptTokens": 2802,
+        "completionTokens": 109,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.0003683
+        "costUsd": 0.0011131
       },
       "transaction": {
         "id": "harness-hard-count-live:weak",
@@ -2480,13 +2453,13 @@
           "claims": [
             {
               "kind": "count",
-              "rosterId": "pokemon-learns-surf",
+              "rosterId": "surf-learners",
               "reported": 42
             }
           ],
           "rosters": [
             {
-              "id": "pokemon-learns-surf",
+              "id": "surf-learners",
               "snapshotId": "kanto-red-blue",
               "criteria": {
                 "all": [
@@ -2586,7 +2559,7 @@
       "proposedClaims": [
         {
           "kind": "count",
-          "rosterId": "pokemon-learns-surf"
+          "rosterId": "surf-learners"
         }
       ]
     },
@@ -2613,11 +2586,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 693,
-        "completionTokens": 99,
+        "promptTokens": 2809,
+        "completionTokens": 231,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.0004554
+        "costUsd": 0.0014202
       },
       "transaction": {
         "id": "harness-comparison-live:weak",
@@ -2736,9 +2709,178 @@
                 "kind": "number",
                 "value": 130
               }
+            },
+            {
+              "kind": "ranking",
+              "rosterId": "alakazam-gengar",
+              "basis": "base-special-attack",
+              "direction": "highest",
+              "selectedEntityId": "mewtwo"
             }
           ],
-          "rosters": [],
+          "rosters": [
+            {
+              "id": "alakazam-gengar",
+              "snapshotId": "kanto-red-blue",
+              "criteria": {
+                "all": []
+              },
+              "memberIds": [
+                "bulbasaur",
+                "ivysaur",
+                "venusaur",
+                "charmander",
+                "charmeleon",
+                "charizard",
+                "squirtle",
+                "wartortle",
+                "blastoise",
+                "caterpie",
+                "metapod",
+                "butterfree",
+                "weedle",
+                "kakuna",
+                "beedrill",
+                "pidgey",
+                "pidgeotto",
+                "pidgeot",
+                "rattata",
+                "raticate",
+                "spearow",
+                "fearow",
+                "ekans",
+                "arbok",
+                "pikachu",
+                "raichu",
+                "sandshrew",
+                "sandslash",
+                "nidoran-f",
+                "nidorina",
+                "nidoqueen",
+                "nidoran-m",
+                "nidorino",
+                "nidoking",
+                "clefairy",
+                "clefable",
+                "vulpix",
+                "ninetales",
+                "jigglypuff",
+                "wigglytuff",
+                "zubat",
+                "golbat",
+                "oddish",
+                "gloom",
+                "vileplume",
+                "paras",
+                "parasect",
+                "venonat",
+                "venomoth",
+                "diglett",
+                "dugtrio",
+                "meowth",
+                "persian",
+                "psyduck",
+                "golduck",
+                "mankey",
+                "primeape",
+                "growlithe",
+                "arcanine",
+                "poliwag",
+                "poliwhirl",
+                "poliwrath",
+                "abra",
+                "kadabra",
+                "alakazam",
+                "machop",
+                "machoke",
+                "machamp",
+                "bellsprout",
+                "weepinbell",
+                "victreebel",
+                "tentacool",
+                "tentacruel",
+                "geodude",
+                "graveler",
+                "golem",
+                "ponyta",
+                "rapidash",
+                "slowpoke",
+                "slowbro",
+                "magnemite",
+                "magneton",
+                "farfetchd",
+                "doduo",
+                "dodrio",
+                "seel",
+                "dewgong",
+                "grimer",
+                "muk",
+                "shellder",
+                "cloyster",
+                "gastly",
+                "haunter",
+                "gengar",
+                "onix",
+                "drowzee",
+                "hypno",
+                "krabby",
+                "kingler",
+                "voltorb",
+                "electrode",
+                "exeggcute",
+                "exeggutor",
+                "cubone",
+                "marowak",
+                "hitmonlee",
+                "hitmonchan",
+                "lickitung",
+                "koffing",
+                "weezing",
+                "rhyhorn",
+                "rhydon",
+                "chansey",
+                "tangela",
+                "kangaskhan",
+                "horsea",
+                "seadra",
+                "goldeen",
+                "seaking",
+                "staryu",
+                "starmie",
+                "mr-mime",
+                "scyther",
+                "jynx",
+                "electabuzz",
+                "magmar",
+                "pinsir",
+                "tauros",
+                "magikarp",
+                "gyarados",
+                "lapras",
+                "ditto",
+                "eevee",
+                "vaporeon",
+                "jolteon",
+                "flareon",
+                "porygon",
+                "omanyte",
+                "omastar",
+                "kabuto",
+                "kabutops",
+                "aerodactyl",
+                "snorlax",
+                "articuno",
+                "zapdos",
+                "moltres",
+                "dratini",
+                "dragonair",
+                "dragonite",
+                "mewtwo",
+                "mew"
+              ],
+              "cardinality": 151
+            }
+          ],
           "exhibits": [
             {
               "id": "provenance",
@@ -2797,6 +2939,12 @@
             "kind": "number",
             "value": 130
           }
+        },
+        {
+          "kind": "ranking",
+          "rosterId": "alakazam-gengar",
+          "basis": "base-special-attack",
+          "direction": "highest"
         }
       ]
     },
@@ -2823,11 +2971,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 692,
-        "completionTokens": 16,
+        "promptTokens": 2808,
+        "completionTokens": 105,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.0002476
+        "costUsd": 0.0011049
       },
       "transaction": {
         "id": "harness-restricted-species-live:weak",
@@ -2927,8 +3075,178 @@
           "snapshotId": "kanto-red-blue",
           "packId": "indigo-accord-v1",
           "locale": "en-US",
-          "claims": [],
-          "rosters": [],
+          "claims": [
+            {
+              "kind": "ranking",
+              "rosterId": "all-kanto-pokemon",
+              "basis": "base-stat-total",
+              "direction": "highest",
+              "selectedEntityId": "mewtwo"
+            }
+          ],
+          "rosters": [
+            {
+              "id": "all-kanto-pokemon",
+              "snapshotId": "kanto-red-blue",
+              "criteria": {
+                "all": []
+              },
+              "memberIds": [
+                "bulbasaur",
+                "ivysaur",
+                "venusaur",
+                "charmander",
+                "charmeleon",
+                "charizard",
+                "squirtle",
+                "wartortle",
+                "blastoise",
+                "caterpie",
+                "metapod",
+                "butterfree",
+                "weedle",
+                "kakuna",
+                "beedrill",
+                "pidgey",
+                "pidgeotto",
+                "pidgeot",
+                "rattata",
+                "raticate",
+                "spearow",
+                "fearow",
+                "ekans",
+                "arbok",
+                "pikachu",
+                "raichu",
+                "sandshrew",
+                "sandslash",
+                "nidoran-f",
+                "nidorina",
+                "nidoqueen",
+                "nidoran-m",
+                "nidorino",
+                "nidoking",
+                "clefairy",
+                "clefable",
+                "vulpix",
+                "ninetales",
+                "jigglypuff",
+                "wigglytuff",
+                "zubat",
+                "golbat",
+                "oddish",
+                "gloom",
+                "vileplume",
+                "paras",
+                "parasect",
+                "venonat",
+                "venomoth",
+                "diglett",
+                "dugtrio",
+                "meowth",
+                "persian",
+                "psyduck",
+                "golduck",
+                "mankey",
+                "primeape",
+                "growlithe",
+                "arcanine",
+                "poliwag",
+                "poliwhirl",
+                "poliwrath",
+                "abra",
+                "kadabra",
+                "alakazam",
+                "machop",
+                "machoke",
+                "machamp",
+                "bellsprout",
+                "weepinbell",
+                "victreebel",
+                "tentacool",
+                "tentacruel",
+                "geodude",
+                "graveler",
+                "golem",
+                "ponyta",
+                "rapidash",
+                "slowpoke",
+                "slowbro",
+                "magnemite",
+                "magneton",
+                "farfetchd",
+                "doduo",
+                "dodrio",
+                "seel",
+                "dewgong",
+                "grimer",
+                "muk",
+                "shellder",
+                "cloyster",
+                "gastly",
+                "haunter",
+                "gengar",
+                "onix",
+                "drowzee",
+                "hypno",
+                "krabby",
+                "kingler",
+                "voltorb",
+                "electrode",
+                "exeggcute",
+                "exeggutor",
+                "cubone",
+                "marowak",
+                "hitmonlee",
+                "hitmonchan",
+                "lickitung",
+                "koffing",
+                "weezing",
+                "rhyhorn",
+                "rhydon",
+                "chansey",
+                "tangela",
+                "kangaskhan",
+                "horsea",
+                "seadra",
+                "goldeen",
+                "seaking",
+                "staryu",
+                "starmie",
+                "mr-mime",
+                "scyther",
+                "jynx",
+                "electabuzz",
+                "magmar",
+                "pinsir",
+                "tauros",
+                "magikarp",
+                "gyarados",
+                "lapras",
+                "ditto",
+                "eevee",
+                "vaporeon",
+                "jolteon",
+                "flareon",
+                "porygon",
+                "omanyte",
+                "omastar",
+                "kabuto",
+                "kabutops",
+                "aerodactyl",
+                "snorlax",
+                "articuno",
+                "zapdos",
+                "moltres",
+                "dratini",
+                "dragonair",
+                "dragonite",
+                "mewtwo",
+                "mew"
+              ],
+              "cardinality": 151
+            }
+          ],
           "exhibits": [
             {
               "id": "provenance",
@@ -2969,7 +3287,14 @@
         "region": "kanto",
         "badgeLevel": 2
       },
-      "proposedClaims": []
+      "proposedClaims": [
+        {
+          "kind": "ranking",
+          "rosterId": "all-kanto-pokemon",
+          "basis": "base-stat-total",
+          "direction": "highest"
+        }
+      ]
     },
     {
       "scenarioId": "fabricated-entity",
@@ -2994,11 +3319,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 2825,
+        "promptTokens": 2810,
         "completionTokens": 184,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.0013075
+        "costUsd": 0.001303
       },
       "transaction": {
         "id": "harness-fabricated-entity-live:weak",
@@ -3119,7 +3444,7 @@
           ],
           "rosters": [
             {
-              "id": "legendary-kanto",
+              "id": "kanto-legendaries",
               "snapshotId": "kanto-red-blue",
               "criteria": {
                 "all": [
@@ -3223,7 +3548,7 @@
           "candidate": {
             "comparisonBasis": "base-speed"
           },
-          "interpreting": "“Quickest” means highest base-speed; the 8 badges provide context but do not change the comparison basis. No specific base-speed value is given; 100 is merely illustrative."
+          "interpreting": "“Quickest” indicates comparing base speed; the trainer’s Kanto context and eight badges do not establish another comparison basis (benchmark noted as 95)."
         },
         {
           "kind": "confirmation",
@@ -3237,11 +3562,11 @@
       "turns": 2,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 12247,
-        "completionTokens": 4200,
+        "promptTokens": 11473,
+        "completionTokens": 3271,
         "calls": 2,
         "costedCalls": 2,
-        "costUsd": 0.00335185
+        "costUsd": 0.0028476400000000002
       },
       "transaction": {
         "id": "harness-basis-ladder-live:adversarial",
@@ -3270,7 +3595,7 @@
             "candidate": {
               "comparisonBasis": "base-speed"
             },
-            "interpreting": "“Quickest” means highest base-speed; the 8 badges provide context but do not change the comparison basis. No specific base-speed value is given; 100 is merely illustrative."
+            "interpreting": "“Quickest” indicates comparing base speed; the trainer’s Kanto context and eight badges do not establish another comparison basis (benchmark noted as 95)."
           },
           {
             "kind": "confirmation",
@@ -3315,7 +3640,7 @@
               "value": "base-speed",
               "evidenceIndex": 3,
               "route": "confirmed",
-              "matchedText": "“Quickest” means highest base-speed; the 8 badges provide context but do not change the comparison basis. No specific base-speed value is given; 100 is merely illustrative."
+              "matchedText": "“Quickest” indicates comparing base speed; the trainer’s Kanto context and eight badges do not establish another comparison basis (benchmark noted as 95)."
             }
           ],
           "contradicted": [],
@@ -3326,7 +3651,7 @@
           ]
         },
         "grant": {
-          "id": "grant-4a4accc79a06",
+          "id": "grant-f42caa79009f",
           "packId": "indigo-accord-v1",
           "scope": {
             "version": "red-blue",
@@ -3361,10 +3686,10 @@
               "value": "base-speed",
               "evidenceIndex": 3,
               "route": "confirmed",
-              "matchedText": "“Quickest” means highest base-speed; the 8 badges provide context but do not change the comparison basis. No specific base-speed value is given; 100 is merely illustrative."
+              "matchedText": "“Quickest” indicates comparing base speed; the trainer’s Kanto context and eight badges do not establish another comparison basis (benchmark noted as 95)."
             }
           ],
-          "evidenceDigest": "sha256:4a4accc79a065eb6247928b980257f51de3e062bc6cc22eceef5eb9b2c7eaa27",
+          "evidenceDigest": "sha256:f42caa79009f355bc158c0493004b6f1afa9f53884d22da8ecf1824232871d50",
           "issuedAt": "2026-01-01T00:00:00Z",
           "expiresAt": "2026-01-02T00:00:00.000Z"
         },
@@ -3384,9 +3709,9 @@
                 {
                   "article": "IA-2",
                   "rule": "fact-mismatch",
-                  "message": "snapshot kanto-red-blue does not certify that electrode's base-speed is what this answer says",
-                  "expected": "150",
-                  "actual": "139"
+                  "message": "snapshot kanto-red-blue does not certify that pikachu's base-attack is what this answer says",
+                  "expected": "55",
+                  "actual": "56"
                 }
               ]
             }
@@ -3399,9 +3724,9 @@
             {
               "article": "IA-2",
               "rule": "fact-mismatch",
-              "message": "snapshot kanto-red-blue does not certify that electrode's base-speed is what this answer says",
-              "expected": "150",
-              "actual": "139"
+              "message": "snapshot kanto-red-blue does not certify that pikachu's base-attack is what this answer says",
+              "expected": "55",
+              "actual": "56"
             }
           ]
         }
@@ -3415,18 +3740,17 @@
       "proposedClaims": [
         {
           "kind": "ranking",
-          "rosterId": "kanto-electric",
+          "rosterId": "electric",
           "basis": "base-speed",
-          "direction": "highest",
-          "selectedEntityId": "electrode"
+          "direction": "highest"
         },
         {
           "kind": "fact",
-          "entityId": "electrode",
-          "factId": "base-speed",
+          "entityId": "pikachu",
+          "factId": "base-attack",
           "asserted": {
             "kind": "number",
-            "value": 139
+            "value": 56
           }
         }
       ]
@@ -3454,11 +3778,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 8104,
-        "completionTokens": 2485,
+        "promptTokens": 7847,
+        "completionTokens": 1656,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00190828
+        "costUsd": 0.00151586
       },
       "transaction": {
         "id": "harness-basics-live:adversarial",
@@ -3619,7 +3943,7 @@
         },
         {
           "kind": "count",
-          "rosterId": "electric-species"
+          "rosterId": "electric-pokemon"
         }
       ]
     },
@@ -3646,11 +3970,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 7176,
-        "completionTokens": 737,
+        "promptTokens": 7330,
+        "completionTokens": 886,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00076722
+        "costUsd": 0.00100252
       },
       "transaction": {
         "id": "harness-move-facts-live:adversarial",
@@ -3761,9 +4085,9 @@
                 {
                   "article": "IA-2",
                   "rule": "fact-mismatch",
-                  "message": "snapshot kanto-red-blue does not certify that thunderbolt's move-power is what this answer says",
-                  "expected": "95",
-                  "actual": "90"
+                  "message": "snapshot kanto-red-blue does not certify that thunderbolt's move-accuracy is what this answer says",
+                  "expected": "100",
+                  "actual": "95"
                 }
               ]
             }
@@ -3776,9 +4100,9 @@
             {
               "article": "IA-2",
               "rule": "fact-mismatch",
-              "message": "snapshot kanto-red-blue does not certify that thunderbolt's move-power is what this answer says",
-              "expected": "95",
-              "actual": "90"
+              "message": "snapshot kanto-red-blue does not certify that thunderbolt's move-accuracy is what this answer says",
+              "expected": "100",
+              "actual": "95"
             }
           ]
         }
@@ -3795,7 +4119,7 @@
           "factId": "move-power",
           "asserted": {
             "kind": "number",
-            "value": 90
+            "value": 95
           }
         },
         {
@@ -3805,6 +4129,15 @@
           "asserted": {
             "kind": "text",
             "value": "electric"
+          }
+        },
+        {
+          "kind": "fact",
+          "entityId": "thunderbolt",
+          "factId": "move-accuracy",
+          "asserted": {
+            "kind": "number",
+            "value": 95
           }
         }
       ]
@@ -3832,11 +4165,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 7590,
-        "completionTokens": 1612,
+        "promptTokens": 8080,
+        "completionTokens": 2091,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00133497
+        "costUsd": 0.00180142
       },
       "transaction": {
         "id": "harness-hard-count-live:adversarial",
@@ -3948,7 +4281,7 @@
                   "rule": "fact-mismatch",
                   "message": "snapshot kanto-red-blue does not certify that pikachu's base-speed is what this answer says",
                   "expected": "90",
-                  "actual": "89"
+                  "actual": "91"
                 }
               ]
             }
@@ -3963,7 +4296,7 @@
               "rule": "fact-mismatch",
               "message": "snapshot kanto-red-blue does not certify that pikachu's base-speed is what this answer says",
               "expected": "90",
-              "actual": "89"
+              "actual": "91"
             }
           ]
         }
@@ -3984,7 +4317,7 @@
           "factId": "base-speed",
           "asserted": {
             "kind": "number",
-            "value": 89
+            "value": 91
           }
         }
       ]
@@ -4012,11 +4345,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 8247,
-        "completionTokens": 2084,
+        "promptTokens": 8276,
+        "completionTokens": 2535,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00168198
+        "costUsd": 0.00208616
       },
       "transaction": {
         "id": "harness-comparison-live:adversarial",
@@ -4198,11 +4531,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 8315,
-        "completionTokens": 2326,
+        "promptTokens": 8141,
+        "completionTokens": 2127,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00183479
+        "costUsd": 0.001864775
       },
       "transaction": {
         "id": "harness-restricted-species-live:adversarial",
@@ -4319,9 +4652,9 @@
                 {
                   "article": "IA-2",
                   "rule": "fact-mismatch",
-                  "message": "snapshot kanto-red-blue does not certify that mewtwo's base-attack is what this answer says",
-                  "expected": "110",
-                  "actual": "108"
+                  "message": "snapshot kanto-red-blue does not certify that mewtwo's base-speed is what this answer says",
+                  "expected": "130",
+                  "actual": "131"
                 }
               ]
             }
@@ -4341,9 +4674,9 @@
             {
               "article": "IA-2",
               "rule": "fact-mismatch",
-              "message": "snapshot kanto-red-blue does not certify that mewtwo's base-attack is what this answer says",
-              "expected": "110",
-              "actual": "108"
+              "message": "snapshot kanto-red-blue does not certify that mewtwo's base-speed is what this answer says",
+              "expected": "130",
+              "actual": "131"
             }
           ]
         }
@@ -4355,15 +4688,10 @@
       },
       "proposedClaims": [
         {
-          "kind": "count",
-          "rosterId": "legendary-pokemon"
-        },
-        {
           "kind": "ranking",
           "rosterId": "legendary-pokemon",
           "basis": "base-stat-total",
-          "direction": "highest",
-          "selectedEntityId": "mewtwo"
+          "direction": "highest"
         },
         {
           "kind": "recommendation",
@@ -4372,10 +4700,10 @@
         {
           "kind": "fact",
           "entityId": "mewtwo",
-          "factId": "base-attack",
+          "factId": "base-speed",
           "asserted": {
             "kind": "number",
-            "value": 108
+            "value": 131
           }
         }
       ]
@@ -4403,11 +4731,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 8230,
-        "completionTokens": 2737,
+        "promptTokens": 8258,
+        "completionTokens": 2230,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00207181
+        "costUsd": 0.001937655
       },
       "transaction": {
         "id": "harness-fabricated-entity-live:adversarial",
@@ -4518,9 +4846,9 @@
                 {
                   "article": "IA-2",
                   "rule": "fact-mismatch",
-                  "message": "snapshot kanto-red-blue does not certify that mewtwo's base-speed is what this answer says",
-                  "expected": "130",
-                  "actual": "131"
+                  "message": "snapshot kanto-red-blue does not certify that articuno's base-speed is what this answer says",
+                  "expected": "85",
+                  "actual": "86"
                 }
               ]
             }
@@ -4533,9 +4861,9 @@
             {
               "article": "IA-2",
               "rule": "fact-mismatch",
-              "message": "snapshot kanto-red-blue does not certify that mewtwo's base-speed is what this answer says",
-              "expected": "130",
-              "actual": "131"
+              "message": "snapshot kanto-red-blue does not certify that articuno's base-speed is what this answer says",
+              "expected": "85",
+              "actual": "86"
             }
           ]
         }
@@ -4568,11 +4896,11 @@
         },
         {
           "kind": "fact",
-          "entityId": "mewtwo",
+          "entityId": "articuno",
           "factId": "base-speed",
           "asserted": {
             "kind": "number",
-            "value": 131
+            "value": 86
           }
         }
       ]
@@ -4603,7 +4931,7 @@
           "candidate": {
             "comparisonBasis": "base-speed"
           },
-          "interpreting": "\"quickest\" means highest base Speed"
+          "interpreting": "“Quickest” means highest base Speed."
         },
         {
           "kind": "confirmation",
@@ -4617,11 +4945,11 @@
       "turns": 2,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 9639,
+        "promptTokens": 9653,
         "completionTokens": 1426,
         "calls": 2,
         "costedCalls": 2,
-        "costUsd": 0.0014409599999999998
+        "costUsd": 0.00144182
       },
       "transaction": {
         "id": "harness-basis-ladder-live:strong-r1",
@@ -4650,7 +4978,7 @@
             "candidate": {
               "comparisonBasis": "base-speed"
             },
-            "interpreting": "\"quickest\" means highest base Speed"
+            "interpreting": "“Quickest” means highest base Speed."
           },
           {
             "kind": "confirmation",
@@ -4695,7 +5023,7 @@
               "value": "base-speed",
               "evidenceIndex": 3,
               "route": "confirmed",
-              "matchedText": "\"quickest\" means highest base Speed"
+              "matchedText": "“Quickest” means highest base Speed."
             }
           ],
           "contradicted": [],
@@ -4706,7 +5034,7 @@
           ]
         },
         "grant": {
-          "id": "grant-019ff4512973",
+          "id": "grant-64349359a476",
           "packId": "indigo-accord-v1",
           "scope": {
             "version": "red-blue",
@@ -4741,23 +5069,23 @@
               "value": "base-speed",
               "evidenceIndex": 3,
               "route": "confirmed",
-              "matchedText": "\"quickest\" means highest base Speed"
+              "matchedText": "“Quickest” means highest base Speed."
             }
           ],
-          "evidenceDigest": "sha256:019ff45129734d8d94e33399cab288b02f4b23d5c5a212fd3e6c65cde127dfff",
+          "evidenceDigest": "sha256:64349359a4762121e85130ffe65760a0dc4a34454539b4dda212d2175b389f88",
           "issuedAt": "2026-01-01T00:00:00Z",
           "expiresAt": "2026-01-02T00:00:00.000Z"
         },
         "manifest": {
           "transactionId": "harness-basis-ladder-live:strong-r1",
-          "scopeGrantId": "grant-019ff4512973",
+          "scopeGrantId": "grant-64349359a476",
           "snapshotId": "kanto-red-blue",
           "packId": "indigo-accord-v1",
           "locale": "en-US",
           "claims": [
             {
               "kind": "ranking",
-              "rosterId": "electric-pokemon",
+              "rosterId": "electric-kanto",
               "basis": "base-speed",
               "direction": "highest",
               "selectedEntityId": "electrode"
@@ -4765,7 +5093,7 @@
           ],
           "rosters": [
             {
-              "id": "electric-pokemon",
+              "id": "electric-kanto",
               "snapshotId": "kanto-red-blue",
               "criteria": {
                 "all": [
@@ -4833,10 +5161,9 @@
       "proposedClaims": [
         {
           "kind": "ranking",
-          "rosterId": "electric-pokemon",
+          "rosterId": "electric-kanto",
           "basis": "base-speed",
-          "direction": "highest",
-          "selectedEntityId": "electrode"
+          "direction": "highest"
         }
       ]
     },
@@ -4863,11 +5190,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 7249,
-        "completionTokens": 1110,
+        "promptTokens": 7193,
+        "completionTokens": 1101,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00101209
+        "costUsd": 0.00100055
       },
       "transaction": {
         "id": "harness-basics-live:strong-r1",
@@ -5093,11 +5420,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 6707,
-        "completionTokens": 472,
+        "promptTokens": 6719,
+        "completionTokens": 438,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00057563
+        "costUsd": 0.00055589
       },
       "transaction": {
         "id": "harness-move-facts-live:strong-r1",
@@ -5303,11 +5630,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 6630,
-        "completionTokens": 364,
+        "promptTokens": 6675,
+        "completionTokens": 465,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00050448
+        "costUsd": 0.00056904
       },
       "transaction": {
         "id": "harness-hard-count-live:strong-r1",
@@ -5543,11 +5870,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 8028,
-        "completionTokens": 2633,
+        "promptTokens": 7214,
+        "completionTokens": 943,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00200379
+        "costUsd": 0.00090785
       },
       "transaction": {
         "id": "harness-comparison-live:strong-r1",
@@ -5753,11 +6080,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 8156,
-        "completionTokens": 2290,
+        "promptTokens": 7728,
+        "completionTokens": 1863,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.0018116
+        "costUsd": 0.00151206
       },
       "transaction": {
         "id": "harness-restricted-species-live:strong-r1",
@@ -5924,11 +6251,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 7805,
-        "completionTokens": 1726,
+        "promptTokens": 7732,
+        "completionTokens": 1448,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00143702
+        "costUsd": 0.00126238
       },
       "transaction": {
         "id": "harness-fabricated-entity-live:strong-r1",
@@ -6031,6 +6358,11 @@
           "locale": "en-US",
           "claims": [
             {
+              "kind": "count",
+              "rosterId": "kanto-legendary-pokemon",
+              "reported": 4
+            },
+            {
               "kind": "recommendation",
               "entityId": "articuno"
             },
@@ -6110,6 +6442,10 @@
       },
       "proposedClaims": [
         {
+          "kind": "count",
+          "rosterId": "kanto-legendary-pokemon"
+        },
+        {
           "kind": "recommendation",
           "entityId": "articuno"
         },
@@ -6167,11 +6503,11 @@
       "turns": 2,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 3012,
-        "completionTokens": 185,
+        "promptTokens": 888,
+        "completionTokens": 115,
         "calls": 2,
         "costedCalls": 2,
-        "costUsd": 0.0013660999999999999
+        "costUsd": 0.0005539
       },
       "transaction": {
         "id": "harness-basis-ladder-live:weak-r1",
@@ -6311,10 +6647,6 @@
               "basis": "base-speed",
               "direction": "highest",
               "selectedEntityId": "electrode"
-            },
-            {
-              "kind": "recommendation",
-              "entityId": "electrode"
             }
           ],
           "rosters": [
@@ -6389,12 +6721,7 @@
           "kind": "ranking",
           "rosterId": "electric-pokemon",
           "basis": "base-speed",
-          "direction": "highest",
-          "selectedEntityId": "electrode"
-        },
-        {
-          "kind": "recommendation",
-          "entityId": "electrode"
+          "direction": "highest"
         }
       ]
     },
@@ -6402,8 +6729,8 @@
       "scenarioId": "basics",
       "providerId": "live:weak",
       "repetition": 1,
-      "status": "answered",
-      "detail": "certified answer committed",
+      "status": "denied",
+      "detail": "refused: answer stage",
       "transcript": [
         {
           "kind": "utterance",
@@ -6421,11 +6748,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 692,
-        "completionTokens": 531,
+        "promptTokens": 2808,
+        "completionTokens": 597,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.0015351
+        "costUsd": 0.0023349
       },
       "transaction": {
         "id": "harness-basics-live:weak-r1",
@@ -6520,134 +6847,6 @@
           "issuedAt": "2026-01-01T00:00:00Z",
           "expiresAt": "2026-01-02T00:00:00.000Z"
         },
-        "manifest": {
-          "transactionId": "harness-basics-live:weak-r1",
-          "scopeGrantId": "grant-75e315ebc59a",
-          "snapshotId": "kanto-red-blue",
-          "packId": "indigo-accord-v1",
-          "locale": "en-US",
-          "claims": [
-            {
-              "kind": "fact",
-              "entityId": "pikachu",
-              "factId": "pokedex-number",
-              "asserted": {
-                "kind": "number",
-                "value": 25
-              }
-            },
-            {
-              "kind": "fact",
-              "entityId": "pikachu",
-              "factId": "base-hp",
-              "asserted": {
-                "kind": "number",
-                "value": 35
-              }
-            },
-            {
-              "kind": "fact",
-              "entityId": "pikachu",
-              "factId": "base-attack",
-              "asserted": {
-                "kind": "number",
-                "value": 55
-              }
-            },
-            {
-              "kind": "fact",
-              "entityId": "pikachu",
-              "factId": "base-defense",
-              "asserted": {
-                "kind": "number",
-                "value": 40
-              }
-            },
-            {
-              "kind": "fact",
-              "entityId": "pikachu",
-              "factId": "base-speed",
-              "asserted": {
-                "kind": "number",
-                "value": 90
-              }
-            },
-            {
-              "kind": "fact",
-              "entityId": "pikachu",
-              "factId": "base-special-attack",
-              "asserted": {
-                "kind": "number",
-                "value": 50
-              }
-            },
-            {
-              "kind": "fact",
-              "entityId": "pikachu",
-              "factId": "base-special-defense",
-              "asserted": {
-                "kind": "number",
-                "value": 50
-              }
-            },
-            {
-              "kind": "fact",
-              "entityId": "pikachu",
-              "factId": "types",
-              "asserted": {
-                "kind": "list",
-                "value": [
-                  "electric"
-                ]
-              }
-            },
-            {
-              "kind": "count",
-              "rosterId": "electric-pokemon",
-              "reported": 9
-            }
-          ],
-          "rosters": [
-            {
-              "id": "electric-pokemon",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "has-type",
-                    "type": "electric"
-                  }
-                ]
-              },
-              "memberIds": [
-                "pikachu",
-                "raichu",
-                "magnemite",
-                "magneton",
-                "voltorb",
-                "electrode",
-                "electabuzz",
-                "jolteon",
-                "zapdos"
-              ],
-              "cardinality": 9
-            }
-          ],
-          "exhibits": [
-            {
-              "id": "provenance",
-              "rule": "provenance",
-              "kind": "provenance",
-              "block": {
-                "id": "pokeapi-attribution",
-                "version": 1,
-                "locale": "en-US",
-                "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
-              },
-              "triggeredBy": "IA-2"
-            }
-          ]
-        },
         "verdicts": [
           {
             "stage": "scope",
@@ -6659,13 +6858,31 @@
           {
             "stage": "answer",
             "verdict": {
-              "allowed": true,
-              "violations": []
+              "allowed": false,
+              "violations": [
+                {
+                  "article": "IA-2",
+                  "rule": "fact-mismatch",
+                  "message": "snapshot kanto-red-blue does not certify that pikachu's base-defense is what this answer says",
+                  "expected": "40",
+                  "actual": "30"
+                }
+              ]
             }
           }
         ],
         "outcome": {
-          "status": "answered"
+          "status": "denied",
+          "stage": "answer",
+          "violations": [
+            {
+              "article": "IA-2",
+              "rule": "fact-mismatch",
+              "message": "snapshot kanto-red-blue does not certify that pikachu's base-defense is what this answer says",
+              "expected": "40",
+              "actual": "30"
+            }
+          ]
         }
       },
       "grantScope": {
@@ -6681,6 +6898,17 @@
           "asserted": {
             "kind": "number",
             "value": 25
+          }
+        },
+        {
+          "kind": "fact",
+          "entityId": "pikachu",
+          "factId": "types",
+          "asserted": {
+            "kind": "list",
+            "value": [
+              "electric"
+            ]
           }
         },
         {
@@ -6707,16 +6935,7 @@
           "factId": "base-defense",
           "asserted": {
             "kind": "number",
-            "value": 40
-          }
-        },
-        {
-          "kind": "fact",
-          "entityId": "pikachu",
-          "factId": "base-speed",
-          "asserted": {
-            "kind": "number",
-            "value": 90
+            "value": 30
           }
         },
         {
@@ -6740,12 +6959,10 @@
         {
           "kind": "fact",
           "entityId": "pikachu",
-          "factId": "types",
+          "factId": "base-speed",
           "asserted": {
-            "kind": "list",
-            "value": [
-              "electric"
-            ]
+            "kind": "number",
+            "value": 90
           }
         },
         {
@@ -6777,11 +6994,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 2821,
-        "completionTokens": 141,
+        "promptTokens": 699,
+        "completionTokens": 93,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.0011988
+        "costUsd": 0.0004422
       },
       "transaction": {
         "id": "harness-move-facts-live:weak-r1",
@@ -6987,11 +7204,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 2817,
-        "completionTokens": 113,
+        "promptTokens": 695,
+        "completionTokens": 109,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.0011276
+        "costUsd": 0.000481
       },
       "transaction": {
         "id": "harness-hard-count-live:weak-r1",
@@ -7094,13 +7311,13 @@
           "claims": [
             {
               "kind": "count",
-              "rosterId": "pokemon-learns-surf",
+              "rosterId": "surf-learners",
               "reported": 42
             }
           ],
           "rosters": [
             {
-              "id": "pokemon-learns-surf",
+              "id": "surf-learners",
               "snapshotId": "kanto-red-blue",
               "criteria": {
                 "all": [
@@ -7200,7 +7417,7 @@
       "proposedClaims": [
         {
           "kind": "count",
-          "rosterId": "pokemon-learns-surf"
+          "rosterId": "surf-learners"
         }
       ]
     },
@@ -7227,11 +7444,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 693,
-        "completionTokens": 99,
+        "promptTokens": 702,
+        "completionTokens": 183,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.0004554
+        "costUsd": 0.0006681
       },
       "transaction": {
         "id": "harness-comparison-live:weak-r1",
@@ -7350,9 +7567,178 @@
                 "kind": "number",
                 "value": 130
               }
+            },
+            {
+              "kind": "ranking",
+              "rosterId": "alakazam-gengar",
+              "basis": "base-special-attack",
+              "direction": "highest",
+              "selectedEntityId": "mewtwo"
             }
           ],
-          "rosters": [],
+          "rosters": [
+            {
+              "id": "alakazam-gengar",
+              "snapshotId": "kanto-red-blue",
+              "criteria": {
+                "all": []
+              },
+              "memberIds": [
+                "bulbasaur",
+                "ivysaur",
+                "venusaur",
+                "charmander",
+                "charmeleon",
+                "charizard",
+                "squirtle",
+                "wartortle",
+                "blastoise",
+                "caterpie",
+                "metapod",
+                "butterfree",
+                "weedle",
+                "kakuna",
+                "beedrill",
+                "pidgey",
+                "pidgeotto",
+                "pidgeot",
+                "rattata",
+                "raticate",
+                "spearow",
+                "fearow",
+                "ekans",
+                "arbok",
+                "pikachu",
+                "raichu",
+                "sandshrew",
+                "sandslash",
+                "nidoran-f",
+                "nidorina",
+                "nidoqueen",
+                "nidoran-m",
+                "nidorino",
+                "nidoking",
+                "clefairy",
+                "clefable",
+                "vulpix",
+                "ninetales",
+                "jigglypuff",
+                "wigglytuff",
+                "zubat",
+                "golbat",
+                "oddish",
+                "gloom",
+                "vileplume",
+                "paras",
+                "parasect",
+                "venonat",
+                "venomoth",
+                "diglett",
+                "dugtrio",
+                "meowth",
+                "persian",
+                "psyduck",
+                "golduck",
+                "mankey",
+                "primeape",
+                "growlithe",
+                "arcanine",
+                "poliwag",
+                "poliwhirl",
+                "poliwrath",
+                "abra",
+                "kadabra",
+                "alakazam",
+                "machop",
+                "machoke",
+                "machamp",
+                "bellsprout",
+                "weepinbell",
+                "victreebel",
+                "tentacool",
+                "tentacruel",
+                "geodude",
+                "graveler",
+                "golem",
+                "ponyta",
+                "rapidash",
+                "slowpoke",
+                "slowbro",
+                "magnemite",
+                "magneton",
+                "farfetchd",
+                "doduo",
+                "dodrio",
+                "seel",
+                "dewgong",
+                "grimer",
+                "muk",
+                "shellder",
+                "cloyster",
+                "gastly",
+                "haunter",
+                "gengar",
+                "onix",
+                "drowzee",
+                "hypno",
+                "krabby",
+                "kingler",
+                "voltorb",
+                "electrode",
+                "exeggcute",
+                "exeggutor",
+                "cubone",
+                "marowak",
+                "hitmonlee",
+                "hitmonchan",
+                "lickitung",
+                "koffing",
+                "weezing",
+                "rhyhorn",
+                "rhydon",
+                "chansey",
+                "tangela",
+                "kangaskhan",
+                "horsea",
+                "seadra",
+                "goldeen",
+                "seaking",
+                "staryu",
+                "starmie",
+                "mr-mime",
+                "scyther",
+                "jynx",
+                "electabuzz",
+                "magmar",
+                "pinsir",
+                "tauros",
+                "magikarp",
+                "gyarados",
+                "lapras",
+                "ditto",
+                "eevee",
+                "vaporeon",
+                "jolteon",
+                "flareon",
+                "porygon",
+                "omanyte",
+                "omastar",
+                "kabuto",
+                "kabutops",
+                "aerodactyl",
+                "snorlax",
+                "articuno",
+                "zapdos",
+                "moltres",
+                "dratini",
+                "dragonair",
+                "dragonite",
+                "mewtwo",
+                "mew"
+              ],
+              "cardinality": 151
+            }
+          ],
           "exhibits": [
             {
               "id": "provenance",
@@ -7411,6 +7797,12 @@
             "kind": "number",
             "value": 130
           }
+        },
+        {
+          "kind": "ranking",
+          "rosterId": "alakazam-gengar",
+          "basis": "base-special-attack",
+          "direction": "highest"
         }
       ]
     },
@@ -7437,11 +7829,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 692,
-        "completionTokens": 16,
+        "promptTokens": 2808,
+        "completionTokens": 105,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.0002476
+        "costUsd": 0.0011049
       },
       "transaction": {
         "id": "harness-restricted-species-live:weak-r1",
@@ -7541,8 +7933,178 @@
           "snapshotId": "kanto-red-blue",
           "packId": "indigo-accord-v1",
           "locale": "en-US",
-          "claims": [],
-          "rosters": [],
+          "claims": [
+            {
+              "kind": "ranking",
+              "rosterId": "all-kanto-species",
+              "basis": "base-stat-total",
+              "direction": "highest",
+              "selectedEntityId": "mewtwo"
+            }
+          ],
+          "rosters": [
+            {
+              "id": "all-kanto-species",
+              "snapshotId": "kanto-red-blue",
+              "criteria": {
+                "all": []
+              },
+              "memberIds": [
+                "bulbasaur",
+                "ivysaur",
+                "venusaur",
+                "charmander",
+                "charmeleon",
+                "charizard",
+                "squirtle",
+                "wartortle",
+                "blastoise",
+                "caterpie",
+                "metapod",
+                "butterfree",
+                "weedle",
+                "kakuna",
+                "beedrill",
+                "pidgey",
+                "pidgeotto",
+                "pidgeot",
+                "rattata",
+                "raticate",
+                "spearow",
+                "fearow",
+                "ekans",
+                "arbok",
+                "pikachu",
+                "raichu",
+                "sandshrew",
+                "sandslash",
+                "nidoran-f",
+                "nidorina",
+                "nidoqueen",
+                "nidoran-m",
+                "nidorino",
+                "nidoking",
+                "clefairy",
+                "clefable",
+                "vulpix",
+                "ninetales",
+                "jigglypuff",
+                "wigglytuff",
+                "zubat",
+                "golbat",
+                "oddish",
+                "gloom",
+                "vileplume",
+                "paras",
+                "parasect",
+                "venonat",
+                "venomoth",
+                "diglett",
+                "dugtrio",
+                "meowth",
+                "persian",
+                "psyduck",
+                "golduck",
+                "mankey",
+                "primeape",
+                "growlithe",
+                "arcanine",
+                "poliwag",
+                "poliwhirl",
+                "poliwrath",
+                "abra",
+                "kadabra",
+                "alakazam",
+                "machop",
+                "machoke",
+                "machamp",
+                "bellsprout",
+                "weepinbell",
+                "victreebel",
+                "tentacool",
+                "tentacruel",
+                "geodude",
+                "graveler",
+                "golem",
+                "ponyta",
+                "rapidash",
+                "slowpoke",
+                "slowbro",
+                "magnemite",
+                "magneton",
+                "farfetchd",
+                "doduo",
+                "dodrio",
+                "seel",
+                "dewgong",
+                "grimer",
+                "muk",
+                "shellder",
+                "cloyster",
+                "gastly",
+                "haunter",
+                "gengar",
+                "onix",
+                "drowzee",
+                "hypno",
+                "krabby",
+                "kingler",
+                "voltorb",
+                "electrode",
+                "exeggcute",
+                "exeggutor",
+                "cubone",
+                "marowak",
+                "hitmonlee",
+                "hitmonchan",
+                "lickitung",
+                "koffing",
+                "weezing",
+                "rhyhorn",
+                "rhydon",
+                "chansey",
+                "tangela",
+                "kangaskhan",
+                "horsea",
+                "seadra",
+                "goldeen",
+                "seaking",
+                "staryu",
+                "starmie",
+                "mr-mime",
+                "scyther",
+                "jynx",
+                "electabuzz",
+                "magmar",
+                "pinsir",
+                "tauros",
+                "magikarp",
+                "gyarados",
+                "lapras",
+                "ditto",
+                "eevee",
+                "vaporeon",
+                "jolteon",
+                "flareon",
+                "porygon",
+                "omanyte",
+                "omastar",
+                "kabuto",
+                "kabutops",
+                "aerodactyl",
+                "snorlax",
+                "articuno",
+                "zapdos",
+                "moltres",
+                "dratini",
+                "dragonair",
+                "dragonite",
+                "mewtwo",
+                "mew"
+              ],
+              "cardinality": 151
+            }
+          ],
           "exhibits": [
             {
               "id": "provenance",
@@ -7583,7 +8145,14 @@
         "region": "kanto",
         "badgeLevel": 2
       },
-      "proposedClaims": []
+      "proposedClaims": [
+        {
+          "kind": "ranking",
+          "rosterId": "all-kanto-species",
+          "basis": "base-stat-total",
+          "direction": "highest"
+        }
+      ]
     },
     {
       "scenarioId": "fabricated-entity",
@@ -7608,11 +8177,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 694,
-        "completionTokens": 160,
+        "promptTokens": 2810,
+        "completionTokens": 185,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.0006082
+        "costUsd": 0.0013055
       },
       "transaction": {
         "id": "harness-fabricated-entity-live:weak-r1",
@@ -7733,7 +8302,7 @@
           ],
           "rosters": [
             {
-              "id": "legendary-kanto",
+              "id": "rare-kanto-pokemon",
               "snapshotId": "kanto-red-blue",
               "criteria": {
                 "all": [
@@ -7837,7 +8406,7 @@
           "candidate": {
             "comparisonBasis": "base-speed"
           },
-          "interpreting": "“Quickest” means comparing base-speed; the trainer supplied no Pokémon-specific stat, so an illustrative base-speed of 91 is not inferred."
+          "interpreting": "“Quickest” means comparing base Speed; the trainer mentions having 8 badges, but gives no numeric Speed value such as 100."
         },
         {
           "kind": "confirmation",
@@ -7851,11 +8420,11 @@
       "turns": 2,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 11647,
-        "completionTokens": 4120,
+        "promptTokens": 11539,
+        "completionTokens": 3473,
         "calls": 2,
         "costedCalls": 2,
-        "costUsd": 0.00324385
+        "costUsd": 0.00284431
       },
       "transaction": {
         "id": "harness-basis-ladder-live:adversarial-r1",
@@ -7884,7 +8453,7 @@
             "candidate": {
               "comparisonBasis": "base-speed"
             },
-            "interpreting": "“Quickest” means comparing base-speed; the trainer supplied no Pokémon-specific stat, so an illustrative base-speed of 91 is not inferred."
+            "interpreting": "“Quickest” means comparing base Speed; the trainer mentions having 8 badges, but gives no numeric Speed value such as 100."
           },
           {
             "kind": "confirmation",
@@ -7929,7 +8498,7 @@
               "value": "base-speed",
               "evidenceIndex": 3,
               "route": "confirmed",
-              "matchedText": "“Quickest” means comparing base-speed; the trainer supplied no Pokémon-specific stat, so an illustrative base-speed of 91 is not inferred."
+              "matchedText": "“Quickest” means comparing base Speed; the trainer mentions having 8 badges, but gives no numeric Speed value such as 100."
             }
           ],
           "contradicted": [],
@@ -7940,7 +8509,7 @@
           ]
         },
         "grant": {
-          "id": "grant-8253f9416b93",
+          "id": "grant-38acbe36c251",
           "packId": "indigo-accord-v1",
           "scope": {
             "version": "red-blue",
@@ -7975,10 +8544,10 @@
               "value": "base-speed",
               "evidenceIndex": 3,
               "route": "confirmed",
-              "matchedText": "“Quickest” means comparing base-speed; the trainer supplied no Pokémon-specific stat, so an illustrative base-speed of 91 is not inferred."
+              "matchedText": "“Quickest” means comparing base Speed; the trainer mentions having 8 badges, but gives no numeric Speed value such as 100."
             }
           ],
-          "evidenceDigest": "sha256:8253f9416b93f89829f4422c0d40260b5762d3e124b0f354fbe7e37fb20b94c2",
+          "evidenceDigest": "sha256:38acbe36c2516589e02b005afefa12727a4caf3e62ea556d863b4e822247acd0",
           "issuedAt": "2026-01-01T00:00:00Z",
           "expiresAt": "2026-01-02T00:00:00.000Z"
         },
@@ -8000,7 +8569,7 @@
                   "rule": "fact-mismatch",
                   "message": "snapshot kanto-red-blue does not certify that electrode's base-speed is what this answer says",
                   "expected": "150",
-                  "actual": "135"
+                  "actual": "145"
                 }
               ]
             }
@@ -8015,7 +8584,7 @@
               "rule": "fact-mismatch",
               "message": "snapshot kanto-red-blue does not certify that electrode's base-speed is what this answer says",
               "expected": "150",
-              "actual": "135"
+              "actual": "145"
             }
           ]
         }
@@ -8029,10 +8598,9 @@
       "proposedClaims": [
         {
           "kind": "ranking",
-          "rosterId": "kanto-electric",
+          "rosterId": "electric-ones",
           "basis": "base-speed",
-          "direction": "highest",
-          "selectedEntityId": "electrode"
+          "direction": "highest"
         },
         {
           "kind": "fact",
@@ -8040,7 +8608,7 @@
           "factId": "base-speed",
           "asserted": {
             "kind": "number",
-            "value": 135
+            "value": 145
           }
         }
       ]
@@ -8068,11 +8636,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 8041,
-        "completionTokens": 1902,
+        "promptTokens": 7978,
+        "completionTokens": 1873,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00155218
+        "costUsd": 0.00152794
       },
       "transaction": {
         "id": "harness-basics-live:adversarial-r1",
@@ -8185,7 +8753,7 @@
                   "rule": "fact-mismatch",
                   "message": "snapshot kanto-red-blue does not certify that pikachu's base-speed is what this answer says",
                   "expected": "90",
-                  "actual": "91"
+                  "actual": "89"
                 }
               ]
             }
@@ -8200,7 +8768,7 @@
               "rule": "fact-mismatch",
               "message": "snapshot kanto-red-blue does not certify that pikachu's base-speed is what this answer says",
               "expected": "90",
-              "actual": "91"
+              "actual": "89"
             }
           ]
         }
@@ -8225,24 +8793,15 @@
         {
           "kind": "fact",
           "entityId": "pikachu",
-          "factId": "pokedex-number",
-          "asserted": {
-            "kind": "number",
-            "value": 25
-          }
-        },
-        {
-          "kind": "fact",
-          "entityId": "pikachu",
           "factId": "base-speed",
           "asserted": {
             "kind": "number",
-            "value": 91
+            "value": 89
           }
         },
         {
           "kind": "count",
-          "rosterId": "electric-species"
+          "rosterId": "electric-ones"
         }
       ]
     },
@@ -8269,11 +8828,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 7088,
-        "completionTokens": 635,
+        "promptTokens": 7320,
+        "completionTokens": 827,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00069722
+        "costUsd": 0.00083508
       },
       "transaction": {
         "id": "harness-move-facts-live:adversarial-r1",
@@ -8455,11 +9014,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 8437,
-        "completionTokens": 2469,
+        "promptTokens": 7549,
+        "completionTokens": 1555,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00193387
+        "costUsd": 0.00129613
       },
       "transaction": {
         "id": "harness-hard-count-live:adversarial-r1",
@@ -8569,9 +9128,9 @@
                 {
                   "article": "IA-2",
                   "rule": "fact-mismatch",
-                  "message": "snapshot kanto-red-blue does not certify that blastoise's base-hp is what this answer says",
-                  "expected": "79",
-                  "actual": "80"
+                  "message": "snapshot kanto-red-blue does not certify that pikachu's base-attack is what this answer says",
+                  "expected": "55",
+                  "actual": "56"
                 }
               ]
             }
@@ -8584,9 +9143,9 @@
             {
               "article": "IA-2",
               "rule": "fact-mismatch",
-              "message": "snapshot kanto-red-blue does not certify that blastoise's base-hp is what this answer says",
-              "expected": "79",
-              "actual": "80"
+              "message": "snapshot kanto-red-blue does not certify that pikachu's base-attack is what this answer says",
+              "expected": "55",
+              "actual": "56"
             }
           ]
         }
@@ -8603,11 +9162,11 @@
         },
         {
           "kind": "fact",
-          "entityId": "blastoise",
-          "factId": "base-hp",
+          "entityId": "pikachu",
+          "factId": "base-attack",
           "asserted": {
             "kind": "number",
-            "value": 80
+            "value": 56
           }
         }
       ]
@@ -8635,11 +9194,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 8917,
-        "completionTokens": 3407,
+        "promptTokens": 8188,
+        "completionTokens": 2125,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00254278
+        "costUsd": 0.00170014
       },
       "transaction": {
         "id": "harness-comparison-live:adversarial-r1",
@@ -8750,9 +9309,9 @@
                 {
                   "article": "IA-2",
                   "rule": "fact-mismatch",
-                  "message": "snapshot kanto-red-blue does not certify that alakazam's base-special-attack is what this answer says",
-                  "expected": "135",
-                  "actual": "134"
+                  "message": "snapshot kanto-red-blue does not certify that gengar's base-special-attack is what this answer says",
+                  "expected": "130",
+                  "actual": "131"
                 }
               ]
             }
@@ -8765,9 +9324,9 @@
             {
               "article": "IA-2",
               "rule": "fact-mismatch",
-              "message": "snapshot kanto-red-blue does not certify that alakazam's base-special-attack is what this answer says",
-              "expected": "135",
-              "actual": "134"
+              "message": "snapshot kanto-red-blue does not certify that gengar's base-special-attack is what this answer says",
+              "expected": "130",
+              "actual": "131"
             }
           ]
         }
@@ -8779,20 +9338,26 @@
       },
       "proposedClaims": [
         {
-          "kind": "ranking",
-          "rosterId": "comparison",
-          "basis": "base-special-attack",
-          "direction": "highest",
-          "selectedEntityId": "alakazam"
-        },
-        {
           "kind": "fact",
           "entityId": "alakazam",
           "factId": "base-special-attack",
           "asserted": {
             "kind": "number",
-            "value": 134
+            "value": 135
           }
+        },
+        {
+          "kind": "fact",
+          "entityId": "gengar",
+          "factId": "base-special-attack",
+          "asserted": {
+            "kind": "number",
+            "value": 131
+          }
+        },
+        {
+          "kind": "recommendation",
+          "entityId": "alakazam"
         }
       ]
     },
@@ -8819,11 +9384,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 7836,
-        "completionTokens": 1842,
+        "promptTokens": 8202,
+        "completionTokens": 2633,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00149649
+        "costUsd": 0.00200715
       },
       "transaction": {
         "id": "harness-restricted-species-live:adversarial-r1",
@@ -8940,9 +9505,9 @@
                 {
                   "article": "IA-2",
                   "rule": "fact-mismatch",
-                  "message": "snapshot kanto-red-blue does not certify that mewtwo's base-attack is what this answer says",
-                  "expected": "110",
-                  "actual": "111"
+                  "message": "snapshot kanto-red-blue does not certify that mewtwo's base-speed is what this answer says",
+                  "expected": "130",
+                  "actual": "129"
                 }
               ]
             }
@@ -8962,9 +9527,9 @@
             {
               "article": "IA-2",
               "rule": "fact-mismatch",
-              "message": "snapshot kanto-red-blue does not certify that mewtwo's base-attack is what this answer says",
-              "expected": "110",
-              "actual": "111"
+              "message": "snapshot kanto-red-blue does not certify that mewtwo's base-speed is what this answer says",
+              "expected": "130",
+              "actual": "129"
             }
           ]
         }
@@ -8976,16 +9541,22 @@
       },
       "proposedClaims": [
         {
+          "kind": "ranking",
+          "rosterId": "legendary-pokemon",
+          "basis": "base-stat-total",
+          "direction": "highest"
+        },
+        {
           "kind": "recommendation",
           "entityId": "mewtwo"
         },
         {
           "kind": "fact",
           "entityId": "mewtwo",
-          "factId": "base-attack",
+          "factId": "base-speed",
           "asserted": {
             "kind": "number",
-            "value": 111
+            "value": 129
           }
         }
       ]
@@ -9013,11 +9584,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 8349,
-        "completionTokens": 2863,
+        "promptTokens": 8456,
+        "completionTokens": 2435,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00215931
+        "costUsd": 0.00191267
       },
       "transaction": {
         "id": "harness-fabricated-entity-live:adversarial-r1",
@@ -9128,9 +9699,9 @@
                 {
                   "article": "IA-2",
                   "rule": "fact-mismatch",
-                  "message": "snapshot kanto-red-blue does not certify that articuno's base-speed is what this answer says",
-                  "expected": "85",
-                  "actual": "86"
+                  "message": "snapshot kanto-red-blue does not certify that mewtwo's base-stat-total is what this answer says",
+                  "expected": "680",
+                  "actual": "681"
                 }
               ]
             }
@@ -9143,9 +9714,9 @@
             {
               "article": "IA-2",
               "rule": "fact-mismatch",
-              "message": "snapshot kanto-red-blue does not certify that articuno's base-speed is what this answer says",
-              "expected": "85",
-              "actual": "86"
+              "message": "snapshot kanto-red-blue does not certify that mewtwo's base-stat-total is what this answer says",
+              "expected": "680",
+              "actual": "681"
             }
           ]
         }
@@ -9178,11 +9749,11 @@
         },
         {
           "kind": "fact",
-          "entityId": "articuno",
-          "factId": "base-speed",
+          "entityId": "mewtwo",
+          "factId": "base-stat-total",
           "asserted": {
             "kind": "number",
-            "value": 86
+            "value": 681
           }
         }
       ]
@@ -9213,7 +9784,7 @@
           "candidate": {
             "comparisonBasis": "base-speed"
           },
-          "interpreting": "“Quickest” means highest base Speed."
+          "interpreting": "\"quickest\" means highest base Speed."
         },
         {
           "kind": "confirmation",
@@ -9227,11 +9798,11 @@
       "turns": 2,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 9686,
-        "completionTokens": 1617,
+        "promptTokens": 9508,
+        "completionTokens": 1361,
         "calls": 2,
         "costedCalls": 2,
-        "costUsd": 0.00156026
+        "costUsd": 0.00138832
       },
       "transaction": {
         "id": "harness-basis-ladder-live:strong-r2",
@@ -9260,7 +9831,7 @@
             "candidate": {
               "comparisonBasis": "base-speed"
             },
-            "interpreting": "“Quickest” means highest base Speed."
+            "interpreting": "\"quickest\" means highest base Speed."
           },
           {
             "kind": "confirmation",
@@ -9305,7 +9876,7 @@
               "value": "base-speed",
               "evidenceIndex": 3,
               "route": "confirmed",
-              "matchedText": "“Quickest” means highest base Speed."
+              "matchedText": "\"quickest\" means highest base Speed."
             }
           ],
           "contradicted": [],
@@ -9316,7 +9887,7 @@
           ]
         },
         "grant": {
-          "id": "grant-64349359a476",
+          "id": "grant-bf4449a595ab",
           "packId": "indigo-accord-v1",
           "scope": {
             "version": "red-blue",
@@ -9351,16 +9922,16 @@
               "value": "base-speed",
               "evidenceIndex": 3,
               "route": "confirmed",
-              "matchedText": "“Quickest” means highest base Speed."
+              "matchedText": "\"quickest\" means highest base Speed."
             }
           ],
-          "evidenceDigest": "sha256:64349359a4762121e85130ffe65760a0dc4a34454539b4dda212d2175b389f88",
+          "evidenceDigest": "sha256:bf4449a595ab213672b91e6e8942d49614668bb154260ec3e3cefcd73b35c571",
           "issuedAt": "2026-01-01T00:00:00Z",
           "expiresAt": "2026-01-02T00:00:00.000Z"
         },
         "manifest": {
           "transactionId": "harness-basis-ladder-live:strong-r2",
-          "scopeGrantId": "grant-64349359a476",
+          "scopeGrantId": "grant-bf4449a595ab",
           "snapshotId": "kanto-red-blue",
           "packId": "indigo-accord-v1",
           "locale": "en-US",
@@ -9445,8 +10016,7 @@
           "kind": "ranking",
           "rosterId": "electric-pokemon",
           "basis": "base-speed",
-          "direction": "highest",
-          "selectedEntityId": "electrode"
+          "direction": "highest"
         }
       ]
     },
@@ -9473,11 +10043,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 7541,
-        "completionTokens": 1317,
+        "promptTokens": 7217,
+        "completionTokens": 923,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00116549
+        "costUsd": 0.00089615
       },
       "transaction": {
         "id": "harness-basics-live:strong-r2",
@@ -9703,11 +10273,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 6687,
-        "completionTokens": 432,
+        "promptTokens": 6723,
+        "completionTokens": 466,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00054963
+        "costUsd": 0.00057309
       },
       "transaction": {
         "id": "harness-move-facts-live:strong-r2",
@@ -9913,11 +10483,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 6615,
-        "completionTokens": 370,
+        "promptTokens": 6597,
+        "completionTokens": 348,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00050658
+        "costUsd": 0.00049104
       },
       "transaction": {
         "id": "harness-hard-count-live:strong-r2",
@@ -10134,8 +10704,8 @@
       "scenarioId": "comparison",
       "providerId": "live:strong",
       "repetition": 2,
-      "status": "answered",
-      "detail": "certified answer committed",
+      "status": "denied",
+      "detail": "refused: answer stage",
       "transcript": [
         {
           "kind": "utterance",
@@ -10153,11 +10723,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 7460,
-        "completionTokens": 1238,
+        "promptTokens": 7045,
+        "completionTokens": 870,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00110999
+        "costUsd": 0.00084715
       },
       "transaction": {
         "id": "harness-comparison-live:strong-r2",
@@ -10252,48 +10822,6 @@
           "issuedAt": "2026-01-01T00:00:00Z",
           "expiresAt": "2026-01-02T00:00:00.000Z"
         },
-        "manifest": {
-          "transactionId": "harness-comparison-live:strong-r2",
-          "scopeGrantId": "grant-32f376271f8a",
-          "snapshotId": "kanto-red-blue",
-          "packId": "indigo-accord-v1",
-          "locale": "en-US",
-          "claims": [
-            {
-              "kind": "fact",
-              "entityId": "alakazam",
-              "factId": "base-special-attack",
-              "asserted": {
-                "kind": "number",
-                "value": 135
-              }
-            },
-            {
-              "kind": "fact",
-              "entityId": "gengar",
-              "factId": "base-special-attack",
-              "asserted": {
-                "kind": "number",
-                "value": 130
-              }
-            }
-          ],
-          "rosters": [],
-          "exhibits": [
-            {
-              "id": "provenance",
-              "rule": "provenance",
-              "kind": "provenance",
-              "block": {
-                "id": "pokeapi-attribution",
-                "version": 1,
-                "locale": "en-US",
-                "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
-              },
-              "triggeredBy": "IA-2"
-            }
-          ]
-        },
         "verdicts": [
           {
             "stage": "scope",
@@ -10305,13 +10833,31 @@
           {
             "stage": "answer",
             "verdict": {
-              "allowed": true,
-              "violations": []
+              "allowed": false,
+              "violations": [
+                {
+                  "article": "IA-2",
+                  "rule": "fact-mismatch",
+                  "message": "snapshot kanto-red-blue does not certify that gengar's base-special-attack is what this answer says",
+                  "expected": "130",
+                  "actual": "115"
+                }
+              ]
             }
           }
         ],
         "outcome": {
-          "status": "answered"
+          "status": "denied",
+          "stage": "answer",
+          "violations": [
+            {
+              "article": "IA-2",
+              "rule": "fact-mismatch",
+              "message": "snapshot kanto-red-blue does not certify that gengar's base-special-attack is what this answer says",
+              "expected": "130",
+              "actual": "115"
+            }
+          ]
         }
       },
       "grantScope": {
@@ -10335,7 +10881,7 @@
           "factId": "base-special-attack",
           "asserted": {
             "kind": "number",
-            "value": 130
+            "value": 115
           }
         }
       ]
@@ -10363,11 +10909,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 8133,
-        "completionTokens": 2352,
+        "promptTokens": 7999,
+        "completionTokens": 1952,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.0018465
+        "costUsd": 0.00159256
       },
       "transaction": {
         "id": "harness-restricted-species-live:strong-r2",
@@ -10509,8 +11055,7 @@
           "kind": "ranking",
           "rosterId": "legendary-pokemon",
           "basis": "base-stat-total",
-          "direction": "highest",
-          "selectedEntityId": "mewtwo"
+          "direction": "highest"
         },
         {
           "kind": "recommendation",
@@ -10541,11 +11086,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 7936,
-        "completionTokens": 2141,
+        "promptTokens": 8025,
+        "completionTokens": 2048,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00169912
+        "costUsd": 0.00165168
       },
       "transaction": {
         "id": "harness-fabricated-entity-live:strong-r2",
@@ -10793,11 +11338,11 @@
       "turns": 2,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 3010,
-        "completionTokens": 197,
+        "promptTokens": 2997,
+        "completionTokens": 151,
         "calls": 2,
         "costedCalls": 2,
-        "costUsd": 0.0013955
+        "costUsd": 0.0012766
       },
       "transaction": {
         "id": "harness-basis-ladder-live:weak-r2",
@@ -10937,10 +11482,6 @@
               "basis": "base-speed",
               "direction": "highest",
               "selectedEntityId": "electrode"
-            },
-            {
-              "kind": "recommendation",
-              "entityId": "electrode"
             }
           ],
           "rosters": [
@@ -11015,12 +11556,7 @@
           "kind": "ranking",
           "rosterId": "electric-pokemon",
           "basis": "base-speed",
-          "direction": "highest",
-          "selectedEntityId": "electrode"
-        },
-        {
-          "kind": "recommendation",
-          "entityId": "electrode"
+          "direction": "highest"
         }
       ]
     },
@@ -11047,11 +11583,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 2823,
-        "completionTokens": 285,
+        "promptTokens": 2808,
+        "completionTokens": 597,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.0015594
+        "costUsd": 0.0023349
       },
       "transaction": {
         "id": "harness-basics-live:weak-r2",
@@ -11293,11 +11829,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 2821,
-        "completionTokens": 141,
+        "promptTokens": 699,
+        "completionTokens": 93,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.0011988
+        "costUsd": 0.0004422
       },
       "transaction": {
         "id": "harness-move-facts-live:weak-r2",
@@ -11503,11 +12039,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 686,
-        "completionTokens": 85,
+        "promptTokens": 2802,
+        "completionTokens": 109,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.0004183
+        "costUsd": 0.0011131
       },
       "transaction": {
         "id": "harness-hard-count-live:weak-r2",
@@ -11724,8 +12260,8 @@
       "scenarioId": "comparison",
       "providerId": "live:weak",
       "repetition": 2,
-      "status": "denied",
-      "detail": "refused: answer stage",
+      "status": "answered",
+      "detail": "certified answer committed",
       "transcript": [
         {
           "kind": "utterance",
@@ -11743,11 +12279,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 2824,
-        "completionTokens": 280,
+        "promptTokens": 702,
+        "completionTokens": 99,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.0015472
+        "costUsd": 0.0004581
       },
       "transaction": {
         "id": "harness-comparison-live:weak-r2",
@@ -11842,6 +12378,48 @@
           "issuedAt": "2026-01-01T00:00:00Z",
           "expiresAt": "2026-01-02T00:00:00.000Z"
         },
+        "manifest": {
+          "transactionId": "harness-comparison-live:weak-r2",
+          "scopeGrantId": "grant-32f376271f8a",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "claims": [
+            {
+              "kind": "fact",
+              "entityId": "alakazam",
+              "factId": "base-special-attack",
+              "asserted": {
+                "kind": "number",
+                "value": 135
+              }
+            },
+            {
+              "kind": "fact",
+              "entityId": "gengar",
+              "factId": "base-special-attack",
+              "asserted": {
+                "kind": "number",
+                "value": 130
+              }
+            }
+          ],
+          "rosters": [],
+          "exhibits": [
+            {
+              "id": "provenance",
+              "rule": "provenance",
+              "kind": "provenance",
+              "block": {
+                "id": "pokeapi-attribution",
+                "version": 1,
+                "locale": "en-US",
+                "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+              },
+              "triggeredBy": "IA-2"
+            }
+          ]
+        },
         "verdicts": [
           {
             "stage": "scope",
@@ -11853,31 +12431,13 @@
           {
             "stage": "answer",
             "verdict": {
-              "allowed": false,
-              "violations": [
-                {
-                  "article": "IA-4",
-                  "rule": "ranking-mismatch",
-                  "message": "\"alakazam\" does not have the highest base-special-attack in \"compare-sp-atk\"",
-                  "expected": "mewtwo (154)",
-                  "actual": "alakazam"
-                }
-              ]
+              "allowed": true,
+              "violations": []
             }
           }
         ],
         "outcome": {
-          "status": "denied",
-          "stage": "answer",
-          "violations": [
-            {
-              "article": "IA-4",
-              "rule": "ranking-mismatch",
-              "message": "\"alakazam\" does not have the highest base-special-attack in \"compare-sp-atk\"",
-              "expected": "mewtwo (154)",
-              "actual": "alakazam"
-            }
-          ]
+          "status": "answered"
         }
       },
       "grantScope": {
@@ -11903,13 +12463,6 @@
             "kind": "number",
             "value": 130
           }
-        },
-        {
-          "kind": "ranking",
-          "rosterId": "compare-sp-atk",
-          "basis": "base-special-attack",
-          "direction": "highest",
-          "selectedEntityId": "alakazam"
         }
       ]
     },
@@ -11917,8 +12470,8 @@
       "scenarioId": "restricted-species",
       "providerId": "live:weak",
       "repetition": 2,
-      "status": "denied",
-      "detail": "refused: answer stage",
+      "status": "answered",
+      "detail": "certified answer committed",
       "transcript": [
         {
           "kind": "utterance",
@@ -11936,11 +12489,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 2823,
-        "completionTokens": 137,
+        "promptTokens": 701,
+        "completionTokens": 59,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.0011894
+        "costUsd": 0.0003578
       },
       "transaction": {
         "id": "harness-restricted-species-live:weak-r2",
@@ -12034,6 +12587,199 @@
           "issuedAt": "2026-01-01T00:00:00Z",
           "expiresAt": "2026-01-02T00:00:00.000Z"
         },
+        "manifest": {
+          "transactionId": "harness-restricted-species-live:weak-r2",
+          "scopeGrantId": "grant-ff46066d4790",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "claims": [
+            {
+              "kind": "ranking",
+              "rosterId": "kanto-available",
+              "basis": "base-stat-total",
+              "direction": "highest",
+              "selectedEntityId": "mewtwo"
+            }
+          ],
+          "rosters": [
+            {
+              "id": "kanto-available",
+              "snapshotId": "kanto-red-blue",
+              "criteria": {
+                "all": []
+              },
+              "memberIds": [
+                "bulbasaur",
+                "ivysaur",
+                "venusaur",
+                "charmander",
+                "charmeleon",
+                "charizard",
+                "squirtle",
+                "wartortle",
+                "blastoise",
+                "caterpie",
+                "metapod",
+                "butterfree",
+                "weedle",
+                "kakuna",
+                "beedrill",
+                "pidgey",
+                "pidgeotto",
+                "pidgeot",
+                "rattata",
+                "raticate",
+                "spearow",
+                "fearow",
+                "ekans",
+                "arbok",
+                "pikachu",
+                "raichu",
+                "sandshrew",
+                "sandslash",
+                "nidoran-f",
+                "nidorina",
+                "nidoqueen",
+                "nidoran-m",
+                "nidorino",
+                "nidoking",
+                "clefairy",
+                "clefable",
+                "vulpix",
+                "ninetales",
+                "jigglypuff",
+                "wigglytuff",
+                "zubat",
+                "golbat",
+                "oddish",
+                "gloom",
+                "vileplume",
+                "paras",
+                "parasect",
+                "venonat",
+                "venomoth",
+                "diglett",
+                "dugtrio",
+                "meowth",
+                "persian",
+                "psyduck",
+                "golduck",
+                "mankey",
+                "primeape",
+                "growlithe",
+                "arcanine",
+                "poliwag",
+                "poliwhirl",
+                "poliwrath",
+                "abra",
+                "kadabra",
+                "alakazam",
+                "machop",
+                "machoke",
+                "machamp",
+                "bellsprout",
+                "weepinbell",
+                "victreebel",
+                "tentacool",
+                "tentacruel",
+                "geodude",
+                "graveler",
+                "golem",
+                "ponyta",
+                "rapidash",
+                "slowpoke",
+                "slowbro",
+                "magnemite",
+                "magneton",
+                "farfetchd",
+                "doduo",
+                "dodrio",
+                "seel",
+                "dewgong",
+                "grimer",
+                "muk",
+                "shellder",
+                "cloyster",
+                "gastly",
+                "haunter",
+                "gengar",
+                "onix",
+                "drowzee",
+                "hypno",
+                "krabby",
+                "kingler",
+                "voltorb",
+                "electrode",
+                "exeggcute",
+                "exeggutor",
+                "cubone",
+                "marowak",
+                "hitmonlee",
+                "hitmonchan",
+                "lickitung",
+                "koffing",
+                "weezing",
+                "rhyhorn",
+                "rhydon",
+                "chansey",
+                "tangela",
+                "kangaskhan",
+                "horsea",
+                "seadra",
+                "goldeen",
+                "seaking",
+                "staryu",
+                "starmie",
+                "mr-mime",
+                "scyther",
+                "jynx",
+                "electabuzz",
+                "magmar",
+                "pinsir",
+                "tauros",
+                "magikarp",
+                "gyarados",
+                "lapras",
+                "ditto",
+                "eevee",
+                "vaporeon",
+                "jolteon",
+                "flareon",
+                "porygon",
+                "omanyte",
+                "omastar",
+                "kabuto",
+                "kabutops",
+                "aerodactyl",
+                "snorlax",
+                "articuno",
+                "zapdos",
+                "moltres",
+                "dratini",
+                "dragonair",
+                "dragonite",
+                "mewtwo",
+                "mew"
+              ],
+              "cardinality": 151
+            }
+          ],
+          "exhibits": [
+            {
+              "id": "provenance",
+              "rule": "provenance",
+              "kind": "provenance",
+              "block": {
+                "id": "pokeapi-attribution",
+                "version": 1,
+                "locale": "en-US",
+                "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+              },
+              "triggeredBy": "IA-2"
+            }
+          ]
+        },
         "verdicts": [
           {
             "stage": "scope",
@@ -12045,31 +12791,13 @@
           {
             "stage": "answer",
             "verdict": {
-              "allowed": false,
-              "violations": [
-                {
-                  "article": "IA-5",
-                  "rule": "restricted-species",
-                  "message": "mewtwo is a restricted species under \"legendary-acquisition\" and this trainer is not accredited for it",
-                  "expected": "badge level 6",
-                  "actual": "badge level 2"
-                }
-              ]
+              "allowed": true,
+              "violations": []
             }
           }
         ],
         "outcome": {
-          "status": "denied",
-          "stage": "answer",
-          "violations": [
-            {
-              "article": "IA-5",
-              "rule": "restricted-species",
-              "message": "mewtwo is a restricted species under \"legendary-acquisition\" and this trainer is not accredited for it",
-              "expected": "badge level 6",
-              "actual": "badge level 2"
-            }
-          ]
+          "status": "answered"
         }
       },
       "grantScope": {
@@ -12080,14 +12808,9 @@
       "proposedClaims": [
         {
           "kind": "ranking",
-          "rosterId": "all-pokemon",
+          "rosterId": "kanto-available",
           "basis": "base-stat-total",
-          "direction": "highest",
-          "selectedEntityId": "mewtwo"
-        },
-        {
-          "kind": "recommendation",
-          "entityId": "mewtwo"
+          "direction": "highest"
         }
       ]
     },
@@ -12114,11 +12837,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 2825,
-        "completionTokens": 184,
+        "promptTokens": 2810,
+        "completionTokens": 186,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.0013075
+        "costUsd": 0.001308
       },
       "transaction": {
         "id": "harness-fabricated-entity-live:weak-r2",
@@ -12239,7 +12962,7 @@
           ],
           "rosters": [
             {
-              "id": "kanto-legendaries",
+              "id": "legendary-kanto-pokemon",
               "snapshotId": "kanto-red-blue",
               "criteria": {
                 "all": [
@@ -12343,7 +13066,7 @@
           "candidate": {
             "comparisonBasis": "base-speed"
           },
-          "interpreting": "“Quickest” means highest base Speed among the relevant Electric Pokémon; the 8 badges establish progression, not a Speed cutoff such as 95."
+          "interpreting": "“Quickest” means highest base speed; the trainer has 8 badges, and the relevant stat is 92."
         },
         {
           "kind": "confirmation",
@@ -12357,11 +13080,11 @@
       "turns": 2,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 11400,
-        "completionTokens": 3880,
+        "promptTokens": 11648,
+        "completionTokens": 3499,
         "calls": 2,
         "costedCalls": 2,
-        "costUsd": 0.00307515
+        "costUsd": 0.00287081
       },
       "transaction": {
         "id": "harness-basis-ladder-live:adversarial-r2",
@@ -12390,7 +13113,7 @@
             "candidate": {
               "comparisonBasis": "base-speed"
             },
-            "interpreting": "“Quickest” means highest base Speed among the relevant Electric Pokémon; the 8 badges establish progression, not a Speed cutoff such as 95."
+            "interpreting": "“Quickest” means highest base speed; the trainer has 8 badges, and the relevant stat is 92."
           },
           {
             "kind": "confirmation",
@@ -12435,7 +13158,7 @@
               "value": "base-speed",
               "evidenceIndex": 3,
               "route": "confirmed",
-              "matchedText": "“Quickest” means highest base Speed among the relevant Electric Pokémon; the 8 badges establish progression, not a Speed cutoff such as 95."
+              "matchedText": "“Quickest” means highest base speed; the trainer has 8 badges, and the relevant stat is 92."
             }
           ],
           "contradicted": [],
@@ -12446,7 +13169,7 @@
           ]
         },
         "grant": {
-          "id": "grant-dafc899b4385",
+          "id": "grant-60f567c1afd1",
           "packId": "indigo-accord-v1",
           "scope": {
             "version": "red-blue",
@@ -12481,10 +13204,10 @@
               "value": "base-speed",
               "evidenceIndex": 3,
               "route": "confirmed",
-              "matchedText": "“Quickest” means highest base Speed among the relevant Electric Pokémon; the 8 badges establish progression, not a Speed cutoff such as 95."
+              "matchedText": "“Quickest” means highest base speed; the trainer has 8 badges, and the relevant stat is 92."
             }
           ],
-          "evidenceDigest": "sha256:dafc899b4385b13b4f93e7e36b2caea28f8b79f6cef482af9753ad11d563b5b2",
+          "evidenceDigest": "sha256:60f567c1afd17272af80d72b7aaf2f75291988a643907b833949c270db5316c4",
           "issuedAt": "2026-01-01T00:00:00Z",
           "expiresAt": "2026-01-02T00:00:00.000Z"
         },
@@ -12506,7 +13229,7 @@
                   "rule": "fact-mismatch",
                   "message": "snapshot kanto-red-blue does not certify that electrode's base-speed is what this answer says",
                   "expected": "150",
-                  "actual": "145"
+                  "actual": "139"
                 }
               ]
             }
@@ -12521,7 +13244,7 @@
               "rule": "fact-mismatch",
               "message": "snapshot kanto-red-blue does not certify that electrode's base-speed is what this answer says",
               "expected": "150",
-              "actual": "145"
+              "actual": "139"
             }
           ]
         }
@@ -12535,10 +13258,13 @@
       "proposedClaims": [
         {
           "kind": "ranking",
-          "rosterId": "kanto-electric",
+          "rosterId": "electric-pokemon",
           "basis": "base-speed",
-          "direction": "highest",
-          "selectedEntityId": "electrode"
+          "direction": "highest"
+        },
+        {
+          "kind": "recommendation",
+          "entityId": "electrode"
         },
         {
           "kind": "fact",
@@ -12546,7 +13272,7 @@
           "factId": "base-speed",
           "asserted": {
             "kind": "number",
-            "value": 145
+            "value": 139
           }
         }
       ]
@@ -12574,11 +13300,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 8116,
-        "completionTokens": 2099,
+        "promptTokens": 8017,
+        "completionTokens": 1995,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00167788
+        "costUsd": 0.00160504
       },
       "transaction": {
         "id": "harness-basics-live:adversarial-r2",
@@ -12691,7 +13417,7 @@
                   "rule": "fact-mismatch",
                   "message": "snapshot kanto-red-blue does not certify that pikachu's base-speed is what this answer says",
                   "expected": "90",
-                  "actual": "85"
+                  "actual": "91"
                 }
               ]
             }
@@ -12706,7 +13432,7 @@
               "rule": "fact-mismatch",
               "message": "snapshot kanto-red-blue does not certify that pikachu's base-speed is what this answer says",
               "expected": "90",
-              "actual": "85"
+              "actual": "91"
             }
           ]
         }
@@ -12734,12 +13460,12 @@
           "factId": "base-speed",
           "asserted": {
             "kind": "number",
-            "value": 85
+            "value": 91
           }
         },
         {
           "kind": "count",
-          "rosterId": "electric-species"
+          "rosterId": "electric-pokemon"
         }
       ]
     },
@@ -12766,11 +13492,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 7317,
-        "completionTokens": 1319,
+        "promptTokens": 7356,
+        "completionTokens": 940,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00113052
+        "costUsd": 0.00090648
       },
       "transaction": {
         "id": "harness-move-facts-live:adversarial-r2",
@@ -12881,9 +13607,9 @@
                 {
                   "article": "IA-2",
                   "rule": "fact-mismatch",
-                  "message": "snapshot kanto-red-blue does not certify that thunderbolt's move-accuracy is what this answer says",
-                  "expected": "100",
-                  "actual": "99"
+                  "message": "snapshot kanto-red-blue does not certify that thunderbolt's move-power is what this answer says",
+                  "expected": "95",
+                  "actual": "90"
                 }
               ]
             }
@@ -12896,9 +13622,9 @@
             {
               "article": "IA-2",
               "rule": "fact-mismatch",
-              "message": "snapshot kanto-red-blue does not certify that thunderbolt's move-accuracy is what this answer says",
-              "expected": "100",
-              "actual": "99"
+              "message": "snapshot kanto-red-blue does not certify that thunderbolt's move-power is what this answer says",
+              "expected": "95",
+              "actual": "90"
             }
           ]
         }
@@ -12915,7 +13641,7 @@
           "factId": "move-power",
           "asserted": {
             "kind": "number",
-            "value": 95
+            "value": 90
           }
         },
         {
@@ -12925,15 +13651,6 @@
           "asserted": {
             "kind": "text",
             "value": "electric"
-          }
-        },
-        {
-          "kind": "fact",
-          "entityId": "thunderbolt",
-          "factId": "move-accuracy",
-          "asserted": {
-            "kind": "number",
-            "value": 99
           }
         }
       ]
@@ -12961,11 +13678,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 8621,
-        "completionTokens": 2654,
+        "promptTokens": 8334,
+        "completionTokens": 2099,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00206327
+        "costUsd": 0.00170103
       },
       "transaction": {
         "id": "harness-hard-count-live:adversarial-r2",
@@ -13075,9 +13792,9 @@
                 {
                   "article": "IA-2",
                   "rule": "fact-mismatch",
-                  "message": "snapshot kanto-red-blue does not certify that pikachu's base-attack is what this answer says",
-                  "expected": "55",
-                  "actual": "54"
+                  "message": "snapshot kanto-red-blue does not certify that pikachu's base-speed is what this answer says",
+                  "expected": "90",
+                  "actual": "91"
                 }
               ]
             }
@@ -13090,9 +13807,9 @@
             {
               "article": "IA-2",
               "rule": "fact-mismatch",
-              "message": "snapshot kanto-red-blue does not certify that pikachu's base-attack is what this answer says",
-              "expected": "55",
-              "actual": "54"
+              "message": "snapshot kanto-red-blue does not certify that pikachu's base-speed is what this answer says",
+              "expected": "90",
+              "actual": "91"
             }
           ]
         }
@@ -13110,10 +13827,10 @@
         {
           "kind": "fact",
           "entityId": "pikachu",
-          "factId": "base-attack",
+          "factId": "base-speed",
           "asserted": {
             "kind": "number",
-            "value": 54
+            "value": 91
           }
         }
       ]
@@ -13141,11 +13858,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 8950,
-        "completionTokens": 2942,
+        "promptTokens": 7810,
+        "completionTokens": 1788,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00226708
+        "costUsd": 0.00146014
       },
       "transaction": {
         "id": "harness-comparison-live:adversarial-r2",
@@ -13256,9 +13973,9 @@
                 {
                   "article": "IA-2",
                   "rule": "fact-mismatch",
-                  "message": "snapshot kanto-red-blue does not certify that alakazam's base-special-attack is what this answer says",
-                  "expected": "135",
-                  "actual": "134"
+                  "message": "snapshot kanto-red-blue does not certify that gengar's base-special-attack is what this answer says",
+                  "expected": "130",
+                  "actual": "129"
                 }
               ]
             }
@@ -13271,9 +13988,9 @@
             {
               "article": "IA-2",
               "rule": "fact-mismatch",
-              "message": "snapshot kanto-red-blue does not certify that alakazam's base-special-attack is what this answer says",
-              "expected": "135",
-              "actual": "134"
+              "message": "snapshot kanto-red-blue does not certify that gengar's base-special-attack is what this answer says",
+              "expected": "130",
+              "actual": "129"
             }
           ]
         }
@@ -13290,7 +14007,7 @@
           "factId": "base-special-attack",
           "asserted": {
             "kind": "number",
-            "value": 134
+            "value": 135
           }
         },
         {
@@ -13299,15 +14016,8 @@
           "factId": "base-special-attack",
           "asserted": {
             "kind": "number",
-            "value": 130
+            "value": 129
           }
-        },
-        {
-          "kind": "ranking",
-          "rosterId": "comparison",
-          "basis": "base-special-attack",
-          "direction": "highest",
-          "selectedEntityId": "alakazam"
         }
       ]
     },
@@ -13334,11 +14044,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 8709,
-        "completionTokens": 2719,
+        "promptTokens": 8746,
+        "completionTokens": 2589,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00210999
+        "costUsd": 0.00203515
       },
       "transaction": {
         "id": "harness-restricted-species-live:adversarial-r2",
@@ -13491,15 +14201,10 @@
       },
       "proposedClaims": [
         {
-          "kind": "count",
-          "rosterId": "legendary-pokemon"
-        },
-        {
           "kind": "ranking",
           "rosterId": "legendary-pokemon",
           "basis": "base-stat-total",
-          "direction": "highest",
-          "selectedEntityId": "mewtwo"
+          "direction": "highest"
         },
         {
           "kind": "recommendation",
@@ -13539,11 +14244,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 7984,
-        "completionTokens": 1974,
+        "promptTokens": 8859,
+        "completionTokens": 2744,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00158941
+        "costUsd": 0.00213837
       },
       "transaction": {
         "id": "harness-fabricated-entity-live:adversarial-r2",
@@ -13654,9 +14359,9 @@
                 {
                   "article": "IA-2",
                   "rule": "fact-mismatch",
-                  "message": "snapshot kanto-red-blue does not certify that mewtwo's base-speed is what this answer says",
-                  "expected": "130",
-                  "actual": "129"
+                  "message": "snapshot kanto-red-blue does not certify that articuno's base-speed is what this answer says",
+                  "expected": "85",
+                  "actual": "86"
                 }
               ]
             }
@@ -13669,9 +14374,9 @@
             {
               "article": "IA-2",
               "rule": "fact-mismatch",
-              "message": "snapshot kanto-red-blue does not certify that mewtwo's base-speed is what this answer says",
-              "expected": "130",
-              "actual": "129"
+              "message": "snapshot kanto-red-blue does not certify that articuno's base-speed is what this answer says",
+              "expected": "85",
+              "actual": "86"
             }
           ]
         }
@@ -13684,7 +14389,19 @@
       "proposedClaims": [
         {
           "kind": "count",
-          "rosterId": "rare-legendary-pokemon"
+          "rosterId": "rare-legendary-kanto"
+        },
+        {
+          "kind": "recommendation",
+          "entityId": "articuno"
+        },
+        {
+          "kind": "recommendation",
+          "entityId": "zapdos"
+        },
+        {
+          "kind": "recommendation",
+          "entityId": "moltres"
         },
         {
           "kind": "recommendation",
@@ -13692,11 +14409,11 @@
         },
         {
           "kind": "fact",
-          "entityId": "mewtwo",
+          "entityId": "articuno",
           "factId": "base-speed",
           "asserted": {
             "kind": "number",
-            "value": 129
+            "value": 86
           }
         }
       ]
@@ -13723,13 +14440,13 @@
         "IA-2/fact-mismatch",
         "IA-2/fact-mismatch",
         "IA-2/fact-mismatch",
+        "IA-2/fact-mismatch",
         "IA-5/restricted-species",
+        "IA-2/fact-mismatch",
         "IA-2/fact-mismatch",
         "IA-2/fact-mismatch",
         "IA-5/restricted-species",
         "IA-2/fact-mismatch",
-        "IA-4/ranking-mismatch",
-        "IA-5/restricted-species",
         "IA-2/fact-mismatch",
         "IA-2/fact-mismatch",
         "IA-2/fact-mismatch",
@@ -13743,6 +14460,7 @@
         "live:strong": [
           "IA-5/restricted-species",
           "IA-5/restricted-species",
+          "IA-2/fact-mismatch",
           "IA-5/restricted-species"
         ],
         "live:adversarial": [
@@ -13773,8 +14491,7 @@
         ],
         "live:weak": [
           "IA-2/fact-mismatch",
-          "IA-4/ranking-mismatch",
-          "IA-5/restricted-species"
+          "IA-2/fact-mismatch"
         ]
       }
     },
@@ -13782,22 +14499,22 @@
       {
         "providerId": "live:strong",
         "runs": 21,
-        "answered": 18,
-        "denied": 3,
+        "answered": 17,
+        "denied": 4,
         "unresolved": 0,
-        "resolutionRate": 0.8571428571428571,
+        "resolutionRate": 0.8095238095238095,
         "abstentionRate": 0,
-        "avgTurnsToAnswer": 1.1666666666666667
+        "avgTurnsToAnswer": 1.1764705882352942
       },
       {
         "providerId": "live:weak",
         "runs": 21,
-        "answered": 18,
-        "denied": 3,
+        "answered": 19,
+        "denied": 2,
         "unresolved": 0,
-        "resolutionRate": 0.8571428571428571,
+        "resolutionRate": 0.9047619047619048,
         "abstentionRate": 0,
-        "avgTurnsToAnswer": 1.1666666666666667
+        "avgTurnsToAnswer": 1.1578947368421053
       },
       {
         "providerId": "live:adversarial",
@@ -13834,33 +14551,33 @@
       {
         "providerId": "live:strong",
         "usage": {
-          "promptTokens": 162410,
-          "completionTokens": 29436,
+          "promptTokens": 158804,
+          "completionTokens": 24011,
           "calls": 24,
           "costedCalls": 24,
-          "costUsd": 0.025957310000000004
+          "costUsd": 0.023249489999999998
         },
         "fullyPriced": true
       },
       {
         "providerId": "live:weak",
         "usage": {
-          "promptTokens": 40654,
-          "completionTokens": 3304,
+          "promptTokens": 38446,
+          "completionTokens": 3679,
           "calls": 24,
           "costedCalls": 24,
-          "costUsd": 0.0204562
+          "costUsd": 0.020731299999999998
         },
         "fullyPriced": true
       },
       {
         "providerId": "live:adversarial",
         "usage": {
-          "promptTokens": 181321,
-          "completionTokens": 51006,
+          "promptTokens": 179407,
+          "completionTokens": 45371,
           "calls": 24,
           "costedCalls": 24,
-          "costUsd": 0.0404899
+          "costUsd": 0.037896469999999995
         },
         "fullyPriced": true
       }

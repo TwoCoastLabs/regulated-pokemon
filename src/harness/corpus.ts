@@ -176,7 +176,10 @@ function ladderAnswer(world: HarnessWorld, pikachuSpeed: number): string {
       { kind: "count", rosterId: ELECTRIC.id },
       { kind: "count", rosterId: BOOMERS.id },
       { kind: "membership", rosterId: ELECTRIC.id, entityId: "zapdos", asserted: true },
-      { kind: "ranking", rosterId: ELECTRIC.id, basis: "base-speed", direction: "highest", selectedEntityId: "electrode" },
+      // No winner named: the set, basis and direction fix it (electrode), and
+      // the kernel picks it — the honest answer states the ordering, not the
+      // result.
+      { kind: "ranking", rosterId: ELECTRIC.id, basis: "base-speed", direction: "highest" },
       { kind: "recommendation", entityId: "mewtwo" },
     ],
   });
