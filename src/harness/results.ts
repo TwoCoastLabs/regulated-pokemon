@@ -135,6 +135,10 @@ export function renderResultsPage(artifact: HarnessArtifact): string {
     `Generated from a **${artifact.label}** run started \`${artifact.startedAt}\`, ` +
       `${artifact.repetitions} repetition(s)${artifact.stoppedEarly ? " — **stopped early**, the corpus below is smaller than requested" : ""}.`,
     "",
+    artifact.structuredOutput
+      ? "The answer grammar was **enforced at decode time**, so a malformed reply was not a reachable output. Shape only: every value still faced the same verification."
+      : "The answer grammar was **described in the prompt but not enforced**, so emitting it correctly was part of what the model was measured on.",
+    "",
     "## Provenance",
     "",
     `Measured against snapshot \`${world.snapshotId}\` (\`${world.snapshotDigest}\`), derived from upstream commit \`${world.sourceCommit}\`, under Accord pack \`${world.packId}\`. A result against an unnamed world is not a result.`,

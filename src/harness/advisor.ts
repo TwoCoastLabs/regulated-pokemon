@@ -20,6 +20,7 @@ import { SPECIES_FACT_IDS } from "../kernel/registry.js";
 import { candidateDigest } from "../kernel/scope.js";
 import { type AnswerDecode, decodeAnswer, decodeCandidate } from "./decode.js";
 import type { CompletionRequest, ModelProvider, Usage } from "./provider.js";
+import { ANSWER_SCHEMA, ANSWER_SCHEMA_NAME } from "./schema.js";
 
 /** Only the trainer's own words are evidence (IA-8); the model interprets those. */
 function trainerText(transcript: ScopeTranscript): string[] {
@@ -185,6 +186,9 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
     purpose: "answer",
     prompt: answerPrompt(context.grant.scope, trainerText(input.transcript)),
     hint: { scenarioId, scope: context.grant.scope },
+    // The same contract the prose describes, in a form a provider can enforce.
+    // Whether it is enforced is the provider's business, not the advisor's.
+    schema: { name: ANSWER_SCHEMA_NAME, schema: ANSWER_SCHEMA },
   };
   const completion = await provider.complete(request);
   return { usage: completion.usage, decode: decodeAnswer(completion.text, context, transactionId) };

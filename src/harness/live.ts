@@ -98,6 +98,8 @@ export interface LiveConfig {
   strong: string;
   weak: string;
   adversary: string;
+  /** Hand the answer grammar to the endpoint as a decoding constraint. */
+  structured: boolean;
 }
 
 /**
@@ -133,7 +135,7 @@ export function loadEnv(processEnv: Env, path: string): Env {
 
 export type ConfigResult = { ok: true; config: LiveConfig } | { ok: false; reason: string };
 
-export function liveConfig(env: Env): ConfigResult {
+export function liveConfig(env: Env, structured = false): ConfigResult {
   const apiKey = (env.OPENROUTER_API_KEY ?? "").trim();
   if (apiKey === "") {
     return {
@@ -150,6 +152,7 @@ export function liveConfig(env: Env): ConfigResult {
       apiKey,
       strong,
       weak: env.HARNESS_WEAK_MODEL ?? DEFAULT_WEAK_MODEL,
+      structured,
       // The adversary is the capable model by default: a weak attacker that
       // fails to fabricate would prove nothing about the gate.
       adversary: env.HARNESS_ADVERSARY_MODEL ?? strong,
@@ -165,7 +168,7 @@ export type ProviderFactory = (config: LiveConfig) => readonly HarnessModel[];
  * The enforcement legs still apply — those are not predictions. */
 export const liveModels: ProviderFactory = (config) => {
   const live = (id: string, model: string, system: string): ModelProvider =>
-    new OpenRouterProvider({ id, model, system, apiKey: config.apiKey });
+    new OpenRouterProvider({ id, model, system, apiKey: config.apiKey, structured: config.structured });
 
   return [
     { provider: live("live:strong", config.strong, HONEST_PERSONA), role: "strong", slug: config.strong },
@@ -182,6 +185,8 @@ export const liveModels: ProviderFactory = (config) => {
 
 export interface LiveArgs {
   live: boolean;
+  /** Constrain the answer's shape at decode time — a measured variable. */
+  structured: boolean;
   repetitions: number;
   out: string;
   roles: readonly string[];
@@ -192,12 +197,13 @@ export interface LiveArgs {
 export function parseArgs(argv: readonly string[]): LiveArgs {
   const args: {
     live: boolean;
+    structured: boolean;
     repetitions: number;
     out: string;
     roles: string[];
     help: boolean;
     errors: string[];
-  } = { live: false, repetitions: 1, out: "runs", roles: [], help: false, errors: [] };
+  } = { live: false, structured: false, repetitions: 1, out: "runs", roles: [], help: false, errors: [] };
 
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index];
@@ -205,6 +211,9 @@ export function parseArgs(argv: readonly string[]): LiveArgs {
     switch (flag) {
       case "--live":
         args.live = true;
+        break;
+      case "--structured":
+        args.structured = true;
         break;
       case "--help":
       case "-h":
@@ -246,6 +255,8 @@ const USAGE = [
   "  --repetitions N     samples per model per scenario (default 1). A provider is",
   "                      nondeterministic even at temperature 0; N=1 first, then N=3.",
   "  --models a,b,c      roles to run: strong, weak, adversarial (default: all three).",
+  "  --structured        send the answer grammar as a decoding constraint. Shape only:",
+  "                      every value still faces the same verification.",
   "  --out DIR           where the run artifact is filed (default: runs/).",
   "",
   "The key is read from OPENROUTER_API_KEY, in the environment or in .env.",
@@ -285,7 +296,7 @@ export async function runLive(options: LiveOptions): Promise<LiveResult> {
   if (args.help) return { lines: [USAGE], exitCode: 0 };
   if (args.errors.length > 0) return { lines: [...args.errors, "", USAGE], exitCode: 1 };
 
-  const config = liveConfig(options.env);
+  const config = liveConfig(options.env, args.structured);
   if (!config.ok) return { lines: [config.reason], exitCode: 1 };
 
   const all = (options.makeModels ?? liveModels)(config.config);
@@ -298,6 +309,7 @@ export async function runLive(options: LiveOptions): Promise<LiveResult> {
     `models        ${selected.map((model) => `${model.provider.id} (${model.slug ?? "—"})`).join(", ")}`,
     `scenarios     ${SCENARIOS.map((scenario) => scenario.id).join(", ")}`,
     `repetitions   ${args.repetitions}`,
+    `structured    ${args.structured ? "yes — the answer grammar is enforced at decode time" : "no"}`,
     `calls         at most ${plannedCalls(selected.length, SCENARIOS.length, args.repetitions)}`,
     "cost          unknown until it is spent — priced by the provider, never estimated here",
   ];
@@ -323,7 +335,12 @@ export async function runLive(options: LiveOptions): Promise<LiveResult> {
     title: "Indigo Accord — live-model harness (billable)",
   });
 
-  const artifact = buildArtifact(report, { label: "live", startedAt: options.now, world });
+  const artifact = buildArtifact(report, {
+    label: args.structured ? "live-structured" : "live",
+    startedAt: options.now,
+    world,
+    structured: args.structured,
+  });
   const artifactPath = fileArtifact(artifact, resolve(args.out), options.write);
 
   return {

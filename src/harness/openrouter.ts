@@ -67,6 +67,15 @@ export interface OpenRouterConfig {
   url?: string;
   maxTokens?: number;
   timeoutMs?: number;
+  /**
+   * Hand the request's schema to the endpoint as a decoding constraint.
+   *
+   * Off by default, because it is a measured variable rather than an assumption:
+   * the claim that constraining *shape* lifts a weak model without touching
+   * enforcement is one this harness is supposed to demonstrate, not assert. It
+   * changes nothing downstream — every value still faces the same verification.
+   */
+  structured?: boolean;
   /** Retries *after* the first attempt, for transient failures only. */
   retries?: number;
   /** Fixed rather than jittered: a run artifact should be as reproducible as a
@@ -79,6 +88,7 @@ export interface OpenRouterConfig {
 const DEFAULTS = {
   maxTokens: 2048,
   timeoutMs: 60_000,
+  structured: false,
   retries: 2,
   backoffMs: [1_000, 4_000] as readonly number[],
 };
@@ -189,7 +199,19 @@ export class OpenRouterProvider implements ModelProvider {
   }
 
   private async attempt(request: CompletionRequest, attempt: number): Promise<Completion> {
-    const { url, apiKey, model, system, maxTokens, timeoutMs, fetch: send } = this.config;
+    const { url, apiKey, model, system, maxTokens, timeoutMs, structured, fetch: send } = this.config;
+
+    // Shape only. The grammar cannot make a claim true, and nothing downstream
+    // trusts it any more for having been well-formed.
+    const format =
+      structured && request.schema !== undefined
+        ? {
+            response_format: {
+              type: "json_schema",
+              json_schema: { name: request.schema.name, strict: true, schema: request.schema.schema },
+            },
+          }
+        : {};
 
     const body = JSON.stringify({
       model,
@@ -199,6 +221,7 @@ export class OpenRouterProvider implements ModelProvider {
       max_tokens: maxTokens,
       // OpenRouter only prices the call when asked to.
       usage: { include: true },
+      ...format,
       messages: [
         { role: "system", content: system },
         { role: "user", content: request.prompt },
