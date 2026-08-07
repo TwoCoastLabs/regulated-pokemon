@@ -109,11 +109,13 @@ const CLAIM: JsonSchema = {
     // not a reachable output — the arithmetic is taken off the model entirely.
     variant("count", { rosterId: STRING }),
     variant("membership", { rosterId: STRING, entityId: STRING, asserted: BOOLEAN }),
+    // No `selectedEntityId`: the model declares the set, the basis and the
+    // direction, and the kernel picks the extreme. Like the count, a wrong
+    // winner is not a reachable output under enforced decoding.
     variant("ranking", {
       rosterId: STRING,
       basis: FACT_ID,
       direction: { type: "string", enum: ["highest", "lowest"] },
-      selectedEntityId: STRING,
     }),
     variant("recommendation", { entityId: STRING }),
     // Kept representable on purpose — see the module note on vacuous safety.

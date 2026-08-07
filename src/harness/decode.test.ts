@@ -118,6 +118,18 @@ describe("decodeAnswer", () => {
     }
   });
 
+  it("accepts a ranking with no winner named — the kernel names the extreme", () => {
+    const text = JSON.stringify({
+      rosters: [],
+      claims: [{ kind: "ranking", rosterId: "electric-kanto", basis: "base-speed", direction: "highest" }],
+    });
+    const decoded = decodeAnswer(text, context, "txn-1");
+    expect(decoded.ok).toBe(true);
+    if (decoded.ok) {
+      expect((decoded.draft.claims[0] as { selectedEntityId?: string }).selectedEntityId).toBeUndefined();
+    }
+  });
+
   it("refuses a roster the registry cannot support, with the article it earned", () => {
     const text = JSON.stringify({
       rosters: [{ id: "r", criteria: { all: [{ kind: "has-type", type: "nonexistent-type" }] } }],

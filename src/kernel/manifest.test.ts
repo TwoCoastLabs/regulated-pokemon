@@ -184,6 +184,18 @@ describe("ranking is recomputed over the declared basis", () => {
     expect(denialsOf({ ...manifest, claims: [{ ...ranking, basis: "coolness" }] })).toContain("IA-2/uncertified-fact");
   });
 
+  it("derives the winner when none is named, so an orderer cannot pick wrong", () => {
+    // Declare the set, the basis and the direction; the kernel names the
+    // extreme. compileManifest fills electrode — the arithmetic taken off the
+    // proposer exactly as the count's was.
+    const { selectedEntityId: _omitted, ...unnamed } = ranking;
+    const result = compile([unnamed as Claim], [ELECTRIC]);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.claims[0]).toMatchObject({ kind: "ranking", selectedEntityId: "electrode" });
+    }
+  });
+
   it("refuses a basis that is not a quantity", () => {
     expect(denialsOf({ ...manifest, claims: [{ ...ranking, basis: "types" }] })).toContain(
       "IA-4/ranking-basis-not-ordered",

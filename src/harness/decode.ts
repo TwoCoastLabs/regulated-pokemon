@@ -158,22 +158,21 @@ function asClaim(value: unknown): Claim | null {
     case "membership":
       if (!isString(value.rosterId) || !isString(value.entityId) || !isBoolean(value.asserted)) return null;
       return { kind: "membership", rosterId: value.rosterId, entityId: value.entityId, asserted: value.asserted };
-    case "ranking":
+    case "ranking": {
+      // `selectedEntityId` is optional: the model declares the set and the
+      // ordering, and the kernel names the winner. A present-but-non-string one
+      // is still malformed.
       if (
         !isString(value.rosterId) ||
         !isString(value.basis) ||
         (value.direction !== "highest" && value.direction !== "lowest") ||
-        !isString(value.selectedEntityId)
+        (value.selectedEntityId !== undefined && !isString(value.selectedEntityId))
       ) {
         return null;
       }
-      return {
-        kind: "ranking",
-        rosterId: value.rosterId,
-        basis: value.basis,
-        direction: value.direction,
-        selectedEntityId: value.selectedEntityId,
-      };
+      const base = { kind: "ranking", rosterId: value.rosterId, basis: value.basis, direction: value.direction } as const;
+      return value.selectedEntityId === undefined ? base : { ...base, selectedEntityId: value.selectedEntityId };
+    }
     case "recommendation":
       return isString(value.entityId) ? { kind: "recommendation", entityId: value.entityId } : null;
     case "action":

@@ -75,23 +75,35 @@ export interface ManifestDraft {
  * Fill in the values a claim leaves to the kernel to derive, from the certified
  * sets the same draft defines.
  *
- * Only a `count` with no `reported` today: the roster is the count, so the
- * number is the cardinality and nothing else — deriving it here is not trust,
- * it is arithmetic, and `verifyManifest` recomputes it afterwards exactly as it
- * would a number the model had stated. A count over a roster the draft never
- * defined is left untouched, so `checkCount` can report the missing roster
- * rather than this quietly inventing a zero.
+ * Two today, both arithmetic the model should not be redoing: a `count` with no
+ * `reported` becomes the roster's cardinality (the roster is the count), and a
+ * `ranking` with no `selectedEntityId` becomes the extreme member the set,
+ * basis and direction already determine. Deriving here is not trust — it is
+ * computation, and `verifyManifest` recomputes both afterwards exactly as it
+ * would values the model had stated. A claim over a roster the draft never
+ * defined, or a ranking with no unique winner (a tie, an unorderable basis), is
+ * left unfilled, so the check can report the real reason rather than this
+ * quietly inventing one.
  */
-function deriveClaims(claims: readonly Claim[], rosters: readonly ClosedRoster[]): Claim[] {
+function deriveClaims(context: ManifestContext, claims: readonly Claim[], rosters: readonly ClosedRoster[]): Claim[] {
+  const roster = (id: string): ClosedRoster | undefined => rosters.find((entry) => entry.id === id);
   return claims.map((claim) => {
-    if (claim.kind !== "count" || claim.reported !== undefined) return claim;
-    const roster = rosters.find((entry) => entry.id === claim.rosterId);
-    return roster === undefined ? claim : { ...claim, reported: roster.cardinality };
+    if (claim.kind === "count" && claim.reported === undefined) {
+      const set = roster(claim.rosterId);
+      return set === undefined ? claim : { ...claim, reported: set.cardinality };
+    }
+    if (claim.kind === "ranking" && claim.selectedEntityId === undefined) {
+      const set = roster(claim.rosterId);
+      if (set === undefined) return claim;
+      const outcome = rankRoster(context, set, claim.basis, claim.direction);
+      return outcome.ok ? { ...claim, selectedEntityId: outcome.winner } : claim;
+    }
+    return claim;
   });
 }
 
 export function compileManifest(context: ManifestContext, draft: ManifestDraft): Resolution<AnswerManifest> {
-  const claims = deriveClaims(draft.claims, draft.rosters);
+  const claims = deriveClaims(context, draft.claims, draft.rosters);
   const manifest: AnswerManifest = {
     transactionId: draft.transactionId,
     scopeGrantId: context.grant.id,
@@ -416,6 +428,75 @@ function checkAccreditation(
 
 // --- ranking ----------------------------------------------------------------
 
+/**
+ * The extreme member of a roster by a certified basis, or the reason there
+ * isn't one. Shared by {@link checkRanking} and {@link deriveClaims}, so the
+ * winner a manifest is filled with and the winner it is verified against are
+ * computed the one way — the same discipline that lets a grant rest on the
+ * derivation that audits it.
+ *
+ * The basis is re-resolved per member rather than trusted: a ranking is only as
+ * certified as the facts it ordered. A tie is not a coin flip — "the fastest"
+ * when two share the top speed is a wrong claim, and argmax over an array would
+ * answer it with whichever the Pokédex happens to list first — so a shared
+ * extreme is a refusal, not a winner.
+ */
+function rankRoster(
+  context: ManifestContext,
+  roster: ClosedRoster,
+  basis: string,
+  direction: "highest" | "lowest",
+): { ok: true; winner: string; score: number } | { ok: false; violations: Violation[] } {
+  if (roster.memberIds.length === 0) {
+    return {
+      ok: false,
+      violations: [
+        violation("IA-4", "ranking-over-empty-roster", `"${roster.id}" has no members, so nothing in it can be first`, {
+          actual: roster.id,
+        }),
+      ],
+    };
+  }
+
+  const scores: Array<{ entityId: string; score: number }> = [];
+  for (const memberId of roster.memberIds) {
+    const resolved = context.registry.resolve(memberId, basis);
+    if (!resolved.ok) return { ok: false, violations: [...resolved.violations] };
+    if (resolved.value.kind !== "number") {
+      return {
+        ok: false,
+        violations: [
+          violation("IA-4", "ranking-basis-not-ordered", `"${basis}" is not a quantity, so it cannot rank a set`, {
+            expected: "a numeric certified fact",
+            actual: `${basis} (${resolved.value.kind})`,
+          }),
+        ],
+      };
+    }
+    scores.push({ entityId: memberId, score: resolved.value.value });
+  }
+
+  const best = scores.reduce(
+    (chosen, candidate) => (direction === "highest" ? Math.max(chosen, candidate.score) : Math.min(chosen, candidate.score)),
+    direction === "highest" ? -Infinity : Infinity,
+  );
+  const winners = scores.filter((entry) => entry.score === best).map((entry) => entry.entityId);
+  if (winners.length > 1) {
+    return {
+      ok: false,
+      violations: [
+        violation(
+          "IA-4",
+          "ranking-tie",
+          `${winners.length} members of "${roster.id}" share the ${direction} ${basis}, so none of them is the one`,
+          { expected: `a unique ${direction} ${basis}`, actual: winners.join(", ") },
+        ),
+      ],
+    };
+  }
+  return { ok: true, winner: winners[0]!, score: best };
+}
+
 function checkRanking(
   context: ManifestContext,
   manifest: AnswerManifest,
@@ -424,13 +505,15 @@ function checkRanking(
   const roster = rosterIn(manifest, claim.rosterId);
   if (roster === undefined) return [missingRoster(claim.rosterId)];
 
-  if (roster.memberIds.length === 0) {
-    return [
-      violation("IA-4", "ranking-over-empty-roster", `"${roster.id}" has no members, so nothing in it can be first`, {
-        actual: roster.id,
-      }),
-    ];
-  }
+  // The set, basis and direction decide the winner before the claim's own guess
+  // is consulted: an empty set, an unorderable basis or a tie is refused whether
+  // or not a member was named.
+  const outcome = rankRoster(context, roster, claim.basis, claim.direction);
+  if (!outcome.ok) return outcome.violations;
+
+  // An omitted selection defers to the computed winner and cannot disagree.
+  if (claim.selectedEntityId === undefined) return [];
+
   if (!roster.memberIds.includes(claim.selectedEntityId)) {
     return [
       violation(
@@ -441,50 +524,10 @@ function checkRanking(
       ),
     ];
   }
-
-  // The basis is re-resolved per member rather than trusted: a ranking is only
-  // as certified as the facts it ordered.
-  const scores: Array<{ entityId: string; score: number }> = [];
-  for (const memberId of roster.memberIds) {
-    const resolved = context.registry.resolve(memberId, claim.basis);
-    if (!resolved.ok) return [...resolved.violations];
-    if (resolved.value.kind !== "number") {
-      return [
-        violation("IA-4", "ranking-basis-not-ordered", `"${claim.basis}" is not a quantity, so it cannot rank a set`, {
-          expected: "a numeric certified fact",
-          actual: `${claim.basis} (${resolved.value.kind})`,
-        }),
-      ];
-    }
-    scores.push({ entityId: memberId, score: resolved.value.value });
-  }
-
-  const best = scores.reduce(
-    (chosen, candidate) =>
-      claim.direction === "highest"
-        ? Math.max(chosen, candidate.score)
-        : Math.min(chosen, candidate.score),
-    claim.direction === "highest" ? -Infinity : Infinity,
-  );
-  const winners = scores.filter((entry) => entry.score === best).map((entry) => entry.entityId);
-
-  // A tie is not a coin flip. "The fastest" when two share the top speed is a
-  // wrong claim, and argmax over an array would answer it with whichever the
-  // Pokédex happens to list first.
-  if (winners.length > 1) {
-    return [
-      violation(
-        "IA-4",
-        "ranking-tie",
-        `${winners.length} members of "${roster.id}" share the ${claim.direction} ${claim.basis}, so none of them is the one`,
-        { expected: `a unique ${claim.direction} ${claim.basis}`, actual: winners.join(", ") },
-      ),
-    ];
-  }
-  if (winners[0] === claim.selectedEntityId) return [];
+  if (claim.selectedEntityId === outcome.winner) return [];
   return [
     violation("IA-4", "ranking-mismatch", `"${claim.selectedEntityId}" does not have the ${claim.direction} ${claim.basis} in "${roster.id}"`, {
-      expected: `${winners[0]} (${best})`,
+      expected: `${outcome.winner} (${outcome.score})`,
       actual: claim.selectedEntityId,
     }),
   ];
@@ -597,7 +640,9 @@ function entitiesMentioned(claims: readonly Claim[], rosters: readonly ClosedRos
     ) {
       mentioned.add(claim.entityId);
     }
-    if (claim.kind === "ranking") mentioned.add(claim.selectedEntityId);
+    // Derived after this runs when omitted; a ranking with no winner yet (a tie
+    // being refused) mentions nobody by selection.
+    if (claim.kind === "ranking" && claim.selectedEntityId !== undefined) mentioned.add(claim.selectedEntityId);
   }
   // "Which Pokémon learn Selfdestruct" is an answer about Selfdestruct even
   // though no claim names it: the move is in the definition of the set.

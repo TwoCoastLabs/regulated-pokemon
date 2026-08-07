@@ -196,7 +196,17 @@ export type Claim =
       /** A certified fact id, e.g. "base-speed". Never a free-text basis. */
       basis: string;
       direction: "highest" | "lowest";
-      selectedEntityId: string;
+      /**
+       * The extreme member, derivable and therefore optional — like a count's
+       * number. The set, the basis and the direction already determine it; a
+       * proposer that fixes those has fixed the winner, and computing it is the
+       * kernel's arithmetic, not the model's memory. Omitted → `compileManifest`
+       * fills it from the certified set (when there is a unique winner; a tie or
+       * an unorderable basis stays unfilled and is refused by name). Present — a
+       * legacy answer, or an adversary naming the wrong one — is verified against
+       * the computed winner and refused on mismatch.
+       */
+      selectedEntityId?: string;
     }
   /**
    * A different speech act from `ranking`: "the fastest is Electrode" is a
