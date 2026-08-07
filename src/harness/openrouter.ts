@@ -213,8 +213,11 @@ export class OpenRouterProvider implements ModelProvider {
           authorization: `Bearer ${apiKey}`,
           "content-type": "application/json",
           // OpenRouter attributes traffic by these; both name this project.
+          // Header values are ByteString: ASCII only, so no em dash here — a
+          // character > 255 makes `fetch` reject every call at the transport
+          // layer, which reads downstream as a total provider outage.
           "http-referer": "https://github.com/smartnose/regulated-pokemon",
-          "x-title": "Regulated Pokemon — Indigo Accord harness",
+          "x-title": "Regulated Pokemon - Indigo Accord harness",
         },
         body,
         signal: AbortSignal.timeout(timeoutMs),

@@ -94,6 +94,19 @@ describe("the request it sends", () => {
     });
   });
 
+  it("sends only ByteString-safe headers, so no attribution string can fail every call", async () => {
+    // A header value with a character > 255 makes the real `fetch` throw at the
+    // transport layer before any request goes out — which the run counts as a
+    // total provider outage. The stub fetch does not enforce this, so an em dash
+    // in an attribution header shipped and failed every live call; this asserts
+    // the property the stub cannot.
+    const { instance, calls } = provider([chat("ok")]);
+    await instance.complete(request);
+    for (const value of Object.values(calls[0]?.headers ?? {})) {
+      expect([...value].every((char) => char.charCodeAt(0) <= 255)).toBe(true);
+    }
+  });
+
   it("refuses to exist without a key, rather than spending a run on 401s", () => {
     expect(
       () => new OpenRouterProvider({ id: "live:x", model: "m", apiKey: "  ", system: "s", fetch: stub([]).fetch }),
