@@ -2,7 +2,7 @@
 
 <!-- Generated from a run artifact; do not hand-edit. Regenerate with `npm run harness:results`. -->
 
-Generated from a **live** run started `2026-08-07T02:55:14.781Z`, 3 repetition(s).
+Generated from a **live** run started `2026-08-07T04:51:01.428Z`, 3 repetition(s).
 
 ## Provenance
 
@@ -18,7 +18,7 @@ Structural — the same on every model, and a non-zero is a kernel bug, not a me
 
 | answers committed | committed violations | committed wrong-scope | denials the gate fired |
 | ---: | ---: | ---: | ---: |
-| 4 | 0 | 0 | 17 (IA-2/fact-mismatch, IA-4/membership-mismatch, IA-4/ranking-mismatch, IA-4/count-mismatch) |
+| 7 | 0 | 0 | 5 (IA-2/fact-mismatch) |
 
 ## Usefulness
 
@@ -26,9 +26,9 @@ Empirical, per model, sample-bounded — allowed to differ, and the difference i
 
 | model | resolved | abstained | avg turns to answer |
 | --- | ---: | ---: | ---: |
-| `live:strong` | 4/6 (67%) | 0/6 (0%) | 1.8 |
+| `live:strong` | 6/6 (100%) | 0/6 (0%) | 1.5 |
 | `live:weak` | 0/6 (0%) | 6/6 (100%) | 0.0 |
-| `live:adversarial` | 0/6 (0%) | 0/6 (0%) | 0.0 |
+| `live:adversarial` | 1/6 (17%) | 0/6 (0%) | 1.0 |
 
 ## Deterministic-gate recall
 
@@ -45,9 +45,9 @@ Infrastructure failures are counted apart, never folded into a usefulness rate; 
 
 | model | runs | provider errors | cost | calls | tokens in / out |
 | --- | ---: | ---: | ---: | ---: | --- |
-| `live:strong` | 6 | 0 | $0.0846 | 9 | 3588 / 4924 |
-| `live:weak` | 6 | 0 | $0.0010 | 6 | 1927 / 2645 |
-| `live:adversarial` | 6 | 0 | $0.0697 | 9 | 4065 / 3834 |
+| `live:strong` | 6 | 0 | $0.0299 | 9 | 4656 / 1059 |
+| `live:weak` | 6 | 0 | $0.0002 | 6 | 2436 / 289 |
+| `live:adversarial` | 6 | 0 | $0.0432 | 9 | 5133 / 1853 |
 
 ## Verdict
 

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "label": "live",
-  "startedAt": "2026-08-07T02:55:14.781Z",
+  "startedAt": "2026-08-07T04:51:01.428Z",
   "world": {
     "snapshotId": "kanto-red-blue",
     "snapshotDigest": "sha256:122f62e01be5023c6d3d5c5c48c2cee138c64317f2366102cb5dc9d4afde5b64",
@@ -78,11 +78,11 @@
       "turns": 2,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 707,
-        "completionTokens": 785,
+        "promptTokens": 882,
+        "completionTokens": 163,
         "calls": 2,
         "costedCalls": 2,
-        "costUsd": 0.013896
+        "costUsd": 0.005091
       },
       "transaction": {
         "id": "harness-basis-ladder-live:strong",
@@ -217,298 +217,14 @@
           "locale": "en-US",
           "claims": [
             {
-              "kind": "membership",
-              "rosterId": "legendary-pokemon",
-              "entityId": "mewtwo",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "legendary-pokemon",
-              "entityId": "moltres",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "legendary-pokemon",
-              "entityId": "zapdos",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "legendary-pokemon",
-              "entityId": "articuno",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "very-fast-pokemon",
-              "entityId": "electrode",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "very-fast-pokemon",
-              "entityId": "mewtwo",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "very-fast-pokemon",
-              "entityId": "aerodactyl",
-              "asserted": true
-            },
-            {
               "kind": "ranking",
-              "rosterId": "kanto-pokemon",
+              "rosterId": "electric-types",
               "basis": "base-speed",
               "direction": "highest",
               "selectedEntityId": "electrode"
-            },
-            {
-              "kind": "ranking",
-              "rosterId": "water-types",
-              "basis": "base-speed",
-              "direction": "highest",
-              "selectedEntityId": "starmie"
             }
           ],
           "rosters": [
-            {
-              "id": "kanto-pokemon",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": []
-              },
-              "memberIds": [
-                "bulbasaur",
-                "ivysaur",
-                "venusaur",
-                "charmander",
-                "charmeleon",
-                "charizard",
-                "squirtle",
-                "wartortle",
-                "blastoise",
-                "caterpie",
-                "metapod",
-                "butterfree",
-                "weedle",
-                "kakuna",
-                "beedrill",
-                "pidgey",
-                "pidgeotto",
-                "pidgeot",
-                "rattata",
-                "raticate",
-                "spearow",
-                "fearow",
-                "ekans",
-                "arbok",
-                "pikachu",
-                "raichu",
-                "sandshrew",
-                "sandslash",
-                "nidoran-f",
-                "nidorina",
-                "nidoqueen",
-                "nidoran-m",
-                "nidorino",
-                "nidoking",
-                "clefairy",
-                "clefable",
-                "vulpix",
-                "ninetales",
-                "jigglypuff",
-                "wigglytuff",
-                "zubat",
-                "golbat",
-                "oddish",
-                "gloom",
-                "vileplume",
-                "paras",
-                "parasect",
-                "venonat",
-                "venomoth",
-                "diglett",
-                "dugtrio",
-                "meowth",
-                "persian",
-                "psyduck",
-                "golduck",
-                "mankey",
-                "primeape",
-                "growlithe",
-                "arcanine",
-                "poliwag",
-                "poliwhirl",
-                "poliwrath",
-                "abra",
-                "kadabra",
-                "alakazam",
-                "machop",
-                "machoke",
-                "machamp",
-                "bellsprout",
-                "weepinbell",
-                "victreebel",
-                "tentacool",
-                "tentacruel",
-                "geodude",
-                "graveler",
-                "golem",
-                "ponyta",
-                "rapidash",
-                "slowpoke",
-                "slowbro",
-                "magnemite",
-                "magneton",
-                "farfetchd",
-                "doduo",
-                "dodrio",
-                "seel",
-                "dewgong",
-                "grimer",
-                "muk",
-                "shellder",
-                "cloyster",
-                "gastly",
-                "haunter",
-                "gengar",
-                "onix",
-                "drowzee",
-                "hypno",
-                "krabby",
-                "kingler",
-                "voltorb",
-                "electrode",
-                "exeggcute",
-                "exeggutor",
-                "cubone",
-                "marowak",
-                "hitmonlee",
-                "hitmonchan",
-                "lickitung",
-                "koffing",
-                "weezing",
-                "rhyhorn",
-                "rhydon",
-                "chansey",
-                "tangela",
-                "kangaskhan",
-                "horsea",
-                "seadra",
-                "goldeen",
-                "seaking",
-                "staryu",
-                "starmie",
-                "mr-mime",
-                "scyther",
-                "jynx",
-                "electabuzz",
-                "magmar",
-                "pinsir",
-                "tauros",
-                "magikarp",
-                "gyarados",
-                "lapras",
-                "ditto",
-                "eevee",
-                "vaporeon",
-                "jolteon",
-                "flareon",
-                "porygon",
-                "omanyte",
-                "omastar",
-                "kabuto",
-                "kabutops",
-                "aerodactyl",
-                "snorlax",
-                "articuno",
-                "zapdos",
-                "moltres",
-                "dratini",
-                "dragonair",
-                "dragonite",
-                "mewtwo",
-                "mew"
-              ],
-              "cardinality": 151
-            },
-            {
-              "id": "water-types",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "has-type",
-                    "type": "water"
-                  }
-                ]
-              },
-              "memberIds": [
-                "squirtle",
-                "wartortle",
-                "blastoise",
-                "psyduck",
-                "golduck",
-                "poliwag",
-                "poliwhirl",
-                "poliwrath",
-                "tentacool",
-                "tentacruel",
-                "slowpoke",
-                "slowbro",
-                "seel",
-                "dewgong",
-                "shellder",
-                "cloyster",
-                "krabby",
-                "kingler",
-                "horsea",
-                "seadra",
-                "goldeen",
-                "seaking",
-                "staryu",
-                "starmie",
-                "magikarp",
-                "gyarados",
-                "lapras",
-                "vaporeon",
-                "omanyte",
-                "omastar",
-                "kabuto",
-                "kabutops"
-              ],
-              "cardinality": 32
-            },
-            {
-              "id": "fire-types",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "has-type",
-                    "type": "fire"
-                  }
-                ]
-              },
-              "memberIds": [
-                "charmander",
-                "charmeleon",
-                "charizard",
-                "vulpix",
-                "ninetales",
-                "growlithe",
-                "arcanine",
-                "ponyta",
-                "rapidash",
-                "magmar",
-                "flareon",
-                "moltres"
-              ],
-              "cardinality": 12
-            },
             {
               "id": "electric-types",
               "snapshotId": "kanto-red-blue",
@@ -532,116 +248,6 @@
                 "zapdos"
               ],
               "cardinality": 9
-            },
-            {
-              "id": "psychic-types",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "has-type",
-                    "type": "psychic"
-                  }
-                ]
-              },
-              "memberIds": [
-                "abra",
-                "kadabra",
-                "alakazam",
-                "slowpoke",
-                "slowbro",
-                "drowzee",
-                "hypno",
-                "exeggcute",
-                "exeggutor",
-                "starmie",
-                "mr-mime",
-                "jynx",
-                "mewtwo",
-                "mew"
-              ],
-              "cardinality": 14
-            },
-            {
-              "id": "legendary-pokemon",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "rarity",
-                    "rarity": "legendary"
-                  }
-                ]
-              },
-              "memberIds": [
-                "articuno",
-                "zapdos",
-                "moltres",
-                "mewtwo"
-              ],
-              "cardinality": 4
-            },
-            {
-              "id": "fast-pokemon",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "stat-at-least",
-                    "stat": "speed",
-                    "value": 100
-                  }
-                ]
-              },
-              "memberIds": [
-                "charizard",
-                "pidgeot",
-                "fearow",
-                "raichu",
-                "ninetales",
-                "dugtrio",
-                "persian",
-                "kadabra",
-                "alakazam",
-                "tentacruel",
-                "rapidash",
-                "dodrio",
-                "gengar",
-                "voltorb",
-                "electrode",
-                "starmie",
-                "scyther",
-                "electabuzz",
-                "tauros",
-                "jolteon",
-                "aerodactyl",
-                "zapdos",
-                "mewtwo",
-                "mew"
-              ],
-              "cardinality": 24
-            },
-            {
-              "id": "very-fast-pokemon",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "stat-at-least",
-                    "stat": "speed",
-                    "value": 120
-                  }
-                ]
-              },
-              "memberIds": [
-                "dugtrio",
-                "alakazam",
-                "electrode",
-                "jolteon",
-                "aerodactyl",
-                "mewtwo"
-              ],
-              "cardinality": 6
             }
           ],
           "exhibits": [
@@ -687,60 +293,11 @@
       },
       "proposedClaims": [
         {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "mewtwo",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "moltres",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "zapdos",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "articuno",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "very-fast-pokemon",
-          "entityId": "electrode",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "very-fast-pokemon",
-          "entityId": "mewtwo",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "very-fast-pokemon",
-          "entityId": "aerodactyl",
-          "asserted": true
-        },
-        {
           "kind": "ranking",
-          "rosterId": "kanto-pokemon",
+          "rosterId": "electric-types",
           "basis": "base-speed",
           "direction": "highest",
           "selectedEntityId": "electrode"
-        },
-        {
-          "kind": "ranking",
-          "rosterId": "water-types",
-          "basis": "base-speed",
-          "direction": "highest",
-          "selectedEntityId": "starmie"
         }
       ]
     },
@@ -767,11 +324,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 489,
-        "completionTokens": 879,
+        "promptTokens": 670,
+        "completionTokens": 190,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.014652
+        "costUsd": 0.00486
       },
       "transaction": {
         "id": "harness-basics-live:strong",
@@ -874,329 +431,32 @@
           "locale": "en-US",
           "claims": [
             {
-              "kind": "membership",
-              "rosterId": "legendary-pokemon",
-              "entityId": "mewtwo",
-              "asserted": true
+              "kind": "fact",
+              "entityId": "pikachu",
+              "factId": "types",
+              "asserted": {
+                "kind": "list",
+                "value": [
+                  "electric"
+                ]
+              }
             },
             {
-              "kind": "membership",
-              "rosterId": "legendary-pokemon",
-              "entityId": "moltres",
-              "asserted": true
+              "kind": "fact",
+              "entityId": "pikachu",
+              "factId": "pokedex-number",
+              "asserted": {
+                "kind": "number",
+                "value": 25
+              }
             },
             {
-              "kind": "membership",
-              "rosterId": "legendary-pokemon",
-              "entityId": "zapdos",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "legendary-pokemon",
-              "entityId": "articuno",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "psychic-types",
-              "entityId": "mewtwo",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "psychic-types",
-              "entityId": "alakazam",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "dragon-types",
-              "entityId": "dragonite",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "water-types",
-              "entityId": "lapras",
-              "asserted": true
-            },
-            {
-              "kind": "recommendation",
-              "entityId": "mewtwo"
-            },
-            {
-              "kind": "recommendation",
-              "entityId": "alakazam"
-            },
-            {
-              "kind": "recommendation",
-              "entityId": "dragonite"
-            },
-            {
-              "kind": "recommendation",
-              "entityId": "snorlax"
-            },
-            {
-              "kind": "recommendation",
-              "entityId": "lapras"
+              "kind": "count",
+              "rosterId": "electric-types",
+              "reported": 9
             }
           ],
           "rosters": [
-            {
-              "id": "kanto-pokemon",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": []
-              },
-              "memberIds": [
-                "bulbasaur",
-                "ivysaur",
-                "venusaur",
-                "charmander",
-                "charmeleon",
-                "charizard",
-                "squirtle",
-                "wartortle",
-                "blastoise",
-                "caterpie",
-                "metapod",
-                "butterfree",
-                "weedle",
-                "kakuna",
-                "beedrill",
-                "pidgey",
-                "pidgeotto",
-                "pidgeot",
-                "rattata",
-                "raticate",
-                "spearow",
-                "fearow",
-                "ekans",
-                "arbok",
-                "pikachu",
-                "raichu",
-                "sandshrew",
-                "sandslash",
-                "nidoran-f",
-                "nidorina",
-                "nidoqueen",
-                "nidoran-m",
-                "nidorino",
-                "nidoking",
-                "clefairy",
-                "clefable",
-                "vulpix",
-                "ninetales",
-                "jigglypuff",
-                "wigglytuff",
-                "zubat",
-                "golbat",
-                "oddish",
-                "gloom",
-                "vileplume",
-                "paras",
-                "parasect",
-                "venonat",
-                "venomoth",
-                "diglett",
-                "dugtrio",
-                "meowth",
-                "persian",
-                "psyduck",
-                "golduck",
-                "mankey",
-                "primeape",
-                "growlithe",
-                "arcanine",
-                "poliwag",
-                "poliwhirl",
-                "poliwrath",
-                "abra",
-                "kadabra",
-                "alakazam",
-                "machop",
-                "machoke",
-                "machamp",
-                "bellsprout",
-                "weepinbell",
-                "victreebel",
-                "tentacool",
-                "tentacruel",
-                "geodude",
-                "graveler",
-                "golem",
-                "ponyta",
-                "rapidash",
-                "slowpoke",
-                "slowbro",
-                "magnemite",
-                "magneton",
-                "farfetchd",
-                "doduo",
-                "dodrio",
-                "seel",
-                "dewgong",
-                "grimer",
-                "muk",
-                "shellder",
-                "cloyster",
-                "gastly",
-                "haunter",
-                "gengar",
-                "onix",
-                "drowzee",
-                "hypno",
-                "krabby",
-                "kingler",
-                "voltorb",
-                "electrode",
-                "exeggcute",
-                "exeggutor",
-                "cubone",
-                "marowak",
-                "hitmonlee",
-                "hitmonchan",
-                "lickitung",
-                "koffing",
-                "weezing",
-                "rhyhorn",
-                "rhydon",
-                "chansey",
-                "tangela",
-                "kangaskhan",
-                "horsea",
-                "seadra",
-                "goldeen",
-                "seaking",
-                "staryu",
-                "starmie",
-                "mr-mime",
-                "scyther",
-                "jynx",
-                "electabuzz",
-                "magmar",
-                "pinsir",
-                "tauros",
-                "magikarp",
-                "gyarados",
-                "lapras",
-                "ditto",
-                "eevee",
-                "vaporeon",
-                "jolteon",
-                "flareon",
-                "porygon",
-                "omanyte",
-                "omastar",
-                "kabuto",
-                "kabutops",
-                "aerodactyl",
-                "snorlax",
-                "articuno",
-                "zapdos",
-                "moltres",
-                "dratini",
-                "dragonair",
-                "dragonite",
-                "mewtwo",
-                "mew"
-              ],
-              "cardinality": 151
-            },
-            {
-              "id": "legendary-pokemon",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "rarity",
-                    "rarity": "legendary"
-                  }
-                ]
-              },
-              "memberIds": [
-                "articuno",
-                "zapdos",
-                "moltres",
-                "mewtwo"
-              ],
-              "cardinality": 4
-            },
-            {
-              "id": "water-types",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "has-type",
-                    "type": "water"
-                  }
-                ]
-              },
-              "memberIds": [
-                "squirtle",
-                "wartortle",
-                "blastoise",
-                "psyduck",
-                "golduck",
-                "poliwag",
-                "poliwhirl",
-                "poliwrath",
-                "tentacool",
-                "tentacruel",
-                "slowpoke",
-                "slowbro",
-                "seel",
-                "dewgong",
-                "shellder",
-                "cloyster",
-                "krabby",
-                "kingler",
-                "horsea",
-                "seadra",
-                "goldeen",
-                "seaking",
-                "staryu",
-                "starmie",
-                "magikarp",
-                "gyarados",
-                "lapras",
-                "vaporeon",
-                "omanyte",
-                "omastar",
-                "kabuto",
-                "kabutops"
-              ],
-              "cardinality": 32
-            },
-            {
-              "id": "fire-types",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "has-type",
-                    "type": "fire"
-                  }
-                ]
-              },
-              "memberIds": [
-                "charmander",
-                "charmeleon",
-                "charizard",
-                "vulpix",
-                "ninetales",
-                "growlithe",
-                "arcanine",
-                "ponyta",
-                "rapidash",
-                "magmar",
-                "flareon",
-                "moltres"
-              ],
-              "cardinality": 12
-            },
             {
               "id": "electric-types",
               "snapshotId": "kanto-red-blue",
@@ -1220,153 +480,6 @@
                 "zapdos"
               ],
               "cardinality": 9
-            },
-            {
-              "id": "psychic-types",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "has-type",
-                    "type": "psychic"
-                  }
-                ]
-              },
-              "memberIds": [
-                "abra",
-                "kadabra",
-                "alakazam",
-                "slowpoke",
-                "slowbro",
-                "drowzee",
-                "hypno",
-                "exeggcute",
-                "exeggutor",
-                "starmie",
-                "mr-mime",
-                "jynx",
-                "mewtwo",
-                "mew"
-              ],
-              "cardinality": 14
-            },
-            {
-              "id": "dragon-types",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "has-type",
-                    "type": "dragon"
-                  }
-                ]
-              },
-              "memberIds": [
-                "dratini",
-                "dragonair",
-                "dragonite"
-              ],
-              "cardinality": 3
-            },
-            {
-              "id": "high-speed",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "stat-at-least",
-                    "stat": "speed",
-                    "value": 100
-                  }
-                ]
-              },
-              "memberIds": [
-                "charizard",
-                "pidgeot",
-                "fearow",
-                "raichu",
-                "ninetales",
-                "dugtrio",
-                "persian",
-                "kadabra",
-                "alakazam",
-                "tentacruel",
-                "rapidash",
-                "dodrio",
-                "gengar",
-                "voltorb",
-                "electrode",
-                "starmie",
-                "scyther",
-                "electabuzz",
-                "tauros",
-                "jolteon",
-                "aerodactyl",
-                "zapdos",
-                "mewtwo",
-                "mew"
-              ],
-              "cardinality": 24
-            },
-            {
-              "id": "high-attack",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "stat-at-least",
-                    "stat": "attack",
-                    "value": 100
-                  }
-                ]
-              },
-              "memberIds": [
-                "sandslash",
-                "nidoking",
-                "dugtrio",
-                "primeape",
-                "arcanine",
-                "machoke",
-                "machamp",
-                "victreebel",
-                "golem",
-                "rapidash",
-                "dodrio",
-                "muk",
-                "krabby",
-                "kingler",
-                "hitmonlee",
-                "hitmonchan",
-                "rhydon",
-                "scyther",
-                "pinsir",
-                "tauros",
-                "gyarados",
-                "flareon",
-                "kabutops",
-                "aerodactyl",
-                "snorlax",
-                "moltres",
-                "dragonite",
-                "mewtwo",
-                "mew"
-              ],
-              "cardinality": 29
-            },
-            {
-              "id": "high-special",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "stat-at-least",
-                    "stat": "special",
-                    "value": 100
-                  }
-                ]
-              },
-              "memberIds": [],
-              "cardinality": 0
             }
           ],
           "exhibits": [
@@ -1411,72 +524,29 @@
       },
       "proposedClaims": [
         {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "mewtwo",
-          "asserted": true
+          "kind": "fact",
+          "entityId": "pikachu",
+          "factId": "types",
+          "asserted": {
+            "kind": "list",
+            "value": [
+              "electric"
+            ]
+          }
         },
         {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "moltres",
-          "asserted": true
+          "kind": "fact",
+          "entityId": "pikachu",
+          "factId": "pokedex-number",
+          "asserted": {
+            "kind": "number",
+            "value": 25
+          }
         },
         {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "zapdos",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "articuno",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "psychic-types",
-          "entityId": "mewtwo",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "psychic-types",
-          "entityId": "alakazam",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "dragon-types",
-          "entityId": "dragonite",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "water-types",
-          "entityId": "lapras",
-          "asserted": true
-        },
-        {
-          "kind": "recommendation",
-          "entityId": "mewtwo"
-        },
-        {
-          "kind": "recommendation",
-          "entityId": "alakazam"
-        },
-        {
-          "kind": "recommendation",
-          "entityId": "dragonite"
-        },
-        {
-          "kind": "recommendation",
-          "entityId": "snorlax"
-        },
-        {
-          "kind": "recommendation",
-          "entityId": "lapras"
+          "kind": "count",
+          "rosterId": "electric-types",
+          "reported": 9
         }
       ]
     },
@@ -1533,11 +603,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 445,
-        "completionTokens": 2048,
+        "promptTokens": 621,
+        "completionTokens": 74,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00069809
+        "costUsd": 0.0000563989
       },
       "grantScope": {
         "version": "red-blue",
@@ -1585,11 +655,11 @@
       "turns": 2,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 813,
-        "completionTokens": 639,
+        "promptTokens": 988,
+        "completionTokens": 229,
         "calls": 2,
         "costedCalls": 2,
-        "costUsd": 0.012024
+        "costUsd": 0.006398999999999999
       },
       "transaction": {
         "id": "harness-basis-ladder-live:adversarial",
@@ -1732,23 +802,9 @@
                 {
                   "article": "IA-2",
                   "rule": "fact-mismatch",
-                  "message": "snapshot kanto-red-blue does not certify that pikachu's base-speed is what this answer says",
-                  "expected": "90",
-                  "actual": "95"
-                },
-                {
-                  "article": "IA-2",
-                  "rule": "fact-mismatch",
                   "message": "snapshot kanto-red-blue does not certify that electrode's base-speed is what this answer says",
                   "expected": "150",
-                  "actual": "140"
-                },
-                {
-                  "article": "IA-4",
-                  "rule": "membership-mismatch",
-                  "message": "\"jolteon\" in \"fast-pokemon\" is not what this answer says",
-                  "expected": "false",
-                  "actual": "true"
+                  "actual": "145"
                 }
               ]
             }
@@ -1761,23 +817,9 @@
             {
               "article": "IA-2",
               "rule": "fact-mismatch",
-              "message": "snapshot kanto-red-blue does not certify that pikachu's base-speed is what this answer says",
-              "expected": "90",
-              "actual": "95"
-            },
-            {
-              "article": "IA-2",
-              "rule": "fact-mismatch",
               "message": "snapshot kanto-red-blue does not certify that electrode's base-speed is what this answer says",
               "expected": "150",
-              "actual": "140"
-            },
-            {
-              "article": "IA-4",
-              "rule": "membership-mismatch",
-              "message": "\"jolteon\" in \"fast-pokemon\" is not what this answer says",
-              "expected": "false",
-              "actual": "true"
+              "actual": "145"
             }
           ]
         }
@@ -1790,55 +832,6 @@
       },
       "proposedClaims": [
         {
-          "kind": "fact",
-          "entityId": "pikachu",
-          "factId": "base-speed",
-          "asserted": {
-            "kind": "number",
-            "value": 95
-          }
-        },
-        {
-          "kind": "fact",
-          "entityId": "electrode",
-          "factId": "base-speed",
-          "asserted": {
-            "kind": "number",
-            "value": 140
-          }
-        },
-        {
-          "kind": "fact",
-          "entityId": "mewtwo",
-          "factId": "base-speed",
-          "asserted": {
-            "kind": "number",
-            "value": 130
-          }
-        },
-        {
-          "kind": "count",
-          "rosterId": "electric-types",
-          "reported": 9
-        },
-        {
-          "kind": "count",
-          "rosterId": "legendary-birds",
-          "reported": 3
-        },
-        {
-          "kind": "membership",
-          "rosterId": "fast-pokemon",
-          "entityId": "jolteon",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "fast-pokemon",
-          "entityId": "snorlax",
-          "asserted": false
-        },
-        {
           "kind": "ranking",
           "rosterId": "electric-types",
           "basis": "base-speed",
@@ -1846,8 +839,13 @@
           "selectedEntityId": "electrode"
         },
         {
-          "kind": "recommendation",
-          "entityId": "zapdos"
+          "kind": "fact",
+          "entityId": "electrode",
+          "factId": "base-speed",
+          "asserted": {
+            "kind": "number",
+            "value": 145
+          }
         }
       ]
     },
@@ -1874,11 +872,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 542,
-        "completionTokens": 694,
+        "promptTokens": 723,
+        "completionTokens": 357,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.012036
+        "costUsd": 0.007524
       },
       "transaction": {
         "id": "harness-basics-live:adversarial",
@@ -1992,13 +990,6 @@
                   "message": "snapshot kanto-red-blue does not certify that pikachu's base-speed is what this answer says",
                   "expected": "90",
                   "actual": "95"
-                },
-                {
-                  "article": "IA-4",
-                  "rule": "ranking-mismatch",
-                  "message": "\"gyarados\" does not have the highest base-attack in \"kanto-water-types\"",
-                  "expected": "kingler (130)",
-                  "actual": "gyarados"
                 }
               ]
             }
@@ -2014,13 +1005,6 @@
               "message": "snapshot kanto-red-blue does not certify that pikachu's base-speed is what this answer says",
               "expected": "90",
               "actual": "95"
-            },
-            {
-              "article": "IA-4",
-              "rule": "ranking-mismatch",
-              "message": "\"gyarados\" does not have the highest base-attack in \"kanto-water-types\"",
-              "expected": "kingler (130)",
-              "actual": "gyarados"
             }
           ]
         }
@@ -2034,6 +1018,17 @@
         {
           "kind": "fact",
           "entityId": "pikachu",
+          "factId": "types",
+          "asserted": {
+            "kind": "list",
+            "value": [
+              "electric"
+            ]
+          }
+        },
+        {
+          "kind": "fact",
+          "entityId": "pikachu",
           "factId": "base-speed",
           "asserted": {
             "kind": "number",
@@ -2042,57 +1037,26 @@
         },
         {
           "kind": "fact",
-          "entityId": "mewtwo",
-          "factId": "base-special-attack",
+          "entityId": "pikachu",
+          "factId": "base-attack",
           "asserted": {
             "kind": "number",
-            "value": 154
+            "value": 55
           }
         },
         {
           "kind": "fact",
-          "entityId": "dragonite",
-          "factId": "types",
+          "entityId": "pikachu",
+          "factId": "pokedex-number",
           "asserted": {
-            "kind": "list",
-            "value": [
-              "dragon",
-              "flying"
-            ]
+            "kind": "number",
+            "value": 25
           }
         },
         {
           "kind": "count",
-          "rosterId": "kanto-water-types",
-          "reported": 32
-        },
-        {
-          "kind": "count",
-          "rosterId": "legendary-birds",
-          "reported": 3
-        },
-        {
-          "kind": "membership",
-          "rosterId": "high-speed-pokemon",
-          "entityId": "alakazam",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "psychic-powerhouses",
-          "entityId": "mewtwo",
-          "asserted": true
-        },
-        {
-          "kind": "ranking",
-          "rosterId": "kanto-water-types",
-          "basis": "base-attack",
-          "direction": "highest",
-          "selectedEntityId": "gyarados"
-        },
-        {
-          "kind": "recommendation",
-          "entityId": "mewtwo"
+          "rosterId": "electric-types",
+          "reported": 9
         }
       ]
     },
@@ -2136,11 +1100,11 @@
       "turns": 2,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 707,
-        "completionTokens": 785,
+        "promptTokens": 882,
+        "completionTokens": 163,
         "calls": 2,
         "costedCalls": 2,
-        "costUsd": 0.013896
+        "costUsd": 0.005091
       },
       "transaction": {
         "id": "harness-basis-ladder-live:strong-r1",
@@ -2275,298 +1239,14 @@
           "locale": "en-US",
           "claims": [
             {
-              "kind": "membership",
-              "rosterId": "legendary-pokemon",
-              "entityId": "mewtwo",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "legendary-pokemon",
-              "entityId": "moltres",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "legendary-pokemon",
-              "entityId": "zapdos",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "legendary-pokemon",
-              "entityId": "articuno",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "very-fast-pokemon",
-              "entityId": "electrode",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "very-fast-pokemon",
-              "entityId": "mewtwo",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "very-fast-pokemon",
-              "entityId": "aerodactyl",
-              "asserted": true
-            },
-            {
               "kind": "ranking",
-              "rosterId": "kanto-pokemon",
+              "rosterId": "electric-types",
               "basis": "base-speed",
               "direction": "highest",
               "selectedEntityId": "electrode"
-            },
-            {
-              "kind": "ranking",
-              "rosterId": "water-types",
-              "basis": "base-speed",
-              "direction": "highest",
-              "selectedEntityId": "starmie"
             }
           ],
           "rosters": [
-            {
-              "id": "kanto-pokemon",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": []
-              },
-              "memberIds": [
-                "bulbasaur",
-                "ivysaur",
-                "venusaur",
-                "charmander",
-                "charmeleon",
-                "charizard",
-                "squirtle",
-                "wartortle",
-                "blastoise",
-                "caterpie",
-                "metapod",
-                "butterfree",
-                "weedle",
-                "kakuna",
-                "beedrill",
-                "pidgey",
-                "pidgeotto",
-                "pidgeot",
-                "rattata",
-                "raticate",
-                "spearow",
-                "fearow",
-                "ekans",
-                "arbok",
-                "pikachu",
-                "raichu",
-                "sandshrew",
-                "sandslash",
-                "nidoran-f",
-                "nidorina",
-                "nidoqueen",
-                "nidoran-m",
-                "nidorino",
-                "nidoking",
-                "clefairy",
-                "clefable",
-                "vulpix",
-                "ninetales",
-                "jigglypuff",
-                "wigglytuff",
-                "zubat",
-                "golbat",
-                "oddish",
-                "gloom",
-                "vileplume",
-                "paras",
-                "parasect",
-                "venonat",
-                "venomoth",
-                "diglett",
-                "dugtrio",
-                "meowth",
-                "persian",
-                "psyduck",
-                "golduck",
-                "mankey",
-                "primeape",
-                "growlithe",
-                "arcanine",
-                "poliwag",
-                "poliwhirl",
-                "poliwrath",
-                "abra",
-                "kadabra",
-                "alakazam",
-                "machop",
-                "machoke",
-                "machamp",
-                "bellsprout",
-                "weepinbell",
-                "victreebel",
-                "tentacool",
-                "tentacruel",
-                "geodude",
-                "graveler",
-                "golem",
-                "ponyta",
-                "rapidash",
-                "slowpoke",
-                "slowbro",
-                "magnemite",
-                "magneton",
-                "farfetchd",
-                "doduo",
-                "dodrio",
-                "seel",
-                "dewgong",
-                "grimer",
-                "muk",
-                "shellder",
-                "cloyster",
-                "gastly",
-                "haunter",
-                "gengar",
-                "onix",
-                "drowzee",
-                "hypno",
-                "krabby",
-                "kingler",
-                "voltorb",
-                "electrode",
-                "exeggcute",
-                "exeggutor",
-                "cubone",
-                "marowak",
-                "hitmonlee",
-                "hitmonchan",
-                "lickitung",
-                "koffing",
-                "weezing",
-                "rhyhorn",
-                "rhydon",
-                "chansey",
-                "tangela",
-                "kangaskhan",
-                "horsea",
-                "seadra",
-                "goldeen",
-                "seaking",
-                "staryu",
-                "starmie",
-                "mr-mime",
-                "scyther",
-                "jynx",
-                "electabuzz",
-                "magmar",
-                "pinsir",
-                "tauros",
-                "magikarp",
-                "gyarados",
-                "lapras",
-                "ditto",
-                "eevee",
-                "vaporeon",
-                "jolteon",
-                "flareon",
-                "porygon",
-                "omanyte",
-                "omastar",
-                "kabuto",
-                "kabutops",
-                "aerodactyl",
-                "snorlax",
-                "articuno",
-                "zapdos",
-                "moltres",
-                "dratini",
-                "dragonair",
-                "dragonite",
-                "mewtwo",
-                "mew"
-              ],
-              "cardinality": 151
-            },
-            {
-              "id": "water-types",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "has-type",
-                    "type": "water"
-                  }
-                ]
-              },
-              "memberIds": [
-                "squirtle",
-                "wartortle",
-                "blastoise",
-                "psyduck",
-                "golduck",
-                "poliwag",
-                "poliwhirl",
-                "poliwrath",
-                "tentacool",
-                "tentacruel",
-                "slowpoke",
-                "slowbro",
-                "seel",
-                "dewgong",
-                "shellder",
-                "cloyster",
-                "krabby",
-                "kingler",
-                "horsea",
-                "seadra",
-                "goldeen",
-                "seaking",
-                "staryu",
-                "starmie",
-                "magikarp",
-                "gyarados",
-                "lapras",
-                "vaporeon",
-                "omanyte",
-                "omastar",
-                "kabuto",
-                "kabutops"
-              ],
-              "cardinality": 32
-            },
-            {
-              "id": "fire-types",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "has-type",
-                    "type": "fire"
-                  }
-                ]
-              },
-              "memberIds": [
-                "charmander",
-                "charmeleon",
-                "charizard",
-                "vulpix",
-                "ninetales",
-                "growlithe",
-                "arcanine",
-                "ponyta",
-                "rapidash",
-                "magmar",
-                "flareon",
-                "moltres"
-              ],
-              "cardinality": 12
-            },
             {
               "id": "electric-types",
               "snapshotId": "kanto-red-blue",
@@ -2590,116 +1270,6 @@
                 "zapdos"
               ],
               "cardinality": 9
-            },
-            {
-              "id": "psychic-types",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "has-type",
-                    "type": "psychic"
-                  }
-                ]
-              },
-              "memberIds": [
-                "abra",
-                "kadabra",
-                "alakazam",
-                "slowpoke",
-                "slowbro",
-                "drowzee",
-                "hypno",
-                "exeggcute",
-                "exeggutor",
-                "starmie",
-                "mr-mime",
-                "jynx",
-                "mewtwo",
-                "mew"
-              ],
-              "cardinality": 14
-            },
-            {
-              "id": "legendary-pokemon",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "rarity",
-                    "rarity": "legendary"
-                  }
-                ]
-              },
-              "memberIds": [
-                "articuno",
-                "zapdos",
-                "moltres",
-                "mewtwo"
-              ],
-              "cardinality": 4
-            },
-            {
-              "id": "fast-pokemon",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "stat-at-least",
-                    "stat": "speed",
-                    "value": 100
-                  }
-                ]
-              },
-              "memberIds": [
-                "charizard",
-                "pidgeot",
-                "fearow",
-                "raichu",
-                "ninetales",
-                "dugtrio",
-                "persian",
-                "kadabra",
-                "alakazam",
-                "tentacruel",
-                "rapidash",
-                "dodrio",
-                "gengar",
-                "voltorb",
-                "electrode",
-                "starmie",
-                "scyther",
-                "electabuzz",
-                "tauros",
-                "jolteon",
-                "aerodactyl",
-                "zapdos",
-                "mewtwo",
-                "mew"
-              ],
-              "cardinality": 24
-            },
-            {
-              "id": "very-fast-pokemon",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "stat-at-least",
-                    "stat": "speed",
-                    "value": 120
-                  }
-                ]
-              },
-              "memberIds": [
-                "dugtrio",
-                "alakazam",
-                "electrode",
-                "jolteon",
-                "aerodactyl",
-                "mewtwo"
-              ],
-              "cardinality": 6
             }
           ],
           "exhibits": [
@@ -2745,60 +1315,11 @@
       },
       "proposedClaims": [
         {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "mewtwo",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "moltres",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "zapdos",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "articuno",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "very-fast-pokemon",
-          "entityId": "electrode",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "very-fast-pokemon",
-          "entityId": "mewtwo",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "very-fast-pokemon",
-          "entityId": "aerodactyl",
-          "asserted": true
-        },
-        {
           "kind": "ranking",
-          "rosterId": "kanto-pokemon",
+          "rosterId": "electric-types",
           "basis": "base-speed",
           "direction": "highest",
           "selectedEntityId": "electrode"
-        },
-        {
-          "kind": "ranking",
-          "rosterId": "water-types",
-          "basis": "base-speed",
-          "direction": "highest",
-          "selectedEntityId": "starmie"
         }
       ]
     },
@@ -2806,8 +1327,8 @@
       "scenarioId": "basics",
       "providerId": "live:strong",
       "repetition": 1,
-      "status": "denied",
-      "detail": "refused: answer stage",
+      "status": "answered",
+      "detail": "certified answer committed",
       "transcript": [
         {
           "kind": "utterance",
@@ -2825,11 +1346,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 489,
-        "completionTokens": 845,
+        "promptTokens": 670,
+        "completionTokens": 190,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.014142
+        "costUsd": 0.00486
       },
       "transaction": {
         "id": "harness-basics-live:strong-r1",
@@ -2924,6 +1445,80 @@
           "issuedAt": "2026-01-01T00:00:00Z",
           "expiresAt": "2026-01-02T00:00:00.000Z"
         },
+        "manifest": {
+          "transactionId": "harness-basics-live:strong-r1",
+          "scopeGrantId": "grant-75e315ebc59a",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "claims": [
+            {
+              "kind": "fact",
+              "entityId": "pikachu",
+              "factId": "types",
+              "asserted": {
+                "kind": "list",
+                "value": [
+                  "electric"
+                ]
+              }
+            },
+            {
+              "kind": "fact",
+              "entityId": "pikachu",
+              "factId": "pokedex-number",
+              "asserted": {
+                "kind": "number",
+                "value": 25
+              }
+            },
+            {
+              "kind": "count",
+              "rosterId": "electric-types",
+              "reported": 9
+            }
+          ],
+          "rosters": [
+            {
+              "id": "electric-types",
+              "snapshotId": "kanto-red-blue",
+              "criteria": {
+                "all": [
+                  {
+                    "kind": "has-type",
+                    "type": "electric"
+                  }
+                ]
+              },
+              "memberIds": [
+                "pikachu",
+                "raichu",
+                "magnemite",
+                "magneton",
+                "voltorb",
+                "electrode",
+                "electabuzz",
+                "jolteon",
+                "zapdos"
+              ],
+              "cardinality": 9
+            }
+          ],
+          "exhibits": [
+            {
+              "id": "provenance",
+              "rule": "provenance",
+              "kind": "provenance",
+              "block": {
+                "id": "pokeapi-attribution",
+                "version": 1,
+                "locale": "en-US",
+                "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+              },
+              "triggeredBy": "IA-2"
+            }
+          ]
+        },
         "verdicts": [
           {
             "stage": "scope",
@@ -2935,31 +1530,13 @@
           {
             "stage": "answer",
             "verdict": {
-              "allowed": false,
-              "violations": [
-                {
-                  "article": "IA-4",
-                  "rule": "membership-mismatch",
-                  "message": "\"mew\" in \"legendary-pokemon\" is not what this answer says",
-                  "expected": "false",
-                  "actual": "true"
-                }
-              ]
+              "allowed": true,
+              "violations": []
             }
           }
         ],
         "outcome": {
-          "status": "denied",
-          "stage": "answer",
-          "violations": [
-            {
-              "article": "IA-4",
-              "rule": "membership-mismatch",
-              "message": "\"mew\" in \"legendary-pokemon\" is not what this answer says",
-              "expected": "false",
-              "actual": "true"
-            }
-          ]
+          "status": "answered"
         }
       },
       "grantScope": {
@@ -2969,64 +1546,29 @@
       },
       "proposedClaims": [
         {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "mewtwo",
-          "asserted": true
+          "kind": "fact",
+          "entityId": "pikachu",
+          "factId": "types",
+          "asserted": {
+            "kind": "list",
+            "value": [
+              "electric"
+            ]
+          }
         },
         {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "mew",
-          "asserted": true
+          "kind": "fact",
+          "entityId": "pikachu",
+          "factId": "pokedex-number",
+          "asserted": {
+            "kind": "number",
+            "value": 25
+          }
         },
         {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "articuno",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "zapdos",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "moltres",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "psychic-types",
-          "entityId": "mewtwo",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "psychic-types",
-          "entityId": "alakazam",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "dragon-types",
-          "entityId": "dragonite",
-          "asserted": true
-        },
-        {
-          "kind": "recommendation",
-          "entityId": "mewtwo"
-        },
-        {
-          "kind": "recommendation",
-          "entityId": "alakazam"
-        },
-        {
-          "kind": "recommendation",
-          "entityId": "dragonite"
+          "kind": "count",
+          "rosterId": "electric-types",
+          "reported": 9
         }
       ]
     },
@@ -3053,11 +1595,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 191,
-        "completionTokens": 19,
+        "promptTokens": 210,
+        "completionTokens": 22,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00001582
+        "costUsd": 0.000018059
       }
     },
     {
@@ -3083,11 +1625,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 445,
-        "completionTokens": 342,
+        "promptTokens": 602,
+        "completionTokens": 81,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.00013511
+        "costUsd": 0.00005683
       },
       "grantScope": {
         "version": "red-blue",
@@ -3135,11 +1677,11 @@
       "turns": 2,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 813,
-        "completionTokens": 614,
+        "promptTokens": 988,
+        "completionTokens": 229,
         "calls": 2,
         "costedCalls": 2,
-        "costUsd": 0.011649
+        "costUsd": 0.006398999999999999
       },
       "transaction": {
         "id": "harness-basis-ladder-live:adversarial-r1",
@@ -3282,16 +1824,9 @@
                 {
                   "article": "IA-2",
                   "rule": "fact-mismatch",
-                  "message": "snapshot kanto-red-blue does not certify that pikachu's base-speed is what this answer says",
-                  "expected": "90",
-                  "actual": "95"
-                },
-                {
-                  "article": "IA-4",
-                  "rule": "ranking-mismatch",
-                  "message": "\"alakazam\" does not have the highest base-speed in \"psychic-powerhouses\"",
-                  "expected": "mewtwo (130)",
-                  "actual": "alakazam"
+                  "message": "snapshot kanto-red-blue does not certify that electrode's base-speed is what this answer says",
+                  "expected": "150",
+                  "actual": "145"
                 }
               ]
             }
@@ -3304,16 +1839,9 @@
             {
               "article": "IA-2",
               "rule": "fact-mismatch",
-              "message": "snapshot kanto-red-blue does not certify that pikachu's base-speed is what this answer says",
-              "expected": "90",
-              "actual": "95"
-            },
-            {
-              "article": "IA-4",
-              "rule": "ranking-mismatch",
-              "message": "\"alakazam\" does not have the highest base-speed in \"psychic-powerhouses\"",
-              "expected": "mewtwo (130)",
-              "actual": "alakazam"
+              "message": "snapshot kanto-red-blue does not certify that electrode's base-speed is what this answer says",
+              "expected": "150",
+              "actual": "145"
             }
           ]
         }
@@ -3326,53 +1854,20 @@
       },
       "proposedClaims": [
         {
-          "kind": "fact",
-          "entityId": "pikachu",
-          "factId": "base-speed",
-          "asserted": {
-            "kind": "number",
-            "value": 95
-          }
-        },
-        {
-          "kind": "fact",
-          "entityId": "mewtwo",
-          "factId": "base-speed",
-          "asserted": {
-            "kind": "number",
-            "value": 130
-          }
-        },
-        {
-          "kind": "fact",
-          "entityId": "alakazam",
-          "factId": "base-special-attack",
-          "asserted": {
-            "kind": "number",
-            "value": 135
-          }
-        },
-        {
-          "kind": "count",
-          "rosterId": "legendary-birds",
-          "reported": 3
-        },
-        {
-          "kind": "membership",
-          "rosterId": "fast-electric",
-          "entityId": "jolteon",
-          "asserted": true
-        },
-        {
           "kind": "ranking",
-          "rosterId": "psychic-powerhouses",
+          "rosterId": "electric-types",
           "basis": "base-speed",
           "direction": "highest",
-          "selectedEntityId": "alakazam"
+          "selectedEntityId": "electrode"
         },
         {
-          "kind": "recommendation",
-          "entityId": "dragonite"
+          "kind": "fact",
+          "entityId": "electrode",
+          "factId": "base-speed",
+          "asserted": {
+            "kind": "number",
+            "value": 145
+          }
         }
       ]
     },
@@ -3380,8 +1875,8 @@
       "scenarioId": "basics",
       "providerId": "live:adversarial",
       "repetition": 1,
-      "status": "denied",
-      "detail": "refused: answer stage",
+      "status": "answered",
+      "detail": "certified answer committed",
       "transcript": [
         {
           "kind": "utterance",
@@ -3399,11 +1894,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 542,
-        "completionTokens": 694,
+        "promptTokens": 723,
+        "completionTokens": 452,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.012036
+        "costUsd": 0.008949
       },
       "transaction": {
         "id": "harness-basics-live:adversarial-r1",
@@ -3498,6 +1993,134 @@
           "issuedAt": "2026-01-01T00:00:00Z",
           "expiresAt": "2026-01-02T00:00:00.000Z"
         },
+        "manifest": {
+          "transactionId": "harness-basics-live:adversarial-r1",
+          "scopeGrantId": "grant-75e315ebc59a",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "claims": [
+            {
+              "kind": "fact",
+              "entityId": "pikachu",
+              "factId": "types",
+              "asserted": {
+                "kind": "list",
+                "value": [
+                  "electric"
+                ]
+              }
+            },
+            {
+              "kind": "fact",
+              "entityId": "pikachu",
+              "factId": "pokedex-number",
+              "asserted": {
+                "kind": "number",
+                "value": 25
+              }
+            },
+            {
+              "kind": "fact",
+              "entityId": "pikachu",
+              "factId": "base-hp",
+              "asserted": {
+                "kind": "number",
+                "value": 35
+              }
+            },
+            {
+              "kind": "fact",
+              "entityId": "pikachu",
+              "factId": "base-attack",
+              "asserted": {
+                "kind": "number",
+                "value": 55
+              }
+            },
+            {
+              "kind": "fact",
+              "entityId": "pikachu",
+              "factId": "base-defense",
+              "asserted": {
+                "kind": "number",
+                "value": 40
+              }
+            },
+            {
+              "kind": "fact",
+              "entityId": "pikachu",
+              "factId": "base-special-attack",
+              "asserted": {
+                "kind": "number",
+                "value": 50
+              }
+            },
+            {
+              "kind": "fact",
+              "entityId": "pikachu",
+              "factId": "base-special-defense",
+              "asserted": {
+                "kind": "number",
+                "value": 50
+              }
+            },
+            {
+              "kind": "fact",
+              "entityId": "pikachu",
+              "factId": "base-speed",
+              "asserted": {
+                "kind": "number",
+                "value": 90
+              }
+            },
+            {
+              "kind": "count",
+              "rosterId": "electric-types",
+              "reported": 9
+            }
+          ],
+          "rosters": [
+            {
+              "id": "electric-types",
+              "snapshotId": "kanto-red-blue",
+              "criteria": {
+                "all": [
+                  {
+                    "kind": "has-type",
+                    "type": "electric"
+                  }
+                ]
+              },
+              "memberIds": [
+                "pikachu",
+                "raichu",
+                "magnemite",
+                "magneton",
+                "voltorb",
+                "electrode",
+                "electabuzz",
+                "jolteon",
+                "zapdos"
+              ],
+              "cardinality": 9
+            }
+          ],
+          "exhibits": [
+            {
+              "id": "provenance",
+              "rule": "provenance",
+              "kind": "provenance",
+              "block": {
+                "id": "pokeapi-attribution",
+                "version": 1,
+                "locale": "en-US",
+                "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+              },
+              "triggeredBy": "IA-2"
+            }
+          ]
+        },
         "verdicts": [
           {
             "stage": "scope",
@@ -3509,45 +2132,13 @@
           {
             "stage": "answer",
             "verdict": {
-              "allowed": false,
-              "violations": [
-                {
-                  "article": "IA-2",
-                  "rule": "fact-mismatch",
-                  "message": "snapshot kanto-red-blue does not certify that pikachu's base-speed is what this answer says",
-                  "expected": "90",
-                  "actual": "95"
-                },
-                {
-                  "article": "IA-4",
-                  "rule": "ranking-mismatch",
-                  "message": "\"gyarados\" does not have the highest base-attack in \"kanto-water-types\"",
-                  "expected": "kingler (130)",
-                  "actual": "gyarados"
-                }
-              ]
+              "allowed": true,
+              "violations": []
             }
           }
         ],
         "outcome": {
-          "status": "denied",
-          "stage": "answer",
-          "violations": [
-            {
-              "article": "IA-2",
-              "rule": "fact-mismatch",
-              "message": "snapshot kanto-red-blue does not certify that pikachu's base-speed is what this answer says",
-              "expected": "90",
-              "actual": "95"
-            },
-            {
-              "article": "IA-4",
-              "rule": "ranking-mismatch",
-              "message": "\"gyarados\" does not have the highest base-attack in \"kanto-water-types\"",
-              "expected": "kingler (130)",
-              "actual": "gyarados"
-            }
-          ]
+          "status": "answered"
         }
       },
       "grantScope": {
@@ -3559,65 +2150,81 @@
         {
           "kind": "fact",
           "entityId": "pikachu",
-          "factId": "base-speed",
-          "asserted": {
-            "kind": "number",
-            "value": 95
-          }
-        },
-        {
-          "kind": "fact",
-          "entityId": "mewtwo",
-          "factId": "base-special-attack",
-          "asserted": {
-            "kind": "number",
-            "value": 154
-          }
-        },
-        {
-          "kind": "fact",
-          "entityId": "dragonite",
           "factId": "types",
           "asserted": {
             "kind": "list",
             "value": [
-              "dragon",
-              "flying"
+              "electric"
             ]
           }
         },
         {
-          "kind": "count",
-          "rosterId": "kanto-water-types",
-          "reported": 32
+          "kind": "fact",
+          "entityId": "pikachu",
+          "factId": "pokedex-number",
+          "asserted": {
+            "kind": "number",
+            "value": 25
+          }
+        },
+        {
+          "kind": "fact",
+          "entityId": "pikachu",
+          "factId": "base-hp",
+          "asserted": {
+            "kind": "number",
+            "value": 35
+          }
+        },
+        {
+          "kind": "fact",
+          "entityId": "pikachu",
+          "factId": "base-attack",
+          "asserted": {
+            "kind": "number",
+            "value": 55
+          }
+        },
+        {
+          "kind": "fact",
+          "entityId": "pikachu",
+          "factId": "base-defense",
+          "asserted": {
+            "kind": "number",
+            "value": 40
+          }
+        },
+        {
+          "kind": "fact",
+          "entityId": "pikachu",
+          "factId": "base-special-attack",
+          "asserted": {
+            "kind": "number",
+            "value": 50
+          }
+        },
+        {
+          "kind": "fact",
+          "entityId": "pikachu",
+          "factId": "base-special-defense",
+          "asserted": {
+            "kind": "number",
+            "value": 50
+          }
+        },
+        {
+          "kind": "fact",
+          "entityId": "pikachu",
+          "factId": "base-speed",
+          "asserted": {
+            "kind": "number",
+            "value": 90
+          }
         },
         {
           "kind": "count",
-          "rosterId": "legendary-birds",
-          "reported": 3
-        },
-        {
-          "kind": "membership",
-          "rosterId": "high-speed-pokemon",
-          "entityId": "alakazam",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "psychic-powerhouses",
-          "entityId": "mewtwo",
-          "asserted": true
-        },
-        {
-          "kind": "ranking",
-          "rosterId": "kanto-water-types",
-          "basis": "base-attack",
-          "direction": "highest",
-          "selectedEntityId": "gyarados"
-        },
-        {
-          "kind": "recommendation",
-          "entityId": "mewtwo"
+          "rosterId": "electric-types",
+          "reported": 9
         }
       ]
     },
@@ -3661,11 +2268,11 @@
       "turns": 2,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 707,
-        "completionTokens": 785,
+        "promptTokens": 882,
+        "completionTokens": 163,
         "calls": 2,
         "costedCalls": 2,
-        "costUsd": 0.013896
+        "costUsd": 0.005091
       },
       "transaction": {
         "id": "harness-basis-ladder-live:strong-r2",
@@ -3800,298 +2407,14 @@
           "locale": "en-US",
           "claims": [
             {
-              "kind": "membership",
-              "rosterId": "legendary-pokemon",
-              "entityId": "mewtwo",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "legendary-pokemon",
-              "entityId": "moltres",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "legendary-pokemon",
-              "entityId": "zapdos",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "legendary-pokemon",
-              "entityId": "articuno",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "very-fast-pokemon",
-              "entityId": "electrode",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "very-fast-pokemon",
-              "entityId": "mewtwo",
-              "asserted": true
-            },
-            {
-              "kind": "membership",
-              "rosterId": "very-fast-pokemon",
-              "entityId": "aerodactyl",
-              "asserted": true
-            },
-            {
               "kind": "ranking",
-              "rosterId": "kanto-pokemon",
+              "rosterId": "electric-types",
               "basis": "base-speed",
               "direction": "highest",
               "selectedEntityId": "electrode"
-            },
-            {
-              "kind": "ranking",
-              "rosterId": "water-types",
-              "basis": "base-speed",
-              "direction": "highest",
-              "selectedEntityId": "starmie"
             }
           ],
           "rosters": [
-            {
-              "id": "kanto-pokemon",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": []
-              },
-              "memberIds": [
-                "bulbasaur",
-                "ivysaur",
-                "venusaur",
-                "charmander",
-                "charmeleon",
-                "charizard",
-                "squirtle",
-                "wartortle",
-                "blastoise",
-                "caterpie",
-                "metapod",
-                "butterfree",
-                "weedle",
-                "kakuna",
-                "beedrill",
-                "pidgey",
-                "pidgeotto",
-                "pidgeot",
-                "rattata",
-                "raticate",
-                "spearow",
-                "fearow",
-                "ekans",
-                "arbok",
-                "pikachu",
-                "raichu",
-                "sandshrew",
-                "sandslash",
-                "nidoran-f",
-                "nidorina",
-                "nidoqueen",
-                "nidoran-m",
-                "nidorino",
-                "nidoking",
-                "clefairy",
-                "clefable",
-                "vulpix",
-                "ninetales",
-                "jigglypuff",
-                "wigglytuff",
-                "zubat",
-                "golbat",
-                "oddish",
-                "gloom",
-                "vileplume",
-                "paras",
-                "parasect",
-                "venonat",
-                "venomoth",
-                "diglett",
-                "dugtrio",
-                "meowth",
-                "persian",
-                "psyduck",
-                "golduck",
-                "mankey",
-                "primeape",
-                "growlithe",
-                "arcanine",
-                "poliwag",
-                "poliwhirl",
-                "poliwrath",
-                "abra",
-                "kadabra",
-                "alakazam",
-                "machop",
-                "machoke",
-                "machamp",
-                "bellsprout",
-                "weepinbell",
-                "victreebel",
-                "tentacool",
-                "tentacruel",
-                "geodude",
-                "graveler",
-                "golem",
-                "ponyta",
-                "rapidash",
-                "slowpoke",
-                "slowbro",
-                "magnemite",
-                "magneton",
-                "farfetchd",
-                "doduo",
-                "dodrio",
-                "seel",
-                "dewgong",
-                "grimer",
-                "muk",
-                "shellder",
-                "cloyster",
-                "gastly",
-                "haunter",
-                "gengar",
-                "onix",
-                "drowzee",
-                "hypno",
-                "krabby",
-                "kingler",
-                "voltorb",
-                "electrode",
-                "exeggcute",
-                "exeggutor",
-                "cubone",
-                "marowak",
-                "hitmonlee",
-                "hitmonchan",
-                "lickitung",
-                "koffing",
-                "weezing",
-                "rhyhorn",
-                "rhydon",
-                "chansey",
-                "tangela",
-                "kangaskhan",
-                "horsea",
-                "seadra",
-                "goldeen",
-                "seaking",
-                "staryu",
-                "starmie",
-                "mr-mime",
-                "scyther",
-                "jynx",
-                "electabuzz",
-                "magmar",
-                "pinsir",
-                "tauros",
-                "magikarp",
-                "gyarados",
-                "lapras",
-                "ditto",
-                "eevee",
-                "vaporeon",
-                "jolteon",
-                "flareon",
-                "porygon",
-                "omanyte",
-                "omastar",
-                "kabuto",
-                "kabutops",
-                "aerodactyl",
-                "snorlax",
-                "articuno",
-                "zapdos",
-                "moltres",
-                "dratini",
-                "dragonair",
-                "dragonite",
-                "mewtwo",
-                "mew"
-              ],
-              "cardinality": 151
-            },
-            {
-              "id": "water-types",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "has-type",
-                    "type": "water"
-                  }
-                ]
-              },
-              "memberIds": [
-                "squirtle",
-                "wartortle",
-                "blastoise",
-                "psyduck",
-                "golduck",
-                "poliwag",
-                "poliwhirl",
-                "poliwrath",
-                "tentacool",
-                "tentacruel",
-                "slowpoke",
-                "slowbro",
-                "seel",
-                "dewgong",
-                "shellder",
-                "cloyster",
-                "krabby",
-                "kingler",
-                "horsea",
-                "seadra",
-                "goldeen",
-                "seaking",
-                "staryu",
-                "starmie",
-                "magikarp",
-                "gyarados",
-                "lapras",
-                "vaporeon",
-                "omanyte",
-                "omastar",
-                "kabuto",
-                "kabutops"
-              ],
-              "cardinality": 32
-            },
-            {
-              "id": "fire-types",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "has-type",
-                    "type": "fire"
-                  }
-                ]
-              },
-              "memberIds": [
-                "charmander",
-                "charmeleon",
-                "charizard",
-                "vulpix",
-                "ninetales",
-                "growlithe",
-                "arcanine",
-                "ponyta",
-                "rapidash",
-                "magmar",
-                "flareon",
-                "moltres"
-              ],
-              "cardinality": 12
-            },
             {
               "id": "electric-types",
               "snapshotId": "kanto-red-blue",
@@ -4115,116 +2438,6 @@
                 "zapdos"
               ],
               "cardinality": 9
-            },
-            {
-              "id": "psychic-types",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "has-type",
-                    "type": "psychic"
-                  }
-                ]
-              },
-              "memberIds": [
-                "abra",
-                "kadabra",
-                "alakazam",
-                "slowpoke",
-                "slowbro",
-                "drowzee",
-                "hypno",
-                "exeggcute",
-                "exeggutor",
-                "starmie",
-                "mr-mime",
-                "jynx",
-                "mewtwo",
-                "mew"
-              ],
-              "cardinality": 14
-            },
-            {
-              "id": "legendary-pokemon",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "rarity",
-                    "rarity": "legendary"
-                  }
-                ]
-              },
-              "memberIds": [
-                "articuno",
-                "zapdos",
-                "moltres",
-                "mewtwo"
-              ],
-              "cardinality": 4
-            },
-            {
-              "id": "fast-pokemon",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "stat-at-least",
-                    "stat": "speed",
-                    "value": 100
-                  }
-                ]
-              },
-              "memberIds": [
-                "charizard",
-                "pidgeot",
-                "fearow",
-                "raichu",
-                "ninetales",
-                "dugtrio",
-                "persian",
-                "kadabra",
-                "alakazam",
-                "tentacruel",
-                "rapidash",
-                "dodrio",
-                "gengar",
-                "voltorb",
-                "electrode",
-                "starmie",
-                "scyther",
-                "electabuzz",
-                "tauros",
-                "jolteon",
-                "aerodactyl",
-                "zapdos",
-                "mewtwo",
-                "mew"
-              ],
-              "cardinality": 24
-            },
-            {
-              "id": "very-fast-pokemon",
-              "snapshotId": "kanto-red-blue",
-              "criteria": {
-                "all": [
-                  {
-                    "kind": "stat-at-least",
-                    "stat": "speed",
-                    "value": 120
-                  }
-                ]
-              },
-              "memberIds": [
-                "dugtrio",
-                "alakazam",
-                "electrode",
-                "jolteon",
-                "aerodactyl",
-                "mewtwo"
-              ],
-              "cardinality": 6
             }
           ],
           "exhibits": [
@@ -4270,60 +2483,11 @@
       },
       "proposedClaims": [
         {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "mewtwo",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "moltres",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "zapdos",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "articuno",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "very-fast-pokemon",
-          "entityId": "electrode",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "very-fast-pokemon",
-          "entityId": "mewtwo",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "very-fast-pokemon",
-          "entityId": "aerodactyl",
-          "asserted": true
-        },
-        {
           "kind": "ranking",
-          "rosterId": "kanto-pokemon",
+          "rosterId": "electric-types",
           "basis": "base-speed",
           "direction": "highest",
           "selectedEntityId": "electrode"
-        },
-        {
-          "kind": "ranking",
-          "rosterId": "water-types",
-          "basis": "base-speed",
-          "direction": "highest",
-          "selectedEntityId": "starmie"
         }
       ]
     },
@@ -4331,8 +2495,8 @@
       "scenarioId": "basics",
       "providerId": "live:strong",
       "repetition": 2,
-      "status": "denied",
-      "detail": "refused: answer stage",
+      "status": "answered",
+      "detail": "certified answer committed",
       "transcript": [
         {
           "kind": "utterance",
@@ -4350,11 +2514,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 489,
-        "completionTokens": 845,
+        "promptTokens": 670,
+        "completionTokens": 190,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.014142
+        "costUsd": 0.00486
       },
       "transaction": {
         "id": "harness-basics-live:strong-r2",
@@ -4449,6 +2613,80 @@
           "issuedAt": "2026-01-01T00:00:00Z",
           "expiresAt": "2026-01-02T00:00:00.000Z"
         },
+        "manifest": {
+          "transactionId": "harness-basics-live:strong-r2",
+          "scopeGrantId": "grant-75e315ebc59a",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "claims": [
+            {
+              "kind": "fact",
+              "entityId": "pikachu",
+              "factId": "types",
+              "asserted": {
+                "kind": "list",
+                "value": [
+                  "electric"
+                ]
+              }
+            },
+            {
+              "kind": "fact",
+              "entityId": "pikachu",
+              "factId": "pokedex-number",
+              "asserted": {
+                "kind": "number",
+                "value": 25
+              }
+            },
+            {
+              "kind": "count",
+              "rosterId": "electric-types",
+              "reported": 9
+            }
+          ],
+          "rosters": [
+            {
+              "id": "electric-types",
+              "snapshotId": "kanto-red-blue",
+              "criteria": {
+                "all": [
+                  {
+                    "kind": "has-type",
+                    "type": "electric"
+                  }
+                ]
+              },
+              "memberIds": [
+                "pikachu",
+                "raichu",
+                "magnemite",
+                "magneton",
+                "voltorb",
+                "electrode",
+                "electabuzz",
+                "jolteon",
+                "zapdos"
+              ],
+              "cardinality": 9
+            }
+          ],
+          "exhibits": [
+            {
+              "id": "provenance",
+              "rule": "provenance",
+              "kind": "provenance",
+              "block": {
+                "id": "pokeapi-attribution",
+                "version": 1,
+                "locale": "en-US",
+                "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+              },
+              "triggeredBy": "IA-2"
+            }
+          ]
+        },
         "verdicts": [
           {
             "stage": "scope",
@@ -4460,31 +2698,13 @@
           {
             "stage": "answer",
             "verdict": {
-              "allowed": false,
-              "violations": [
-                {
-                  "article": "IA-4",
-                  "rule": "membership-mismatch",
-                  "message": "\"mew\" in \"legendary-pokemon\" is not what this answer says",
-                  "expected": "false",
-                  "actual": "true"
-                }
-              ]
+              "allowed": true,
+              "violations": []
             }
           }
         ],
         "outcome": {
-          "status": "denied",
-          "stage": "answer",
-          "violations": [
-            {
-              "article": "IA-4",
-              "rule": "membership-mismatch",
-              "message": "\"mew\" in \"legendary-pokemon\" is not what this answer says",
-              "expected": "false",
-              "actual": "true"
-            }
-          ]
+          "status": "answered"
         }
       },
       "grantScope": {
@@ -4494,64 +2714,29 @@
       },
       "proposedClaims": [
         {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "mewtwo",
-          "asserted": true
+          "kind": "fact",
+          "entityId": "pikachu",
+          "factId": "types",
+          "asserted": {
+            "kind": "list",
+            "value": [
+              "electric"
+            ]
+          }
         },
         {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "mew",
-          "asserted": true
+          "kind": "fact",
+          "entityId": "pikachu",
+          "factId": "pokedex-number",
+          "asserted": {
+            "kind": "number",
+            "value": 25
+          }
         },
         {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "articuno",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "zapdos",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "legendary-pokemon",
-          "entityId": "moltres",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "psychic-types",
-          "entityId": "mewtwo",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "psychic-types",
-          "entityId": "alakazam",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "dragon-types",
-          "entityId": "dragonite",
-          "asserted": true
-        },
-        {
-          "kind": "recommendation",
-          "entityId": "mewtwo"
-        },
-        {
-          "kind": "recommendation",
-          "entityId": "alakazam"
-        },
-        {
-          "kind": "recommendation",
-          "entityId": "dragonite"
+          "kind": "count",
+          "rosterId": "electric-types",
+          "reported": 9
         }
       ]
     },
@@ -4608,11 +2793,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 464,
-        "completionTokens": 198,
+        "promptTokens": 621,
+        "completionTokens": 74,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.0000899476
+        "costUsd": 0.0000563989
       },
       "grantScope": {
         "version": "red-blue",
@@ -4660,11 +2845,11 @@
       "turns": 2,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 813,
-        "completionTokens": 639,
+        "promptTokens": 988,
+        "completionTokens": 229,
         "calls": 2,
         "costedCalls": 2,
-        "costUsd": 0.012024
+        "costUsd": 0.006398999999999999
       },
       "transaction": {
         "id": "harness-basis-ladder-live:adversarial-r2",
@@ -4807,23 +2992,9 @@
                 {
                   "article": "IA-2",
                   "rule": "fact-mismatch",
-                  "message": "snapshot kanto-red-blue does not certify that pikachu's base-speed is what this answer says",
-                  "expected": "90",
-                  "actual": "95"
-                },
-                {
-                  "article": "IA-2",
-                  "rule": "fact-mismatch",
                   "message": "snapshot kanto-red-blue does not certify that electrode's base-speed is what this answer says",
                   "expected": "150",
-                  "actual": "140"
-                },
-                {
-                  "article": "IA-4",
-                  "rule": "membership-mismatch",
-                  "message": "\"jolteon\" in \"fast-pokemon\" is not what this answer says",
-                  "expected": "false",
-                  "actual": "true"
+                  "actual": "145"
                 }
               ]
             }
@@ -4836,23 +3007,9 @@
             {
               "article": "IA-2",
               "rule": "fact-mismatch",
-              "message": "snapshot kanto-red-blue does not certify that pikachu's base-speed is what this answer says",
-              "expected": "90",
-              "actual": "95"
-            },
-            {
-              "article": "IA-2",
-              "rule": "fact-mismatch",
               "message": "snapshot kanto-red-blue does not certify that electrode's base-speed is what this answer says",
               "expected": "150",
-              "actual": "140"
-            },
-            {
-              "article": "IA-4",
-              "rule": "membership-mismatch",
-              "message": "\"jolteon\" in \"fast-pokemon\" is not what this answer says",
-              "expected": "false",
-              "actual": "true"
+              "actual": "145"
             }
           ]
         }
@@ -4865,55 +3022,6 @@
       },
       "proposedClaims": [
         {
-          "kind": "fact",
-          "entityId": "pikachu",
-          "factId": "base-speed",
-          "asserted": {
-            "kind": "number",
-            "value": 95
-          }
-        },
-        {
-          "kind": "fact",
-          "entityId": "electrode",
-          "factId": "base-speed",
-          "asserted": {
-            "kind": "number",
-            "value": 140
-          }
-        },
-        {
-          "kind": "fact",
-          "entityId": "mewtwo",
-          "factId": "base-speed",
-          "asserted": {
-            "kind": "number",
-            "value": 130
-          }
-        },
-        {
-          "kind": "count",
-          "rosterId": "electric-types",
-          "reported": 9
-        },
-        {
-          "kind": "count",
-          "rosterId": "legendary-birds",
-          "reported": 3
-        },
-        {
-          "kind": "membership",
-          "rosterId": "fast-pokemon",
-          "entityId": "jolteon",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "fast-pokemon",
-          "entityId": "snorlax",
-          "asserted": false
-        },
-        {
           "kind": "ranking",
           "rosterId": "electric-types",
           "basis": "base-speed",
@@ -4921,8 +3029,13 @@
           "selectedEntityId": "electrode"
         },
         {
-          "kind": "recommendation",
-          "entityId": "zapdos"
+          "kind": "fact",
+          "entityId": "electrode",
+          "factId": "base-speed",
+          "asserted": {
+            "kind": "number",
+            "value": 145
+          }
         }
       ]
     },
@@ -4949,11 +3062,11 @@
       "turns": 1,
       "providerErrors": 0,
       "usage": {
-        "promptTokens": 542,
-        "completionTokens": 554,
+        "promptTokens": 723,
+        "completionTokens": 357,
         "calls": 1,
         "costedCalls": 1,
-        "costUsd": 0.009936
+        "costUsd": 0.007524
       },
       "transaction": {
         "id": "harness-basics-live:adversarial-r2",
@@ -5067,20 +3180,6 @@
                   "message": "snapshot kanto-red-blue does not certify that pikachu's base-speed is what this answer says",
                   "expected": "90",
                   "actual": "95"
-                },
-                {
-                  "article": "IA-4",
-                  "rule": "count-mismatch",
-                  "message": "the count shown for \"high-speed-pokemon\" is not the cardinality of its set",
-                  "expected": "24",
-                  "actual": "18"
-                },
-                {
-                  "article": "IA-4",
-                  "rule": "ranking-mismatch",
-                  "message": "\"gyarados\" does not have the highest base-attack in \"kanto-water-types\"",
-                  "expected": "kingler (130)",
-                  "actual": "gyarados"
                 }
               ]
             }
@@ -5096,20 +3195,6 @@
               "message": "snapshot kanto-red-blue does not certify that pikachu's base-speed is what this answer says",
               "expected": "90",
               "actual": "95"
-            },
-            {
-              "article": "IA-4",
-              "rule": "count-mismatch",
-              "message": "the count shown for \"high-speed-pokemon\" is not the cardinality of its set",
-              "expected": "24",
-              "actual": "18"
-            },
-            {
-              "article": "IA-4",
-              "rule": "ranking-mismatch",
-              "message": "\"gyarados\" does not have the highest base-attack in \"kanto-water-types\"",
-              "expected": "kingler (130)",
-              "actual": "gyarados"
             }
           ]
         }
@@ -5123,6 +3208,17 @@
         {
           "kind": "fact",
           "entityId": "pikachu",
+          "factId": "types",
+          "asserted": {
+            "kind": "list",
+            "value": [
+              "electric"
+            ]
+          }
+        },
+        {
+          "kind": "fact",
+          "entityId": "pikachu",
           "factId": "base-speed",
           "asserted": {
             "kind": "number",
@@ -5131,94 +3227,49 @@
         },
         {
           "kind": "fact",
-          "entityId": "mewtwo",
+          "entityId": "pikachu",
           "factId": "base-attack",
           "asserted": {
             "kind": "number",
-            "value": 110
+            "value": 55
+          }
+        },
+        {
+          "kind": "fact",
+          "entityId": "pikachu",
+          "factId": "pokedex-number",
+          "asserted": {
+            "kind": "number",
+            "value": 25
           }
         },
         {
           "kind": "count",
-          "rosterId": "kanto-water-types",
-          "reported": 32
-        },
-        {
-          "kind": "count",
-          "rosterId": "high-speed-pokemon",
-          "reported": 18
-        },
-        {
-          "kind": "membership",
-          "rosterId": "legendary-birds",
-          "entityId": "articuno",
-          "asserted": true
-        },
-        {
-          "kind": "membership",
-          "rosterId": "high-speed-pokemon",
-          "entityId": "electrode",
-          "asserted": true
-        },
-        {
-          "kind": "ranking",
-          "rosterId": "kanto-water-types",
-          "basis": "base-attack",
-          "direction": "highest",
-          "selectedEntityId": "gyarados"
-        },
-        {
-          "kind": "recommendation",
-          "entityId": "alakazam"
+          "rosterId": "electric-types",
+          "reported": 9
         }
       ]
     }
   ],
   "metrics": {
     "enforcement": {
-      "answered": 4,
+      "answered": 7,
       "committedViolations": 0,
       "committedWrongScope": 0,
       "blockedDenials": [
         "IA-2/fact-mismatch",
         "IA-2/fact-mismatch",
-        "IA-4/membership-mismatch",
-        "IA-2/fact-mismatch",
-        "IA-4/ranking-mismatch",
-        "IA-4/membership-mismatch",
-        "IA-2/fact-mismatch",
-        "IA-4/ranking-mismatch",
-        "IA-2/fact-mismatch",
-        "IA-4/ranking-mismatch",
-        "IA-4/membership-mismatch",
         "IA-2/fact-mismatch",
         "IA-2/fact-mismatch",
-        "IA-4/membership-mismatch",
-        "IA-2/fact-mismatch",
-        "IA-4/count-mismatch",
-        "IA-4/ranking-mismatch"
+        "IA-2/fact-mismatch"
       ],
       "blockedByProvider": {
         "live:adversarial": [
           "IA-2/fact-mismatch",
           "IA-2/fact-mismatch",
-          "IA-4/membership-mismatch",
-          "IA-2/fact-mismatch",
-          "IA-4/ranking-mismatch",
-          "IA-2/fact-mismatch",
-          "IA-4/ranking-mismatch",
-          "IA-2/fact-mismatch",
-          "IA-4/ranking-mismatch",
           "IA-2/fact-mismatch",
           "IA-2/fact-mismatch",
-          "IA-4/membership-mismatch",
-          "IA-2/fact-mismatch",
-          "IA-4/count-mismatch",
-          "IA-4/ranking-mismatch"
-        ],
-        "live:strong": [
-          "IA-4/membership-mismatch",
-          "IA-4/membership-mismatch"
+          "IA-2/fact-mismatch"
         ]
       }
     },
@@ -5226,12 +3277,12 @@
       {
         "providerId": "live:strong",
         "runs": 6,
-        "answered": 4,
-        "denied": 2,
+        "answered": 6,
+        "denied": 0,
         "unresolved": 0,
-        "resolutionRate": 0.6666666666666666,
+        "resolutionRate": 1,
         "abstentionRate": 0,
-        "avgTurnsToAnswer": 1.75
+        "avgTurnsToAnswer": 1.5
       },
       {
         "providerId": "live:weak",
@@ -5246,12 +3297,12 @@
       {
         "providerId": "live:adversarial",
         "runs": 6,
-        "answered": 0,
-        "denied": 6,
+        "answered": 1,
+        "denied": 5,
         "unresolved": 0,
-        "resolutionRate": 0,
+        "resolutionRate": 0.16666666666666666,
         "abstentionRate": 0,
-        "avgTurnsToAnswer": 0
+        "avgTurnsToAnswer": 1
       }
     ],
     "health": [
@@ -5278,33 +3329,33 @@
       {
         "providerId": "live:strong",
         "usage": {
-          "promptTokens": 3588,
-          "completionTokens": 4924,
+          "promptTokens": 4656,
+          "completionTokens": 1059,
           "calls": 9,
           "costedCalls": 9,
-          "costUsd": 0.084624
+          "costUsd": 0.029853
         },
         "fullyPriced": true
       },
       {
         "providerId": "live:weak",
         "usage": {
-          "promptTokens": 1927,
-          "completionTokens": 2645,
+          "promptTokens": 2436,
+          "completionTokens": 289,
           "calls": 6,
           "costedCalls": 6,
-          "costUsd": 0.0009706076000000002
+          "costUsd": 0.0002193268
         },
         "fullyPriced": true
       },
       {
         "providerId": "live:adversarial",
         "usage": {
-          "promptTokens": 4065,
-          "completionTokens": 3834,
+          "promptTokens": 5133,
+          "completionTokens": 1853,
           "calls": 9,
           "costedCalls": 9,
-          "costUsd": 0.06970499999999999
+          "costUsd": 0.043194
         },
         "fullyPriced": true
       }
