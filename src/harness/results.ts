@@ -49,9 +49,12 @@ function enforcementSection(metrics: Metrics): string[] {
     "",
     "Structural — the same on every model, and a non-zero is a kernel bug, not a metric.",
     "",
-    "| answers committed | committed violations | committed wrong-scope | denials the gate fired |",
-    "| ---: | ---: | ---: | ---: |",
-    `| ${enforcement.answered} | ${enforcement.committedViolations} | ${enforcement.committedWrongScope} | ${denials} |`,
+    "| answers committed | acts executed | committed violations | committed wrong-scope | unauthorized acts | denials the gate fired |",
+    "| ---: | ---: | ---: | ---: | ---: | ---: |",
+    // The `?? 0` pairs keep an artifact filed before the act path renderable;
+    // its acts columns read zero because no act could have run.
+    `| ${enforcement.answered} | ${enforcement.acted ?? 0} | ${enforcement.committedViolations} | ` +
+      `${enforcement.committedWrongScope} | ${enforcement.committedUnauthorizedActions ?? 0} | ${denials} |`,
   ];
 }
 
@@ -66,7 +69,7 @@ function usefulnessSection(metrics: Metrics): string[] {
   ];
   for (const use of metrics.usefulness) {
     lines.push(
-      `| \`${use.providerId}\` | ${use.answered}/${use.runs} (${percent(use.resolutionRate)}) | ` +
+      `| \`${use.providerId}\` | ${use.resolved ?? use.answered}/${use.runs} (${percent(use.resolutionRate)}) | ` +
         `${use.unresolved}/${use.runs} (${percent(use.abstentionRate)}) | ${use.avgTurnsToAnswer.toFixed(1)} |`,
     );
   }

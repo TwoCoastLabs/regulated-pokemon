@@ -83,7 +83,12 @@ function scopePrompt(pack: AccordPack, missing: readonly ScopeDimension[], said:
  * The whole block is part of the run artifact by design: a reader can see
  * exactly what the model was and was not told.
  */
-function answerPrompt(scope: TrainerScope, asks: readonly string[], reference: string | undefined): string {
+function answerPrompt(
+  scope: TrainerScope,
+  asks: readonly string[],
+  tools: readonly string[],
+  reference: string | undefined,
+): string {
   return [
     // Grounding, when on: the certified facts in front of the model so it reads
     // rather than recalls. Prefixed, so the contract and the question that
@@ -119,6 +124,9 @@ function answerPrompt(scope: TrainerScope, asks: readonly string[], reference: s
     '  {"kind": "membership", "rosterId": "<id>", "entityId": "<id>", "asserted": <boolean>}',
     '  {"kind": "ranking", "rosterId": "<id>", "basis": "<fact-id>", "direction": "highest"|"lowest"}  — defines a set and an ordering; the system names the winner, so name none',
     '  {"kind": "recommendation", "entityId": "<id>"}',
+    '  {"kind": "action", "tool": "<tool-id>", "entityId": "<species-id>"}  — an act you propose to perform. It is shown to the trainer and executes only on their confirmation; claim one only when the trainer asked for it.',
+    "",
+    `A <tool-id> must be one of: ${tools.join(", ")}. No other tool exists.`,
     "",
     "A <fact-id> must be one of these certified ids; no other resolves.",
     `  about a species (entityId is a species id): ${SPECIES_FACT_IDS.join(", ")}`,
@@ -195,7 +203,12 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
   const reference = input.grounded ? certifiedReference(context.registry) : undefined;
   const request: CompletionRequest = {
     purpose: "answer",
-    prompt: answerPrompt(context.grant.scope, trainerText(input.transcript), reference),
+    prompt: answerPrompt(
+      context.grant.scope,
+      trainerText(input.transcript),
+      context.pack.actions.map((action) => action.id),
+      reference,
+    ),
     hint: { scenarioId, scope: context.grant.scope },
     // The same contract the prose describes, in a form a provider can enforce.
     // Whether it is enforced is the provider's business, not the advisor's.

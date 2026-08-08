@@ -33,12 +33,14 @@
 
 import { createHash } from "node:crypto";
 
-import type { Verdict, Violation } from "./contracts.js";
+import { authorizeAction } from "./action.js";
+import type { ActionGrant, AnswerManifest, Claim, Verdict, Violation } from "./contracts.js";
 import { type ManifestContext, verifyManifest } from "./manifest.js";
 import type { AccordPack } from "./pack.js";
+import { attestRender, planRender } from "./render.js";
 import type { CertifiedRegistry } from "./registry.js";
 import { resolveScope, type ScopeContext } from "./scope.js";
-import type { StageVerdict, Transaction } from "./transaction.js";
+import { actionClaims, type StageVerdict, type Transaction } from "./transaction.js";
 import { AccordError, verdictOf, violation } from "./violation.js";
 
 /**
@@ -144,12 +146,130 @@ export function replayTransaction(world: ReplayWorld, record: RecordedTransactio
     };
   }
 
-  return {
+  const committed: Omit<Transaction, "outcome"> = {
     ...base,
     grant: scope.grant,
     manifest: record.manifest,
     verdicts: [scopeVerdict, { stage: "answer", verdict: verdictOf([]) }],
-    outcome: { status: "answered" },
+  };
+
+  // The act path is re-walked exactly when the record says it was walked: the
+  // recorded moments are the evidence the transport offered one. A record that
+  // never entered it replays to "answered" whatever its claims propose,
+  // because an act that was never rendered is an act that never happened.
+  const acts = actionClaims(record.manifest);
+  if (record.renderedAt === undefined || acts.length === 0) {
+    return { ...committed, outcome: { status: "answered" } };
+  }
+  return replayActPath(context, record, record.manifest, record.renderedAt, committed, acts);
+}
+
+/**
+ * The act path, re-executed from the record.
+ *
+ * Mirrors `runActPath` with the same substitution `replayTransaction` makes for
+ * the manifest: the two inputs nothing deterministic produced — the artifact
+ * (an untrusted renderer drew it) and the confirmation (a trainer gave it) —
+ * are read from the record, and everything derived from them (the plan, the
+ * affidavit, every grant) is derived again and compared by the caller's digest.
+ */
+function replayActPath(
+  context: ManifestContext,
+  record: RecordedTransaction,
+  manifest: AnswerManifest,
+  renderedAt: string,
+  committed: Omit<Transaction, "outcome">,
+  acts: readonly Extract<Claim, { kind: "action" }>[],
+): Transaction {
+  const base: Omit<Transaction, "outcome"> = {
+    ...committed,
+    renderedAt,
+    ...(record.authorizedAt === undefined ? {} : { authorizedAt: record.authorizedAt }),
+    ...(record.executedAt === undefined ? {} : { executedAt: record.executedAt }),
+  };
+
+  const planned = planRender(context, manifest);
+  if (!planned.ok) {
+    return {
+      ...base,
+      verdicts: [...committed.verdicts, { stage: "render", verdict: verdictOf(planned.violations) }],
+      outcome: { status: "denied", stage: "render", violations: planned.violations },
+    };
+  }
+
+  if (record.artifact === undefined) {
+    throw new AccordError([
+      violation("IA-10", "record-incomplete", `cannot replay ${record.id}: the page was planned but no artifact is on file`, {
+        expected: "the artifact the trainer was shown",
+        actual: "no artifact recorded",
+      }),
+    ]);
+  }
+
+  const attested = attestRender(context, manifest, record.artifact, renderedAt);
+  if (!attested.ok) {
+    return {
+      ...base,
+      artifact: record.artifact,
+      verdicts: [...committed.verdicts, { stage: "render", verdict: verdictOf(attested.violations) }],
+      outcome: { status: "denied", stage: "render", violations: attested.violations },
+    };
+  }
+
+  if (record.confirmation === undefined) {
+    return {
+      ...base,
+      artifact: record.artifact,
+      affidavit: attested.value,
+      outcome: { status: "declined" },
+    };
+  }
+
+  if (record.authorizedAt === undefined || record.executedAt === undefined) {
+    throw new AccordError([
+      violation("IA-10", "record-incomplete", `cannot replay ${record.id}: the act was confirmed but its moments are not on file`, {
+        expected: "authorizedAt and executedAt for the confirmed act",
+        actual: "moments missing from the record",
+      }),
+    ]);
+  }
+
+  const grants: ActionGrant[] = [];
+  const violations: Violation[] = [];
+  for (const claim of acts) {
+    const authorized = authorizeAction(context, {
+      manifest,
+      artifact: record.artifact,
+      affidavit: attested.value,
+      confirmation: record.confirmation,
+      tool: claim.tool,
+      entityId: claim.entityId,
+      authorizedAt: record.authorizedAt,
+      executedAt: record.executedAt,
+    });
+    if (authorized.ok) grants.push(authorized.value);
+    else violations.push(...authorized.violations);
+  }
+
+  if (violations.length > 0) {
+    return {
+      ...base,
+      artifact: record.artifact,
+      affidavit: attested.value,
+      confirmation: record.confirmation,
+      verdicts: [...committed.verdicts, { stage: "action", verdict: verdictOf(violations) }],
+      outcome: { status: "denied", stage: "action", violations },
+    };
+  }
+
+  return {
+    ...base,
+    artifact: record.artifact,
+    affidavit: attested.value,
+    confirmation: record.confirmation,
+    actionGrants: grants,
+    verdicts: [...committed.verdicts, { stage: "action", verdict: verdictOf([]) }],
+    outcome: { status: "acted" },
   };
 }
 
@@ -235,25 +355,55 @@ function checkPins(world: ReplayWorld, record: RecordedTransaction): Violation[]
 /**
  * The record carries every input its verdict rested on.
  *
- * The one input that is not derivable from the transcript is the manifest, and
- * it is load-bearing exactly when the exchange got far enough to judge an
- * answer — whether that answer was released or refused at the answer stage. A
- * record that reached either without keeping the manifest is a verdict nobody
- * can re-derive.
+ * Three inputs are not derivable from the transcript, and each is load-bearing
+ * for the outcomes that rest on it: the **manifest** whenever an answer was
+ * judged, the **artifact** whenever a page was shown (it came from an untrusted
+ * renderer nothing can re-run), and the **confirmation** whenever an act was
+ * judged (it came from a trainer). A record that reached such an outcome
+ * without keeping the input is a verdict nobody can re-derive. The moments the
+ * act path ran at are inputs too — supplied to the kernel, so kept by it.
  */
 function checkComplete(record: RecordedTransaction): Violation[] {
+  const violations: Violation[] = [];
+  const { outcome } = record;
+  const missing = (message: string, expected: string): void => {
+    violations.push(
+      violation("IA-10", "record-incomplete", `record ${record.id} ${message}`, { expected, actual: "not recorded" }),
+    );
+  };
+
+  const deniedAt = outcome.status === "denied" ? outcome.stage : undefined;
   const judgedAnAnswer =
-    record.outcome.status === "answered" ||
-    (record.outcome.status === "denied" && record.outcome.stage === "answer");
+    outcome.status === "answered" ||
+    outcome.status === "acted" ||
+    outcome.status === "declined" ||
+    deniedAt === "answer" ||
+    deniedAt === "render" ||
+    deniedAt === "action";
   if (judgedAnAnswer && record.manifest === undefined) {
-    return [
-      violation("IA-10", "record-incomplete", `record ${record.id} reached an answer verdict but kept no manifest to replay`, {
-        expected: "the manifest the answer verdict was reached over",
-        actual: "no manifest recorded",
-      }),
-    ];
+    missing("reached an answer verdict but kept no manifest to replay", "the manifest the answer verdict was reached over");
   }
-  return [];
+
+  const walkedActPath =
+    outcome.status === "acted" || outcome.status === "declined" || deniedAt === "render" || deniedAt === "action";
+  if (walkedActPath && record.renderedAt === undefined) {
+    missing("walked the act path but does not say when", "the moments the act path ran at");
+  }
+
+  const showedAPage = outcome.status === "acted" || outcome.status === "declined" || deniedAt === "action";
+  if (showedAPage && record.artifact === undefined) {
+    missing("says a page was shown but kept no artifact", "the artifact the trainer was shown");
+  }
+
+  const judgedAnAct = outcome.status === "acted" || deniedAt === "action";
+  if (judgedAnAct && record.confirmation === undefined) {
+    missing("reached an act verdict but kept no confirmation", "the trainer's confirmation of the artifact");
+  }
+  if (judgedAnAct && (record.authorizedAt === undefined || record.executedAt === undefined)) {
+    missing("reached an act verdict but not the act's moments", "authorizedAt and executedAt");
+  }
+
+  return violations;
 }
 
 // --- bit-for-bit ------------------------------------------------------------

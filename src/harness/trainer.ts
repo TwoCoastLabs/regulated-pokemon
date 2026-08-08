@@ -16,7 +16,8 @@
  * rather than assumed away.
  */
 
-import type { ScopeCandidate, ScopeDimension, ScopeEvent, TrainerScope } from "../kernel/contracts.js";
+import type { ConfirmationEvent, ScopeCandidate, ScopeDimension, ScopeEvent, TrainerScope } from "../kernel/contracts.js";
+import { type DomElement, walkArtifact } from "../kernel/dom.js";
 import { proposalDigest } from "./advisor.js";
 
 /** True only if the candidate agrees with ground truth on every dimension it
@@ -44,5 +45,53 @@ export function respondToProposal(
     proposalId: proposal.id,
     candidateDigest: proposalDigest(proposal),
     decision: candidateIsTrue(proposal.candidate, truth) ? "confirm" : "reject",
+  };
+}
+
+/** The act a trainer walked into the exchange wanting done, when they did. */
+export interface TrainerAsk {
+  tool: string;
+  entityId: string;
+}
+
+/**
+ * The trainer's honest reply to a rendered page proposing an act: confirm when
+ * the page proposes exactly what they asked for, decline otherwise.
+ *
+ * Three disciplines, each a hard-won lesson made behaviour:
+ *
+ * 1. **They read the page, not the paperwork.** Everything checked here comes
+ *    from their own walk of the artifact — the acts it visibly proposes, the
+ *    transaction it says it is, the digest of what they can actually see. The
+ *    affidavit is the transport's evidence for the kernel, not the trainer's;
+ *    a trainer who trusted it would be confirming a description of a page.
+ * 2. **Every pinned dimension is checked, not just the interesting one.** The
+ *    page must visibly propose the asked act *and nothing else*: an extra act
+ *    riding along on a page the trainer confirms would commit invisibly under
+ *    cover of the right one — the phase-3 confirmation trap, again, on a page.
+ * 3. **No ask, no consent.** On a question-only scenario any proposed act is
+ *    declined; an honest trainer does not confirm surprises.
+ */
+export function respondToArtifact(
+  artifact: DomElement,
+  ask: TrainerAsk | undefined,
+  at: string,
+): ConfirmationEvent | null {
+  const seen = walkArtifact(artifact);
+  const proposed = seen.units.filter((unit) => unit.visible && unit.id.startsWith("action:")).map((unit) => unit.id);
+
+  if (ask === undefined) return null;
+  const wanted = `action:${ask.tool}:${ask.entityId}`;
+  if (proposed.length !== 1 || proposed[0] !== wanted) return null;
+
+  const transactionId = seen.transactionId;
+  if (transactionId === undefined) return null;
+
+  return {
+    id: `confirmation-${transactionId}`,
+    transactionId,
+    source: "trainer",
+    artifactDigest: seen.digest,
+    confirmedAt: at,
   };
 }

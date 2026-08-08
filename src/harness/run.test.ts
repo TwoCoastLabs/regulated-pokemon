@@ -11,6 +11,7 @@ const scenario = (id: string): Scenario => SCENARIOS.find((entry) => entry.id ==
 
 const LADDER = scenario("basis-ladder");
 const BASICS = scenario("basics");
+const RELEASE = scenario("release-consent");
 
 describe("runScenario — the three landing outcomes", () => {
   it("reaches a certified answer when the model interprets and answers well", async () => {
@@ -27,6 +28,29 @@ describe("runScenario — the three landing outcomes", () => {
     const run = await runScenario(world, BASICS, provider("scripted:strong"));
     expect(run.status).toBe("answered");
     expect(run.turns).toBe(1);
+  });
+
+  it("acts when the trainer asked for the act and confirmed the page", async () => {
+    const run = await runScenario(world, RELEASE, provider("scripted:strong"));
+    expect(run.status).toBe("acted");
+    expect(run.transaction?.outcome.status).toBe("acted");
+    expect(run.transaction?.actionGrants).toHaveLength(1);
+    expect(run.transaction?.confirmation?.source).toBe("trainer");
+  });
+
+  it("ends unresolved when the model aims the act at the wrong Pokémon — the trainer declines", async () => {
+    // The kernel has nothing to refuse here: releasing Pikachu is a perfectly
+    // certifiable act. It is the trainer who never asked for it, and their
+    // declined confirmation is what stands between a well-formed page and an
+    // execution. Nothing runs, and the abstention is recorded as one.
+    const wrongTarget = new ScriptedProvider("scripted:wrong-target", () =>
+      JSON.stringify({ rosters: [], claims: [{ kind: "action", tool: "release", entityId: "pikachu" }] }),
+    );
+    const run = await runScenario(world, RELEASE, wrongTarget);
+    expect(run.status).toBe("unresolved");
+    expect(run.detail).toContain("declined");
+    expect(run.transaction?.outcome.status).toBe("declined");
+    expect(run.transaction?.actionGrants).toBeUndefined();
   });
 
   it("abstains rather than guessing when it cannot interpret the wording", async () => {

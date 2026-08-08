@@ -12,25 +12,34 @@
  * in order and writes down what each said; it holds no rule of its own, and
  * there is no verdict here that the kernel would not have reached without it.
  * In particular the stage verdicts sit side by side and are never fused into
- * one. Composing scope, render, confirmation and action into a single proof
- * identity is phase 5's work, and doing half of it here would leave phase 5
- * nothing to prove.
+ * one. Where the answer proposes an act, the seam continues through the chain
+ * phase 5 proved — render, attest, the trainer's confirmation, authorization —
+ * calling that phase's entry points exactly as a transport would; the one
+ * proof identity is still `verifyAction`'s, reached through `authorizeAction`,
+ * never re-derived here.
  *
  * Fail-closed is preserved exactly as each stage states it. A clarification is
  * a clarification and a denial is a denial: an unestablished scope produces a
  * question, not a violation, and nothing here smooths one into the other.
  */
 
+import { authorizeAction } from "./action.js";
 import type {
+  ActionGrant,
   AnswerManifest,
+  Claim,
+  ConfirmationEvent,
+  RenderAffidavit,
   ScopeDimension,
   ScopeGrant,
   ScopeTranscript,
   Verdict,
   Violation,
 } from "./contracts.js";
+import type { DomElement } from "./dom.js";
 import { compileManifest, type ManifestContext, type ManifestDraft } from "./manifest.js";
 import type { AccordPack } from "./pack.js";
+import { attestRender, planRender, type RenderPlan } from "./render.js";
 import type { CertifiedRegistry } from "./registry.js";
 import { resolveScope, type ScopeContext, type ScopeDerivation } from "./scope.js";
 import { verdictOf } from "./violation.js";
@@ -45,6 +54,28 @@ import { verdictOf } from "./violation.js";
  * same verification a hostile manifest would face.
  */
 export type AnswerPlan = (context: ManifestContext, transactionId: string) => ManifestDraft;
+
+/**
+ * The transport half of the act path, injected exactly as the plan is.
+ *
+ * Neither function is trusted. The renderer is Article VI's untrusted half —
+ * whatever page it returns is walked and attested from the DOM, never taken at
+ * its word. The confirmation is the trainer's and only the trainer's: the seam
+ * asks, records what came back, and lets `authorizeAction` judge it; a `null`
+ * is the trainer declining, which ends the act and nothing else — the certified
+ * answer stands, and nothing executes.
+ *
+ * The three moments are supplied, never clocked (IA-10), and they are the act
+ * path's own: rendered, then authorised, then executed, each checked against
+ * the confirmation's own timestamp by phase 5's ordering rules.
+ */
+export interface ActTransport {
+  render: (pack: AccordPack, plan: RenderPlan) => DomElement;
+  confirm: (artifact: DomElement, affidavit: RenderAffidavit) => ConfirmationEvent | null;
+  renderedAt: string;
+  authorizedAt: string;
+  executedAt: string;
+}
 
 export interface TransactionInput {
   id: string;
@@ -64,29 +95,46 @@ export interface TransactionInput {
   /** Dimensions this exchange needs. A ranking answer also needs a basis. */
   required?: readonly ScopeDimension[];
   plan: AnswerPlan;
+  /**
+   * How the answer becomes a page and the page becomes consent, when the plan
+   * proposes an act. Absent, an answer whose claims include an act is still
+   * compiled, verified and committed — but the act itself never renders and
+   * never executes, exactly as a transport that stops at "answered" behaves.
+   */
+  act?: ActTransport;
 }
+
+/** The stages a transaction can reach, in the order it reaches them. */
+export type TransactionStage = "scope" | "answer" | "render" | "action";
 
 /** One stage's ruling, kept under the stage that reached it. */
 export interface StageVerdict {
-  stage: "scope" | "answer";
+  stage: TransactionStage;
   verdict: Verdict;
 }
 
 /**
- * How the exchange ended. Three states, and the middle one is why this is a
- * union rather than a verdict: not knowing the trainer's scope is a question
- * to ask, and reporting it as a refusal would be the fail-closed theatre the
- * controls exist to catch.
+ * How the exchange ended. The non-terminal states are why this is a union
+ * rather than a verdict: not knowing the trainer's scope is a question to ask,
+ * and a trainer declining an act is a choice honoured — reporting either as a
+ * refusal would be the fail-closed theatre the controls exist to catch.
+ *
+ * `acted` is `answered` plus the whole phase-5 chain: the page attested, the
+ * trainer's confirmation of that exact page, and a grant per act, each minted
+ * by `authorizeAction` and so already submitted to `verifyAction`. `declined`
+ * commits the answer and executes nothing.
  */
 export type TransactionOutcome =
   | { status: "answered" }
+  | { status: "acted" }
+  | { status: "declined" }
   | {
       status: "clarifying";
       asking: ScopeDimension;
       question: string;
       missing: readonly ScopeDimension[];
     }
-  | { status: "denied"; stage: "scope" | "answer"; violations: readonly Violation[] };
+  | { status: "denied"; stage: TransactionStage; violations: readonly Violation[] };
 
 export interface Transaction {
   id: string;
@@ -113,6 +161,21 @@ export interface Transaction {
   verdicts: readonly StageVerdict[];
   grant?: ScopeGrant;
   manifest?: AnswerManifest;
+  /**
+   * The act path's record, present exactly when the exchange entered it. The
+   * artifact and the confirmation are the two inputs a replay cannot re-derive
+   * — the renderer is untrusted and the trainer is a person — so both travel
+   * with the record; the affidavit and the grants are re-derived and compared.
+   */
+  artifact?: DomElement;
+  affidavit?: RenderAffidavit;
+  confirmation?: ConfirmationEvent;
+  actionGrants?: readonly ActionGrant[];
+  /** The act path's moments, recorded whenever it was entered — including when
+   * it refused — so a replay knows to walk the same path (IA-10). */
+  renderedAt?: string;
+  authorizedAt?: string;
+  executedAt?: string;
   outcome: TransactionOutcome;
 }
 
@@ -188,11 +251,113 @@ export function runTransaction(input: TransactionInput): Transaction {
     };
   }
 
-  return {
+  const committed: Omit<Transaction, "outcome"> = {
     ...record,
     grant: scope.grant,
     manifest: compiled.value,
     verdicts: [scopeVerdict, { stage: "answer", verdict: verdictOf([]) }],
-    outcome: { status: "answered" },
+  };
+
+  const acts = actionClaims(compiled.value);
+  if (input.act === undefined || acts.length === 0) {
+    return { ...committed, outcome: { status: "answered" } };
+  }
+  return runActPath(input.act, context, compiled.value, committed, acts);
+}
+
+/** The acts a certified answer proposes — the claims the chain is owed for. */
+export function actionClaims(manifest: AnswerManifest): readonly Extract<Claim, { kind: "action" }>[] {
+  return manifest.claims.filter((claim): claim is Extract<Claim, { kind: "action" }> => claim.kind === "action");
+}
+
+/**
+ * The certified answer proposed an act, so the seam keeps going: plan the page,
+ * let the untrusted renderer draw it, attest what it actually shows, put it to
+ * the trainer, and — only on their confirmation — submit the whole chain to
+ * `authorizeAction`, once per act. Every step is a phase-5 entry point; the
+ * seam contributes order and record-keeping, no judgement of its own.
+ */
+function runActPath(
+  act: ActTransport,
+  context: ManifestContext,
+  manifest: AnswerManifest,
+  committed: Omit<Transaction, "outcome">,
+  acts: readonly Extract<Claim, { kind: "action" }>[],
+): Transaction {
+  const base: Omit<Transaction, "outcome"> = {
+    ...committed,
+    renderedAt: act.renderedAt,
+    authorizedAt: act.authorizedAt,
+    executedAt: act.executedAt,
+  };
+
+  const planned = planRender(context, manifest);
+  if (!planned.ok) {
+    return {
+      ...base,
+      verdicts: [...committed.verdicts, { stage: "render", verdict: verdictOf(planned.violations) }],
+      outcome: { status: "denied", stage: "render", violations: planned.violations },
+    };
+  }
+
+  const artifact = act.render(context.pack, planned.value);
+  const attested = attestRender(context, manifest, artifact, act.renderedAt);
+  if (!attested.ok) {
+    return {
+      ...base,
+      artifact,
+      verdicts: [...committed.verdicts, { stage: "render", verdict: verdictOf(attested.violations) }],
+      outcome: { status: "denied", stage: "render", violations: attested.violations },
+    };
+  }
+
+  const confirmation = act.confirm(artifact, attested.value);
+  if (confirmation === null) {
+    // Not a denial and not dressed up as one: the trainer looked at the page
+    // and said no. The certified answer stands; the act does not happen.
+    return {
+      ...base,
+      artifact,
+      affidavit: attested.value,
+      outcome: { status: "declined" },
+    };
+  }
+
+  const grants: ActionGrant[] = [];
+  const violations: Violation[] = [];
+  for (const claim of acts) {
+    const authorized = authorizeAction(context, {
+      manifest,
+      artifact,
+      affidavit: attested.value,
+      confirmation,
+      tool: claim.tool,
+      entityId: claim.entityId,
+      authorizedAt: act.authorizedAt,
+      executedAt: act.executedAt,
+    });
+    if (authorized.ok) grants.push(authorized.value);
+    else violations.push(...authorized.violations);
+  }
+
+  if (violations.length > 0) {
+    return {
+      ...base,
+      artifact,
+      affidavit: attested.value,
+      confirmation,
+      verdicts: [...committed.verdicts, { stage: "action", verdict: verdictOf(violations) }],
+      outcome: { status: "denied", stage: "action", violations },
+    };
+  }
+
+  return {
+    ...base,
+    artifact,
+    affidavit: attested.value,
+    confirmation,
+    actionGrants: grants,
+    verdicts: [...committed.verdicts, { stage: "action", verdict: verdictOf([]) }],
+    outcome: { status: "acted" },
   };
 }
