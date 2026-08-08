@@ -79,8 +79,10 @@ describe("runModels — repetitions", () => {
 const CLEAN: Metrics = {
   enforcement: {
     answered: 1,
+    acted: 0,
     committedViolations: 0,
     committedWrongScope: 0,
+    committedUnauthorizedActions: 0,
     blockedDenials: ["IA-2/x"],
     blockedByProvider: { m: ["IA-2/x"] },
   },

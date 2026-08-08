@@ -12,10 +12,12 @@
 import { describe, expect, it } from "vitest";
 
 import { honestDraft } from "../crucible/phase2.js";
-import type { ScopeDimension } from "./contracts.js";
+import { renderAnswer } from "../render/reference.js";
+import type { ConfirmationEvent, ScopeDimension } from "./contracts.js";
+import { type DomElement, walkArtifact } from "./dom.js";
 import { canonicalDigest, replayTransaction, verifyReplay } from "./replay.js";
 import { REQUIRED_DIMENSIONS } from "./scope.js";
-import { type AnswerPlan, runTransaction, type Transaction } from "./transaction.js";
+import { type ActTransport, type AnswerPlan, runTransaction, type Transaction } from "./transaction.js";
 import { denialCode } from "./violation.js";
 import {
   COMMIT_TIME,
@@ -28,6 +30,35 @@ import {
 
 const REQUIRED: readonly ScopeDimension[] = [...REQUIRED_DIMENSIONS, "comparisonBasis"];
 const plan: AnswerPlan = (context, transactionId) => ({ ...honestDraft(context), transactionId });
+
+/** Phase 2's honest answer plus the act it leads to, as phase 5 builds it. */
+const actPlan: AnswerPlan = (context, transactionId) => {
+  const draft = honestDraft(context);
+  return {
+    ...draft,
+    transactionId,
+    claims: [...draft.claims, { kind: "action", tool: "release", entityId: "pikachu" }],
+  };
+};
+
+function trainerConfirms(artifact: DomElement): ConfirmationEvent {
+  const seen = walkArtifact(artifact);
+  return {
+    id: `confirmation-${seen.transactionId ?? "unmarked"}`,
+    transactionId: seen.transactionId ?? "",
+    source: "trainer",
+    artifactDigest: seen.digest,
+    confirmedAt: "2026-01-01T12:00:30Z",
+  };
+}
+
+const TRANSPORT: ActTransport = {
+  render: renderAnswer,
+  confirm: trainerConfirms,
+  renderedAt: "2026-01-01T12:00:05Z",
+  authorizedAt: "2026-01-01T12:00:31Z",
+  executedAt: "2026-01-01T12:00:32Z",
+};
 
 function world() {
   return { registry: kantoRegistry(), pack: kantoPack() };
@@ -45,6 +76,22 @@ function file(id: string, transcript = trainerTranscript(), required = REQUIRED)
     locale: LOCALE,
     required,
     plan,
+  });
+}
+
+/** An honest exchange that walks the whole act path, or declines partway. */
+function fileActed(id: string, confirm: ActTransport["confirm"] = trainerConfirms): Transaction {
+  return runTransaction({
+    id,
+    registry: kantoRegistry(),
+    pack: kantoPack(),
+    transcript: trainerTranscript(),
+    establishedAt: ISSUED_AT,
+    committedAt: COMMIT_TIME,
+    locale: LOCALE,
+    required: REQUIRED,
+    plan: actPlan,
+    act: { ...TRANSPORT, confirm },
   });
 }
 
@@ -78,6 +125,36 @@ describe("a genuine record reproduces bit-for-bit", () => {
     const twice = replayTransaction(world(), record);
     expect(canonicalDigest(once)).toBe(canonicalDigest(twice));
   });
+
+  it("replays an acted transaction to the identical record — grants and all", () => {
+    const record = fileActed("txn-acted");
+    expect(record.outcome.status).toBe("acted");
+
+    const replayed = replayTransaction(world(), record);
+    expect(canonicalDigest(replayed)).toBe(canonicalDigest(record));
+    expect(verifyReplay(world(), record)).toEqual({ allowed: true, violations: [] });
+  });
+
+  it("replays a declined transaction to the identical record", () => {
+    const record = fileActed("txn-declined", () => null);
+    expect(record.outcome.status).toBe("declined");
+
+    const replayed = replayTransaction(world(), record);
+    expect(canonicalDigest(replayed)).toBe(canonicalDigest(record));
+    expect(verifyReplay(world(), record)).toEqual({ allowed: true, violations: [] });
+  });
+
+  it("replays an act refused at the action stage to the identical denial", () => {
+    const record = fileActed("txn-refused-act", (artifact) => ({
+      ...trainerConfirms(artifact),
+      artifactDigest: "sha256:some-other-page",
+    }));
+    expect(record.outcome.status).toBe("denied");
+
+    const replayed = replayTransaction(world(), record);
+    expect(canonicalDigest(replayed)).toBe(canonicalDigest(record));
+    expect(verifyReplay(world(), record)).toEqual({ allowed: true, violations: [] });
+  });
 });
 
 describe("replay refuses to invent what the record does not carry", () => {
@@ -95,6 +172,39 @@ describe("replay refuses to invent what the record does not carry", () => {
     const verdict = verifyReplay(world(), withoutManifest as Transaction);
     expect(verdict.allowed).toBe(false);
     expect(verdict.violations.map(denialCode)).toContain("IA-10/record-incomplete");
+  });
+
+  it("refuses an acted record that kept no artifact — the page cannot be re-rendered", () => {
+    const record = fileActed("txn-acted");
+    const { artifact: _shredded, ...withoutArtifact } = record;
+
+    const verdict = verifyReplay(world(), withoutArtifact as Transaction);
+    expect(verdict.allowed).toBe(false);
+    expect(verdict.violations.map(denialCode)).toContain("IA-10/record-incomplete");
+  });
+
+  it("refuses an acted record that kept no confirmation — consent cannot be presumed", () => {
+    const record = fileActed("txn-acted");
+    const { confirmation: _shredded, ...withoutConsent } = record;
+
+    const verdict = verifyReplay(world(), withoutConsent as Transaction);
+    expect(verdict.allowed).toBe(false);
+    expect(verdict.violations.map(denialCode)).toContain("IA-10/record-incomplete");
+  });
+
+  it("catches an acted record whose confirmation was doctored after filing", () => {
+    const record = fileActed("txn-acted");
+    // The ledger says the act committed; the doctored confirmation on file
+    // would never have authorised it. Re-execution disagrees with the filed
+    // verdict, and that disagreement is Article X's own denial.
+    const doctored: Transaction = {
+      ...record,
+      confirmation: { ...record.confirmation!, artifactDigest: "sha256:swapped-after-the-fact" },
+    };
+
+    const verdict = verifyReplay(world(), doctored);
+    expect(verdict.allowed).toBe(false);
+    expect(verdict.violations.map(denialCode)).toContain("IA-10/verdict-not-reproduced");
   });
 });
 

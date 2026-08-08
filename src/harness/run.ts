@@ -20,11 +20,21 @@ import type { ManifestContext } from "../kernel/manifest.js";
 import type { AccordPack } from "../kernel/pack.js";
 import type { CertifiedRegistry } from "../kernel/registry.js";
 import { resolveScope, type ScopeContext } from "../kernel/scope.js";
-import { runTransaction, type Transaction } from "../kernel/transaction.js";
+import { runTransaction, type Transaction, type TransactionOutcome } from "../kernel/transaction.js";
+import { renderAnswer } from "../render/reference.js";
 import { proposeAnswer, proposeScope } from "./advisor.js";
 import { addUsage, emptyUsage, type ModelProvider, type Usage } from "./provider.js";
-import { respondToProposal } from "./trainer.js";
-import { COMMITTED_AT, ESTABLISHED_AT, LOCALE, type Scenario } from "./corpus.js";
+import { respondToArtifact, respondToProposal } from "./trainer.js";
+import {
+  AUTHORIZED_AT,
+  COMMITTED_AT,
+  CONFIRMED_AT,
+  ESTABLISHED_AT,
+  EXECUTED_AT,
+  LOCALE,
+  RENDERED_AT,
+  type Scenario,
+} from "./corpus.js";
 
 export interface HarnessWorld {
   registry: CertifiedRegistry;
@@ -32,13 +42,16 @@ export interface HarnessWorld {
 }
 
 /**
- * How a run ended, in the three shapes the metrics care about.
+ * How a run ended, in the four shapes the metrics care about.
  *  - `answered`   the model reached a certified answer that survived the kernel.
+ *  - `acted`      the certified answer proposed an act, the trainer confirmed
+ *                 the exact page, and the kernel authorised the whole chain.
  *  - `denied`     the model proposed something the kernel refused — the gate held.
- *  - `unresolved` scope never closed, or the model produced nothing usable — a
- *                 fail-closed abstention, never a partial release.
+ *  - `unresolved` scope never closed, the model produced nothing usable, or the
+ *                 trainer declined the act it proposed — a fail-closed
+ *                 abstention, never a partial release.
  */
-export type RunStatus = "answered" | "denied" | "unresolved";
+export type RunStatus = "answered" | "acted" | "denied" | "unresolved";
 
 export interface HarnessRun {
   scenarioId: string;
@@ -160,15 +173,38 @@ export async function runScenario(
     locale: LOCALE,
     required: scenario.required,
     plan: () => draft,
+    // The act path, wired for every scenario: whether an act is proposed is the
+    // model's doing, and whether one is consented to is the trainer's. The
+    // renderer is the reference one, honest; sabotaged pages are the crucible's
+    // business, not the harness's.
+    act: {
+      render: renderAnswer,
+      confirm: (artifact) => respondToArtifact(artifact, scenario.ask, CONFIRMED_AT),
+      renderedAt: RENDERED_AT,
+      authorizedAt: AUTHORIZED_AT,
+      executedAt: EXECUTED_AT,
+    },
   });
 
   // Scope is already granted on this exact transcript, so the transaction can
-  // only be answered or denied here — never a fresh clarification.
-  const status: RunStatus = transaction.outcome.status === "answered" ? "answered" : "denied";
-  const detail =
-    status === "answered"
-      ? "certified answer committed"
-      : `refused: ${transaction.outcome.status === "denied" ? transaction.outcome.stage : "unexpected"} stage`;
+  // only end at the answer stage or beyond here — never a fresh clarification.
+  const ended = (outcome: TransactionOutcome): { status: RunStatus; detail: string } => {
+    switch (outcome.status) {
+      case "answered":
+        return { status: "answered", detail: "certified answer committed" };
+      case "acted":
+        return { status: "acted", detail: "confirmed act authorised against the page the trainer saw" };
+      case "declined":
+        // Fail-closed abstention: the answer stood, but the act the model
+        // proposed was not the act the trainer consented to, so nothing ran.
+        return { status: "unresolved", detail: "the trainer declined the proposed act" };
+      case "denied":
+        return { status: "denied", detail: `refused: ${outcome.stage} stage` };
+      default:
+        return { status: "unresolved", detail: `unexpected outcome: ${outcome.status}` };
+    }
+  };
+  const { status, detail } = ended(transaction.outcome);
 
   return {
     ...base,
