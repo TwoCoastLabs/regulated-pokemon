@@ -67,13 +67,18 @@ Private, work in progress.
       filed run artifact (`npm run harness:live`)
 - [ ] Published two-model numbers and the results page generated from those
       artifacts
-- [ ] Demo UI: chat + live compliance console + sabotage buttons
+- [x] Demo UI: the filed run replayed as pages (chat, certified page,
+      compliance console), and the crucible with buttons on it — every
+      sabotage below runnable in the browser, against the real kernel
 
 ## Seeing it
 
-The browser demo is later work. What runs today is the same exchange without
-the theatre — scope resolution and answer certification composed into one
-transaction, printed as a compliance trace:
+In a browser: `npm run app:dev`, then the **run ledger** replays a filed
+live-model run page by page, and **the crucible** puts buttons on the
+failure-injection suite — one sabotage per Accord article, run live in the
+tab and refused under the article it names, next to the untampered control
+that must pass. The same exchange without the theatre is the compliance
+trace:
 
 ```
 npm run demo                                  # every scripted conversation

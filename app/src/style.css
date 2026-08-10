@@ -726,6 +726,172 @@ body {
   overflow-wrap: anywhere;
 }
 
+/* --- the page tabs ------------------------------------------------------- */
+
+.views {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.view-tab {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 5px 14px;
+  border: 1px solid var(--indigo);
+  border-radius: 3px;
+  background: var(--card);
+  color: var(--indigo);
+  cursor: pointer;
+}
+
+.view-tab.current {
+  background: var(--indigo-deep);
+  border-color: var(--indigo-deep);
+  color: #fff;
+}
+
+/* --- the crucible -------------------------------------------------------- */
+
+.crucible {
+  display: grid;
+  gap: 16px;
+}
+
+.crucible-intro p {
+  margin: 0;
+  max-width: 88ch;
+  color: var(--muted);
+}
+
+.sabotage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 14px;
+}
+
+.sabotage-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 14px 16px;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.sabotage-card.honest {
+  border-color: var(--ledger);
+  background: var(--ledger-tint);
+}
+
+.sabotage-card header {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.sabotage-card h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.article-chip {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--indigo);
+  padding: 1px 8px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.control-chip {
+  background: var(--ledger);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+}
+
+.sabotage-description {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.sabotage-promise {
+  margin: 0;
+  font-size: 12px;
+  color: var(--indigo-deep);
+}
+
+.sabotage-trigger {
+  justify-self: start;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 16px;
+  border: 1px solid var(--seal);
+  border-radius: 3px;
+  background: var(--card);
+  color: var(--seal);
+  cursor: pointer;
+}
+
+.sabotage-trigger:hover {
+  background: var(--seal);
+  color: #fff;
+}
+
+.honest .sabotage-trigger {
+  border-color: var(--ledger);
+  color: var(--ledger);
+}
+
+.honest .sabotage-trigger:hover {
+  background: var(--ledger);
+  color: #fff;
+}
+
+.sabotage-verdict {
+  display: grid;
+  gap: 6px;
+}
+
+.sabotage-agreement {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ledger);
+}
+
+.sabotage-agreement.disagreed {
+  color: var(--seal);
+  font-weight: 700;
+}
+
+.sabotage-allowed {
+  margin: 0;
+  border: 1px solid var(--ledger);
+  background: var(--card);
+  border-radius: 3px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--ledger);
+}
+
+.sabotage-breach {
+  margin: 0;
+  border: 2px solid var(--seal);
+  background: var(--seal-tint);
+  border-radius: 3px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--seal);
+}
+
 /* --- small screens ------------------------------------------------------- */
 
 @media (max-width: 1100px) {
