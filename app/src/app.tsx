@@ -1,0 +1,133 @@
+/**
+ * The run ledger: one filed harness artifact, replayed as pages.
+ *
+ * Everything on screen is a projection of the record via src/ui/viewmodel.ts —
+ * the same artifact `npm run harness:results` renders as Markdown. The app
+ * holds exactly two pieces of state: which record is open, and which run in it
+ * is selected. There is no third: nothing on this page is computed from
+ * anything but the record.
+ */
+import { useMemo, useState } from "preact/hooks";
+
+import type { HarnessRun } from "../../src/harness/run.js";
+import { enforcementCounters, groupRuns } from "../../src/ui/viewmodel.js";
+import { Console } from "./console.js";
+import { bundledArtifact, openArtifact, type ArtifactSource } from "./load.js";
+import { Conversation, Picker } from "./views.js";
+
+/** Open on the first run that walked the whole read-to-act chain, when the
+ * record has one — it is the run with the most to show. */
+function defaultRun(runs: readonly HarnessRun[]): number {
+  const acted = runs.findIndex((run) => run.status === "acted");
+  return acted === -1 ? 0 : acted;
+}
+
+/** The ?run= parameter, so a run in the bundled record has a linkable page. */
+function runFromUrl(): number | null {
+  const raw = new URLSearchParams(window.location.search).get("run");
+  if (raw === null) return null;
+  const index = Number(raw);
+  return Number.isInteger(index) && index >= 0 ? index : null;
+}
+
+export function App() {
+  const [source, setSource] = useState<ArtifactSource>(bundledArtifact);
+  const [selected, setSelected] = useState<number | null>(runFromUrl);
+  const [refusal, setRefusal] = useState<string | null>(null);
+
+  const { artifact, name } = source;
+  const groups = useMemo(() => groupRuns(artifact), [artifact]);
+  const index = selected ?? defaultRun(artifact.runs);
+  const run = artifact.runs[index];
+
+  const open = async (file: File | undefined) => {
+    if (file === undefined) return;
+    try {
+      setSource(await openArtifact(file));
+      setSelected(null);
+      setRefusal(null);
+    } catch (error) {
+      setRefusal(error instanceof Error ? error.message : String(error));
+    }
+  };
+
+  return (
+    <div class="ledger">
+      <header class="masthead">
+        <div class="masthead-title">
+          <p class="eyebrow">The Indigo Accord</p>
+          <h1>Run ledger</h1>
+          <p class="lead">
+            One filed run, replayed. Every number and every page below is read from the record — never recomputed,
+            never summarised.
+          </p>
+        </div>
+        <dl class="provenance">
+          <div>
+            <dt>record</dt>
+            <dd class="mono">{name}</dd>
+          </div>
+          <div>
+            <dt>started</dt>
+            <dd class="mono">{artifact.startedAt}</dd>
+          </div>
+          <div>
+            <dt>snapshot</dt>
+            <dd class="mono" title={artifact.world.snapshotDigest}>
+              {artifact.world.snapshotId}
+            </dd>
+          </div>
+          <div>
+            <dt>pack</dt>
+            <dd class="mono">{artifact.world.packId}</dd>
+          </div>
+          <div>
+            <dt>models</dt>
+            <dd class="mono">
+              {artifact.models.map((model) => `${model.role}: ${model.slug ?? model.id}`).join(" · ")}
+            </dd>
+          </div>
+        </dl>
+        <div class="counters">
+          {enforcementCounters(artifact).map((counter) => (
+            <div class={`counter${counter.mustBeZero ? (counter.value === 0 ? " zero" : " broken") : ""}`}>
+              <span class="counter-value">{counter.value}</span>
+              <span class="counter-label">{counter.label}</span>
+            </div>
+          ))}
+          <div class={`selfcheck ${artifact.verdict.ok ? "ok" : "failed"}`}>
+            {artifact.verdict.ok ? "self-check: green" : `self-check failed: ${artifact.verdict.failures.join("; ")}`}
+          </div>
+        </div>
+        <label class="open-record">
+          Open another run artifact…
+          <input
+            type="file"
+            accept="application/json,.json"
+            onChange={(event) => void open(event.currentTarget.files?.[0])}
+          />
+        </label>
+        {refusal !== null && <p class="refusal-banner">{refusal}</p>}
+      </header>
+
+      {run === undefined ? (
+        <p class="refusal-banner">This record holds no runs to show.</p>
+      ) : (
+        <div class="panes">
+          <Picker
+            groups={groups}
+            artifact={artifact}
+            selected={run}
+            onSelect={(chosen) => {
+              const chosenIndex = artifact.runs.indexOf(chosen);
+              setSelected(chosenIndex);
+              window.history.replaceState(null, "", `?run=${chosenIndex}`);
+            }}
+          />
+          <Conversation run={run} />
+          <Console artifact={artifact} run={run} />
+        </div>
+      )}
+    </div>
+  );
+}

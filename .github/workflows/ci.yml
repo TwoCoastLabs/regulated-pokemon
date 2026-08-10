@@ -104,6 +104,13 @@ jobs:
       - name: the live-model harness still builds and runs (scripted, offline)
         run: npm run harness
 
+      # The web app's emit check, exactly as for the demo: its projections are
+      # covered by src/ui/*.test.ts, and this is the only path that bundles
+      # them for a browser and resolves the filed artifact in runs/ for real.
+      # Deterministic and offline — the build's one input is the repository.
+      - name: the run ledger still builds
+        run: npm run app:build
+
   # Forward check, deliberately separate from the gate. The kernel is Node
   # version-agnostic; `scripts/fetch-snapshot.ts` is not, since it runs
   # straight from source under type stripping. Kept as its own job so that

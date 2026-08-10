@@ -11,8 +11,11 @@
   "scripts": {
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "lint": "tsc --noEmit",
+    "lint": "tsc --noEmit && tsc --noEmit -p app",
     "build": "tsc -p tsconfig.build.json",
+    "app:dev": "vite --config app/vite.config.ts",
+    "app:build": "vite build --config app/vite.config.ts",
+    "app:preview": "vite preview --config app/vite.config.ts",
     "demo": "npm run build && node dist/demo/cli.js",
     "harness": "npm run build && node dist/harness/cli.js",
     "harness:live": "npm run build && node dist/harness/live-cli.js",
@@ -22,7 +25,9 @@
   "devDependencies": {
     "@types/node": "^24.0.0",
     "@vitest/coverage-v8": "^4.1.10",
+    "preact": "^10.29.8",
     "typescript": "^5.7.0",
+    "vite": "^8.2.1",
     "vitest": "^4.0.0"
   }
 }

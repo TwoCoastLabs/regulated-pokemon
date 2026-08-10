@@ -42,6 +42,12 @@ public, it doesn't go in the repo at all.
   `-- --out docs/results.md` to file it). Pure and key-free — it only reads an
   artifact, so a published number is always traceable to the run that produced
   it, never hand-transcribed.
+- **Run ledger (web):** `npm run app:dev` serves the Phase 8 UI; `app:build`
+  bundles it (CI does, so it cannot rot). It replays the filed artifact in
+  `runs/` as pages — chat, certified page, compliance console — through the
+  pure projections in `src/ui/`, which are tested and coverage-counted like
+  the kernel. The app never recomputes: everything on screen is read from
+  the record.
 
 ## LLM keys
 

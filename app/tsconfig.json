@@ -1,0 +1,16 @@
+// The app's typecheck, run by `npm run lint` beside the root one. It extends
+// the root config for strictness and swaps the module world: bundler
+// resolution and DOM types, because this code is built by Vite for a browser
+// rather than emitted by tsc for Node.
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["vite/client", "node"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
+  },
+  "include": ["src", "vite.config.ts"]
+}
