@@ -23,7 +23,7 @@
  * Every one of them is a claim the walker can check and the kernel can refuse.
  */
 
-import { createHash } from "node:crypto";
+import { sha256Hex } from "./sha256.js";
 
 /** A governed display unit's identity, placed by the renderer. */
 export const UNIT_ATTRIBUTE = "data-unit";
@@ -202,7 +202,7 @@ export function walkArtifact(root: DomElement): ArtifactWalk {
     duplicated: [...duplicated],
     attributed: found.attributed,
     unattributed: found.unattributed,
-    digest: `sha256:${createHash("sha256").update(found.records.join("")).digest("hex")}`,
+    digest: `sha256:${sha256Hex(found.records.join(""))}`,
   };
 }
 

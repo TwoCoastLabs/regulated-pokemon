@@ -13,35 +13,32 @@
  * reads by the same public entry points anyone else would use.
  */
 
-import { resolve } from "node:path";
-
 import type { Claim, ClosedRoster, RosterCriteria, ScopeDimension, ScopeEvent, ScopeTranscript } from "../kernel/contracts.js";
-import type { ManifestDraft } from "../kernel/manifest.js";
-import { type AccordPack, readPack } from "../kernel/pack.js";
-import { type CertifiedRegistry, readRegistry } from "../kernel/registry.js";
+import type { ManifestContext, ManifestDraft } from "../kernel/manifest.js";
+import { type AccordPack, loadPack } from "../kernel/pack.js";
+import { type CertifiedRegistry, loadRegistry } from "../kernel/registry.js";
 import { buildRoster } from "../kernel/roster.js";
 import { candidateDigest, REQUIRED_DIMENSIONS } from "../kernel/scope.js";
-import type { AnswerPlan, TransactionOutcome } from "../kernel/transaction.js";
+import { type AnswerPlan, runTransaction, type Transaction, type TransactionOutcome } from "../kernel/transaction.js";
 import { AccordError } from "../kernel/violation.js";
-
-const DATA = resolve(import.meta.dirname, "../../data");
-export const SNAPSHOT_PATH = resolve(DATA, "snapshots/kanto-red-blue.json");
-export const PACK_PATH = resolve(DATA, "accord-pack/v1.json");
 
 export interface DemoWorld {
   registry: CertifiedRegistry;
   pack: AccordPack;
 }
 
-let loaded: DemoWorld | undefined;
-
-/** The certified world, read once from disk. Throws named, never silently. */
-export function demoWorld(): DemoWorld {
-  if (loaded === undefined) {
-    const registry = readRegistry(SNAPSHOT_PATH);
-    loaded = { registry, pack: readPack(PACK_PATH, registry) };
-  }
-  return loaded;
+/**
+ * The certified world as a pure function of parsed data, so the same demo
+ * runs wherever the bytes can be delivered: the CLI reads them from disk
+ * (files.ts) and the sabotage page ships them in the bundle. Throws named,
+ * never silently — a world that does not load is not demonstrated around.
+ */
+export function loadDemoWorld(snapshotData: unknown, packData: unknown): DemoWorld {
+  const registry = loadRegistry(snapshotData);
+  if (!registry.ok) throw new AccordError(registry.violations);
+  const pack = loadPack(packData, registry.value);
+  if (!pack.ok) throw new AccordError(pack.violations);
+  return { registry: registry.value, pack: pack.value };
 }
 
 /**
@@ -219,3 +216,37 @@ export const demoPlan: AnswerPlan = (context, transactionId): ManifestDraft => {
 
   return { transactionId, claims, rosters: [electric, boomers] };
 };
+
+// --- playing it -------------------------------------------------------------
+
+/** One conversation, run through the transaction seam in the given world. */
+export function playConversation(world: DemoWorld, entry: Conversation): Transaction {
+  return runTransaction({
+    id: `txn-demo-${entry.id}`,
+    registry: world.registry,
+    pack: world.pack,
+    transcript: entry.transcript,
+    establishedAt: ESTABLISHED_AT,
+    committedAt: COMMITTED_AT,
+    locale: LOCALE,
+    required: REQUIRED,
+    plan: demoPlan,
+  });
+}
+
+/**
+ * The world a mutation is let loose in: the certified registry, the Accord
+ * pack, and the scope *the clean conversation actually established* through
+ * the ladder — not a fixture grant typed out beside it. Shared by the CLI's
+ * `--sabotage` and the sabotage page, so a button in the browser attacks the
+ * same world the terminal does.
+ */
+export function sabotageWorld(world: DemoWorld): ManifestContext {
+  const clean = CONVERSATIONS[0];
+  if (clean === undefined) throw new Error("the demo has no conversations");
+  const transaction = playConversation(world, clean);
+  if (transaction.grant === undefined) {
+    throw new Error(`the demo's clean conversation established no scope (${transaction.outcome.status})`);
+  }
+  return { registry: world.registry, pack: world.pack, grant: transaction.grant, locale: LOCALE, at: COMMITTED_AT };
+}

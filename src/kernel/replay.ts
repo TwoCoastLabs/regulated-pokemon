@@ -31,10 +31,9 @@
  *    is the failure Article X exists to catch, and it has a name.
  */
 
-import { createHash } from "node:crypto";
-
 import { authorizeAction } from "./action.js";
 import type { ActionGrant, AnswerManifest, Claim, Verdict, Violation } from "./contracts.js";
+import { sha256Hex } from "./sha256.js";
 import { type ManifestContext, verifyManifest } from "./manifest.js";
 import type { AccordPack } from "./pack.js";
 import { attestRender, planRender } from "./render.js";
@@ -419,7 +418,7 @@ function checkComplete(record: RecordedTransaction): Violation[] {
  * replay must reproduce.
  */
 export function canonicalDigest(value: unknown): string {
-  return `sha256:${createHash("sha256").update(canonicalJson(value)).digest("hex")}`;
+  return `sha256:${sha256Hex(canonicalJson(value))}`;
 }
 
 function canonicalJson(value: unknown): string {

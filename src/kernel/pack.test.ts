@@ -10,7 +10,8 @@ import { describe, expect, it } from "vitest";
 import { ACCORD_ARTICLES } from "./accord.js";
 import { digestText } from "./digest.js";
 import { formatCarriesLocale } from "./format.js";
-import { type AccordPack, blockFor, loadPack, MAX_BADGE_LEVEL, readPack, restrictionsFor } from "./pack.js";
+import { readPack } from "./files.js";
+import { type AccordPack, blockFor, loadPack, MAX_BADGE_LEVEL, restrictionsFor } from "./pack.js";
 import { denialCode } from "./violation.js";
 import { kantoPack, kantoRegistry, PACK_PATH } from "../testing/fixtures.js";
 
