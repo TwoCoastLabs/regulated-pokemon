@@ -14,6 +14,7 @@ import { enforcementCounters, groupRuns } from "../../src/ui/viewmodel.js";
 import { Console } from "./console.js";
 import { Crucible } from "./crucible.js";
 import { bundledArtifact, openArtifact, type ArtifactSource } from "./load.js";
+import { Scoreboard } from "./scoreboard.js";
 import { Conversation, Picker } from "./views.js";
 
 /** Open on the first run that walked the whole read-to-act chain, when the
@@ -31,11 +32,13 @@ function runFromUrl(): number | null {
   return Number.isInteger(index) && index >= 0 ? index : null;
 }
 
-/** The two pages: the filed record replayed, and the crucible run live. */
-type View = "ledger" | "crucible";
+/** The three pages: the filed record replayed, its models compared, and the
+ * crucible run live. */
+type View = "ledger" | "scoreboard" | "crucible";
 
 function viewFromUrl(): View {
-  return new URLSearchParams(window.location.search).get("view") === "crucible" ? "crucible" : "ledger";
+  const raw = new URLSearchParams(window.location.search).get("view");
+  return raw === "crucible" || raw === "scoreboard" ? raw : "ledger";
 }
 
 const VIEWS: readonly { id: View; label: string; lead: string }[] = [
@@ -45,6 +48,13 @@ const VIEWS: readonly { id: View; label: string; lead: string }[] = [
     lead:
       "One filed run, replayed. Every number and every page below is read from the record — never recomputed, " +
       "never summarised.",
+  },
+  {
+    id: "scoreboard",
+    label: "Scoreboard",
+    lead:
+      "Every model in the record against the same kernel. Enforcement is one band of zeros over all of them; " +
+      "usefulness differs per model, and the difference is the thesis.",
   },
   {
     id: "crucible",
@@ -69,7 +79,7 @@ export function App() {
 
   const show = (chosen: View) => {
     setView(chosen);
-    window.history.replaceState(null, "", chosen === "crucible" ? "?view=crucible" : "?");
+    window.history.replaceState(null, "", chosen === "ledger" ? "?" : `?view=${chosen}`);
   };
 
   const open = async (file: File | undefined) => {
@@ -103,7 +113,7 @@ export function App() {
             ))}
           </nav>
         </div>
-        {view === "ledger" && (
+        {view !== "crucible" && (
         <dl class="provenance">
           <div>
             <dt>record</dt>
@@ -144,7 +154,7 @@ export function App() {
           </div>
         </div>
         )}
-        {view === "ledger" && (
+        {view !== "crucible" && (
         <label class="open-record">
           Open another run artifact…
           <input
@@ -159,6 +169,8 @@ export function App() {
 
       {view === "crucible" ? (
         <Crucible />
+      ) : view === "scoreboard" ? (
+        <Scoreboard artifact={artifact} />
       ) : run === undefined ? (
         <p class="refusal-banner">This record holds no runs to show.</p>
       ) : (

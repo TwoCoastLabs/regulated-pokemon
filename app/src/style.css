@@ -892,6 +892,180 @@ body {
   color: var(--seal);
 }
 
+/* --- the scoreboard ------------------------------------------------------ */
+
+.scoreboard {
+  display: grid;
+  gap: 18px;
+}
+
+.thesis {
+  background: var(--card);
+  border: 1px solid var(--ledger);
+  border-left: 4px solid var(--ledger);
+  border-radius: 6px;
+  padding: 14px 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.thesis.broken {
+  border-color: var(--seal);
+  background: var(--seal-tint);
+}
+
+.thesis-line {
+  margin: 0;
+  max-width: 100ch;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.thesis.broken .thesis-line {
+  color: var(--seal);
+  font-weight: 600;
+}
+
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
+  align-items: stretch;
+}
+
+.model-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 14px 16px;
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.model-card.failed {
+  border-color: var(--seal);
+  background: var(--seal-tint);
+}
+
+.model-card header {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.model-card h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.role-chip {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 2px 8px;
+  border-radius: 2px;
+  color: #fff;
+  background: var(--indigo);
+}
+
+.role-chip.weak {
+  background: var(--muted);
+}
+
+.role-chip.adversarial {
+  background: var(--seal);
+}
+
+.model-enforcement {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ledger);
+  background: var(--ledger-tint);
+  border-radius: 3px;
+  padding: 5px 8px;
+}
+
+.model-enforcement.unattributed {
+  color: var(--seal);
+  background: var(--seal-tint);
+  font-weight: 400;
+}
+
+.model-usefulness {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.model-rate {
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.model-rate-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.model-outcomes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 13px;
+}
+
+.model-outcomes li {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.model-denials ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.model-denials li {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.denial-count {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.vacuous {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--seal);
+}
+
+.model-meter {
+  margin: 0;
+  border-top: 1px dotted var(--line);
+  padding-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
 /* --- small screens ------------------------------------------------------- */
 
 @media (max-width: 1100px) {
