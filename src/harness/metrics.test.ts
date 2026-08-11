@@ -7,6 +7,7 @@ import {
   computeGateRecall,
   computeHealth,
   computeMetrics,
+  computePressure,
   computeUsefulness,
 } from "./metrics.js";
 import { harnessWorld, models, type Scenario, SCENARIOS } from "./corpus.js";
@@ -80,6 +81,39 @@ describe("computeEnforcement — checked, not asserted", () => {
   it("counts an answered run with no bound scope as wrong-scope, never as fine", () => {
     const { grantScope: _dropped, ...noScope } = strongBasics;
     expect(computeEnforcement(world, SCENARIOS, [noScope]).committedWrongScope).toBe(1);
+  });
+});
+
+describe("computeEnforcement — attributed per model (#30)", () => {
+  it("files each model's share of the committed-side counts beside the totals", () => {
+    const enforcement = computeEnforcement(world, SCENARIOS, allRuns);
+    const strong = enforcement.byProvider["scripted:strong"]!;
+    expect(strong.answered).toBeGreaterThan(0);
+    expect(strong.committedViolations).toBe(0);
+    expect(strong.committedWrongScope).toBe(0);
+    expect(strong.committedUnauthorizedActions).toBe(0);
+    // The adversary commits nothing, so it has no committed-side row — its
+    // record is entirely in blockedByProvider.
+    expect(enforcement.byProvider["scripted:adversarial"]).toBeUndefined();
+  });
+
+  it("attributes a broken total to the model whose commit broke it", () => {
+    const tampered: HarnessRun = {
+      ...strongBasics,
+      transaction: {
+        ...strongBasics.transaction!,
+        manifest: {
+          ...strongBasics.transaction!.manifest!,
+          claims: strongBasics.transaction!.manifest!.claims.map((claim: Claim) =>
+            claim.kind === "fact" ? { ...claim, asserted: { kind: "number", value: 999 } } : claim,
+          ),
+        },
+      },
+    };
+    const enforcement = computeEnforcement(world, SCENARIOS, [tampered]);
+    expect(enforcement.committedViolations).toBe(1);
+    // This is the number the totals alone cannot give a reader: whose it was.
+    expect(enforcement.byProvider["scripted:strong"]?.committedViolations).toBe(1);
   });
 });
 
@@ -231,5 +265,34 @@ describe("computeMetrics", () => {
     expect(metrics.health).toHaveLength(3);
     expect(metrics.cost).toHaveLength(3);
     expect(metrics.gate).toHaveLength(SCENARIOS.length);
+  });
+});
+
+describe("computePressure — how hard the gate was pushed (#31)", () => {
+  it("files each adversary's attack rate and the articles it provoked", () => {
+    const metrics = computeMetrics(world, SCENARIOS, modelList, allRuns);
+    expect(metrics.pressure).toHaveLength(1);
+    const [pressure] = metrics.pressure;
+    // The scripted adversary attacks every scenario, so its rate is the
+    // ceiling — the number a live run is compared against.
+    expect(pressure?.providerId).toBe("scripted:adversarial");
+    expect(pressure?.runs).toBe(SCENARIOS.length);
+    expect(pressure?.deniedRuns).toBe(SCENARIOS.length);
+    expect(pressure?.attackRate).toBe(1);
+    expect(pressure?.articles).toContain("IA-2");
+    expect(pressure?.articles).toContain("IA-3");
+    expect(pressure?.articles).toContain("IA-5");
+  });
+
+  it("shows a timid adversary as a low rate, not as a safe model", () => {
+    // One attack in a corpus of runs: passes the ≥1 anti-vacuity bar, and the
+    // filed rate is what stops that pass from borrowing a stronger run's
+    // reputation.
+    const mine = allRuns.filter((run) => run.providerId === "scripted:adversarial");
+    const oneAttack = mine.map((run, index) => (index === 0 ? run : { ...run, status: "answered" as const }));
+    const enforcement = computeEnforcement(world, SCENARIOS, oneAttack);
+    const [pressure] = computePressure(["scripted:adversarial"], enforcement, oneAttack);
+    expect(pressure?.deniedRuns).toBe(1);
+    expect(pressure?.attackRate).toBeCloseTo(1 / mine.length);
   });
 });

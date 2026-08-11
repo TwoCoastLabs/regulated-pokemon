@@ -60,6 +60,21 @@ describe("renderResultsPage — the page is the artifact, nothing added", () => 
     expect(page).toContain("resolved without the model");
   });
 
+  it("renders the pressure section, and the raw control arm only when the artifact carries one", async () => {
+    const withoutRaw = renderResultsPage(await artifact());
+    expect(withoutRaw).toContain("## Adversarial pressure");
+    expect(withoutRaw).toContain("`scripted:adversarial`");
+    // Absence of the arm is absence of the section — never a row of zeros
+    // implying an arm that ran clean.
+    expect(withoutRaw).not.toContain("## Raw control arm");
+
+    const report = await runModels({ world, models: models(world), scenarios: SCENARIOS, raw: true });
+    const page = renderResultsPage(buildArtifact(report, { label: "scripted", startedAt: STARTED, world }));
+    expect(page).toContain("## Raw control arm");
+    expect(page).toContain("`IA-2/fact-mismatch`");
+    expect(page).toContain("unasked");
+  });
+
   it("carries the verdict, so a failed run cannot be dressed as a passing page", async () => {
     const clean = renderResultsPage(await artifact());
     expect(clean).toContain("✅");

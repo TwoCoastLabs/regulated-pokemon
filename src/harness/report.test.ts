@@ -4,6 +4,7 @@ import type { HarnessModel, Scenario } from "./corpus.js";
 import { harnessWorld, models, SCENARIOS } from "./corpus.js";
 import type { Metrics } from "./metrics.js";
 import { emptyUsage, ScriptedProvider } from "./provider.js";
+import type { RawRun } from "./raw.js";
 import { runHarness, runModels, selfCheck } from "./report.js";
 import type { HarnessRun } from "./run.js";
 
@@ -41,6 +42,24 @@ describe("runHarness — the whole thing, self-checking", () => {
     expect(report.lines.join("\n")).toContain("COST  (as the provider priced it");
     // Scripted models are free, and that zero is a price: every call is priced.
     expect(report.metrics.cost.every((item) => item.fullyPriced)).toBe(true);
+  });
+});
+
+describe("runHarness — the raw control arm rides along, scripted and free", () => {
+  it("files the A/B: the same attacks denied governed and published raw", async () => {
+    const report = await runHarness();
+    expect(report.rawRuns).toHaveLength(models(harnessWorld()).length * SCENARIOS.length);
+    expect(report.lines.join("\n")).toContain("RAW CONTROL");
+
+    const raw = (id: string) => report.rawMetrics?.find((entry) => entry.providerId === id);
+    // The pair of rows the control arm exists for: the adversary is denied on
+    // every governed scenario and publishes a violation on every raw one.
+    expect(raw("scripted:adversarial")?.violatedRuns).toBe(SCENARIOS.length);
+    expect(raw("scripted:adversarial")?.cleanRuns).toBe(0);
+    // And the honest model is clean raw — the arm measures the absence of a
+    // guarantee, not the presence of misbehaviour.
+    expect(raw("scripted:strong")?.assertionViolations).toBe(0);
+    expect(raw("scripted:strong")?.omittedDisclosures).toBeGreaterThan(0);
   });
 });
 
@@ -85,12 +104,14 @@ const CLEAN: Metrics = {
     committedUnauthorizedActions: 0,
     blockedDenials: ["IA-2/x"],
     blockedByProvider: { m: ["IA-2/x"] },
+    byProvider: {},
   },
   usefulness: [],
   health: [],
   cost: [],
   gate: [],
   adversaries: [],
+  pressure: [],
 };
 
 /** A gate-recall entry: escalates a dimension and routes wording for it by
@@ -209,5 +230,67 @@ describe("selfCheck — each failure leg", () => {
 
   it("passes a corpus that escalates and routes wording for it", () => {
     expect(selfCheck({ ...CLEAN, gate: [gate()] }, [], [], [])).toHaveLength(0);
+  });
+});
+
+describe("selfCheck — the raw control arm, held to the same discipline", () => {
+  function rawRun(over: Partial<RawRun>): RawRun {
+    return {
+      scenarioId: "basis-ladder",
+      providerId: "m",
+      repetition: 0,
+      committed: true,
+      detail: "published",
+      providerErrors: 0,
+      usage: emptyUsage(),
+      assertionViolations: [],
+      ...over,
+    };
+  }
+
+  const rawModel = (finding: "honest" | "violated"): HarnessModel => ({
+    provider: new ScriptedProvider("m", () => ""),
+    role: "strong",
+    expectRaw: { "basis-ladder": finding },
+  });
+
+  const FABRICATION = { article: "IA-2" as const, rule: "fact-mismatch", message: "not certified" };
+
+  it("says nothing when no raw leg ran — absence is not a clean control arm", () => {
+    expect(selfCheck(CLEAN, [rawModel("honest")], [], SCENARIOS)).toHaveLength(0);
+  });
+
+  it("fails a raw leg that never published — the ungoverned side measured nothing", () => {
+    const failures = selfCheck(CLEAN, [], [], SCENARIOS, [rawRun({ committed: false })]);
+    expect(failures.join("\n")).toContain("raw control arm never published");
+  });
+
+  it("fails a scripted model whose raw answer was declared honest and metered dirty", () => {
+    const failures = selfCheck(CLEAN, [rawModel("honest")], [], SCENARIOS, [
+      rawRun({ assertionViolations: [FABRICATION] }),
+    ]);
+    expect(failures.join("\n")).toContain("had to publish honest");
+  });
+
+  it("fails a scripted model whose raw attack was declared violated and metered clean", () => {
+    // The raw arm's own anti-vacuity: an adversary whose ungoverned answers
+    // come back spotless did not attack, and its A/B row proves nothing.
+    const failures = selfCheck(CLEAN, [rawModel("violated")], [], SCENARIOS, [rawRun({})]);
+    expect(failures.join("\n")).toContain("had to publish violated");
+  });
+
+  it("fails a declared raw run that did not publish at all", () => {
+    const failures = selfCheck(CLEAN, [rawModel("honest")], [], SCENARIOS, [
+      rawRun({ committed: false, detail: "nothing publishable: not JSON" }),
+    ]);
+    expect(failures.join("\n")).toContain("had to publish and did not");
+  });
+
+  it("passes raw runs that end as declared, on every sample", () => {
+    const failures = selfCheck(CLEAN, [rawModel("violated")], [], SCENARIOS, [
+      rawRun({ assertionViolations: [FABRICATION] }),
+      rawRun({ repetition: 1, assertionViolations: [FABRICATION] }),
+    ]);
+    expect(failures).toHaveLength(0);
   });
 });

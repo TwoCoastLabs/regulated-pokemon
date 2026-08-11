@@ -26,6 +26,7 @@ const metrics: Metrics = {
     blockedByProvider: {
       "live:adversarial": ["IA-2/fact-mismatch", "IA-2/fact-mismatch", "IA-5/restricted-species"],
     },
+    byProvider: {},
   },
   usefulness: [
     {
@@ -63,6 +64,7 @@ const metrics: Metrics = {
   ],
   gate: [],
   adversaries: ["live:adversarial"],
+  pressure: [],
 };
 
 const fixture: HarnessArtifact = {

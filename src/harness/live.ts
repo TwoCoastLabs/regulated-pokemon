@@ -206,6 +206,10 @@ export interface LiveArgs {
    * ungrounded, a wrong fact is the model misremembering; grounded, it is a
    * composition error, and the two are worth telling apart. */
   grounded: boolean;
+  /** Run the control arm: the same models ungoverned, published as-is and
+   * metered afterwards. On by default — the A/B is the thesis's experiment,
+   * and a paid run without its control arm supports a weaker claim. */
+  raw: boolean;
   repetitions: number;
   out: string;
   roles: readonly string[];
@@ -218,12 +222,23 @@ export function parseArgs(argv: readonly string[]): LiveArgs {
     live: boolean;
     structured: boolean;
     grounded: boolean;
+    raw: boolean;
     repetitions: number;
     out: string;
     roles: string[];
     help: boolean;
     errors: string[];
-  } = { live: false, structured: true, grounded: false, repetitions: 1, out: "runs", roles: [], help: false, errors: [] };
+  } = {
+    live: false,
+    structured: true,
+    grounded: false,
+    raw: true,
+    repetitions: 1,
+    out: "runs",
+    roles: [],
+    help: false,
+    errors: [],
+  };
 
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index];
@@ -240,6 +255,12 @@ export function parseArgs(argv: readonly string[]): LiveArgs {
         break;
       case "--grounded":
         args.grounded = true;
+        break;
+      case "--raw":
+        args.raw = true;
+        break;
+      case "--no-raw":
+        args.raw = false;
         break;
       case "--help":
       case "-h":
@@ -287,6 +308,9 @@ const USAGE = [
   "  --grounded          hand the proposer the certified registry to compose from",
   "                      instead of recall. Facts only, never policy; every value is",
   "                      still re-verified, so enforcement is untouched.",
+  "  --no-raw            skip the control arm (the same models ungoverned, published",
+  "                      as-is, metered afterwards). On by default: the A/B is the",
+  "                      experiment, and it costs one extra call per model-scenario.",
   "  --out DIR           where the run artifact is filed (default: runs/).",
   "",
   "The key is read from OPENROUTER_API_KEY, in the environment or in .env.",
@@ -315,10 +339,11 @@ export interface LiveResult {
 }
 
 /** The upper bound on calls: every scope turn plus the answer, for every model
- * on every scenario, on every pass. Honest about being a bound — a model that
- * resolves scope immediately makes far fewer. */
-export function plannedCalls(models: number, scenarios: number, repetitions: number): number {
-  return models * scenarios * repetitions * (MAX_SCOPE_TURNS + 1);
+ * on every scenario, on every pass — plus one ungoverned call per cell when the
+ * control arm runs. Honest about being a bound — a model that resolves scope
+ * immediately makes far fewer. */
+export function plannedCalls(models: number, scenarios: number, repetitions: number, raw = false): number {
+  return models * scenarios * repetitions * (MAX_SCOPE_TURNS + 1 + (raw ? 1 : 0));
 }
 
 export async function runLive(options: LiveOptions): Promise<LiveResult> {
@@ -341,7 +366,8 @@ export async function runLive(options: LiveOptions): Promise<LiveResult> {
     `repetitions   ${args.repetitions}`,
     `structured    ${args.structured ? "yes — the answer grammar is enforced at decode time" : "no — prose only, the pre-grammar baseline"}`,
     `grounded      ${args.grounded ? "yes — the certified registry is handed to the proposer (facts, not policy)" : "no — the model answers from its own knowledge"}`,
-    `calls         at most ${plannedCalls(selected.length, SCENARIOS.length, args.repetitions)}`,
+    `raw control   ${args.raw ? "yes — each model also answers each scenario ungoverned, published as-is and metered" : "no — governed leg only; the A/B has no control arm"}`,
+    `calls         at most ${plannedCalls(selected.length, SCENARIOS.length, args.repetitions, args.raw)}`,
     "cost          unknown until it is spent — priced by the provider, never estimated here",
   ];
 
@@ -364,6 +390,7 @@ export async function runLive(options: LiveOptions): Promise<LiveResult> {
     scenarios: SCENARIOS,
     repetitions: args.repetitions,
     grounded: args.grounded,
+    raw: args.raw,
     title: "Indigo Accord — live-model harness (billable)",
   });
 

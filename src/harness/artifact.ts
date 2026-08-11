@@ -26,6 +26,7 @@ import { dirname, join } from "node:path";
 
 import type { ModelRole } from "./corpus.js";
 import type { Metrics } from "./metrics.js";
+import type { RawModelMetrics, RawRun } from "./raw.js";
 import type { HarnessReport } from "./report.js";
 import type { HarnessRun, HarnessWorld } from "./run.js";
 
@@ -87,6 +88,13 @@ export interface HarnessArtifact {
   models: readonly ArtifactModel[];
   runs: readonly HarnessRun[];
   metrics: Metrics;
+  /**
+   * The control arm, when the run carried one: the same models ungoverned,
+   * their answers published as-is and metered afterwards. Additive and
+   * optional — an artifact filed before the arm existed reads unchanged, and
+   * its absence means the arm did not run, never that it ran clean.
+   */
+  raw?: { runs: readonly RawRun[]; metrics: readonly RawModelMetrics[] };
   verdict: { ok: boolean; failures: readonly string[] };
 }
 
@@ -124,6 +132,9 @@ export function buildArtifact(report: HarnessReport, input: ArtifactInput): Harn
     })),
     runs: report.runs,
     metrics: report.metrics,
+    ...(report.rawRuns === undefined || report.rawMetrics === undefined
+      ? {}
+      : { raw: { runs: report.rawRuns, metrics: report.rawMetrics } }),
     verdict: { ok: report.failures.length === 0, failures: report.failures },
   };
 }
