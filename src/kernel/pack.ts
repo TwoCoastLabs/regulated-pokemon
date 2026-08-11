@@ -15,8 +15,6 @@
  * the reviewer, which is ceremony rather than enforcement.
  */
 
-import { readFileSync } from "node:fs";
-
 import { ACCORD_ARTICLES, type ArticleId } from "./accord.js";
 import type { Exhibit, Resolution, ScopeDimension, ScopeValue, Violation } from "./contracts.js";
 import { digestText } from "./digest.js";
@@ -358,21 +356,6 @@ export function loadPack(input: unknown, registry: CertifiedRegistry): Resolutio
   ];
   if (violations.length > 0) return { ok: false, violations };
   return { ok: true, value: pack };
-}
-
-/** Read a pack from disk, refusing loudly if it does not hold up. */
-export function readPack(path: string, registry: CertifiedRegistry): AccordPack {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(readFileSync(path, "utf8"));
-  } catch (cause) {
-    throw new AccordError([
-      violation("IA-5", "pack-unreadable", `cannot read Accord pack at ${path}: ${(cause as Error).message}`),
-    ]);
-  }
-  const loaded = loadPack(parsed, registry);
-  if (!loaded.ok) throw new AccordError(loaded.violations);
-  return loaded.value;
 }
 
 function checkRules(pack: AccordPack, registry: CertifiedRegistry): Violation[] {

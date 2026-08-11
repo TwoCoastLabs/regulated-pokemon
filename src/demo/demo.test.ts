@@ -19,12 +19,12 @@ import { verifyScopeGrant } from "../kernel/scope.js";
 import { runTransaction } from "../kernel/transaction.js";
 import { denialCode } from "../kernel/violation.js";
 import { play, playAndCheck, playSabotage, runDemo, sabotageWorld } from "./demo.js";
+import { demoWorld } from "./files.js";
 import {
   COMMITTED_AT,
   CONVERSATIONS,
   conversation,
   demoPlan,
-  demoWorld,
   ESTABLISHED_AT,
   LOCALE,
   REQUIRED,

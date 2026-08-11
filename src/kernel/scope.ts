@@ -29,8 +29,7 @@
  * handed (IA-10).
  */
 
-import { createHash } from "node:crypto";
-
+import { sha256Hex } from "./sha256.js";
 import type {
   Resolution,
   ScopeBinding,
@@ -733,5 +732,5 @@ export function digestTranscript(transcript: ScopeTranscript): string {
 }
 
 function sha256(value: string): string {
-  return `sha256:${createHash("sha256").update(value).digest("hex")}`;
+  return `sha256:${sha256Hex(value)}`;
 }

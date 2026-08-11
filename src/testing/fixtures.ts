@@ -8,7 +8,8 @@ import { resolve } from "node:path";
 
 import type { ScopeGrant, ScopeTranscript } from "../kernel/contracts.js";
 import type { ManifestContext } from "../kernel/manifest.js";
-import { type AccordPack, readPack } from "../kernel/pack.js";
+import { readPack } from "../kernel/files.js";
+import { type AccordPack } from "../kernel/pack.js";
 import { CertifiedRegistry, loadRegistry } from "../kernel/registry.js";
 import { candidateDigest, establishScope } from "../kernel/scope.js";
 import type { SnapshotDocument } from "../kernel/snapshot-format.js";

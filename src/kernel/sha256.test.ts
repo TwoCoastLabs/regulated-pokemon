@@ -1,0 +1,50 @@
+/**
+ * The vendored SHA-256 against the platform one it replaced.
+ *
+ * Every digest in every filed record was computed by `node:crypto` before this
+ * module existed, so agreeing with it byte-for-byte is not a nicety — it is
+ * what keeps IA-10 true across the change: a record filed then must still
+ * reproduce now.
+ */
+
+import { createHash } from "node:crypto";
+
+import { describe, expect, it } from "vitest";
+
+import { readSnapshot } from "../testing/fixtures.js";
+import { sha256Hex } from "./sha256.js";
+
+function reference(value: string): string {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+describe("sha256Hex", () => {
+  it("matches the published FIPS 180-4 vectors", () => {
+    expect(sha256Hex("")).toBe("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+    expect(sha256Hex("abc")).toBe("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+    expect(sha256Hex("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq")).toBe(
+      "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1",
+    );
+  });
+
+  it("agrees with node:crypto at every length across a block boundary", () => {
+    // 0 through 130 covers both padding cases (length ≤ 55 and > 55 mod 64)
+    // and the two-block transition, which is where implementations break.
+    for (let length = 0; length <= 130; length += 1) {
+      const value = "a".repeat(length);
+      expect(sha256Hex(value), `length ${length}`).toBe(reference(value));
+    }
+  });
+
+  it("agrees with node:crypto on multi-byte UTF-8", () => {
+    for (const value of ["Pokémon", "ピカチュウ", "🔴⚡", "a\u0000b", "é vs é"]) {
+      expect(sha256Hex(value), JSON.stringify(value)).toBe(reference(value));
+    }
+  });
+
+  it("agrees with node:crypto on the vendored snapshot itself", () => {
+    // The largest string the kernel actually digests: the certified snapshot.
+    const value = JSON.stringify(readSnapshot());
+    expect(sha256Hex(value)).toBe(reference(value));
+  });
+});

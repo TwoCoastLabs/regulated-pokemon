@@ -12,10 +12,9 @@
  * before hashing. Everything else, including punctuation and case, is content.
  */
 
-import { createHash } from "node:crypto";
-
 import { normalise } from "./dom.js";
+import { sha256Hex } from "./sha256.js";
 
 export function digestText(value: string): string {
-  return `sha256:${createHash("sha256").update(normalise(value)).digest("hex")}`;
+  return `sha256:${sha256Hex(normalise(value))}`;
 }

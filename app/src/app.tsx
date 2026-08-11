@@ -12,6 +12,7 @@ import { useMemo, useState } from "preact/hooks";
 import type { HarnessRun } from "../../src/harness/run.js";
 import { enforcementCounters, groupRuns } from "../../src/ui/viewmodel.js";
 import { Console } from "./console.js";
+import { Crucible } from "./crucible.js";
 import { bundledArtifact, openArtifact, type ArtifactSource } from "./load.js";
 import { Conversation, Picker } from "./views.js";
 
@@ -30,15 +31,46 @@ function runFromUrl(): number | null {
   return Number.isInteger(index) && index >= 0 ? index : null;
 }
 
+/** The two pages: the filed record replayed, and the crucible run live. */
+type View = "ledger" | "crucible";
+
+function viewFromUrl(): View {
+  return new URLSearchParams(window.location.search).get("view") === "crucible" ? "crucible" : "ledger";
+}
+
+const VIEWS: readonly { id: View; label: string; lead: string }[] = [
+  {
+    id: "ledger",
+    label: "Run ledger",
+    lead:
+      "One filed run, replayed. Every number and every page below is read from the record — never recomputed, " +
+      "never summarised.",
+  },
+  {
+    id: "crucible",
+    label: "The crucible",
+    lead:
+      "The mutations CI runs, with buttons on them. Each sabotage runs the real kernel in this tab and must land " +
+      "on the denial it declared — plus the untampered control that keeps the refusals honest.",
+  },
+];
+
 export function App() {
   const [source, setSource] = useState<ArtifactSource>(bundledArtifact);
   const [selected, setSelected] = useState<number | null>(runFromUrl);
   const [refusal, setRefusal] = useState<string | null>(null);
+  const [view, setView] = useState<View>(viewFromUrl);
 
   const { artifact, name } = source;
   const groups = useMemo(() => groupRuns(artifact), [artifact]);
   const index = selected ?? defaultRun(artifact.runs);
   const run = artifact.runs[index];
+  const page = VIEWS.find((entry) => entry.id === view) ?? VIEWS[0]!;
+
+  const show = (chosen: View) => {
+    setView(chosen);
+    window.history.replaceState(null, "", chosen === "crucible" ? "?view=crucible" : "?");
+  };
 
   const open = async (file: File | undefined) => {
     if (file === undefined) return;
@@ -56,12 +88,22 @@ export function App() {
       <header class="masthead">
         <div class="masthead-title">
           <p class="eyebrow">The Indigo Accord</p>
-          <h1>Run ledger</h1>
-          <p class="lead">
-            One filed run, replayed. Every number and every page below is read from the record — never recomputed,
-            never summarised.
-          </p>
+          <h1>{page.label}</h1>
+          <p class="lead">{page.lead}</p>
+          <nav class="views" aria-label="Pages">
+            {VIEWS.map((entry) => (
+              <button
+                type="button"
+                class={`view-tab${entry.id === view ? " current" : ""}`}
+                aria-current={entry.id === view ? "page" : undefined}
+                onClick={() => show(entry.id)}
+              >
+                {entry.label}
+              </button>
+            ))}
+          </nav>
         </div>
+        {view === "ledger" && (
         <dl class="provenance">
           <div>
             <dt>record</dt>
@@ -88,6 +130,8 @@ export function App() {
             </dd>
           </div>
         </dl>
+        )}
+        {view === "ledger" && (
         <div class="counters">
           {enforcementCounters(artifact).map((counter) => (
             <div class={`counter${counter.mustBeZero ? (counter.value === 0 ? " zero" : " broken") : ""}`}>
@@ -99,6 +143,8 @@ export function App() {
             {artifact.verdict.ok ? "self-check: green" : `self-check failed: ${artifact.verdict.failures.join("; ")}`}
           </div>
         </div>
+        )}
+        {view === "ledger" && (
         <label class="open-record">
           Open another run artifact…
           <input
@@ -107,10 +153,13 @@ export function App() {
             onChange={(event) => void open(event.currentTarget.files?.[0])}
           />
         </label>
+        )}
         {refusal !== null && <p class="refusal-banner">{refusal}</p>}
       </header>
 
-      {run === undefined ? (
+      {view === "crucible" ? (
+        <Crucible />
+      ) : run === undefined ? (
         <p class="refusal-banner">This record holds no runs to show.</p>
       ) : (
         <div class="panes">

@@ -15,18 +15,15 @@
 import { ALL_MUTATIONS } from "../crucible/phases.js";
 import { expectedDenial, type Mutation } from "../crucible/harness.js";
 import type { ManifestContext } from "../kernel/manifest.js";
-import { runTransaction, type Transaction } from "../kernel/transaction.js";
+import type { Transaction } from "../kernel/transaction.js";
 import { denialCode } from "../kernel/violation.js";
+import { demoWorld } from "./files.js";
 import {
-  COMMITTED_AT,
   CONVERSATIONS,
   type Conversation,
   conversation,
-  demoPlan,
-  demoWorld,
-  ESTABLISHED_AT,
-  LOCALE,
-  REQUIRED,
+  playConversation,
+  sabotageWorld as establishSabotageWorld,
 } from "./script.js";
 import { describeDenials, describeTransaction } from "./trace.js";
 
@@ -39,18 +36,7 @@ export interface DemoResult {
 const RULE = "─".repeat(72);
 
 export function play(entry: Conversation): Transaction {
-  const { registry, pack } = demoWorld();
-  return runTransaction({
-    id: `txn-demo-${entry.id}`,
-    registry,
-    pack,
-    transcript: entry.transcript,
-    establishedAt: ESTABLISHED_AT,
-    committedAt: COMMITTED_AT,
-    locale: LOCALE,
-    required: REQUIRED,
-    plan: demoPlan,
-  });
+  return playConversation(demoWorld(), entry);
 }
 
 export function playAndCheck(entry: Conversation): DemoResult {
@@ -77,19 +63,11 @@ export function playAndCheck(entry: Conversation): DemoResult {
 // --- sabotage ---------------------------------------------------------------
 
 /**
- * The world a mutation is let loose in: the certified registry, the Accord
- * pack, and the scope *this conversation actually established* through the
- * ladder — not a fixture grant typed out beside it.
+ * The world a mutation is let loose in — script.ts's `sabotageWorld`, over
+ * the world this process read from disk.
  */
 export function sabotageWorld(): ManifestContext {
-  const clean = CONVERSATIONS[0];
-  if (clean === undefined) throw new Error("the demo has no conversations");
-  const transaction = play(clean);
-  if (transaction.grant === undefined) {
-    throw new Error(`the demo's clean conversation established no scope (${transaction.outcome.status})`);
-  }
-  const { registry, pack } = demoWorld();
-  return { registry, pack, grant: transaction.grant, locale: LOCALE, at: COMMITTED_AT };
+  return establishSabotageWorld(demoWorld());
 }
 
 /**

@@ -9,5 +9,8 @@ export default defineConfig({
   // The app reaches up for src/ (pure modules) and runs/ (the filed record).
   server: { fs: { allow: [".."] } },
   oxc: { jsx: { runtime: "automatic", importSource: "preact" } },
-  build: { outDir: "dist", emptyOutDir: true },
+  // The bundle carries the pinned snapshot (~530 kB of certified data) so the
+  // crucible page can load the registry offline; that is cargo, not code, and
+  // the default 500 kB warning would cry wolf on every build.
+  build: { outDir: "dist", emptyOutDir: true, chunkSizeWarningLimit: 900 },
 });

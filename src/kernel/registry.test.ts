@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { kantoRegistry, readSnapshot, SNAPSHOT_PATH } from "../testing/fixtures.js";
-import { loadRegistry, readRegistry, sameFactValue } from "./registry.js";
+import { readRegistry } from "./files.js";
+import { loadRegistry, sameFactValue } from "./registry.js";
 import { denialCode } from "./violation.js";
 
 describe("the vendored snapshot loads as a certified registry", () => {

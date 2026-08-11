@@ -42,12 +42,16 @@ public, it doesn't go in the repo at all.
   `-- --out docs/results.md` to file it). Pure and key-free — it only reads an
   artifact, so a published number is always traceable to the run that produced
   it, never hand-transcribed.
-- **Run ledger (web):** `npm run app:dev` serves the Phase 8 UI; `app:build`
-  bundles it (CI does, so it cannot rot). It replays the filed artifact in
-  `runs/` as pages — chat, certified page, compliance console — through the
-  pure projections in `src/ui/`, which are tested and coverage-counted like
-  the kernel. The app never recomputes: everything on screen is read from
-  the record.
+- **Web app:** `npm run app:dev` serves the Phase 8 UI; `app:build` bundles
+  it (CI does, so it cannot rot). Two pages, split by where truth comes from.
+  The **run ledger** replays the filed artifact in `runs/` as pages — chat,
+  certified page, compliance console — and never recomputes: everything on
+  that screen is read from the record. The **crucible** page is the opposite
+  on purpose: it runs the real kernel live in the tab — the same mutation
+  values CI runs, against the bundled snapshot and pack — so a visitor can
+  press a sabotage and watch its named denial. Both go through the pure
+  projections in `src/ui/`, tested and coverage-counted like the kernel;
+  still no model and no key anywhere in the app.
 
 ## LLM keys
 

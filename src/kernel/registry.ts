@@ -12,10 +12,8 @@
  *    refuses to start rather than serving facts it cannot stand behind.
  */
 
-import { readFileSync } from "node:fs";
-import { createHash } from "node:crypto";
-
 import type { CertifiedSnapshot, FactValue, Resolution, Violation } from "./contracts.js";
+import { sha256Hex } from "./sha256.js";
 import {
   SNAPSHOT_SCHEMA_VERSION,
   type SnapshotDocument,
@@ -202,21 +200,6 @@ export function loadRegistry(input: unknown): Resolution<CertifiedRegistry> {
   return { ok: true, value: new CertifiedRegistry(document) };
 }
 
-/** Read the vendored snapshot from disk, refusing loudly if it does not hold. */
-export function readRegistry(path: string): CertifiedRegistry {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(readFileSync(path, "utf8"));
-  } catch (cause) {
-    throw new AccordError([
-      violation("IA-2", "snapshot-unreadable", `cannot read snapshot at ${path}: ${(cause as Error).message}`),
-    ]);
-  }
-  const loaded = loadRegistry(parsed);
-  if (!loaded.ok) throw new AccordError(loaded.violations);
-  return loaded.value;
-}
-
 function checkStructure(input: unknown): Violation[] {
   if (input === null || typeof input !== "object") {
     return [violation("IA-2", "snapshot-malformed", "snapshot is not an object")];
@@ -315,7 +298,7 @@ function checkIntegrity(document: SnapshotDocument): Violation[] {
 
 /** The digest is what makes tampering with the vendored bytes detectable. */
 function checkDigest(document: SnapshotDocument): Violation[] {
-  const recomputed = `sha256:${createHash("sha256").update(stableStringify(snapshotContent(document))).digest("hex")}`;
+  const recomputed = `sha256:${sha256Hex(stableStringify(snapshotContent(document)))}`;
   if (recomputed === document.contentDigest) return [];
   return [
     violation("IA-2", "snapshot-digest-mismatch", `snapshot ${document.id} does not match its content digest`, {

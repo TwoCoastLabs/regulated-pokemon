@@ -13,7 +13,7 @@ import {
   type ViolationView,
 } from "../../src/ui/viewmodel.js";
 
-function Stamp(props: { violation: ViolationView }) {
+export function Stamp(props: { violation: ViolationView }) {
   const { violation } = props;
   return (
     <div class="stamp">

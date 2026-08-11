@@ -10,7 +10,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { readRegistry } from "../kernel/registry.js";
+import { readRegistry } from "../kernel/files.js";
 import { buildRoster, verifyRoster } from "../kernel/roster.js";
 import { kantoRegistry, SNAPSHOT_PATH } from "../testing/fixtures.js";
 

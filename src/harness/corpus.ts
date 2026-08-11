@@ -19,8 +19,9 @@
 import { resolve } from "node:path";
 
 import type { RosterCriteria, ScopeDimension, ScopeEvent, ScopeTranscript, TrainerScope } from "../kernel/contracts.js";
-import { type AccordPack, readPack } from "../kernel/pack.js";
-import { type CertifiedRegistry, readRegistry } from "../kernel/registry.js";
+import { type AccordPack } from "../kernel/pack.js";
+import { readPack, readRegistry } from "../kernel/files.js";
+import { type CertifiedRegistry } from "../kernel/registry.js";
 import { buildRoster } from "../kernel/roster.js";
 import { REQUIRED_DIMENSIONS } from "../kernel/scope.js";
 import { AccordError } from "../kernel/violation.js";
