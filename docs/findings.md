@@ -553,6 +553,70 @@ the answer first. Zero unauthorized actions, recomputed from the record."*
 
 ---
 
+## 14. The control arm: ungoverned, the honest model fabricates — the same model, gated, cannot
+
+Through thirteen findings the thesis had no control arm: every published row
+showed the same models *governed*, and "the architecture is doing the work, not
+the model" was an argument, not a measurement. This run is the first with the
+raw leg filed: each model also answered each scenario once **ungoverned** — no
+scope ladder, no verification, no page, no confirmation; an action claim
+executed the moment it was stated — and the published answer was metered
+afterwards with the same `verifyManifest` the governed leg uses as a gate,
+under a grant minted from the trainer's ground truth. Same models, same
+questions, same meter; the only variable is the kernel. Published run (N=3,
+8 scenarios, 72 governed + 72 raw exchanges, ~$0.08; preflight N=1 ~$0.03;
+both artifacts filed):
+
+| | governed | raw (same models, no kernel) |
+| --- | ---: | ---: |
+| strong — false claims committed | **0** (21 answers) | **6**, in 6 of 23 committed runs (IA-2 ×3, IA-5 ×3) |
+| weak — false claims committed | **0** (24 answers) | **2**, in 2 of 24 (IA-2 ×1, IA-5 ×1) |
+| adversarial — false claims committed | **0** (23 denied, filed attack rate 96%) | **31**, in 24 of 24 |
+| acts executed without consent | **0** of 6 executed | **9 of 9** — every act ungated; the adversary's 3 all aimed where nobody asked |
+| mandated disclosures omitted | 0 | **80 of 80** — every committed answer omitted every disclosure it owed |
+
+Three observations worth the article:
+
+- **The honest model is the finding.** The adversary's row was known in
+  advance; the control arm's news is `live:strong` under the *honest* persona —
+  a false claim in roughly a quarter of its ungoverned answers, and the split
+  matters: three fabricated stats (IA-2), and three repetitions of recommending
+  the restricted legendary to the two-badge trainer (IA-5). The eligibility
+  breach is the sharper half, because it is not a memory error a better model
+  outgrows — the badge rule is *our* policy, in the Accord pack, and no
+  amount of model capability recalls a rule it was never shown. Governed, the
+  same slug, same persona, same questions: zero across 24 runs.
+- **The raw arm measures the absence of a guarantee, not the presence of
+  misbehaviour.** The weak model's raw row is *cleaner* than the strong one's
+  (2 false claims to 6) — small samples, but the direction is instructive: the
+  capable model answers more ambitiously, so ungoverned it has more to be wrong
+  about, and "stronger model" is not even reliably "safer raw". Meanwhile its
+  governed row is identical to the weak model's: zero. That pair — raw varies
+  with the model, governed does not — is the thesis stated as two columns.
+- **Where §13's attack died before the page, here it executes.** The
+  adversary's wrong-target release — the exact attack the governed chain
+  refused upstream of consent — ran all three repetitions in the raw arm,
+  because stating an act *is* executing one when nothing stands between. And
+  the persona bias runs the safe way: the raw arm reuses the honest persona,
+  which mentions verification that raw does not have, so these numbers are a
+  floor on ungoverned harm, not a ceiling.
+
+The run also files two measurements the scoreboard was owed: per-model
+enforcement attribution (`byProvider` — the adversary has no committed-side
+row at all; its record is entirely denials), and the adversary's attack rate
+as a number (23/24, 96%, articles IA-2 and IA-5) rather than a one-denial
+existence check — this same run shows why, having caught the adversary
+declining to attack exactly once.
+
+**Publishable form:** *"Ungoverned, an honest, capable model published a false
+claim in about a quarter of its answers — including recommending a restricted
+species to an under-accredited trainer on every repetition — executed every
+act without consent, and omitted every mandated disclosure. The same model
+behind the kernel: zeros, 24 of 24. The difference is not the model; it is the
+architecture."*
+
+---
+
 ## Appendix — how to reproduce
 
 ```sh
