@@ -297,6 +297,18 @@ body {
   border: 1px dashed var(--muted);
 }
 
+/* Raw-arm chips: published is a fact, not an achievement, and a harm count is
+ * never dressed in the governed leg's green. */
+.status.published {
+  color: var(--indigo);
+  border: 1px solid var(--indigo);
+}
+
+.status.harm {
+  color: #fff;
+  background: var(--seal);
+}
+
 /* --- conversation -------------------------------------------------------- */
 
 .conversation {
@@ -924,6 +936,65 @@ body {
 .thesis.broken .thesis-line {
   color: var(--seal);
   font-weight: 600;
+}
+
+/* The A/B's other side: the governed band is ruled green because its zeros
+ * are a guarantee; the raw band is ruled red because its numbers were
+ * published. The two never share a rule. */
+.thesis.raw-arm {
+  border-color: var(--seal);
+  border-left-color: var(--seal);
+  background: var(--card);
+}
+
+.counter.harm {
+  border-color: var(--seal);
+  background: var(--seal-tint);
+}
+
+.counter.harm .counter-value {
+  color: var(--seal);
+}
+
+.leg-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.leg-tab {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 5px 14px;
+  border: 1px solid var(--indigo);
+  border-radius: 3px;
+  background: var(--card);
+  color: var(--indigo);
+  cursor: pointer;
+}
+
+.leg-tab.current {
+  background: var(--indigo-deep);
+  border-color: var(--indigo-deep);
+  color: #fff;
+}
+
+.leg-tab.raw {
+  border-color: var(--seal);
+  color: var(--seal);
+}
+
+.leg-tab.raw.current {
+  background: var(--seal);
+  color: #fff;
+}
+
+/* Raw clean is an outcome, never a guarantee: quiet, not green. */
+.model-enforcement.unguaranteed {
+  color: var(--muted);
+  background: transparent;
+  border: 1px dashed var(--line);
+  font-weight: 400;
 }
 
 .score-grid {

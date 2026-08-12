@@ -6,8 +6,9 @@ import { describe, expect, it } from "vitest";
 
 import type { HarnessArtifact } from "../harness/artifact.js";
 import type { Metrics } from "../harness/metrics.js";
+import type { RawModelMetrics } from "../harness/raw.js";
 import { readArtifact } from "./viewmodel.js";
-import { scoreboard } from "./scoreboard.js";
+import { rawScoreboard, scoreboard } from "./scoreboard.js";
 
 const AT = "2026-01-01T00:00:00Z";
 
@@ -160,6 +161,97 @@ describe("scoreboard", () => {
   });
 });
 
+const rawArm = (providerId: string, over: Partial<RawModelMetrics> = {}): RawModelMetrics => ({
+  providerId,
+  runs: 8,
+  committed: 8,
+  unusable: 0,
+  providerErrors: 0,
+  violatedRuns: 0,
+  cleanRuns: 8,
+  assertionViolations: 0,
+  byCode: {},
+  omittedDisclosures: 10,
+  actsExecuted: 1,
+  unaskedActs: 0,
+  wrongScopeClaims: 0,
+  usage: usage(0.005, 8),
+  ...over,
+});
+
+const withRaw: HarnessArtifact = {
+  ...fixture,
+  raw: {
+    runs: [],
+    metrics: [
+      rawArm("live:strong"),
+      rawArm("live:adversarial", {
+        violatedRuns: 8,
+        cleanRuns: 0,
+        assertionViolations: 12,
+        byCode: { "IA-2/fact-mismatch": 8, "IA-5/restricted-species": 4 },
+        unaskedActs: 1,
+        wrongScopeClaims: 2,
+        usage: { ...usage(0.009, 8), costedCalls: 6 },
+      }),
+    ],
+  },
+};
+
+describe("rawScoreboard", () => {
+  it("projects nothing for a record without the arm — absence is not a clean run", () => {
+    expect(rawScoreboard(fixture)).toBeUndefined();
+  });
+
+  it("joins the filed raw metrics per model, in the record's model order", () => {
+    const view = rawScoreboard(withRaw)!;
+    expect(view.rows.map((row) => row.providerId)).toEqual(["live:strong", "live:adversarial"]);
+
+    const strong = view.rows[0]!;
+    expect(strong).toMatchObject({
+      role: "strong",
+      slug: "vendor/big-model",
+      committed: 8,
+      assertionViolations: 0,
+      cleanRuns: 8,
+      omittedDisclosures: 10,
+      publishedNothing: false,
+    });
+    expect(strong.findings).toEqual([]);
+    expect(strong.cost).toEqual({ usd: 0.005, floor: false, calls: 8, promptTokens: 1000, completionTokens: 100 });
+  });
+
+  it("tallies the meter's findings as filed, most frequent first, and flags an unpriced spend", () => {
+    const adversarial = rawScoreboard(withRaw)!.rows[1]!;
+    expect(adversarial.findings).toEqual([
+      { code: "IA-2/fact-mismatch", count: 8 },
+      { code: "IA-5/restricted-species", count: 4 },
+    ]);
+    expect(adversarial.cost).toMatchObject({ usd: 0.009, floor: true });
+  });
+
+  it("totals are sums of the filed per-model figures", () => {
+    expect(rawScoreboard(withRaw)!.totals).toEqual({
+      committed: 16,
+      assertionViolations: 12,
+      wrongScopeClaims: 2,
+      actsExecuted: 2,
+      unaskedActs: 1,
+      omittedDisclosures: 20,
+    });
+  });
+
+  it("renders a model the arm never measured as an empty column that says so", () => {
+    const orphan: HarnessArtifact = {
+      ...withRaw,
+      models: [...withRaw.models, { id: "live:ghost", role: "weak" as const }],
+    };
+    const ghost = rawScoreboard(orphan)!.rows[2]!;
+    expect(ghost).toMatchObject({ providerId: "live:ghost", runs: 0, committed: 0, publishedNothing: true });
+    expect(ghost.cost).toBeUndefined();
+  });
+});
+
 describe("the filed artifact in runs/", () => {
   const runsDir = fileURLToPath(new URL("../../runs/", import.meta.url));
   const files = readdirSync(runsDir).filter((file) => file.endsWith(".json"));
@@ -174,6 +266,26 @@ describe("the filed artifact in runs/", () => {
       // and every adversarial leg was seen making the gate fire.
       expect(view.identical).toBe(true);
       expect(view.rows.every((row) => !row.vacuousAdversary && !row.allFailed)).toBe(true);
+    }
+  });
+
+  it("projects a raw board exactly when the record carries the arm", () => {
+    const artifacts = files.map((file) => readArtifact(JSON.parse(readFileSync(join(runsDir, file), "utf8"))));
+    // The A/B needs both kinds on file: records from before the arm existed
+    // must stay renderable, and at least one filed record must carry it.
+    expect(artifacts.some((artifact) => artifact.raw === undefined)).toBe(true);
+    expect(artifacts.some((artifact) => artifact.raw !== undefined)).toBe(true);
+    for (const artifact of artifacts) {
+      const raw = rawScoreboard(artifact);
+      if (artifact.raw === undefined) {
+        expect(raw).toBeUndefined();
+        continue;
+      }
+      expect(raw?.rows.map((row) => row.providerId)).toEqual(artifact.models.map((model) => model.id));
+      // The filed A/B is the thesis: the governed zeros held while the same
+      // models, ungoverned, published false claims and omitted disclosures.
+      expect(raw!.totals.assertionViolations).toBeGreaterThan(0);
+      expect(raw!.totals.omittedDisclosures).toBeGreaterThan(0);
     }
   });
 });
