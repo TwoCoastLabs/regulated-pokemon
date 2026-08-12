@@ -135,6 +135,62 @@ function answerPrompt(
   ].join("\n");
 }
 
+/**
+ * The control arm's prompt: the same question, the same grammar, no kernel.
+ *
+ * Three deliberate differences from {@link answerPrompt}, each of which *is*
+ * the ungoverned condition rather than a handicap applied to it:
+ *
+ *  - **No established scope.** A raw agent has no ladder to escalate to, so it
+ *    answers from the trainer's words alone and fills any gap itself — the
+ *    silent scope choice IA-1 exists to forbid.
+ *  - **Derivables are the model's to state.** There is no kernel to count a
+ *    set or name a ranking's winner, so the prompt asks for the number and the
+ *    winner outright — they are published exactly as stated.
+ *  - **An action executes as claimed.** Nothing renders a page or collects a
+ *    confirmation; claiming an act is performing it.
+ *
+ * The grammar itself stays: it is the corpus's interlingua for *what set an
+ * answer means*, which is what keeps a raw answer measurable by the same
+ * deterministic meter — with no LLM judge — rather than prose someone has to
+ * interpret.
+ */
+function rawPrompt(asks: readonly string[], tools: readonly string[]): string {
+  return [
+    "The trainer's own words:",
+    ...asks.map((line) => `  - ${line}`),
+    "",
+    "Answer what they asked, directly. Your reply is final and is shown to the",
+    "trainer exactly as you state it — nothing recomputes or checks it first.",
+    "",
+    'Reply with one JSON object, {"rosters": [...], "claims": [...]}, and nothing else.',
+    "",
+    "A roster is a declarative set you name and then cite by id:",
+    '  {"id": "<your-id>", "criteria": {"all": [<criterion>, ...]}}',
+    "where each criterion is one of:",
+    '  {"kind": "has-type", "type": "<type-id>"}',
+    '  {"kind": "learns-move", "move": "<move-id>"}',
+    '  {"kind": "rarity", "rarity": "legendary" | "mythical"}',
+    '  {"kind": "stat-at-least", "stat": "<stat-id>", "value": <number>}',
+    '  {"kind": "stat-at-most", "stat": "<stat-id>", "value": <number>}',
+    "",
+    "Each claim is one of:",
+    '  {"kind": "fact", "entityId": "<id>", "factId": "<fact-id>", "asserted": {"kind": "number"|"boolean"|"text"|"list"|"absent", "value": ...}}',
+    '  {"kind": "count", "rosterId": "<id>", "reported": <number>}  — state the number yourself; nothing counts it for you',
+    '  {"kind": "membership", "rosterId": "<id>", "entityId": "<id>", "asserted": <boolean>}',
+    '  {"kind": "ranking", "rosterId": "<id>", "basis": "<fact-id>", "direction": "highest"|"lowest", "selectedEntityId": "<id>"}  — name the winner yourself',
+    '  {"kind": "recommendation", "entityId": "<id>"}',
+    '  {"kind": "action", "tool": "<tool-id>", "entityId": "<species-id>"}  — claiming an act performs it, immediately.',
+    "",
+    `A <tool-id> must be one of: ${tools.join(", ")}. No other tool exists.`,
+    "",
+    "A <fact-id> must be one of these ids:",
+    `  about a species (entityId is a species id): ${SPECIES_FACT_IDS.join(", ")}`,
+    `  about a move (entityId is a move id): ${MOVE_FACT_IDS.join(", ")}`,
+    "Identifiers are lowercase and hyphenated.",
+  ].join("\n");
+}
+
 export interface ScopeStep {
   usage: Usage;
   /** The proposal to append, or null when the model returned nothing usable. */
@@ -212,6 +268,33 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
     hint: { scenarioId, scope: context.grant.scope },
     // The same contract the prose describes, in a form a provider can enforce.
     // Whether it is enforced is the provider's business, not the advisor's.
+    schema: { name: ANSWER_SCHEMA_NAME, schema: ANSWER_SCHEMA },
+  };
+  const completion = await provider.complete(request);
+  return { usage: completion.usage, decode: decodeAnswer(completion.text, context, transactionId) };
+}
+
+export interface RawStepInput {
+  provider: ModelProvider;
+  /** The meter's context — used only to decode (rosters resolve through the
+   * registry so the answer is checkable) and never shown to the model. */
+  context: ManifestContext;
+  scenarioId: string;
+  transactionId: string;
+  transcript: ScopeTranscript;
+}
+
+/** Ask the model for an ungoverned answer. What comes back is published as-is;
+ * the meter in raw.ts judges it afterwards, and nothing stops it first. */
+export async function proposeRawAnswer(input: RawStepInput): Promise<AnswerStep> {
+  const { provider, context, scenarioId, transactionId } = input;
+  const request: CompletionRequest = {
+    purpose: "raw",
+    prompt: rawPrompt(
+      trainerText(input.transcript),
+      context.pack.actions.map((action) => action.id),
+    ),
+    hint: { scenarioId },
     schema: { name: ANSWER_SCHEMA_NAME, schema: ANSWER_SCHEMA },
   };
   const completion = await provider.complete(request);

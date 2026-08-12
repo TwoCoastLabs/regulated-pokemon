@@ -44,6 +44,19 @@ describe("buildArtifact", () => {
     const filed = await artifact();
     expect(JSON.parse(JSON.stringify(filed))).toEqual(filed);
   });
+
+  it("carries the raw control arm when it ran, and omits the field when it did not", async () => {
+    const withoutRaw = await artifact();
+    expect(withoutRaw.raw).toBeUndefined();
+
+    const report = await runModels({ world, models: models(world), scenarios: SCENARIOS, raw: true });
+    const withRaw = buildArtifact(report, { label: "scripted", startedAt: STARTED, world });
+    expect(withRaw.raw?.runs).toHaveLength(SCENARIOS.length * 3);
+    expect(withRaw.raw?.metrics).toHaveLength(3);
+    // Whole raw records too: the claims that published travel with the file,
+    // so the meter's findings are re-derivable by a reader who distrusts them.
+    expect(withRaw.raw?.runs.every((run) => !run.committed || (run.claims?.length ?? 0) > 0)).toBe(true);
+  });
 });
 
 describe("filing it", () => {

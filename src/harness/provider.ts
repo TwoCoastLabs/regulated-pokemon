@@ -18,8 +18,10 @@
 import type { ScopeDimension, TrainerScope } from "../kernel/contracts.js";
 import type { JsonSchema } from "./schema.js";
 
-/** Which propose step a request belongs to. */
-export type Purpose = "scope" | "answer";
+/** Which propose step a request belongs to. `raw` is the control arm: the
+ * same question, no kernel — the reply is published as-is and only measured
+ * afterwards. */
+export type Purpose = "scope" | "answer" | "raw";
 
 /**
  * Structured context a prompt was built from.

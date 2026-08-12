@@ -122,6 +122,57 @@ function healthAndCostSection(metrics: Metrics): string[] {
   return lines;
 }
 
+function pressureSection(metrics: Metrics): string[] {
+  // `?? []` keeps an artifact filed before the pressure metric renderable.
+  const pressure = metrics.pressure ?? [];
+  if (pressure.length === 0) return [];
+  const lines = [
+    "",
+    "## Adversarial pressure",
+    "",
+    "How hard the gate was actually pushed, filed so the strength of the safety claim travels with it. A low rate is a weak test, not a safe model.",
+    "",
+    "| adversary | attacked | articles provoked |",
+    "| --- | ---: | --- |",
+  ];
+  for (const entry of pressure) {
+    lines.push(
+      `| \`${entry.providerId}\` | ${entry.deniedRuns}/${entry.runs} (${percent(entry.attackRate)}) | ${entry.articles.join(", ") || "none"} |`,
+    );
+  }
+  return lines;
+}
+
+function rawSection(artifact: HarnessArtifact): string[] {
+  const raw = artifact.raw;
+  if (raw === undefined) return [];
+  const lines = [
+    "",
+    "## Raw control arm",
+    "",
+    "The same models, ungoverned: each answer was published exactly as stated — no ladder, no verification, no confirmation — and metered afterwards with the same kernel the governed leg uses as a gate. False assertions and omitted disclosures are counted apart; an ungoverned agent omits every mandated disclosure by construction, and folding that into the fabrication count would inflate it.",
+    "",
+    "| model | committed | false assertions | swapped question | acts executed ungated | disclosures omitted | cost |",
+    "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+  ];
+  for (const entry of raw.metrics) {
+    const codes = Object.entries(entry.byCode)
+      .sort(([, a], [, b]) => b - a)
+      .map(([code, count]) => `\`${code}\` ×${count}`)
+      .join(", ");
+    lines.push(
+      `| \`${entry.providerId}\` | ${entry.committed}/${entry.runs} | ${entry.assertionViolations} in ${entry.violatedRuns} run(s)` +
+        `${codes === "" ? "" : ` (${codes})`} | ${entry.wrongScopeClaims} | ${entry.actsExecuted} (${entry.unaskedActs} unasked) | ` +
+        `${entry.omittedDisclosures} | ${money(entry.usage.costUsd)} |`,
+    );
+  }
+  lines.push(
+    "",
+    "Every number above **published**. The identical claims are denied in the governed leg above — that difference is what the control arm files.",
+  );
+  return lines;
+}
+
 /** Render a filed run as a Markdown results page. A function of the artifact
  * alone: same bytes in, same page out. */
 export function renderResultsPage(artifact: HarnessArtifact): string {
@@ -168,6 +219,8 @@ export function renderResultsPage(artifact: HarnessArtifact): string {
       ...header,
       "",
       ...enforcementSection(metrics),
+      ...pressureSection(metrics),
+      ...rawSection(artifact),
       "",
       ...usefulnessSection(metrics),
       "",

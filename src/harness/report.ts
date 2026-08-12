@@ -18,6 +18,7 @@
 
 import { computeMetrics, type Metrics } from "./metrics.js";
 import { harnessWorld, type HarnessModel, models, type Scenario, SCENARIOS } from "./corpus.js";
+import { computeRawMetrics, type RawModelMetrics, type RawRun, runRawScenario } from "./raw.js";
 import { type HarnessRun, type HarnessWorld, runScenario } from "./run.js";
 
 const RULE = "─".repeat(72);
@@ -48,6 +49,10 @@ export interface HarnessReport {
   /** True when the run stopped before its last repetition — see {@link runModels}. */
   stoppedEarly: boolean;
   failures: readonly string[];
+  /** The control arm, when it ran: the same models ungoverned, published as-is
+   * and metered afterwards. Absent when the run had no raw leg. */
+  rawRuns?: readonly RawRun[];
+  rawMetrics?: readonly RawModelMetrics[];
 }
 
 export interface HarnessOptions {
@@ -60,6 +65,9 @@ export interface HarnessOptions {
   /** Hand the proposer the certified registry to compose from, instead of
    * asking it to recall. A measured variable; the scripted models ignore it. */
   grounded?: boolean;
+  /** Run the control arm too: every model asked once per scenario ungoverned,
+   * the reply published as-is and metered afterwards (raw.ts). */
+  raw?: boolean;
   title?: string;
   subtitle?: string;
 }
@@ -94,6 +102,44 @@ function renderGate(gate: Metrics["gate"]): string[] {
       const routed = entry.unmatched.length === 0 ? "(nothing — a silent ceiling)" : entry.unmatched.map((w) => `"${w}"`).join(", ");
       lines.push(`${INDENT}${INDENT}routed to the model: ${routed}`);
     }
+  }
+  return lines;
+}
+
+function renderRaw(rawMetrics: readonly RawModelMetrics[]): string[] {
+  const lines = [
+    "",
+    "RAW CONTROL  (the same models, no kernel — published as-is, metered afterwards)",
+    `${INDENT}${pad("model", 22)} ${pad("committed", 11)} ${pad("false claims", 14)} ${pad("swapped Q", 11)} ` +
+      `${pad("acts ungated", 14)} disclosures omitted`,
+  ];
+  for (const raw of rawMetrics) {
+    lines.push(
+      `${INDENT}${pad(raw.providerId, 22)} ${pad(`${raw.committed}/${raw.runs}`, 11)} ` +
+        `${pad(`${raw.assertionViolations} in ${raw.violatedRuns} run(s)`, 14)} ${pad(String(raw.wrongScopeClaims), 11)} ` +
+        `${pad(`${raw.actsExecuted} (${raw.unaskedActs} unasked)`, 14)} ${raw.omittedDisclosures}`,
+    );
+    const codes = Object.entries(raw.byCode)
+      .sort(([, a], [, b]) => b - a)
+      .map(([code, count]) => `${code} ×${count}`)
+      .join(", ");
+    if (codes !== "") lines.push(`${INDENT}${INDENT}committed uncaught: ${codes}`);
+  }
+  lines.push(
+    `${INDENT}every number above *published* — the identical claims are denied in the governed leg,`,
+    `${INDENT}which is the difference the control arm exists to file.`,
+  );
+  return lines;
+}
+
+function renderPressure(pressure: Metrics["pressure"]): string[] {
+  if (pressure.length === 0) return [];
+  const lines = ["", "ADVERSARIAL PRESSURE  (how hard the gate was actually pushed — filed, not assumed)"];
+  for (const entry of pressure) {
+    lines.push(
+      `${INDENT}${pad(entry.providerId, 22)} attacked in ${entry.deniedRuns}/${entry.runs} run(s) ` +
+        `(${percent(entry.attackRate)}) — articles provoked: ${entry.articles.join(", ") || "none"}`,
+    );
   }
   return lines;
 }
@@ -157,6 +203,7 @@ export function selfCheck(
   modelList: readonly HarnessModel[],
   runs: readonly HarnessRun[],
   scenarios: readonly Scenario[],
+  rawRuns?: readonly RawRun[],
 ): string[] {
   const failures: string[] = [];
   const { enforcement } = metrics;
@@ -226,6 +273,39 @@ export function selfCheck(
       }
     }
   }
+
+  // The control arm, held to the same discipline. A raw leg that published
+  // nothing measured nothing — its zeros would be silence, not honesty — and a
+  // scripted model's raw answers are declared and checked like its governed
+  // ones, so the A/B cannot drift into folklore.
+  if (rawRuns !== undefined) {
+    if (!rawRuns.some((run) => run.committed)) {
+      failures.push(
+        "HARNESS FAILED: the raw control arm never published an answer; the ungoverned side of the A/B measured nothing.",
+      );
+    }
+    for (const model of modelList) {
+      for (const scenario of scenarios) {
+        const expected = model.expectRaw?.[scenario.id];
+        if (expected === undefined) continue;
+        for (const run of rawRuns.filter(
+          (entry) => entry.providerId === model.provider.id && entry.scenarioId === scenario.id,
+        )) {
+          const violations = run.assertionViolations?.length ?? 0;
+          if (!run.committed) {
+            failures.push(
+              `HARNESS FAILED: ${model.provider.id} raw on "${scenario.id}" had to publish and did not: ${run.detail}.`,
+            );
+          } else if (expected === "honest" ? violations > 0 : violations === 0) {
+            failures.push(
+              `HARNESS FAILED: ${model.provider.id} raw on "${scenario.id}" had to publish ${expected} ` +
+                `and the meter found ${violations} false assertion(s).`,
+            );
+          }
+        }
+      }
+    }
+  }
   return failures;
 }
 
@@ -273,8 +353,28 @@ export async function runModels(options: HarnessOptions): Promise<HarnessReport>
     }
   }
 
+  // The control arm, after the governed leg and only on a run that finished:
+  // a run stopped early is already refusing to spend, and a partial A/B would
+  // invite comparing a full governed corpus against a fragment of a raw one.
+  let rawRuns: RawRun[] | undefined;
+  let rawMetrics: readonly RawModelMetrics[] | undefined;
+  if (options.raw === true && !stoppedEarly) {
+    rawRuns = [];
+    for (let repetition = 0; repetition < repetitions; repetition++) {
+      for (const model of modelList) {
+        for (const scenario of scenarios) {
+          rawRuns.push(await runRawScenario(world, scenario, model.provider, repetition));
+        }
+      }
+    }
+    rawMetrics = computeRawMetrics(
+      modelList.map((model) => model.provider.id),
+      rawRuns,
+    );
+  }
+
   const metrics = computeMetrics(world, scenarios, modelList, runs);
-  const failures = selfCheck(metrics, modelList, runs, scenarios);
+  const failures = selfCheck(metrics, modelList, runs, scenarios, rawRuns);
 
   const lines = [
     RULE,
@@ -284,6 +384,8 @@ export async function runModels(options: HarnessOptions): Promise<HarnessReport>
     "",
     ...renderRuns(scenarios, runs, repetitions),
     ...renderMetrics(metrics),
+    ...renderPressure(metrics.pressure),
+    ...(rawMetrics === undefined ? [] : renderRaw(rawMetrics)),
     "",
     "VERDICT",
   ];
@@ -309,17 +411,21 @@ export async function runModels(options: HarnessOptions): Promise<HarnessReport>
     repetitions,
     stoppedEarly,
     failures,
+    ...(rawRuns === undefined ? {} : { rawRuns }),
+    ...(rawMetrics === undefined ? {} : { rawMetrics }),
   };
 }
 
 /** The scripted corpus: deterministic and key-free, which is the reason CI can
- * run it alongside the demo. */
+ * run it alongside the demo. The raw control arm runs too — scripted, it is
+ * free, and CI proving the A/B's shape is what makes the paid one routine. */
 export function runHarness(): Promise<HarnessReport> {
   const world = harnessWorld();
   return runModels({
     world,
     models: models(world),
     scenarios: SCENARIOS,
+    raw: true,
     title: "Indigo Accord — live-model harness (scripted, offline)",
   });
 }
