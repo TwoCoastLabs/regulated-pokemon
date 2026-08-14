@@ -1,0 +1,24 @@
+# fly.io deployment for the hosted demo (issue #36).
+#
+#   fly launch --no-deploy          # once; keeps this file
+#   fly secrets set OPENROUTER_API_KEY=sk-or-…
+#   fly deploy
+#
+# The relay's caps have safe defaults (src/relay/relay.ts, RELAY_DEFAULTS);
+# override them here under [env] or with `fly secrets set` — RELAY_MODELS,
+# RELAY_MAX_TOKENS, RELAY_PER_IP_LIMIT, RELAY_PER_IP_WINDOW_MS,
+# RELAY_DAILY_SPEND_CAP_USD, RELAY_DAILY_CALL_CAP, RELAY_MAX_CONTENT_CHARS.
+
+app = "indigo-accord"
+primary_region = "sea"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
