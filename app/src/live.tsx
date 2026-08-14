@@ -12,13 +12,18 @@
  * register (an article chip on a refusal), it carries its explanation as a
  * widget, reusing the article registry's real-world analogs.
  *
- * Bring-your-own-key, deliberately (a hosted relay is #36): the key lives in
+ * Two ways to power the Advisor. When the deployment carries the League's
+ * relay (src/relay — probed via its health door), a visitor needs nothing:
+ * calls go browser → relay → provider, the hosted key never enters the tab,
+ * and the relay's own caps do the rationing. Bring-your-own-key stays as the
+ * other mode, and the only one on a static deployment: the key lives in
  * component state for the duration of the session, is sent only to
  * openrouter.ai by the same driver the billable harness uses (which scrubs it
  * from every error it raises), and is never persisted, logged, or sent
- * anywhere else.
+ * anywhere else. Either way it is the same driver, the same session module,
+ * the same kernel — the modes differ in one URL and who pays.
  */
-import { useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useState } from "preact/hooks";
 
 import { proposalDigest } from "../../src/harness/advisor.js";
 import {
@@ -61,10 +66,37 @@ function makeClock(): () => string {
 
 type Persona = "honest" | "adversarial";
 
+/** Who pays for the model: the deployment's relay, or the visitor's key. */
+type KeyMode = "league" | "own";
+
 interface LiveSetup {
   provider: ModelProvider;
   model: string;
   persona: Persona;
+  mode: KeyMode;
+}
+
+/** What the relay's health door said, once asked. `null` while asking. */
+interface RelayStatus {
+  ready: boolean;
+  models: readonly string[];
+}
+
+/** The relay lives on the same origin as the served app; a static deployment
+ * simply has no such door, and the probe falls back to bring-your-own-key. */
+const RELAY_HEALTH = "/api/relay/health";
+export const RELAY_CHAT_URL = "/api/relay/chat";
+
+async function probeRelay(): Promise<RelayStatus> {
+  try {
+    const reply = await fetch(RELAY_HEALTH);
+    if (!reply.ok) return { ready: false, models: [] };
+    const body = (await reply.json()) as { ok?: unknown; models?: unknown };
+    const models = Array.isArray(body.models) ? body.models.filter((m): m is string => typeof m === "string") : [];
+    return body.ok === true && models.length > 0 ? { ready: true, models } : { ready: false, models: [] };
+  } catch {
+    return { ready: false, models: [] };
+  }
 }
 
 // --- chat derivation --------------------------------------------------------
@@ -271,6 +303,8 @@ function LiveConsole(props: { state: SessionState; setup: LiveSetup }) {
 
 export function Live() {
   const [setup, setSetup] = useState<LiveSetup | null>(null);
+  const [relay, setRelay] = useState<RelayStatus | null>(null);
+  const [mode, setMode] = useState<KeyMode | null>(null);
   const [key, setKey] = useState("");
   const [model, setModel] = useState(DEFAULT_STRONG_MODEL);
   const [persona, setPersona] = useState<Persona>("honest");
@@ -284,21 +318,36 @@ export function Live() {
   const [console_, setConsole] = useState(false);
   const clock = useMemo(makeClock, []);
 
+  useEffect(() => {
+    void probeRelay().then((status) => {
+      setRelay(status);
+      // The relay's model list is the allowlist; starting on it means the
+      // default choice is one the relay will accept.
+      if (status.ready && status.models[0] !== undefined) setModel(status.models[0]);
+      setMode(status.ready ? "league" : "own");
+    });
+  }, []);
+
   const deps = useMemo<SessionDeps | null>(() => {
     if (setup === null) return null;
     return { world: demoWorld(), provider: setup.provider, now: clock };
   }, [setup, clock]);
 
   const begin = () => {
+    if (mode === null) return;
     try {
       const provider = new OpenRouterProvider({
         id: "live:session",
         model,
-        apiKey: key,
+        // In league mode no key exists in this tab at all: the placeholder
+        // satisfies the driver's fail-closed constructor, the relay ignores
+        // it, and the real key is added server-side and scrubbed on return.
+        apiKey: mode === "league" ? "league-relay" : key,
+        ...(mode === "league" ? { url: RELAY_CHAT_URL } : {}),
         system: persona === "honest" ? HONEST_PERSONA : ADVERSARY_PERSONA,
         structured: true,
       });
-      setSetup({ provider, model, persona });
+      setSetup({ provider, model, persona, mode });
       setTrouble(null);
     } catch (error) {
       setTrouble(error instanceof Error ? error.message : String(error));
@@ -326,6 +375,7 @@ export function Live() {
   };
 
   if (setup === null || deps === null) {
+    const league = mode === "league";
     return (
       <div class="live">
         <section class="live-setup">
@@ -335,41 +385,79 @@ export function Live() {
             answer against the official Pokédex records before you see it. The Advisor can charm; nothing it makes up
             can reach you.
           </p>
-          <p>
-            You bring the model: an OpenRouter key powers the Advisor, stays in this tab's memory, is sent only to{" "}
-            <span class="mono">openrouter.ai</span>, and is never stored or logged. Live calls bill your OpenRouter
-            account (a short session costs well under a cent).
-          </p>
-          <label>
-            OpenRouter API key
-            <input
-              type="password"
-              value={key}
-              placeholder="sk-or-…"
-              onInput={(event) => setKey(event.currentTarget.value)}
-            />
-          </label>
-          <label>
-            Model
-            <input value={model} onInput={(event) => setModel(event.currentTarget.value)} list="live-models" />
-            <datalist id="live-models">
-              <option value={DEFAULT_STRONG_MODEL}>the measured strong model</option>
-              <option value={DEFAULT_WEAK_MODEL}>the measured weak model</option>
-            </datalist>
-          </label>
-          <label>
-            Your Advisor
-            <select
-              value={persona}
-              onInput={(event) => setPersona(event.currentTarget.value === "adversarial" ? "adversarial" : "honest")}
-            >
-              <option value="honest">plays fair — answers as well as it can</option>
-              <option value="adversarial">cheats — instructed to lie to you; watch the League catch it</option>
-            </select>
-          </label>
-          <button type="button" class="live-begin" disabled={key.trim() === ""} onClick={begin}>
-            Start the session
-          </button>
+          {mode === null ? (
+            <p class="fine">Checking whether this site carries the League's own key…</p>
+          ) : (
+            <>
+              {relay?.ready === true && (
+                <label>
+                  Who pays for the model
+                  <select
+                    value={mode}
+                    onInput={(event) => setMode(event.currentTarget.value === "own" ? "own" : "league")}
+                  >
+                    <option value="league">the League — free, rate-limited, capped for everyone daily</option>
+                    <option value="own">you — bring your own OpenRouter key</option>
+                  </select>
+                </label>
+              )}
+              {league ? (
+                <p>
+                  Nothing to bring: this site carries the League's own key. Your conversation goes from this tab to
+                  the site's relay and on to the model — the key never enters your browser, and the relay rations it
+                  so everyone gets a turn.
+                </p>
+              ) : (
+                <p>
+                  You bring the model: an OpenRouter key powers the Advisor, stays in this tab's memory, is sent only
+                  to <span class="mono">openrouter.ai</span>, and is never stored or logged. Live calls bill your
+                  OpenRouter account (a short session costs well under a cent).
+                </p>
+              )}
+              {!league && (
+                <label>
+                  OpenRouter API key
+                  <input
+                    type="password"
+                    value={key}
+                    placeholder="sk-or-…"
+                    onInput={(event) => setKey(event.currentTarget.value)}
+                  />
+                </label>
+              )}
+              <label>
+                Model
+                {league ? (
+                  <select value={model} onInput={(event) => setModel(event.currentTarget.value)}>
+                    {(relay?.models ?? []).map((slug) => (
+                      <option value={slug}>{slug}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input value={model} onInput={(event) => setModel(event.currentTarget.value)} list="live-models" />
+                )}
+                <datalist id="live-models">
+                  <option value={DEFAULT_STRONG_MODEL}>the measured strong model</option>
+                  <option value={DEFAULT_WEAK_MODEL}>the measured weak model</option>
+                </datalist>
+              </label>
+              <label>
+                Your Advisor
+                <select
+                  value={persona}
+                  onInput={(event) =>
+                    setPersona(event.currentTarget.value === "adversarial" ? "adversarial" : "honest")
+                  }
+                >
+                  <option value="honest">plays fair — answers as well as it can</option>
+                  <option value="adversarial">cheats — instructed to lie to you; watch the League catch it</option>
+                </select>
+              </label>
+              <button type="button" class="live-begin" disabled={!league && key.trim() === ""} onClick={begin}>
+                Start the session
+              </button>
+            </>
+          )}
           {trouble !== null && <p class="refusal-banner">{trouble}</p>}
           <p class="fine">
             The cheating Advisor is the fun one: it is under orders to slip a lie past the League in every answer. It
@@ -390,6 +478,9 @@ export function Live() {
       <div class="live-meta">
         <span class="mono">{setup.model}</span>
         <span class="live-persona">{setup.persona === "honest" ? "plays fair" : "cheats — watch the League"}</span>
+        <span title={setup.mode === "league" ? "calls go through this site's relay; the key never enters your browser" : "your key, in this tab's memory only"}>
+          {setup.mode === "league" ? "on the League's key" : "on your key"}
+        </span>
         <span>
           {cost.calls} model call{cost.calls === 1 ? "" : "s"} · ${cost.costUsd.toFixed(4)} so far
         </span>

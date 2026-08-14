@@ -1,0 +1,308 @@
+/**
+ * The League's key, held so a visitor needs none.
+ *
+ * One small relay in front of OpenRouter: the deployment holds
+ * `OPENROUTER_API_KEY` as a secret, the live session page calls this instead
+ * of openrouter.ai, and the browser never sees a key at all. The app-side
+ * change is nothing but a URL — the same `OpenRouterProvider`, the same
+ * driver, the same kernel; this module is deployment surface, not
+ * architecture.
+ *
+ * Rules it holds to, each one a way a hosted key gets burned:
+ *
+ *  - **It never proxies an arbitrary body.** The upstream request is built
+ *    from the fields it understands — model (allowlisted), messages (role
+ *    and content, bounded), max_tokens (clamped), the answer grammar's
+ *    response_format — and nothing else survives the crossing. Temperature
+ *    and usage accounting are the relay's, not the caller's.
+ *  - **Abuse is bounded twice.** A per-IP rate limit answers the fast
+ *    visitor; a daily spend cap *and* a daily call cap answer everyone at
+ *    once — the call cap is the backstop for the calls a provider declines
+ *    to price, which would otherwise walk straight past a dollar cap.
+ *  - **The key never leaves.** It is added at the upstream hop and scrubbed
+ *    from every body that comes back, exactly as the driver scrubs its own.
+ *  - **Refusals are plain.** A visitor who hits a limit is told what
+ *    happened and what to do next, in the player's register — a relay
+ *    refusal surfaces in the chat, and "429" is not a sentence.
+ *
+ * Everything here is pure and injected (fetch, clock, files), so CI proves
+ * the whole surface key-free; the node wiring in serve.ts stays too thin to
+ * hide a bug in.
+ */
+
+import { type FetchLike, OPENROUTER_URL, redact } from "../harness/openrouter.js";
+
+export interface RelayConfig {
+  /** Empty means "not configured": health reports it and chat refuses. */
+  apiKey: string;
+  /** The slugs a visitor may run — the measured ones, not a free-for-all. */
+  models: readonly string[];
+  maxTokens: number;
+  perIpLimit: number;
+  perIpWindowMs: number;
+  dailySpendCapUsd: number;
+  dailyCallCap: number;
+  /** Ceiling on the summed message content of one request, in characters. */
+  maxContentChars: number;
+  upstreamUrl: string;
+}
+
+export const RELAY_DEFAULTS = {
+  maxTokens: 2048,
+  perIpLimit: 30,
+  perIpWindowMs: 5 * 60_000,
+  dailySpendCapUsd: 1,
+  dailyCallCap: 2_000,
+  maxContentChars: 200_000,
+  upstreamUrl: OPENROUTER_URL,
+} as const;
+
+/** Configuration from the environment, defaults stated in one place. The
+ * models default is supplied by the caller so this module never imports the
+ * harness's model table. */
+export function relayConfigFromEnv(env: Record<string, string | undefined>, defaultModels: readonly string[]): RelayConfig {
+  const number = (name: string, fallback: number): number => {
+    const raw = env[name];
+    const parsed = raw === undefined ? Number.NaN : Number(raw);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+  };
+  return {
+    apiKey: env.OPENROUTER_API_KEY ?? "",
+    models: env.RELAY_MODELS === undefined ? defaultModels : env.RELAY_MODELS.split(",").map((slug) => slug.trim()).filter(Boolean),
+    maxTokens: number("RELAY_MAX_TOKENS", RELAY_DEFAULTS.maxTokens),
+    perIpLimit: number("RELAY_PER_IP_LIMIT", RELAY_DEFAULTS.perIpLimit),
+    perIpWindowMs: number("RELAY_PER_IP_WINDOW_MS", RELAY_DEFAULTS.perIpWindowMs),
+    dailySpendCapUsd: number("RELAY_DAILY_SPEND_CAP_USD", RELAY_DEFAULTS.dailySpendCapUsd),
+    dailyCallCap: number("RELAY_DAILY_CALL_CAP", RELAY_DEFAULTS.dailyCallCap),
+    maxContentChars: number("RELAY_MAX_CONTENT_CHARS", RELAY_DEFAULTS.maxContentChars),
+    upstreamUrl: env.RELAY_UPSTREAM_URL ?? RELAY_DEFAULTS.upstreamUrl,
+  };
+}
+
+export interface RelayDeps {
+  config: RelayConfig;
+  fetch: FetchLike;
+  /** Epoch milliseconds, injected: rate windows and daily caps must replay
+   * in tests without waiting for tomorrow. */
+  now: () => number;
+}
+
+export interface RelayRequest {
+  method: string;
+  path: string;
+  ip: string;
+  body: string;
+}
+
+export interface RelayResponse {
+  status: number;
+  contentType: string;
+  body: string;
+}
+
+const json = (status: number, value: unknown): RelayResponse => ({
+  status,
+  contentType: "application/json",
+  body: JSON.stringify(value),
+});
+
+/** A refusal the chat can show a person. The shape matches OpenRouter's error
+ * envelope so the driver needs no second decoder. */
+const refuse = (status: number, message: string): RelayResponse =>
+  json(status, { error: { message, code: status } });
+
+interface ChatBody {
+  model: string;
+  messages: readonly { role: "system" | "user"; content: string }[];
+  maxTokens: number | undefined;
+  responseFormat: unknown;
+}
+
+/** Accept exactly the request the Advisor's driver makes; name what fails.
+ * Returns a string refusal reason, or the understood fields. */
+function readChatBody(raw: string, config: RelayConfig): ChatBody | string {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return "the request body was not JSON";
+  }
+  if (typeof parsed !== "object" || parsed === null) return "the request body was not an object";
+  const body = parsed as Record<string, unknown>;
+
+  if (typeof body.model !== "string" || !config.models.includes(body.model)) {
+    return `the model must be one of: ${config.models.join(", ")}`;
+  }
+
+  if (!Array.isArray(body.messages) || body.messages.length === 0 || body.messages.length > 4) {
+    return "messages must be a list of one to four entries";
+  }
+  const messages: { role: "system" | "user"; content: string }[] = [];
+  let contentChars = 0;
+  for (const entry of body.messages as unknown[]) {
+    if (typeof entry !== "object" || entry === null) return "each message must be an object";
+    const message = entry as Record<string, unknown>;
+    if ((message.role !== "system" && message.role !== "user") || typeof message.content !== "string") {
+      return "each message must carry a role of system or user, and string content";
+    }
+    contentChars += message.content.length;
+    messages.push({ role: message.role, content: message.content });
+  }
+  if (contentChars > config.maxContentChars) return "the request is larger than a session's turn can be";
+
+  let responseFormat: unknown;
+  if (body.response_format !== undefined) {
+    const format = body.response_format as Record<string, unknown>;
+    const schema = format.json_schema as Record<string, unknown> | undefined;
+    const wellFormed =
+      typeof format === "object" &&
+      format !== null &&
+      format.type === "json_schema" &&
+      typeof schema === "object" &&
+      schema !== null &&
+      typeof schema.name === "string" &&
+      typeof schema.schema === "object";
+    if (!wellFormed) return "response_format, when present, must be a named json_schema";
+    responseFormat = body.response_format;
+  }
+
+  const maxTokens = typeof body.max_tokens === "number" && body.max_tokens > 0 ? body.max_tokens : undefined;
+  return { model: body.model, messages, maxTokens, responseFormat };
+}
+
+/** UTC day key, so the daily caps roll over at a stated, testable moment. */
+function dayOf(epochMs: number): string {
+  return new Date(epochMs).toISOString().slice(0, 10);
+}
+
+export type RelayHandler = (request: RelayRequest) => Promise<RelayResponse>;
+
+/**
+ * The relay, as one function of one request. All limiting state lives in the
+ * returned closure: in-memory and reset on restart, which is proportionate —
+ * the caps guard a demo budget, not a ledger.
+ */
+export function createRelay(deps: RelayDeps): RelayHandler {
+  const { config } = deps;
+  const hitsByIp = new Map<string, number[]>();
+  let day = "";
+  let spentUsd = 0;
+  let calls = 0;
+
+  return async (request) => {
+    if (request.path === "/api/relay/health") {
+      if (request.method !== "GET") return refuse(405, "health is read-only");
+      return config.apiKey === ""
+        ? json(503, { ok: false })
+        : json(200, { ok: true, models: config.models });
+    }
+
+    if (request.path !== "/api/relay/chat") return refuse(404, "no such door");
+    if (request.method !== "POST") return refuse(405, "chat is POST-only");
+    if (config.apiKey === "") {
+      return refuse(503, "This deployment carries no key — bring your own on the session page.");
+    }
+
+    const at = deps.now();
+    const today = dayOf(at);
+    if (today !== day) {
+      day = today;
+      spentUsd = 0;
+      calls = 0;
+    }
+    if (spentUsd >= config.dailySpendCapUsd || calls >= config.dailyCallCap) {
+      return refuse(503, "The League's free budget for today is spent. Come back tomorrow — or bring your own key.");
+    }
+
+    const hits = (hitsByIp.get(request.ip) ?? []).filter((t) => at - t < config.perIpWindowMs);
+    if (hits.length >= config.perIpLimit) {
+      hitsByIp.set(request.ip, hits);
+      return refuse(429, "You're going a little fast — free sessions are rate-limited. Give it a minute and try again.");
+    }
+    hits.push(at);
+    hitsByIp.set(request.ip, hits);
+
+    const read = readChatBody(request.body, config);
+    if (typeof read === "string") return refuse(400, read);
+
+    // Built, never forwarded: only the understood fields cross, and the
+    // relay's own discipline (temperature, usage accounting) is not the
+    // caller's to set.
+    const upstreamBody = JSON.stringify({
+      model: read.model,
+      temperature: 0,
+      max_tokens: Math.min(read.maxTokens ?? config.maxTokens, config.maxTokens),
+      usage: { include: true },
+      ...(read.responseFormat === undefined ? {} : { response_format: read.responseFormat }),
+      messages: read.messages,
+    });
+
+    let upstream;
+    try {
+      upstream = await deps.fetch(config.upstreamUrl, {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${config.apiKey}`,
+          "content-type": "application/json",
+          "http-referer": "https://github.com/smartnose/regulated-pokemon",
+          "x-title": "Regulated Pokemon - Indigo Accord live session relay",
+        },
+        body: upstreamBody,
+      });
+    } catch {
+      return refuse(502, "The model provider could not be reached. Try again in a moment.");
+    }
+
+    const raw = await upstream.text().catch(() => "");
+    // Belt and braces, same as the driver: nothing that came back crosses to
+    // a browser with the key still in it.
+    const scrubbed = redact(raw, config.apiKey);
+
+    calls += 1;
+    if (upstream.ok) {
+      try {
+        const payload = JSON.parse(scrubbed) as { usage?: { cost?: unknown } };
+        const cost = payload.usage?.cost;
+        if (typeof cost === "number" && Number.isFinite(cost) && cost > 0) spentUsd += cost;
+      } catch {
+        // An unparseable 200 still counted a call; the call cap has it.
+      }
+    }
+
+    return { status: upstream.status, contentType: "application/json", body: scrubbed };
+  };
+}
+
+// --- the static half --------------------------------------------------------
+
+const MIME: Readonly<Record<string, string>> = {
+  html: "text/html; charset=utf-8",
+  js: "text/javascript; charset=utf-8",
+  css: "text/css; charset=utf-8",
+  json: "application/json",
+  svg: "image/svg+xml",
+  png: "image/png",
+  ico: "image/x-icon",
+  txt: "text/plain; charset=utf-8",
+};
+
+/**
+ * The built app's files, answered from an injected reader. Path discipline
+ * first: only a clean, rooted path with no traversal reaches the reader, so
+ * the reader can be a straight filesystem read.
+ */
+export function staticResponse(
+  urlPath: string,
+  readFile: (relativePath: string) => Uint8Array | null,
+): { status: number; contentType: string; body: Uint8Array | string } {
+  const path = urlPath === "/" ? "/index.html" : urlPath;
+  if (!path.startsWith("/") || path.includes("..") || path.includes("\0")) {
+    return { status: 404, contentType: MIME.txt!, body: "no such page" };
+  }
+  const extension = path.slice(path.lastIndexOf(".") + 1).toLowerCase();
+  const contentType = MIME[extension];
+  if (contentType === undefined) return { status: 404, contentType: MIME.txt!, body: "no such page" };
+  const file = readFile(path.slice(1));
+  if (file === null) return { status: 404, contentType: MIME.txt!, body: "no such page" };
+  return { status: 200, contentType, body: file };
+}

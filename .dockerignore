@@ -1,0 +1,16 @@
+# Nothing secret and nothing heavy enters the build context. The .env line is
+# the one that matters: the key reaches the deployment as a fly secret, never
+# as a file inside any image layer.
+.env
+.env.*
+!.env.example
+node_modules
+dist
+app/dist
+coverage
+.git
+.github
+.claude
+.playwright-mcp
+runs
+*.log

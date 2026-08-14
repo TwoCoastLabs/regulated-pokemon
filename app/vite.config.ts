@@ -7,7 +7,10 @@ import { defineConfig } from "vite";
 export default defineConfig({
   root: import.meta.dirname,
   // The app reaches up for src/ (pure modules) and runs/ (the filed record).
-  server: { fs: { allow: [".."] } },
+  // The /api proxy is dev-only convenience: `npm run relay` on :8080 beside
+  // `app:dev` gives the League's-key mode with hot reload; without a relay
+  // running the probe fails and the page falls back to bring-your-own-key.
+  server: { fs: { allow: [".."] }, proxy: { "/api": "http://localhost:8080" } },
   oxc: { jsx: { runtime: "automatic", importSource: "preact" } },
   // The bundle carries the pinned snapshot (~530 kB of certified data) so the
   // crucible page can load the registry offline; that is cargo, not code, and
