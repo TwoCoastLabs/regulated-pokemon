@@ -15,17 +15,17 @@
       {
         "id": "page.lead",
         "text": {
-          "en-US": "Everything below was recomputed from the pinned registry before it reached this page.",
-          "en-GB": "Everything below was recomputed from the pinned registry before it reached this page."
+          "en-US": "Every value below was checked by the League against the official records before this page could be shown.",
+          "en-GB": "Every value below was checked by the League against the official records before this page could be shown."
         }
       },
       {
         "id": "lead-in.fact",
-        "text": { "en-US": "From the certified registry:", "en-GB": "From the certified registry:" }
+        "text": { "en-US": "From the official records:", "en-GB": "From the official records:" }
       },
       {
         "id": "lead-in.count",
-        "text": { "en-US": "Certified count for this set:", "en-GB": "Certified count for this set:" }
+        "text": { "en-US": "Counted by the League itself:", "en-GB": "Counted by the League itself:" }
       },
       {
         "id": "lead-in.membership",

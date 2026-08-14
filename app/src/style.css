@@ -1146,6 +1146,143 @@ body {
   gap: 14px;
 }
 
+/* With the machinery shown, the page widens to seat both registers. */
+.live:has(.live-panes.with-console) {
+  max-width: 1360px;
+}
+
+.live-panes {
+  display: grid;
+  gap: 14px;
+  align-items: start;
+}
+
+.live-panes.with-console {
+  grid-template-columns: minmax(420px, 1.4fr) minmax(320px, 1fr);
+}
+
+.live-persona {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--indigo);
+}
+
+.console-toggle {
+  margin-left: auto;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border: 1px solid var(--indigo);
+  border-radius: 3px;
+  background: var(--card);
+  color: var(--indigo);
+  cursor: pointer;
+}
+
+.console-toggle.current {
+  background: var(--indigo-deep);
+  border-color: var(--indigo-deep);
+  color: #fff;
+}
+
+/* --- the compliance console (live) --- */
+
+.live-console {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--indigo);
+  border-radius: 6px;
+  padding: 14px 16px;
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.live-console h3 {
+  margin: 0;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--indigo);
+}
+
+.console-line {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.console-notes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.console-record {
+  border-top: 1px dotted var(--line);
+  padding-top: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.console-record h4 {
+  margin: 0;
+  font-size: 13px;
+}
+
+.console-stages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.console-stages li {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.console-ok {
+  color: var(--ledger);
+  font-weight: 600;
+}
+
+.console-stages li.refused > .mono {
+  color: var(--seal);
+  font-weight: 700;
+}
+
+.console-violations {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.console-violations li {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.console-message {
+  font-size: 12px;
+  color: var(--ink);
+}
+
 .live-setup {
   background: var(--card);
   border: 1px solid var(--line);
