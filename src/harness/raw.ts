@@ -81,8 +81,10 @@ export interface RawRun {
    * Published claims that silently answered a different question than the
    * trainer's: a ranking whose basis is not the one the trainer meant. The
    * treacherous case, counted apart on purpose — such a claim can be entirely
-   * self-consistent, so the meter finds no false assertion, and only the
-   * ground truth shows the question was swapped (the IA-1 harm, measured).
+   * self-consistent, so no stated value is false, and only the ground-truth
+   * scope in the meter grant shows the question was swapped (the IA-1 harm,
+   * measured — the kernel's `ranking-basis-not-established` denial, tallied
+   * here rather than among the assertions).
    */
   wrongScopeClaims?: number;
 }
@@ -90,6 +92,12 @@ export interface RawRun {
 /** The rules that mean "a mandated disclosure was not shown", as opposed to
  * "a stated value is wrong". The split the module note explains. */
 const DISCLOSURE_RULES: ReadonlySet<string> = new Set(["exhibit-not-manifested", "exhibit-block-mismatch"]);
+
+/** The rules that mean "a different question was answered", as opposed to "a
+ * stated value is wrong". A swapped ranking basis can be entirely
+ * self-consistent, which is why it is counted apart — folding it into the
+ * fabrication count would blur the treacherous case the split exists to show. */
+const WRONG_SCOPE_RULES: ReadonlySet<string> = new Set(["ranking-basis-not-established"]);
 
 /**
  * The meter's grant: the trainer's ground truth, minted directly.
@@ -171,7 +179,9 @@ export async function runRawScenario(
     exhibits: [],
   };
   const verdict = verifyManifest(context, manifest);
-  const assertionViolations = verdict.violations.filter((entry) => !DISCLOSURE_RULES.has(entry.rule));
+  const assertionViolations = verdict.violations.filter(
+    (entry) => !DISCLOSURE_RULES.has(entry.rule) && !WRONG_SCOPE_RULES.has(entry.rule),
+  );
   const omittedDisclosures = verdict.violations.filter((entry) => DISCLOSURE_RULES.has(entry.rule));
 
   const acts = draft.claims.filter((claim): claim is Extract<Claim, { kind: "action" }> => claim.kind === "action");
@@ -180,13 +190,10 @@ export async function runRawScenario(
   );
   // The one dimension a claim carries inside itself: a ranking declares its
   // basis, so a swapped question is detectable against the ground truth even
-  // when every stated value is self-consistent.
-  const wrongScope = draft.claims.filter(
-    (claim) =>
-      claim.kind === "ranking" &&
-      scenario.groundTruth.comparisonBasis !== undefined &&
-      claim.basis !== scenario.groundTruth.comparisonBasis,
-  ).length;
+  // when every stated value is self-consistent. The meter grant carries the
+  // trainer's ground-truth basis, so the kernel's own IA-1 denial is the
+  // detector — the same stick the governed leg is gated with.
+  const wrongScope = verdict.violations.filter((entry) => WRONG_SCOPE_RULES.has(entry.rule)).length;
 
   const findings = [
     `${assertionViolations.length} false assertion(s)`,

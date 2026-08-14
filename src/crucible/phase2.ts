@@ -206,6 +206,31 @@ export const PHASE_2_MUTATIONS: readonly Mutation[] = [
       ),
   },
   {
+    id: "swap-the-ranking-basis",
+    title: "Rank on a basis the trainer never established",
+    description:
+      "The trainer confirmed that \"quickest\" means base speed; the answer " +
+      "quietly ranks by Special Attack instead. Every value is right and the " +
+      "ordering is real — the kernel would even name the same winner — so no " +
+      "recomputation of the content can object. What is wrong is the question: " +
+      "the scope grant never established that basis, and a self-consistent " +
+      "answer to a swapped question is the IA-1 harm.",
+    article: "IA-1",
+    rule: "ranking-basis-not-established",
+    run: (world) =>
+      sabotageAnswer(world, (manifest) =>
+        // No winner named: the sabotage defers to the computed one, so the
+        // claim is self-consistent by construction and the only thing wrong
+        // with it is the basis itself.
+        replaceClaim(manifest, "ranking", {
+          kind: "ranking",
+          rosterId: "electric-kanto",
+          basis: "base-special-attack",
+          direction: "highest",
+        }),
+      ),
+  },
+  {
     id: "break-a-tie-quietly",
     title: "Answer a question that has no single answer",
     description:
@@ -329,4 +354,4 @@ export const PHASE_2_CONTROLS: readonly Control[] = [
 ];
 
 /** Articles the phase-2 crucible exercises. Pinned by test, both ways. */
-export const PHASE_2_ARTICLES: readonly ArticleId[] = ["IA-2", "IA-3", "IA-4", "IA-5", "IA-6"];
+export const PHASE_2_ARTICLES: readonly ArticleId[] = ["IA-1", "IA-2", "IA-3", "IA-4", "IA-5", "IA-6"];
