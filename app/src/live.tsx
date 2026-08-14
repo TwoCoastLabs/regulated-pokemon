@@ -116,7 +116,7 @@ function Page(props: { artifact: DomElement }) {
     <figure class="exhibit">
       <figcaption
         class="exhibit-tag"
-        title="Every value on this page was recomputed from the pinned official records before it could be shown; free text cannot appear on it at all."
+        title="The League checked every value on this page against its own frozen copy of the official records. The Advisor cannot write a word here — it only fills approved slots."
       >
         Checked &amp; certified
       </figcaption>
@@ -153,7 +153,10 @@ function RecordItem(props: { record: Transaction; page: DomElement | undefined }
               </li>
             ))}
           </ul>
-          <p class="fine">Nothing above reached you — that's the point. The full ruling is in the console.</p>
+          <p class="fine">
+            None of it ever reached you — that's the point. The full ruling is one click away under “Show the
+            machinery”.
+          </p>
         </div>
       </div>
     );
@@ -328,9 +331,9 @@ export function Live() {
         <section class="live-setup">
           <h2>Sit down with the Advisor</h2>
           <p>
-            A real AI plays the League's Advisor, and the League's inspector — running right here in your tab — checks
-            every answer against the official Pokédex records before you see it. The Advisor can charm; it cannot make
-            things up to you.
+            A real AI plays the League's Advisor, and the League — running right here in your tab — checks every
+            answer against the official Pokédex records before you see it. The Advisor can charm; nothing it makes up
+            can reach you.
           </p>
           <p>
             You bring the model: an OpenRouter key powers the Advisor, stays in this tab's memory, is sent only to{" "}
@@ -369,9 +372,9 @@ export function Live() {
           </button>
           {trouble !== null && <p class="refusal-banner">{trouble}</p>}
           <p class="fine">
-            The cheating Advisor is the fun one: it is under orders to slip a lie past the inspector in every answer.
-            It has never managed it — not because the model is good, but because the inspector recomputes everything.
-            Come watch it try.
+            The cheating Advisor is the fun one: it is under orders to slip a lie past the League in every answer. It
+            hasn't managed it yet — not because models are bad at lying, but because the League looks every value up
+            itself. Come watch it try.
           </p>
         </section>
       </div>

@@ -68,8 +68,9 @@ const VIEWS: readonly { id: View; label: string; lead: string }[] = [
     id: "live",
     label: "Live session",
     lead:
-      "You as the trainer, a real model as the Advisor, the kernel in this tab as the gate. Bring your own " +
-      "OpenRouter key; nothing binds without your confirmation, and every exchange files a replayable record.",
+      "You as the trainer, a real AI as the Advisor, and the League's checks running right here in your tab. " +
+      "Bring your own OpenRouter key; nothing counts until you confirm it, and every exchange leaves a record " +
+      "anyone can re-run.",
   },
 ];
 

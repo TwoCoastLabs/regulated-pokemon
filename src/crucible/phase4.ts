@@ -299,7 +299,7 @@ export const PHASE_4_MUTATIONS: readonly Mutation[] = [
     title: "Soften the lead-in the catalogue approved",
     description:
       "Copy asserts nothing, which is exactly why it is worth attacking: " +
-      '"From the certified registry:" becomes "From memory, roughly:" and ' +
+      '"From the official records:" becomes "From memory, roughly:" and ' +
       "the number beside it is still perfectly certified. The catalogue is " +
       "versioned data for this reason — a renderer may choose which approved " +
       "string to use and may not choose its words.",
@@ -358,7 +358,7 @@ export const PHASE_4_MUTATIONS: readonly Mutation[] = [
             // card's existence rather than on sloppy markup around it.
             element("section", { [UNIT_ATTRIBUTE]: "fact:missingno:base-speed" }, [
               element("p", {}, [
-                element("span", { [COPY_ATTRIBUTE]: "lead-in.fact" }, [text("From the certified registry:")]),
+                element("span", { [COPY_ATTRIBUTE]: "lead-in.fact" }, [text("From the official records:")]),
                 element("span", { [SLOT_ATTRIBUTE]: "entity" }, [text("Missingno")]),
                 element("span", { [SLOT_ATTRIBUTE]: "value" }, [text("136")]),
               ]),
