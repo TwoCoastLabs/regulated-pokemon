@@ -3,17 +3,20 @@
  * the bundled certified world as the ground, and the kernel in this tab as
  * the gate — the same `runTransaction` CI runs, driven by src/session.
  *
- * Bring-your-own-key, deliberately: the key lives in component state for the
- * duration of the session, is sent only to openrouter.ai by the same driver
- * the billable harness uses (which scrubs it from every error it raises), and
- * is never persisted, logged, or sent anywhere else. There is no server; the
- * conversation happens between this tab and the model, with the kernel
- * standing where it always stands.
+ * Two registers, one page. The chat speaks to a *player*: what happened and
+ * what to do next, in trainer's terms, with no article codes or digests in
+ * the primary copy (src/ui/plain.ts is that voice, tested like the page copy
+ * it is). The **compliance console** is one toggle away and speaks the
+ * League's own words — stage verdicts, scope pins, kernel messages, digests,
+ * the filed record itself. Where a formal term must surface in the player
+ * register (an article chip on a refusal), it carries its explanation as a
+ * widget, reusing the article registry's real-world analogs.
  *
- * Everything the visitor sees in the chat is derived from the session state:
- * the transcript's own events, the driver's notes, and the filed records —
- * the same discipline as the run ledger, applied to a conversation that is
- * still happening.
+ * Bring-your-own-key, deliberately (a hosted relay is #36): the key lives in
+ * component state for the duration of the session, is sent only to
+ * openrouter.ai by the same driver the billable harness uses (which scrubs it
+ * from every error it raises), and is never persisted, logged, or sent
+ * anywhere else.
  */
 import { useMemo, useState } from "preact/hooks";
 
@@ -28,7 +31,6 @@ import { OpenRouterProvider } from "../../src/harness/openrouter.js";
 import type { ModelProvider } from "../../src/harness/provider.js";
 import type { DomElement } from "../../src/kernel/dom.js";
 import type { Transaction } from "../../src/kernel/transaction.js";
-import { denialCode } from "../../src/kernel/violation.js";
 import {
   decideAct,
   decideScope,
@@ -41,6 +43,8 @@ import {
   startSession,
 } from "../../src/session/session.js";
 import { adaptArtifact } from "../../src/ui/artifact-dom.js";
+import { plainCandidate, plainStage, plainViolation } from "../../src/ui/plain.js";
+import { violationView } from "../../src/ui/viewmodel.js";
 import { browserFactory } from "./mount.js";
 import { demoWorld } from "./world.js";
 
@@ -110,35 +114,46 @@ function Page(props: { artifact: DomElement }) {
 
   return (
     <figure class="exhibit">
-      <figcaption class="exhibit-tag">Certified page · governed region</figcaption>
+      <figcaption
+        class="exhibit-tag"
+        title="Every value on this page was recomputed from the pinned official records before it could be shown; free text cannot appear on it at all."
+      >
+        Checked &amp; certified
+      </figcaption>
       {refusal !== null && <p class="exhibit-refusal">{refusal}</p>}
       <div class="exhibit-page" ref={attach} />
     </figure>
   );
 }
 
-function candidateLines(proposal: ScopeProposal): string[] {
-  return Object.entries(proposal.candidate).map(([dimension, value]) => `${dimension} = ${String(value)}`);
+/** An article chip: the one formal token the player register keeps, wearing
+ * its explanation — title, then the real-world analog — as a tooltip. */
+function ArticleChip(props: { code: string; articleTitle: string; analog: string }) {
+  return (
+    <span class="stamp-code mono" title={`${props.articleTitle} — real-world analog: ${props.analog}`}>
+      {props.code}
+    </span>
+  );
 }
 
 function RecordItem(props: { record: Transaction; page: DomElement | undefined }) {
   const { record, page } = props;
   const outcome = record.outcome;
   if (outcome.status === "denied") {
+    const denials = outcome.violations.map(plainViolation);
     return (
       <div class="live-item advisor">
         <div class="live-denial">
-          <p class="live-denial-lead">
-            The kernel refused this answer at the {outcome.stage} stage — the record, not the model, is what says so.
-          </p>
+          <p class="live-denial-lead">The League stepped in {plainStage(outcome.stage)}.</p>
           <ul>
-            {outcome.violations.map((violation) => (
+            {denials.map((denial) => (
               <li>
-                <span class="stamp-code mono">{denialCode(violation)}</span>
-                <span class="live-denial-detail">{violation.message}</span>
+                <span class="live-denial-detail">{denial.plain}</span>
+                <ArticleChip code={denial.code} articleTitle={denial.articleTitle} analog={denial.analog} />
               </li>
             ))}
           </ul>
+          <p class="fine">Nothing above reached you — that's the point. The full ruling is in the console.</p>
         </div>
       </div>
     );
@@ -148,12 +163,104 @@ function RecordItem(props: { record: Transaction; page: DomElement | undefined }
       {page !== undefined && <Page artifact={page} />}
       <p class={`outcome ${outcome.status === "declined" ? "quiet" : "ok"}`}>
         {outcome.status === "acted"
-          ? "Confirmed act authorised against the exact page above — a grant per act, the whole chain verified."
+          ? "Done — exactly what the page showed, nothing more."
           : outcome.status === "declined"
-            ? "You declined; the certified answer stands and nothing executed."
-            : "Certified answer committed: every claim recomputed from the snapshot before it reached this page."}
+            ? "No problem — nothing was done. The answer above still stands."
+            : "Every value on this page was checked against the official records before you saw it."}
       </p>
     </div>
+  );
+}
+
+// --- the compliance console -------------------------------------------------
+
+/** One settled exchange, in the League's own words: the formal identity the
+ * player register deliberately leaves out. */
+function ConsoleRecord(props: { record: Transaction }) {
+  const { record } = props;
+  const pins = Object.entries(record.grant?.scope ?? {});
+  return (
+    <section class="console-record">
+      <h4 class="mono">{record.id}</h4>
+      <p class="console-line mono">outcome: {record.outcome.status}</p>
+      {pins.length > 0 && (
+        <p class="console-line mono" title="the scope this answer was certified under">
+          {pins.map(([dimension, value]) => `${dimension}=${String(value)}`).join(" · ")}
+        </p>
+      )}
+      <ul class="console-stages">
+        {record.verdicts.map((entry) => (
+          <li class={entry.verdict.allowed ? "ok" : "refused"}>
+            <span class="mono">{entry.stage}</span>
+            {entry.verdict.allowed ? (
+              <span class="console-ok">allowed</span>
+            ) : (
+              <ul class="console-violations">
+                {entry.verdict.violations.map(violationView).map((view) => (
+                  <li>
+                    <ArticleChip code={view.code} articleTitle={view.articleTitle} analog={view.analog} />
+                    <span class="console-message">{view.message}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ul>
+      {record.affidavit !== undefined && (
+        <p class="console-line mono" title="digest of the visible content, from the affidavit">
+          page {record.affidavit.artifactDigest}
+        </p>
+      )}
+      {record.confirmation !== undefined && (
+        <p class="console-line mono" title="the trainer's confirmation binds this exact digest">
+          confirmed {record.confirmation.artifactDigest} at {record.confirmation.confirmedAt}
+        </p>
+      )}
+    </section>
+  );
+}
+
+function LiveConsole(props: { state: SessionState; setup: LiveSetup }) {
+  const { state, setup } = props;
+  const cost = state.usage;
+  return (
+    <aside class="live-console" aria-label="Compliance console">
+      <h3>The compliance console</h3>
+      <p class="fine">The same session, in the League's own words. Everything here is read from the filed records.</p>
+      <p class="console-line mono">
+        {setup.model} · {setup.persona} persona · {cost.calls} call{cost.calls === 1 ? "" : "s"} · $
+        {cost.costUsd.toFixed(4)}
+        {cost.costedCalls < cost.calls ? " (floor: some calls came back unpriced)" : ""} · {state.providerErrors}{" "}
+        provider error{state.providerErrors === 1 ? "" : "s"}
+      </p>
+      {state.notes.length > 0 && (
+        <ul class="console-notes">
+          {state.notes.map((note) => (
+            <li class="mono">
+              [{note.tone}] {note.text}
+            </li>
+          ))}
+        </ul>
+      )}
+      {state.records.length === 0 ? (
+        <p class="fine">No exchange has settled yet — records appear here as they are filed.</p>
+      ) : (
+        state.records.map((record) => <ConsoleRecord record={record} />)
+      )}
+      <button
+        type="button"
+        class="live-download"
+        disabled={state.records.length === 0}
+        onClick={() => downloadRecord(state)}
+      >
+        Download session record
+      </button>
+      <p class="fine">
+        The download carries the transcript and every filed record against the named snapshot and pack — enough for
+        anyone to re-execute each exchange and reproduce these verdicts bit-for-bit.
+      </p>
+    </aside>
   );
 }
 
@@ -171,6 +278,7 @@ export function Live() {
    * so the visitor's words never vanish while the model is consulted. */
   const [inFlight, setInFlight] = useState<string | null>(null);
   const [trouble, setTrouble] = useState<string | null>(null);
+  const [console_, setConsole] = useState(false);
   const clock = useMemo(makeClock, []);
 
   const deps = useMemo<SessionDeps | null>(() => {
@@ -218,12 +326,16 @@ export function Live() {
     return (
       <div class="live">
         <section class="live-setup">
-          <h2>Bring your own key</h2>
+          <h2>Sit down with the Advisor</h2>
           <p>
-            The session runs entirely in this tab: your key is held in memory for this page only, sent to nothing but{" "}
-            <span class="mono">openrouter.ai</span>, and never stored or logged. The model proposes; the kernel —
-            running right here, against the bundled certified snapshot — decides what commits. Live calls bill your
-            OpenRouter account.
+            A real AI plays the League's Advisor, and the League's inspector — running right here in your tab — checks
+            every answer against the official Pokédex records before you see it. The Advisor can charm; it cannot make
+            things up to you.
+          </p>
+          <p>
+            You bring the model: an OpenRouter key powers the Advisor, stays in this tab's memory, is sent only to{" "}
+            <span class="mono">openrouter.ai</span>, and is never stored or logged. Live calls bill your OpenRouter
+            account (a short session costs well under a cent).
           </p>
           <label>
             OpenRouter API key
@@ -235,7 +347,7 @@ export function Live() {
             />
           </label>
           <label>
-            Model slug
+            Model
             <input value={model} onInput={(event) => setModel(event.currentTarget.value)} list="live-models" />
             <datalist id="live-models">
               <option value={DEFAULT_STRONG_MODEL}>the measured strong model</option>
@@ -243,23 +355,23 @@ export function Live() {
             </datalist>
           </label>
           <label>
-            Persona
+            Your Advisor
             <select
               value={persona}
               onInput={(event) => setPersona(event.currentTarget.value === "adversarial" ? "adversarial" : "honest")}
             >
-              <option value="honest">honest — the Advisor as shipped</option>
-              <option value="adversarial">adversarial — instructed to fabricate; watch the gate</option>
+              <option value="honest">plays fair — answers as well as it can</option>
+              <option value="adversarial">cheats — instructed to lie to you; watch the League catch it</option>
             </select>
           </label>
           <button type="button" class="live-begin" disabled={key.trim() === ""} onClick={begin}>
-            Begin the session
+            Start the session
           </button>
           {trouble !== null && <p class="refusal-banner">{trouble}</p>}
           <p class="fine">
-            The adversarial persona is the crucible with a live model in it: the same instructions the harness's
-            red-team leg runs, so you can watch a model actively trying to slip a fabrication past the gate — and the
-            gate naming the article as it refuses.
+            The cheating Advisor is the fun one: it is under orders to slip a lie past the inspector in every answer.
+            It has never managed it — not because the model is good, but because the inspector recomputes everything.
+            Come watch it try.
           </p>
         </section>
       </div>
@@ -272,128 +384,143 @@ export function Live() {
 
   return (
     <div class="live">
-      <div class="live-meta mono">
+      <div class="live-meta">
+        <span class="mono">{setup.model}</span>
+        <span class="live-persona">{setup.persona === "honest" ? "plays fair" : "cheats — watch the League"}</span>
         <span>
-          {setup.model} · {setup.persona}
-        </span>
-        <span>
-          {cost.calls} call{cost.calls === 1 ? "" : "s"} · ${cost.costUsd.toFixed(4)}
-          {cost.costedCalls < cost.calls ? " (floor)" : ""} · {state.providerErrors} provider error
-          {state.providerErrors === 1 ? "" : "s"}
+          {cost.calls} model call{cost.calls === 1 ? "" : "s"} · ${cost.costUsd.toFixed(4)} so far
         </span>
         <button
           type="button"
-          class="live-download"
-          disabled={state.records.length === 0}
-          onClick={() => downloadRecord(state)}
+          class={`console-toggle${console_ ? " current" : ""}`}
+          aria-pressed={console_}
+          onClick={() => setConsole(!console_)}
         >
-          Download session record
+          {console_ ? "Hide the machinery" : "Show the machinery"}
         </button>
       </div>
 
-      <div class="live-chat">
-        {items.length === 0 && (
-          <p class="live-hint">
-            Introduce yourself and ask — the Accord needs your version, region and badge count before anything can be
-            certified. For example: “I'm playing Red and Blue, travelling around the Kanto region, and I have 8
-            badges. Which of the Electric ones is the quickest?”
-          </p>
-        )}
-        {items.map((item, index) => {
-          const latest = index === items.length - 1;
-          switch (item.kind) {
-            case "visitor":
-              return (
-                <div class="live-item trainer">
-                  <p class="live-bubble trainer">{item.text}</p>
-                </div>
-              );
-            case "proposal": {
-              const active =
-                phase.kind === "confirming-scope" && phase.proposal.id === item.proposal.id && !busy;
-              return (
-                <div class="live-item advisor">
-                  <div class="live-proposal">
-                    <p class="live-proposal-lead">
-                      The Advisor reads “{item.proposal.interpreting}” as:{" "}
-                      <span class="mono">{candidateLines(item.proposal).join(", ")}</span>
-                    </p>
-                    <p class="fine">
-                      Nothing binds unless you confirm this exact interpretation — digest{" "}
-                      <span class="mono">{proposalDigest(item.proposal).slice(0, 18)}…</span>
-                    </p>
-                    {active && (
-                      <div class="live-actions">
-                        <button type="button" onClick={() => run((s) => decideScope(s, "confirm", deps))}>
-                          That is what I meant
-                        </button>
-                        <button type="button" class="quiet" onClick={() => run((s) => decideScope(s, "reject", deps))}>
-                          No — not that
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            }
-            case "decision":
-              return (
-                <div class="live-item trainer">
-                  <p class="live-bubble decision">{item.decision === "confirm" ? "Confirmed." : "Rejected."}</p>
-                </div>
-              );
-            case "note":
-              return (
-                <div class="live-item advisor">
-                  <p class={`live-note ${item.note.tone}`}>
-                    {item.note.text}
-                    {latest && !busy && (
-                      <button type="button" class="live-retry" onClick={() => run((s) => retry(s, deps))}>
-                        retry
-                      </button>
-                    )}
-                  </p>
-                </div>
-              );
-            case "record":
-              return <RecordItem record={item.record} page={item.page} />;
-            default:
-              return null;
-          }
-        })}
-
-        {inFlight !== null && (
-          <div class="live-item trainer">
-            <p class="live-bubble trainer">{inFlight}</p>
-          </div>
-        )}
-
-        {phase.kind === "asking" && inFlight === null && (
-          <div class="live-item advisor">
-            <p class="live-bubble advisor">{phase.question}</p>
-          </div>
-        )}
-
-        {phase.kind === "confirming-act" && (
-          <div class="live-item advisor">
-            <Page artifact={phase.artifact} />
-            <div class="live-actions">
-              <button type="button" disabled={busy} onClick={() => run((s) => decideAct(s, "confirm", deps))}>
-                I consent — perform exactly what this page shows
-              </button>
-              <button type="button" class="quiet" disabled={busy} onClick={() => run((s) => decideAct(s, "decline", deps))}>
-                Decline
-              </button>
-            </div>
-            <p class="fine">
-              Your consent binds the digest of this exact page (IA-7); a page altered after you read it is a different
-              page and cannot execute.
+      <div class={`live-panes${console_ ? " with-console" : ""}`}>
+        <div class="live-chat">
+          {items.length === 0 && inFlight === null && (
+            <p class="live-hint">
+              Tell the Advisor about your game, then ask away — it needs your version, region and badge count before
+              the League will certify anything. Try: “I'm playing Red and Blue, travelling around the Kanto region,
+              and I have 8 badges. Which of the Electric ones is the quickest?”
             </p>
-          </div>
-        )}
+          )}
+          {items.map((item, index) => {
+            const latest = index === items.length - 1;
+            switch (item.kind) {
+              case "visitor":
+                return (
+                  <div class="live-item trainer">
+                    <p class="live-bubble trainer">{item.text}</p>
+                  </div>
+                );
+              case "proposal": {
+                const active = phase.kind === "confirming-scope" && phase.proposal.id === item.proposal.id && !busy;
+                return (
+                  <div class="live-item advisor">
+                    <div class="live-proposal">
+                      <p class="live-proposal-lead">
+                        Just to be sure — by “{item.proposal.interpreting}”, you mean{" "}
+                        <strong>{plainCandidate(item.proposal.candidate)}</strong>?
+                      </p>
+                      <p
+                        class="fine"
+                        title={`Your yes is sealed to this exact reading by a fingerprint (${proposalDigest(item.proposal).slice(0, 18)}…); an edited reading is a different one and your yes will not carry over.`}
+                      >
+                        Only your yes makes this stick — and it sticks to exactly this reading, nothing else.
+                      </p>
+                      {active && (
+                        <div class="live-actions">
+                          <button type="button" onClick={() => run((s) => decideScope(s, "confirm", deps))}>
+                            Yes, that's what I meant
+                          </button>
+                          <button
+                            type="button"
+                            class="quiet"
+                            onClick={() => run((s) => decideScope(s, "reject", deps))}
+                          >
+                            No — not that
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              }
+              case "decision":
+                return (
+                  <div class="live-item trainer">
+                    <p class="live-bubble decision">
+                      {item.decision === "confirm" ? "Yes — that's what I meant." : "No — not that."}
+                    </p>
+                  </div>
+                );
+              case "note":
+                return (
+                  <div class="live-item advisor">
+                    <p class={`live-note ${item.note.tone}`} title={item.note.text}>
+                      {item.note.tone === "error"
+                        ? "The connection to the model failed — nothing was lost."
+                        : "The Advisor couldn't put together a checkable answer this time."}
+                      {latest && !busy && (
+                        <button type="button" class="live-retry" onClick={() => run((s) => retry(s, deps))}>
+                          try again
+                        </button>
+                      )}
+                    </p>
+                  </div>
+                );
+              case "record":
+                return <RecordItem record={item.record} page={item.page} />;
+              default:
+                return null;
+            }
+          })}
 
-        {busy && <p class="live-busy">The Advisor is consulting the model…</p>}
-        {trouble !== null && <p class="refusal-banner">{trouble}</p>}
+          {inFlight !== null && (
+            <div class="live-item trainer">
+              <p class="live-bubble trainer">{inFlight}</p>
+            </div>
+          )}
+
+          {phase.kind === "asking" && inFlight === null && (
+            <div class="live-item advisor">
+              <p class="live-bubble advisor">{phase.question}</p>
+            </div>
+          )}
+
+          {phase.kind === "confirming-act" && (
+            <div class="live-item advisor">
+              <Page artifact={phase.artifact} />
+              <div class="live-actions">
+                <button type="button" disabled={busy} onClick={() => run((s) => decideAct(s, "confirm", deps))}>
+                  Yes — do exactly what's shown
+                </button>
+                <button
+                  type="button"
+                  class="quiet"
+                  disabled={busy}
+                  onClick={() => run((s) => decideAct(s, "decline", deps))}
+                >
+                  Never mind
+                </button>
+              </div>
+              <p class="fine">
+                This is for real: your yes sticks to this exact page. If the page changed after you read it, the
+                League refuses to act on it.
+              </p>
+            </div>
+          )}
+
+          {busy && <p class="live-busy">The Advisor is thinking…</p>}
+          {trouble !== null && <p class="refusal-banner">{trouble}</p>}
+        </div>
+
+        {console_ && <LiveConsole state={state} setup={setup} />}
       </div>
 
       <form
