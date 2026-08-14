@@ -2,6 +2,10 @@ node_modules/
 dist/
 app/dist/
 coverage/
+# Playwright MCP's scratch output: screenshots, page snapshots and downloaded
+# session records from a browser-driven walkthrough. Evidence for a review,
+# never part of the record — the artifacts that count live in runs/.
+.playwright-mcp/
 *.log
 .env
 .env.*
