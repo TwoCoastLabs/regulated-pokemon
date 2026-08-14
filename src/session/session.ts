@@ -404,11 +404,13 @@ async function answer(state: SessionState, deps: SessionDeps): Promise<SessionSt
   const draft = step.decode.draft;
 
   // The structural escalation: the model wants to rank, and no basis was ever
-  // established. Submitting would let the claim's own basis stand in for the
-  // trainer's question — the silent scope swap IA-1 exists to forbid — so the
-  // draft is discarded and the exchange falls back to the ladder, now required
-  // to establish the basis before any answer is compiled. The trigger is the
-  // decoded claim's type, never the wording; a miss costs a question.
+  // established. The kernel would refuse the draft by name (IA-1/
+  // ranking-basis-not-established — the same denial a mismatched basis gets),
+  // so nothing rests on this branch; it exists so the exchange falls back to
+  // the ladder and costs the visitor a question rather than a denial, now
+  // required to establish the basis before any answer is compiled. The
+  // trigger is the decoded claim's type, never the wording; a miss costs a
+  // question — never a wrongly scoped commit, which the manifest gate holds.
   const wantsRanking = draft.claims.some((claim) => claim.kind === "ranking");
   if (wantsRanking && resolved.grant.scope.comparisonBasis === undefined) {
     return drive({ ...withUsage, required: [...REQUIRED_DIMENSIONS, "comparisonBasis"] }, deps);

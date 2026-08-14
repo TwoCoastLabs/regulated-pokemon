@@ -224,13 +224,56 @@ describe("ranking is recomputed over the declared basis", () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.violations.map(denialCode)).toContain("IA-4/ranking-tie");
-    expect(result.violations[0]?.actual).toBe("lapras, vaporeon");
+    expect(result.violations.find((entry) => entry.rule === "ranking-tie")?.actual).toBe("lapras, vaporeon");
   });
 
   it("denies a ranking over an empty set", () => {
     const empty: ClosedRoster = { ...ELECTRIC, id: "empty", memberIds: [], cardinality: 0 };
     const claim: Claim = { ...ranking, rosterId: "empty" };
     expect(denialsOf({ ...manifest, claims: [claim], rosters: [empty] })).toContain("IA-4/ranking-over-empty-roster");
+  });
+});
+
+describe("a ranking's basis is scope, not content", () => {
+  const ranking: Claim = {
+    kind: "ranking",
+    rosterId: "electric-kanto",
+    basis: "base-speed",
+    direction: "highest",
+    selectedEntityId: "electrode",
+  };
+  const manifest = compiled([ranking], [ELECTRIC]);
+
+  it("commits a ranking on the basis the grant establishes", () => {
+    // The fixture trainer confirmed "the quickest" as base-speed through the
+    // ladder; ranking on it is the answer to the question that was asked.
+    expect(verifyManifest(context, manifest)).toEqual({ allowed: true, violations: [] });
+  });
+
+  it("denies a self-consistent ranking on a basis the trainer never confirmed", () => {
+    // The treacherous case: winner omitted, so the kernel's own derivation
+    // would name the right member for this ordering — nothing about the
+    // content is false, and the question was still swapped.
+    const swapped: Claim = { kind: "ranking", rosterId: "electric-kanto", basis: "base-special-attack", direction: "highest" };
+    const denials = denialsOf({ ...manifest, claims: [swapped] });
+    expect(denials).toContain("IA-1/ranking-basis-not-established");
+    expect(denials.filter((code) => code.startsWith("IA-4"))).toEqual([]);
+  });
+
+  it("denies a ranking when no basis was ever established", () => {
+    // The same grant minus its comparisonBasis: a scope in which no ranking
+    // question was ever asked, so no basis the claim picks can be right.
+    const grant = trainerGrant();
+    const { comparisonBasis: _unbound, ...scope } = grant.scope;
+    const unestablished: ManifestContext = { ...context, grant: { ...grant, scope } };
+    expect(denialsOf(manifest, unestablished)).toContain("IA-1/ranking-basis-not-established");
+  });
+
+  it("refuses at compile as at verify, so the compiler cannot outrank the auditor", () => {
+    const result = compile([{ ...ranking, basis: "base-attack" }], [ELECTRIC]);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.violations.map(denialCode)).toContain("IA-1/ranking-basis-not-established");
   });
 });
 

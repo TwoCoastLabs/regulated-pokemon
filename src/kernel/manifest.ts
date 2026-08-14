@@ -497,25 +497,54 @@ function rankRoster(
   return { ok: true, winner: winners[0]!, score: best };
 }
 
+/**
+ * A ranking's basis is scope, not content. "Which is the quickest?" and "which
+ * hits hardest?" are different questions, and which one the trainer asked was
+ * settled when scope was established (IA-1) — so a claim ranking by any other
+ * basis is a self-consistent answer to a question nobody asked, the silent
+ * scope swap no recomputation of the ordering can catch. Checked against the
+ * grant, not the conversation: a basis the ladder never bound is a basis the
+ * answer may not rank on.
+ */
+function checkRankingBasis(context: ManifestContext, claim: Extract<Claim, { kind: "ranking" }>): Violation[] {
+  const established = context.grant.scope.comparisonBasis;
+  if (claim.basis === established) return [];
+  return [
+    violation(
+      "IA-1",
+      "ranking-basis-not-established",
+      established === undefined
+        ? `this answer ranks by "${claim.basis}" and the trainer never established a comparison basis`
+        : `this answer ranks by "${claim.basis}" and the trainer's established basis is "${established}"`,
+      { expected: established ?? "an established comparison basis", actual: claim.basis },
+    ),
+  ];
+}
+
 function checkRanking(
   context: ManifestContext,
   manifest: AnswerManifest,
   claim: Extract<Claim, { kind: "ranking" }>,
 ): Violation[] {
+  // Scope first: whatever else is wrong with the ordering, a basis the grant
+  // never established is already a denial in its own right.
+  const violations = checkRankingBasis(context, claim);
+
   const roster = rosterIn(manifest, claim.rosterId);
-  if (roster === undefined) return [missingRoster(claim.rosterId)];
+  if (roster === undefined) return [...violations, missingRoster(claim.rosterId)];
 
   // The set, basis and direction decide the winner before the claim's own guess
   // is consulted: an empty set, an unorderable basis or a tie is refused whether
   // or not a member was named.
   const outcome = rankRoster(context, roster, claim.basis, claim.direction);
-  if (!outcome.ok) return outcome.violations;
+  if (!outcome.ok) return [...violations, ...outcome.violations];
 
   // An omitted selection defers to the computed winner and cannot disagree.
-  if (claim.selectedEntityId === undefined) return [];
+  if (claim.selectedEntityId === undefined) return violations;
 
   if (!roster.memberIds.includes(claim.selectedEntityId)) {
     return [
+      ...violations,
       violation(
         "IA-4",
         "ranking-outside-roster",
@@ -524,8 +553,9 @@ function checkRanking(
       ),
     ];
   }
-  if (claim.selectedEntityId === outcome.winner) return [];
+  if (claim.selectedEntityId === outcome.winner) return violations;
   return [
+    ...violations,
     violation("IA-4", "ranking-mismatch", `"${claim.selectedEntityId}" does not have the ${claim.direction} ${claim.basis} in "${roster.id}"`, {
       expected: `${outcome.winner} (${outcome.score})`,
       actual: claim.selectedEntityId,
