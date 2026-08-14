@@ -43,7 +43,7 @@ public, it doesn't go in the repo at all.
   artifact, so a published number is always traceable to the run that produced
   it, never hand-transcribed.
 - **Web app:** `npm run app:dev` serves the Phase 8 UI; `app:build` bundles
-  it (CI does, so it cannot rot). Three pages, split by where truth comes
+  it (CI does, so it cannot rot). Four pages, split by where truth comes
   from. The **run ledger** replays the filed artifact in `runs/` as pages —
   chat, certified page, compliance console — and never recomputes: everything
   on that screen is read from the record. The **scoreboard** lays that same
@@ -52,9 +52,14 @@ public, it doesn't go in the repo at all.
   **crucible** page is the opposite on purpose: it runs the real kernel live
   in the tab — the same mutation values CI runs, against the bundled snapshot
   and pack — so a visitor can press a sabotage and watch its named denial.
-  All three go through the pure projections in `src/ui/`, tested and
-  coverage-counted like the kernel; still no model and no key anywhere in
-  the app.
+  The **live session** page puts a real model behind that same kernel with
+  the visitor as the trainer (`src/session/`, driven bring-your-own-key: the
+  visitor's OpenRouter key stays in tab memory, goes only to openrouter.ai,
+  and bills them); every settled exchange files a replayable `Transaction`.
+  All four go through tested, coverage-counted code below `app/`; the app
+  itself still ships with no model and no key — a key exists only when a
+  visitor types theirs, and CI exercises the session driver with scripted
+  models only.
 
 ## LLM keys
 

@@ -13,6 +13,7 @@ import type { HarnessRun } from "../../src/harness/run.js";
 import { enforcementCounters, groupRuns } from "../../src/ui/viewmodel.js";
 import { Console } from "./console.js";
 import { Crucible } from "./crucible.js";
+import { Live } from "./live.js";
 import { bundledArtifact, openArtifact, type ArtifactSource } from "./load.js";
 import { Scoreboard } from "./scoreboard.js";
 import { Conversation, Picker } from "./views.js";
@@ -32,13 +33,13 @@ function runFromUrl(): number | null {
   return Number.isInteger(index) && index >= 0 ? index : null;
 }
 
-/** The three pages: the filed record replayed, its models compared, and the
- * crucible run live. */
-type View = "ledger" | "scoreboard" | "crucible";
+/** The four pages: the filed record replayed, its models compared, the
+ * crucible run live, and a live session with the visitor as the trainer. */
+type View = "ledger" | "scoreboard" | "crucible" | "live";
 
 function viewFromUrl(): View {
   const raw = new URLSearchParams(window.location.search).get("view");
-  return raw === "crucible" || raw === "scoreboard" ? raw : "ledger";
+  return raw === "crucible" || raw === "scoreboard" || raw === "live" ? raw : "ledger";
 }
 
 const VIEWS: readonly { id: View; label: string; lead: string }[] = [
@@ -62,6 +63,13 @@ const VIEWS: readonly { id: View; label: string; lead: string }[] = [
     lead:
       "The mutations CI runs, with buttons on them. Each sabotage runs the real kernel in this tab and must land " +
       "on the denial it declared — plus the untampered control that keeps the refusals honest.",
+  },
+  {
+    id: "live",
+    label: "Live session",
+    lead:
+      "You as the trainer, a real model as the Advisor, the kernel in this tab as the gate. Bring your own " +
+      "OpenRouter key; nothing binds without your confirmation, and every exchange files a replayable record.",
   },
 ];
 
@@ -113,7 +121,7 @@ export function App() {
             ))}
           </nav>
         </div>
-        {view !== "crucible" && (
+        {(view === "ledger" || view === "scoreboard") && (
         <dl class="provenance">
           <div>
             <dt>record</dt>
@@ -154,7 +162,7 @@ export function App() {
           </div>
         </div>
         )}
-        {view !== "crucible" && (
+        {(view === "ledger" || view === "scoreboard") && (
         <label class="open-record">
           Open another run artifact…
           <input
@@ -167,7 +175,9 @@ export function App() {
         {refusal !== null && <p class="refusal-banner">{refusal}</p>}
       </header>
 
-      {view === "crucible" ? (
+      {view === "live" ? (
+        <Live />
+      ) : view === "crucible" ? (
         <Crucible />
       ) : view === "scoreboard" ? (
         <Scoreboard artifact={artifact} />
