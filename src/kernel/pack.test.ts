@@ -65,6 +65,17 @@ describe("the shipped pack holds up", () => {
     }
   });
 
+  it("states positive display floors for a live page to be measured against", () => {
+    // The floors the browser affidavit holds a real rendering to. They govern
+    // no offline check and never enter a digest — but a pack that shipped them
+    // zeroed would switch the live prominence and proximity gates off silently.
+    const { display } = pack.presentation;
+    expect(display.minLegiblePx).toBeGreaterThan(0);
+    expect(display.maxProximityPx).toBeGreaterThan(0);
+    expect(display.minLegibleOpacity).toBeGreaterThan(0);
+    expect(display.minLegibleOpacity).toBeLessThanOrEqual(1);
+  });
+
   it("approves only formats this kernel can render in every approved locale", () => {
     for (const formatId of pack.presentation.formats) {
       for (const locale of pack.presentation.locales) {
@@ -166,6 +177,31 @@ describe("a pack that cannot be trusted is refused by name", () => {
         }),
       ),
     ).toContain("IA-6/pack-copy-incomplete");
+  });
+
+  it("refuses a pack that states no display floors at all", () => {
+    // Fail closed: a page can only be measured against a policy that measures
+    // something. A missing floor is a gate switched off, not a lenient one.
+    expect(
+      denials(loadWith((draft) => delete (draft.presentation as { display?: unknown }).display)),
+    ).toContain("IA-6/pack-display-missing");
+  });
+
+  it("refuses a display floor that is zero, negative, or not a number", () => {
+    expect(
+      denials(loadWith((draft) => ((draft.presentation.display as { minLegiblePx: number }).minLegiblePx = 0))),
+    ).toContain("IA-6/pack-display-unusable");
+    expect(
+      denials(loadWith((draft) => ((draft.presentation.display as { maxProximityPx: number }).maxProximityPx = -1))),
+    ).toContain("IA-6/pack-display-unusable");
+    // Opacity is a fraction: a floor above one could never be met, and one at
+    // or below zero would call a transparent disclosure shown.
+    expect(
+      denials(loadWith((draft) => ((draft.presentation.display as { minLegibleOpacity: number }).minLegibleOpacity = 1.5))),
+    ).toContain("IA-6/pack-display-unusable");
+    expect(
+      denials(loadWith((draft) => ((draft.presentation.display as { minLegibleOpacity: number }).minLegibleOpacity = 0))),
+    ).toContain("IA-6/pack-display-unusable");
   });
 
   it("refuses a pack that says nothing about how an answer may be presented", () => {
