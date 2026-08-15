@@ -904,6 +904,37 @@ body {
   color: var(--seal);
 }
 
+/* --- the paint layer (browser-backed affidavit) -------------------------- */
+
+.geometry-crucible {
+  display: grid;
+  gap: 16px;
+  margin-top: 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.geometry-crucible .crucible-intro h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+/* The mounted certified page needs a real, bounded box to be laid out and
+ * measured against — this is the display region the affidavit treats as the
+ * viewport. `position: relative` gives the off-screen sabotage a positioned
+ * ancestor to escape, so it lands predictably outside this box. */
+.geometry-stage {
+  position: relative;
+  max-width: 640px;
+  overflow: hidden;
+}
+
+.geometry-contrast {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
 /* --- the scoreboard ------------------------------------------------------ */
 
 .scoreboard {

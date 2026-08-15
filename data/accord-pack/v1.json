@@ -1,5 +1,5 @@
 {
-  "packVersion": 4,
+  "packVersion": 5,
   "id": "indigo-accord-v1",
   "presentation": {
     "locales": ["en-US", "en-GB"],
@@ -53,7 +53,8 @@
         "id": "provenance.snapshot",
         "text": { "en-US": "Certified snapshot:", "en-GB": "Certified snapshot:" }
       }
-    ]
+    ],
+    "display": { "minLegiblePx": 12, "minLegibleOpacity": 0.5, "maxProximityPx": 320 }
   },
   "restrictions": [
     {

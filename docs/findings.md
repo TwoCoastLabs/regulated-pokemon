@@ -617,6 +617,71 @@ architecture."*
 
 ---
 
+## 15. The paint layer: a structural check the offline gate cannot make
+
+Not a live-*model* finding — the models are irrelevant here — but a structural
+one, and it closes the last box of Phase 8. Everything the render affidavit
+proved until now, it proved by reading the certified artifact's *markup*: which
+governed units are in the tree, what text is legible inside each, whether a
+disclosure is hidden by an inline `display:none`, `visibility:hidden` or an
+opacity below the floor. That is exactly what replays — an inline style means
+the same thing on every machine, so it can enter the digest a confirmation binds
+(IA-10). It is also exactly the ceiling: a stylesheet, a font stack and a
+viewport decide the rest at paint time, and none of it is in the markup.
+
+So a page can pass every structural check and still show the trainer nothing. A
+class that sets `display:none`; a warning shrunk to four pixels; a disclosure
+positioned a screen away from the claim it qualifies; a box collapsed to zero by
+zero. The browser-backed affidavit reads those as geometry — the FTC's four Ps
+(prominence, placement, proximity) as numbers against floors versioned in the
+Accord pack — and denies each with a named IA-6 violation, the same shape as the
+structural verifier's. Measured live, in a real browser, on the demo's own
+certified page, mutating only the paint and leaving the markup untouched:
+
+| Paint-layer attack | Denial | Measured |
+|---|---|---|
+| Shrink the warning to 4px | `IA-6/insufficient-prominence` | 4px against a 12px floor |
+| Position it off-screen | `IA-6/rendered-offscreen` (+ `insufficient-proximity`) | box at x = −9957; 8776px from its anchor |
+| Collapse it to no size | `IA-6/rendered-zero-area` | 0×0 |
+
+Every one carries the contrast the whole layer exists to draw: *the offline
+structural walk still calls this unit visible — the markup never changed.* The
+clean control, the same page measured untouched, denies nothing. (Off-screen
+positioning trips proximity too, because `position:absolute` pulls the warning
+out of its anchor's box — the one arrangement in which a nested disclosure and
+its anchor stop overlapping.)
+
+Two boundaries make this an addition to the architecture rather than a hole in
+it:
+
+- **It only ever tightens.** It judges units the structural walk already found
+  *visible*; a page it clears is a page the structural walk already cleared. So
+  it can add denials, never remove them.
+- **It is not on the replayable chain.** Pixels depend on the machine, so a
+  geometry verdict cannot be reproduced bit-for-bit elsewhere, and folding it
+  into a digest would poison Article X rather than strengthen Article VI. The
+  pure DOM walker (`src/kernel/dom.ts`) stays the deterministic, offline,
+  replayable gate; the browser walker is the production authority beneath it,
+  and the essay states that ceiling honestly.
+
+The enforcement *logic* is still CI-gated with no browser in the loop:
+`attestGeometry` is tested against scripted layouts (`browser-affidavit.test.ts`,
+prominence/placement/proximity, fail-closed-on-unmeasured, and the
+additivity-with-the-structural-walk case), exactly as the mounting adapter is
+tested against a recorder rather than a real DOM. The pack now carries the
+floors as versioned data (schema v4 → v5: `minLegiblePx` 12, `minLegibleOpacity`
+0.5, `maxProximityPx` 320), and the loader fails closed on a missing or zeroed
+floor (`IA-6/pack-display-missing`, `IA-6/pack-display-unusable`) — a gate that
+measures nothing is denied before any page is measured against it.
+
+**Publishable form:** *"The offline gate proves the disclosure is in the
+document. The browser gate proves a trainer could actually read it — and it is
+the only one of the two that a four-pixel font can fool. So they are different
+gates: one replayable and deterministic, one live at the edge, and the kernel is
+honest about which guarantee each one carries."*
+
+---
+
 ## Appendix — how to reproduce
 
 ```sh

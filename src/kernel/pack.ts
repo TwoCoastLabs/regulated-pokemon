@@ -23,7 +23,7 @@ import { formatCarriesLocale, type FormatId, IMPLEMENTED_LOCALES, isFormatId } f
 import type { CertifiedRegistry } from "./registry.js";
 import { AccordError, violation } from "./violation.js";
 
-export const PACK_SCHEMA_VERSION = 4;
+export const PACK_SCHEMA_VERSION = 5;
 
 /** The League's badge scale. Kanto issues eight; nothing above that exists. */
 export const MAX_BADGE_LEVEL = 8;
@@ -168,19 +168,57 @@ export interface CopyEntry {
 }
 
 /**
- * How a certified answer may be presented: the locales it may appear in, the
- * formats its values may take, and the copy that may surround them.
+ * The geometry floors a live page is measured against (IA-6).
  *
- * All three are closed lists. Between them they are the whole of what a
- * renderer is allowed to put on a certified artifact — a slot filled through an
- * approved format, a disclosure block, or a catalogued string. There is no
- * fourth category, which is what makes "anything else is denied" a rule the
- * kernel can actually apply.
+ * These are the FTC's "four Ps" — prominence, placement, proximity — turned
+ * into numbers a stylesheet cannot argue with: the smallest a certified value
+ * or disclosure may be drawn, the faintest it may be, and how far a triggered
+ * warning may drift from what it discloses.
+ *
+ * They are policy, versioned here like every other rule, and *only the live
+ * browser authority consults them*. The deterministic offline walker reads
+ * structure, never pixels, so nothing on the replayable chain (IA-10) depends
+ * on a number a viewport, a font stack or a device's DPI can move. That
+ * asymmetry is the whole point — geometry is where the kernel's guarantee stops
+ * being replayable, so it is enforced at the edge and never folded into a
+ * digest. A pixel floor in the pack is not a claim the offline gate will check;
+ * it is the standing instruction the production affidavit holds the real
+ * browser to.
+ */
+export interface DisplayPolicy {
+  /**
+   * The smallest computed font size, in CSS pixels, a certified value or a
+   * disclosure may be rendered at. The four-pixel warning is denied here — the
+   * fine print's oldest trick, in a stylesheet instead of a printing press.
+   */
+  minLegiblePx: number;
+  /** The lowest computed opacity that still counts as shown, in `(0, 1]`. */
+  minLegibleOpacity: number;
+  /**
+   * How far, in CSS pixels, a triggered disclosure's box may sit from the box
+   * of the unit it discloses before proximity fails. Adjacency in the document
+   * tree is necessary and not sufficient: two elements can be siblings in the
+   * markup and a screen apart in the layout.
+   */
+  maxProximityPx: number;
+}
+
+/**
+ * How a certified answer may be presented: the locales it may appear in, the
+ * formats its values may take, the copy that may surround them, and the
+ * geometry floors a live rendering of it is held to.
+ *
+ * The first three are closed lists — between them the whole of what a renderer
+ * may put on a certified artifact: a slot filled through an approved format, a
+ * disclosure block, or a catalogued string, and no fourth category. The last is
+ * not a list but a set of floors, and it governs a different question: not what
+ * may appear, but whether what appeared could actually be read.
  */
 export interface Presentation {
   locales: readonly string[];
   formats: readonly FormatId[];
   catalogue: readonly CopyEntry[];
+  display: DisplayPolicy;
 }
 
 /**
@@ -553,6 +591,56 @@ function checkPresentation(presentation: Presentation): Violation[] {
         }),
       );
     }
+  }
+
+  violations.push(...checkDisplay(presentation.display));
+
+  return violations;
+}
+
+/**
+ * Validate the display floors.
+ *
+ * Same discipline the rest of the pack gets: a floor that is missing, zero, or
+ * outside the range it means switches the live affidavit's measurement off
+ * silently. A missing prominence floor would let any font size pass; an opacity
+ * floor of zero would call a fully transparent disclosure "shown". Fail closed
+ * at load, before any page is measured against a policy that measures nothing.
+ */
+function checkDisplay(display: DisplayPolicy | undefined): Violation[] {
+  if (display === null || typeof display !== "object") {
+    return [
+      violation(
+        "IA-6",
+        "pack-display-missing",
+        "the pack states no display floors, so a live page's prominence and proximity could never be measured",
+      ),
+    ];
+  }
+
+  const violations: Violation[] = [];
+  const positive = (key: "minLegiblePx" | "maxProximityPx") => {
+    const value = display[key];
+    if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+      violations.push(
+        violation("IA-6", "pack-display-unusable", `the display floor "${key}" is not a positive number of pixels`, {
+          actual: String(value),
+        }),
+      );
+    }
+  };
+  positive("minLegiblePx");
+  positive("maxProximityPx");
+
+  // Opacity is a fraction, not a pixel count: a floor at or below zero would
+  // call an invisible disclosure legible, and one above one could never be met.
+  const opacity = display.minLegibleOpacity;
+  if (typeof opacity !== "number" || !Number.isFinite(opacity) || opacity <= 0 || opacity > 1) {
+    violations.push(
+      violation("IA-6", "pack-display-unusable", 'the display floor "minLegibleOpacity" is not a fraction in (0, 1]', {
+        actual: String(opacity),
+      }),
+    );
   }
 
   return violations;
