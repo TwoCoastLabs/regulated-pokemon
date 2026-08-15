@@ -48,6 +48,7 @@ function honestLayout(): Geometry {
     viewport,
     box: (path) => boxes.get(path.join(".")),
     style: (path) => styles.get(path.join(".")),
+    occluderAt: () => undefined,
   };
 }
 
@@ -86,6 +87,7 @@ describe("the menu is honest about what it will do", () => {
       "IA-6/rendered-offscreen",
       "IA-6/rendered-zero-area",
       "IA-6/insufficient-proximity",
+      "IA-6/occluded",
     ]);
     for (const card of GEOMETRY_SABOTAGES) {
       expect(raisable.has(card.expectedDenial), `${card.id} promises ${card.expectedDenial}`).toBe(true);
@@ -104,6 +106,7 @@ describe("the projection the console reads back", () => {
       viewport: base.viewport,
       box: base.box,
       style: (path) => (path.join(".") === blockPath ? { fontSizePx: 4, opacity: 1 } : base.style(path)),
+      occluderAt: base.occluderAt,
     };
     const outcome = geometryOutcome(scene, hostile, card);
     expect(outcome.allowed).toBe(false);

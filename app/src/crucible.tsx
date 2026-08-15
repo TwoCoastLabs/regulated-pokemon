@@ -126,11 +126,39 @@ function GeometryCard(props: {
 }
 
 /**
+ * Lay an opaque box over an element, higher in the paint order — the one attack
+ * that adds a node instead of restyling one. Positioned against the stage
+ * container (which is `position: relative`), so it sits exactly over the target
+ * whatever the scroll. It carries a class so the affidavit can name what covered
+ * the warning, and `elementFromPoint` returns it regardless of its fill.
+ */
+function coverElement(target: HTMLElement, container: HTMLElement, style: Readonly<Record<string, string>>) {
+  const t = target.getBoundingClientRect();
+  const c = container.getBoundingClientRect();
+  const overlay = document.createElement("div");
+  overlay.className = "geometry-overlay";
+  overlay.setAttribute("aria-hidden", "true");
+  Object.assign(
+    overlay.style,
+    {
+      position: "absolute",
+      left: `${t.left - c.left}px`,
+      top: `${t.top - c.top}px`,
+      width: `${t.width}px`,
+      height: `${t.height}px`,
+      zIndex: "10",
+    },
+    style,
+  );
+  container.appendChild(overlay);
+}
+
+/**
  * The paint-layer grid: the certified page mounted for real, and the attacks a
  * stylesheet can mount on it. Each press remounts the clean page, applies one
- * inline patch to the target's real node, and reads the geometry back — so the
- * verdict is about the page on the screen, and pressing one button never leaves
- * the last one's damage behind.
+ * inline patch to the target's real node (or lays an overlay over it), and reads
+ * the geometry back — so the verdict is about the page on the screen, and
+ * pressing one button never leaves the last one's damage behind.
  */
 function GeometryCrucible() {
   const scene = useMemo(() => geometryScene(sabotageContext()), []);
@@ -156,9 +184,20 @@ function GeometryCrucible() {
     const root = mountClean();
     if (root === null || host.current === null) return;
     const target = scene.walk.units.find((unit) => unit.id === card.target);
-    if (target !== undefined) {
-      const node = resolveNode(root, target.path);
-      if (node instanceof HTMLElement) Object.assign(node.style, card.style);
+    const node = target === undefined ? undefined : resolveNode(root, target.path);
+    if (node instanceof HTMLElement) {
+      // A cover card leaves the target alone and lays an opaque box over it,
+      // higher in the paint order; every other card restyles the target itself.
+      if (card.cover === true) {
+        coverElement(node, host.current, card.style);
+        // Occlusion is read with `elementFromPoint`, which only answers for a
+        // point inside the visible window — so the warning has to be on screen
+        // when it is sampled. The overlay is positioned against the container
+        // and rides the same scroll, staying over the warning.
+        node.scrollIntoView({ block: "center" });
+      } else {
+        Object.assign(node.style, card.style);
+      }
     }
     const outcome = geometryOutcome(scene, browserGeometry(root, host.current), card);
     setCleanRun(undefined);
@@ -180,11 +219,12 @@ function GeometryCrucible() {
         <p>
           The mutations above change the document. These change only how the browser draws it. The page below is the
           same certified answer, mounted for real; each button leaves its markup untouched and rewrites its paint —
-          shrinking the warning, moving it off the screen, collapsing it to nothing. The offline structural walker
-          reads inline style and tree shape and clears every one; the <strong>browser-backed affidavit</strong>,
-          reading the real layout against the pack's floors, is what denies them. It measures prominence and placement
-          here — the P's a stylesheet can attack without touching the tree. Proximity is enforced the same way, but the
-          renderer nests every warning inside what it discloses, so no style-only edit can pull them apart.
+          shrinking the warning, moving it off the screen, collapsing it to nothing, or laying a box over it. The
+          offline structural walker reads inline style and tree shape and clears every one; the{" "}
+          <strong>browser-backed affidavit</strong>, reading the real layout against the pack's floors, is what denies
+          them. Three of the FTC's four Ps live here — prominence, placement and occlusion. Proximity is the fourth,
+          enforced the same way, but the renderer nests every warning inside what it discloses, so no paint-only edit
+          can pull them apart.
         </p>
       </div>
 

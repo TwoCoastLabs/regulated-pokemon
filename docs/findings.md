@@ -632,17 +632,20 @@ viewport decide the rest at paint time, and none of it is in the markup.
 So a page can pass every structural check and still show the trainer nothing. A
 class that sets `display:none`; a warning shrunk to four pixels; a disclosure
 positioned a screen away from the claim it qualifies; a box collapsed to zero by
-zero. The browser-backed affidavit reads those as geometry — the FTC's four Ps
-(prominence, placement, proximity) as numbers against floors versioned in the
-Accord pack — and denies each with a named IA-6 violation, the same shape as the
-structural verifier's. Measured live, in a real browser, on the demo's own
-certified page, mutating only the paint and leaving the markup untouched:
+zero; an opaque panel laid over it. The browser-backed affidavit reads those as
+geometry — the FTC's four Ps (prominence, placement, proximity, and occlusion as
+the presentation of "placement") as numbers and hit-tests against floors
+versioned in the Accord pack — and denies each with a named IA-6 violation, the
+same shape as the structural verifier's. Measured live, in a real browser, on
+the demo's own certified page, mutating only the paint and leaving the markup
+untouched:
 
 | Paint-layer attack | Denial | Measured |
 |---|---|---|
 | Shrink the warning to 4px | `IA-6/insufficient-prominence` | 4px against a 12px floor |
 | Position it off-screen | `IA-6/rendered-offscreen` (+ `insufficient-proximity`) | box at x = −9957; 8776px from its anchor |
 | Collapse it to no size | `IA-6/rendered-zero-area` | 0×0 |
+| Lay a panel over it | `IA-6/occluded` | topmost element at its centre is `<div.geometry-overlay>` |
 
 Every one carries the contrast the whole layer exists to draw: *the offline
 structural walk still calls this unit visible — the markup never changed.* The
@@ -650,6 +653,22 @@ clean control, the same page measured untouched, denies nothing. (Off-screen
 positioning trips proximity too, because `position:absolute` pulls the warning
 out of its anchor's box — the one arrangement in which a nested disclosure and
 its anchor stop overlapping.)
+
+**A real viewport is part of the test, and it earned its keep.** Occlusion is
+read with `elementFromPoint` — the browser's own authoritative answer to "what
+would a click here hit?" — which only answers for a point inside the visible
+window. Two things followed. First, the check has to sample a disclosure that is
+actually on the screen, so the affidavit only asks it of a block whose *unit* is
+cleanly placed: a first pass at that guard was missing, and against a real layout
+the collapsed-warning sabotage fired a *spurious* `occluded` — the 0×0 unit's
+block kept a stray box whose centre landed on an unrelated card, and the
+hit-test dutifully reported that card. The fix is one line of intent (only
+sample inside a well-placed unit) and a regression test; the bug was invisible
+to the scripted layouts and to a headless pane that reports a 0×0 window, and
+surfaced only when the page was driven in a browser with real dimensions. The
+lesson is the project's oldest one in a new place — **verify the final rendering,
+not a proxy for it** — and it is why occlusion carries a live end-to-end check on
+top of its scripted unit tests.
 
 Two boundaries make this an addition to the architecture rather than a hole in
 it:
@@ -666,9 +685,10 @@ it:
 
 The enforcement *logic* is still CI-gated with no browser in the loop:
 `attestGeometry` is tested against scripted layouts (`browser-affidavit.test.ts`,
-prominence/placement/proximity, fail-closed-on-unmeasured, and the
-additivity-with-the-structural-walk case), exactly as the mounting adapter is
-tested against a recorder rather than a real DOM. The pack now carries the
+prominence/placement/proximity/occlusion, fail-closed-on-unmeasured, the
+collapsed-unit occlusion guard, and the additivity-with-the-structural-walk
+case), exactly as the mounting adapter is tested against a recorder rather than a
+real DOM. The pack now carries the
 floors as versioned data (schema v4 → v5: `minLegiblePx` 12, `minLegibleOpacity`
 0.5, `maxProximityPx` 320), and the loader fails closed on a missing or zeroed
 floor (`IA-6/pack-display-missing`, `IA-6/pack-display-unusable`) — a gate that
