@@ -66,12 +66,18 @@ function paths(artifact: DomElement) {
   return { walk, rec: unit("rec"), warn: unit("warn"), block: block("release-warning") };
 }
 
-/** A scripted layout: boxes and styles keyed by path, the viewport fixed. */
-function geometry(boxes: Record<string, Box>, styles: Record<string, VisualStyle>): Geometry {
+/** A scripted layout: boxes and styles keyed by path, the viewport fixed, and
+ * an optional map of paths that have something painted over them. */
+function geometry(
+  boxes: Record<string, Box>,
+  styles: Record<string, VisualStyle>,
+  occluders: Record<string, string> = {},
+): Geometry {
   return {
     viewport: VIEWPORT,
     box: (path) => boxes[path.join(".")],
     style: (path) => styles[path.join(".")],
+    occluderAt: (path) => occluders[path.join(".")],
   };
 }
 
@@ -160,6 +166,53 @@ describe("placement: a unit off the screen or collapsed to nothing is denied", (
     const { block, boxes, styles } = cleanLayout(artifact);
     boxes[block] = { x: 14, y: 124, width: 0, height: 0 };
     expect(codes(artifact, geometry(boxes, styles))).toContain("IA-6/rendered-zero-area");
+  });
+});
+
+describe("occlusion: a disclosure painted over by something is denied", () => {
+  it("denies a warning with a foreign element covering its centre, and names it", () => {
+    const artifact = page();
+    const { block, boxes, styles } = cleanLayout(artifact);
+    const found = attestGeometry(
+      walkArtifact(artifact),
+      geometry(boxes, styles, { [block]: "<div class=\"overlay\">" }),
+      POLICY,
+      DISCLOSES,
+    );
+    expect(found.allowed).toBe(false);
+    const covered = found.violations.find((v) => v.rule === "occluded");
+    expect(covered).toBeDefined();
+    expect(covered?.actual).toContain("overlay");
+  });
+
+  it("clears a warning whose own text is the topmost thing at its centre", () => {
+    // occluderAt returns undefined when the element or a descendant is on top.
+    const artifact = page();
+    const { boxes, styles } = cleanLayout(artifact);
+    expect(codes(artifact, geometry(boxes, styles, {}))).toEqual([]);
+  });
+
+  it("does not ask about occlusion for a block that is not on the screen", () => {
+    // A collapsed block is denied for its size; "what is painted over a box
+    // with no area?" is not a question, so occlusion is not also reported.
+    const artifact = page();
+    const { block, boxes, styles } = cleanLayout(artifact);
+    boxes[block] = { x: 14, y: 124, width: 0, height: 0 };
+    const found = codes(artifact, geometry(boxes, styles, { [block]: "<div class=\"overlay\">" }));
+    expect(found).toContain("IA-6/rendered-zero-area");
+    expect(found).not.toContain("IA-6/occluded");
+  });
+
+  it("does not cry occlusion about a block whose own unit is collapsed", () => {
+    // The unit is 0×0 and denied for it; the block keeps a real box, so its
+    // centre resolves to some unrelated element the browser paints there. That
+    // is the unit's fault, not a foreign overlay — occlusion must stay silent.
+    const artifact = page();
+    const { warn, block, boxes, styles } = cleanLayout(artifact);
+    boxes[warn] = { x: 10, y: 120, width: 0, height: 0 };
+    const found = codes(artifact, geometry(boxes, styles, { [block]: "<p class=\"unrelated\">" }));
+    expect(found).toContain("IA-6/rendered-zero-area");
+    expect(found).not.toContain("IA-6/occluded");
   });
 });
 

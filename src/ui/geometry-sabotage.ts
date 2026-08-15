@@ -20,13 +20,15 @@
  * needs a real layout engine, so it runs in the visitor's browser and this
  * module only supplies the scene, the menu, and the projection of a verdict.
  *
- * The menu is style-only, so it covers prominence and placement — the P's a
- * stylesheet can attack without touching the tree. Proximity is enforced all
- * the same (the sibling-box case in browser-affidavit.test.ts), but the
- * reference renderer nests every disclosure *inside* the unit it discloses, so
- * their boxes always overlap and no style-only edit can pull them apart; a
- * proximity breach needs a renderer that does not nest, which is a document
- * change, not a paint one.
+ * The menu covers three of the four P's live. Prominence and placement are
+ * restyles of the disclosure; occlusion is the one attack a stylesheet cannot
+ * mount by editing the warning — it needs a *second* element on top — so its
+ * card lays an opaque overlay rather than restyling the target. Proximity is
+ * the fourth, enforced all the same (the sibling-box case in
+ * browser-affidavit.test.ts), but not on this menu: the reference renderer
+ * nests every disclosure *inside* the unit it discloses, so their boxes always
+ * overlap and no paint-only edit can pull them apart; a proximity breach needs
+ * a renderer that does not nest, which is a document change, not a paint one.
  */
 
 import type { ArtifactWalk, DomElement } from "../kernel/dom.js";
@@ -93,10 +95,20 @@ export interface GeometrySabotageCard {
   id: string;
   title: string;
   description: string;
-  /** The unit id whose real node the patch is applied to. */
+  /** The unit id the attack targets. */
   target: string;
-  /** Inline style properties to set on the mounted node — camelCase keys. */
+  /**
+   * Inline style properties — camelCase keys. For a normal card, applied to the
+   * target's own node. For a `cover` card, applied to the overlay laid over it.
+   */
   style: Readonly<Record<string, string>>;
+  /**
+   * When true, the attack does not touch the target: it lays a fresh, opaque
+   * element over it. Occlusion is the one P a stylesheet cannot mount by
+   * editing the disclosure — it needs a second element on top — so it is the
+   * one live sabotage that adds a node rather than restyling one.
+   */
+  cover?: boolean;
   expectedDenial: string;
 }
 
@@ -133,6 +145,18 @@ export const GEOMETRY_SABOTAGES: readonly GeometrySabotageCard[] = [
     target: GEOMETRY_TARGET,
     style: { width: "0", height: "0", padding: "0", border: "0", overflow: "hidden" },
     expectedDenial: "IA-6/rendered-zero-area",
+  },
+  {
+    id: "cover-with-overlay",
+    title: "Cover the warning with an overlay",
+    description:
+      "The disclosure is untouched: full size, legible, in place. An opaque box " +
+      "is laid over it, higher in the paint order. A click at the warning's " +
+      "centre lands on the cover, not the text — present, and behind something.",
+    target: GEOMETRY_TARGET,
+    cover: true,
+    style: { background: "var(--seal-tint)", border: "1px solid var(--seal)" },
+    expectedDenial: "IA-6/occluded",
   },
 ];
 

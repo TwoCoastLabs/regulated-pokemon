@@ -68,7 +68,25 @@ export function browserGeometry(root: Node, container: Element): Geometry {
         opacity: cumulativeOpacity(node, root),
       };
     },
+    occluderAt(path, point) {
+      const node = resolve(path);
+      if (!(node instanceof Element)) return undefined;
+      // What a click at this point would actually hit. If it is the element
+      // itself or one of its descendants, nothing is covering it; anything else
+      // is painted on top, and its own markup names it in the denial.
+      const top = document.elementFromPoint(point.x, point.y);
+      if (top === null || node.contains(top)) return undefined;
+      return describeElement(top);
+    },
   };
+}
+
+/** A short, honest identifier for an intruding element — its tag and whatever
+ * mark it wears — so a denial can say what covered the disclosure. */
+function describeElement(element: Element): string {
+  const id = element.id ? `#${element.id}` : "";
+  const cls = element.classList.length > 0 ? `.${[...element.classList].join(".")}` : "";
+  return `<${element.tagName.toLowerCase()}${id}${cls}>`;
 }
 
 function cumulativeOpacity(node: Element, root: Node): number {

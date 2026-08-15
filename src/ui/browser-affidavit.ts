@@ -55,6 +55,12 @@ export interface Box {
   height: number;
 }
 
+/** A point in the same coordinates as the boxes. */
+export interface Point {
+  x: number;
+  y: number;
+}
+
 /** The computed legibility of one element — the parts of `getComputedStyle`
  * that decide whether text can be read, rather than merely be present. */
 export interface VisualStyle {
@@ -77,6 +83,16 @@ export interface Geometry {
   viewport: Box;
   box(path: readonly number[]): Box | undefined;
   style(path: readonly number[]): VisualStyle | undefined;
+  /**
+   * What, if anything, is painted on top of the element at `path` at `point`.
+   *
+   * A raw observation, like `box` and `style`: it answers "what would a click
+   * here hit?" and `undefined` means the element itself, or one of its own
+   * descendants, is the topmost thing there — nothing is covering it. A string
+   * is a short description of the intruding element, for the denial to name.
+   * The affidavit decides that an intruder is a fault; this only reports one.
+   */
+  occluderAt(path: readonly number[], point: Point): string | undefined;
 }
 
 const IA6: ArticleId = "IA-6";
@@ -98,6 +114,12 @@ export function attestGeometry(
 ): Verdict {
   const violations: Violation[] = [];
   const unitBoxes = new Map<string, Box>();
+  // Units that are visible, measured, and sitting cleanly in the viewport.
+  // Occlusion is only asked about a disclosure inside one of these: a warning
+  // whose unit is off-screen or collapsed is already denied on placement, and
+  // sampling a point inside a clipped or displaced unit would resolve to some
+  // unrelated element and cry "occluded" about a fault that is really the unit's.
+  const wellPlaced = new Set<string>();
 
   // Placement: every governed unit the markup shows must occupy a real box on
   // the screen. A unit positioned off-screen or collapsed to nothing is present
@@ -114,6 +136,8 @@ export function attestGeometry(
     const placement = placementOf(box, geometry.viewport);
     if (placement !== undefined) {
       violations.push(placementViolation(placement, `"${unit.id}"`, geometry.viewport));
+    } else {
+      wellPlaced.add(unit.id);
     }
   }
 
@@ -132,7 +156,25 @@ export function attestGeometry(
       const placement = placementOf(box, geometry.viewport);
       // A block collapsed inside an otherwise-visible unit is its own fault;
       // an off-screen block is already reported against its off-screen unit.
-      if (placement?.kind === "zero-area") violations.push(placementViolation(placement, label, geometry.viewport));
+      if (placement?.kind === "zero-area") {
+        violations.push(placementViolation(placement, label, geometry.viewport));
+      } else if (placement === undefined && block.unitId !== undefined && wellPlaced.has(block.unitId)) {
+        // Occlusion: the block is on the screen at a real size, inside a unit
+        // that is itself cleanly placed — but is anything painted over it?
+        // Sample its centre; a foreign element there means the text is behind
+        // something, present and unreadable. The well-placed guard matters: a
+        // block inside a collapsed or displaced unit is denied on that unit, and
+        // its centre would land somewhere the disclosure was never shown.
+        const occluder = geometry.occluderAt(block.path, centre(box));
+        if (occluder !== undefined) {
+          violations.push(
+            violation(IA6, "occluded", `${label} is on the screen and painted over`, {
+              expected: "nothing painted on top of it",
+              actual: occluder,
+            }),
+          );
+        }
+      }
     }
 
     const style = geometry.style(block.path);
@@ -223,6 +265,12 @@ function unmeasured(label: string, path: readonly number[]): Violation {
     expected: "a layout box and computed style",
     actual: `nothing at path ${path.join(".") || "root"}`,
   });
+}
+
+/** The middle of a box — the point a click lands on, and where occlusion is
+ * sampled. */
+function centre(box: Box): Point {
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
 
 /** Do two boxes overlap at all? Touching edges do not count as overlap. */
