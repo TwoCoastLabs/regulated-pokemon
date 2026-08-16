@@ -1360,6 +1360,25 @@ body {
   color: var(--ink);
 }
 
+/* Bring-your-own-key, folded away: the visitor is never asked for a key —
+ * the expander is there for the one who arrives holding one. */
+.live-byok {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 10px 12px;
+}
+
+.live-byok summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.live-byok[open] {
+  display: grid;
+  gap: 12px;
+}
+
 .live-begin {
   font: inherit;
   font-weight: 600;

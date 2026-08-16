@@ -38,24 +38,24 @@ function runFromUrl(): number | null {
 type View = "ledger" | "scoreboard" | "crucible" | "live";
 
 function viewFromUrl(): View {
-  const raw = new URLSearchParams(window.location.search).get("view");
-  return raw === "crucible" || raw === "scoreboard" || raw === "live" ? raw : "ledger";
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get("view");
+  if (raw === "crucible" || raw === "scoreboard" || raw === "ledger" || raw === "live") return raw;
+  // A link that names a run is a link into the ledger — ?run= predates the
+  // live-first default and must keep meaning what it meant.
+  return params.get("run") !== null ? "ledger" : "live";
 }
 
+/** The live session leads: a visitor's first minute is sitting down with the
+ * Advisor, not reading a filed record. The other three pages are the evidence
+ * room, one tab away. */
 const VIEWS: readonly { id: View; label: string; lead: string }[] = [
   {
-    id: "ledger",
-    label: "Run ledger",
+    id: "live",
+    label: "Live session",
     lead:
-      "One filed run, replayed. Every number and every page below is read from the record — never recomputed, " +
-      "never summarised.",
-  },
-  {
-    id: "scoreboard",
-    label: "Scoreboard",
-    lead:
-      "Every model in the record against the same kernel. Enforcement is one band of zeros over all of them; " +
-      "usefulness differs per model, and the difference is the thesis.",
+      "You as the trainer, a real AI as the Advisor, and the League's checks running right here in your tab. " +
+      "Nothing counts until you confirm it, and every exchange leaves a record anyone can re-run.",
   },
   {
     id: "crucible",
@@ -65,12 +65,18 @@ const VIEWS: readonly { id: View; label: string; lead: string }[] = [
       "on the denial it declared — plus the untampered control that keeps the refusals honest.",
   },
   {
-    id: "live",
-    label: "Live session",
+    id: "scoreboard",
+    label: "Scoreboard",
     lead:
-      "You as the trainer, a real AI as the Advisor, and the League's checks running right here in your tab. " +
-      "Bring your own OpenRouter key; nothing counts until you confirm it, and every exchange leaves a record " +
-      "anyone can re-run.",
+      "Every model in the record against the same kernel. Enforcement is one band of zeros over all of them; " +
+      "usefulness differs per model, and the difference is the thesis.",
+  },
+  {
+    id: "ledger",
+    label: "Run ledger",
+    lead:
+      "One filed run, replayed. Every number and every page below is read from the record — never recomputed, " +
+      "never summarised.",
   },
 ];
 
@@ -88,7 +94,7 @@ export function App() {
 
   const show = (chosen: View) => {
     setView(chosen);
-    window.history.replaceState(null, "", chosen === "ledger" ? "?" : `?view=${chosen}`);
+    window.history.replaceState(null, "", chosen === "live" ? "?" : `?view=${chosen}`);
   };
 
   const open = async (file: File | undefined) => {

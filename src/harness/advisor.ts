@@ -45,6 +45,8 @@ function scopePrompt(pack: AccordPack, missing: readonly ScopeDimension[], said:
     `Still unestablished: ${missing.join(", ")}.`,
     "Propose one approved value per dimension you can justify from the trainer's",
     "own words, as JSON: {\"candidate\": {<dimension>: <value>}, \"interpreting\": \"<their wording>\"}.",
+    "In \"interpreting\", quote the trainer's exact words you are reading — never",
+    "your own reasoning about them.",
     "Approved values:",
     options,
   ].join("\n");
