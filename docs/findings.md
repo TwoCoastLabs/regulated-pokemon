@@ -774,6 +774,72 @@ down in the same change."*
 
 ---
 
+## 17. Playability iteration log — fail-fast probes, and what moved the needle
+
+Epic #45 built the coverage instrument (the disposition taxonomy, the funnel,
+the bank, the runner). This is the living record of *using* it — small
+disposition-spanning probes rather than one big-bang run, each one driving a
+concrete change to the evaluation or the system, with the numbers before and
+after. Every probe is `npm run coverage:map -- --live --ids …` against the
+pinned snapshot `kanto-red-blue` (`sha256:122f62e0…`). Probes are **N=1 per
+question** on purpose — a fail-fast signal to iterate on, not a published rate
+(finding #6: one sample is an anecdote, and these are anecdotes chosen to be
+cheap and fast, not statistically settled).
+
+### Probe 1 — baseline, 15 questions, `gpt-5.6-luna-pro`
+
+| Disposition | pass | funnel |
+|---|---|---|
+| answerable | 7/7 | all resolved (fact, move-fact, count, membership, ranking, recommendation, action) |
+| needs-data | 2/2 | both honestly abstained |
+| needs-claim-kind | 1/2 | one abstained; one **declined** |
+| should-refuse | 2/2 | both denied `IA-5/restricted-species` — enforcement held |
+| off-domain | 2/2 | both abstained |
+
+**14/15.** The one miss — `kind-team-six` ("Build me a team of six") landing in
+`declined` — was the probe's most useful output, because it was wrong for a
+reason that indicts the *evaluation*, not the system.
+
+**What it taught: the claim kinds compose.** Traced, "build me a team" is
+answered as **six `recommendation` claims** (each eligibility-checked), and the
+kernel certifies all six — 4 of 4 repetitions resolved that way; the probe's
+lone `declined` was the model diverging into an *act* proposal once (finding
+#5). So a team is not a missing "set-recommendation" claim kind — it is a set
+of the recommendation claims that already exist. The `needs-claim-kind` tag
+asked "is there one claim kind shaped like a team?" when the question that
+matters is "can a team be built from the claim kinds there are?". It can.
+
+**The change (to the evaluation):** `kind-team-six` is retagged `answerable`
+(composed recommendations). Confirmed after the retag: it resolves 1/1 under
+`answerable`, and the remaining unanswerable probe (`meta-what-is-game`)
+abstains 1/1 — both now pass. The broader lesson is a review lens for the whole
+`needs-claim-kind` bucket — a question is only expressiveness-blocked if it
+cannot be *composed* from the six kinds, not merely if no single kind names its
+whole shape. The genuinely-blocked ones remain (a subjective "tier list", a
+"who's better" with no basis, type-effectiveness with no matchup data); the
+composable ones (lists, sets, multi-fact summaries) are answerable and were
+mis-shelved.
+
+An open question this raises, deliberately left for a decision rather than
+settled here: a `recommendation` claim is checked for *eligibility* (IA-5), not
+for *correctness* — the kernel certifies "this is a real, allowed species to
+suggest", never "this is the best pick". So almost any advisory question ("which
+starter?", "which legendary to chase?", "best team for the Elite Four?")
+*resolves*, but the certificate it carries is weaker than a fact's. Whether
+those count as `answerable` (the player got a certified, eligible answer) or
+belong in a new bucket (advisory, weakly-certified) is a product call — the
+composition lens says the first, the trust story may want the second. Recorded
+here so the retag of the rest of the bucket is a decision, not a drift.
+
+**A second, smaller thing the probe filed:** provider latency is wildly
+variable. Probe 1 ran 15 questions in ~2.5 min; a re-run of the same 15 hung
+past 12 min on one slow call before it was abandoned for a two-question
+confirmation. This is why the harness bounds and reports it (findings #5, #6),
+and why these probes stay small — a fail-fast loop cannot afford to block on a
+tail-latency call.
+
+---
+
 ## Appendix — how to reproduce
 
 ```sh

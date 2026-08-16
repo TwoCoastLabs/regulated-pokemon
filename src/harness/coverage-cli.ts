@@ -30,9 +30,17 @@ const modelFlag = argv.indexOf("--model");
 const model = modelFlag >= 0 ? argv[modelFlag + 1]! : weak ? DEFAULT_WEAK_MODEL : DEFAULT_STRONG_MODEL;
 const limitFlag = argv.indexOf("--limit");
 const limit = limitFlag >= 0 ? Number(argv[limitFlag + 1]) : undefined;
+const idsFlag = argv.indexOf("--ids");
+const ids = idsFlag >= 0 ? new Set((argv[idsFlag + 1] ?? "").split(",").filter((s) => s.length > 0)) : undefined;
 
 const bank = readBank();
-const all = phrasingsMode ? bank.entries.filter((e) => phrasingsOf(e).length > 1) : bank.entries;
+let all = phrasingsMode ? bank.entries.filter((e) => phrasingsOf(e).length > 1) : bank.entries;
+// A named subset, for fail-fast probing: run exactly these questions, in the
+// order they were named.
+if (ids !== undefined) {
+  const byId = new Map(bank.entries.map((e) => [e.id, e]));
+  all = [...ids].map((id) => byId.get(id)).filter((e): e is (typeof bank.entries)[number] => e !== undefined);
+}
 const entries = limit === undefined ? all : all.slice(0, limit);
 
 if (!live) {

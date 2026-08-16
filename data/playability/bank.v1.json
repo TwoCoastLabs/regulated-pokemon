@@ -957,12 +957,15 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "recommending a *set* has no claim kind; recommendation names one entity",
+      "disposition": "answerable",
+      "notes": "a team of six composes from six recommendation claims (each eligibility-checked); no set-recommendation claim kind is needed \u2014 probe 1 (finding #17)",
       "phrasings": [
         "Make me a team of six.",
         "Could you put together a full six-Pokemon team?",
         "buld me a team of six"
+      ],
+      "expectClaimKinds": [
+        "recommendation"
       ]
     },
     {

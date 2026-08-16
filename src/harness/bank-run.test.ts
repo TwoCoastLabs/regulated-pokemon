@@ -71,7 +71,9 @@ describe("runBankEntry buckets each disposition through the real session", () =>
   });
 
   it("a needs-claim-kind question passes on an honest abstention", async () => {
-    const run = await runBankEntry(world, entry("kind-team-six"), model(""), clock());
+    // A genuinely unexpressible question — a subjective tier list has no basis
+    // and no claim kind (unlike a team, which composes from recommendations).
+    const run = await runBankEntry(world, entry("kind-tier-list"), model(""), clock());
     expect(run.score.pass).toBe(true);
   });
 
