@@ -113,7 +113,11 @@ export function renderCoverage(map: CoverageMap, heading = "Playability coverage
   // `coverageMap` maps over DISPOSITIONS in order, and `answerable` is first, so
   // the answerable row is always `byDisposition[0]` — no lookup, no branch.
   const answerable = map.byDisposition[0]!;
-  lines.push(`**Answerable resolution rate: ${pct(answerable.passRate)}** (${answerable.pass}/${answerable.total}) — the usefulness number.`);
+  lines.push(`**Answerable resolution rate: ${pct(answerable.passRate)}** (${answerable.pass}/${answerable.total}) — the usefulness number for the strong guarantee (facts).`);
+  const advisory = map.byDisposition.find((row) => row.disposition === "advisory");
+  if (advisory !== undefined && advisory.total > 0) {
+    lines.push(`**Advisory resolution rate: ${pct(advisory.passRate)}** (${advisory.pass}/${advisory.total}) — reported apart: eligibility-checked advice, a weaker certificate than a fact.`);
+  }
   const refusals = map.byDisposition.filter((row) => row.disposition === "needs-data" || row.disposition === "needs-claim-kind");
   const owed = refusals.reduce((sum, row) => sum + row.total, 0);
   const honest = refusals.reduce((sum, row) => sum + row.pass, 0);
