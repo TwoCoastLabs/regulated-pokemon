@@ -159,6 +159,42 @@ describe("the ladder with a person on the end", () => {
     if (state.phase.kind !== "asking") throw new Error("unreachable");
     expect(state.phase.dimension).toBe("comparisonBasis");
     expect(state.phase.question.length).toBeGreaterThan(0);
+
+    // The question is also durably logged, so a chat history can still show
+    // it after it has been answered — the phase alone forgets.
+    expect(state.asked).toHaveLength(1);
+    expect(state.asked[0]!.question).toBe(state.phase.question);
+  });
+
+  it("keeps every asked question after it is answered, and never logs a repeat twice", async () => {
+    // A model whose ranking answer escalates the basis into the requirement,
+    // but with nothing usable to propose about scope — so the exchange falls
+    // to the pack's own question.
+    const muteOnScope = scripted("scripted:mute-scope", (purpose) =>
+      purpose === "answer" ? rankingAnswer() : "no JSON here",
+    );
+    const d = deps(muteOnScope);
+    let state = await say(startSession(), `${PROFILE} Which of the Electric ones is the quickest?`, d);
+
+    expect(state.phase.kind).toBe("asking");
+    expect(state.asked).toHaveLength(1);
+    const first = state.asked[0]!;
+
+    // The visitor answers the question; the exchange settles into a record.
+    state = await say(state, "by base speed", {
+      ...d,
+      provider: scripted("scripted:ranker", (purpose) =>
+        purpose === "scope" ? basisProposal("base-speed") : rankingAnswer(),
+      ),
+    });
+    for (let guard = 0; state.phase.kind === "confirming-scope" && guard < 3; guard++) {
+      state = await decideScope(state, "confirm", d);
+    }
+
+    // The answered question is still in the log — the conversation reads
+    // whole — and it was logged exactly once.
+    expect(state.asked[0]).toEqual(first);
+    expect(state.asked.filter((entry) => entry.question === first.question)).toHaveLength(1);
   });
 });
 

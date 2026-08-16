@@ -103,6 +103,7 @@ async function probeRelay(): Promise<RelayStatus> {
 
 type ChatItem =
   | { at: string; kind: "visitor"; text: string }
+  | { at: string; kind: "question"; text: string }
   | { at: string; kind: "proposal"; proposal: ScopeProposal }
   | { at: string; kind: "decision"; decision: "confirm" | "reject" }
   | { at: string; kind: "note"; note: SessionNote }
@@ -119,6 +120,10 @@ function chatItems(state: SessionState): ChatItem[] {
       items.push({ at: event.at, kind: "decision", decision: event.decision });
     }
   }
+  // The questions come from the session's durable log, not from the phase: a
+  // question the visitor has already answered still happened, and a history
+  // showing every answer with none of the questions is not a conversation.
+  for (const asked of state.asked) items.push({ at: asked.at, kind: "question", text: asked.question });
   for (const note of state.notes) items.push({ at: note.at, kind: "note", note });
   for (const record of state.records) {
     items.push({ at: record.committedAt, kind: "record", record, page: state.pages[record.id] });
@@ -402,60 +407,85 @@ export function Live() {
                 </label>
               )}
               {league ? (
-                <p>
-                  Nothing to bring: this site carries the League's own key. Your conversation goes from this tab to
-                  the site's relay and on to the model — the key never enters your browser, and the relay rations it
-                  so everyone gets a turn.
-                </p>
+                <>
+                  <p>
+                    Nothing to bring: this site carries the League's own key. Your conversation goes from this tab to
+                    the site's relay and on to the model — the key never enters your browser, and the relay rations
+                    it so everyone gets a turn.
+                  </p>
+                  <label>
+                    Model
+                    <select value={model} onInput={(event) => setModel(event.currentTarget.value)}>
+                      {(relay?.models ?? []).map((slug) => (
+                        <option value={slug}>{slug}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Your Advisor
+                    <select
+                      value={persona}
+                      onInput={(event) =>
+                        setPersona(event.currentTarget.value === "adversarial" ? "adversarial" : "honest")
+                      }
+                    >
+                      <option value="honest">plays fair — answers as well as it can</option>
+                      <option value="adversarial">cheats — instructed to lie to you; watch the League catch it</option>
+                    </select>
+                  </label>
+                  <button type="button" class="live-begin" onClick={begin}>
+                    Start the session
+                  </button>
+                </>
               ) : (
-                <p>
-                  You bring the model: an OpenRouter key powers the Advisor, stays in this tab's memory, is sent only
-                  to <span class="mono">openrouter.ai</span>, and is never stored or logged. Live calls bill your
-                  OpenRouter account (a short session costs well under a cent).
-                </p>
+                <>
+                  <p>
+                    This deployment is not carrying the League's key right now, so the Advisor has no model to speak
+                    with. Everything else here runs without one — the crucible's sabotages and the filed records are
+                    one tab away.
+                  </p>
+                  <details class="live-byok">
+                    <summary>I have my own OpenRouter key</summary>
+                    <p>
+                      Your key powers the Advisor, stays in this tab's memory, is sent only to{" "}
+                      <span class="mono">openrouter.ai</span>, and is never stored or logged. Live calls bill your
+                      OpenRouter account (a short session costs well under a cent).
+                    </p>
+                    <label>
+                      OpenRouter API key
+                      <input
+                        type="password"
+                        value={key}
+                        placeholder="sk-or-…"
+                        onInput={(event) => setKey(event.currentTarget.value)}
+                      />
+                    </label>
+                    <label>
+                      Model
+                      <input value={model} onInput={(event) => setModel(event.currentTarget.value)} list="live-models" />
+                      <datalist id="live-models">
+                        <option value={DEFAULT_STRONG_MODEL}>the measured strong model</option>
+                        <option value={DEFAULT_WEAK_MODEL}>the measured weak model</option>
+                      </datalist>
+                    </label>
+                    <label>
+                      Your Advisor
+                      <select
+                        value={persona}
+                        onInput={(event) =>
+                          setPersona(event.currentTarget.value === "adversarial" ? "adversarial" : "honest")
+                        }
+                      >
+                        <option value="honest">plays fair — answers as well as it can</option>
+                        <option value="adversarial">cheats — instructed to lie to you; watch the League catch it</option>
+                      </select>
+                    </label>
+                    <button type="button" class="live-begin" disabled={key.trim() === ""} onClick={begin}>
+                      Start the session
+                    </button>
+                  </details>
+                </>
               )}
-              {!league && (
-                <label>
-                  OpenRouter API key
-                  <input
-                    type="password"
-                    value={key}
-                    placeholder="sk-or-…"
-                    onInput={(event) => setKey(event.currentTarget.value)}
-                  />
-                </label>
-              )}
-              <label>
-                Model
-                {league ? (
-                  <select value={model} onInput={(event) => setModel(event.currentTarget.value)}>
-                    {(relay?.models ?? []).map((slug) => (
-                      <option value={slug}>{slug}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <input value={model} onInput={(event) => setModel(event.currentTarget.value)} list="live-models" />
-                )}
-                <datalist id="live-models">
-                  <option value={DEFAULT_STRONG_MODEL}>the measured strong model</option>
-                  <option value={DEFAULT_WEAK_MODEL}>the measured weak model</option>
-                </datalist>
-              </label>
-              <label>
-                Your Advisor
-                <select
-                  value={persona}
-                  onInput={(event) =>
-                    setPersona(event.currentTarget.value === "adversarial" ? "adversarial" : "honest")
-                  }
-                >
-                  <option value="honest">plays fair — answers as well as it can</option>
-                  <option value="adversarial">cheats — instructed to lie to you; watch the League catch it</option>
-                </select>
-              </label>
-              <button type="button" class="live-begin" disabled={!league && key.trim() === ""} onClick={begin}>
-                Start the session
-              </button>
             </>
           )}
           {trouble !== null && <p class="refusal-banner">{trouble}</p>}
@@ -512,14 +542,27 @@ export function Live() {
                     <p class="live-bubble trainer">{item.text}</p>
                   </div>
                 );
+              case "question":
+                return (
+                  <div class="live-item advisor">
+                    <p class="live-bubble advisor">{item.text}</p>
+                  </div>
+                );
               case "proposal": {
                 const active = phase.kind === "confirming-scope" && phase.proposal.id === item.proposal.id && !busy;
                 return (
                   <div class="live-item advisor">
                     <div class="live-proposal">
-                      <p class="live-proposal-lead">
-                        Just to be sure — by “{item.proposal.interpreting}”, you mean{" "}
-                        <strong>{plainCandidate(item.proposal.candidate)}</strong>?
+                      <p
+                        class="live-proposal-lead"
+                        // The model's own account of what it read is provenance,
+                        // not the trainer's words — quoting it in the question
+                        // produced nested quotes around a sentence the visitor
+                        // never said. The reading being confirmed is the bold
+                        // part; the model's note rides along as a tooltip.
+                        title={`The Advisor's reading of your words: ${item.proposal.interpreting}`}
+                      >
+                        Just to be sure — you mean <strong>{plainCandidate(item.proposal.candidate)}</strong>?
                       </p>
                       <p
                         class="fine"
@@ -578,12 +621,6 @@ export function Live() {
           {inFlight !== null && (
             <div class="live-item trainer">
               <p class="live-bubble trainer">{inFlight}</p>
-            </div>
-          )}
-
-          {phase.kind === "asking" && inFlight === null && (
-            <div class="live-item advisor">
-              <p class="live-bubble advisor">{phase.question}</p>
             </div>
           )}
 
