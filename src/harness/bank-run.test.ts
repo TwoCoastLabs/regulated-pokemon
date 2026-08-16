@@ -71,9 +71,9 @@ describe("runBankEntry buckets each disposition through the real session", () =>
   });
 
   it("a needs-claim-kind question passes on an honest abstention", async () => {
-    // A genuinely unexpressible question — a subjective tier list has no basis
-    // and no claim kind (unlike a team, which composes from recommendations).
-    const run = await runBankEntry(world, entry("kind-tier-list"), model(""), clock());
+    // Genuinely unexpressible: type effectiveness is a matchup relation with no
+    // claim kind and no chart in the snapshot — not composable, not advisory.
+    const run = await runBankEntry(world, entry("kind-type-effectiveness"), model(""), clock());
     expect(run.score.pass).toBe(true);
   });
 

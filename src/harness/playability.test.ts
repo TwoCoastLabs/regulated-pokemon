@@ -98,6 +98,15 @@ const MATRIX: Record<Disposition, Partial<Record<FunnelStageKind, boolean | "esc
     "abstained-answer": false,
     declined: false,
   },
+  advisory: {
+    // Passes on resolving, like answerable — never an escalation (its picks are
+    // eligibility-checked), and a denial means the advice was gated, a miss.
+    resolved: true,
+    denied: false,
+    "abstained-scope": false,
+    "abstained-answer": false,
+    declined: false,
+  },
   "needs-data": {
     resolved: false,
     denied: true,

@@ -976,8 +976,11 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "team composition is a set recommendation with no claim shape (and no Elite-Four data)"
+      "disposition": "advisory",
+      "notes": "a team composes from recommendations; 'best for the Elite Four' is unverifiable advice, not certified truth",
+      "expectClaimKinds": [
+        "recommendation"
+      ]
     },
     {
       "id": "kind-better-pikachu-raichu",
@@ -987,12 +990,15 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "'better' has no certified basis; ranking needs a named stat, not an aggregate 'good'",
+      "disposition": "advisory",
+      "notes": "'better' has no certified basis; the model answers with an eligibility-checked recommendation \u2014 advice, not a fact",
       "phrasings": [
         "Pikachu or Raichu \u2014 who's better?",
         "Which is the better Pokemon, Pikachu or Raichu?",
         "pikachu vs raichu whos beter"
+      ],
+      "expectClaimKinds": [
+        "recommendation"
       ]
     },
     {
@@ -1003,8 +1009,11 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "'good' is not a certified basis; only a specific stat can order a set"
+      "disposition": "advisory",
+      "notes": "'good' is not a certified basis; resolves as recommendations \u2014 advisory, weakly certified",
+      "expectClaimKinds": [
+        "recommendation"
+      ]
     },
     {
       "id": "kind-evolve-order",
@@ -1025,8 +1034,11 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "'starter' is not a modeled roster and the choice is subjective \u2014 no claim kind"
+      "disposition": "advisory",
+      "notes": "a recommendation with no certified 'best'; eligible advice, not a fact",
+      "expectClaimKinds": [
+        "recommendation"
+      ]
     },
     {
       "id": "kind-summarize-pikachu",
@@ -1036,8 +1048,11 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "an open-ended summary is not a bounded claim; each fact is answerable, the whole is not a claim kind"
+      "disposition": "answerable",
+      "notes": "an open summary composes from multiple certified fact claims (strong certificate) \u2014 not a missing claim kind",
+      "expectClaimKinds": [
+        "fact"
+      ]
     },
     {
       "id": "kind-compare-all",
@@ -1047,8 +1062,11 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "a holistic 'who wins' verdict has no claim kind; individual facts do"
+      "disposition": "advisory",
+      "notes": "the 'who wins' verdict is advisory; the comparison facts underneath are certifiable but the ask is the judgement",
+      "expectClaimKinds": [
+        "recommendation"
+      ]
     },
     {
       "id": "kind-strategy-gym",
@@ -1091,8 +1109,11 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "a worth/should judgement is subjective advice, not a certified claim"
+      "disposition": "advisory",
+      "notes": "a 'worth it' judgement resolves as a recommendation for/against \u2014 eligible advice, no correctness guarantee",
+      "expectClaimKinds": [
+        "recommendation"
+      ]
     },
     {
       "id": "kind-type-effectiveness",
@@ -1140,12 +1161,15 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "tiering is a subjective ordering with no certified basis or claim shape",
+      "disposition": "advisory",
+      "notes": "a subjective ordering; resolves as eligibility-checked recommendations, not certified correctness",
       "phrasings": [
         "Give me a tier list.",
         "Could you rank Kanto Pokemon into tiers?",
         "make a teir list"
+      ],
+      "expectClaimKinds": [
+        "recommendation"
       ]
     },
     {
@@ -1156,8 +1180,11 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "'best' across legendaries has no certified basis; a specific stat would be a ranking"
+      "disposition": "advisory",
+      "notes": "'best' across legendaries has no basis; at an accredited badge level it resolves as a recommendation \u2014 advisory",
+      "expectClaimKinds": [
+        "recommendation"
+      ]
     },
     {
       "id": "kind-team-synergy",

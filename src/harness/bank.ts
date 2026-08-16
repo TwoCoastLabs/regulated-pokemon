@@ -124,7 +124,7 @@ export function loadBank(input: unknown): QuestionBank {
       }
     }
 
-    if (entry.disposition === "answerable" || entry.disposition === "should-refuse") {
+    if (entry.disposition === "answerable" || entry.disposition === "advisory" || entry.disposition === "should-refuse") {
       if (!Array.isArray(entry.expectClaimKinds) || entry.expectClaimKinds.length === 0) {
         fail("bank-claims-missing", `entry "${label}" (${entry.disposition}) names no expected claim kind`, label);
       }

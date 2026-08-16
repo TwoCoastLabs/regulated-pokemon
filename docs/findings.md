@@ -838,6 +838,41 @@ confirmation. This is why the harness bounds and reports it (findings #5, #6),
 and why these probes stay small — a fail-fast loop cannot afford to block on a
 tail-latency call.
 
+### Iteration 2 — the advisory bucket: eligibility is not correctness
+
+The open question from probe 1 got a decision: a sixth disposition, **advisory**.
+The reasoning is a real property of the kernel, not a taxonomy nicety. A
+`recommendation` claim is checked against Article V — *is this species one the
+trainer is accredited to be advised toward?* — and against nothing else. It is
+never checked for being **right**. So "which starter?", "best team for the
+Elite Four?", "which legendary should I chase?" all resolve: the model names an
+eligible species, the kernel certifies the eligibility, and the player gets a
+certificate that says "a real, allowed pick" while saying nothing about "the
+best pick". Folding that into the answerable rate would let advice borrow a
+fact's guarantee.
+
+So `advisory` scores like `answerable` — it should resolve — but the coverage
+map reports its resolution on its **own line**, and the two are never summed.
+Eight questions moved from `needs-claim-kind` to `advisory` (the composable-
+via-recommendation ones); `kind-summarize-pikachu` moved the other way, to
+`answerable`, because an open summary composes from certified **facts** (the
+strong certificate), not recommendations. The genuinely-blocked entries stayed:
+a type-matchup relation has no claim kind *and* no chart, a "best moveset" has
+no move-recommendation claim, a nickname is not a claim of any kind.
+
+**Measured (probe 3, 4 advisory questions, N=1):** advisory resolution **4/4,
+100%** — the model gives eligible advice reliably — printed apart from the fact
+rate:
+
+> **Answerable resolution rate: —** (facts, strong certificate)
+> **Advisory resolution rate: 100%** — eligibility-checked advice, a weaker
+> certificate than a fact.
+
+The needle this moved is not a number going up; it is the map no longer
+*lying by omission*. Before, a rubber-stamped tier list counted as a plain
+"answered", indistinguishable from a certified base-stat. Now the two guarantees
+are separated on the page, which is the honest thing the whole epic is for.
+
 ---
 
 ## Appendix — how to reproduce

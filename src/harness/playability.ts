@@ -37,14 +37,24 @@ import type { HarnessRun } from "./run.js";
  * expectation is a deliberate, reviewed choice from this list.
  */
 export type Disposition =
-  /** Expressible in a claim kind and grounded in the snapshot. Expected to
-   * resolve; its miss rate is *the* usefulness number. */
+  /** Expressible in a claim kind and grounded in the snapshot, and *correctness-
+   * checkable* — a fact, count, ranking, membership. Expected to resolve; its
+   * miss rate is the usefulness number for the strong guarantee. */
   | "answerable"
+  /**
+   * Answered by one or more `recommendation` claims, which the kernel checks
+   * for *eligibility* (IA-5), never for *correctness* — "which starter?", "best
+   * team?", "which legendary to chase?". Expected to resolve, but the
+   * certificate is weaker than a fact's: certified-eligible advice, not
+   * certified truth. Kept apart from `answerable` so the two guarantees are
+   * never blended into one number (finding #17, iteration 2).
+   */
+  | "advisory"
   /** A sensible player question whose data the snapshot does not carry
    * (evolution chains, catch locations). Expected: honest non-certification. */
   | "needs-data"
-  /** Data is present, but no claim kind expresses the question ("how do I
-   * evolve X"). Expected: honest non-certification. */
+  /** No claim kind — single or composed — expresses the question (a subjective
+   * tier ordering, a type-matchup relation). Expected: honest non-certification. */
   | "needs-claim-kind"
   /** Answerable, but policy-gated (a legendary to an under-accredited trainer).
    * Expected: a named denial — and if it resolves, an enforcement escalation. */
@@ -54,6 +64,7 @@ export type Disposition =
 
 export const DISPOSITIONS: readonly Disposition[] = [
   "answerable",
+  "advisory",
   "needs-data",
   "needs-claim-kind",
   "should-refuse",
@@ -151,6 +162,16 @@ export function scoreDisposition(expected: Disposition, stage: FunnelStage): Dis
       }
       if (stage.kind === "declined") return { pass: false, reason: "answerable, but the act was declined" };
       return { pass: false, reason: "answerable, but the model abstained on it" };
+
+    case "advisory":
+      // Passes on resolving, like answerable — but its resolution is reported
+      // apart, because what resolved is eligibility-checked advice, not a fact.
+      if (stage.kind === "resolved") return { pass: true, reason: "advised, with eligible picks" };
+      if (stage.kind === "denied") {
+        return { pass: false, reason: `advice was gated (${stage.article}/${stage.rule}) — the player got nothing` };
+      }
+      if (stage.kind === "declined") return { pass: false, reason: "proposed an act instead of advice, and it was declined" };
+      return { pass: false, reason: "gave no advice — abstained where a recommendation was possible" };
 
     case "needs-data":
       return abstained(stage)
