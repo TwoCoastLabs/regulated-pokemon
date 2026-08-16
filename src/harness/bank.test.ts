@@ -89,6 +89,11 @@ describe("a bank that would make the map lie is refused by name", () => {
     throw new Error(`expected a violation containing "${rule}"`);
   };
 
+  it("refuses input that is not an object at all", () => {
+    named(() => loadBank(null), "bank-malformed");
+    named(() => loadBank("not a bank"), "bank-malformed");
+  });
+
   it("refuses an unsupported schema version", () => {
     named(loadWith((draft) => ((draft as { bankVersion: number }).bankVersion = 99)), "bank-schema-unsupported");
   });
@@ -136,6 +141,10 @@ describe("a bank that would make the map lie is refused by name", () => {
       }),
       "bank-profile-incomplete",
     );
+  });
+
+  it("throws named when the bank cannot be read from disk", () => {
+    expect(() => readBank(`${BANK_PATH}.missing`)).toThrow("bank-unreadable");
   });
 
   it("refuses an unanswerable entry that names no ceiling", () => {
