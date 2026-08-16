@@ -218,5 +218,14 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
     claims.push(claim);
   }
 
+  // An answer that asserts nothing is not an answer. Compiled, it would mint
+  // a certified page whose only content is the standing provenance footer —
+  // technically true, useless, and read by a visitor as "answered". The
+  // honest reading of an empty claims list is that the model had nothing to
+  // say, which is an abstention, and abstentions are counted, not certified.
+  if (claims.length === 0) {
+    return { ok: false, reason: "the answer asserts no claims at all" };
+  }
+
   return { ok: true, draft: { transactionId, claims, rosters } };
 }

@@ -115,7 +115,10 @@ describe("anything the grammar admits, the decoder reads", () => {
       { id: "brisk", criteria: { all: [{ kind: "stat-at-least", stat: "speed", value: 100 }] } },
       { id: "sluggish", criteria: { all: [{ kind: "stat-at-most", stat: "speed", value: 30 }] } },
     ];
-    const decoded = decodeAnswer(JSON.stringify({ rosters, claims: [] }), context, "txn-rosters");
+    // One claim rides along: an answer with no claims is refused as an
+    // abstention, and this test is about the roster criteria.
+    const claims = [{ kind: "count", rosterId: "everything" }];
+    const decoded = decodeAnswer(JSON.stringify({ rosters, claims }), context, "txn-rosters");
     expect(decoded.ok).toBe(true);
     if (decoded.ok) expect(decoded.draft.rosters).toHaveLength(rosters.length);
   });

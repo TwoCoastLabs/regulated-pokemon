@@ -338,6 +338,17 @@ describe("failures counted apart, never blended", () => {
     expect(recovered.records[0]!.outcome.status).toBe("answered");
   });
 
+  it("an answer with no claims is an abstention, never an empty certificate", async () => {
+    // The dogfooding finding: a model can reply with well-formed JSON that
+    // asserts nothing, and certifying it would render a page whose only
+    // content is the provenance footer, stamped "checked & certified".
+    const empty = scripted("scripted:empty", () => JSON.stringify({ rosters: [], claims: [] }));
+    const state = await say(startSession(), `${PROFILE} what are the types of Pokemon?`, deps(empty));
+
+    expect(state.records).toHaveLength(0);
+    expect(state.notes.some((entry) => entry.tone === "abstention")).toBe(true);
+  });
+
   it("a model that produced nothing usable is an abstention, not a verdict", async () => {
     const mute = scripted("scripted:mute", () => "I would rather write prose than JSON.");
     const state = await say(startSession(), `${PROFILE} What is Thunderbolt's power?`, deps(mute));

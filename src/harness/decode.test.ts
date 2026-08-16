@@ -144,6 +144,10 @@ describe("decodeAnswer", () => {
     ["not a JSON object", "nope", "not a JSON object"],
     ["a JSON array", "[]", "not a JSON object"],
     ["missing claims", JSON.stringify({ rosters: [] }), "missing rosters or claims"],
+    // An empty answer is an abstention, never a certificate: compiled, its
+    // page would carry nothing but the provenance footer and still say
+    // "checked & certified" — the dogfooding finding behind this row.
+    ["an empty answer", JSON.stringify({ rosters: [], claims: [] }), "asserts no claims"],
     ["a malformed roster", JSON.stringify({ rosters: [{ id: 5 }], claims: [] }), "roster is malformed"],
     [
       "a malformed claim",

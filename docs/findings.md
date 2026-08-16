@@ -752,6 +752,20 @@ the real session module from a terminal (messages and button-presses as argv)
 and prints every phase transition, question, proposal, note, denial and cost —
 so a conversation bug is a re-runnable one-liner instead of a browser session.
 
+**Addendum — the empty certificate.** Dogfooding the fixed flow surfaced a
+second bug hiding behind the first: on some phrasings ("what *are* the types
+of Pokemon?") the model returns well-formed JSON that asserts *nothing* —
+`claims: []` — and the kernel dutifully compiled it, rendering a certified
+page whose only content was the standing provenance footer, stamped "checked
+& certified". Technically true; useless; and it silently counted as
+*resolved* in the usefulness metrics. The decoder now refuses an answer with
+no claims ("the answer asserts no claims at all"), which flows to the
+existing abstention path: the visitor sees "the Advisor couldn't put together
+a checkable answer" with a retry, nothing is filed, and the abstention is
+counted as one. An empty answer was never an enforcement hole — nothing false
+was certified — but it was a usefulness lie, and those corrupt the other side
+of the thesis.
+
 **Publishable form:** *"The fix for an over-asking compliance bot was not
 loosening the rules — it was recording the questions. A bare 'Red' binds
 because the record shows exactly which question it answered; a tool that
