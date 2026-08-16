@@ -6,8 +6,8 @@
 
 import { describe, expect, it } from "vitest";
 
-import type { BankRun } from "./bank-run.js";
-import { coverageMap, renderCoverage } from "./coverage.js";
+import type { BankRun, IntentRobustness } from "./bank-run.js";
+import { coverageMap, renderCoverage, renderRobustness, robustnessSummary } from "./coverage.js";
 import type { Disposition, FunnelStage } from "./playability.js";
 
 function run(entryId: string, disposition: Disposition, stage: FunnelStage, pass: boolean, extra: Partial<BankRun> = {}): BankRun {
@@ -89,5 +89,44 @@ describe("renderCoverage is a faithful, pure Markdown view", () => {
     );
     expect(md).toContain("ENFORCEMENT ESCALATION");
     expect(md).toContain("refuse-2");
+  });
+});
+
+// --- robustness -------------------------------------------------------------
+
+function report(entryId: string, disposition: Disposition, stageKinds: FunnelStage["kind"][]): IntentRobustness {
+  const phrasings = stageKinds.map((kind, index) => ({
+    text: `phrasing ${index}`,
+    stage: (kind === "denied" ? { kind, article: "IA-5", rule: "restricted-species" } : { kind }) as FunnelStage,
+    pass: true,
+  }));
+  return { entryId, disposition, phrasings, stable: new Set(stageKinds).size === 1 };
+}
+
+describe("robustnessSummary reports whether wording moved the bucket", () => {
+  it("counts only entries that carry more than one wording", () => {
+    const summary = robustnessSummary([
+      report("stable", "answerable", ["resolved", "resolved", "resolved"]),
+      report("moved", "answerable", ["resolved", "abstained-answer"]),
+      report("single", "off-domain", ["abstained-answer"]), // one wording — not measured
+    ]);
+    expect(summary.measured).toBe(2);
+    expect(summary.stable).toBe(1);
+    expect(summary.stableRate).toBe(0.5);
+    expect(summary.unstable).toEqual([
+      { entryId: "moved", disposition: "answerable", stages: ["resolved", "abstained-answer"] },
+    ]);
+  });
+
+  it("renders the stable case as a clean pass and the unstable case as a finding", () => {
+    const clean = renderRobustness(robustnessSummary([report("a", "answerable", ["resolved", "resolved"])]));
+    expect(clean).toContain("1/1 intents phrasing-stable");
+    expect(clean).toContain("No intent changed its funnel bucket");
+
+    const moved = renderRobustness(
+      robustnessSummary([report("b", "needs-data", ["abstained-answer", "resolved"])]),
+    );
+    expect(moved).toContain("Wording moved the outcome");
+    expect(moved).toContain("`b`");
   });
 });

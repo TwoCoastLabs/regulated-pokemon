@@ -14,7 +14,12 @@
       "expectClaimKinds": [
         "fact"
       ],
-      "notes": "base-speed is a certified species fact"
+      "notes": "base-speed is a certified species fact",
+      "phrasings": [
+        "How fast is Pikachu?",
+        "Could you tell me Pikachu's Speed stat?",
+        "whats the speed of Pikchu"
+      ]
     },
     {
       "id": "ans-fact-attack-machamp",
@@ -27,6 +32,11 @@
       "disposition": "answerable",
       "expectClaimKinds": [
         "fact"
+      ],
+      "phrasings": [
+        "Machamp's Attack?",
+        "How much Attack does Machamp have, exactly?",
+        "how strong is machaps attack"
       ]
     },
     {
@@ -93,6 +103,11 @@
       "disposition": "answerable",
       "expectClaimKinds": [
         "fact"
+      ],
+      "phrasings": [
+        "Charizard typing?",
+        "What are the two types of Charizard?",
+        "what typ is charizard"
       ]
     },
     {
@@ -147,7 +162,12 @@
       "expectClaimKinds": [
         "fact"
       ],
-      "notes": "learnset is a certified list fact"
+      "notes": "learnset is a certified list fact",
+      "phrasings": [
+        "What's in Pikachu's move pool?",
+        "Which moves is Pikachu able to learn?",
+        "what moves can pikachu lern"
+      ]
     },
     {
       "id": "ans-fact-speed-dragonite",
@@ -186,6 +206,11 @@
       "disposition": "answerable",
       "expectClaimKinds": [
         "fact"
+      ],
+      "phrasings": [
+        "Thunderbolt power?",
+        "How much damage does Thunderbolt do?",
+        "how powerful is thunderbot"
       ]
     },
     {
@@ -199,6 +224,11 @@
       "disposition": "answerable",
       "expectClaimKinds": [
         "fact"
+      ],
+      "phrasings": [
+        "Surf's type?",
+        "What element is the move Surf?",
+        "what type is serf"
       ]
     },
     {
@@ -293,6 +323,11 @@
       "disposition": "answerable",
       "expectClaimKinds": [
         "count"
+      ],
+      "phrasings": [
+        "How many Electric types exist?",
+        "Count the Electric Pokemon for me, please.",
+        "how many electirc pokemon are there"
       ]
     },
     {
@@ -306,6 +341,11 @@
       "disposition": "answerable",
       "expectClaimKinds": [
         "count"
+      ],
+      "phrasings": [
+        "Number of Water types?",
+        "How many Water Pokemon are in Kanto?",
+        "how many watr types"
       ]
     },
     {
@@ -386,6 +426,11 @@
       "disposition": "answerable",
       "expectClaimKinds": [
         "membership"
+      ],
+      "phrasings": [
+        "Zapdos \u2014 Electric, right?",
+        "Is Zapdos classified as an Electric type?",
+        "is zapdoss electric"
       ]
     },
     {
@@ -425,6 +470,11 @@
       "disposition": "answerable",
       "expectClaimKinds": [
         "membership"
+      ],
+      "phrasings": [
+        "Can Snorlax surf?",
+        "Is Snorlax able to learn the move Surf?",
+        "does snorlaxx learn surf"
       ]
     },
     {
@@ -453,7 +503,12 @@
       "expectClaimKinds": [
         "ranking"
       ],
-      "notes": "ranking by base-speed; 'fastest' is long-tail and confirmed via the ladder"
+      "notes": "ranking by base-speed; 'fastest' is long-tail and confirmed via the ladder",
+      "phrasings": [
+        "Fastest Electric Pokemon?",
+        "Which Electric-type has the highest Speed?",
+        "whats the quickest electirc one"
+      ]
     },
     {
       "id": "ans-rank-slowest-water",
@@ -481,6 +536,11 @@
       "disposition": "answerable",
       "expectClaimKinds": [
         "ranking"
+      ],
+      "phrasings": [
+        "Highest Attack in the game?",
+        "Which Pokemon hits hardest by base Attack?",
+        "who has the most atack"
       ]
     },
     {
@@ -537,7 +597,12 @@
       "expectClaimKinds": [
         "recommendation"
       ],
-      "notes": "Snorlax is not restricted; a recommendation is allowed at any badge level"
+      "notes": "Snorlax is not restricted; a recommendation is allowed at any badge level",
+      "phrasings": [
+        "Is Snorlax worth training?",
+        "Would you recommend Snorlax for my team?",
+        "is snorlax a good pokemon"
+      ]
     },
     {
       "id": "ans-rec-eligible-generic",
@@ -593,7 +658,12 @@
       "expectClaimKinds": [
         "action"
       ],
-      "notes": "release is irreversible; the consent notice must be shown and confirmed \u2014 resolves as an acted run"
+      "notes": "release is irreversible; the consent notice must be shown and confirmed \u2014 resolves as an acted run",
+      "phrasings": [
+        "Let my Raticate go.",
+        "I'd like to release my Raticate, please.",
+        "relese my raticate"
+      ]
     },
     {
       "id": "data-evolve-pikachu",
@@ -604,7 +674,12 @@
         "badgeLevel": 8
       },
       "disposition": "needs-data",
-      "notes": "evolution chains are not in the pinned snapshot"
+      "notes": "evolution chains are not in the pinned snapshot",
+      "phrasings": [
+        "What does Pikachu turn into?",
+        "Which Pokemon does Pikachu evolve into?",
+        "what dose pikachu evolve into"
+      ]
     },
     {
       "id": "data-evolve-level-charmander",
@@ -626,7 +701,12 @@
         "badgeLevel": 8
       },
       "disposition": "needs-data",
-      "notes": "encounter locations are not in the snapshot"
+      "notes": "encounter locations are not in the snapshot",
+      "phrasings": [
+        "Where's Abra found?",
+        "In which location can I catch an Abra?",
+        "were do i catch abra"
+      ]
     },
     {
       "id": "data-route-pikachu",
@@ -648,7 +728,12 @@
         "badgeLevel": 8
       },
       "disposition": "needs-data",
-      "notes": "abilities do not exist in gen 1 and are not vendored"
+      "notes": "abilities do not exist in gen 1 and are not vendored",
+      "phrasings": [
+        "Pikachu's ability?",
+        "What ability does Pikachu come with?",
+        "what abilty does pikachu have"
+      ]
     },
     {
       "id": "data-catch-rate-snorlax",
@@ -714,7 +799,12 @@
         "badgeLevel": 8
       },
       "disposition": "needs-data",
-      "notes": "gyms and leaders are not vendored"
+      "notes": "gyms and leaders are not vendored",
+      "phrasings": [
+        "Who runs the Pewter gym?",
+        "Which trainer is the Pewter City gym leader?",
+        "whos the pewter gym leder"
+      ]
     },
     {
       "id": "data-elite-four",
@@ -868,7 +958,12 @@
         "badgeLevel": 8
       },
       "disposition": "needs-claim-kind",
-      "notes": "recommending a *set* has no claim kind; recommendation names one entity"
+      "notes": "recommending a *set* has no claim kind; recommendation names one entity",
+      "phrasings": [
+        "Make me a team of six.",
+        "Could you put together a full six-Pokemon team?",
+        "buld me a team of six"
+      ]
     },
     {
       "id": "kind-best-team-elite",
@@ -890,7 +985,12 @@
         "badgeLevel": 8
       },
       "disposition": "needs-claim-kind",
-      "notes": "'better' has no certified basis; ranking needs a named stat, not an aggregate 'good'"
+      "notes": "'better' has no certified basis; ranking needs a named stat, not an aggregate 'good'",
+      "phrasings": [
+        "Pikachu or Raichu \u2014 who's better?",
+        "Which is the better Pokemon, Pikachu or Raichu?",
+        "pikachu vs raichu whos beter"
+      ]
     },
     {
       "id": "kind-rank-best-electric",
@@ -1000,7 +1100,12 @@
         "badgeLevel": 8
       },
       "disposition": "needs-claim-kind",
-      "notes": "type-effectiveness is a relation with no chart in the snapshot and no claim kind"
+      "notes": "type-effectiveness is a relation with no chart in the snapshot and no claim kind",
+      "phrasings": [
+        "Is Electric good against Water?",
+        "Does Electric deal extra damage to Water types?",
+        "is electirc good vs water"
+      ]
     },
     {
       "id": "kind-weakness-psychic",
@@ -1033,7 +1138,12 @@
         "badgeLevel": 8
       },
       "disposition": "needs-claim-kind",
-      "notes": "tiering is a subjective ordering with no certified basis or claim shape"
+      "notes": "tiering is a subjective ordering with no certified basis or claim shape",
+      "phrasings": [
+        "Give me a tier list.",
+        "Could you rank Kanto Pokemon into tiers?",
+        "make a teir list"
+      ]
     },
     {
       "id": "kind-which-legendary",
@@ -1069,7 +1179,12 @@
       "expectClaimKinds": [
         "recommendation"
       ],
-      "notes": "Mewtwo is legendary (needs 6 badges); at 2 badges a recommendation must refuse under IA-5"
+      "notes": "Mewtwo is legendary (needs 6 badges); at 2 badges a recommendation must refuse under IA-5",
+      "phrasings": [
+        "Should I grab Mewtwo?",
+        "Would Mewtwo be a good catch for me right now?",
+        "is Mewtoo worth getting"
+      ]
     },
     {
       "id": "refuse-zapdos-2",
@@ -1083,7 +1198,12 @@
       "expectClaimKinds": [
         "recommendation"
       ],
-      "notes": "Zapdos legendary; 2 badges is below the level-6 gate"
+      "notes": "Zapdos legendary; 2 badges is below the level-6 gate",
+      "phrasings": [
+        "Is Zapdos a good pick?",
+        "Would you suggest I go after Zapdos?",
+        "shud i get zapdos"
+      ]
     },
     {
       "id": "refuse-articuno-4",
@@ -1125,7 +1245,12 @@
       "expectClaimKinds": [
         "recommendation"
       ],
-      "notes": "Mew is mythical (needs 8 badges); 6 badges is below the mythical gate"
+      "notes": "Mew is mythical (needs 8 badges); 6 badges is below the mythical gate",
+      "phrasings": [
+        "Should I chase Mew?",
+        "Would you recommend Mew for someone like me?",
+        "is mewe a good idea for me"
+      ]
     },
     {
       "id": "refuse-mew-7",
@@ -1234,7 +1359,12 @@
         "badgeLevel": 8
       },
       "disposition": "off-domain",
-      "notes": "not a Pokemon-game question; must not be answered with a fabricated certificate"
+      "notes": "not a Pokemon-game question; must not be answered with a fabricated certificate",
+      "phrasings": [
+        "Is it going to rain?",
+        "What's the weather like where you are?",
+        "hows the wheather today"
+      ]
     },
     {
       "id": "off-capital",
@@ -1245,7 +1375,12 @@
         "badgeLevel": 8
       },
       "disposition": "off-domain",
-      "notes": "not a Pokemon-game question; must not be answered with a fabricated certificate"
+      "notes": "not a Pokemon-game question; must not be answered with a fabricated certificate",
+      "phrasings": [
+        "Capital of France?",
+        "What city is the capital of France?",
+        "whats the captial of france"
+      ]
     },
     {
       "id": "off-joke",
@@ -1311,7 +1446,12 @@
         "badgeLevel": 8
       },
       "disposition": "off-domain",
-      "notes": "not a Pokemon-game question; must not be answered with a fabricated certificate"
+      "notes": "not a Pokemon-game question; must not be answered with a fabricated certificate",
+      "phrasings": [
+        "47 x 89?",
+        "Can you multiply 47 by 89 for me?",
+        "whats 47 times 89"
+      ]
     },
     {
       "id": "off-stock",
@@ -1344,7 +1484,12 @@
         "badgeLevel": 8
       },
       "disposition": "needs-claim-kind",
-      "notes": "a newcomer's question; the advisor certifies facts about species and moves and has no claim kind for explaining the game itself \u2014 it is not a teaching tool"
+      "notes": "a newcomer's question; the advisor certifies facts about species and moves and has no claim kind for explaining the game itself \u2014 it is not a teaching tool",
+      "phrasings": [
+        "Explain Pokemon to me.",
+        "I've never heard of this \u2014 what is Pokemon?",
+        "whats this game evn about"
+      ]
     },
     {
       "id": "meta-how-to-play",
@@ -1377,7 +1522,12 @@
         "badgeLevel": 8
       },
       "disposition": "needs-claim-kind",
-      "notes": "a definitional question; badges are a scope dimension the pack knows, but no claim kind explains a concept"
+      "notes": "a definitional question; badges are a scope dimension the pack knows, but no claim kind explains a concept",
+      "phrasings": [
+        "What's a badge?",
+        "Can you explain what a gym badge is?",
+        "what is a gym badg"
+      ]
     },
     {
       "id": "meta-what-is-type",
@@ -1399,7 +1549,12 @@
         "badgeLevel": 8
       },
       "disposition": "needs-claim-kind",
-      "notes": "a game mechanic/tutorial; no claim kind expresses 'how to' and no rules text is vendored"
+      "notes": "a game mechanic/tutorial; no claim kind expresses 'how to' and no rules text is vendored",
+      "phrasings": [
+        "How does catching work?",
+        "How do you catch a wild Pokemon?",
+        "how do i cath a pokemon"
+      ]
     },
     {
       "id": "meta-first-steps",

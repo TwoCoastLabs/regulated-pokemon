@@ -52,6 +52,13 @@ export interface BankEntry {
   /** For `answerable`/`should-refuse`: the claim kinds a good answer asserts —
    * the oracle, never a script. Absent for the unanswerable dispositions. */
   expectClaimKinds?: readonly ClaimKind[];
+  /**
+   * Frozen paraphrases of the same intent — terse, verbose, misspelled — beside
+   * the canonical `intent`. Fixtures, authored once and reviewed, never varied
+   * at run time (a run that changed its own inputs would not replay). The
+   * robustness reading asks whether the wording moves the funnel bucket.
+   */
+  phrasings?: readonly string[];
   /** Why this disposition. Required for the unanswerable dispositions, where
    * it names the specific ceiling — the coverage map reads it as the roadmap. */
   notes?: string;
@@ -130,6 +137,15 @@ export function loadBank(input: unknown): QuestionBank {
 
     if (UNANSWERABLE.includes(entry.disposition) && (entry.notes ?? "").trim().length === 0) {
       fail("bank-ceiling-unstated", `entry "${label}" (${entry.disposition}) must name the ceiling in its notes`, label);
+    }
+
+    if (entry.phrasings !== undefined) {
+      if (!Array.isArray(entry.phrasings)) fail("bank-phrasings-malformed", `entry "${label}" has a non-array phrasings`, label);
+      for (const phrasing of entry.phrasings) {
+        if (typeof phrasing !== "string" || phrasing.trim().length === 0) {
+          fail("bank-phrasing-empty", `entry "${label}" carries an empty paraphrase`, label);
+        }
+      }
     }
   }
 

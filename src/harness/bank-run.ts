@@ -72,9 +72,11 @@ function wantsAct(entry: BankEntry): boolean {
   return (entry.expectClaimKinds ?? []).includes("action");
 }
 
-/** Drive the session to a settled state, answering as the trainer would. */
-async function play(entry: BankEntry, deps: SessionDeps): Promise<SessionState> {
-  let state = await say(startSession(), entry.intent, deps);
+/** Drive the session to a settled state, answering as the trainer would. The
+ * opening is one phrasing of the question — the canonical intent, or a variant
+ * when robustness is being measured. */
+async function play(entry: BankEntry, opening: string, deps: SessionDeps): Promise<SessionState> {
+  let state = await say(startSession(), opening, deps);
   const acts = wantsAct(entry);
 
   for (let step = 0; step < MAX_STEPS; step += 1) {
@@ -142,14 +144,22 @@ export function asRun(entry: BankEntry, state: SessionState, world: DemoWorld): 
   };
 }
 
-/** Run one bank entry and score it. `now` is injected, so a run replays. */
+/** Every wording of a question the bank carries — the canonical intent first,
+ * then any frozen paraphrases. Robustness is measured over this list. */
+export function phrasingsOf(entry: BankEntry): readonly string[] {
+  return [entry.intent, ...(entry.phrasings ?? [])];
+}
+
+/** Run one phrasing of one entry and score it. `now` is injected, so a run
+ * replays; `opening` defaults to the canonical intent. */
 export async function runBankEntry(
   world: DemoWorld,
   entry: BankEntry,
   provider: ModelProvider,
   now: () => string,
+  opening: string = entry.intent,
 ): Promise<BankRun> {
-  const state = await play(entry, { world, provider, now });
+  const state = await play(entry, opening, { world, provider, now });
   const run = asRun(entry, state, world);
   const stage = funnelOf(run, wantsAct(entry));
   return {
@@ -162,9 +172,9 @@ export async function runBankEntry(
   };
 }
 
-/** The whole bank, one provider, in order. A live caller pays for it; a
- * scripted one proves the machinery in CI. `clock` yields a fresh, strictly
- * increasing clock per entry so ids and digests do not collide. */
+/** The whole bank, one provider, in order — the canonical phrasing of each. A
+ * live caller pays for it; a scripted one proves the machinery in CI. `clock`
+ * yields a fresh, strictly increasing clock per entry so ids do not collide. */
 export async function runBank(
   world: DemoWorld,
   entries: readonly BankEntry[],
@@ -176,4 +186,37 @@ export async function runBank(
     runs.push(await runBankEntry(world, entry, provider, clock()));
   }
   return runs;
+}
+
+/** One entry's answer under every wording — the robustness reading. */
+export interface IntentRobustness {
+  entryId: string;
+  disposition: Disposition;
+  /** Each phrasing and where it landed. */
+  phrasings: readonly { text: string; stage: FunnelStage; pass: boolean }[];
+  /** True when every phrasing landed in the same funnel stage: the answer did
+   * not depend on the wording. */
+  stable: boolean;
+}
+
+/**
+ * Run every phrasing of one entry and report whether the wording moved the
+ * outcome. A `false` here is the finding wave 3 exists to surface: a question
+ * that resolves phrased one way and abstains phrased another is a robustness
+ * hole, not a coverage statistic. An entry with no paraphrases is trivially
+ * stable — one wording cannot disagree with itself.
+ */
+export async function runIntentRobustness(
+  world: DemoWorld,
+  entry: BankEntry,
+  provider: ModelProvider,
+  clock: () => () => string,
+): Promise<IntentRobustness> {
+  const phrasings: { text: string; stage: FunnelStage; pass: boolean }[] = [];
+  for (const text of phrasingsOf(entry)) {
+    const run = await runBankEntry(world, entry, provider, clock(), text);
+    phrasings.push({ text, stage: run.stage, pass: run.score.pass });
+  }
+  const stages = new Set(phrasings.map((p) => p.stage.kind));
+  return { entryId: entry.id, disposition: entry.disposition, phrasings, stable: stages.size === 1 };
 }
