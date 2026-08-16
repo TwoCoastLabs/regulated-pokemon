@@ -20,6 +20,7 @@
     "harness": "npm run build && node dist/harness/cli.js",
     "harness:live": "npm run build && node dist/harness/live-cli.js",
     "session:trace": "npm run build && node dist/session/trace-cli.js",
+    "coverage:map": "npm run build && node dist/harness/coverage-cli.js",
     "harness:results": "npm run build && node dist/harness/results-cli.js",
     "relay": "npm run app:build && npm run build && node dist/relay/serve.js",
     "snapshot:fetch": "node --experimental-strip-types scripts/fetch-snapshot.ts"
