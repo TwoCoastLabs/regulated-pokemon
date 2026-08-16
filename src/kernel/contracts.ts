@@ -36,7 +36,7 @@ export type ScopeValue = string | number;
  * guide and a retrieved page are not classified as hostile — they arrive on a
  * channel the trainer does not speak on, and the resolver never reads them.
  */
-export type UtteranceSource = "trainer" | "quoted-document" | "third-party" | "tool";
+export type UtteranceSource = "trainer" | "advisor" | "quoted-document" | "third-party" | "tool";
 
 /** A typed interpretation offered for confirmation. Never authority itself. */
 export type ScopeCandidate = Partial<TrainerScope>;
@@ -55,8 +55,10 @@ export interface ScopeBinding {
   /**
    * `direct` — approved vocabulary in the trainer's own words.
    * `confirmed` — the trainer's confirmation of one stated interpretation.
+   * `answer` — the trainer's direct reply to a recorded clarifying question;
+   *   the question supplies the context a bare value lacks.
    */
-  route: "direct" | "confirmed";
+  route: "direct" | "confirmed" | "answer";
   /** The exact wording this binding rests on, normalised for replay. */
   matchedText: string;
 }
@@ -69,6 +71,21 @@ export interface ScopeBinding {
  */
 export type ScopeEvent =
   | { kind: "utterance"; at: string; source: UtteranceSource; text: string }
+  | {
+      /**
+       * A clarifying question put to the trainer, recorded as evidence. Its
+       * whole effect is context: the trainer's direct reply may bind this one
+       * dimension on bare wording, because the question said what the words
+       * are about. The channel decides here as everywhere (IA-8) — only the
+       * advisor's own questions arm an answer, and the question text is in
+       * the record so the leniency it granted is auditable.
+       */
+      kind: "question";
+      at: string;
+      source: UtteranceSource;
+      dimension: ScopeDimension;
+      text: string;
+    }
   | {
       kind: "proposal";
       at: string;

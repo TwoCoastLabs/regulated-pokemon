@@ -160,13 +160,14 @@ describe("the ladder with a person on the end", () => {
     expect(state.phase.dimension).toBe("comparisonBasis");
     expect(state.phase.question.length).toBeGreaterThan(0);
 
-    // The question is also durably logged, so a chat history can still show
-    // it after it has been answered — the phase alone forgets.
-    expect(state.asked).toHaveLength(1);
-    expect(state.asked[0]!.question).toBe(state.phase.question);
+    // The question is also in the transcript — evidence, and the chat's
+    // durable history — so it can still be shown after it has been answered.
+    const questions = state.transcript.filter((event) => event.kind === "question");
+    expect(questions).toHaveLength(1);
+    expect(questions[0]!.text).toBe(state.phase.question);
   });
 
-  it("keeps every asked question after it is answered, and never logs a repeat twice", async () => {
+  it("binds a bare answer to the recorded question — no proposal, no card, and the record replays", async () => {
     // A model whose ranking answer escalates the basis into the requirement,
     // but with nothing usable to propose about scope — so the exchange falls
     // to the pack's own question.
@@ -177,24 +178,71 @@ describe("the ladder with a person on the end", () => {
     let state = await say(startSession(), `${PROFILE} Which of the Electric ones is the quickest?`, d);
 
     expect(state.phase.kind).toBe("asking");
-    expect(state.asked).toHaveLength(1);
-    const first = state.asked[0]!;
+    const asked = state.transcript.filter((event) => event.kind === "question");
+    expect(asked).toHaveLength(1);
 
-    // The visitor answers the question; the exchange settles into a record.
-    state = await say(state, "by base speed", {
-      ...d,
-      provider: scripted("scripted:ranker", (purpose) =>
-        purpose === "scope" ? basisProposal("base-speed") : rankingAnswer(),
-      ),
+    // The visitor answers with one bare word — no context word in sight, so
+    // the direct route cannot bind it. The recorded question is the context,
+    // so it binds all the same — the ladder is never climbed and no
+    // confirmation card interrupts.
+    state = await say(state, "speed", d);
+
+    expect(state.records).toHaveLength(1);
+    const record = state.records[0]!;
+    expect(record.outcome.status).toBe("answered");
+    const basis = record.grant?.bindings.find((binding) => binding.dimension === "comparisonBasis");
+    expect(basis?.route).toBe("answer");
+    expect(record.transcript.filter((event) => event.kind === "proposal")).toHaveLength(0);
+    expect(verifyReplay(world, record).allowed).toBe(true);
+
+    // The answered question is still in the transcript, exactly once — the
+    // conversation reads whole.
+    expect(state.transcript.filter((event) => event.kind === "question")).toHaveLength(1);
+  });
+
+  it("a catalogue opener is three questions and zero cards — not an interrogation", async () => {
+    // The conversation that exposed the rabbit hole, scripted: a question the
+    // vocabulary cannot read, then three plain answers. Each answer must bind
+    // against the recorded question — no proposal, no confirmation card, and
+    // no model call — until the profile is complete and the answer compiles.
+    const typesAnswer = JSON.stringify({
+      rosters: [
+        { id: "electric-kanto", criteria: { all: [{ kind: "has-type", type: "electric" }] } },
+        { id: "psychic-kanto", criteria: { all: [{ kind: "has-type", type: "psychic" }] } },
+      ],
+      claims: [
+        { kind: "count", rosterId: "electric-kanto" },
+        { kind: "count", rosterId: "psychic-kanto" },
+      ],
     });
-    for (let guard = 0; state.phase.kind === "confirming-scope" && guard < 3; guard++) {
-      state = await decideScope(state, "confirm", d);
-    }
+    const provider = scripted("scripted:catalogue", (purpose) => (purpose === "answer" ? typesAnswer : "no JSON"));
+    const d = deps(provider);
 
-    // The answered question is still in the log — the conversation reads
-    // whole — and it was logged exactly once.
-    expect(state.asked[0]).toEqual(first);
-    expect(state.asked.filter((entry) => entry.question === first.question)).toHaveLength(1);
+    let state = await say(startSession(), "what types of pokemons do you have?", d);
+    expect(state.phase.kind).toBe("asking");
+    const callsAfterOpener = state.usage.calls;
+
+    state = await say(state, "Red", d);
+    expect(state.phase.kind).toBe("asking");
+    state = await say(state, "Kanto", d);
+    expect(state.phase.kind).toBe("asking");
+    // Answering the pack's own questions consulted no model at all.
+    expect(state.usage.calls).toBe(callsAfterOpener);
+
+    state = await say(state, "two badges", d);
+    expect(state.records).toHaveLength(1);
+    expect(state.records[0]!.outcome.status).toBe("answered");
+
+    // The shape of the conversation: three questions, zero proposals.
+    expect(state.transcript.filter((event) => event.kind === "question")).toHaveLength(3);
+    expect(state.transcript.filter((event) => event.kind === "proposal")).toHaveLength(0);
+
+    // The bare answers bound on the answer route; the phrased one directly.
+    const routes = Object.fromEntries(
+      (state.records[0]!.grant?.bindings ?? []).map((binding) => [binding.dimension, binding.route]),
+    );
+    expect(routes).toEqual({ version: "answer", region: "answer", badgeLevel: "direct" });
+    expect(verifyReplay(world, state.records[0]!).allowed).toBe(true);
   });
 });
 
@@ -288,6 +336,17 @@ describe("failures counted apart, never blended", () => {
     const recovered = await retry(state, healthy);
     expect(recovered.records).toHaveLength(1);
     expect(recovered.records[0]!.outcome.status).toBe("answered");
+  });
+
+  it("an answer with no claims is an abstention, never an empty certificate", async () => {
+    // The dogfooding finding: a model can reply with well-formed JSON that
+    // asserts nothing, and certifying it would render a page whose only
+    // content is the provenance footer, stamped "checked & certified".
+    const empty = scripted("scripted:empty", () => JSON.stringify({ rosters: [], claims: [] }));
+    const state = await say(startSession(), `${PROFILE} what are the types of Pokemon?`, deps(empty));
+
+    expect(state.records).toHaveLength(0);
+    expect(state.notes.some((entry) => entry.tone === "abstention")).toBe(true);
   });
 
   it("a model that produced nothing usable is an abstention, not a verdict", async () => {

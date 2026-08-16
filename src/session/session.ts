@@ -39,7 +39,7 @@ import type { ManifestContext, ManifestDraft } from "../kernel/manifest.js";
 import type { AccordPack } from "../kernel/pack.js";
 import { planRender } from "../kernel/render.js";
 import type { CertifiedRegistry } from "../kernel/registry.js";
-import { REQUIRED_DIMENSIONS, resolveScope, type ScopeContext } from "../kernel/scope.js";
+import { REQUIRED_DIMENSIONS, resolveScope, type ScopeContext, unmatchedClauses } from "../kernel/scope.js";
 import { runTransaction, type Transaction } from "../kernel/transaction.js";
 import { renderAnswer } from "../render/reference.js";
 import { proposalDigest, proposeAnswer, proposeScope } from "../harness/advisor.js";
@@ -88,17 +88,6 @@ export interface SessionNote {
   tone: "abstention" | "error";
 }
 
-/** One clarifying question the session put to the visitor, kept so the
- * conversation still reads as one after it has been answered. The *current*
- * question lives on the phase; this is its durable trace — without it, a chat
- * history would show every answer the visitor gave and none of the questions
- * they were answering. */
-export interface AskedQuestion {
-  at: string;
-  dimension: ScopeDimension;
-  question: string;
-}
-
 export interface SessionState {
   transcript: ScopeTranscript;
   /** Filed exchanges, in order. Each is the seam's own record and replays. */
@@ -106,8 +95,6 @@ export interface SessionState {
   /** Certified pages for display, by transaction id — beside the record. */
   pages: Readonly<Record<string, DomElement>>;
   notes: readonly SessionNote[];
-  /** Every clarifying question asked so far, in the order asked. */
-  asked: readonly AskedQuestion[];
   usage: Usage;
   providerErrors: number;
   phase: SessionPhase;
@@ -152,7 +139,6 @@ export function startSession(): SessionState {
     records: [],
     pages: {},
     notes: [],
-    asked: [],
     usage: emptyUsage(),
     providerErrors: 0,
     phase: { kind: "gathering" },
@@ -165,15 +151,25 @@ function note(state: SessionState, at: string, text: string, tone: SessionNote["
   return { ...state, notes: [...state.notes, { at, text, tone }] };
 }
 
-/** Fall to the pack's clarifying question: set the phase and keep the durable
- * trace. Re-asking the question already on the phase (a retry after an error,
- * say) does not log it twice — the visitor saw it once. */
+/**
+ * Fall to the pack's clarifying question, and record it as evidence.
+ *
+ * The question event in the transcript does two jobs at once: it keeps the
+ * conversation whole for the visitor (a history of answers with no questions
+ * is not a conversation), and it arms the kernel's `answer` route — the
+ * trainer's direct reply binds this one dimension without a proposal or a
+ * card, because the recorded question is the context (see kernel/scope.ts).
+ * Re-asking the question already on the phase (a retry after an error, say)
+ * records nothing new — the visitor was asked once.
+ */
 function ask(state: SessionState, at: string, dimension: ScopeDimension, question: string): SessionState {
   const repeat = state.phase.kind === "asking" && state.phase.question === question;
   return {
     ...state,
     phase: { kind: "asking", dimension, question },
-    asked: repeat ? state.asked : [...state.asked, { at, dimension, question }],
+    transcript: repeat
+      ? state.transcript
+      : [...state.transcript, { kind: "question", at, source: "advisor", dimension, text: question }],
   };
 }
 
@@ -319,9 +315,18 @@ async function drive(state: SessionState, deps: SessionDeps): Promise<SessionSta
     return answer(state, deps);
   }
 
-  // Clarify. The model gets a bounded number of tries at interpreting the
-  // long tail; past the budget, the pack's own question does the asking.
-  if (state.ladderTurns >= MAX_LADDER_TURNS) {
+  // Clarify — and the pack's own question outranks the model. A question is
+  // free, deterministic, and armed: the trainer's direct answer to it binds
+  // without a proposal or a card. The ladder exists for wording the
+  // vocabulary could not read at all, so it runs only when the trainer's
+  // latest words actually contain some — anything else turned every missing
+  // dimension into a model call and a confirmation, which is how one
+  // catalogue question became an interrogation.
+  const lastSaid = [...state.transcript]
+    .reverse()
+    .find((event): event is Extract<ScopeEvent, { kind: "utterance" }> => event.kind === "utterance" && event.source === "trainer");
+  const freshLongTail = lastSaid !== undefined && unmatchedClauses(world.pack, lastSaid.text).length > 0;
+  if (!freshLongTail || state.ladderTurns >= MAX_LADDER_TURNS) {
     return ask(state, deps.now(), outcome.asking, outcome.question);
   }
 
