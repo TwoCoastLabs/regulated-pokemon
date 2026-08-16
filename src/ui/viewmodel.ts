@@ -103,8 +103,8 @@ export function modelOf(artifact: HarnessArtifact, providerId: string): Artifact
 
 /** One transcript event, as a line in the chat pane. */
 export interface TranscriptLine {
-  kind: "utterance" | "proposal" | "confirmation";
-  /** Who the pane shows speaking. Proposals are the Advisor's. */
+  kind: "utterance" | "question" | "proposal" | "confirmation";
+  /** Who the pane shows speaking. Proposals and questions are the Advisor's. */
   speaker: "trainer" | "advisor" | "quoted-document" | "third-party" | "tool";
   text: string;
   /** For a proposal: the trainer wording it claims to interpret. */
@@ -117,6 +117,14 @@ export function transcriptLines(transcript: ScopeTranscript): readonly Transcrip
     switch (event.kind) {
       case "utterance":
         return { kind: "utterance", speaker: event.source, text: event.text, at: event.at };
+      case "question":
+        return {
+          kind: "question",
+          speaker: event.source,
+          text: event.text,
+          detail: `asking about ${event.dimension}`,
+          at: event.at,
+        };
       case "proposal": {
         const bindings = Object.entries(event.candidate)
           .map(([dimension, value]) => `${dimension} = ${String(value)}`)

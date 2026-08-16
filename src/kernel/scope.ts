@@ -24,6 +24,13 @@
  *    manifest layer, the thing that produces grants is built on top of the
  *    thing that audits them and cannot be the more trusted of the two.
  *
+ * And one corollary of asking: **the question is the context.** The bare-noun
+ * ban demands context words because prose gives a value token nothing to be
+ * about — but a recorded clarifying question already said what the reply is
+ * about, so a direct answer binds that one dimension deterministically
+ * (route `answer`, see {@link answerMatches}) instead of costing the trainer
+ * a model proposal and a confirmation card for their own one-word answer.
+ *
  * Nothing here reads a clock, a registry, or a model. A grant is a pure
  * function of the recorded transcript, the pack, and the commit time it was
  * handed (IA-10).
@@ -71,6 +78,7 @@ export interface ScopeContext {
  */
 export type BlockReason =
   | "foreign-channel"
+  | "foreign-question"
   | "quoted"
   | "instruction"
   | "reported"
@@ -95,6 +103,11 @@ export const BLOCK_DENIALS: Record<BlockReason, { article: "IA-1" | "IA-8"; rule
     article: "IA-8",
     rule: "unauthorized-speaker",
     because: "it arrived on a channel the trainer does not speak on",
+  },
+  "foreign-question": {
+    article: "IA-8",
+    rule: "unauthorized-questioner",
+    because: "the question that armed it arrived on a channel the advisor does not speak on",
   },
   quoted: {
     article: "IA-8",
@@ -176,6 +189,7 @@ export interface ScopeDerivation {
 export function deriveScope(pack: AccordPack, transcript: ScopeTranscript): ScopeDerivation {
   const matches = [
     ...directMatches(pack.vocabulary, transcript),
+    ...answerMatches(pack.vocabulary, transcript),
     ...confirmedMatches(pack.vocabulary, transcript),
   ];
 
@@ -331,6 +345,66 @@ function clauseBlock(clause: Clause, vocabulary: ScopeVocabulary): BlockReason |
   return undefined;
 }
 
+/**
+ * Bindings from direct answers to recorded questions (route `answer`).
+ *
+ * The bare-noun ban exists because "yellow" loose in prose might be a
+ * Pokémon's colour — the reader cannot know what the word is about. A direct
+ * reply to "Which game version are you playing?" has no such ambiguity: the
+ * question said what the words are about, so the question *is* the context,
+ * and requiring the trainer to also utter a context word (or to confirm a
+ * model's restatement of their one-word answer) is ceremony, not rigor.
+ *
+ * The leniency is narrow and fully audited. It reaches exactly one dimension —
+ * the one the recorded question named; it reads only the trainer's channel;
+ * every clause exclusion still applies (quoted, reported, instruction,
+ * interrogative, negated); the answer window closes at the next question; and
+ * the question event sits in the transcript under the evidence digest, so a
+ * grant resting on an answer names the question it answered and the verifier
+ * re-derives both sides. A question arriving on any other channel arms
+ * nothing — it is read, and born blocked, exactly as foreign utterances are.
+ */
+function answerMatches(vocabulary: ScopeVocabulary, transcript: ScopeTranscript): ScopeMatch[] {
+  const matches: ScopeMatch[] = [];
+  const window = vocabulary.contextWindow;
+
+  transcript.forEach((event, questionIndex) => {
+    if (event.kind !== "question") return;
+    const rule = vocabulary.dimensions.find((entry) => entry.dimension === event.dimension);
+    if (rule === undefined) return;
+    const foreign = event.source !== "advisor";
+
+    for (let index = questionIndex + 1; index < transcript.length; index += 1) {
+      const reply = transcript[index]!;
+      // The next question changes the subject; answers do not carry across it.
+      if (reply.kind === "question") break;
+      if (reply.kind !== "utterance" || reply.source !== "trainer") continue;
+
+      for (const clause of clausesOf(reply.text, vocabulary)) {
+        const clauseReason = foreign ? "foreign-question" : clauseBlock(clause, vocabulary);
+        for (const term of rule.terms) {
+          const at = clause.tokens.findIndex((token) => term.tokens.includes(token));
+          if (at < 0) continue;
+          const negated = clause.tokens
+            .slice(Math.max(0, at - window), at)
+            .some((token) => vocabulary.markers.negation.includes(token));
+          const blockedBy = clauseReason ?? (negated ? "negated" : undefined);
+          matches.push({
+            dimension: rule.dimension,
+            value: term.value,
+            evidenceIndex: index,
+            route: "answer",
+            matchedText: clause.text,
+            ...(blockedBy === undefined ? {} : { blockedBy }),
+          });
+        }
+      }
+    }
+  });
+
+  return matches;
+}
+
 function directMatches(vocabulary: ScopeVocabulary, transcript: ScopeTranscript): ScopeMatch[] {
   const matches: ScopeMatch[] = [];
 
@@ -358,6 +432,32 @@ function directMatches(vocabulary: ScopeVocabulary, transcript: ScopeTranscript)
   });
 
   return matches;
+}
+
+/**
+ * Wording in one utterance that the vocabulary does not cover at all — the
+ * ladder's inbox for a single turn. A driver uses this to decide *who asks
+ * next*: wording here is something a model could usefully interpret; an
+ * utterance with none leaves nothing to interpret, and the pack's own
+ * question (free, deterministic, and armed for a direct answer) should do
+ * the asking instead of a proposal card.
+ *
+ * Coverage is by token presence, deliberately looser than a match: a bare
+ * "Red" fails the context discipline and still is not long tail — the
+ * vocabulary knows the word, and the ladder has nothing to add that a
+ * recorded question would not bind more cheaply.
+ */
+export function unmatchedClauses(pack: AccordPack, text: string): string[] {
+  const vocabulary = pack.vocabulary;
+  return clausesOf(text, vocabulary)
+    .filter((clause) => !clause.quoted)
+    .filter(
+      (clause) =>
+        !vocabulary.dimensions.some((rule) =>
+          rule.terms.some((term) => clause.tokens.some((token) => term.tokens.includes(token))),
+        ),
+    )
+    .map((clause) => clause.text);
 }
 
 /** Trainer clauses that expressed no dimension at all — the ladder's inbox. */

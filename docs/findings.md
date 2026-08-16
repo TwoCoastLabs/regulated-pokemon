@@ -702,6 +702,64 @@ honest about which guarantee each one carries."*
 
 ---
 
+## 16. The question is the context: a catalogue opener stopped being an interrogation
+
+A dogfooding finding with a trace behind it (the traces below are
+`npm run session:trace` runs against `gpt-5.6-luna-pro`, the measured strong
+model). Opening the live session with **"what types of pokemons do you
+have?"** produced a rabbit hole: the pack asked its profile questions one at a
+time, and each one-word reply — "Red", "Kanto" — went to the *model ladder*,
+because a bare noun fails the context discipline. The visitor was shown a
+model proposal and a confirmation card for their own unambiguous answer,
+three times, before any answer could compile. Measured before the fix: **6
+model calls, $0.0061, two to three confirmation cards** — and a variant run
+never reached an answer at all, burning the ladder budget on proposals the
+visitor kept typing past.
+
+Two structural changes, both of which *tighten* rather than relax:
+
+- **A recorded question arms its answer.** The pack's clarifying question is
+  now a transcript event (`kind: "question"`), and the kernel gained a third
+  binding route: `answer` — the trainer's direct reply to a recorded advisor
+  question binds that one dimension on bare wording, because the question
+  supplied the context the words lack. The leniency is narrow and audited:
+  one dimension, trainer channel only, every clause exclusion still applies
+  (negation, quotation, reported speech, interrogatives), the window closes
+  at the next question, and the question sits under the evidence digest — so
+  a grant resting on an answer names the question it answered, and the
+  verifier re-derives both sides. The new attack surface got its own named
+  denial and crucible mutation: a *tool-injected* question arming a bare
+  reply is refused `IA-8/unauthorized-questioner`.
+- **The pack's question outranks the model.** The session driver asked the
+  model to interpret before falling back to the pack's own question; now the
+  ladder runs only when the trainer's latest words contain wording the
+  vocabulary does not cover at all (`unmatchedClauses`). A question is free,
+  deterministic, and armed; a proposal card is for interpretation, and there
+  is nothing to interpret in "Red".
+
+Same conversation after the fix: **question → answer, three times, then the
+certified type catalogue — zero confirmation cards, 2 model calls, $0.0036**
+(one of the two is the opener's ladder try, one is the answer). Each bare
+reply bound deterministically on the `answer` route. And the case that
+*should* ask for confirmation still does: a full profile plus "which is the
+quickest?" still yields exactly one proposal card for `base-speed` — the
+model interpreting genuine long-tail wording — then the certified ranking
+(3 calls, $0.0023). That is the shape the dogfooding asked for: best-effort
+when the meaning is plain, confirmation only where interpretation happened.
+
+The measurement instrument landed with the fix: `npm run session:trace` drives
+the real session module from a terminal (messages and button-presses as argv)
+and prints every phase transition, question, proposal, note, denial and cost —
+so a conversation bug is a re-runnable one-liner instead of a browser session.
+
+**Publishable form:** *"The fix for an over-asking compliance bot was not
+loosening the rules — it was recording the questions. A bare 'Red' binds
+because the record shows exactly which question it answered; a tool that
+forges the question is refused by name. Rigor went up and friction went
+down in the same change."*
+
+---
+
 ## Appendix — how to reproduce
 
 ```sh

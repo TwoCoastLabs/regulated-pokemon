@@ -114,16 +114,17 @@ function chatItems(state: SessionState): ChatItem[] {
   for (const event of state.transcript) {
     if (event.kind === "utterance" && event.source === "trainer") {
       items.push({ at: event.at, kind: "visitor", text: event.text });
+    } else if (event.kind === "question" && event.source === "advisor") {
+      // Questions are transcript events — evidence the kernel reads (a direct
+      // answer binds against them) and the chat's durable history at once: a
+      // question the visitor has already answered still happened.
+      items.push({ at: event.at, kind: "question", text: event.text });
     } else if (event.kind === "proposal") {
       items.push({ at: event.at, kind: "proposal", proposal: event });
     } else if (event.kind === "confirmation") {
       items.push({ at: event.at, kind: "decision", decision: event.decision });
     }
   }
-  // The questions come from the session's durable log, not from the phase: a
-  // question the visitor has already answered still happened, and a history
-  // showing every answer with none of the questions is not a conversation.
-  for (const asked of state.asked) items.push({ at: asked.at, kind: "question", text: asked.question });
   for (const note of state.notes) items.push({ at: note.at, kind: "note", note });
   for (const record of state.records) {
     items.push({ at: record.committedAt, kind: "record", record, page: state.pages[record.id] });

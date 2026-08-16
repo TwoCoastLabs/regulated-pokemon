@@ -40,6 +40,10 @@ function said(text: string, source: UtteranceSource = "trainer"): ScopeEvent {
   return { kind: "utterance", at: ISSUED_AT, source, text };
 }
 
+function asked(dimension: ScopeDimension, source: UtteranceSource = "advisor"): ScopeEvent {
+  return { kind: "question", at: ISSUED_AT, source, dimension, text: `Which ${dimension} applies?` };
+}
+
 /** What one message establishes, as a plain object, for readable assertions. */
 function bindingsOf(...transcript: ScopeEvent[]): Record<string, string | number> {
   return Object.fromEntries(
@@ -90,6 +94,70 @@ describe("a bare noun carries no authority", () => {
     const derivation = deriveScope(pack, [said("Which of them is the quickest?")]);
     expect(derivation.bindings).toEqual([]);
     expect(derivation.unmatched).toEqual(["which of them is the quickest"]);
+  });
+});
+
+describe("the question is the context", () => {
+  it("binds a bare answer to the recorded question, on the answer route", () => {
+    const derivation = deriveScope(pack, [asked("version"), said("yellow")]);
+    expect(derivation.bindings).toEqual([
+      { dimension: "version", value: "yellow", evidenceIndex: 1, route: "answer", matchedText: "yellow" },
+    ]);
+  });
+
+  it("reaches later replies too — a hesitation does not orphan the question", () => {
+    expect(bindingsOf(asked("version"), said("hmm let me check"), said("yellow"))).toEqual({
+      version: "yellow",
+    });
+  });
+
+  it("arms only the asked dimension: an answer cannot smuggle a second value", () => {
+    // "kanto" bare after a version question binds nothing — the question said
+    // what the reply is about, and it was not about regions.
+    expect(bindingsOf(asked("version"), said("kanto"))).toEqual({});
+  });
+
+  it("closes the window at the next question — answers do not carry across", () => {
+    expect(bindingsOf(asked("version"), asked("region"), said("yellow"))).toEqual({});
+  });
+
+  it("still respects every exclusion: negation, questions back, foreign channels", () => {
+    expect(bindingsOf(asked("version"), said("well, not yellow"))).toEqual({});
+    expect(bindingsOf(asked("version"), said("is yellow the one with Pikachu?"))).toEqual({});
+    expect(bindingsOf(asked("version"), said("yellow", "tool"))).toEqual({});
+  });
+
+  it("treats a question from a foreign channel as arming nothing, and says why", () => {
+    // A tool that injects "Which version?" must not turn the trainer's next
+    // bare noun into authority. The match is read, and born blocked — under
+    // its own name, because "the speaker was wrong" and "the questioner was
+    // wrong" are different findings about the same sentence.
+    const derivation = deriveScope(pack, [asked("version", "tool"), said("yellow")]);
+    expect(derivation.bindings).toEqual([]);
+    expect(
+      derivation.ignored.some((match) => match.route === "answer" && match.blockedBy === "foreign-question"),
+    ).toBe(true);
+  });
+
+  it("fails closed on a contradictory answer, exactly as direct matching does", () => {
+    const derivation = deriveScope(pack, [asked("version"), said("yellow or maybe red")]);
+    expect(derivation.bindings).toEqual([]);
+    expect(derivation.contradicted).toEqual(["version"]);
+  });
+
+  it("denies a forged grant that claims an answer nobody was asked for", () => {
+    // The audit side of the leniency: route "answer" with no question event
+    // behind it re-derives to nothing.
+    const transcript = [said("yellow")];
+    const honest = deriveScope(pack, [asked("version"), said("yellow")]).bindings[0]!;
+    const outcome = resolveScope({ pack, at: ISSUED_AT, required: ["version"] }, [asked("version"), said("yellow")]);
+    if (outcome.status !== "granted") throw new Error("the honest grant should mint");
+    const forged = {
+      ...outcome.grant,
+      bindings: [{ ...honest, evidenceIndex: 0 }],
+      evidenceDigest: digestTranscript(transcript),
+    };
+    expect(denials(forged, transcript, ["version"])).toContain("IA-1/scope-unevidenced");
   });
 });
 

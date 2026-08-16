@@ -61,6 +61,8 @@ function describeEvent(event: ScopeEvent, index: number): string {
   switch (event.kind) {
     case "utterance":
       return `${at}${pad(event.source, 16)} ${event.text}`;
+    case "question":
+      return `${at}${pad(`${event.source} asks`, 16)} ${event.text}  — about ${event.dimension}`;
     case "proposal": {
       const candidate = Object.entries(event.candidate)
         .map(([dimension, value]) => `${dimension}=${String(value)}`)

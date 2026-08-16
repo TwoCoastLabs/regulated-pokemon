@@ -32,6 +32,10 @@ public, it doesn't go in the repo at all.
   the PR gate; a weekly workflow runs it and opens an issue.
 - Live-model harnesses (Phase 7+) are separate, explicitly billable scripts;
   they never run in CI and always write run artifacts.
+- **Debug a conversation without a browser:** `npm run session:trace --
+  "message" [/confirm|/reject|/act|/decline|/retry] ...` drives the real live
+  session (model from `.env`, billable pennies) and prints every phase,
+  question, proposal, denial and cost. Reach for it before driving the web UI.
 - **Findings log:** [docs/findings.md](docs/findings.md) — every claim this
   project can defend, with the measurement behind it. When a live run teaches
   something, record it there *with its numbers* in the same change; a claim
@@ -109,7 +113,13 @@ public, it doesn't go in the repo at all.
 1. **A deterministic alias carries full authority — give it context
    discipline.** Bare-noun aliases ("yellow") wrongly mint values on
    paraphrases and misspellings. Require context in the pattern; route
-   vaguer wording through the propose/confirm ladder.
+   vaguer wording through the propose/confirm ladder. And a recorded
+   clarifying question **is** context: bind its direct answer
+   deterministically (the question sits in the transcript, so the leniency
+   is auditable) and let the pack's question outrank the model ladder when
+   the trainer's latest words hold nothing the vocabulary lacks — otherwise
+   every one-word answer costs a model proposal and a confirmation card,
+   and rigor decays into interrogation.
 2. **A confirmation commits the challenged mappings, not completeness.**
    After any confirmation, re-check required dimensions; incomplete falls to
    clarification, never partial release.
