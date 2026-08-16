@@ -10,8 +10,8 @@ import { describe, expect, it } from "vitest";
 
 import { harnessWorld } from "./corpus.js";
 import { ScriptedProvider } from "./provider.js";
-import { readBank } from "./bank.js";
-import { runBank, runBankEntry } from "./bank-run.js";
+import { type BankEntry, readBank } from "./bank.js";
+import { phrasingsOf, runBank, runBankEntry, runIntentRobustness } from "./bank-run.js";
 
 const world = harnessWorld();
 const bank = readBank();
@@ -141,5 +141,43 @@ describe("runBankEntry buckets each disposition through the real session", () =>
       clock,
     );
     expect(runs.map((run) => run.entryId)).toEqual(["ans-fact-speed-pikachu", "off-weather"]);
+  });
+});
+
+describe("robustness: whether the wording moves the bucket", () => {
+  const P8 = { version: "red-blue", region: "kanto", badgeLevel: 8 };
+  // Two wordings the answer step can tell apart by a marker word in the prompt.
+  const twoWordings: BankEntry = {
+    id: "rob",
+    intent: "Pikachu speed, variant ALPHA?",
+    profile: P8,
+    disposition: "answerable",
+    expectClaimKinds: ["fact"],
+    phrasings: ["Pikachu speed, variant BETA?"],
+  };
+
+  it("phrasingsOf lists the canonical intent first, then the paraphrases", () => {
+    expect(phrasingsOf(twoWordings)).toEqual([
+      "Pikachu speed, variant ALPHA?",
+      "Pikachu speed, variant BETA?",
+    ]);
+  });
+
+  it("is stable when every phrasing lands in the same bucket", async () => {
+    const report = await runIntentRobustness(world, twoWordings, model(pikachuSpeed()), clock);
+    expect(report.stable).toBe(true);
+    expect(report.phrasings).toHaveLength(2);
+  });
+
+  it("is unstable when one wording resolves and another abstains — the finding", async () => {
+    // The model answers only the ALPHA wording; BETA gets no usable answer.
+    const fickle = new ScriptedProvider("scripted:fickle", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      return request.prompt.includes("ALPHA") ? pikachuSpeed() : "";
+    });
+    const report = await runIntentRobustness(world, twoWordings, fickle, clock);
+    expect(report.stable).toBe(false);
+    const kinds = new Set(report.phrasings.map((phrasing) => phrasing.stage.kind));
+    expect(kinds).toEqual(new Set(["resolved", "abstained-answer"]));
   });
 });

@@ -55,6 +55,16 @@ describe("the shipped bank holds up", () => {
     }
   });
 
+  it("carries frozen paraphrases on a representative spread of entries", () => {
+    const withPhrasings = bank.entries.filter((entry) => (entry.phrasings ?? []).length > 0);
+    expect(withPhrasings.length).toBeGreaterThanOrEqual(20);
+    // Every disposition has at least one entry whose robustness can be measured.
+    const dispositions = new Set(withPhrasings.map((entry) => entry.disposition));
+    for (const disposition of DISPOSITIONS) {
+      expect(dispositions.has(disposition), `no paraphrased entry for ${disposition}`).toBe(true);
+    }
+  });
+
   it("names the ceiling on every unanswerable entry", () => {
     for (const entry of bank.entries) {
       if (entry.disposition === "needs-data" || entry.disposition === "needs-claim-kind") {
@@ -154,6 +164,15 @@ describe("a bank that would make the map lie is refused by name", () => {
         delete (entry as { notes?: string }).notes;
       }),
       "bank-ceiling-unstated",
+    );
+  });
+
+  it("refuses an empty paraphrase", () => {
+    named(
+      loadWith((draft) => {
+        (draft.entries[0] as unknown as { phrasings: string[] }).phrasings = ["fine", "  "];
+      }),
+      "bank-phrasing-empty",
     );
   });
 });

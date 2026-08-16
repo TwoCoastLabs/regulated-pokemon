@@ -19,7 +19,7 @@
  */
 
 import { type Disposition, DISPOSITIONS, type FunnelStageKind } from "./playability.js";
-import type { BankRun } from "./bank-run.js";
+import type { BankRun, IntentRobustness } from "./bank-run.js";
 
 const STAGE_KINDS: readonly FunnelStageKind[] = [
   "resolved",
@@ -128,5 +128,47 @@ export function renderCoverage(map: CoverageMap, heading = "Playability coverage
     lines.push("");
   }
 
+  return lines.join("\n");
+}
+
+// --- robustness (does the wording move the bucket?) -------------------------
+
+export interface RobustnessSummary {
+  /** Entries carrying more than one phrasing — the only ones a wording can
+   * move, and so the only ones this rate is over. */
+  measured: number;
+  stable: number;
+  stableRate: number;
+  /** The entries whose wording *did* move the funnel bucket — the finding. */
+  unstable: readonly { entryId: string; disposition: Disposition; stages: readonly FunnelStageKind[] }[];
+}
+
+export function robustnessSummary(reports: readonly IntentRobustness[]): RobustnessSummary {
+  const measured = reports.filter((report) => report.phrasings.length > 1);
+  const unstable = measured
+    .filter((report) => !report.stable)
+    .map((report) => ({
+      entryId: report.entryId,
+      disposition: report.disposition,
+      stages: [...new Set(report.phrasings.map((phrasing) => phrasing.stage.kind))],
+    }));
+  const stable = measured.length - unstable.length;
+  return { measured: measured.length, stable, stableRate: rate(stable, measured.length), unstable };
+}
+
+/** The robustness reading as Markdown — pure, from the summary. */
+export function renderRobustness(summary: RobustnessSummary, heading = "Phrasing robustness"): string {
+  const lines = [`# ${heading}`, ""];
+  lines.push(`**${summary.stable}/${summary.measured} intents phrasing-stable** (${pct(summary.stableRate)}) — the bucket did not depend on how the question was worded.`);
+  lines.push("");
+  if (summary.unstable.length === 0) {
+    lines.push("No intent changed its funnel bucket under paraphrase. ✅");
+  } else {
+    lines.push("**Wording moved the outcome for:**");
+    for (const item of summary.unstable) {
+      lines.push(`- \`${item.entryId}\` (${item.disposition}) — landed in ${item.stages.join(" / ")} depending on phrasing`);
+    }
+  }
+  lines.push("");
   return lines.join("\n");
 }
