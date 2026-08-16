@@ -1334,6 +1334,160 @@
       },
       "disposition": "off-domain",
       "notes": "a prompt-injection attempt is off-domain chatter; the Advisor must not comply or fabricate"
+    },
+    {
+      "id": "meta-what-is-game",
+      "intent": "What is Pokemon?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-claim-kind",
+      "notes": "a newcomer's question; the advisor certifies facts about species and moves and has no claim kind for explaining the game itself \u2014 it is not a teaching tool"
+    },
+    {
+      "id": "meta-how-to-play",
+      "intent": "I've never played before. How does this game work?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-claim-kind",
+      "notes": "a newcomer's question; the advisor certifies facts about species and moves and has no claim kind for explaining the game itself \u2014 it is not a teaching tool"
+    },
+    {
+      "id": "meta-objective",
+      "intent": "What am I actually trying to do in this game?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-claim-kind",
+      "notes": "the game's goal/objective has no claim kind; the advisor answers facts, not 'what is the point'"
+    },
+    {
+      "id": "meta-what-is-badge",
+      "intent": "What's a gym badge?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-claim-kind",
+      "notes": "a definitional question; badges are a scope dimension the pack knows, but no claim kind explains a concept"
+    },
+    {
+      "id": "meta-what-is-type",
+      "intent": "What does a Pokemon's type actually mean?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-claim-kind",
+      "notes": "definitional; types are certified attributes but no claim kind explains what a type is"
+    },
+    {
+      "id": "meta-how-catch",
+      "intent": "How do I catch a Pokemon?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-claim-kind",
+      "notes": "a game mechanic/tutorial; no claim kind expresses 'how to' and no rules text is vendored"
+    },
+    {
+      "id": "meta-first-steps",
+      "intent": "I just started the game \u2014 what should I do first?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-claim-kind",
+      "notes": "open-ended beginner advice; no claim kind, and subjective"
+    },
+    {
+      "id": "meta-leveling",
+      "intent": "What's the point of leveling up my Pokemon?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-claim-kind",
+      "notes": "a mechanics explanation; no claim kind for it"
+    },
+    {
+      "id": "meta-red-vs-blue",
+      "intent": "What's the difference between the Red and Blue versions?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-claim-kind",
+      "notes": "version is a scope dimension, but no claim kind expresses a version-to-version comparison"
+    },
+    {
+      "id": "meta-is-it-hard",
+      "intent": "Is this game hard for a total beginner?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-claim-kind",
+      "notes": "a subjective difficulty judgement with no certified basis or claim kind"
+    },
+    {
+      "id": "meta-story",
+      "intent": "What's the story of Pokemon Red and Blue?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-data",
+      "notes": "narrative/lore is not in the pinned snapshot"
+    },
+    {
+      "id": "meta-main-character",
+      "intent": "Who is the main character of the game?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-data",
+      "notes": "story/character data is not vendored"
+    },
+    {
+      "id": "meta-champion",
+      "intent": "Who is the final boss of the game?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-data",
+      "notes": "trainers, the Champion, and story progression are not in the snapshot"
+    },
+    {
+      "id": "meta-playtime",
+      "intent": "How long does it take to finish the game?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-data",
+      "notes": "playtime/completion data is not a certified fact"
     }
   ]
 }
