@@ -196,6 +196,11 @@ export function describeClaim(claim: Claim): string {
         `${claim.direction} ${claim.basis} of ${claim.rosterId}` +
         (claim.selectedEntityId === undefined ? " — winner derived by the kernel" : ` → ${claim.selectedEntityId}`)
       );
+    case "matchup":
+      return (
+        `${claim.subject.kind === "species" ? claim.subject.entityId : claim.subject.typeId} ${claim.direction}` +
+        (claim.members === undefined ? " — derived by the kernel" : ` ${claim.members.join(", ")}`)
+      );
     case "recommendation":
       return `recommend ${claim.entityId}`;
     case "action":

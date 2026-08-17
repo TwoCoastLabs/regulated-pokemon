@@ -873,6 +873,35 @@ The needle this moved is not a number going up; it is the map no longer
 "answered", indistinguishable from a certified base-stat. Now the two guarantees
 are separated on the page, which is the honest thing the whole epic is for.
 
+### Iteration 3 — the chart lands: two walls become wins (epic #54, slice 1)
+
+The first expressiveness-ceiling slice of epic #54. The generation-I type
+chart is vendored into the snapshot (schema v2, complete 15×15 matrix, era
+quirks preserved — gen-I Ghost deals *no* damage to Psychic, and the loader
+would refuse a "corrected" chart as a different game), and a `matchup` claim
+kind derives effectiveness from it: the model names a subject and a
+direction, the kernel computes the members. The model never states a
+multiplier, so a wrong weakness is not a reachable output — the same
+derivation discipline as counts (§11) and rankings (§12), extended to a
+relation.
+
+**Measured (probe, N=1 per model, both retagged questions):** `kind-weakness-
+psychic` ("What is Gengar weak to?") and `kind-type-effectiveness` ("Is
+Electric effective against Water?") — previously honest abstentions or
+adjacent-fact deflections (§18) — now resolve **2/2 on both models**
+(`gpt-5.6-luna-pro` and `gemini-3.5-flash-lite`; artifacts
+`2026-08-17T09-35-17-776Z` / `2026-08-17T09-35-49-715Z`, ~$0.006). Both
+models' certified answers are *identical* — "Gengar is weak to ghost, ground,
+and psychic" — necessarily, because the members are kernel arithmetic and the
+model's whole contribution was naming Gengar and the direction. That is the
+needle this slice was for: the on-target answer now exists, so the deflection
+loses to it instead of being suppressed.
+
+One entry deliberately did not move: `kind-counter-mewtwo` stays
+`needs-claim-kind`, because a "counter" weighs speed, movesets and role — the
+chart made *effectiveness* expressible, not judgement. The bucket shrinks by
+what the capability actually covers, nothing more.
+
 ---
 
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate

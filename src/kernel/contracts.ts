@@ -226,6 +226,22 @@ export type Claim =
       selectedEntityId?: string;
     }
   /**
+   * Effectiveness read off the certified type chart (epic #54, slice 1).
+   *
+   * `members` is derivable and therefore optional, exactly like a count's
+   * number and a ranking's winner: the subject and direction already determine
+   * the set, the kernel computes it from the chart, and a stated list — a
+   * legacy answer, or an adversary asserting a doctored one — is verified
+   * against the derived members and refused on mismatch. The model never
+   * states a multiplier; there is nothing for it to misremember.
+   */
+  | {
+      kind: "matchup";
+      subject: { kind: "species"; entityId: string } | { kind: "type"; typeId: string };
+      direction: "weak-to" | "resists" | "immune-to" | "strong-against";
+      members?: readonly string[];
+    }
+  /**
    * A different speech act from `ranking`: "the fastest is Electrode" is a
    * claim about a set, "go and catch Mewtwo" is advice. IA-5 gates the second,
    * so it needs something of its own to gate.

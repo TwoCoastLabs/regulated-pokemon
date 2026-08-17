@@ -10,7 +10,7 @@
  * is not "unknown", it is unprovable, and asking for it is a denial.
  */
 
-export const SNAPSHOT_SCHEMA_VERSION = 1;
+export const SNAPSHOT_SCHEMA_VERSION = 2;
 
 /** Provenance of the projection, including the limits of its certification. */
 export interface SnapshotSource {
@@ -102,14 +102,32 @@ export interface SnapshotMove {
   shortEffect: string;
 }
 
+/**
+ * The generation's damage chart (upstream `past_damage_relations` applied),
+ * vendored as a **complete matrix** rather than the upstream's sparse
+ * relations. Sparseness would make "no entry" and "neutral" the same bytes;
+ * writing every attacking × defending cell means a missing one is a loader
+ * refusal, never a silent 1×.
+ */
+export interface SnapshotTypeChart {
+  /** The generation's closed set of type ids, sorted. */
+  types: readonly string[];
+  /** Damage multiplier, attacking type → defending type → 0, 0.5, 1 or 2. */
+  multipliers: Readonly<Record<string, Readonly<Record<string, number>>>>;
+}
+
+/** The multipliers a chart cell may hold; anything else fails the loader. */
+export const CHART_MULTIPLIERS: readonly number[] = [0, 0.5, 1, 2];
+
 export interface SnapshotDocument {
   schemaVersion: typeof SNAPSHOT_SCHEMA_VERSION;
   /** Stable, human-readable snapshot id, e.g. "kanto-red-blue". */
   id: string;
   scope: SnapshotScope;
   source: SnapshotSource;
-  /** Digest over the certified content only (id, scope, species, moves). */
+  /** Digest over the certified content only (id, scope, chart, species, moves). */
   contentDigest: string;
+  typeChart: SnapshotTypeChart;
   species: readonly SnapshotSpecies[];
   moves: readonly SnapshotMove[];
 }
@@ -117,7 +135,7 @@ export interface SnapshotDocument {
 /** Fields hashed into `contentDigest` — provenance is deliberately excluded. */
 export type SnapshotContent = Pick<
   SnapshotDocument,
-  "schemaVersion" | "id" | "scope" | "species" | "moves"
+  "schemaVersion" | "id" | "scope" | "typeChart" | "species" | "moves"
 >;
 
 export function snapshotContent(document: SnapshotContent): SnapshotContent {
@@ -125,6 +143,7 @@ export function snapshotContent(document: SnapshotContent): SnapshotContent {
     schemaVersion: document.schemaVersion,
     id: document.id,
     scope: document.scope,
+    typeChart: document.typeChart,
     species: document.species,
     moves: document.moves,
   };

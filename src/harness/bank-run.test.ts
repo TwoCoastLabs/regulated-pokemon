@@ -71,9 +71,9 @@ describe("runBankEntry buckets each disposition through the real session", () =>
   });
 
   it("a needs-claim-kind question passes on an honest abstention", async () => {
-    // Genuinely unexpressible: type effectiveness is a matchup relation with no
-    // claim kind and no chart in the snapshot — not composable, not advisory.
-    const run = await runBankEntry(world, entry("kind-type-effectiveness"), model(""), clock());
+    // Genuinely unexpressible: a "counter" is a judgement over speed, movesets
+    // and role — the chart (epic #54) made effectiveness expressible, not this.
+    const run = await runBankEntry(world, entry("kind-counter-mewtwo"), model(""), clock());
     expect(run.score.pass).toBe(true);
   });
 

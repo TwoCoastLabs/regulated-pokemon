@@ -33,6 +33,7 @@ import {
   type SnapshotMove,
   type SnapshotSpecies,
   type SnapshotStats,
+  type SnapshotTypeChart,
   STAT_NAMES,
   snapshotContent,
   stableStringify,
@@ -60,6 +61,11 @@ const NOTICE =
  */
 const CAVEATS = [
   "Types are pinned to this version group via upstream `past_types`.",
+  "The type chart is pinned to this generation via upstream " +
+    "`past_damage_relations`, era quirks preserved (e.g. Ghost dealing no " +
+    "damage to Psychic in generation I). It is vendored as a complete " +
+    "matrix; upstream's sparse relations are expanded so that a missing " +
+    "cell can never read as neutral.",
   "Move legality is pinned to this version group via upstream learnset entries.",
   "Move power, accuracy, PP and type are pinned via upstream `past_values`.",
   "Base stats are NOT version-pinned: upstream publishes present-day values " +
@@ -117,6 +123,20 @@ interface PokemonDocument {
       version_group: NamedResource;
     }>;
   }>;
+}
+
+interface DamageRelations {
+  double_damage_to: NamedResource[];
+  half_damage_to: NamedResource[];
+  no_damage_to: NamedResource[];
+}
+
+interface TypeDocument {
+  id: number;
+  name: string;
+  generation: NamedResource;
+  damage_relations: DamageRelations;
+  past_damage_relations: Array<{ generation: NamedResource; damage_relations: DamageRelations }>;
 }
 
 interface MovePastValue {
@@ -265,6 +285,54 @@ function moveAt(move: MoveDocument, versionGroupOrder: Map<string, number>, targ
   };
 }
 
+/**
+ * The generation's damage chart, expanded to a complete matrix.
+ *
+ * Upstream ships sparse relations (only the non-neutral cells), recorded
+ * against the *last* generation in which they applied — the same convention as
+ * `past_types`, resolved by the same walk. Every attacking × defending cell is
+ * written out: 1 unless the era's relations say otherwise, so downstream a
+ * missing cell is a loader refusal rather than an implicit neutral.
+ */
+function chartOf(
+  types: readonly TypeDocument[],
+  generationOrder: Map<string, number>,
+  target: number,
+): SnapshotTypeChart {
+  const names = types.map((entry) => entry.name).sort();
+  const inGeneration = new Set(names);
+
+  const multipliers: Record<string, Record<string, number>> = {};
+  for (const name of names) {
+    const document = types.find((entry) => entry.name === name)!;
+    const past = applicableEntries(
+      document.past_damage_relations,
+      (entry) => generationOrder.get(entry.generation.name),
+      target,
+    );
+    // Each past entry restates the full relations, so the earliest applicable
+    // entry — last after the latest-to-earliest walk — wins, as with types.
+    const relations = past.at(-1)?.damage_relations ?? document.damage_relations;
+
+    const row: Record<string, number> = {};
+    for (const defending of names) row[defending] = 1;
+    for (const [resources, multiplier] of [
+      [relations.double_damage_to, 2],
+      [relations.half_damage_to, 0.5],
+      [relations.no_damage_to, 0],
+    ] as const) {
+      for (const resource of resources) {
+        // Relations may point at types from later generations; those defenders
+        // do not exist in this world and get no cell.
+        if (inGeneration.has(resource.name)) row[resource.name] = multiplier;
+      }
+    }
+    multipliers[name] = row;
+  }
+
+  return { types: names, multipliers };
+}
+
 function statsOf(pokemon: PokemonDocument): SnapshotStats {
   const byName = new Map(pokemon.stats.map((entry) => [entry.stat.name, entry.base_stat]));
   const stats: Partial<SnapshotStats> = {};
@@ -323,6 +391,20 @@ async function build(commit: string): Promise<SnapshotDocument> {
     throw new Error(`generation ${target.generation.name} not found upstream`);
   }
 
+  const typeList = await registry.read<ListDocument>("type");
+  const typeDocuments = await mapPooled(typeList.results, (entry) =>
+    registry.read<TypeDocument>(`type/${idFromUrl(entry.url, "type")}`),
+  );
+  // The chart is closed over the types this generation *has*: a type
+  // introduced later does not exist in this world, so it gets no row, no
+  // column, and no way to be asserted.
+  const generationTypes = typeDocuments.filter((document) => {
+    const order = generationOrder.get(document.generation.name);
+    return order !== undefined && order <= targetGenerationOrder;
+  });
+  const typeChart = chartOf(generationTypes, generationOrder, targetGenerationOrder);
+  console.error(`type chart: ${typeChart.types.length} types`);
+
   const pokedex = await registry.read<PokedexDocument>(`pokedex/${POKEDEX_ID}`);
   const entries = [...pokedex.pokemon_entries].sort((a, b) => a.entry_number - b.entry_number);
   console.error(`pokédex ${POKEDEX_ID}: ${entries.length} entries`);
@@ -365,6 +447,7 @@ async function build(commit: string): Promise<SnapshotDocument> {
       versionGroupOrder: target.order,
       generation: target.generation.name,
     },
+    typeChart,
     species,
     moves,
   } as const;

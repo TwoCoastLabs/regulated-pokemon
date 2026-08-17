@@ -77,6 +77,7 @@ export type RenderUnitKind =
   | "count"
   | "membership"
   | "selection"
+  | "matchup"
   | "recommendation"
   | "action"
   | "warning"
@@ -300,6 +301,30 @@ function unitForClaim(
             kind: "selection",
             slots: resolved.value,
             mentions: [selected, ...definedBy(claim.rosterId, manifest.rosters)],
+          },
+        };
+      }
+      case "matchup": {
+        // A rendered manifest is a verified one, so the members are the derived
+        // list. An empty set is shown as "none" rather than refused: "immune to
+        // none" is a certified statement, not a missing value.
+        const members = claim.members ?? [];
+        const subjectId = claim.subject.kind === "species" ? claim.subject.entityId : claim.subject.typeId;
+        const resolved = slots(
+          slot(context, locale, "subject", entity(subjectId), "entity-name"),
+          slot(context, locale, "direction", entity(claim.direction), "matchup-direction"),
+          members.length === 0
+            ? slot(context, locale, "members", { kind: "absent" })
+            : slot(context, locale, "members", { kind: "list", value: members }),
+        );
+        if (!resolved.ok) return resolved;
+        return {
+          ok: true,
+          value: {
+            id: `matchup:${subjectId}:${claim.direction}`,
+            kind: "matchup",
+            slots: resolved.value,
+            mentions: claim.subject.kind === "species" ? [claim.subject.entityId] : [],
           },
         };
       }

@@ -41,7 +41,8 @@ export type FormatId =
   | "plain-text"
   | "yes-no"
   | "no-value"
-  | "member-of";
+  | "member-of"
+  | "matchup-direction";
 
 /**
  * The locales the formatters below carry.
@@ -144,7 +145,33 @@ const FORMATTERS: Readonly<Record<FormatId, Formatter>> = {
       "en-GB": (value) => (value ? "is a member of" : "is not a member of"),
     },
   },
+  // Same reason as member-of: "ground and psychic" beside "Gengar" is equally
+  // consistent with a weakness and a resistance, so the words that decide
+  // which are a bound rendering of the claim's direction, not renderer prose.
+  // An unknown direction is refused, never guessed at.
+  "matchup-direction": {
+    accepts: "text",
+    render: {
+      "en-US": matchupPhrase,
+      "en-GB": matchupPhrase,
+    },
+  },
 };
+
+function matchupPhrase(direction: string): string | undefined {
+  switch (direction) {
+    case "weak-to":
+      return "is weak to";
+    case "resists":
+      return "resists";
+    case "immune-to":
+      return "is immune to";
+    case "strong-against":
+      return "is super effective against";
+    default:
+      return undefined;
+  }
+}
 
 export const FORMAT_IDS: readonly FormatId[] = Object.keys(FORMATTERS).sort() as FormatId[];
 

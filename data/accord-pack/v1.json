@@ -2,8 +2,20 @@
   "packVersion": 5,
   "id": "indigo-accord-v1",
   "presentation": {
-    "locales": ["en-US", "en-GB"],
-    "formats": ["entity-name", "integer", "list-oxford", "member-of", "no-value", "plain-text", "yes-no"],
+    "locales": [
+      "en-US",
+      "en-GB"
+    ],
+    "formats": [
+      "entity-name",
+      "integer",
+      "list-oxford",
+      "member-of",
+      "matchup-direction",
+      "no-value",
+      "plain-text",
+      "yes-no"
+    ],
     "catalogue": [
       {
         "id": "page.title",
@@ -21,19 +33,38 @@
       },
       {
         "id": "lead-in.fact",
-        "text": { "en-US": "From the official records:", "en-GB": "From the official records:" }
+        "text": {
+          "en-US": "From the official records:",
+          "en-GB": "From the official records:"
+        }
       },
       {
         "id": "lead-in.count",
-        "text": { "en-US": "Counted by the League itself:", "en-GB": "Counted by the League itself:" }
+        "text": {
+          "en-US": "Counted by the League itself:",
+          "en-GB": "Counted by the League itself:"
+        }
       },
       {
         "id": "lead-in.membership",
-        "text": { "en-US": "Membership in this set:", "en-GB": "Membership in this set:" }
+        "text": {
+          "en-US": "Membership in this set:",
+          "en-GB": "Membership in this set:"
+        }
+      },
+      {
+        "id": "lead-in.matchup",
+        "text": {
+          "en-US": "How the types line up, straight from the chart:",
+          "en-GB": "How the types line up, straight from the chart:"
+        }
       },
       {
         "id": "lead-in.selection",
-        "text": { "en-US": "The one that comes out on top:", "en-GB": "The one that comes out on top:" }
+        "text": {
+          "en-US": "The one that comes out on top:",
+          "en-GB": "The one that comes out on top:"
+        }
       },
       {
         "id": "lead-in.recommendation",
@@ -51,10 +82,17 @@
       },
       {
         "id": "provenance.snapshot",
-        "text": { "en-US": "Certified snapshot:", "en-GB": "Certified snapshot:" }
+        "text": {
+          "en-US": "Certified snapshot:",
+          "en-GB": "Certified snapshot:"
+        }
       }
     ],
-    "display": { "minLegiblePx": 12, "minLegibleOpacity": 0.5, "maxProximityPx": 320 }
+    "display": {
+      "minLegiblePx": 12,
+      "minLegibleOpacity": 0.5,
+      "maxProximityPx": 320
+    }
   },
   "restrictions": [
     {
@@ -71,15 +109,24 @@
     }
   ],
   "actions": [
-    { "id": "add-to-team", "irreversible": false },
-    { "id": "release", "irreversible": true }
+    {
+      "id": "add-to-team",
+      "irreversible": false
+    },
+    {
+      "id": "release",
+      "irreversible": true
+    }
   ],
   "exhibits": [
     {
       "id": "release-irreversibility",
       "article": "IA-9",
       "kind": "warning",
-      "when": { "kind": "action-claimed", "tool": "release" },
+      "when": {
+        "kind": "action-claimed",
+        "tool": "release"
+      },
       "block": {
         "id": "release-permanence",
         "version": 1,
@@ -97,15 +144,26 @@
         ]
       },
       "slots": [
-        { "name": "released", "source": "action-entity", "format": "entity-name" },
-        { "name": "giving-up", "source": "action-entity-learnset", "format": "list-oxford" }
+        {
+          "name": "released",
+          "source": "action-entity",
+          "format": "entity-name"
+        },
+        {
+          "name": "giving-up",
+          "source": "action-entity-learnset",
+          "format": "list-oxford"
+        }
       ]
     },
     {
       "id": "selfdestruct-warning",
       "article": "IA-6",
       "kind": "warning",
-      "when": { "kind": "entity-claimed", "entityId": "self-destruct" },
+      "when": {
+        "kind": "entity-claimed",
+        "entityId": "self-destruct"
+      },
       "block": {
         "id": "selfdestruct-handling",
         "version": 1,
@@ -127,7 +185,10 @@
       "id": "explosion-warning",
       "article": "IA-6",
       "kind": "warning",
-      "when": { "kind": "entity-claimed", "entityId": "explosion" },
+      "when": {
+        "kind": "entity-claimed",
+        "entityId": "explosion"
+      },
       "block": {
         "id": "explosion-handling",
         "version": 1,
@@ -149,7 +210,9 @@
       "id": "provenance",
       "article": "IA-2",
       "kind": "provenance",
-      "when": { "kind": "always" },
+      "when": {
+        "kind": "always"
+      },
       "block": {
         "id": "pokeapi-attribution",
         "version": 1,
@@ -166,18 +229,107 @@
           }
         ]
       },
-      "slots": [{ "name": "snapshot", "source": "snapshot-id", "format": "plain-text" }]
+      "slots": [
+        {
+          "name": "snapshot",
+          "source": "snapshot-id",
+          "format": "plain-text"
+        }
+      ]
     }
   ],
   "vocabulary": {
     "contextWindow": 3,
     "validitySeconds": 86400,
     "markers": {
-      "negation": ["not", "no", "never", "isn't", "aren't", "wasn't", "don't", "doesn't", "didn't", "won't", "stopped", "quit", "without", "instead"],
-      "reported": ["says", "say", "said", "told", "tells", "wants", "wanted", "asked", "asks", "insists", "recommends", "recommended", "suggests", "suggested", "according", "rival", "friend", "guide", "walkthrough", "forum", "streamer", "someone", "everyone"],
-      "instruction": ["ignore", "disregard", "override", "overrule", "pretend", "assume", "system", "assistant", "advisor", "prompt", "instructions"],
-      "interrogative": ["what", "which", "who", "whom", "whose", "where", "when", "why", "how", "list", "tell", "show", "is", "are", "does", "do", "did", "can", "could", "should", "would"],
-      "conjunction": ["and", "but", "although", "though", "while", "because", "so", "however", "whereas"]
+      "negation": [
+        "not",
+        "no",
+        "never",
+        "isn't",
+        "aren't",
+        "wasn't",
+        "don't",
+        "doesn't",
+        "didn't",
+        "won't",
+        "stopped",
+        "quit",
+        "without",
+        "instead"
+      ],
+      "reported": [
+        "says",
+        "say",
+        "said",
+        "told",
+        "tells",
+        "wants",
+        "wanted",
+        "asked",
+        "asks",
+        "insists",
+        "recommends",
+        "recommended",
+        "suggests",
+        "suggested",
+        "according",
+        "rival",
+        "friend",
+        "guide",
+        "walkthrough",
+        "forum",
+        "streamer",
+        "someone",
+        "everyone"
+      ],
+      "instruction": [
+        "ignore",
+        "disregard",
+        "override",
+        "overrule",
+        "pretend",
+        "assume",
+        "system",
+        "assistant",
+        "advisor",
+        "prompt",
+        "instructions"
+      ],
+      "interrogative": [
+        "what",
+        "which",
+        "who",
+        "whom",
+        "whose",
+        "where",
+        "when",
+        "why",
+        "how",
+        "list",
+        "tell",
+        "show",
+        "is",
+        "are",
+        "does",
+        "do",
+        "did",
+        "can",
+        "could",
+        "should",
+        "would"
+      ],
+      "conjunction": [
+        "and",
+        "but",
+        "although",
+        "though",
+        "while",
+        "because",
+        "so",
+        "however",
+        "whereas"
+      ]
     },
     "dimensions": [
       {
@@ -187,13 +339,47 @@
         "terms": [
           {
             "value": "red-blue",
-            "tokens": ["red", "blue", "red-blue"],
-            "context": ["playing", "play", "playthrough", "replaying", "version", "game", "games", "copy", "cartridge", "save", "run", "my", "on"]
+            "tokens": [
+              "red",
+              "blue",
+              "red-blue"
+            ],
+            "context": [
+              "playing",
+              "play",
+              "playthrough",
+              "replaying",
+              "version",
+              "game",
+              "games",
+              "copy",
+              "cartridge",
+              "save",
+              "run",
+              "my",
+              "on"
+            ]
           },
           {
             "value": "yellow",
-            "tokens": ["yellow"],
-            "context": ["playing", "play", "playthrough", "replaying", "version", "game", "games", "copy", "cartridge", "save", "run", "my", "on"]
+            "tokens": [
+              "yellow"
+            ],
+            "context": [
+              "playing",
+              "play",
+              "playthrough",
+              "replaying",
+              "version",
+              "game",
+              "games",
+              "copy",
+              "cartridge",
+              "save",
+              "run",
+              "my",
+              "on"
+            ]
           }
         ]
       },
@@ -204,8 +390,21 @@
         "terms": [
           {
             "value": "kanto",
-            "tokens": ["kanto"],
-            "context": ["region", "playing", "play", "through", "across", "around", "in", "my", "travelling", "traveling"]
+            "tokens": [
+              "kanto"
+            ],
+            "context": [
+              "region",
+              "playing",
+              "play",
+              "through",
+              "across",
+              "around",
+              "in",
+              "my",
+              "travelling",
+              "traveling"
+            ]
           }
         ]
       },
@@ -214,15 +413,105 @@
         "valueType": "number",
         "question": "How many gym badges do you hold?",
         "terms": [
-          { "value": 0, "tokens": ["0", "zero"], "context": ["badge", "badges"] },
-          { "value": 1, "tokens": ["1", "one"], "context": ["badge", "badges"] },
-          { "value": 2, "tokens": ["2", "two"], "context": ["badge", "badges"] },
-          { "value": 3, "tokens": ["3", "three"], "context": ["badge", "badges"] },
-          { "value": 4, "tokens": ["4", "four"], "context": ["badge", "badges"] },
-          { "value": 5, "tokens": ["5", "five"], "context": ["badge", "badges"] },
-          { "value": 6, "tokens": ["6", "six"], "context": ["badge", "badges"] },
-          { "value": 7, "tokens": ["7", "seven"], "context": ["badge", "badges"] },
-          { "value": 8, "tokens": ["8", "eight"], "context": ["badge", "badges"] }
+          {
+            "value": 0,
+            "tokens": [
+              "0",
+              "zero"
+            ],
+            "context": [
+              "badge",
+              "badges"
+            ]
+          },
+          {
+            "value": 1,
+            "tokens": [
+              "1",
+              "one"
+            ],
+            "context": [
+              "badge",
+              "badges"
+            ]
+          },
+          {
+            "value": 2,
+            "tokens": [
+              "2",
+              "two"
+            ],
+            "context": [
+              "badge",
+              "badges"
+            ]
+          },
+          {
+            "value": 3,
+            "tokens": [
+              "3",
+              "three"
+            ],
+            "context": [
+              "badge",
+              "badges"
+            ]
+          },
+          {
+            "value": 4,
+            "tokens": [
+              "4",
+              "four"
+            ],
+            "context": [
+              "badge",
+              "badges"
+            ]
+          },
+          {
+            "value": 5,
+            "tokens": [
+              "5",
+              "five"
+            ],
+            "context": [
+              "badge",
+              "badges"
+            ]
+          },
+          {
+            "value": 6,
+            "tokens": [
+              "6",
+              "six"
+            ],
+            "context": [
+              "badge",
+              "badges"
+            ]
+          },
+          {
+            "value": 7,
+            "tokens": [
+              "7",
+              "seven"
+            ],
+            "context": [
+              "badge",
+              "badges"
+            ]
+          },
+          {
+            "value": 8,
+            "tokens": [
+              "8",
+              "eight"
+            ],
+            "context": [
+              "badge",
+              "badges"
+            ]
+          }
         ]
       },
       {
@@ -230,11 +519,116 @@
         "valueType": "text",
         "question": "What should the comparison be based on — speed, attack, defense, HP, or base stat total?",
         "terms": [
-          { "value": "base-speed", "tokens": ["speed"], "context": ["by", "base", "rank", "ranked", "ranking", "order", "ordered", "compare", "compared", "comparison", "basis", "highest", "lowest"] },
-          { "value": "base-attack", "tokens": ["attack"], "context": ["by", "base", "rank", "ranked", "ranking", "order", "ordered", "compare", "compared", "comparison", "basis", "highest", "lowest"] },
-          { "value": "base-defense", "tokens": ["defense", "defence"], "context": ["by", "base", "rank", "ranked", "ranking", "order", "ordered", "compare", "compared", "comparison", "basis", "highest", "lowest"] },
-          { "value": "base-hp", "tokens": ["hp", "hitpoints"], "context": ["by", "base", "rank", "ranked", "ranking", "order", "ordered", "compare", "compared", "comparison", "basis", "highest", "lowest"] },
-          { "value": "base-stat-total", "tokens": ["total", "bst"], "context": ["by", "base", "stat", "stats", "rank", "ranked", "ranking", "order", "ordered", "compare", "compared", "comparison", "basis", "highest", "lowest"] }
+          {
+            "value": "base-speed",
+            "tokens": [
+              "speed"
+            ],
+            "context": [
+              "by",
+              "base",
+              "rank",
+              "ranked",
+              "ranking",
+              "order",
+              "ordered",
+              "compare",
+              "compared",
+              "comparison",
+              "basis",
+              "highest",
+              "lowest"
+            ]
+          },
+          {
+            "value": "base-attack",
+            "tokens": [
+              "attack"
+            ],
+            "context": [
+              "by",
+              "base",
+              "rank",
+              "ranked",
+              "ranking",
+              "order",
+              "ordered",
+              "compare",
+              "compared",
+              "comparison",
+              "basis",
+              "highest",
+              "lowest"
+            ]
+          },
+          {
+            "value": "base-defense",
+            "tokens": [
+              "defense",
+              "defence"
+            ],
+            "context": [
+              "by",
+              "base",
+              "rank",
+              "ranked",
+              "ranking",
+              "order",
+              "ordered",
+              "compare",
+              "compared",
+              "comparison",
+              "basis",
+              "highest",
+              "lowest"
+            ]
+          },
+          {
+            "value": "base-hp",
+            "tokens": [
+              "hp",
+              "hitpoints"
+            ],
+            "context": [
+              "by",
+              "base",
+              "rank",
+              "ranked",
+              "ranking",
+              "order",
+              "ordered",
+              "compare",
+              "compared",
+              "comparison",
+              "basis",
+              "highest",
+              "lowest"
+            ]
+          },
+          {
+            "value": "base-stat-total",
+            "tokens": [
+              "total",
+              "bst"
+            ],
+            "context": [
+              "by",
+              "base",
+              "stat",
+              "stats",
+              "rank",
+              "ranked",
+              "ranking",
+              "order",
+              "ordered",
+              "compare",
+              "compared",
+              "comparison",
+              "basis",
+              "highest",
+              "lowest"
+            ]
+          }
         ]
       }
     ]

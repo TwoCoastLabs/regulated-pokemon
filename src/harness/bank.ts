@@ -32,12 +32,13 @@ export const BANK_PATH = resolve(import.meta.dirname, "../../data/playability/ba
 export const BANK_SCHEMA_VERSION = 1;
 
 /**
- * The six claim kinds a certified answer may assert. Pinned here as the closed
- * list an `answerable` entry may name, and kept in step with the `Claim` union
- * in `kernel/contracts.ts` by {@link bank.test}. A kind outside this list is a
- * kind the kernel cannot compile, so an entry expecting it could never pass.
+ * The seven claim kinds a certified answer may assert. Pinned here as the
+ * closed list an `answerable` entry may name, and kept in step with the
+ * `Claim` union in `kernel/contracts.ts` by {@link bank.test}. A kind outside
+ * this list is a kind the kernel cannot compile, so an entry expecting it
+ * could never pass.
  */
-export const CLAIM_KINDS = ["fact", "count", "membership", "ranking", "recommendation", "action"] as const;
+export const CLAIM_KINDS = ["fact", "count", "membership", "ranking", "matchup", "recommendation", "action"] as const;
 export type ClaimKind = (typeof CLAIM_KINDS)[number];
 
 /** One question, and the disposition it was authored to have. */

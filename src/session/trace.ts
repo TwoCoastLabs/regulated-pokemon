@@ -168,6 +168,8 @@ function describeClaim(claim: Claim): string {
       return `membership ${claim.entityId} in ${claim.rosterId}`;
     case "ranking":
       return `ranking ${claim.rosterId} by ${claim.basis} (${claim.direction})`;
+    case "matchup":
+      return `matchup ${claim.subject.kind === "species" ? claim.subject.entityId : claim.subject.typeId} ${claim.direction}`;
     case "recommendation":
       return `recommendation ${claim.entityId}`;
     case "action":

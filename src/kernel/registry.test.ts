@@ -114,3 +114,53 @@ describe("a snapshot that cannot be trusted is refused at load", () => {
     expect(() => readRegistry("/nonexistent/kanto.json")).toThrow("IA-2/snapshot-unreadable");
   });
 });
+
+describe("the chart is complete and closed before anything derives from it", () => {
+  const registry = kantoRegistry();
+  const doctored = (sabotage: (document: ReturnType<typeof readSnapshot>) => void): string[] => {
+    const document = structuredClone(registry.document) as ReturnType<typeof readSnapshot>;
+    sabotage(document);
+    const loaded = loadRegistry(document);
+    return loaded.ok ? [] : loaded.violations.map(denialCode);
+  };
+
+  it("exposes the vendored chart and its cells", () => {
+    expect(registry.typeChart.types).toHaveLength(15);
+    expect(registry.multiplier("water", "fire")).toBe(2);
+    // A cell for a type the chart does not close over is undefined, never 1.
+    expect(registry.multiplier("fairy", "fire")).toBeUndefined();
+  });
+
+  it("refuses a snapshot with no chart at all", () => {
+    expect(doctored((document) => {
+      delete (document as { typeChart?: unknown }).typeChart;
+    })).toContain("IA-2/snapshot-malformed");
+  });
+
+  it("refuses a chart that closes over no types, or lists one twice", () => {
+    expect(doctored((document) => {
+      (document.typeChart as unknown as { types: string[] }).types = [];
+    })).toContain("IA-2/chart-empty");
+    expect(doctored((document) => {
+      (document.typeChart as unknown as { types: string[] }).types = [...document.typeChart.types, "water"];
+    })).toContain("IA-2/chart-duplicate-type");
+  });
+
+  it("refuses rows and cells outside the closed set", () => {
+    expect(doctored((document) => {
+      (document.typeChart.multipliers as Record<string, Record<string, number>>)["fairy"] = { water: 1 };
+    })).toContain("IA-2/chart-unclosed");
+    expect(doctored((document) => {
+      (document.typeChart.multipliers as Record<string, Record<string, number>>)["water"]!["fairy"] = 2;
+    })).toContain("IA-2/chart-unclosed");
+    expect(doctored((document) => {
+      delete (document.typeChart.multipliers as Record<string, Record<string, number>>)["water"];
+    })).toContain("IA-2/chart-incomplete");
+  });
+
+  it("refuses a move typed outside the generation's chart", () => {
+    expect(doctored((document) => {
+      (document.moves[0] as { type: string }).type = "fairy";
+    })).toContain("IA-3/dangling-type-reference");
+  });
+});

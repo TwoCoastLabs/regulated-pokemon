@@ -90,6 +90,25 @@ function replaceClaim(manifest: AnswerManifest, kind: Claim["kind"], replacement
   return { ...manifest, claims };
 }
 
+/** An honest matchup answer — Gengar's gen-I weaknesses, derived from the
+ * chart — compiled fresh so each mutation tampers with a truthful record. */
+function honestMatchup(world: CrucibleWorld): AnswerManifest {
+  const compiled = compileManifest(world, {
+    transactionId: "txn-crucible-matchup",
+    claims: [{ kind: "matchup", subject: { kind: "species", entityId: "gengar" }, direction: "weak-to" }],
+    rosters: [],
+  });
+  if (!compiled.ok) throw new Error("the crucible could not compile an honest matchup answer");
+  return compiled.value;
+}
+
+/** Compile the honest matchup, tamper with its claim, then verify. */
+function sabotageMatchup(world: CrucibleWorld, tamper: (claim: Extract<Claim, { kind: "matchup" }>) => Claim): Verdict {
+  const manifest = honestMatchup(world);
+  const claim = manifest.claims[0] as Extract<Claim, { kind: "matchup" }>;
+  return verifyManifest(world, { ...manifest, claims: [tamper(claim)] });
+}
+
 export const PHASE_2_MUTATIONS: readonly Mutation[] = [
   {
     id: "swapped-stat",
@@ -322,6 +341,45 @@ export const PHASE_2_MUTATIONS: readonly Mutation[] = [
         };
         return { ...manifest, exhibits: [...manifest.exhibits, injected] };
       }),
+  },
+  {
+    id: "matchup-member-dropped",
+    title: "Leave a weakness off the certified list",
+    description:
+      "Gengar's gen-I weaknesses lose ghost. Every remaining member is true, " +
+      "which is exactly why a matchup is compared whole: a shortened list is " +
+      "a different chart, not a smaller truth.",
+    article: "IA-4",
+    rule: "matchup-mismatch",
+    run: (world) =>
+      sabotageMatchup(world, (claim) => ({ ...claim, members: (claim.members ?? []).slice(1) })),
+  },
+  {
+    id: "matchup-fabricated-type",
+    title: "Ask the chart about a type from the future",
+    description:
+      "Fairy does not exist in generation I. A matchup about it is not a hard " +
+      "question, it is a question about nothing this world certifies.",
+    article: "IA-3",
+    rule: "fabricated-type",
+    run: (world) =>
+      sabotageMatchup(world, () => ({
+        kind: "matchup",
+        subject: { kind: "type", typeId: "fairy" },
+        direction: "weak-to",
+      })),
+  },
+  {
+    id: "matchup-species-attacking",
+    title: "Ask what a species is strong against",
+    description:
+      "A species defends with its typing; its offense runs through the moves " +
+      "it knows. The chart cannot answer this, so it refuses by name instead " +
+      "of shipping a plausible confusion.",
+    article: "IA-2",
+    rule: "matchup-inapplicable",
+    run: (world) =>
+      sabotageMatchup(world, (claim) => ({ kind: "matchup", subject: claim.subject, direction: "strong-against" })),
   },
 ];
 
