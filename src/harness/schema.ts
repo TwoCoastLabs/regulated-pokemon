@@ -103,6 +103,13 @@ const ROSTER: JsonSchema = object({
 
 const CLAIM: JsonSchema = {
   anyOf: [
+    // Two fact shapes rather than one optional field: strict-mode providers
+    // reject schemas whose `required` omits a declared property, so the
+    // choice between naming the fact and also asserting its value is a
+    // union, exactly as the kernel treats it. Naming alone is the grounded
+    // shape — the system reads the certified value; asserting is allowed and
+    // is verified, so a misremembered spelling refuses rather than commits.
+    variant("fact", { entityId: STRING, factId: FACT_ID }),
     variant("fact", { entityId: STRING, factId: FACT_ID, asserted: FACT_VALUE }),
     // No `reported`: the model defines the set and the kernel counts it. Under
     // enforced decoding a live model *cannot* state a count, so a wrong one is

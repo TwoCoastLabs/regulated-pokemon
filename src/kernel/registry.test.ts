@@ -164,3 +164,41 @@ describe("the chart is complete and closed before anything derives from it", () 
     })).toContain("IA-3/dangling-type-reference");
   });
 });
+
+describe("the grown world (schema v3): evolutions, encounters, machines", () => {
+  const registry = kantoRegistry();
+
+  it("resolves evolution facts, edges restricted to the certified world", () => {
+    // Pichu does not exist here, so Pikachu is a root — absence is certified.
+    expect(registry.resolve("pikachu", "evolves-from")).toEqual({ ok: true, value: { kind: "absent" } });
+    expect(registry.resolve("pikachu", "evolves-to")).toEqual({ ok: true, value: { kind: "list", value: ["raichu"] } });
+    expect(registry.resolve("pikachu", "evolution-methods")).toEqual({
+      ok: true,
+      value: { kind: "list", value: ["raichu via thunder-stone"] },
+    });
+    expect(registry.resolve("charmander", "evolution-methods")).toEqual({
+      ok: true,
+      value: { kind: "list", value: ["charmeleon via level 16"] },
+    });
+    expect(registry.resolve("golem", "evolves-from")).toEqual({ ok: true, value: { kind: "text", value: "graveler" } });
+    // Eevee keeps its three gen-I stones and gains nothing from the future.
+    expect(registry.resolve("eevee", "evolves-to")).toEqual({
+      ok: true,
+      value: { kind: "list", value: ["vaporeon", "jolteon", "flareon"] },
+    });
+    expect(registry.resolve("mewtwo", "evolves-to")).toEqual({ ok: true, value: { kind: "absent" } });
+  });
+
+  it("resolves presence-only locations, with certified absence for Mew", () => {
+    const abra = registry.resolve("abra", "locations");
+    expect(abra.ok && abra.value.kind === "list" && abra.value.value).toContain("kanto-route-24-area");
+    // Event-only: nowhere in either cartridge, and "none" is the honest answer.
+    expect(registry.resolve("mew", "locations")).toEqual({ ok: true, value: { kind: "absent" } });
+  });
+
+  it("resolves the TM/HM that teaches a move, or certified absence", () => {
+    expect(registry.resolve("surf", "machine")).toEqual({ ok: true, value: { kind: "text", value: "hm03" } });
+    expect(registry.resolve("thunderbolt", "machine")).toEqual({ ok: true, value: { kind: "text", value: "tm24" } });
+    expect(registry.resolve("tackle", "machine")).toEqual({ ok: true, value: { kind: "absent" } });
+  });
+});

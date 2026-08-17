@@ -10,7 +10,11 @@
  * is not "unknown", it is unprovable, and asking for it is a denial.
  */
 
-export const SNAPSHOT_SCHEMA_VERSION = 2;
+export const SNAPSHOT_SCHEMA_VERSION = 3;
+
+/** The cartridges this snapshot's version group comprises. Closed: an
+ * encounter recorded against any other version fails the loader. */
+export const SNAPSHOT_VERSIONS: readonly string[] = ["red", "blue"];
 
 /** Provenance of the projection, including the limits of its certification. */
 export interface SnapshotSource {
@@ -70,6 +74,29 @@ export interface SnapshotLearnedMove {
   level: number | null;
 }
 
+/**
+ * One certified evolution edge. `to` is always a species this snapshot
+ * certifies: upstream chains are not version-pinned, so edges into
+ * later-generation relatives (Espeon, Crobat) — and parents from them
+ * (Pichu) — are excluded at build time rather than caveated at read time.
+ */
+export interface SnapshotEvolution {
+  to: string;
+  /** Upstream trigger slug: level-up, use-item, trade. */
+  trigger: string;
+  minLevel: number | null;
+  /** The stone or item, when the trigger needs one. */
+  item: string | null;
+}
+
+/** Presence-only encounter data: where a species can be found, per cartridge.
+ * Rates and level ranges are deliberately not vendored (epic #54, decision 5). */
+export interface SnapshotEncounter {
+  area: string;
+  /** Which cartridges of this version group, each in SNAPSHOT_VERSIONS. */
+  versions: readonly string[];
+}
+
 export interface SnapshotSpecies {
   /** Entity id used throughout the kernel — the upstream species slug. */
   id: string;
@@ -87,6 +114,10 @@ export interface SnapshotSpecies {
   types: readonly string[];
   stats: SnapshotStats;
   learnset: readonly SnapshotLearnedMove[];
+  /** The certified species this one evolves from, when the snapshot holds it. */
+  evolvesFrom: string | null;
+  evolvesTo: readonly SnapshotEvolution[];
+  encounters: readonly SnapshotEncounter[];
 }
 
 export interface SnapshotMove {
@@ -100,6 +131,9 @@ export interface SnapshotMove {
   pp: number | null;
   priority: number;
   shortEffect: string;
+  /** The TM/HM that teaches it in this version group ("tm11", "hm03"), or
+   * null for a move no machine carries. */
+  machine: string | null;
 }
 
 /**

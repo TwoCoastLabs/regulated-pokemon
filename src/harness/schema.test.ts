@@ -94,6 +94,8 @@ describe("anything the grammar admits, the decoder reads", () => {
   it("decodes one well-formed instance of every claim kind", () => {
     const claims = [
       { kind: "fact", entityId: "pikachu", factId: "base-speed", asserted: { kind: "number", value: 90 } },
+      // The grounded fact shape: name it, and the kernel reads the value.
+      { kind: "fact", entityId: "surf", factId: "machine" },
       { kind: "count", rosterId: "electric", reported: 9 },
       { kind: "membership", rosterId: "electric", entityId: "pikachu", asserted: true },
       { kind: "ranking", rosterId: "electric", basis: "base-speed", direction: "highest", selectedEntityId: "electrode" },
@@ -102,7 +104,9 @@ describe("anything the grammar admits, the decoder reads", () => {
       { kind: "recommendation", entityId: "pikachu" },
       { kind: "action", tool: "catch", entityId: "pikachu" },
     ];
-    expect(claims.map((claim) => claim.kind).sort()).toEqual([...claimKinds].sort());
+    // Sets, not arrays: the fact kind appears twice in the grammar (with and
+    // without an asserted value), which is one kind offered two ways.
+    expect(new Set(claims.map((claim) => claim.kind))).toEqual(new Set(claimKinds));
 
     const decoded = decodeAnswer(JSON.stringify({ rosters: [], claims }), context, "txn-schema");
     expect(decoded.ok).toBe(true);

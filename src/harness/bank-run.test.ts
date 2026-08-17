@@ -65,7 +65,9 @@ describe("runBankEntry buckets each disposition through the real session", () =>
   });
 
   it("a needs-data question is a pass when the model does not certify it", async () => {
-    const run = await runBankEntry(world, entry("data-evolve-pikachu"), model(""), clock());
+    // Berries remain genuinely absent — slice 3 vendored evolutions,
+    // encounters and machines, not items.
+    const run = await runBankEntry(world, entry("data-berry-effect"), model(""), clock());
     expect(run.stage.kind).toBe("abstained-answer");
     expect(run.score.pass).toBe(true);
   });

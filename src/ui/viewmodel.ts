@@ -186,7 +186,7 @@ function factValue(value: FactValue): string {
 export function describeClaim(claim: Claim): string {
   switch (claim.kind) {
     case "fact":
-      return `${claim.entityId}: ${claim.factId} = ${factValue(claim.asserted)}`;
+      return `${claim.entityId}: ${claim.factId}${claim.asserted === undefined ? " — derived by the kernel" : ` = ${factValue(claim.asserted)}`}`;
     case "count":
       return `count(${claim.rosterId})${claim.reported === undefined ? " — derived by the kernel" : ` = ${claim.reported}`}`;
     case "membership":

@@ -121,7 +121,7 @@ function answerPrompt(
     "A species is a member exactly when it satisfies every criterion.",
     "",
     "Each claim is one of:",
-    '  {"kind": "fact", "entityId": "<id>", "factId": "<fact-id>", "asserted": {"kind": "number"|"boolean"|"text"|"list"|"absent", "value": ...}}',
+    '  {"kind": "fact", "entityId": "<id>", "factId": "<fact-id>"}  — the system reads the certified value; you may add "asserted" only when you are certain of the exact certified form, and a wrong one refuses the whole answer',
     '  {"kind": "count", "rosterId": "<id>"}  — defines a set to be counted; the system counts it, so state no number',
     '  {"kind": "membership", "rosterId": "<id>", "entityId": "<id>", "asserted": <boolean>}',
     '  {"kind": "ranking", "rosterId": "<id>", "basis": "<fact-id>", "direction": "highest"|"lowest"}  — defines a set and an ordering; the system names the winner, so name none',

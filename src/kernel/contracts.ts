@@ -192,7 +192,18 @@ export type Resolution<T> =
  * verifier is checking, so it is part of the record.
  */
 export type Claim =
-  | { kind: "fact"; entityId: string; factId: string; asserted: FactValue }
+  /**
+   * `asserted` is derivable and therefore optional (epic #54, slice 3): the
+   * entity and fact id already determine the certified value, and the live
+   * probes showed why forcing the model to state it was a usefulness ceiling —
+   * every denial was right-fact-wrong-format ("HM03" for "hm03",
+   * "viridian-forest" for "viridian-forest-area"): correct intent, denied on
+   * spelling the model could not know. Omitted, `compileManifest` fills it
+   * from the registry; stated — proof of intent, or an adversary's forgery —
+   * it is verified against the certified value and refused on mismatch, so
+   * a wrong value still cannot commit.
+   */
+  | { kind: "fact"; entityId: string; factId: string; asserted?: FactValue }
   /**
    * A count over a certified roster.
    *

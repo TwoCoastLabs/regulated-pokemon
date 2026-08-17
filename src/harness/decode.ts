@@ -141,8 +141,12 @@ function asClaim(value: unknown): Claim | null {
   if (!isObject(value)) return null;
   switch (value.kind) {
     case "fact": {
+      // `asserted` is optional: naming the fact is enough, and the kernel
+      // reads the certified value. Present-but-malformed is still malformed.
+      if (!isString(value.entityId) || !isString(value.factId)) return null;
+      if (value.asserted === undefined) return { kind: "fact", entityId: value.entityId, factId: value.factId };
       const asserted = asFactValue(value.asserted);
-      if (asserted === null || !isString(value.entityId) || !isString(value.factId)) return null;
+      if (asserted === null) return null;
       return { kind: "fact", entityId: value.entityId, factId: value.factId, asserted };
     }
     case "count": {

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "kanto-red-blue",
   "scope": {
     "pokedex": "kanto",
@@ -425,6 +425,24 @@
           "method": "level-up",
           "level": 13
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "ivysaur",
+          "trigger": "level-up",
+          "minLevel": 16,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "pallet-town-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -572,7 +590,17 @@
           "method": "level-up",
           "level": 13
         }
-      ]
+      ],
+      "evolvesFrom": "bulbasaur",
+      "evolvesTo": [
+        {
+          "to": "venusaur",
+          "trigger": "level-up",
+          "minLevel": 32,
+          "item": null
+        }
+      ],
+      "encounters": []
     },
     {
       "id": "venusaur",
@@ -729,7 +757,10 @@
           "method": "level-up",
           "level": 13
         }
-      ]
+      ],
+      "evolvesFrom": "ivysaur",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "charmander",
@@ -909,6 +940,24 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "charmeleon",
+          "trigger": "level-up",
+          "minLevel": 16,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "pallet-town-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -1096,7 +1145,17 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "charmander",
+      "evolvesTo": [
+        {
+          "to": "charizard",
+          "trigger": "level-up",
+          "minLevel": 36,
+          "item": null
+        }
+      ],
+      "encounters": []
     },
     {
       "id": "charizard",
@@ -1303,7 +1362,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "charmeleon",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "squirtle",
@@ -1483,6 +1545,24 @@
           "move": "withdraw",
           "method": "level-up",
           "level": 28
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "wartortle",
+          "trigger": "level-up",
+          "minLevel": 16,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "pallet-town-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -1670,7 +1750,17 @@
           "method": "level-up",
           "level": 31
         }
-      ]
+      ],
+      "evolvesFrom": "squirtle",
+      "evolvesTo": [
+        {
+          "to": "blastoise",
+          "trigger": "level-up",
+          "minLevel": 36,
+          "item": null
+        }
+      ],
+      "encounters": []
     },
     {
       "id": "blastoise",
@@ -1876,7 +1966,10 @@
           "method": "level-up",
           "level": 31
         }
-      ]
+      ],
+      "evolvesFrom": "wartortle",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "caterpie",
@@ -1907,6 +2000,43 @@
           "method": "level-up",
           "level": 1
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "metapod",
+          "trigger": "level-up",
+          "minLevel": 7,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-2-south-towards-viridian-city",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-24-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-25-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "viridian-forest-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -1932,6 +2062,37 @@
           "move": "harden",
           "method": "level-up",
           "level": 1
+        }
+      ],
+      "evolvesFrom": "caterpie",
+      "evolvesTo": [
+        {
+          "to": "butterfree",
+          "trigger": "level-up",
+          "minLevel": 10,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-24-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-25-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "viridian-forest-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -2090,7 +2251,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "metapod",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "weedle",
@@ -2122,6 +2286,43 @@
           "method": "level-up",
           "level": 1
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "kakuna",
+          "trigger": "level-up",
+          "minLevel": 7,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-2-south-towards-viridian-city",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-24-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-25-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "viridian-forest-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -2148,6 +2349,37 @@
           "move": "harden",
           "method": "level-up",
           "level": 1
+        }
+      ],
+      "evolvesFrom": "weedle",
+      "evolvesTo": [
+        {
+          "to": "beedrill",
+          "trigger": "level-up",
+          "minLevel": 10,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-24-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-25-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "viridian-forest-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -2286,7 +2518,10 @@
           "method": "level-up",
           "level": 20
         }
-      ]
+      ],
+      "evolvesFrom": "kakuna",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "pidgey",
@@ -2417,6 +2652,115 @@
           "move": "wing-attack",
           "method": "level-up",
           "level": 28
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "pidgeotto",
+          "trigger": "level-up",
+          "minLevel": 18,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-1-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-12-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-13-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-14-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-15-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-2-south-towards-viridian-city",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-24-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-25-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-3-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-5-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-6-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-7-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-8-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-21-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -2554,6 +2898,38 @@
           "move": "wing-attack",
           "method": "level-up",
           "level": 31
+        }
+      ],
+      "evolvesFrom": "pidgey",
+      "evolvesTo": [
+        {
+          "to": "pidgeot",
+          "trigger": "level-up",
+          "minLevel": 36,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-14-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-15-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-21-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -2702,7 +3078,10 @@
           "method": "level-up",
           "level": 31
         }
-      ]
+      ],
+      "evolvesFrom": "pidgeotto",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "rattata",
@@ -2842,6 +3221,66 @@
           "move": "water-gun",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "raticate",
+          "trigger": "level-up",
+          "minLevel": 20,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-1-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-16-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-2-south-towards-viridian-city",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-22-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-4-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-9-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-21-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -2999,6 +3438,38 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": "rattata",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "kanto-route-16-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-17-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-18-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-21-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -3125,6 +3596,87 @@
           "move": "whirlwind",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "fearow",
+          "trigger": "level-up",
+          "minLevel": 20,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-10-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-11-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-16-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-17-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-18-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-22-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-23-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-3-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-4-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-9-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -3262,6 +3814,31 @@
           "move": "whirlwind",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": "spearow",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "kanto-route-17-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-18-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-23-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -3403,6 +3980,53 @@
           "move": "wrap",
           "method": "level-up",
           "level": 1
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "arbok",
+          "trigger": "level-up",
+          "minLevel": 22,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-10-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-11-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-23-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-4-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-8-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-9-area",
+          "versions": [
+            "red"
+          ]
         }
       ]
     },
@@ -3554,6 +4178,28 @@
           "move": "wrap",
           "method": "level-up",
           "level": 1
+        }
+      ],
+      "evolvesFrom": "ekans",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cerulean-cave-1f",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-cave-b1f",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-23-area",
+          "versions": [
+            "red"
+          ]
         }
       ]
     },
@@ -3726,6 +4372,31 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "raichu",
+          "trigger": "use-item",
+          "minLevel": null,
+          "item": "thunder-stone"
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-power-plant-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "viridian-forest-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -3876,6 +4547,30 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": "pikachu",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cerulean-cave-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-cave-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-power-plant-area",
+          "versions": [
+            "blue"
+          ]
         }
       ]
     },
@@ -4032,6 +4727,59 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "sandslash",
+          "trigger": "level-up",
+          "minLevel": 22,
+          "item": null
+        },
+        {
+          "to": "sandslash",
+          "trigger": "use-item",
+          "minLevel": null,
+          "item": "ice-stone"
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-10-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-11-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-23-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-4-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-8-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-9-area",
+          "versions": [
+            "blue"
+          ]
         }
       ]
     },
@@ -4199,6 +4947,28 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": "sandshrew",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cerulean-cave-1f",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "cerulean-cave-b1f",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-23-area",
+          "versions": [
+            "blue"
+          ]
+        }
       ]
     },
     {
@@ -4334,6 +5104,57 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "nidorina",
+          "trigger": "level-up",
+          "minLevel": 16,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-22-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-1-east",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-2-north",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-3-west",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-middle",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-underground-path-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -4495,6 +5316,56 @@
           "move": "water-gun",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": "nidoran-f",
+      "evolvesTo": [
+        {
+          "to": "nidoqueen",
+          "trigger": "use-item",
+          "minLevel": null,
+          "item": "moon-stone"
+        }
+      ],
+      "encounters": [
+        {
+          "area": "celadon-city-prize-corner",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-11-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-1-east",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-2-north",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-3-west",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-middle",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -4713,7 +5584,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "nidorina",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "nidoran-m",
@@ -4853,6 +5727,50 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "nidorino",
+          "trigger": "level-up",
+          "minLevel": 16,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-22-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-1-east",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-2-north",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-3-west",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-middle",
+          "versions": [
+            "red"
+          ]
         }
       ]
     },
@@ -5014,6 +5932,49 @@
           "move": "water-gun",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": "nidoran-m",
+      "evolvesTo": [
+        {
+          "to": "nidoking",
+          "trigger": "use-item",
+          "minLevel": null,
+          "item": "moon-stone"
+        }
+      ],
+      "encounters": [
+        {
+          "area": "celadon-city-prize-corner",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-1-east",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-2-north",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-3-west",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-middle",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -5232,7 +6193,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "nidorino",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "clefairy",
@@ -5458,6 +6422,45 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "clefable",
+          "trigger": "use-item",
+          "minLevel": null,
+          "item": "moon-stone"
+        }
+      ],
+      "encounters": [
+        {
+          "area": "celadon-city-prize-corner",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "mt-moon-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "mt-moon-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "mt-moon-b2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -5669,7 +6672,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "clefairy",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "vulpix",
@@ -5800,6 +6806,59 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "ninetales",
+          "trigger": "use-item",
+          "minLevel": null,
+          "item": "fire-stone"
+        },
+        {
+          "to": "ninetales",
+          "trigger": "use-item",
+          "minLevel": null,
+          "item": "ice-stone"
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-7-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-8-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-1f",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-2f",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-3f",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-b1f",
+          "versions": [
+            "blue"
+          ]
+        }
       ]
     },
     {
@@ -5921,7 +6980,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "vulpix",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "jigglypuff",
@@ -6142,6 +7204,24 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "wigglytuff",
+          "trigger": "use-item",
+          "minLevel": null,
+          "item": "moon-stone"
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-3-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -6348,6 +7428,17 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": "jigglypuff",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cerulean-cave-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -6464,6 +7555,80 @@
           "move": "wing-attack",
           "method": "level-up",
           "level": 28
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "golbat",
+          "trigger": "level-up",
+          "minLevel": 22,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-victory-road-2-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-victory-road-2-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-victory-road-2-3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "mt-moon-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "mt-moon-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "mt-moon-b2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "rock-tunnel-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "rock-tunnel-b2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -6597,6 +7762,59 @@
           "method": "level-up",
           "level": 32
         }
+      ],
+      "evolvesFrom": "zubat",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cerulean-cave-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-victory-road-2-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-victory-road-2-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-victory-road-2-3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b4f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -6723,6 +7941,71 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "gloom",
+          "trigger": "level-up",
+          "minLevel": 21,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-12-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-13-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-14-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-15-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-24-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-25-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-5-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-6-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-7-area",
+          "versions": [
+            "red"
+          ]
         }
       ]
     },
@@ -6861,6 +8144,41 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": "oddish",
+      "evolvesTo": [
+        {
+          "to": "vileplume",
+          "trigger": "use-item",
+          "minLevel": null,
+          "item": "leaf-stone"
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-12-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-13-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-14-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-15-area",
+          "versions": [
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -6998,7 +8316,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "gloom",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "paras",
@@ -7134,6 +8455,52 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "parasect",
+          "trigger": "level-up",
+          "minLevel": 24,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-safari-zone-area-1-east",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-2-north",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "mt-moon-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "mt-moon-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "mt-moon-b2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -7287,6 +8654,38 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": "paras",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cerulean-cave-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-cave-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-1-east",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-middle",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -7418,6 +8817,59 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "venomoth",
+          "trigger": "level-up",
+          "minLevel": 31,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-12-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-13-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-14-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-15-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-3-west",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-middle",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -7586,6 +9038,45 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": "venonat",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cerulean-cave-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-cave-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-2-north",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-3-west",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-victory-road-2-3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -7706,6 +9197,24 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "dugtrio",
+          "trigger": "level-up",
+          "minLevel": 26,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "digletts-cave-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -7842,6 +9351,17 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": "diglett",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "digletts-cave-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -7983,6 +9503,47 @@
           "move": "water-gun",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "persian",
+          "trigger": "level-up",
+          "minLevel": 28,
+          "item": null
+        },
+        {
+          "to": "persian",
+          "trigger": "level-up",
+          "minLevel": null,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-5-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-6-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-7-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-8-area",
+          "versions": [
+            "blue"
+          ]
         }
       ]
     },
@@ -8140,7 +9701,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "meowth",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "psyduck",
@@ -8315,6 +9879,97 @@
           "move": "water-gun",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "golduck",
+          "trigger": "level-up",
+          "minLevel": 33,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "cerulean-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-24-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-25-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-1-east",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-2-north",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-3-west",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-middle",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b1f",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b2f",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b3f",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b4f",
+          "versions": [
+            "blue"
+          ]
         }
       ]
     },
@@ -8507,6 +10162,28 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": "psyduck",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "seafoam-islands-1f",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b2f",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b4f",
+          "versions": [
+            "blue"
+          ]
+        }
       ]
     },
     {
@@ -8682,6 +10359,41 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "primeape",
+          "trigger": "level-up",
+          "minLevel": 28,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-5-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-6-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-7-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-8-area",
+          "versions": [
+            "red"
+          ]
         }
       ]
     },
@@ -8874,7 +10586,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "mankey",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "growlithe",
@@ -9010,6 +10725,53 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "arcanine",
+          "trigger": "use-item",
+          "minLevel": null,
+          "item": "fire-stone"
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-7-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-8-area",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-1f",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-2f",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-3f",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-b1f",
+          "versions": [
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -9141,7 +10903,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "growlithe",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "poliwag",
@@ -9286,6 +11051,227 @@
           "move": "water-gun",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "poliwhirl",
+          "trigger": "level-up",
+          "minLevel": 25,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "celadon-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-cave-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-cave-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cinnabar-island-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "fuchsia-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-10-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-11-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-12-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-13-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-17-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-18-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-22-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-23-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-24-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-25-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-6-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-1-east",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-2-north",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-3-west",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-middle",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-19-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-20-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-21-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pallet-town-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b4f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "vermilion-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "vermilion-city-ss-anne-dock",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "viridian-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -9488,6 +11474,31 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": "poliwag",
+      "evolvesTo": [
+        {
+          "to": "poliwrath",
+          "trigger": "use-item",
+          "minLevel": null,
+          "item": "water-stone"
+        }
+      ],
+      "encounters": [
+        {
+          "area": "celadon-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-10-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -9680,7 +11691,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "poliwhirl",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "abra",
@@ -9825,6 +11839,38 @@
           "move": "tri-attack",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "kadabra",
+          "trigger": "level-up",
+          "minLevel": 16,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "celadon-city-prize-corner",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-24-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-25-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -10016,6 +12062,31 @@
           "move": "tri-attack",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": "abra",
+      "evolvesTo": [
+        {
+          "to": "alakazam",
+          "trigger": "trade",
+          "minLevel": null,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "cerulean-cave-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-cave-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -10213,7 +12284,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "kadabra",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "machop",
@@ -10378,6 +12452,52 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "machoke",
+          "trigger": "level-up",
+          "minLevel": 28,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-victory-road-2-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-victory-road-2-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-victory-road-2-3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "rock-tunnel-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "rock-tunnel-b2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -10554,6 +12674,38 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": "machop",
+      "evolvesTo": [
+        {
+          "to": "machamp",
+          "trigger": "trade",
+          "minLevel": null,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-victory-road-2-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-victory-road-2-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-victory-road-2-3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -10736,7 +12888,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "machoke",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "bellsprout",
@@ -10872,6 +13027,71 @@
           "move": "wrap",
           "method": "level-up",
           "level": 13
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "weepinbell",
+          "trigger": "level-up",
+          "minLevel": 21,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-12-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-13-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-14-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-15-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-24-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-25-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-5-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-6-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-7-area",
+          "versions": [
+            "blue"
+          ]
         }
       ]
     },
@@ -11015,6 +13235,41 @@
           "method": "level-up",
           "level": 13
         }
+      ],
+      "evolvesFrom": "bellsprout",
+      "evolvesTo": [
+        {
+          "to": "victreebel",
+          "trigger": "use-item",
+          "minLevel": null,
+          "item": "leaf-stone"
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-12-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-13-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-14-area",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-route-15-area",
+          "versions": [
+            "blue"
+          ]
+        }
       ]
     },
     {
@@ -11152,7 +13407,10 @@
           "method": "level-up",
           "level": 13
         }
-      ]
+      ],
+      "evolvesFrom": "weepinbell",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "tentacool",
@@ -11313,6 +13571,80 @@
           "move": "wrap",
           "method": "level-up",
           "level": 13
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "tentacruel",
+          "trigger": "level-up",
+          "minLevel": 30,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-12-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-13-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-17-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-18-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-19-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-20-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-21-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pallet-town-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "viridian-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -11491,7 +13823,10 @@
           "method": "level-up",
           "level": 13
         }
-      ]
+      ],
+      "evolvesFrom": "tentacool",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "geodude",
@@ -11662,6 +13997,73 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "graveler",
+          "trigger": "level-up",
+          "minLevel": 25,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-victory-road-2-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-victory-road-2-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-victory-road-2-3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "mt-moon-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "mt-moon-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "mt-moon-b2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "rock-tunnel-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "rock-tunnel-b2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -11839,6 +14241,38 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": "geodude",
+      "evolvesTo": [
+        {
+          "to": "golem",
+          "trigger": "trade",
+          "minLevel": null,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-victory-road-2-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-victory-road-2-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-victory-road-2-3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -12027,7 +14461,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "graveler",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "ponyta",
@@ -12157,6 +14594,45 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "rapidash",
+          "trigger": "level-up",
+          "minLevel": 40,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "pokemon-mansion-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -12309,7 +14785,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "ponyta",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "slowpoke",
@@ -12515,6 +14994,96 @@
           "move": "water-gun",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "slowbro",
+          "trigger": "level-up",
+          "minLevel": 37,
+          "item": null
+        },
+        {
+          "to": "slowbro",
+          "trigger": "use-item",
+          "minLevel": null,
+          "item": "galarica-cuff"
+        }
+      ],
+      "encounters": [
+        {
+          "area": "celadon-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-10-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-1-east",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-2-north",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-3-west",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-middle",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b1f",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b2f",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b3f",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b4f",
+          "versions": [
+            "red"
+          ]
         }
       ]
     },
@@ -12768,6 +15337,49 @@
           "method": "level-up",
           "level": 37
         }
+      ],
+      "evolvesFrom": "slowpoke",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cerulean-cave-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-cave-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-23-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-1f",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b2f",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b4f",
+          "versions": [
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -12903,6 +15515,24 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "magneton",
+          "trigger": "level-up",
+          "minLevel": 30,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-power-plant-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -13055,6 +15685,24 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": "magnemite",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cerulean-cave-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-power-plant-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -13202,6 +15850,17 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "vermilion-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -13338,6 +15997,52 @@
           "move": "whirlwind",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "dodrio",
+          "trigger": "level-up",
+          "minLevel": 31,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-16-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-17-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-18-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-1-east",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-3-west",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -13491,6 +16196,24 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": "doduo",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cerulean-cave-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-cave-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -13636,6 +16359,59 @@
           "move": "water-gun",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "dewgong",
+          "trigger": "level-up",
+          "minLevel": 34,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "cinnabar-island-cinnabar-lab",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b4f",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -13799,6 +16575,24 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": "seel",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "seafoam-islands-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -13929,6 +16723,45 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "muk",
+          "trigger": "level-up",
+          "minLevel": 38,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "pokemon-mansion-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -14070,6 +16903,38 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": "grimer",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "pokemon-mansion-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -14227,6 +17092,107 @@
           "method": "level-up",
           "level": 1
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "cloyster",
+          "trigger": "use-item",
+          "minLevel": null,
+          "item": "water-stone"
+        }
+      ],
+      "encounters": [
+        {
+          "area": "cinnabar-island-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-11-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-6-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-19-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-20-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-21-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-1f",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b4f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "vermilion-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "vermilion-city-ss-anne-dock",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -14379,7 +17345,10 @@
           "method": "level-up",
           "level": 1
         }
-      ]
+      ],
+      "evolvesFrom": "shellder",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "gastly",
@@ -14500,6 +17469,52 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "haunter",
+          "trigger": "level-up",
+          "minLevel": 25,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "pokemon-tower-3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-tower-4f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-tower-5f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-tower-6f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-tower-7f",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -14622,6 +17637,52 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": "gastly",
+      "evolvesTo": [
+        {
+          "to": "gengar",
+          "trigger": "trade",
+          "minLevel": null,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "pokemon-tower-3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-tower-4f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-tower-5f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-tower-6f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-tower-7f",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -14805,7 +17866,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "haunter",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "onix",
@@ -14951,6 +18015,45 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "kanto-victory-road-2-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-victory-road-2-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-victory-road-2-3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "rock-tunnel-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "rock-tunnel-b2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -15137,6 +18240,24 @@
           "move": "tri-attack",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "hypno",
+          "trigger": "level-up",
+          "minLevel": 26,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-route-11-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -15339,6 +18460,17 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": "drowzee",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cerulean-cave-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -15484,6 +18616,159 @@
           "move": "water-gun",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "kingler",
+          "trigger": "level-up",
+          "minLevel": 28,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "cerulean-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "fuchsia-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-11-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-12-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-13-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-17-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-18-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-24-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-25-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-6-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-1-east",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-2-north",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-3-west",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-middle",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-1f",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b1f",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b2f",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b3f",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b4f",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "vermilion-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "vermilion-city-ss-anne-dock",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -15641,6 +18926,43 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": "krabby",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cerulean-cave-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-cave-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-23-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b1f",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b3f",
+          "versions": [
+            "blue"
+          ]
+        }
       ]
     },
     {
@@ -15781,6 +19103,37 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "electrode",
+          "trigger": "level-up",
+          "minLevel": 30,
+          "item": null
+        },
+        {
+          "to": "electrode",
+          "trigger": "use-item",
+          "minLevel": null,
+          "item": "leaf-stone"
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-power-plant-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-10-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -15938,6 +19291,38 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": "voltorb",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cerulean-cave-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-cave-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cinnabar-island-cinnabar-lab",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-power-plant-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -16080,6 +19465,45 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "exeggutor",
+          "trigger": "use-item",
+          "minLevel": null,
+          "item": "leaf-stone"
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-safari-zone-area-1-east",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-2-north",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-3-west",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-middle",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -16217,7 +19641,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "exeggcute",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "cubone",
@@ -16397,6 +19824,52 @@
           "move": "water-gun",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "marowak",
+          "trigger": "level-up",
+          "minLevel": 28,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "pokemon-tower-3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-tower-4f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-tower-5f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-tower-6f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-tower-7f",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -16594,6 +20067,38 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": "cubone",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cerulean-cave-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-cave-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-victory-road-2-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-victory-road-2-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -16745,6 +20250,17 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "saffron-city-fighting-dojo",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -16895,6 +20411,17 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "saffron-city-fighting-dojo",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -17102,6 +20629,17 @@
           "method": "level-up",
           "level": 1
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "kanto-route-18-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -17217,6 +20755,45 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "weezing",
+          "trigger": "level-up",
+          "minLevel": 35,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "pokemon-mansion-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -17343,6 +20920,38 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": "koffing",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "pokemon-mansion-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -17500,6 +21109,31 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "rhydon",
+          "trigger": "level-up",
+          "minLevel": 42,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "kanto-safari-zone-area-2-north",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-middle",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -17732,6 +21366,24 @@
           "move": "water-gun",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": "rhyhorn",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cerulean-cave-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-cave-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -17974,6 +21626,38 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cerulean-cave-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-cave-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-2-north",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-middle",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -18114,6 +21798,24 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cinnabar-island-cinnabar-lab",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-21-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -18316,6 +22018,24 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "kanto-safari-zone-area-1-east",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-3-west",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -18446,6 +22166,77 @@
           "move": "water-gun",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "seadra",
+          "trigger": "level-up",
+          "minLevel": 32,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "cinnabar-island-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-19-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-20-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-21-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-1f",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b1f",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b2f",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b4f",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -18587,6 +22378,43 @@
           "move": "water-gun",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": "horsea",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cerulean-cave-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-cave-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-23-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b1f",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b3f",
+          "versions": [
+            "red"
+          ]
         }
       ]
     },
@@ -18733,6 +22561,227 @@
           "move": "waterfall",
           "method": "level-up",
           "level": 37
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "seaking",
+          "trigger": "level-up",
+          "minLevel": 33,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "celadon-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-cave-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-cave-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cinnabar-island-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "fuchsia-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-10-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-11-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-12-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-13-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-17-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-18-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-22-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-23-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-24-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-25-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-6-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-1-east",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-2-north",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-3-west",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-middle",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-19-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-20-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-21-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pallet-town-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b4f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "vermilion-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "vermilion-city-ss-anne-dock",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "viridian-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -18889,6 +22938,38 @@
           "move": "waterfall",
           "method": "level-up",
           "level": 39
+        }
+      ],
+      "evolvesFrom": "goldeen",
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cerulean-cave-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-cave-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "fuchsia-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-23-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -19076,6 +23157,79 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "starmie",
+          "trigger": "use-item",
+          "minLevel": null,
+          "item": "water-stone"
+        }
+      ],
+      "encounters": [
+        {
+          "area": "cinnabar-island-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-19-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-20-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-21-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-1f",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b4f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -19243,7 +23397,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "staryu",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "mr-mime",
@@ -19434,6 +23591,17 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "kanto-route-2-north-towards-pewter-city",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -19560,6 +23728,28 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "celadon-city-prize-corner",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-1-east",
+          "versions": [
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-middle",
+          "versions": [
+            "red"
+          ]
         }
       ]
     },
@@ -19752,6 +23942,17 @@
           "move": "water-gun",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cerulean-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -19949,6 +24150,16 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "kanto-power-plant-area",
+          "versions": [
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -20120,6 +24331,22 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "pokemon-mansion-3f",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "pokemon-mansion-b1f",
+          "versions": [
+            "blue"
+          ]
+        }
       ]
     },
     {
@@ -20255,6 +24482,28 @@
           "move": "vice-grip",
           "method": "level-up",
           "level": 1
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "celadon-city-prize-corner",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-1-east",
+          "versions": [
+            "blue"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-middle",
+          "versions": [
+            "blue"
+          ]
         }
       ]
     },
@@ -20412,6 +24661,24 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "kanto-safari-zone-area-2-north",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-3-west",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -20442,6 +24709,241 @@
           "move": "tackle",
           "method": "level-up",
           "level": 15
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "gyarados",
+          "trigger": "level-up",
+          "minLevel": 20,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "celadon-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-cave-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-cave-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cinnabar-island-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "fuchsia-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-10-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-11-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-12-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-13-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-17-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-18-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-22-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-23-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-24-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-25-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-3-pokemon-center",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-4-pokemon-center",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-6-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-1-east",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-2-north",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-3-west",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-middle",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-19-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-20-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-sea-route-21-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "pallet-town-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b3f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "seafoam-islands-b4f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "vermilion-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "vermilion-city-ss-anne-dock",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "viridian-city-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -20625,7 +25127,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "magikarp",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "lapras",
@@ -20817,6 +25322,17 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "saffron-city-silph-co-7f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -20842,6 +25358,59 @@
           "move": "transform",
           "method": "level-up",
           "level": 1
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cerulean-cave-1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-cave-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "cerulean-cave-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-13-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-14-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-15-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-23-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -20958,6 +25527,36 @@
           "move": "toxic",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "vaporeon",
+          "trigger": "use-item",
+          "minLevel": null,
+          "item": "water-stone"
+        },
+        {
+          "to": "jolteon",
+          "trigger": "use-item",
+          "minLevel": null,
+          "item": "thunder-stone"
+        },
+        {
+          "to": "flareon",
+          "trigger": "use-item",
+          "minLevel": null,
+          "item": "fire-stone"
+        }
+      ],
+      "encounters": [
+        {
+          "area": "celadon-city-celadon-mansion",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -21135,7 +25734,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "eevee",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "jolteon",
@@ -21306,7 +25908,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "eevee",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "flareon",
@@ -21462,7 +26067,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "eevee",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "porygon",
@@ -21633,6 +26241,17 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "celadon-city-prize-corner",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -21764,6 +26383,24 @@
           "move": "withdraw",
           "method": "level-up",
           "level": 1
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "omastar",
+          "trigger": "level-up",
+          "minLevel": 40,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "cinnabar-island-cinnabar-lab",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -21927,7 +26564,10 @@
           "method": "level-up",
           "level": 1
         }
-      ]
+      ],
+      "evolvesFrom": "omanyte",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "kabuto",
@@ -22058,6 +26698,24 @@
           "move": "water-gun",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "kabutops",
+          "trigger": "level-up",
+          "minLevel": 40,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "cinnabar-island-cinnabar-lab",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -22231,7 +26889,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": "kabuto",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "aerodactyl",
@@ -22372,6 +27033,17 @@
           "move": "wing-attack",
           "method": "level-up",
           "level": 1
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cinnabar-island-cinnabar-lab",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -22609,6 +27281,24 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "kanto-route-12-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-route-16-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -22755,6 +27445,17 @@
           "move": "whirlwind",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "seafoam-islands-b4f",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -22903,6 +27604,17 @@
           "method": "machine",
           "level": null
         }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "kanto-power-plant-area",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        }
       ]
     },
     {
@@ -23034,6 +27746,17 @@
           "move": "whirlwind",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "kanto-victory-road-2-2f",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -23205,6 +27928,52 @@
           "move": "wrap",
           "method": "level-up",
           "level": 1
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [
+        {
+          "to": "dragonair",
+          "trigger": "level-up",
+          "minLevel": 30,
+          "item": null
+        }
+      ],
+      "encounters": [
+        {
+          "area": "celadon-city-prize-corner",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-1-east",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-2-north",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-area-3-west",
+          "versions": [
+            "blue",
+            "red"
+          ]
+        },
+        {
+          "area": "kanto-safari-zone-middle",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -23387,7 +28156,17 @@
           "method": "level-up",
           "level": 1
         }
-      ]
+      ],
+      "evolvesFrom": "dratini",
+      "evolvesTo": [
+        {
+          "to": "dragonite",
+          "trigger": "level-up",
+          "minLevel": 55,
+          "item": null
+        }
+      ],
+      "encounters": []
     },
     {
       "id": "dragonite",
@@ -23589,7 +28368,10 @@
           "method": "level-up",
           "level": 1
         }
-      ]
+      ],
+      "evolvesFrom": "dragonair",
+      "evolvesTo": [],
+      "encounters": []
     },
     {
       "id": "mewtwo",
@@ -23834,6 +28616,17 @@
           "move": "water-gun",
           "method": "machine",
           "level": null
+        }
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": [
+        {
+          "area": "cerulean-cave-b1f",
+          "versions": [
+            "blue",
+            "red"
+          ]
         }
       ]
     },
@@ -24156,7 +28949,10 @@
           "method": "machine",
           "level": null
         }
-      ]
+      ],
+      "evolvesFrom": null,
+      "evolvesTo": [],
+      "encounters": []
     }
   ],
   "moves": [
@@ -24169,7 +28965,8 @@
       "accuracy": 100,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Drains half the damage inflicted to heal the user."
+      "shortEffect": "Drains half the damage inflicted to heal the user.",
+      "machine": null
     },
     {
       "id": "acid",
@@ -24180,7 +28977,8 @@
       "accuracy": 100,
       "pp": 30,
       "priority": 0,
-      "shortEffect": "Has a chance to lower the target’s Special Defense by one stage."
+      "shortEffect": "Has a chance to lower the target’s Special Defense by one stage.",
+      "machine": null
     },
     {
       "id": "acid-armor",
@@ -24191,7 +28989,8 @@
       "accuracy": null,
       "pp": 40,
       "priority": 0,
-      "shortEffect": "Raises the user’s Defense by two stages."
+      "shortEffect": "Raises the user’s Defense by two stages.",
+      "machine": null
     },
     {
       "id": "agility",
@@ -24202,7 +29001,8 @@
       "accuracy": null,
       "pp": 30,
       "priority": 0,
-      "shortEffect": "Raises the user’s Speed by two stages."
+      "shortEffect": "Raises the user’s Speed by two stages.",
+      "machine": null
     },
     {
       "id": "amnesia",
@@ -24213,7 +29013,8 @@
       "accuracy": null,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Raises the user’s Special Defense by two stages."
+      "shortEffect": "Raises the user’s Special Defense by two stages.",
+      "machine": null
     },
     {
       "id": "aurora-beam",
@@ -24224,7 +29025,8 @@
       "accuracy": 100,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Has a chance to lower the target’s Attack by one stage."
+      "shortEffect": "Has a chance to lower the target’s Attack by one stage.",
+      "machine": null
     },
     {
       "id": "barrage",
@@ -24235,7 +29037,8 @@
       "accuracy": 85,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Hits 2-5 times in one turn."
+      "shortEffect": "Hits 2-5 times in one turn.",
+      "machine": null
     },
     {
       "id": "barrier",
@@ -24246,7 +29049,8 @@
       "accuracy": null,
       "pp": 30,
       "priority": 0,
-      "shortEffect": "Raises the user’s Defense by two stages."
+      "shortEffect": "Raises the user’s Defense by two stages.",
+      "machine": null
     },
     {
       "id": "bide",
@@ -24257,7 +29061,8 @@
       "accuracy": null,
       "pp": 10,
       "priority": 1,
-      "shortEffect": "User waits for two turns, then hits back for twice the damage it took."
+      "shortEffect": "User waits for two turns, then hits back for twice the damage it took.",
+      "machine": "tm34"
     },
     {
       "id": "bind",
@@ -24268,7 +29073,8 @@
       "accuracy": 75,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Prevents the target from fleeing and inflicts damage for 2-5 turns."
+      "shortEffect": "Prevents the target from fleeing and inflicts damage for 2-5 turns.",
+      "machine": null
     },
     {
       "id": "bite",
@@ -24279,7 +29085,8 @@
       "accuracy": 100,
       "pp": 25,
       "priority": 0,
-      "shortEffect": "Has a chance to make the target flinch."
+      "shortEffect": "Has a chance to make the target flinch.",
+      "machine": null
     },
     {
       "id": "blizzard",
@@ -24290,7 +29097,8 @@
       "accuracy": 90,
       "pp": 5,
       "priority": 0,
-      "shortEffect": "Has a chance to freeze the target."
+      "shortEffect": "Has a chance to freeze the target.",
+      "machine": "tm14"
     },
     {
       "id": "body-slam",
@@ -24301,7 +29109,8 @@
       "accuracy": 100,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Has a chance to paralyze the target."
+      "shortEffect": "Has a chance to paralyze the target.",
+      "machine": "tm08"
     },
     {
       "id": "bone-club",
@@ -24312,7 +29121,8 @@
       "accuracy": 85,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Has a chance to make the target flinch."
+      "shortEffect": "Has a chance to make the target flinch.",
+      "machine": null
     },
     {
       "id": "bonemerang",
@@ -24323,7 +29133,8 @@
       "accuracy": 90,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Hits twice in one turn."
+      "shortEffect": "Hits twice in one turn.",
+      "machine": null
     },
     {
       "id": "bubble",
@@ -24334,7 +29145,8 @@
       "accuracy": 100,
       "pp": 30,
       "priority": 0,
-      "shortEffect": "Has a chance to lower the target’s Speed by one stage."
+      "shortEffect": "Has a chance to lower the target’s Speed by one stage.",
+      "machine": null
     },
     {
       "id": "bubble-beam",
@@ -24345,7 +29157,8 @@
       "accuracy": 100,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Has a chance to lower the target’s Speed by one stage."
+      "shortEffect": "Has a chance to lower the target’s Speed by one stage.",
+      "machine": "tm11"
     },
     {
       "id": "clamp",
@@ -24356,7 +29169,8 @@
       "accuracy": 75,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Prevents the target from fleeing and inflicts damage for 2-5 turns."
+      "shortEffect": "Prevents the target from fleeing and inflicts damage for 2-5 turns.",
+      "machine": null
     },
     {
       "id": "comet-punch",
@@ -24367,7 +29181,8 @@
       "accuracy": 85,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Hits 2-5 times in one turn."
+      "shortEffect": "Hits 2-5 times in one turn.",
+      "machine": null
     },
     {
       "id": "confuse-ray",
@@ -24378,7 +29193,8 @@
       "accuracy": 100,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Confuses the target."
+      "shortEffect": "Confuses the target.",
+      "machine": null
     },
     {
       "id": "confusion",
@@ -24389,7 +29205,8 @@
       "accuracy": 100,
       "pp": 25,
       "priority": 0,
-      "shortEffect": "Has a chance to confuse the target."
+      "shortEffect": "Has a chance to confuse the target.",
+      "machine": null
     },
     {
       "id": "constrict",
@@ -24400,7 +29217,8 @@
       "accuracy": 100,
       "pp": 35,
       "priority": 0,
-      "shortEffect": "Has a chance to lower the target’s Speed by one stage."
+      "shortEffect": "Has a chance to lower the target’s Speed by one stage.",
+      "machine": null
     },
     {
       "id": "conversion",
@@ -24411,7 +29229,8 @@
       "accuracy": null,
       "pp": 30,
       "priority": 0,
-      "shortEffect": "User’s type changes to the type of one of its moves at random."
+      "shortEffect": "User’s type changes to the type of one of its moves at random.",
+      "machine": null
     },
     {
       "id": "counter",
@@ -24422,7 +29241,8 @@
       "accuracy": 100,
       "pp": 20,
       "priority": -5,
-      "shortEffect": "Inflicts twice the damage the user received from the last physical hit it took."
+      "shortEffect": "Inflicts twice the damage the user received from the last physical hit it took.",
+      "machine": "tm18"
     },
     {
       "id": "crabhammer",
@@ -24433,7 +29253,8 @@
       "accuracy": 85,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Has an increased chance for a critical hit."
+      "shortEffect": "Has an increased chance for a critical hit.",
+      "machine": null
     },
     {
       "id": "cut",
@@ -24444,7 +29265,8 @@
       "accuracy": 95,
       "pp": 30,
       "priority": 0,
-      "shortEffect": "Inflicts regular damage with no additional effect."
+      "shortEffect": "Inflicts regular damage with no additional effect.",
+      "machine": "hm01"
     },
     {
       "id": "defense-curl",
@@ -24455,7 +29277,8 @@
       "accuracy": null,
       "pp": 40,
       "priority": 0,
-      "shortEffect": "Raises user’s Defense by one stage."
+      "shortEffect": "Raises user’s Defense by one stage.",
+      "machine": null
     },
     {
       "id": "dig",
@@ -24466,7 +29289,8 @@
       "accuracy": 100,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "User digs underground, dodging all attacks, and hits next turn."
+      "shortEffect": "User digs underground, dodging all attacks, and hits next turn.",
+      "machine": "tm28"
     },
     {
       "id": "disable",
@@ -24477,7 +29301,8 @@
       "accuracy": 55,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Disables the target’s last used move for 1-8 turns."
+      "shortEffect": "Disables the target’s last used move for 1-8 turns.",
+      "machine": null
     },
     {
       "id": "dizzy-punch",
@@ -24488,7 +29313,8 @@
       "accuracy": 100,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Has a chance to confuse the target."
+      "shortEffect": "Has a chance to confuse the target.",
+      "machine": null
     },
     {
       "id": "double-edge",
@@ -24499,7 +29325,8 @@
       "accuracy": 100,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "User receives 1/3 the damage inflicted in recoil."
+      "shortEffect": "User receives 1/3 the damage inflicted in recoil.",
+      "machine": "tm10"
     },
     {
       "id": "double-kick",
@@ -24510,7 +29337,8 @@
       "accuracy": 100,
       "pp": 30,
       "priority": 0,
-      "shortEffect": "Hits twice in one turn."
+      "shortEffect": "Hits twice in one turn.",
+      "machine": null
     },
     {
       "id": "double-slap",
@@ -24521,7 +29349,8 @@
       "accuracy": 85,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Hits 2-5 times in one turn."
+      "shortEffect": "Hits 2-5 times in one turn.",
+      "machine": null
     },
     {
       "id": "double-team",
@@ -24532,7 +29361,8 @@
       "accuracy": null,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Raises the user’s evasion by one stage."
+      "shortEffect": "Raises the user’s evasion by one stage.",
+      "machine": "tm32"
     },
     {
       "id": "dragon-rage",
@@ -24543,7 +29373,8 @@
       "accuracy": 100,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Inflicts 40 points of damage."
+      "shortEffect": "Inflicts 40 points of damage.",
+      "machine": "tm23"
     },
     {
       "id": "dream-eater",
@@ -24554,7 +29385,8 @@
       "accuracy": 100,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Only works on sleeping Pokémon. Drains half the damage inflicted to heal the user."
+      "shortEffect": "Only works on sleeping Pokémon. Drains half the damage inflicted to heal the user.",
+      "machine": "tm42"
     },
     {
       "id": "drill-peck",
@@ -24565,7 +29397,8 @@
       "accuracy": 100,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Inflicts regular damage with no additional effect."
+      "shortEffect": "Inflicts regular damage with no additional effect.",
+      "machine": null
     },
     {
       "id": "earthquake",
@@ -24576,7 +29409,8 @@
       "accuracy": 100,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Inflicts regular damage and can hit Dig users."
+      "shortEffect": "Inflicts regular damage and can hit Dig users.",
+      "machine": "tm26"
     },
     {
       "id": "egg-bomb",
@@ -24587,7 +29421,8 @@
       "accuracy": 75,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Inflicts regular damage with no additional effect."
+      "shortEffect": "Inflicts regular damage with no additional effect.",
+      "machine": "tm37"
     },
     {
       "id": "ember",
@@ -24598,7 +29433,8 @@
       "accuracy": 100,
       "pp": 25,
       "priority": 0,
-      "shortEffect": "Has a chance to burn the target."
+      "shortEffect": "Has a chance to burn the target.",
+      "machine": null
     },
     {
       "id": "explosion",
@@ -24609,7 +29445,8 @@
       "accuracy": 100,
       "pp": 5,
       "priority": 0,
-      "shortEffect": "User faints."
+      "shortEffect": "User faints.",
+      "machine": "tm47"
     },
     {
       "id": "fire-blast",
@@ -24620,7 +29457,8 @@
       "accuracy": 85,
       "pp": 5,
       "priority": 0,
-      "shortEffect": "Has a chance to burn the target."
+      "shortEffect": "Has a chance to burn the target.",
+      "machine": "tm38"
     },
     {
       "id": "fire-punch",
@@ -24631,7 +29469,8 @@
       "accuracy": 100,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Has a chance to burn the target."
+      "shortEffect": "Has a chance to burn the target.",
+      "machine": null
     },
     {
       "id": "fire-spin",
@@ -24642,7 +29481,8 @@
       "accuracy": 70,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Prevents the target from fleeing and inflicts damage for 2-5 turns."
+      "shortEffect": "Prevents the target from fleeing and inflicts damage for 2-5 turns.",
+      "machine": null
     },
     {
       "id": "fissure",
@@ -24653,7 +29493,8 @@
       "accuracy": 30,
       "pp": 5,
       "priority": 0,
-      "shortEffect": "Causes a one-hit KO."
+      "shortEffect": "Causes a one-hit KO.",
+      "machine": "tm27"
     },
     {
       "id": "flamethrower",
@@ -24664,7 +29505,8 @@
       "accuracy": 100,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Has a chance to burn the target."
+      "shortEffect": "Has a chance to burn the target.",
+      "machine": null
     },
     {
       "id": "flash",
@@ -24675,7 +29517,8 @@
       "accuracy": 70,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Lowers the target’s accuracy by one stage."
+      "shortEffect": "Lowers the target’s accuracy by one stage.",
+      "machine": "hm05"
     },
     {
       "id": "fly",
@@ -24686,7 +29529,8 @@
       "accuracy": 95,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "User flies high into the air, dodging all attacks, and hits next turn."
+      "shortEffect": "User flies high into the air, dodging all attacks, and hits next turn.",
+      "machine": "hm02"
     },
     {
       "id": "focus-energy",
@@ -24697,7 +29541,8 @@
       "accuracy": null,
       "pp": 30,
       "priority": 0,
-      "shortEffect": "Increases the user’s chance to score a critical hit."
+      "shortEffect": "Increases the user’s chance to score a critical hit.",
+      "machine": null
     },
     {
       "id": "fury-attack",
@@ -24708,7 +29553,8 @@
       "accuracy": 85,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Hits 2-5 times in one turn."
+      "shortEffect": "Hits 2-5 times in one turn.",
+      "machine": null
     },
     {
       "id": "fury-swipes",
@@ -24719,7 +29565,8 @@
       "accuracy": 80,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Hits 2-5 times in one turn."
+      "shortEffect": "Hits 2-5 times in one turn.",
+      "machine": null
     },
     {
       "id": "glare",
@@ -24730,7 +29577,8 @@
       "accuracy": 75,
       "pp": 30,
       "priority": 0,
-      "shortEffect": "Paralyzes the target."
+      "shortEffect": "Paralyzes the target.",
+      "machine": null
     },
     {
       "id": "growl",
@@ -24741,7 +29589,8 @@
       "accuracy": 100,
       "pp": 40,
       "priority": 0,
-      "shortEffect": "Lowers the target’s Attack by one stage."
+      "shortEffect": "Lowers the target’s Attack by one stage.",
+      "machine": null
     },
     {
       "id": "growth",
@@ -24752,7 +29601,8 @@
       "accuracy": null,
       "pp": 40,
       "priority": 0,
-      "shortEffect": "Raises the user’s Attack and Special Attack by one stage."
+      "shortEffect": "Raises the user’s Attack and Special Attack by one stage.",
+      "machine": null
     },
     {
       "id": "guillotine",
@@ -24763,7 +29613,8 @@
       "accuracy": 30,
       "pp": 5,
       "priority": 0,
-      "shortEffect": "Causes a one-hit KO."
+      "shortEffect": "Causes a one-hit KO.",
+      "machine": null
     },
     {
       "id": "gust",
@@ -24774,7 +29625,8 @@
       "accuracy": 100,
       "pp": 35,
       "priority": 0,
-      "shortEffect": "Inflicts regular damage and can hit Pokémon in the air."
+      "shortEffect": "Inflicts regular damage and can hit Pokémon in the air.",
+      "machine": null
     },
     {
       "id": "harden",
@@ -24785,7 +29637,8 @@
       "accuracy": null,
       "pp": 30,
       "priority": 0,
-      "shortEffect": "Raises the user’s Defense by one stage."
+      "shortEffect": "Raises the user’s Defense by one stage.",
+      "machine": null
     },
     {
       "id": "haze",
@@ -24796,7 +29649,8 @@
       "accuracy": null,
       "pp": 30,
       "priority": 0,
-      "shortEffect": "Resets all Pokémon’s stats, accuracy, and evasion."
+      "shortEffect": "Resets all Pokémon’s stats, accuracy, and evasion.",
+      "machine": null
     },
     {
       "id": "headbutt",
@@ -24807,7 +29661,8 @@
       "accuracy": 100,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Has a chance to make the target flinch."
+      "shortEffect": "Has a chance to make the target flinch.",
+      "machine": null
     },
     {
       "id": "high-jump-kick",
@@ -24818,7 +29673,8 @@
       "accuracy": 90,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "If the user misses, it takes half the damage it would have inflicted in recoil."
+      "shortEffect": "If the user misses, it takes half the damage it would have inflicted in recoil.",
+      "machine": null
     },
     {
       "id": "horn-attack",
@@ -24829,7 +29685,8 @@
       "accuracy": 100,
       "pp": 25,
       "priority": 0,
-      "shortEffect": "Inflicts regular damage with no additional effect."
+      "shortEffect": "Inflicts regular damage with no additional effect.",
+      "machine": null
     },
     {
       "id": "horn-drill",
@@ -24840,7 +29697,8 @@
       "accuracy": 30,
       "pp": 5,
       "priority": 0,
-      "shortEffect": "Causes a one-hit KO."
+      "shortEffect": "Causes a one-hit KO.",
+      "machine": "tm07"
     },
     {
       "id": "hydro-pump",
@@ -24851,7 +29709,8 @@
       "accuracy": 80,
       "pp": 5,
       "priority": 0,
-      "shortEffect": "Inflicts regular damage with no additional effect."
+      "shortEffect": "Inflicts regular damage with no additional effect.",
+      "machine": null
     },
     {
       "id": "hyper-beam",
@@ -24862,7 +29721,8 @@
       "accuracy": 90,
       "pp": 5,
       "priority": 0,
-      "shortEffect": "User foregoes its next turn to recharge."
+      "shortEffect": "User foregoes its next turn to recharge.",
+      "machine": "tm15"
     },
     {
       "id": "hyper-fang",
@@ -24873,7 +29733,8 @@
       "accuracy": 90,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Has a chance to make the target flinch."
+      "shortEffect": "Has a chance to make the target flinch.",
+      "machine": null
     },
     {
       "id": "hypnosis",
@@ -24884,7 +29745,8 @@
       "accuracy": 60,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Puts the target to sleep."
+      "shortEffect": "Puts the target to sleep.",
+      "machine": null
     },
     {
       "id": "ice-beam",
@@ -24895,7 +29757,8 @@
       "accuracy": 100,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Has a chance to freeze the target."
+      "shortEffect": "Has a chance to freeze the target.",
+      "machine": "tm13"
     },
     {
       "id": "ice-punch",
@@ -24906,7 +29769,8 @@
       "accuracy": 100,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Has a chance to freeze the target."
+      "shortEffect": "Has a chance to freeze the target.",
+      "machine": null
     },
     {
       "id": "jump-kick",
@@ -24917,7 +29781,8 @@
       "accuracy": 95,
       "pp": 25,
       "priority": 0,
-      "shortEffect": "If the user misses, it takes half the damage it would have inflicted in recoil."
+      "shortEffect": "If the user misses, it takes half the damage it would have inflicted in recoil.",
+      "machine": null
     },
     {
       "id": "karate-chop",
@@ -24928,7 +29793,8 @@
       "accuracy": 100,
       "pp": 25,
       "priority": 0,
-      "shortEffect": "Has an increased chance for a critical hit."
+      "shortEffect": "Has an increased chance for a critical hit.",
+      "machine": null
     },
     {
       "id": "leech-life",
@@ -24939,7 +29805,8 @@
       "accuracy": 100,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Drains half the damage inflicted to heal the user."
+      "shortEffect": "Drains half the damage inflicted to heal the user.",
+      "machine": null
     },
     {
       "id": "leech-seed",
@@ -24950,7 +29817,8 @@
       "accuracy": 90,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Seeds the target, stealing HP from it every turn."
+      "shortEffect": "Seeds the target, stealing HP from it every turn.",
+      "machine": null
     },
     {
       "id": "leer",
@@ -24961,7 +29829,8 @@
       "accuracy": 100,
       "pp": 30,
       "priority": 0,
-      "shortEffect": "Lowers the target’s Defense by one stage."
+      "shortEffect": "Lowers the target’s Defense by one stage.",
+      "machine": null
     },
     {
       "id": "lick",
@@ -24972,7 +29841,8 @@
       "accuracy": 100,
       "pp": 30,
       "priority": 0,
-      "shortEffect": "Has a chance to paralyze the target."
+      "shortEffect": "Has a chance to paralyze the target.",
+      "machine": null
     },
     {
       "id": "light-screen",
@@ -24983,7 +29853,8 @@
       "accuracy": null,
       "pp": 30,
       "priority": 0,
-      "shortEffect": "Reduces damage from special attacks by 50% for five turns."
+      "shortEffect": "Reduces damage from special attacks by 50% for five turns.",
+      "machine": null
     },
     {
       "id": "lovely-kiss",
@@ -24994,7 +29865,8 @@
       "accuracy": 75,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Puts the target to sleep."
+      "shortEffect": "Puts the target to sleep.",
+      "machine": null
     },
     {
       "id": "low-kick",
@@ -25005,7 +29877,8 @@
       "accuracy": 90,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Inflicts more damage to heavier targets, with a maximum of 120 power."
+      "shortEffect": "Inflicts more damage to heavier targets, with a maximum of 120 power.",
+      "machine": null
     },
     {
       "id": "meditate",
@@ -25016,7 +29889,8 @@
       "accuracy": null,
       "pp": 40,
       "priority": 0,
-      "shortEffect": "Raises the user’s Attack by one stage."
+      "shortEffect": "Raises the user’s Attack by one stage.",
+      "machine": null
     },
     {
       "id": "mega-drain",
@@ -25027,7 +29901,8 @@
       "accuracy": 100,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Drains half the damage inflicted to heal the user."
+      "shortEffect": "Drains half the damage inflicted to heal the user.",
+      "machine": "tm21"
     },
     {
       "id": "mega-kick",
@@ -25038,7 +29913,8 @@
       "accuracy": 75,
       "pp": 5,
       "priority": 0,
-      "shortEffect": "Inflicts regular damage with no additional effect."
+      "shortEffect": "Inflicts regular damage with no additional effect.",
+      "machine": "tm05"
     },
     {
       "id": "mega-punch",
@@ -25049,7 +29925,8 @@
       "accuracy": 85,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Inflicts regular damage with no additional effect."
+      "shortEffect": "Inflicts regular damage with no additional effect.",
+      "machine": "tm01"
     },
     {
       "id": "metronome",
@@ -25060,7 +29937,8 @@
       "accuracy": null,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Randomly selects and uses any move in the game."
+      "shortEffect": "Randomly selects and uses any move in the game.",
+      "machine": "tm35"
     },
     {
       "id": "mimic",
@@ -25071,7 +29949,8 @@
       "accuracy": null,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Copies the target’s last used move."
+      "shortEffect": "Copies the target’s last used move.",
+      "machine": "tm31"
     },
     {
       "id": "minimize",
@@ -25082,7 +29961,8 @@
       "accuracy": null,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Raises the user’s evasion by two stages."
+      "shortEffect": "Raises the user’s evasion by two stages.",
+      "machine": null
     },
     {
       "id": "mirror-move",
@@ -25093,7 +29973,8 @@
       "accuracy": null,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Uses the target’s last used move."
+      "shortEffect": "Uses the target’s last used move.",
+      "machine": null
     },
     {
       "id": "mist",
@@ -25104,7 +29985,8 @@
       "accuracy": null,
       "pp": 30,
       "priority": 0,
-      "shortEffect": "Protects the user’s stats from being changed by enemy moves."
+      "shortEffect": "Protects the user’s stats from being changed by enemy moves.",
+      "machine": null
     },
     {
       "id": "night-shade",
@@ -25115,7 +29997,8 @@
       "accuracy": 100,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Inflicts damage equal to the user’s level."
+      "shortEffect": "Inflicts damage equal to the user’s level.",
+      "machine": null
     },
     {
       "id": "pay-day",
@@ -25126,7 +30009,8 @@
       "accuracy": 100,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Scatters money on the ground worth five times the user’s level."
+      "shortEffect": "Scatters money on the ground worth five times the user’s level.",
+      "machine": "tm16"
     },
     {
       "id": "peck",
@@ -25137,7 +30021,8 @@
       "accuracy": 100,
       "pp": 35,
       "priority": 0,
-      "shortEffect": "Inflicts regular damage with no additional effect."
+      "shortEffect": "Inflicts regular damage with no additional effect.",
+      "machine": null
     },
     {
       "id": "petal-dance",
@@ -25148,7 +30033,8 @@
       "accuracy": 100,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Hits every turn for 2-3 turns, then confuses the user."
+      "shortEffect": "Hits every turn for 2-3 turns, then confuses the user.",
+      "machine": null
     },
     {
       "id": "pin-missile",
@@ -25159,7 +30045,8 @@
       "accuracy": 85,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Hits 2-5 times in one turn."
+      "shortEffect": "Hits 2-5 times in one turn.",
+      "machine": null
     },
     {
       "id": "poison-gas",
@@ -25170,7 +30057,8 @@
       "accuracy": 55,
       "pp": 40,
       "priority": 0,
-      "shortEffect": "Poisons the target."
+      "shortEffect": "Poisons the target.",
+      "machine": null
     },
     {
       "id": "poison-powder",
@@ -25181,7 +30069,8 @@
       "accuracy": 75,
       "pp": 35,
       "priority": 0,
-      "shortEffect": "Poisons the target."
+      "shortEffect": "Poisons the target.",
+      "machine": null
     },
     {
       "id": "poison-sting",
@@ -25192,7 +30081,8 @@
       "accuracy": 100,
       "pp": 35,
       "priority": 0,
-      "shortEffect": "Has a chance to poison the target."
+      "shortEffect": "Has a chance to poison the target.",
+      "machine": null
     },
     {
       "id": "pound",
@@ -25203,7 +30093,8 @@
       "accuracy": 100,
       "pp": 35,
       "priority": 0,
-      "shortEffect": "Inflicts regular damage with no additional effect."
+      "shortEffect": "Inflicts regular damage with no additional effect.",
+      "machine": null
     },
     {
       "id": "psybeam",
@@ -25214,7 +30105,8 @@
       "accuracy": 100,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Has a chance to confuse the target."
+      "shortEffect": "Has a chance to confuse the target.",
+      "machine": null
     },
     {
       "id": "psychic",
@@ -25225,7 +30117,8 @@
       "accuracy": 100,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Has a chance to lower the target’s Special Defense by one stage."
+      "shortEffect": "Has a chance to lower the target’s Special Defense by one stage.",
+      "machine": "tm29"
     },
     {
       "id": "psywave",
@@ -25236,7 +30129,8 @@
       "accuracy": 80,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Inflicts damage between 50% and 150% of the user’s level."
+      "shortEffect": "Inflicts damage between 50% and 150% of the user’s level.",
+      "machine": "tm46"
     },
     {
       "id": "quick-attack",
@@ -25247,7 +30141,8 @@
       "accuracy": 100,
       "pp": 30,
       "priority": 1,
-      "shortEffect": "Inflicts regular damage with no additional effect."
+      "shortEffect": "Inflicts regular damage with no additional effect.",
+      "machine": null
     },
     {
       "id": "rage",
@@ -25258,7 +30153,8 @@
       "accuracy": 100,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "If the user is hit after using this move, its Attack rises by one stage."
+      "shortEffect": "If the user is hit after using this move, its Attack rises by one stage.",
+      "machine": "tm20"
     },
     {
       "id": "razor-leaf",
@@ -25269,7 +30165,8 @@
       "accuracy": 95,
       "pp": 25,
       "priority": 0,
-      "shortEffect": "Has an increased chance for a critical hit."
+      "shortEffect": "Has an increased chance for a critical hit.",
+      "machine": null
     },
     {
       "id": "razor-wind",
@@ -25280,7 +30177,8 @@
       "accuracy": 75,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Requires a turn to charge before attacking."
+      "shortEffect": "Requires a turn to charge before attacking.",
+      "machine": "tm02"
     },
     {
       "id": "recover",
@@ -25291,7 +30189,8 @@
       "accuracy": null,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Heals the user by half its max HP."
+      "shortEffect": "Heals the user by half its max HP.",
+      "machine": null
     },
     {
       "id": "reflect",
@@ -25302,7 +30201,8 @@
       "accuracy": null,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Reduces damage from physical attacks by half."
+      "shortEffect": "Reduces damage from physical attacks by half.",
+      "machine": "tm33"
     },
     {
       "id": "rest",
@@ -25313,7 +30213,8 @@
       "accuracy": null,
       "pp": 5,
       "priority": 0,
-      "shortEffect": "User sleeps for two turns, completely healing itself."
+      "shortEffect": "User sleeps for two turns, completely healing itself.",
+      "machine": "tm44"
     },
     {
       "id": "roar",
@@ -25324,7 +30225,8 @@
       "accuracy": 100,
       "pp": 20,
       "priority": -6,
-      "shortEffect": "Immediately ends wild battles. Forces trainers to switch Pokémon."
+      "shortEffect": "Immediately ends wild battles. Forces trainers to switch Pokémon.",
+      "machine": null
     },
     {
       "id": "rock-slide",
@@ -25335,7 +30237,8 @@
       "accuracy": 90,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Has a chance to make the target flinch."
+      "shortEffect": "Has a chance to make the target flinch.",
+      "machine": "tm48"
     },
     {
       "id": "rock-throw",
@@ -25346,7 +30249,8 @@
       "accuracy": 65,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Inflicts regular damage with no additional effect."
+      "shortEffect": "Inflicts regular damage with no additional effect.",
+      "machine": null
     },
     {
       "id": "rolling-kick",
@@ -25357,7 +30261,8 @@
       "accuracy": 85,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Has a chance to make the target flinch."
+      "shortEffect": "Has a chance to make the target flinch.",
+      "machine": null
     },
     {
       "id": "sand-attack",
@@ -25368,7 +30273,8 @@
       "accuracy": 100,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Lowers the target’s accuracy by one stage."
+      "shortEffect": "Lowers the target’s accuracy by one stage.",
+      "machine": null
     },
     {
       "id": "scratch",
@@ -25379,7 +30285,8 @@
       "accuracy": 100,
       "pp": 35,
       "priority": 0,
-      "shortEffect": "Inflicts regular damage with no additional effect."
+      "shortEffect": "Inflicts regular damage with no additional effect.",
+      "machine": null
     },
     {
       "id": "screech",
@@ -25390,7 +30297,8 @@
       "accuracy": 85,
       "pp": 40,
       "priority": 0,
-      "shortEffect": "Lowers the target’s Defense by two stages."
+      "shortEffect": "Lowers the target’s Defense by two stages.",
+      "machine": null
     },
     {
       "id": "seismic-toss",
@@ -25401,7 +30309,8 @@
       "accuracy": 100,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Inflicts damage equal to the user’s level."
+      "shortEffect": "Inflicts damage equal to the user’s level.",
+      "machine": "tm19"
     },
     {
       "id": "self-destruct",
@@ -25412,7 +30321,8 @@
       "accuracy": 100,
       "pp": 5,
       "priority": 0,
-      "shortEffect": "User faints."
+      "shortEffect": "User faints.",
+      "machine": "tm36"
     },
     {
       "id": "sharpen",
@@ -25423,7 +30333,8 @@
       "accuracy": null,
       "pp": 30,
       "priority": 0,
-      "shortEffect": "Raises the user’s Attack by one stage."
+      "shortEffect": "Raises the user’s Attack by one stage.",
+      "machine": null
     },
     {
       "id": "sing",
@@ -25434,7 +30345,8 @@
       "accuracy": 55,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Puts the target to sleep."
+      "shortEffect": "Puts the target to sleep.",
+      "machine": null
     },
     {
       "id": "skull-bash",
@@ -25445,7 +30357,8 @@
       "accuracy": 100,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Raises the user’s Defense by one stage. User charges for one turn before attacking."
+      "shortEffect": "Raises the user’s Defense by one stage. User charges for one turn before attacking.",
+      "machine": "tm40"
     },
     {
       "id": "sky-attack",
@@ -25456,7 +30369,8 @@
       "accuracy": 90,
       "pp": 5,
       "priority": 0,
-      "shortEffect": "User charges for one turn before attacking. Has a chance to make the target flinch."
+      "shortEffect": "User charges for one turn before attacking. Has a chance to make the target flinch.",
+      "machine": "tm43"
     },
     {
       "id": "slam",
@@ -25467,7 +30381,8 @@
       "accuracy": 75,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Inflicts regular damage with no additional effect."
+      "shortEffect": "Inflicts regular damage with no additional effect.",
+      "machine": null
     },
     {
       "id": "slash",
@@ -25478,7 +30393,8 @@
       "accuracy": 100,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Has an increased chance for a critical hit."
+      "shortEffect": "Has an increased chance for a critical hit.",
+      "machine": null
     },
     {
       "id": "sleep-powder",
@@ -25489,7 +30405,8 @@
       "accuracy": 75,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Puts the target to sleep."
+      "shortEffect": "Puts the target to sleep.",
+      "machine": null
     },
     {
       "id": "sludge",
@@ -25500,7 +30417,8 @@
       "accuracy": 100,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Has a chance to poison the target."
+      "shortEffect": "Has a chance to poison the target.",
+      "machine": null
     },
     {
       "id": "smog",
@@ -25511,7 +30429,8 @@
       "accuracy": 70,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Has a chance to poison the target."
+      "shortEffect": "Has a chance to poison the target.",
+      "machine": null
     },
     {
       "id": "smokescreen",
@@ -25522,7 +30441,8 @@
       "accuracy": 100,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Lowers the target’s accuracy by one stage."
+      "shortEffect": "Lowers the target’s accuracy by one stage.",
+      "machine": null
     },
     {
       "id": "soft-boiled",
@@ -25533,7 +30453,8 @@
       "accuracy": null,
       "pp": 5,
       "priority": 0,
-      "shortEffect": "Heals the user by half its max HP."
+      "shortEffect": "Heals the user by half its max HP.",
+      "machine": "tm41"
     },
     {
       "id": "solar-beam",
@@ -25544,7 +30465,8 @@
       "accuracy": 100,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Requires a turn to charge before attacking."
+      "shortEffect": "Requires a turn to charge before attacking.",
+      "machine": "tm22"
     },
     {
       "id": "sonic-boom",
@@ -25555,7 +30477,8 @@
       "accuracy": 90,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Inflicts 20 points of damage."
+      "shortEffect": "Inflicts 20 points of damage.",
+      "machine": null
     },
     {
       "id": "spike-cannon",
@@ -25566,7 +30489,8 @@
       "accuracy": 100,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Hits 2-5 times in one turn."
+      "shortEffect": "Hits 2-5 times in one turn.",
+      "machine": null
     },
     {
       "id": "splash",
@@ -25577,7 +30501,8 @@
       "accuracy": null,
       "pp": 40,
       "priority": 0,
-      "shortEffect": "Does nothing."
+      "shortEffect": "Does nothing.",
+      "machine": null
     },
     {
       "id": "spore",
@@ -25588,7 +30513,8 @@
       "accuracy": 100,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Puts the target to sleep."
+      "shortEffect": "Puts the target to sleep.",
+      "machine": null
     },
     {
       "id": "stomp",
@@ -25599,7 +30525,8 @@
       "accuracy": 100,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Has a chance to make the target flinch."
+      "shortEffect": "Has a chance to make the target flinch.",
+      "machine": null
     },
     {
       "id": "strength",
@@ -25610,7 +30537,8 @@
       "accuracy": 100,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Inflicts regular damage with no additional effect."
+      "shortEffect": "Inflicts regular damage with no additional effect.",
+      "machine": "hm04"
     },
     {
       "id": "string-shot",
@@ -25621,7 +30549,8 @@
       "accuracy": 95,
       "pp": 40,
       "priority": 0,
-      "shortEffect": "Lowers the target’s Speed by two stages."
+      "shortEffect": "Lowers the target’s Speed by two stages.",
+      "machine": null
     },
     {
       "id": "stun-spore",
@@ -25632,7 +30561,8 @@
       "accuracy": 75,
       "pp": 30,
       "priority": 0,
-      "shortEffect": "Paralyzes the target."
+      "shortEffect": "Paralyzes the target.",
+      "machine": null
     },
     {
       "id": "submission",
@@ -25643,7 +30573,8 @@
       "accuracy": 80,
       "pp": 25,
       "priority": 0,
-      "shortEffect": "User receives 1/4 the damage it inflicts in recoil."
+      "shortEffect": "User receives 1/4 the damage it inflicts in recoil.",
+      "machine": "tm17"
     },
     {
       "id": "substitute",
@@ -25654,7 +30585,8 @@
       "accuracy": null,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Transfers 1/4 of the user’s max HP into a doll, protecting the user from further damage or status changes until it breaks."
+      "shortEffect": "Transfers 1/4 of the user’s max HP into a doll, protecting the user from further damage or status changes until it breaks.",
+      "machine": "tm50"
     },
     {
       "id": "super-fang",
@@ -25665,7 +30597,8 @@
       "accuracy": 90,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Inflicts damage equal to half the target’s HP."
+      "shortEffect": "Inflicts damage equal to half the target’s HP.",
+      "machine": null
     },
     {
       "id": "supersonic",
@@ -25676,7 +30609,8 @@
       "accuracy": 55,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Confuses the target."
+      "shortEffect": "Confuses the target.",
+      "machine": null
     },
     {
       "id": "surf",
@@ -25687,7 +30621,8 @@
       "accuracy": 100,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Inflicts regular damage and can hit Dive users."
+      "shortEffect": "Inflicts regular damage and can hit Dive users.",
+      "machine": "hm03"
     },
     {
       "id": "swift",
@@ -25698,7 +30633,8 @@
       "accuracy": null,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Never misses."
+      "shortEffect": "Never misses.",
+      "machine": "tm39"
     },
     {
       "id": "swords-dance",
@@ -25709,7 +30645,8 @@
       "accuracy": null,
       "pp": 30,
       "priority": 0,
-      "shortEffect": "Raises the user’s Attack by two stages."
+      "shortEffect": "Raises the user’s Attack by two stages.",
+      "machine": "tm03"
     },
     {
       "id": "tackle",
@@ -25720,7 +30657,8 @@
       "accuracy": 95,
       "pp": 35,
       "priority": 0,
-      "shortEffect": "Inflicts regular damage with no additional effect."
+      "shortEffect": "Inflicts regular damage with no additional effect.",
+      "machine": null
     },
     {
       "id": "tail-whip",
@@ -25731,7 +30669,8 @@
       "accuracy": 100,
       "pp": 30,
       "priority": 0,
-      "shortEffect": "Lowers the target’s Defense by one stage."
+      "shortEffect": "Lowers the target’s Defense by one stage.",
+      "machine": null
     },
     {
       "id": "take-down",
@@ -25742,7 +30681,8 @@
       "accuracy": 85,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "User receives 1/4 the damage it inflicts in recoil."
+      "shortEffect": "User receives 1/4 the damage it inflicts in recoil.",
+      "machine": "tm09"
     },
     {
       "id": "teleport",
@@ -25753,7 +30693,8 @@
       "accuracy": null,
       "pp": 20,
       "priority": -6,
-      "shortEffect": "Immediately ends wild battles. No effect otherwise."
+      "shortEffect": "Immediately ends wild battles. No effect otherwise.",
+      "machine": "tm30"
     },
     {
       "id": "thrash",
@@ -25764,7 +30705,8 @@
       "accuracy": 100,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Hits every turn for 2-3 turns, then confuses the user."
+      "shortEffect": "Hits every turn for 2-3 turns, then confuses the user.",
+      "machine": null
     },
     {
       "id": "thunder",
@@ -25775,7 +30717,8 @@
       "accuracy": 70,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Has a chance to paralyze the target."
+      "shortEffect": "Has a chance to paralyze the target.",
+      "machine": "tm25"
     },
     {
       "id": "thunder-punch",
@@ -25786,7 +30729,8 @@
       "accuracy": 100,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Has a chance to paralyze the target."
+      "shortEffect": "Has a chance to paralyze the target.",
+      "machine": null
     },
     {
       "id": "thunder-shock",
@@ -25797,7 +30741,8 @@
       "accuracy": 100,
       "pp": 30,
       "priority": 0,
-      "shortEffect": "Has a chance to paralyze the target."
+      "shortEffect": "Has a chance to paralyze the target.",
+      "machine": null
     },
     {
       "id": "thunder-wave",
@@ -25808,7 +30753,8 @@
       "accuracy": 100,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Paralyzes the target."
+      "shortEffect": "Paralyzes the target.",
+      "machine": "tm45"
     },
     {
       "id": "thunderbolt",
@@ -25819,7 +30765,8 @@
       "accuracy": 100,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Has a chance to paralyze the target."
+      "shortEffect": "Has a chance to paralyze the target.",
+      "machine": "tm24"
     },
     {
       "id": "toxic",
@@ -25830,7 +30777,8 @@
       "accuracy": 85,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Badly poisons the target, inflicting more damage every turn."
+      "shortEffect": "Badly poisons the target, inflicting more damage every turn.",
+      "machine": "tm06"
     },
     {
       "id": "transform",
@@ -25841,7 +30789,8 @@
       "accuracy": null,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "User becomes a copy of the target until it leaves battle."
+      "shortEffect": "User becomes a copy of the target until it leaves battle.",
+      "machine": null
     },
     {
       "id": "tri-attack",
@@ -25852,7 +30801,8 @@
       "accuracy": 100,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Has a chance to burn, freeze, or paralyze the target."
+      "shortEffect": "Has a chance to burn, freeze, or paralyze the target.",
+      "machine": "tm49"
     },
     {
       "id": "twineedle",
@@ -25863,7 +30813,8 @@
       "accuracy": 100,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Hits twice in the same turn. Has a chance to poison the target."
+      "shortEffect": "Hits twice in the same turn. Has a chance to poison the target.",
+      "machine": null
     },
     {
       "id": "vice-grip",
@@ -25874,7 +30825,8 @@
       "accuracy": 100,
       "pp": 30,
       "priority": 0,
-      "shortEffect": "Inflicts regular damage with no additional effect."
+      "shortEffect": "Inflicts regular damage with no additional effect.",
+      "machine": null
     },
     {
       "id": "vine-whip",
@@ -25885,7 +30837,8 @@
       "accuracy": 100,
       "pp": 10,
       "priority": 0,
-      "shortEffect": "Inflicts regular damage with no additional effect."
+      "shortEffect": "Inflicts regular damage with no additional effect.",
+      "machine": null
     },
     {
       "id": "water-gun",
@@ -25896,7 +30849,8 @@
       "accuracy": 100,
       "pp": 25,
       "priority": 0,
-      "shortEffect": "Inflicts regular damage with no additional effect."
+      "shortEffect": "Inflicts regular damage with no additional effect.",
+      "machine": "tm12"
     },
     {
       "id": "waterfall",
@@ -25907,7 +30861,8 @@
       "accuracy": 100,
       "pp": 15,
       "priority": 0,
-      "shortEffect": "Has a chance to make the target flinch."
+      "shortEffect": "Has a chance to make the target flinch.",
+      "machine": null
     },
     {
       "id": "whirlwind",
@@ -25918,7 +30873,8 @@
       "accuracy": 85,
       "pp": 20,
       "priority": -6,
-      "shortEffect": "Immediately ends wild battles. Forces trainers to switch Pokémon."
+      "shortEffect": "Immediately ends wild battles. Forces trainers to switch Pokémon.",
+      "machine": "tm04"
     },
     {
       "id": "wing-attack",
@@ -25929,7 +30885,8 @@
       "accuracy": 100,
       "pp": 35,
       "priority": 0,
-      "shortEffect": "Inflicts regular damage with no additional effect."
+      "shortEffect": "Inflicts regular damage with no additional effect.",
+      "machine": null
     },
     {
       "id": "withdraw",
@@ -25940,7 +30897,8 @@
       "accuracy": null,
       "pp": 40,
       "priority": 0,
-      "shortEffect": "Raises the user’s Defense by one stage."
+      "shortEffect": "Raises the user’s Defense by one stage.",
+      "machine": null
     },
     {
       "id": "wrap",
@@ -25951,18 +30909,19 @@
       "accuracy": 85,
       "pp": 20,
       "priority": 0,
-      "shortEffect": "Prevents the target from fleeing and inflicts damage for 2-5 turns."
+      "shortEffect": "Prevents the target from fleeing and inflicts damage for 2-5 turns.",
+      "machine": null
     }
   ],
-  "contentDigest": "sha256:2519b032b670a88e08f4d8b1be6a30ec3e8e29f06837a50f18d4f11478881e68",
+  "contentDigest": "sha256:dd55ccbf5375efb987a9f3857cd749a790a997d73513eb747df8225a5026eac9",
   "source": {
     "repository": "https://github.com/PokeAPI/api-data",
     "commit": "eed7925e3158c9f744816768d3cc3395e290127f",
     "license": "BSD-3-Clause",
     "licenseFile": "data/LICENSE.pokeapi",
     "notice": "Data derived from the PokeAPI project (BSD-3-Clause). PokeAPI is community-maintained and is this project's designated data source; it is not an official Pokémon authority. No artwork or sprites are included.",
-    "documentCount": 522,
-    "documentsDigest": "sha256:d6a85a2eaf758045bda57670d43a177551eeef7cfcb1e529eaeb01fd3e12a4bd",
+    "documentCount": 806,
+    "documentsDigest": "sha256:0c96129360daa3201ec9fa498937b7d4c8045575393c69d1685e2e6dc91cfe79",
     "caveats": [
       "Types are pinned to this version group via upstream `past_types`.",
       "The type chart is pinned to this generation via upstream `past_damage_relations`, era quirks preserved (e.g. Ghost dealing no damage to Psychic in generation I). It is vendored as a complete matrix; upstream's sparse relations are expanded so that a missing cell can never read as neutral.",
@@ -25970,7 +30929,10 @@
       "Move power, accuracy, PP and type are pinned via upstream `past_values`.",
       "Base stats are NOT version-pinned: upstream publishes present-day values only, and several species were re-statted in later generations. Claims over stats are certified against this snapshot, not against the original cartridge.",
       "Move effect text is present-day upstream wording; it is not version-pinned.",
-      "Species absent from this Pokédex are not certified by this snapshot and cannot be asserted from it."
+      "Species absent from this Pokédex are not certified by this snapshot and cannot be asserted from it.",
+      "Evolution chains are NOT version-pinned upstream: edges are restricted at build time to species this snapshot certifies (excluding later relatives such as Pichu, Espeon and Crobat), but triggers and items are present-day upstream data.",
+      "Encounters are presence-only, per cartridge (red, blue), filtered from upstream version details. Rates and level ranges are deliberately not vendored.",
+      "TM/HM assignments are pinned to this version group via upstream machine records."
     ]
   }
 }

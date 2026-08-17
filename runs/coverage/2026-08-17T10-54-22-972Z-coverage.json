@@ -1,0 +1,2074 @@
+{
+  "schemaVersion": 1,
+  "label": "coverage",
+  "startedAt": "2026-08-17T10:54:22.972Z",
+  "world": {
+    "snapshotId": "kanto-red-blue",
+    "snapshotDigest": "sha256:dd55ccbf5375efb987a9f3857cd749a790a997d73513eb747df8225a5026eac9",
+    "sourceCommit": "eed7925e3158c9f744816768d3cc3395e290127f",
+    "packId": "indigo-accord-v1"
+  },
+  "bankId": "indigo-playability-v1",
+  "model": {
+    "id": "coverage:google/gemini-3.5-flash-lite",
+    "slug": "google/gemini-3.5-flash-lite"
+  },
+  "structuredOutput": true,
+  "repetitions": 1,
+  "stoppedEarly": false,
+  "runs": [
+    {
+      "entryId": "data-evolve-pikachu",
+      "disposition": "answerable",
+      "opening": "What does Pikachu evolve into?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "answered, as it should be"
+      },
+      "turns": 2,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "data-evolve-pikachu",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:22.993Z",
+            "source": "trainer",
+            "text": "What does Pikachu evolve into?"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:54:23.981Z",
+            "source": "advisor",
+            "dimension": "version",
+            "text": "Which game version are you playing — Red/Blue, or Yellow?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:23.982Z",
+            "source": "trainer",
+            "text": "red-blue"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:54:23.984Z",
+            "source": "advisor",
+            "dimension": "region",
+            "text": "Which region are you playing through?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:23.985Z",
+            "source": "trainer",
+            "text": "kanto"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:54:23.987Z",
+            "source": "advisor",
+            "dimension": "badgeLevel",
+            "text": "How many gym badges do you hold?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:23.988Z",
+            "source": "trainer",
+            "text": "8"
+          }
+        ],
+        "turns": 2,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 3992,
+          "completionTokens": 64,
+          "calls": 2,
+          "costedCalls": 2,
+          "costUsd": 0.0013576
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-17T10:54:23.990Z",
+          "committedAt": "2026-08-17T10:54:25.547Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:22.993Z",
+              "source": "trainer",
+              "text": "What does Pikachu evolve into?"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:54:23.981Z",
+              "source": "advisor",
+              "dimension": "version",
+              "text": "Which game version are you playing — Red/Blue, or Yellow?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:23.982Z",
+              "source": "trainer",
+              "text": "red-blue"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:54:23.984Z",
+              "source": "advisor",
+              "dimension": "region",
+              "text": "Which region are you playing through?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:23.985Z",
+              "source": "trainer",
+              "text": "kanto"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:54:23.987Z",
+              "source": "advisor",
+              "dimension": "badgeLevel",
+              "text": "How many gym badges do you hold?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:23.988Z",
+              "source": "trainer",
+              "text": "8"
+            }
+          ],
+          "derivation": {
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 2,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "kanto"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "8"
+              }
+            ],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "what does pikachu evolve into"
+            ]
+          },
+          "grant": {
+            "id": "grant-7d3d21f8efc7",
+            "packId": "indigo-accord-v1",
+            "scope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            },
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 2,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "kanto"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "8"
+              }
+            ],
+            "evidenceDigest": "sha256:7d3d21f8efc725bd9d41fba5fbec2f549476cfa4873df0d00e53f4b805abd5d0",
+            "issuedAt": "2026-08-17T10:54:23.990Z",
+            "expiresAt": "2026-08-18T10:54:23.990Z"
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "scopeGrantId": "grant-7d3d21f8efc7",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "fact",
+                "entityId": "pikachu",
+                "factId": "evolves-to",
+                "asserted": {
+                  "kind": "list",
+                  "value": [
+                    "raichu"
+                  ]
+                }
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "scope",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            },
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        },
+        "grantScope": {
+          "version": "red-blue",
+          "region": "kanto",
+          "badgeLevel": 8
+        }
+      }
+    },
+    {
+      "entryId": "data-evolve-level-charmander",
+      "disposition": "answerable",
+      "opening": "At what level does Charmander evolve?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "answered, as it should be"
+      },
+      "turns": 3,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "data-evolve-level-charmander",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:25.551Z",
+            "source": "trainer",
+            "text": "At what level does Charmander evolve?"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-17T10:54:25.553Z",
+            "id": "prop-session-1",
+            "candidate": {
+              "region": "kanto"
+            },
+            "interpreting": "Charmander"
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-17T10:54:26.305Z",
+            "source": "trainer",
+            "proposalId": "prop-session-1",
+            "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+            "decision": "confirm"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:54:27.415Z",
+            "source": "advisor",
+            "dimension": "version",
+            "text": "Which game version are you playing — Red/Blue, or Yellow?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:27.416Z",
+            "source": "trainer",
+            "text": "red-blue"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:54:27.418Z",
+            "source": "advisor",
+            "dimension": "badgeLevel",
+            "text": "How many gym badges do you hold?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:27.419Z",
+            "source": "trainer",
+            "text": "8"
+          }
+        ],
+        "turns": 3,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 1404,
+          "completionTokens": 90,
+          "calls": 3,
+          "costedCalls": 3,
+          "costUsd": 0.0006462
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-17T10:54:27.421Z",
+          "committedAt": "2026-08-17T10:54:28.254Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:25.551Z",
+              "source": "trainer",
+              "text": "At what level does Charmander evolve?"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-17T10:54:25.553Z",
+              "id": "prop-session-1",
+              "candidate": {
+                "region": "kanto"
+              },
+              "interpreting": "Charmander"
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-17T10:54:26.305Z",
+              "source": "trainer",
+              "proposalId": "prop-session-1",
+              "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+              "decision": "confirm"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:54:27.415Z",
+              "source": "advisor",
+              "dimension": "version",
+              "text": "Which game version are you playing — Red/Blue, or Yellow?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:27.416Z",
+              "source": "trainer",
+              "text": "red-blue"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:54:27.418Z",
+              "source": "advisor",
+              "dimension": "badgeLevel",
+              "text": "How many gym badges do you hold?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:27.419Z",
+              "source": "trainer",
+              "text": "8"
+            }
+          ],
+          "derivation": {
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "Charmander"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "8"
+              }
+            ],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "at what level does charmander evolve"
+            ]
+          },
+          "grant": {
+            "id": "grant-331ef50de60c",
+            "packId": "indigo-accord-v1",
+            "scope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            },
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "Charmander"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "8"
+              }
+            ],
+            "evidenceDigest": "sha256:331ef50de60c0e25d46f20f389d1f152ab8c1650c2bc6dca08c81ffadda56dc2",
+            "issuedAt": "2026-08-17T10:54:27.421Z",
+            "expiresAt": "2026-08-18T10:54:27.421Z"
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "scopeGrantId": "grant-331ef50de60c",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "fact",
+                "entityId": "charmander",
+                "factId": "evolution-methods",
+                "asserted": {
+                  "kind": "list",
+                  "value": [
+                    "charmeleon via level 16"
+                  ]
+                }
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "scope",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            },
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        },
+        "grantScope": {
+          "version": "red-blue",
+          "region": "kanto",
+          "badgeLevel": 8
+        }
+      }
+    },
+    {
+      "entryId": "data-catch-abra",
+      "disposition": "answerable",
+      "opening": "Where do I catch Abra?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "answered, as it should be"
+      },
+      "turns": 3,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "data-catch-abra",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:28.256Z",
+            "source": "trainer",
+            "text": "Where do I catch Abra?"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-17T10:54:28.258Z",
+            "id": "prop-session-1",
+            "candidate": {
+              "region": "kanto"
+            },
+            "interpreting": "Where do I catch Abra?"
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-17T10:54:29.112Z",
+            "source": "trainer",
+            "proposalId": "prop-session-1",
+            "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+            "decision": "confirm"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:54:30.081Z",
+            "source": "advisor",
+            "dimension": "version",
+            "text": "Which game version are you playing — Red/Blue, or Yellow?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:30.082Z",
+            "source": "trainer",
+            "text": "red-blue"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:54:30.084Z",
+            "source": "advisor",
+            "dimension": "badgeLevel",
+            "text": "How many gym badges do you hold?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:30.085Z",
+            "source": "trainer",
+            "text": "8"
+          }
+        ],
+        "turns": 3,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 1396,
+          "completionTokens": 89,
+          "calls": 3,
+          "costedCalls": 3,
+          "costUsd": 0.0006413
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-17T10:54:30.087Z",
+          "committedAt": "2026-08-17T10:54:31.046Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:28.256Z",
+              "source": "trainer",
+              "text": "Where do I catch Abra?"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-17T10:54:28.258Z",
+              "id": "prop-session-1",
+              "candidate": {
+                "region": "kanto"
+              },
+              "interpreting": "Where do I catch Abra?"
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-17T10:54:29.112Z",
+              "source": "trainer",
+              "proposalId": "prop-session-1",
+              "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+              "decision": "confirm"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:54:30.081Z",
+              "source": "advisor",
+              "dimension": "version",
+              "text": "Which game version are you playing — Red/Blue, or Yellow?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:30.082Z",
+              "source": "trainer",
+              "text": "red-blue"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:54:30.084Z",
+              "source": "advisor",
+              "dimension": "badgeLevel",
+              "text": "How many gym badges do you hold?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:30.085Z",
+              "source": "trainer",
+              "text": "8"
+            }
+          ],
+          "derivation": {
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "Where do I catch Abra?"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "8"
+              }
+            ],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "where do i catch abra"
+            ]
+          },
+          "grant": {
+            "id": "grant-5695c21be909",
+            "packId": "indigo-accord-v1",
+            "scope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            },
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "Where do I catch Abra?"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "8"
+              }
+            ],
+            "evidenceDigest": "sha256:5695c21be9093c348988072b501bdf67bd0c98ecdebcdd6941cc775edea01173",
+            "issuedAt": "2026-08-17T10:54:30.087Z",
+            "expiresAt": "2026-08-18T10:54:30.087Z"
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "scopeGrantId": "grant-5695c21be909",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "fact",
+                "entityId": "abra",
+                "factId": "locations",
+                "asserted": {
+                  "kind": "list",
+                  "value": [
+                    "celadon-city-prize-corner",
+                    "kanto-route-24-area",
+                    "kanto-route-25-area"
+                  ]
+                }
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "scope",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            },
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        },
+        "grantScope": {
+          "version": "red-blue",
+          "region": "kanto",
+          "badgeLevel": 8
+        }
+      }
+    },
+    {
+      "entryId": "data-route-pikachu",
+      "disposition": "answerable",
+      "opening": "Which route has wild Pikachu?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "answered, as it should be"
+      },
+      "turns": 4,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "data-route-pikachu",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:31.048Z",
+            "source": "trainer",
+            "text": "Which route has wild Pikachu?"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-17T10:54:31.050Z",
+            "id": "prop-session-1",
+            "candidate": {
+              "version": "yellow"
+            },
+            "interpreting": "Pikachu"
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-17T10:54:32.152Z",
+            "source": "trainer",
+            "proposalId": "prop-session-1",
+            "candidateDigest": "sha256:904a8e26571211cddfb33ae334d8ead711aead4ae4a83e44372f67f7868f5715",
+            "decision": "reject"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-17T10:54:32.154Z",
+            "id": "prop-session-3",
+            "candidate": {
+              "version": "yellow"
+            },
+            "interpreting": "Which route has wild Pikachu?"
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-17T10:54:32.993Z",
+            "source": "trainer",
+            "proposalId": "prop-session-3",
+            "candidateDigest": "sha256:702f6de0e38bf5800b4527747882254f8ff0bb8d7ab1c056e3177e388c22ccf6",
+            "decision": "reject"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-17T10:54:32.995Z",
+            "id": "prop-session-5",
+            "candidate": {
+              "version": "yellow"
+            },
+            "interpreting": "Which route has wild Pikachu?"
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-17T10:54:33.726Z",
+            "source": "trainer",
+            "proposalId": "prop-session-5",
+            "candidateDigest": "sha256:8e8cd1d96a16815505bb904dc8b405fc354f095347539061f7659e34e79ff84d",
+            "decision": "reject"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:54:33.728Z",
+            "source": "advisor",
+            "dimension": "version",
+            "text": "Which game version are you playing — Red/Blue, or Yellow?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:33.729Z",
+            "source": "trainer",
+            "text": "red-blue"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:54:33.731Z",
+            "source": "advisor",
+            "dimension": "region",
+            "text": "Which region are you playing through?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:33.732Z",
+            "source": "trainer",
+            "text": "kanto"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:54:33.734Z",
+            "source": "advisor",
+            "dimension": "badgeLevel",
+            "text": "How many gym badges do you hold?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:33.735Z",
+            "source": "trainer",
+            "text": "8"
+          }
+        ],
+        "turns": 4,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 1631,
+          "completionTokens": 136,
+          "calls": 4,
+          "costedCalls": 4,
+          "costUsd": 0.0008293
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-17T10:54:33.737Z",
+          "committedAt": "2026-08-17T10:54:34.654Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:31.048Z",
+              "source": "trainer",
+              "text": "Which route has wild Pikachu?"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-17T10:54:31.050Z",
+              "id": "prop-session-1",
+              "candidate": {
+                "version": "yellow"
+              },
+              "interpreting": "Pikachu"
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-17T10:54:32.152Z",
+              "source": "trainer",
+              "proposalId": "prop-session-1",
+              "candidateDigest": "sha256:904a8e26571211cddfb33ae334d8ead711aead4ae4a83e44372f67f7868f5715",
+              "decision": "reject"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-17T10:54:32.154Z",
+              "id": "prop-session-3",
+              "candidate": {
+                "version": "yellow"
+              },
+              "interpreting": "Which route has wild Pikachu?"
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-17T10:54:32.993Z",
+              "source": "trainer",
+              "proposalId": "prop-session-3",
+              "candidateDigest": "sha256:702f6de0e38bf5800b4527747882254f8ff0bb8d7ab1c056e3177e388c22ccf6",
+              "decision": "reject"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-17T10:54:32.995Z",
+              "id": "prop-session-5",
+              "candidate": {
+                "version": "yellow"
+              },
+              "interpreting": "Which route has wild Pikachu?"
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-17T10:54:33.726Z",
+              "source": "trainer",
+              "proposalId": "prop-session-5",
+              "candidateDigest": "sha256:8e8cd1d96a16815505bb904dc8b405fc354f095347539061f7659e34e79ff84d",
+              "decision": "reject"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:54:33.728Z",
+              "source": "advisor",
+              "dimension": "version",
+              "text": "Which game version are you playing — Red/Blue, or Yellow?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:33.729Z",
+              "source": "trainer",
+              "text": "red-blue"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:54:33.731Z",
+              "source": "advisor",
+              "dimension": "region",
+              "text": "Which region are you playing through?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:33.732Z",
+              "source": "trainer",
+              "text": "kanto"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:54:33.734Z",
+              "source": "advisor",
+              "dimension": "badgeLevel",
+              "text": "How many gym badges do you hold?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:33.735Z",
+              "source": "trainer",
+              "text": "8"
+            }
+          ],
+          "derivation": {
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 8,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 10,
+                "route": "answer",
+                "matchedText": "kanto"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 12,
+                "route": "answer",
+                "matchedText": "8"
+              }
+            ],
+            "contradicted": [],
+            "ignored": [
+              {
+                "dimension": "version",
+                "value": "yellow",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "Pikachu",
+                "blockedBy": "rejected"
+              },
+              {
+                "dimension": "version",
+                "value": "yellow",
+                "evidenceIndex": 4,
+                "route": "confirmed",
+                "matchedText": "Which route has wild Pikachu?",
+                "blockedBy": "rejected"
+              },
+              {
+                "dimension": "version",
+                "value": "yellow",
+                "evidenceIndex": 6,
+                "route": "confirmed",
+                "matchedText": "Which route has wild Pikachu?",
+                "blockedBy": "rejected"
+              }
+            ],
+            "unmatched": [
+              "which route has wild pikachu"
+            ]
+          },
+          "grant": {
+            "id": "grant-a26caaf9242c",
+            "packId": "indigo-accord-v1",
+            "scope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            },
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 8,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 10,
+                "route": "answer",
+                "matchedText": "kanto"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 12,
+                "route": "answer",
+                "matchedText": "8"
+              }
+            ],
+            "evidenceDigest": "sha256:a26caaf9242c55c60a9e66ff38c0131caa2b73bdb8b8cfdd48c898ae0967b092",
+            "issuedAt": "2026-08-17T10:54:33.737Z",
+            "expiresAt": "2026-08-18T10:54:33.737Z"
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "scopeGrantId": "grant-a26caaf9242c",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "fact",
+                "entityId": "pikachu",
+                "factId": "locations",
+                "asserted": {
+                  "kind": "list",
+                  "value": [
+                    "kanto-power-plant-area",
+                    "viridian-forest-area"
+                  ]
+                }
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "scope",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            },
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        },
+        "grantScope": {
+          "version": "red-blue",
+          "region": "kanto",
+          "badgeLevel": 8
+        }
+      }
+    },
+    {
+      "entryId": "data-tm-surf",
+      "disposition": "answerable",
+      "opening": "Which TM teaches Surf?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "answered, as it should be"
+      },
+      "turns": 2,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "data-tm-surf",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:34.656Z",
+            "source": "trainer",
+            "text": "Which TM teaches Surf?"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:54:35.564Z",
+            "source": "advisor",
+            "dimension": "version",
+            "text": "Which game version are you playing — Red/Blue, or Yellow?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:35.565Z",
+            "source": "trainer",
+            "text": "red-blue"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:54:35.567Z",
+            "source": "advisor",
+            "dimension": "region",
+            "text": "Which region are you playing through?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:35.568Z",
+            "source": "trainer",
+            "text": "kanto"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:54:35.570Z",
+            "source": "advisor",
+            "dimension": "badgeLevel",
+            "text": "How many gym badges do you hold?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:35.571Z",
+            "source": "trainer",
+            "text": "8"
+          }
+        ],
+        "turns": 2,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 3992,
+          "completionTokens": 72,
+          "calls": 2,
+          "costedCalls": 2,
+          "costUsd": 0.0013775999999999999
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-17T10:54:35.573Z",
+          "committedAt": "2026-08-17T10:54:36.919Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:34.656Z",
+              "source": "trainer",
+              "text": "Which TM teaches Surf?"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:54:35.564Z",
+              "source": "advisor",
+              "dimension": "version",
+              "text": "Which game version are you playing — Red/Blue, or Yellow?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:35.565Z",
+              "source": "trainer",
+              "text": "red-blue"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:54:35.567Z",
+              "source": "advisor",
+              "dimension": "region",
+              "text": "Which region are you playing through?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:35.568Z",
+              "source": "trainer",
+              "text": "kanto"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:54:35.570Z",
+              "source": "advisor",
+              "dimension": "badgeLevel",
+              "text": "How many gym badges do you hold?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:35.571Z",
+              "source": "trainer",
+              "text": "8"
+            }
+          ],
+          "derivation": {
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 2,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "kanto"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "8"
+              }
+            ],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "which tm teaches surf"
+            ]
+          },
+          "grant": {
+            "id": "grant-2aa1c3943b9a",
+            "packId": "indigo-accord-v1",
+            "scope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            },
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 2,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "kanto"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "8"
+              }
+            ],
+            "evidenceDigest": "sha256:2aa1c3943b9a180d605cee54fd0f79b440c9b9bc884751edfa8d96ae90f1106c",
+            "issuedAt": "2026-08-17T10:54:35.573Z",
+            "expiresAt": "2026-08-18T10:54:35.573Z"
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "scopeGrantId": "grant-2aa1c3943b9a",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "fact",
+                "entityId": "surf",
+                "factId": "machine",
+                "asserted": {
+                  "kind": "text",
+                  "value": "hm03"
+                }
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "scope",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            },
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        },
+        "grantScope": {
+          "version": "red-blue",
+          "region": "kanto",
+          "badgeLevel": 8
+        }
+      }
+    },
+    {
+      "entryId": "data-move-tm-number",
+      "disposition": "answerable",
+      "opening": "What TM number is Thunderbolt?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "answered, as it should be"
+      },
+      "turns": 3,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "data-move-tm-number",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:36.921Z",
+            "source": "trainer",
+            "text": "What TM number is Thunderbolt?"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-17T10:54:36.923Z",
+            "id": "prop-session-1",
+            "candidate": {
+              "region": "kanto"
+            },
+            "interpreting": "What TM number is Thunderbolt?"
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-17T10:54:37.661Z",
+            "source": "trainer",
+            "proposalId": "prop-session-1",
+            "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+            "decision": "confirm"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:54:38.662Z",
+            "source": "advisor",
+            "dimension": "version",
+            "text": "Which game version are you playing — Red/Blue, or Yellow?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:38.663Z",
+            "source": "trainer",
+            "text": "red-blue"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:54:38.665Z",
+            "source": "advisor",
+            "dimension": "badgeLevel",
+            "text": "How many gym badges do you hold?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:38.666Z",
+            "source": "trainer",
+            "text": "8"
+          }
+        ],
+        "turns": 3,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 1398,
+          "completionTokens": 95,
+          "calls": 3,
+          "costedCalls": 3,
+          "costUsd": 0.0006569
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-17T10:54:38.668Z",
+          "committedAt": "2026-08-17T10:54:39.521Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:36.921Z",
+              "source": "trainer",
+              "text": "What TM number is Thunderbolt?"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-17T10:54:36.923Z",
+              "id": "prop-session-1",
+              "candidate": {
+                "region": "kanto"
+              },
+              "interpreting": "What TM number is Thunderbolt?"
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-17T10:54:37.661Z",
+              "source": "trainer",
+              "proposalId": "prop-session-1",
+              "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+              "decision": "confirm"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:54:38.662Z",
+              "source": "advisor",
+              "dimension": "version",
+              "text": "Which game version are you playing — Red/Blue, or Yellow?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:38.663Z",
+              "source": "trainer",
+              "text": "red-blue"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:54:38.665Z",
+              "source": "advisor",
+              "dimension": "badgeLevel",
+              "text": "How many gym badges do you hold?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:38.666Z",
+              "source": "trainer",
+              "text": "8"
+            }
+          ],
+          "derivation": {
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "What TM number is Thunderbolt?"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "8"
+              }
+            ],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "what tm number is thunderbolt"
+            ]
+          },
+          "grant": {
+            "id": "grant-92eece19dfa0",
+            "packId": "indigo-accord-v1",
+            "scope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            },
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "What TM number is Thunderbolt?"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "8"
+              }
+            ],
+            "evidenceDigest": "sha256:92eece19dfa0f6fa230a43f2f48dea1798bc33c12149848e77633e79cf12332b",
+            "issuedAt": "2026-08-17T10:54:38.668Z",
+            "expiresAt": "2026-08-18T10:54:38.668Z"
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "scopeGrantId": "grant-92eece19dfa0",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "fact",
+                "entityId": "thunderbolt",
+                "factId": "machine",
+                "asserted": {
+                  "kind": "text",
+                  "value": "tm24"
+                }
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "scope",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            },
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        },
+        "grantScope": {
+          "version": "red-blue",
+          "region": "kanto",
+          "badgeLevel": 8
+        }
+      }
+    },
+    {
+      "entryId": "data-evo-item-eevee",
+      "disposition": "answerable",
+      "opening": "What stone evolves Eevee into Vaporeon?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "answered, as it should be"
+      },
+      "turns": 3,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "data-evo-item-eevee",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:39.523Z",
+            "source": "trainer",
+            "text": "What stone evolves Eevee into Vaporeon?"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-17T10:54:39.525Z",
+            "id": "prop-session-1",
+            "candidate": {
+              "region": "kanto"
+            },
+            "interpreting": "What stone evolves Eevee into Vaporeon?"
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-17T10:54:40.615Z",
+            "source": "trainer",
+            "proposalId": "prop-session-1",
+            "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+            "decision": "confirm"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:54:41.591Z",
+            "source": "advisor",
+            "dimension": "version",
+            "text": "Which game version are you playing — Red/Blue, or Yellow?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:41.592Z",
+            "source": "trainer",
+            "text": "red-blue"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:54:41.594Z",
+            "source": "advisor",
+            "dimension": "badgeLevel",
+            "text": "How many gym badges do you hold?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:54:41.595Z",
+            "source": "trainer",
+            "text": "8"
+          }
+        ],
+        "turns": 3,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 4204,
+          "completionTokens": 115,
+          "calls": 3,
+          "costedCalls": 3,
+          "costUsd": 0.0015487
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-17T10:54:41.597Z",
+          "committedAt": "2026-08-17T10:54:42.722Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:39.523Z",
+              "source": "trainer",
+              "text": "What stone evolves Eevee into Vaporeon?"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-17T10:54:39.525Z",
+              "id": "prop-session-1",
+              "candidate": {
+                "region": "kanto"
+              },
+              "interpreting": "What stone evolves Eevee into Vaporeon?"
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-17T10:54:40.615Z",
+              "source": "trainer",
+              "proposalId": "prop-session-1",
+              "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+              "decision": "confirm"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:54:41.591Z",
+              "source": "advisor",
+              "dimension": "version",
+              "text": "Which game version are you playing — Red/Blue, or Yellow?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:41.592Z",
+              "source": "trainer",
+              "text": "red-blue"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:54:41.594Z",
+              "source": "advisor",
+              "dimension": "badgeLevel",
+              "text": "How many gym badges do you hold?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:54:41.595Z",
+              "source": "trainer",
+              "text": "8"
+            }
+          ],
+          "derivation": {
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "What stone evolves Eevee into Vaporeon?"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "8"
+              }
+            ],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "what stone evolves eevee into vaporeon"
+            ]
+          },
+          "grant": {
+            "id": "grant-8401ebb68432",
+            "packId": "indigo-accord-v1",
+            "scope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            },
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "What stone evolves Eevee into Vaporeon?"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "8"
+              }
+            ],
+            "evidenceDigest": "sha256:8401ebb68432306da478175d989ebe87497c029000ea09d2d3498d2eeb7a930e",
+            "issuedAt": "2026-08-17T10:54:41.597Z",
+            "expiresAt": "2026-08-18T10:54:41.597Z"
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "scopeGrantId": "grant-8401ebb68432",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "fact",
+                "entityId": "vaporeon",
+                "factId": "evolution-methods",
+                "asserted": {
+                  "kind": "absent"
+                }
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "scope",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            },
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        },
+        "grantScope": {
+          "version": "red-blue",
+          "region": "kanto",
+          "badgeLevel": 8
+        }
+      }
+    }
+  ],
+  "map": {
+    "total": 7,
+    "pass": 7,
+    "byDisposition": [
+      {
+        "disposition": "answerable",
+        "total": 7,
+        "pass": 7,
+        "passRate": 1,
+        "stages": {
+          "resolved": 7,
+          "denied": 0,
+          "abstained-answer": 0,
+          "abstained-scope": 0,
+          "declined": 0
+        }
+      },
+      {
+        "disposition": "advisory",
+        "total": 0,
+        "pass": 0,
+        "passRate": 0,
+        "stages": {
+          "resolved": 0,
+          "denied": 0,
+          "abstained-answer": 0,
+          "abstained-scope": 0,
+          "declined": 0
+        }
+      },
+      {
+        "disposition": "needs-data",
+        "total": 0,
+        "pass": 0,
+        "passRate": 0,
+        "stages": {
+          "resolved": 0,
+          "denied": 0,
+          "abstained-answer": 0,
+          "abstained-scope": 0,
+          "declined": 0
+        }
+      },
+      {
+        "disposition": "needs-claim-kind",
+        "total": 0,
+        "pass": 0,
+        "passRate": 0,
+        "stages": {
+          "resolved": 0,
+          "denied": 0,
+          "abstained-answer": 0,
+          "abstained-scope": 0,
+          "declined": 0
+        }
+      },
+      {
+        "disposition": "gated-advisory",
+        "total": 0,
+        "pass": 0,
+        "passRate": 0,
+        "stages": {
+          "resolved": 0,
+          "denied": 0,
+          "abstained-answer": 0,
+          "abstained-scope": 0,
+          "declined": 0
+        }
+      },
+      {
+        "disposition": "should-refuse",
+        "total": 0,
+        "pass": 0,
+        "passRate": 0,
+        "stages": {
+          "resolved": 0,
+          "denied": 0,
+          "abstained-answer": 0,
+          "abstained-scope": 0,
+          "declined": 0
+        }
+      },
+      {
+        "disposition": "off-domain",
+        "total": 0,
+        "pass": 0,
+        "passRate": 0,
+        "stages": {
+          "resolved": 0,
+          "denied": 0,
+          "abstained-answer": 0,
+          "abstained-scope": 0,
+          "declined": 0
+        }
+      }
+    ],
+    "friction": [],
+    "enforcementEscalations": []
+  }
+}

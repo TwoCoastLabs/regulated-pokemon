@@ -202,6 +202,54 @@ export const PHASE_1_MUTATIONS: readonly Mutation[] = [
       }),
   },
   {
+    id: "espeon-evolution",
+    title: "Evolve Eevee into a species from the future",
+    description:
+      "Espeon is five years away. An evolution edge into a species this " +
+      "snapshot does not certify is a road out of the closed world, and a " +
+      "record that could cite it could cite anything.",
+    article: "IA-3",
+    rule: "dangling-evolution-reference",
+    run: ({ registry }) =>
+      sabotageSnapshot(registry, (document) => {
+        mutable(speciesNamed(document, "eevee")).evolvesTo.push({
+          to: "espeon",
+          trigger: "level-up",
+          minLevel: null,
+          item: null,
+        });
+      }),
+  },
+  {
+    id: "yellow-encounter",
+    title: "File an encounter from another cartridge",
+    description:
+      "Pikachu 'found' via Yellow's script, recorded under Red/Blue's name. " +
+      "The version group's cartridges are a closed set; an encounter outside " +
+      "them is a fact about a different game.",
+    article: "IA-2",
+    rule: "encounter-version-unclosed",
+    run: ({ registry }) =>
+      sabotageSnapshot(registry, (document) => {
+        mutable(speciesNamed(document, "pikachu")).encounters.push({ area: "pallet-town-area", versions: ["yellow"] });
+      }),
+  },
+  {
+    id: "bootleg-machine",
+    title: "Teach a move from a bootleg cartridge",
+    description:
+      "A 'machine' that is not a TM or HM is not a way this game teaches " +
+      "anything; the loader refuses the shape before a claim can cite it.",
+    article: "IA-2",
+    rule: "machine-invalid",
+    run: ({ registry }) =>
+      sabotageSnapshot(registry, (document) => {
+        const surf = document.moves.find((move) => move.id === "surf");
+        if (surf === undefined) throw new Error("crucible fixture expects surf");
+        mutable(surf).machine = "bootleg-01";
+      }),
+  },
+  {
     id: "fairy-clefable",
     title: "Type a species outside the generation's chart",
     description:
