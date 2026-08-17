@@ -996,6 +996,41 @@ metric exists precisely to catch the risk this change carries (a model
 naming plausible-but-irrelevant facts now gets them certified), and the
 full-bank re-run (finding §19) is where that number gets checked.
 
+### Iteration 6 — dogfooding: per-token price lies, and the strong slot changes hands
+
+The first human dogfooding session (live web UI, relay mode) surfaced two
+things the bank had not.
+
+**Latency and cost are answer-level properties, not token-level ones.**
+`gpt-5.6-luna-pro` is priced at $0.20/M input — and cost **$0.0074 per
+answered call**, because it spent ~6k reasoning tokens per answer, which is
+also why the tab felt slow. A three-candidate audition on the same 3-message
+dogfood script (scope statement, a location ask, an evolution ask), one
+session each:
+
+| model | records | wall | session cost |
+|---|---|---|---|
+| `anthropic/claude-sonnet-5` | 2/2 asks answered, non-question declined | 9s | $0.0091 |
+| `x-ai/grok-4.6` | 2/2 asks answered, non-question declined | 22s | $0.0238 |
+| `openai/gpt-5.4-mini` | 3/3 "answered" — including the non-question | 4s | $0.0055 |
+
+`gpt-5.4-mini` was fastest and cheapest but volunteered an unsolicited
+(kernel-legal) Zapdos recommendation for "I'm playing Red in Kanto with 7
+badges" — a message that asks nothing. Certified non-sequiturs are the
+usefulness failure this project tracks, so speed did not win: the strong
+slot moved to `anthropic/claude-sonnet-5` (~$0.003/answer, ~3s/call, and
+the only audition beside grok to stay quiet on a non-question). Single
+sessions, not statistics — the §19 re-run on the new default is the number.
+
+**Two dead ends the trace names precisely.** "What can I do with this
+game?" and "what are the types of pokemon?" both ended in the abstention
+note; the trace shows *the model returned zero claims* — the grammar has no
+way to state either answer. That is the slice-4 curriculum gap measured
+from a real user's first two minutes, not from the bank. (On one strong-model
+repetition, luna-pro improvised 15 count claims — one roster per type — an
+answer-shaped workaround the grammar permits; nondeterministic, and no
+substitute for a certified curriculum block.)
+
 ---
 
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate

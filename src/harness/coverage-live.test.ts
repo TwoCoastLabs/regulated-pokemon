@@ -13,6 +13,7 @@ import { readBank } from "./bank.js";
 import { phrasingsOf, type RecordedBankRun } from "./bank-run.js";
 import { type CoverageArtifact, latestCoverageArtifact, renderCoverageArtifact } from "./coverage-artifact.js";
 import { type CoverageFs, type CoverageOptions, parseCoverageArgs, runCoverage } from "./coverage-live.js";
+import { DEFAULT_STRONG_MODEL } from "./models.js";
 import { emptyUsage, ScriptedProvider } from "./provider.js";
 
 const world = demoWorld();
@@ -126,7 +127,7 @@ describe("a live run files the whole record and renders from it", () => {
     expect(artifact.schemaVersion).toBe(1);
     expect(artifact.label).toBe("coverage");
     expect(artifact.bankId).toBe(bank.id);
-    expect(artifact.model).toEqual({ id: "coverage:scripted", slug: "openai/gpt-5.6-luna-pro" });
+    expect(artifact.model).toEqual({ id: "coverage:scripted", slug: DEFAULT_STRONG_MODEL });
     expect(artifact.world.snapshotId).toBe(world.registry.snapshot.id);
     expect(artifact.world.snapshotDigest).toBe(world.registry.document.contentDigest);
     expect(artifact.world.packId).toBe(world.pack.id);
@@ -273,7 +274,7 @@ describe("--render re-reads the filed artifact and never recomputes", () => {
     expect(result.exitCode).toBe(0);
     const text = result.lines.join("\n");
     expect(text).toContain("do not hand-edit");
-    expect(text).toContain("Coverage map — openai/gpt-5.6-luna-pro");
+    expect(text).toContain(`Coverage map — ${DEFAULT_STRONG_MODEL}`);
     expect(text).toContain(world.registry.document.contentDigest);
   });
 

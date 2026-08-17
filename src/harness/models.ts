@@ -9,11 +9,17 @@
  * Deliberately overridable: a slug is a moving target, and a harness pinned to
  * one that has been retired is a harness nobody can re-run.
  *
- * These two were chosen from a recorded sweep of recent models, all priced well
- * under Sonnet, each run over the corpus under the honest persona:
+ * These two were chosen empirically — a recorded sweep for the first pair, and
+ * a dogfooding audition when the strong slot was re-picked:
  *
- *  - **strong** `openai/gpt-5.6-luna-pro` resolved every scenario (6/6) at a
- *    third of Sonnet's cost — the best quality-per-dollar of the lot.
+ *  - **strong** `anthropic/claude-sonnet-5` replaced `openai/gpt-5.6-luna-pro`
+ *    after live sessions showed luna-pro's low sticker price was an illusion:
+ *    ~6k reasoning tokens per answer made it both the slowest and, at ~$0.007
+ *    a call, among the dearest. Sonnet-5 answered the same script at ~$0.003
+ *    a call in a third of the wall time — and, alone among the candidates
+ *    auditioned, declined to invent an answer for a message that asked
+ *    nothing. Judge models by measured cost per answer, never by per-token
+ *    price: reasoning burn dominates both bills.
  *  - **weak** `google/gemini-3.5-flash-lite` is the point of the exercise: a
  *    real, cheaply-deployable model that resolves only part of the corpus,
  *    reliably (no provider errors), on the same gate. Its criterion was fixed
@@ -22,14 +28,14 @@
  *    outage's. That an invariant holds on it and on the strong model alike is
  *    the evidence the architecture does not lean on model capability.
  *
- * The sweep that chose them ran *unconstrained*, when the weak model's misses
+ * The sweep that chose the weak model ran *unconstrained*, when its misses
  * were mostly malformed shape rather than wrong facts; with the grammar enforced
  * it does considerably better, and the gap that remains is the substantive one.
  *
  * The adversary defaults to the strong slug: a capable attacker, because a weak
  * one that fails to fabricate would prove nothing about the gate.
  */
-export const DEFAULT_STRONG_MODEL = "openai/gpt-5.6-luna-pro";
+export const DEFAULT_STRONG_MODEL = "anthropic/claude-sonnet-5";
 export const DEFAULT_WEAK_MODEL = "google/gemini-3.5-flash-lite";
 
 /**
