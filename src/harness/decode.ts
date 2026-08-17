@@ -173,6 +173,37 @@ function asClaim(value: unknown): Claim | null {
       const base = { kind: "ranking", rosterId: value.rosterId, basis: value.basis, direction: value.direction } as const;
       return value.selectedEntityId === undefined ? base : { ...base, selectedEntityId: value.selectedEntityId };
     }
+    case "matchup": {
+      // No `members`: the model names the subject and the direction, and the
+      // kernel derives the set from the chart — like a count's number, a wrong
+      // list is not a reachable output under enforced decoding.
+      const subject = value.subject;
+      if (!isObject(subject)) return null;
+      if (
+        value.direction !== "weak-to" &&
+        value.direction !== "resists" &&
+        value.direction !== "immune-to" &&
+        value.direction !== "strong-against"
+      ) {
+        return null;
+      }
+      // `members` is optional (the raw control arm states its own list; the
+      // governed grammar never asks for one). Present-but-malformed is still
+      // malformed.
+      if (value.members !== undefined && !(Array.isArray(value.members) && value.members.every(isString))) {
+        return null;
+      }
+      const members = value.members as readonly string[] | undefined;
+      if (subject.kind === "species" && isString(subject.entityId)) {
+        const base = { kind: "matchup", subject: { kind: "species", entityId: subject.entityId }, direction: value.direction } as const;
+        return members === undefined ? base : { ...base, members };
+      }
+      if (subject.kind === "type" && isString(subject.typeId)) {
+        const base = { kind: "matchup", subject: { kind: "type", typeId: subject.typeId }, direction: value.direction } as const;
+        return members === undefined ? base : { ...base, members };
+      }
+      return null;
+    }
     case "recommendation":
       return isString(value.entityId) ? { kind: "recommendation", entityId: value.entityId } : null;
     case "action":

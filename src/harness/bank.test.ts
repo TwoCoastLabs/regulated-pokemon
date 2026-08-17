@@ -81,6 +81,7 @@ describe("the shipped bank holds up", () => {
       count: true,
       membership: true,
       ranking: true,
+      matchup: true,
       recommendation: true,
       action: true,
     };

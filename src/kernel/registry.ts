@@ -15,10 +15,12 @@
 import type { CertifiedSnapshot, FactValue, Resolution, Violation } from "./contracts.js";
 import { sha256Hex } from "./sha256.js";
 import {
+  CHART_MULTIPLIERS,
   SNAPSHOT_SCHEMA_VERSION,
   type SnapshotDocument,
   type SnapshotMove,
   type SnapshotSpecies,
+  type SnapshotTypeChart,
   STAT_NAMES,
   snapshotContent,
   stableStringify,
@@ -124,6 +126,20 @@ export class CertifiedRegistry {
     return this.document.moves.map((move) => move.id);
   }
 
+  /** The generation's closed damage chart. Validated complete at load. */
+  get typeChart(): SnapshotTypeChart {
+    return this.document.typeChart;
+  }
+
+  /**
+   * One chart cell, or undefined for a type the chart does not close over.
+   * Never a default: a caller that would treat "no cell" as neutral is the
+   * exact confusion the complete matrix exists to prevent.
+   */
+  multiplier(attacking: string, defending: string): number | undefined {
+    return this.document.typeChart.multipliers[attacking]?.[defending];
+  }
+
   findSpecies(entityId: string): SnapshotSpecies | undefined {
     return this.speciesById.get(entityId);
   }
@@ -194,7 +210,7 @@ export function loadRegistry(input: unknown): Resolution<CertifiedRegistry> {
   if (structural.length > 0) return { ok: false, violations: structural };
 
   const document = input as SnapshotDocument;
-  const violations = [...checkIntegrity(document), ...checkDigest(document)];
+  const violations = [...checkIntegrity(document), ...checkChart(document), ...checkDigest(document)];
   if (violations.length > 0) return { ok: false, violations };
 
   return { ok: true, value: new CertifiedRegistry(document) };
@@ -215,7 +231,7 @@ function checkStructure(input: unknown): Violation[] {
     ];
   }
 
-  const missing = (["id", "scope", "source", "contentDigest"] as const).filter(
+  const missing = (["id", "scope", "source", "contentDigest", "typeChart"] as const).filter(
     (field) => document[field] === undefined,
   );
   if (missing.length > 0) {
@@ -235,6 +251,102 @@ function checkStructure(input: unknown): Violation[] {
  * problems rather than IA-2 ones: each is a route by which something that
  * does not exist could be asserted as if it did.
  */
+/**
+ * The chart must be *complete and closed* before anything derives from it: a
+ * missing cell that read as neutral, or a multiplier outside the game's own
+ * set, would let a derived matchup assert something no chart certifies.
+ */
+function checkChart(document: SnapshotDocument): Violation[] {
+  const violations: Violation[] = [];
+  const chart = document.typeChart;
+
+  if (!Array.isArray(chart.types) || chart.types.length === 0) {
+    return [violation("IA-2", "chart-empty", "snapshot has a type chart that closes over no types")];
+  }
+  for (const duplicate of duplicates(chart.types)) {
+    violations.push(
+      violation("IA-2", "chart-duplicate-type", `type "${duplicate}" appears in the chart more than once`, {
+        actual: duplicate,
+      }),
+    );
+  }
+
+  const closed = new Set(chart.types);
+  const rows = Object.keys(chart.multipliers ?? {});
+  for (const missing of chart.types.filter((type) => !rows.includes(type))) {
+    violations.push(
+      violation("IA-2", "chart-incomplete", `the chart has no row for attacking type "${missing}"`, {
+        expected: `a row per type: ${chart.types.join(", ")}`,
+        actual: `no "${missing}" row`,
+      }),
+    );
+  }
+  for (const extra of rows.filter((row) => !closed.has(row))) {
+    violations.push(
+      violation("IA-2", "chart-unclosed", `the chart has a row for "${extra}", which is not a type it closes over`, {
+        expected: chart.types.join(", "),
+        actual: extra,
+      }),
+    );
+  }
+
+  for (const attacking of rows.filter((row) => closed.has(row))) {
+    const row = chart.multipliers[attacking] ?? {};
+    const cells = Object.keys(row);
+    for (const missing of chart.types.filter((type) => !cells.includes(type))) {
+      violations.push(
+        violation("IA-2", "chart-incomplete", `the chart has no "${attacking}" versus "${missing}" cell`, {
+          expected: `a cell per defending type`,
+          actual: `no "${missing}" cell`,
+        }),
+      );
+    }
+    for (const extra of cells.filter((cell) => !closed.has(cell))) {
+      violations.push(
+        violation("IA-2", "chart-unclosed", `"${attacking}" has a cell against "${extra}", which is not a type the chart closes over`, {
+          expected: chart.types.join(", "),
+          actual: extra,
+        }),
+      );
+    }
+    for (const [defending, value] of Object.entries(row)) {
+      if (!CHART_MULTIPLIERS.includes(value)) {
+        violations.push(
+          violation("IA-2", "chart-invalid-multiplier", `"${attacking}" versus "${defending}" is ${value}, which the game's chart cannot hold`, {
+            expected: CHART_MULTIPLIERS.join(", "),
+            actual: String(value),
+          }),
+        );
+      }
+    }
+  }
+
+  // Every type the world uses must be one the chart closes over — a species
+  // or move typed outside it would carry a type that does not exist here.
+  for (const species of document.species) {
+    for (const type of species.types.filter((entry) => !closed.has(entry))) {
+      violations.push(
+        violation("IA-3", "dangling-type-reference", `${species.id} is typed "${type}", which this generation's chart does not certify`, {
+          expected: chart.types.join(", "),
+          actual: type,
+        }),
+      );
+    }
+  }
+  for (const move of document.moves) {
+    if (!closed.has(move.type)) {
+      violations.push(
+        violation("IA-3", "dangling-type-reference", `${move.id} is typed "${move.type}", which this generation's chart does not certify`, {
+          expected: chart.types.join(", "),
+          actual: move.type,
+        }),
+      );
+    }
+  }
+
+  return violations;
+}
+
 function checkIntegrity(document: SnapshotDocument): Violation[] {
   const violations: Violation[] = [];
 

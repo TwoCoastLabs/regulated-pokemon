@@ -44,6 +44,7 @@ const LEAD_IN: Record<RenderUnitKind, string | undefined> = {
   count: "lead-in.count",
   membership: "lead-in.membership",
   selection: "lead-in.selection",
+  matchup: "lead-in.matchup",
   recommendation: "lead-in.recommendation",
   action: "lead-in.action",
   warning: undefined,

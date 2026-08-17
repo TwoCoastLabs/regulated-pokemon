@@ -10,7 +10,7 @@ import type { ArticleId } from "../kernel/accord.js";
 import type { ClosedRoster, RosterCriteria, Verdict } from "../kernel/contracts.js";
 import { type CertifiedRegistry, loadRegistry } from "../kernel/registry.js";
 import { buildRoster, verifyRoster } from "../kernel/roster.js";
-import type { SnapshotDocument } from "../kernel/snapshot-format.js";
+import { SNAPSHOT_SCHEMA_VERSION, type SnapshotDocument } from "../kernel/snapshot-format.js";
 import { verdictOf } from "../kernel/violation.js";
 import { type Control, mutable, type Mutation } from "./harness.js";
 
@@ -107,7 +107,9 @@ export const PHASE_1_MUTATIONS: readonly Mutation[] = [
     rule: "snapshot-schema-unsupported",
     run: ({ registry }) =>
       sabotageSnapshot(registry, (document) => {
-        (document as { schemaVersion: number }).schemaVersion = 2;
+        // Relative, not a literal: "the future" must stay ahead of whatever
+        // schema the kernel currently reads.
+        (document as { schemaVersion: number }).schemaVersion = SNAPSHOT_SCHEMA_VERSION + 1;
       }),
   },
   {
@@ -172,6 +174,47 @@ export const PHASE_1_MUTATIONS: readonly Mutation[] = [
     article: "IA-2",
     rule: "snapshot-mismatch",
     run: ({ registry }) => sabotageRoster(registry, (roster) => ({ ...roster, snapshotId: "kanto-yellow" })),
+  },
+  {
+    id: "chart-off-scale",
+    title: "Write a multiplier the game does not have",
+    description:
+      "A 3× cell is not a stronger opinion, it is a value outside the game's " +
+      "own scale — the chart refuses it before anything can derive from it.",
+    article: "IA-2",
+    rule: "chart-invalid-multiplier",
+    run: ({ registry }) =>
+      sabotageSnapshot(registry, (document) => {
+        mutable(document.typeChart.multipliers)["water"]!["fire"] = 3;
+      }),
+  },
+  {
+    id: "chart-missing-cell",
+    title: "Delete a cell and hope it reads as neutral",
+    description:
+      "Sparse charts make 'no entry' and 'neutral' the same bytes. This one " +
+      "is complete by construction, so a missing cell is a refusal, never a 1×.",
+    article: "IA-2",
+    rule: "chart-incomplete",
+    run: ({ registry }) =>
+      sabotageSnapshot(registry, (document) => {
+        delete mutable(document.typeChart.multipliers)["ground"]!["flying"];
+      }),
+  },
+  {
+    id: "fairy-clefable",
+    title: "Type a species outside the generation's chart",
+    description:
+      "Clefable became a Fairy type five generations after Red/Blue. A type " +
+      "the chart does not close over does not exist in this world, and a " +
+      "species wearing it is dangling off the certified universe.",
+    article: "IA-3",
+    rule: "dangling-type-reference",
+    run: ({ registry }) =>
+      sabotageSnapshot(registry, (document) => {
+        speciesNamed(document, "clefable");
+        mutable(speciesNamed(document, "clefable")).types = ["fairy"];
+      }),
   },
 ];
 

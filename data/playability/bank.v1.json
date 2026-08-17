@@ -428,7 +428,7 @@
         "membership"
       ],
       "phrasings": [
-        "Zapdos \u2014 Electric, right?",
+        "Zapdos — Electric, right?",
         "Is Zapdos classified as an Electric type?",
         "is zapdoss electric"
       ]
@@ -658,7 +658,7 @@
       "expectClaimKinds": [
         "action"
       ],
-      "notes": "release is irreversible; the consent notice must be shown and confirmed \u2014 resolves as an acted run",
+      "notes": "release is irreversible; the consent notice must be shown and confirmed — resolves as an acted run",
       "phrasings": [
         "Let my Raticate go.",
         "I'd like to release my Raticate, please.",
@@ -958,7 +958,7 @@
         "badgeLevel": 8
       },
       "disposition": "answerable",
-      "notes": "a team of six composes from six recommendation claims (each eligibility-checked); no set-recommendation claim kind is needed \u2014 probe 1 (finding #17)",
+      "notes": "a team of six composes from six recommendation claims (each eligibility-checked); no set-recommendation claim kind is needed — probe 1 (finding #17)",
       "phrasings": [
         "Make me a team of six.",
         "Could you put together a full six-Pokemon team?",
@@ -991,9 +991,9 @@
         "badgeLevel": 8
       },
       "disposition": "advisory",
-      "notes": "'better' has no certified basis; the model answers with an eligibility-checked recommendation \u2014 advice, not a fact",
+      "notes": "'better' has no certified basis; the model answers with an eligibility-checked recommendation — advice, not a fact",
       "phrasings": [
-        "Pikachu or Raichu \u2014 who's better?",
+        "Pikachu or Raichu — who's better?",
         "Which is the better Pokemon, Pikachu or Raichu?",
         "pikachu vs raichu whos beter"
       ],
@@ -1010,7 +1010,7 @@
         "badgeLevel": 8
       },
       "disposition": "advisory",
-      "notes": "'good' is not a certified basis; resolves as recommendations \u2014 advisory, weakly certified",
+      "notes": "'good' is not a certified basis; resolves as recommendations — advisory, weakly certified",
       "expectClaimKinds": [
         "recommendation"
       ]
@@ -1049,7 +1049,7 @@
         "badgeLevel": 8
       },
       "disposition": "answerable",
-      "notes": "an open summary composes from multiple certified fact claims (strong certificate) \u2014 not a missing claim kind",
+      "notes": "an open summary composes from multiple certified fact claims (strong certificate) — not a missing claim kind",
       "expectClaimKinds": [
         "fact"
       ]
@@ -1110,7 +1110,7 @@
         "badgeLevel": 8
       },
       "disposition": "advisory",
-      "notes": "a 'worth it' judgement resolves as a recommendation for/against \u2014 eligible advice, no correctness guarantee",
+      "notes": "a 'worth it' judgement resolves as a recommendation for/against — eligible advice, no correctness guarantee",
       "expectClaimKinds": [
         "recommendation"
       ]
@@ -1123,12 +1123,15 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "type-effectiveness is a relation with no chart in the snapshot and no claim kind",
+      "disposition": "answerable",
+      "notes": "RETAGGED (epic #54, slice 1): a type-subject matchup (strong-against / weak-to) expresses the relation and the chart grounds it — was needs-claim-kind ('no chart and no claim kind').",
       "phrasings": [
         "Is Electric good against Water?",
         "Does Electric deal extra damage to Water types?",
         "is electirc good vs water"
+      ],
+      "expectClaimKinds": [
+        "matchup"
       ]
     },
     {
@@ -1139,8 +1142,11 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "weakness is a type-effectiveness relation, uncharted and unexpressible"
+      "disposition": "answerable",
+      "notes": "RETAGGED (epic #54, slice 1): the gen-I type chart is vendored and the matchup claim kind derives weakness from it — was needs-claim-kind ('weakness is a relation, uncharted and unexpressible').",
+      "expectClaimKinds": [
+        "matchup"
+      ]
     },
     {
       "id": "kind-counter-mewtwo",
@@ -1151,7 +1157,7 @@
         "badgeLevel": 8
       },
       "disposition": "needs-claim-kind",
-      "notes": "'counters' is an effectiveness/matchup judgement with no claim kind"
+      "notes": "'counters' is a judgement, not a chart lookup: what is *effective against* Mewtwo is now expressible (matchup weak-to), but a counter weighs speed, movesets and role — stays needs-claim-kind after the chart landed (epic #54, slice 1)."
     },
     {
       "id": "kind-tier-list",
@@ -1181,7 +1187,7 @@
         "badgeLevel": 8
       },
       "disposition": "advisory",
-      "notes": "'best' across legendaries has no basis; at an accredited badge level it resolves as a recommendation \u2014 advisory",
+      "notes": "'best' across legendaries has no basis; at an accredited badge level it resolves as a recommendation — advisory",
       "expectClaimKinds": [
         "recommendation"
       ]
@@ -1308,7 +1314,7 @@
       "expectClaimKinds": [
         "recommendation"
       ],
-      "notes": "Mewtwo legendary; a fresh trainer with no badges \u2014 the clearest refusal"
+      "notes": "Mewtwo legendary; a fresh trainer with no badges — the clearest refusal"
     },
     {
       "id": "refuse-legendary-generic",
@@ -1514,10 +1520,10 @@
         "badgeLevel": 8
       },
       "disposition": "needs-claim-kind",
-      "notes": "a newcomer's question; the advisor certifies facts about species and moves and has no claim kind for explaining the game itself \u2014 it is not a teaching tool",
+      "notes": "a newcomer's question; the advisor certifies facts about species and moves and has no claim kind for explaining the game itself — it is not a teaching tool",
       "phrasings": [
         "Explain Pokemon to me.",
-        "I've never heard of this \u2014 what is Pokemon?",
+        "I've never heard of this — what is Pokemon?",
         "whats this game evn about"
       ]
     },
@@ -1530,7 +1536,7 @@
         "badgeLevel": 8
       },
       "disposition": "needs-claim-kind",
-      "notes": "a newcomer's question; the advisor certifies facts about species and moves and has no claim kind for explaining the game itself \u2014 it is not a teaching tool"
+      "notes": "a newcomer's question; the advisor certifies facts about species and moves and has no claim kind for explaining the game itself — it is not a teaching tool"
     },
     {
       "id": "meta-objective",
@@ -1588,7 +1594,7 @@
     },
     {
       "id": "meta-first-steps",
-      "intent": "I just started the game \u2014 what should I do first?",
+      "intent": "I just started the game — what should I do first?",
       "profile": {
         "version": "red-blue",
         "region": "kanto",

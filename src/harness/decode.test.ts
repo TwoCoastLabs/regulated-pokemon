@@ -87,15 +87,29 @@ describe("decodeAnswer", () => {
         { kind: "ranking", rosterId: "r", basis: "base-speed", direction: "lowest", selectedEntityId: "e" },
         { kind: "recommendation", entityId: "e" },
         { kind: "action", tool: "release", entityId: "e" },
+        { kind: "matchup", subject: { kind: "species", entityId: "gengar" }, direction: "weak-to" },
+        { kind: "matchup", subject: { kind: "type", typeId: "electric" }, direction: "strong-against", members: ["water"] },
       ],
     });
     const decoded = decodeAnswer(text, context, "txn-1");
     expect(decoded.ok).toBe(true);
     if (decoded.ok) {
       expect(decoded.draft.transactionId).toBe("txn-1");
-      expect(decoded.draft.claims).toHaveLength(10);
+      expect(decoded.draft.claims).toHaveLength(12);
       expect(decoded.draft.rosters).toHaveLength(1);
     }
+  });
+
+  it.each([
+    ["a matchup with no subject", { kind: "matchup", direction: "weak-to" }],
+    ["a matchup with a malformed subject", { kind: "matchup", subject: { kind: "species" }, direction: "weak-to" }],
+    ["a matchup with an unknown subject kind", { kind: "matchup", subject: { kind: "move", entityId: "surf" }, direction: "weak-to" }],
+    ["a matchup with an unknown direction", { kind: "matchup", subject: { kind: "type", typeId: "water" }, direction: "beats" }],
+    ["a matchup with malformed members", { kind: "matchup", subject: { kind: "type", typeId: "water" }, direction: "weak-to", members: [1] }],
+  ])("refuses %s", (_label, claim) => {
+    const decoded = decodeAnswer(JSON.stringify({ rosters: [], claims: [claim] }), context, "txn-1");
+    expect(decoded.ok).toBe(false);
+    if (!decoded.ok) expect(decoded.reason).toContain("claim is malformed");
   });
 
   it("carries a well-formed lie through intact — catching it is the kernel's job", () => {

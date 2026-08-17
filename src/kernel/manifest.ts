@@ -30,6 +30,7 @@ import type {
   Verdict,
   Violation,
 } from "./contracts.js";
+import { deriveMatchup, matchupSubjectId } from "./chart.js";
 import { type AccordPack, actionRule, approvesLocale, blockFor, type ExhibitRule, restrictionsFor } from "./pack.js";
 import { type CertifiedRegistry, formatFactValue, sameFactValue } from "./registry.js";
 import { verifyRoster } from "./roster.js";
@@ -97,6 +98,10 @@ function deriveClaims(context: ManifestContext, claims: readonly Claim[], roster
       if (set === undefined) return claim;
       const outcome = rankRoster(context, set, claim.basis, claim.direction);
       return outcome.ok ? { ...claim, selectedEntityId: outcome.winner } : claim;
+    }
+    if (claim.kind === "matchup" && claim.members === undefined) {
+      const derived = deriveMatchup(context.registry, claim.subject, claim.direction);
+      return derived.ok ? { ...claim, members: derived.value } : claim;
     }
     return claim;
   });
@@ -291,6 +296,8 @@ function checkClaim(context: ManifestContext, manifest: AnswerManifest, claim: C
       return checkMembership(context, manifest, claim);
     case "ranking":
       return checkRanking(context, manifest, claim);
+    case "matchup":
+      return checkMatchup(context, claim);
     case "recommendation":
       return checkRecommendation(context, claim);
     case "action":
@@ -326,6 +333,33 @@ function checkCount(manifest: AnswerManifest, claim: Extract<Claim, { kind: "cou
       expected: String(roster.cardinality),
       actual: String(claim.reported),
     }),
+  ];
+}
+
+/**
+ * A matchup is re-derived from the chart and compared whole. An omitted list
+ * defers to the derivation and can never disagree; a stated list that does is
+ * not a rounding error, it is a different chart.
+ */
+function checkMatchup(context: ManifestContext, claim: Extract<Claim, { kind: "matchup" }>): Violation[] {
+  const derived = deriveMatchup(context.registry, claim.subject, claim.direction);
+  if (!derived.ok) return [...derived.violations];
+  if (claim.members === undefined) return [];
+
+  const same =
+    claim.members.length === derived.value.length &&
+    claim.members.every((member, index) => member === derived.value[index]);
+  if (same) return [];
+  return [
+    violation(
+      "IA-4",
+      "matchup-mismatch",
+      `what ${matchupSubjectId(claim.subject)} is ${claim.direction} is not what this answer says`,
+      {
+        expected: derived.value.join(", ") || "nothing",
+        actual: claim.members.join(", ") || "nothing",
+      },
+    ),
   ];
 }
 
@@ -673,6 +707,9 @@ function entitiesMentioned(claims: readonly Claim[], rosters: readonly ClosedRos
     // Derived after this runs when omitted; a ranking with no winner yet (a tie
     // being refused) mentions nobody by selection.
     if (claim.kind === "ranking" && claim.selectedEntityId !== undefined) mentioned.add(claim.selectedEntityId);
+    // A matchup about a species is an answer about that species; its members
+    // are types, which are not entities and trigger nothing.
+    if (claim.kind === "matchup" && claim.subject.kind === "species") mentioned.add(claim.subject.entityId);
   }
   // "Which Pokémon learn Selfdestruct" is an answer about Selfdestruct even
   // though no claim names it: the move is in the definition of the set.

@@ -48,7 +48,7 @@ describe("the answer grammar tracks the kernel, not a copy of it", () => {
 
   it("offers every claim kind the decoder accepts, so the grammar narrows nothing", () => {
     expect(new Set(claimKinds)).toEqual(
-      new Set(["fact", "count", "membership", "ranking", "recommendation", "action"]),
+      new Set(["fact", "count", "membership", "ranking", "matchup", "recommendation", "action"]),
     );
   });
 
@@ -97,6 +97,7 @@ describe("anything the grammar admits, the decoder reads", () => {
       { kind: "count", rosterId: "electric", reported: 9 },
       { kind: "membership", rosterId: "electric", entityId: "pikachu", asserted: true },
       { kind: "ranking", rosterId: "electric", basis: "base-speed", direction: "highest", selectedEntityId: "electrode" },
+      { kind: "matchup", subject: { kind: "species", entityId: "gengar" }, direction: "weak-to" },
       { kind: "recommendation", entityId: "pikachu" },
       { kind: "action", tool: "catch", entityId: "pikachu" },
     ];

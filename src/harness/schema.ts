@@ -117,6 +117,15 @@ const CLAIM: JsonSchema = {
       basis: FACT_ID,
       direction: { type: "string", enum: ["highest", "lowest"] },
     }),
+    // No `members`: the model names the subject and the direction, and the
+    // kernel derives the set from the certified chart. A wrong weakness is not
+    // a reachable output under enforced decoding.
+    variant("matchup", {
+      subject: {
+        anyOf: [variant("species", { entityId: STRING }), variant("type", { typeId: STRING })],
+      },
+      direction: { type: "string", enum: ["weak-to", "resists", "immune-to", "strong-against"] },
+    }),
     variant("recommendation", { entityId: STRING }),
     // Kept representable on purpose — see the module note on vacuous safety.
     variant("action", { tool: STRING, entityId: STRING }),
