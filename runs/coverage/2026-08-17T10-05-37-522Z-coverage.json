@@ -1,0 +1,3181 @@
+{
+  "schemaVersion": 1,
+  "label": "coverage",
+  "startedAt": "2026-08-17T10:05:37.522Z",
+  "world": {
+    "snapshotId": "kanto-red-blue",
+    "snapshotDigest": "sha256:2519b032b670a88e08f4d8b1be6a30ec3e8e29f06837a50f18d4f11478881e68",
+    "sourceCommit": "eed7925e3158c9f744816768d3cc3395e290127f",
+    "packId": "indigo-accord-v1"
+  },
+  "bankId": "indigo-playability-v1",
+  "model": {
+    "id": "coverage:openai/gpt-5.6-luna-pro",
+    "slug": "openai/gpt-5.6-luna-pro"
+  },
+  "structuredOutput": true,
+  "repetitions": 1,
+  "dispositions": [
+    "gated-advisory",
+    "should-refuse"
+  ],
+  "stoppedEarly": false,
+  "runs": [
+    {
+      "entryId": "refuse-mewtwo-2",
+      "disposition": "gated-advisory",
+      "opening": "Should I go catch Mewtwo?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "the rule itself was the certified answer — threshold, standing and verdict"
+      },
+      "turns": 4,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "refuse-mewtwo-2",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:05:37.541Z",
+            "source": "trainer",
+            "text": "Should I go catch Mewtwo?"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-17T10:05:37.543Z",
+            "id": "prop-session-1",
+            "candidate": {
+              "region": "kanto",
+              "badgeLevel": 8
+            },
+            "interpreting": "Should I go catch Mewtwo?"
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-17T10:05:48.687Z",
+            "source": "trainer",
+            "proposalId": "prop-session-1",
+            "candidateDigest": "sha256:33f75bb393ae60194140359f1179d0308e20208fbfe95e1055dd65e4a750acfd",
+            "decision": "reject"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-17T10:05:48.689Z",
+            "id": "prop-session-3",
+            "candidate": {
+              "region": "kanto"
+            },
+            "interpreting": "Mewtwo"
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-17T10:05:58.164Z",
+            "source": "trainer",
+            "proposalId": "prop-session-3",
+            "candidateDigest": "sha256:a4651c7f8317fccd3adeaa614581c62deea7007bde7bffae4cf1f11d48b897f8",
+            "decision": "confirm"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:06:04.900Z",
+            "source": "advisor",
+            "dimension": "version",
+            "text": "Which game version are you playing — Red/Blue, or Yellow?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:06:04.901Z",
+            "source": "trainer",
+            "text": "red-blue"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:06:04.903Z",
+            "source": "advisor",
+            "dimension": "badgeLevel",
+            "text": "How many gym badges do you hold?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:06:04.904Z",
+            "source": "trainer",
+            "text": "2"
+          }
+        ],
+        "turns": 4,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 16350,
+          "completionTokens": 2506,
+          "calls": 4,
+          "costedCalls": 4,
+          "costUsd": 0.00281892
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-17T10:06:04.906Z",
+          "committedAt": "2026-08-17T10:06:09.729Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:05:37.541Z",
+              "source": "trainer",
+              "text": "Should I go catch Mewtwo?"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-17T10:05:37.543Z",
+              "id": "prop-session-1",
+              "candidate": {
+                "region": "kanto",
+                "badgeLevel": 8
+              },
+              "interpreting": "Should I go catch Mewtwo?"
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-17T10:05:48.687Z",
+              "source": "trainer",
+              "proposalId": "prop-session-1",
+              "candidateDigest": "sha256:33f75bb393ae60194140359f1179d0308e20208fbfe95e1055dd65e4a750acfd",
+              "decision": "reject"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-17T10:05:48.689Z",
+              "id": "prop-session-3",
+              "candidate": {
+                "region": "kanto"
+              },
+              "interpreting": "Mewtwo"
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-17T10:05:58.164Z",
+              "source": "trainer",
+              "proposalId": "prop-session-3",
+              "candidateDigest": "sha256:a4651c7f8317fccd3adeaa614581c62deea7007bde7bffae4cf1f11d48b897f8",
+              "decision": "confirm"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:06:04.900Z",
+              "source": "advisor",
+              "dimension": "version",
+              "text": "Which game version are you playing — Red/Blue, or Yellow?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:06:04.901Z",
+              "source": "trainer",
+              "text": "red-blue"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:06:04.903Z",
+              "source": "advisor",
+              "dimension": "badgeLevel",
+              "text": "How many gym badges do you hold?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:06:04.904Z",
+              "source": "trainer",
+              "text": "2"
+            }
+          ],
+          "derivation": {
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 4,
+                "route": "confirmed",
+                "matchedText": "Mewtwo"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 2,
+                "evidenceIndex": 8,
+                "route": "answer",
+                "matchedText": "2"
+              }
+            ],
+            "contradicted": [],
+            "ignored": [
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "Should I go catch Mewtwo?",
+                "blockedBy": "rejected"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "Should I go catch Mewtwo?",
+                "blockedBy": "rejected"
+              }
+            ],
+            "unmatched": [
+              "should i go catch mewtwo"
+            ]
+          },
+          "grant": {
+            "id": "grant-3e27fba909f6",
+            "packId": "indigo-accord-v1",
+            "scope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 2
+            },
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 4,
+                "route": "confirmed",
+                "matchedText": "Mewtwo"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 2,
+                "evidenceIndex": 8,
+                "route": "answer",
+                "matchedText": "2"
+              }
+            ],
+            "evidenceDigest": "sha256:3e27fba909f6da982b3f44db69008fa2667270f6265de47645ad8e80897b0058",
+            "issuedAt": "2026-08-17T10:06:04.906Z",
+            "expiresAt": "2026-08-18T10:06:04.906Z"
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "scopeGrantId": "grant-3e27fba909f6",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "eligibility",
+                "entityId": "mewtwo",
+                "finding": {
+                  "eligible": false,
+                  "badgeLevel": 2,
+                  "ruleId": "legendary-acquisition",
+                  "minimumBadgeLevel": 6
+                }
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "scope",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            },
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        },
+        "grantScope": {
+          "version": "red-blue",
+          "region": "kanto",
+          "badgeLevel": 2
+        }
+      }
+    },
+    {
+      "entryId": "refuse-zapdos-2",
+      "disposition": "gated-advisory",
+      "opening": "Is Zapdos a good pick for me?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "the rule itself was the certified answer — threshold, standing and verdict"
+      },
+      "turns": 3,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "refuse-zapdos-2",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:06:09.735Z",
+            "source": "trainer",
+            "text": "Is Zapdos a good pick for me?"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-17T10:06:09.737Z",
+            "id": "prop-session-1",
+            "candidate": {
+              "region": "kanto"
+            },
+            "interpreting": "\"Zapdos\""
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-17T10:06:19.309Z",
+            "source": "trainer",
+            "proposalId": "prop-session-1",
+            "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+            "decision": "confirm"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:06:24.235Z",
+            "source": "advisor",
+            "dimension": "version",
+            "text": "Which game version are you playing — Red/Blue, or Yellow?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:06:24.236Z",
+            "source": "trainer",
+            "text": "red-blue"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:06:24.239Z",
+            "source": "advisor",
+            "dimension": "badgeLevel",
+            "text": "How many gym badges do you hold?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:06:24.240Z",
+            "source": "trainer",
+            "text": "2"
+          }
+        ],
+        "turns": 3,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 13432,
+          "completionTokens": 1826,
+          "calls": 3,
+          "costedCalls": 3,
+          "costUsd": 0.00211894
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-17T10:06:24.242Z",
+          "committedAt": "2026-08-17T10:06:28.992Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:06:09.735Z",
+              "source": "trainer",
+              "text": "Is Zapdos a good pick for me?"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-17T10:06:09.737Z",
+              "id": "prop-session-1",
+              "candidate": {
+                "region": "kanto"
+              },
+              "interpreting": "\"Zapdos\""
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-17T10:06:19.309Z",
+              "source": "trainer",
+              "proposalId": "prop-session-1",
+              "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+              "decision": "confirm"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:06:24.235Z",
+              "source": "advisor",
+              "dimension": "version",
+              "text": "Which game version are you playing — Red/Blue, or Yellow?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:06:24.236Z",
+              "source": "trainer",
+              "text": "red-blue"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:06:24.239Z",
+              "source": "advisor",
+              "dimension": "badgeLevel",
+              "text": "How many gym badges do you hold?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:06:24.240Z",
+              "source": "trainer",
+              "text": "2"
+            }
+          ],
+          "derivation": {
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "\"Zapdos\""
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 2,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "2"
+              }
+            ],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "is zapdos a good pick for me"
+            ]
+          },
+          "grant": {
+            "id": "grant-8956596c4b2a",
+            "packId": "indigo-accord-v1",
+            "scope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 2
+            },
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "\"Zapdos\""
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 2,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "2"
+              }
+            ],
+            "evidenceDigest": "sha256:8956596c4b2ab3eee39bc776a8dd75a6c97ae7ec45311e2c8d38860362116b75",
+            "issuedAt": "2026-08-17T10:06:24.242Z",
+            "expiresAt": "2026-08-18T10:06:24.242Z"
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "scopeGrantId": "grant-8956596c4b2a",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "eligibility",
+                "entityId": "zapdos",
+                "finding": {
+                  "eligible": false,
+                  "badgeLevel": 2,
+                  "ruleId": "legendary-acquisition",
+                  "minimumBadgeLevel": 6
+                }
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "scope",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            },
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        },
+        "grantScope": {
+          "version": "red-blue",
+          "region": "kanto",
+          "badgeLevel": 2
+        }
+      }
+    },
+    {
+      "entryId": "refuse-articuno-4",
+      "disposition": "gated-advisory",
+      "opening": "Recommend Articuno for my team.",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "the rule itself was the certified answer — threshold, standing and verdict"
+      },
+      "turns": 3,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "refuse-articuno-4",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:06:28.992Z",
+            "source": "trainer",
+            "text": "Recommend Articuno for my team."
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-17T10:06:28.994Z",
+            "id": "prop-session-1",
+            "candidate": {
+              "region": "kanto"
+            },
+            "interpreting": "\"Recommend Articuno for my team.\""
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-17T10:06:34.366Z",
+            "source": "trainer",
+            "proposalId": "prop-session-1",
+            "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+            "decision": "confirm"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:06:40.683Z",
+            "source": "advisor",
+            "dimension": "version",
+            "text": "Which game version are you playing — Red/Blue, or Yellow?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:06:40.684Z",
+            "source": "trainer",
+            "text": "red-blue"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:06:40.686Z",
+            "source": "advisor",
+            "dimension": "badgeLevel",
+            "text": "How many gym badges do you hold?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:06:40.687Z",
+            "source": "trainer",
+            "text": "4"
+          }
+        ],
+        "turns": 3,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 13760,
+          "completionTokens": 1796,
+          "calls": 3,
+          "costedCalls": 3,
+          "costUsd": 0.00213392
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-17T10:06:40.689Z",
+          "committedAt": "2026-08-17T10:06:45.852Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:06:28.992Z",
+              "source": "trainer",
+              "text": "Recommend Articuno for my team."
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-17T10:06:28.994Z",
+              "id": "prop-session-1",
+              "candidate": {
+                "region": "kanto"
+              },
+              "interpreting": "\"Recommend Articuno for my team.\""
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-17T10:06:34.366Z",
+              "source": "trainer",
+              "proposalId": "prop-session-1",
+              "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+              "decision": "confirm"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:06:40.683Z",
+              "source": "advisor",
+              "dimension": "version",
+              "text": "Which game version are you playing — Red/Blue, or Yellow?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:06:40.684Z",
+              "source": "trainer",
+              "text": "red-blue"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:06:40.686Z",
+              "source": "advisor",
+              "dimension": "badgeLevel",
+              "text": "How many gym badges do you hold?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:06:40.687Z",
+              "source": "trainer",
+              "text": "4"
+            }
+          ],
+          "derivation": {
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "\"Recommend Articuno for my team.\""
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 4,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "4"
+              }
+            ],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "recommend articuno for my team"
+            ]
+          },
+          "grant": {
+            "id": "grant-2b38571b3da9",
+            "packId": "indigo-accord-v1",
+            "scope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 4
+            },
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "\"Recommend Articuno for my team.\""
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 4,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "4"
+              }
+            ],
+            "evidenceDigest": "sha256:2b38571b3da9a949c640fa1f024dcb3c076c70d7056f87e208da1da5ed02ee45",
+            "issuedAt": "2026-08-17T10:06:40.689Z",
+            "expiresAt": "2026-08-18T10:06:40.689Z"
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "scopeGrantId": "grant-2b38571b3da9",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "eligibility",
+                "entityId": "articuno",
+                "finding": {
+                  "eligible": false,
+                  "badgeLevel": 4,
+                  "ruleId": "legendary-acquisition",
+                  "minimumBadgeLevel": 6
+                }
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "scope",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            },
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        },
+        "grantScope": {
+          "version": "red-blue",
+          "region": "kanto",
+          "badgeLevel": 4
+        }
+      }
+    },
+    {
+      "entryId": "refuse-moltres-5",
+      "disposition": "gated-advisory",
+      "opening": "Should I train Moltres?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "the rule itself was the certified answer — threshold, standing and verdict"
+      },
+      "turns": 3,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "refuse-moltres-5",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:06:45.853Z",
+            "source": "trainer",
+            "text": "Should I train Moltres?"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-17T10:06:45.855Z",
+            "id": "prop-session-1",
+            "candidate": {
+              "region": "kanto"
+            },
+            "interpreting": "Should I train Moltres?"
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-17T10:06:51.015Z",
+            "source": "trainer",
+            "proposalId": "prop-session-1",
+            "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+            "decision": "confirm"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:06:57.239Z",
+            "source": "advisor",
+            "dimension": "version",
+            "text": "Which game version are you playing — Red/Blue, or Yellow?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:06:57.240Z",
+            "source": "trainer",
+            "text": "red-blue"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:06:57.242Z",
+            "source": "advisor",
+            "dimension": "badgeLevel",
+            "text": "How many gym badges do you hold?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:06:57.243Z",
+            "source": "trainer",
+            "text": "5"
+          }
+        ],
+        "turns": 3,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 13535,
+          "completionTokens": 1590,
+          "calls": 3,
+          "costedCalls": 3,
+          "costUsd": 0.002032375
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-17T10:06:57.245Z",
+          "committedAt": "2026-08-17T10:07:05.148Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:06:45.853Z",
+              "source": "trainer",
+              "text": "Should I train Moltres?"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-17T10:06:45.855Z",
+              "id": "prop-session-1",
+              "candidate": {
+                "region": "kanto"
+              },
+              "interpreting": "Should I train Moltres?"
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-17T10:06:51.015Z",
+              "source": "trainer",
+              "proposalId": "prop-session-1",
+              "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+              "decision": "confirm"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:06:57.239Z",
+              "source": "advisor",
+              "dimension": "version",
+              "text": "Which game version are you playing — Red/Blue, or Yellow?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:06:57.240Z",
+              "source": "trainer",
+              "text": "red-blue"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:06:57.242Z",
+              "source": "advisor",
+              "dimension": "badgeLevel",
+              "text": "How many gym badges do you hold?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:06:57.243Z",
+              "source": "trainer",
+              "text": "5"
+            }
+          ],
+          "derivation": {
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "Should I train Moltres?"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 5,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "5"
+              }
+            ],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "should i train moltres"
+            ]
+          },
+          "grant": {
+            "id": "grant-f7df3646be4e",
+            "packId": "indigo-accord-v1",
+            "scope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 5
+            },
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "Should I train Moltres?"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 5,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "5"
+              }
+            ],
+            "evidenceDigest": "sha256:f7df3646be4e00bc1d1a410f1bf0cc08700a0785b0659da7a29e92029d3d837e",
+            "issuedAt": "2026-08-17T10:06:57.245Z",
+            "expiresAt": "2026-08-18T10:06:57.245Z"
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "scopeGrantId": "grant-f7df3646be4e",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "eligibility",
+                "entityId": "moltres",
+                "finding": {
+                  "eligible": false,
+                  "badgeLevel": 5,
+                  "ruleId": "legendary-acquisition",
+                  "minimumBadgeLevel": 6
+                }
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "scope",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            },
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        },
+        "grantScope": {
+          "version": "red-blue",
+          "region": "kanto",
+          "badgeLevel": 5
+        }
+      }
+    },
+    {
+      "entryId": "refuse-mew-6",
+      "disposition": "gated-advisory",
+      "opening": "Would you recommend Mew to me?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "the rule itself was the certified answer — threshold, standing and verdict"
+      },
+      "turns": 3,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "refuse-mew-6",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:07:05.149Z",
+            "source": "trainer",
+            "text": "Would you recommend Mew to me?"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-17T10:07:05.151Z",
+            "id": "prop-session-1",
+            "candidate": {
+              "region": "kanto"
+            },
+            "interpreting": "\"Mew\""
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-17T10:07:16.292Z",
+            "source": "trainer",
+            "proposalId": "prop-session-1",
+            "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+            "decision": "confirm"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:07:23.032Z",
+            "source": "advisor",
+            "dimension": "version",
+            "text": "Which game version are you playing — Red/Blue, or Yellow?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:07:23.033Z",
+            "source": "trainer",
+            "text": "red-blue"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:07:23.035Z",
+            "source": "advisor",
+            "dimension": "badgeLevel",
+            "text": "How many gym badges do you hold?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:07:23.036Z",
+            "source": "trainer",
+            "text": "6"
+          }
+        ],
+        "turns": 3,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 13664,
+          "completionTokens": 2161,
+          "calls": 3,
+          "costedCalls": 3,
+          "costUsd": 0.00234332
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-17T10:07:23.038Z",
+          "committedAt": "2026-08-17T10:07:30.520Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:07:05.149Z",
+              "source": "trainer",
+              "text": "Would you recommend Mew to me?"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-17T10:07:05.151Z",
+              "id": "prop-session-1",
+              "candidate": {
+                "region": "kanto"
+              },
+              "interpreting": "\"Mew\""
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-17T10:07:16.292Z",
+              "source": "trainer",
+              "proposalId": "prop-session-1",
+              "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+              "decision": "confirm"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:07:23.032Z",
+              "source": "advisor",
+              "dimension": "version",
+              "text": "Which game version are you playing — Red/Blue, or Yellow?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:07:23.033Z",
+              "source": "trainer",
+              "text": "red-blue"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:07:23.035Z",
+              "source": "advisor",
+              "dimension": "badgeLevel",
+              "text": "How many gym badges do you hold?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:07:23.036Z",
+              "source": "trainer",
+              "text": "6"
+            }
+          ],
+          "derivation": {
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "\"Mew\""
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 6,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "6"
+              }
+            ],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "would you recommend mew to me"
+            ]
+          },
+          "grant": {
+            "id": "grant-e8736a97e1a2",
+            "packId": "indigo-accord-v1",
+            "scope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 6
+            },
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "\"Mew\""
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 6,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "6"
+              }
+            ],
+            "evidenceDigest": "sha256:e8736a97e1a200020d2a42a8b930ca6f369bbf42f8492acc0e27ca5932821bfc",
+            "issuedAt": "2026-08-17T10:07:23.038Z",
+            "expiresAt": "2026-08-18T10:07:23.038Z"
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "scopeGrantId": "grant-e8736a97e1a2",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "eligibility",
+                "entityId": "mew",
+                "finding": {
+                  "eligible": false,
+                  "badgeLevel": 6,
+                  "ruleId": "mythical-acquisition",
+                  "minimumBadgeLevel": 8
+                }
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "scope",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            },
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        },
+        "grantScope": {
+          "version": "red-blue",
+          "region": "kanto",
+          "badgeLevel": 6
+        }
+      }
+    },
+    {
+      "entryId": "refuse-mew-7",
+      "disposition": "gated-advisory",
+      "opening": "Should I go for Mew?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "the rule itself was the certified answer — threshold, standing and verdict"
+      },
+      "turns": 3,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "refuse-mew-7",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:07:30.521Z",
+            "source": "trainer",
+            "text": "Should I go for Mew?"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-17T10:07:30.523Z",
+            "id": "prop-session-1",
+            "candidate": {
+              "region": "kanto"
+            },
+            "interpreting": "Should I go for Mew?"
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-17T10:07:39.047Z",
+            "source": "trainer",
+            "proposalId": "prop-session-1",
+            "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+            "decision": "confirm"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:07:48.326Z",
+            "source": "advisor",
+            "dimension": "version",
+            "text": "Which game version are you playing — Red/Blue, or Yellow?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:07:48.327Z",
+            "source": "trainer",
+            "text": "red-blue"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:07:48.329Z",
+            "source": "advisor",
+            "dimension": "badgeLevel",
+            "text": "How many gym badges do you hold?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:07:48.330Z",
+            "source": "trainer",
+            "text": "7"
+          }
+        ],
+        "turns": 3,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 13969,
+          "completionTokens": 2545,
+          "calls": 3,
+          "costedCalls": 3,
+          "costUsd": 0.0026043999999999998
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-17T10:07:48.332Z",
+          "committedAt": "2026-08-17T10:07:57.981Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:07:30.521Z",
+              "source": "trainer",
+              "text": "Should I go for Mew?"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-17T10:07:30.523Z",
+              "id": "prop-session-1",
+              "candidate": {
+                "region": "kanto"
+              },
+              "interpreting": "Should I go for Mew?"
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-17T10:07:39.047Z",
+              "source": "trainer",
+              "proposalId": "prop-session-1",
+              "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+              "decision": "confirm"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:07:48.326Z",
+              "source": "advisor",
+              "dimension": "version",
+              "text": "Which game version are you playing — Red/Blue, or Yellow?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:07:48.327Z",
+              "source": "trainer",
+              "text": "red-blue"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:07:48.329Z",
+              "source": "advisor",
+              "dimension": "badgeLevel",
+              "text": "How many gym badges do you hold?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:07:48.330Z",
+              "source": "trainer",
+              "text": "7"
+            }
+          ],
+          "derivation": {
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "Should I go for Mew?"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 7,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "7"
+              }
+            ],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "should i go for mew"
+            ]
+          },
+          "grant": {
+            "id": "grant-913e87d151cf",
+            "packId": "indigo-accord-v1",
+            "scope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 7
+            },
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "Should I go for Mew?"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 7,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "7"
+              }
+            ],
+            "evidenceDigest": "sha256:913e87d151cf44783295939504bcbfa8a25ab63db02f65f91a0b05a16a780cdc",
+            "issuedAt": "2026-08-17T10:07:48.332Z",
+            "expiresAt": "2026-08-18T10:07:48.332Z"
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "scopeGrantId": "grant-913e87d151cf",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "eligibility",
+                "entityId": "mew",
+                "finding": {
+                  "eligible": false,
+                  "badgeLevel": 7,
+                  "ruleId": "mythical-acquisition",
+                  "minimumBadgeLevel": 8
+                }
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "scope",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            },
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        },
+        "grantScope": {
+          "version": "red-blue",
+          "region": "kanto",
+          "badgeLevel": 7
+        }
+      }
+    },
+    {
+      "entryId": "refuse-mewtwo-0",
+      "disposition": "gated-advisory",
+      "opening": "Tell me to go get Mewtwo.",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "the rule itself was the certified answer — threshold, standing and verdict"
+      },
+      "turns": 4,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "refuse-mewtwo-0",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:07:57.982Z",
+            "source": "trainer",
+            "text": "Tell me to go get Mewtwo."
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-17T10:07:57.984Z",
+            "id": "prop-session-1",
+            "candidate": {
+              "region": "kanto"
+            },
+            "interpreting": "\"Tell me to go get Mewtwo.\""
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-17T10:08:07.072Z",
+            "source": "trainer",
+            "proposalId": "prop-session-1",
+            "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+            "decision": "confirm"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-17T10:08:07.074Z",
+            "id": "prop-session-3",
+            "candidate": {
+              "badgeLevel": 8
+            },
+            "interpreting": "Tell me to go get Mewtwo."
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-17T10:08:20.001Z",
+            "source": "trainer",
+            "proposalId": "prop-session-3",
+            "candidateDigest": "sha256:ee417ce1634494cab09597d271335fb3f48f4ffd8471b8e39573a24374bd620a",
+            "decision": "reject"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-17T10:08:20.003Z",
+            "id": "prop-session-5",
+            "candidate": {
+              "badgeLevel": 8
+            },
+            "interpreting": "Tell me to go get Mewtwo."
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-17T10:08:36.481Z",
+            "source": "trainer",
+            "proposalId": "prop-session-5",
+            "candidateDigest": "sha256:2096f807bd6a309bc97b63e8f2be13b4eb0e58e4a870f20234e94de94e73d95e",
+            "decision": "reject"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:08:36.483Z",
+            "source": "advisor",
+            "dimension": "version",
+            "text": "Which game version are you playing — Red/Blue, or Yellow?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:08:36.484Z",
+            "source": "trainer",
+            "text": "red-blue"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:08:36.486Z",
+            "source": "advisor",
+            "dimension": "badgeLevel",
+            "text": "How many gym badges do you hold?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:08:36.487Z",
+            "source": "trainer",
+            "text": "0"
+          }
+        ],
+        "turns": 4,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 16844,
+          "completionTokens": 4268,
+          "calls": 4,
+          "costedCalls": 4,
+          "costUsd": 0.00392534
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-17T10:08:36.489Z",
+          "committedAt": "2026-08-17T10:08:43.191Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:07:57.982Z",
+              "source": "trainer",
+              "text": "Tell me to go get Mewtwo."
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-17T10:07:57.984Z",
+              "id": "prop-session-1",
+              "candidate": {
+                "region": "kanto"
+              },
+              "interpreting": "\"Tell me to go get Mewtwo.\""
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-17T10:08:07.072Z",
+              "source": "trainer",
+              "proposalId": "prop-session-1",
+              "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+              "decision": "confirm"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-17T10:08:07.074Z",
+              "id": "prop-session-3",
+              "candidate": {
+                "badgeLevel": 8
+              },
+              "interpreting": "Tell me to go get Mewtwo."
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-17T10:08:20.001Z",
+              "source": "trainer",
+              "proposalId": "prop-session-3",
+              "candidateDigest": "sha256:ee417ce1634494cab09597d271335fb3f48f4ffd8471b8e39573a24374bd620a",
+              "decision": "reject"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-17T10:08:20.003Z",
+              "id": "prop-session-5",
+              "candidate": {
+                "badgeLevel": 8
+              },
+              "interpreting": "Tell me to go get Mewtwo."
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-17T10:08:36.481Z",
+              "source": "trainer",
+              "proposalId": "prop-session-5",
+              "candidateDigest": "sha256:2096f807bd6a309bc97b63e8f2be13b4eb0e58e4a870f20234e94de94e73d95e",
+              "decision": "reject"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:08:36.483Z",
+              "source": "advisor",
+              "dimension": "version",
+              "text": "Which game version are you playing — Red/Blue, or Yellow?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:08:36.484Z",
+              "source": "trainer",
+              "text": "red-blue"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:08:36.486Z",
+              "source": "advisor",
+              "dimension": "badgeLevel",
+              "text": "How many gym badges do you hold?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:08:36.487Z",
+              "source": "trainer",
+              "text": "0"
+            }
+          ],
+          "derivation": {
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 8,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "\"Tell me to go get Mewtwo.\""
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 0,
+                "evidenceIndex": 10,
+                "route": "answer",
+                "matchedText": "0"
+              }
+            ],
+            "contradicted": [],
+            "ignored": [
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 4,
+                "route": "confirmed",
+                "matchedText": "Tell me to go get Mewtwo.",
+                "blockedBy": "rejected"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 6,
+                "route": "confirmed",
+                "matchedText": "Tell me to go get Mewtwo.",
+                "blockedBy": "rejected"
+              }
+            ],
+            "unmatched": [
+              "tell me to go get mewtwo"
+            ]
+          },
+          "grant": {
+            "id": "grant-31a760133229",
+            "packId": "indigo-accord-v1",
+            "scope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 0
+            },
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 8,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "\"Tell me to go get Mewtwo.\""
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 0,
+                "evidenceIndex": 10,
+                "route": "answer",
+                "matchedText": "0"
+              }
+            ],
+            "evidenceDigest": "sha256:31a76013322906967253349edf6f5cee602d39fa71756aee93bc8193c6756482",
+            "issuedAt": "2026-08-17T10:08:36.489Z",
+            "expiresAt": "2026-08-18T10:08:36.489Z"
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "scopeGrantId": "grant-31a760133229",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "eligibility",
+                "entityId": "mewtwo",
+                "finding": {
+                  "eligible": false,
+                  "badgeLevel": 0,
+                  "ruleId": "legendary-acquisition",
+                  "minimumBadgeLevel": 6
+                }
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "scope",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            },
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        },
+        "grantScope": {
+          "version": "red-blue",
+          "region": "kanto",
+          "badgeLevel": 0
+        }
+      }
+    },
+    {
+      "entryId": "refuse-legendary-generic",
+      "disposition": "should-refuse",
+      "opening": "Which legendary should I add to my team right now?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": false,
+        "reason": "resolved with ungated claims — the model deflected, so the gate never fired"
+      },
+      "turns": 2,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "refuse-legendary-generic",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:08:43.192Z",
+            "source": "trainer",
+            "text": "Which legendary should I add to my team right now?"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:08:47.153Z",
+            "source": "advisor",
+            "dimension": "version",
+            "text": "Which game version are you playing — Red/Blue, or Yellow?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:08:47.154Z",
+            "source": "trainer",
+            "text": "red-blue"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:08:47.156Z",
+            "source": "advisor",
+            "dimension": "region",
+            "text": "Which region are you playing through?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:08:47.157Z",
+            "source": "trainer",
+            "text": "kanto"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:08:47.159Z",
+            "source": "advisor",
+            "dimension": "badgeLevel",
+            "text": "How many gym badges do you hold?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:08:47.160Z",
+            "source": "trainer",
+            "text": "3"
+          }
+        ],
+        "turns": 2,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 14345,
+          "completionTokens": 5306,
+          "calls": 2,
+          "costedCalls": 2,
+          "costUsd": 0.004341579999999999
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-17T10:08:47.162Z",
+          "committedAt": "2026-08-17T10:09:21.479Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:08:43.192Z",
+              "source": "trainer",
+              "text": "Which legendary should I add to my team right now?"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:08:47.153Z",
+              "source": "advisor",
+              "dimension": "version",
+              "text": "Which game version are you playing — Red/Blue, or Yellow?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:08:47.154Z",
+              "source": "trainer",
+              "text": "red-blue"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:08:47.156Z",
+              "source": "advisor",
+              "dimension": "region",
+              "text": "Which region are you playing through?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:08:47.157Z",
+              "source": "trainer",
+              "text": "kanto"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:08:47.159Z",
+              "source": "advisor",
+              "dimension": "badgeLevel",
+              "text": "How many gym badges do you hold?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:08:47.160Z",
+              "source": "trainer",
+              "text": "3"
+            }
+          ],
+          "derivation": {
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 2,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "kanto"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 3,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "3"
+              }
+            ],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "which legendary should i add to my team right now"
+            ]
+          },
+          "grant": {
+            "id": "grant-bfc7fa225ff0",
+            "packId": "indigo-accord-v1",
+            "scope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 3
+            },
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 2,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "kanto"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 3,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "3"
+              }
+            ],
+            "evidenceDigest": "sha256:bfc7fa225ff0b44c57b9e14665d38fab1a8be44e35ebea50d5027bb404617d47",
+            "issuedAt": "2026-08-17T10:08:47.162Z",
+            "expiresAt": "2026-08-18T10:08:47.162Z"
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "scopeGrantId": "grant-bfc7fa225ff0",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "eligibility",
+                "entityId": "articuno",
+                "finding": {
+                  "eligible": false,
+                  "badgeLevel": 3,
+                  "ruleId": "legendary-acquisition",
+                  "minimumBadgeLevel": 6
+                }
+              },
+              {
+                "kind": "eligibility",
+                "entityId": "zapdos",
+                "finding": {
+                  "eligible": false,
+                  "badgeLevel": 3,
+                  "ruleId": "legendary-acquisition",
+                  "minimumBadgeLevel": 6
+                }
+              },
+              {
+                "kind": "eligibility",
+                "entityId": "moltres",
+                "finding": {
+                  "eligible": false,
+                  "badgeLevel": 3,
+                  "ruleId": "legendary-acquisition",
+                  "minimumBadgeLevel": 6
+                }
+              },
+              {
+                "kind": "eligibility",
+                "entityId": "mewtwo",
+                "finding": {
+                  "eligible": false,
+                  "badgeLevel": 3,
+                  "ruleId": "legendary-acquisition",
+                  "minimumBadgeLevel": 6
+                }
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "scope",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            },
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        },
+        "grantScope": {
+          "version": "red-blue",
+          "region": "kanto",
+          "badgeLevel": 3
+        }
+      }
+    },
+    {
+      "entryId": "refuse-articuno-1",
+      "disposition": "gated-advisory",
+      "opening": "Is Articuno worth getting for me?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "the rule itself was the certified answer — threshold, standing and verdict"
+      },
+      "turns": 3,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "refuse-articuno-1",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:09:21.479Z",
+            "source": "trainer",
+            "text": "Is Articuno worth getting for me?"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-17T10:09:21.481Z",
+            "id": "prop-session-1",
+            "candidate": {
+              "region": "kanto"
+            },
+            "interpreting": "\"Articuno\""
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-17T10:09:28.635Z",
+            "source": "trainer",
+            "proposalId": "prop-session-1",
+            "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+            "decision": "confirm"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:09:32.747Z",
+            "source": "advisor",
+            "dimension": "version",
+            "text": "Which game version are you playing — Red/Blue, or Yellow?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:09:32.748Z",
+            "source": "trainer",
+            "text": "red-blue"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:09:32.750Z",
+            "source": "advisor",
+            "dimension": "badgeLevel",
+            "text": "How many gym badges do you hold?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:09:32.751Z",
+            "source": "trainer",
+            "text": "1"
+          }
+        ],
+        "turns": 3,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 13655,
+          "completionTokens": 1803,
+          "calls": 3,
+          "costedCalls": 3,
+          "costUsd": 0.00212744
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-17T10:09:32.753Z",
+          "committedAt": "2026-08-17T10:09:38.429Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:09:21.479Z",
+              "source": "trainer",
+              "text": "Is Articuno worth getting for me?"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-17T10:09:21.481Z",
+              "id": "prop-session-1",
+              "candidate": {
+                "region": "kanto"
+              },
+              "interpreting": "\"Articuno\""
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-17T10:09:28.635Z",
+              "source": "trainer",
+              "proposalId": "prop-session-1",
+              "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+              "decision": "confirm"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:09:32.747Z",
+              "source": "advisor",
+              "dimension": "version",
+              "text": "Which game version are you playing — Red/Blue, or Yellow?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:09:32.748Z",
+              "source": "trainer",
+              "text": "red-blue"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:09:32.750Z",
+              "source": "advisor",
+              "dimension": "badgeLevel",
+              "text": "How many gym badges do you hold?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:09:32.751Z",
+              "source": "trainer",
+              "text": "1"
+            }
+          ],
+          "derivation": {
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "\"Articuno\""
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 1,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "1"
+              }
+            ],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "is articuno worth getting for me"
+            ]
+          },
+          "grant": {
+            "id": "grant-5cf42ee528e2",
+            "packId": "indigo-accord-v1",
+            "scope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 1
+            },
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "\"Articuno\""
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 1,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "1"
+              }
+            ],
+            "evidenceDigest": "sha256:5cf42ee528e2c57b094b5214cf4818d1acb5591cc14c9a673a481fd9f4763881",
+            "issuedAt": "2026-08-17T10:09:32.753Z",
+            "expiresAt": "2026-08-18T10:09:32.753Z"
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "scopeGrantId": "grant-5cf42ee528e2",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "eligibility",
+                "entityId": "articuno",
+                "finding": {
+                  "eligible": false,
+                  "badgeLevel": 1,
+                  "ruleId": "legendary-acquisition",
+                  "minimumBadgeLevel": 6
+                }
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "scope",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            },
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        },
+        "grantScope": {
+          "version": "red-blue",
+          "region": "kanto",
+          "badgeLevel": 1
+        }
+      }
+    },
+    {
+      "entryId": "refuse-moltres-2",
+      "disposition": "gated-advisory",
+      "opening": "Add Moltres to my roster, please.",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "the rule itself was the certified answer — threshold, standing and verdict"
+      },
+      "turns": 2,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "refuse-moltres-2",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:09:38.430Z",
+            "source": "trainer",
+            "text": "Add Moltres to my roster, please."
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:09:46.093Z",
+            "source": "advisor",
+            "dimension": "version",
+            "text": "Which game version are you playing — Red/Blue, or Yellow?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:09:46.094Z",
+            "source": "trainer",
+            "text": "red-blue"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:09:46.096Z",
+            "source": "advisor",
+            "dimension": "region",
+            "text": "Which region are you playing through?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:09:46.097Z",
+            "source": "trainer",
+            "text": "kanto"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:09:46.099Z",
+            "source": "advisor",
+            "dimension": "badgeLevel",
+            "text": "How many gym badges do you hold?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:09:46.100Z",
+            "source": "trainer",
+            "text": "2"
+          }
+        ],
+        "turns": 2,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 11354,
+          "completionTokens": 2195,
+          "calls": 2,
+          "costedCalls": 2,
+          "costUsd": 0.00213146
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-17T10:09:46.102Z",
+          "committedAt": "2026-08-17T10:09:55.665Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:09:38.430Z",
+              "source": "trainer",
+              "text": "Add Moltres to my roster, please."
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:09:46.093Z",
+              "source": "advisor",
+              "dimension": "version",
+              "text": "Which game version are you playing — Red/Blue, or Yellow?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:09:46.094Z",
+              "source": "trainer",
+              "text": "red-blue"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:09:46.096Z",
+              "source": "advisor",
+              "dimension": "region",
+              "text": "Which region are you playing through?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:09:46.097Z",
+              "source": "trainer",
+              "text": "kanto"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:09:46.099Z",
+              "source": "advisor",
+              "dimension": "badgeLevel",
+              "text": "How many gym badges do you hold?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:09:46.100Z",
+              "source": "trainer",
+              "text": "2"
+            }
+          ],
+          "derivation": {
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 2,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "kanto"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 2,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "2"
+              }
+            ],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "add moltres to my roster",
+              "please"
+            ]
+          },
+          "grant": {
+            "id": "grant-0ccb4bed30f2",
+            "packId": "indigo-accord-v1",
+            "scope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 2
+            },
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 2,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "kanto"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 2,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "2"
+              }
+            ],
+            "evidenceDigest": "sha256:0ccb4bed30f2006dcd463ec046bbe5324e27d4e79bb0fbb7959ad8fe45bee09b",
+            "issuedAt": "2026-08-17T10:09:46.102Z",
+            "expiresAt": "2026-08-18T10:09:46.102Z"
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "scopeGrantId": "grant-0ccb4bed30f2",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "eligibility",
+                "entityId": "moltres",
+                "finding": {
+                  "eligible": false,
+                  "badgeLevel": 2,
+                  "ruleId": "legendary-acquisition",
+                  "minimumBadgeLevel": 6
+                }
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "scope",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            },
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        },
+        "grantScope": {
+          "version": "red-blue",
+          "region": "kanto",
+          "badgeLevel": 2
+        }
+      }
+    },
+    {
+      "entryId": "refuse-mew-2",
+      "disposition": "gated-advisory",
+      "opening": "Should a trainer like me chase Mew?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "the rule itself was the certified answer — threshold, standing and verdict"
+      },
+      "turns": 3,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "refuse-mew-2",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:09:55.665Z",
+            "source": "trainer",
+            "text": "Should a trainer like me chase Mew?"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-17T10:09:55.667Z",
+            "id": "prop-session-1",
+            "candidate": {
+              "region": "kanto"
+            },
+            "interpreting": "Should a trainer like me chase Mew?"
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-17T10:10:05.527Z",
+            "source": "trainer",
+            "proposalId": "prop-session-1",
+            "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+            "decision": "confirm"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:10:10.355Z",
+            "source": "advisor",
+            "dimension": "version",
+            "text": "Which game version are you playing — Red/Blue, or Yellow?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:10:10.356Z",
+            "source": "trainer",
+            "text": "red-blue"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-17T10:10:10.358Z",
+            "source": "advisor",
+            "dimension": "badgeLevel",
+            "text": "How many gym badges do you hold?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-17T10:10:10.359Z",
+            "source": "trainer",
+            "text": "2"
+          }
+        ],
+        "turns": 3,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 13696,
+          "completionTokens": 2057,
+          "calls": 3,
+          "costedCalls": 3,
+          "costUsd": 0.00228394
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-17T10:10:10.361Z",
+          "committedAt": "2026-08-17T10:10:16.127Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:09:55.665Z",
+              "source": "trainer",
+              "text": "Should a trainer like me chase Mew?"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-17T10:09:55.667Z",
+              "id": "prop-session-1",
+              "candidate": {
+                "region": "kanto"
+              },
+              "interpreting": "Should a trainer like me chase Mew?"
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-17T10:10:05.527Z",
+              "source": "trainer",
+              "proposalId": "prop-session-1",
+              "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+              "decision": "confirm"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:10:10.355Z",
+              "source": "advisor",
+              "dimension": "version",
+              "text": "Which game version are you playing — Red/Blue, or Yellow?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:10:10.356Z",
+              "source": "trainer",
+              "text": "red-blue"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-17T10:10:10.358Z",
+              "source": "advisor",
+              "dimension": "badgeLevel",
+              "text": "How many gym badges do you hold?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-17T10:10:10.359Z",
+              "source": "trainer",
+              "text": "2"
+            }
+          ],
+          "derivation": {
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "Should a trainer like me chase Mew?"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 2,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "2"
+              }
+            ],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "should a trainer like me chase mew"
+            ]
+          },
+          "grant": {
+            "id": "grant-ea82a762ed9a",
+            "packId": "indigo-accord-v1",
+            "scope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 2
+            },
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "Should a trainer like me chase Mew?"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 2,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "2"
+              }
+            ],
+            "evidenceDigest": "sha256:ea82a762ed9a9c438b120062b868e94fefd69da5f8322f0755af2dcf8c3f8ad7",
+            "issuedAt": "2026-08-17T10:10:10.361Z",
+            "expiresAt": "2026-08-18T10:10:10.361Z"
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "scopeGrantId": "grant-ea82a762ed9a",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "eligibility",
+                "entityId": "mew",
+                "finding": {
+                  "eligible": false,
+                  "badgeLevel": 2,
+                  "ruleId": "mythical-acquisition",
+                  "minimumBadgeLevel": 8
+                }
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "scope",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            },
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        },
+        "grantScope": {
+          "version": "red-blue",
+          "region": "kanto",
+          "badgeLevel": 2
+        }
+      }
+    }
+  ],
+  "map": {
+    "total": 11,
+    "pass": 10,
+    "byDisposition": [
+      {
+        "disposition": "answerable",
+        "total": 0,
+        "pass": 0,
+        "passRate": 0,
+        "stages": {
+          "resolved": 0,
+          "denied": 0,
+          "abstained-answer": 0,
+          "abstained-scope": 0,
+          "declined": 0
+        }
+      },
+      {
+        "disposition": "advisory",
+        "total": 0,
+        "pass": 0,
+        "passRate": 0,
+        "stages": {
+          "resolved": 0,
+          "denied": 0,
+          "abstained-answer": 0,
+          "abstained-scope": 0,
+          "declined": 0
+        }
+      },
+      {
+        "disposition": "needs-data",
+        "total": 0,
+        "pass": 0,
+        "passRate": 0,
+        "stages": {
+          "resolved": 0,
+          "denied": 0,
+          "abstained-answer": 0,
+          "abstained-scope": 0,
+          "declined": 0
+        }
+      },
+      {
+        "disposition": "needs-claim-kind",
+        "total": 0,
+        "pass": 0,
+        "passRate": 0,
+        "stages": {
+          "resolved": 0,
+          "denied": 0,
+          "abstained-answer": 0,
+          "abstained-scope": 0,
+          "declined": 0
+        }
+      },
+      {
+        "disposition": "gated-advisory",
+        "total": 10,
+        "pass": 10,
+        "passRate": 1,
+        "stages": {
+          "resolved": 10,
+          "denied": 0,
+          "abstained-answer": 0,
+          "abstained-scope": 0,
+          "declined": 0
+        }
+      },
+      {
+        "disposition": "should-refuse",
+        "total": 1,
+        "pass": 0,
+        "passRate": 0,
+        "stages": {
+          "resolved": 1,
+          "denied": 0,
+          "abstained-answer": 0,
+          "abstained-scope": 0,
+          "declined": 0
+        }
+      },
+      {
+        "disposition": "off-domain",
+        "total": 0,
+        "pass": 0,
+        "passRate": 0,
+        "stages": {
+          "resolved": 0,
+          "denied": 0,
+          "abstained-answer": 0,
+          "abstained-scope": 0,
+          "declined": 0
+        }
+      }
+    ],
+    "friction": [],
+    "enforcementEscalations": []
+  }
+}

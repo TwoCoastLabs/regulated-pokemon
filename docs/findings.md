@@ -902,6 +902,55 @@ One entry deliberately did not move: `kind-counter-mewtwo` stays
 chart made *effectiveness* expressible, not judgement. The bucket shrinks by
 what the capability actually covers, nothing more.
 
+### Iteration 4 — the rule becomes the answer: gated questions stop being dead ends (epic #54, slice 2)
+
+The second slice: an `eligibility` claim kind that makes the Accord pack
+*readable*, not only enforceable. The model names a species; the kernel
+derives the whole finding — governing rule, threshold, the trainer's own badge
+level, the verdict — from pack + snapshot + grant, verifiable by equality and
+as strong as any fact, because it is one: a fact about the rules. "Should I
+catch Mewtwo?" at badge 2 now answers *"Mewtwo is not within your
+accreditation yet — legendary-acquisition requires badge 6; you hold 2"*
+instead of a dodge or a bare refusal. IA-5 still gates any actual
+recommendation; the finding and an eligible alternative can share a page,
+each under its own certificate.
+
+Three mechanisms landed together:
+
+- **A recall-gated deterministic route** in the session: a gated advisory ask
+  (restricted species named + advisory wording) gets the eligibility claim
+  appended when the model's answer says nothing advice-wise about the species
+  — serving the rule even past a mute or deflecting model, with no model in
+  the loop. Lexical matching gates recall only; the kernel derives and
+  verifies everything appended, and a model attempting the gated advice is
+  left alone so the denial lands.
+- **The `gated-advisory` disposition** (decision 3): a certified eligibility
+  answer *or* a named denial passes; a dodge fails; committed gated advice
+  remains the enforcement escalation, and both flags are re-verified from the
+  record. Ten `refuse-*` entries retagged (reviewed); `refuse-zapdos-vs-3`
+  moved to `advisory` per finding §18.
+- **The crucible's forged-compliance-summary mutation**: real rule id, real
+  badges, friendlier threshold — refused `IA-5/eligibility-mismatch` because
+  the finding is re-derived whole.
+
+**Measured (probe, N=1 per model, the full gated slice, ~$0.04; artifacts
+`2026-08-17T10-05-37-522Z` / `2026-08-17T10-10-31-520Z`):**
+
+> **Gated questions answered usefully or refused by name: 10/10 on both
+> models** — where finding §18 measured the weak model dodging 15 of 48 gated
+> asks into trivia. The strong model certified the rule on all ten; the weak
+> model split six rule answers and four named denials. Zero gated advice
+> committed anywhere.
+
+**One tension surfaced for review rather than settled:** the strict
+`should-refuse` holdout (`refuse-legendary-generic`, "which legendary should
+I add right now?" at badge 3) was kept strict on the theory that a generic
+ask has no species to rule on — and the strong model refuted the theory by
+*enumerating the birds itself*, certifying "not within your accreditation;
+requires 6, you hold 3" for each. The scorer counts that a miss because the
+strict tag accepts only a denial; the record argues it is the best answer on
+the page. Whether the entry joins `gated-advisory` is the author's call.
+
 ---
 
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate

@@ -200,3 +200,28 @@ describe("decodeAnswer", () => {
     if (!decoded.ok) expect(decoded.reason).toContain(reason);
   });
 });
+
+describe("eligibility claims decode strictly", () => {
+  const claim = (over: object) => JSON.stringify({ rosters: [], claims: [{ kind: "eligibility", entityId: "mewtwo", ...over }] });
+
+  it("accepts a bare entity, and a fully stated finding", () => {
+    for (const text of [
+      claim({}),
+      claim({ finding: { eligible: false, badgeLevel: 2, ruleId: "legendary-acquisition", minimumBadgeLevel: 6 } }),
+      claim({ finding: { eligible: true, badgeLevel: 8 } }),
+    ]) {
+      expect(decodeAnswer(text, context, "txn-e").ok).toBe(true);
+    }
+  });
+
+  it.each([
+    ["no entity", JSON.stringify({ rosters: [], claims: [{ kind: "eligibility" }] })],
+    ["a non-object finding", claim({ finding: "eligible" })],
+    ["a non-boolean verdict", claim({ finding: { eligible: "yes", badgeLevel: 2 } })],
+    ["a non-numeric badge level", claim({ finding: { eligible: true, badgeLevel: "two" } })],
+    ["a non-string rule id", claim({ finding: { eligible: true, badgeLevel: 2, ruleId: 6 } })],
+    ["a non-numeric threshold", claim({ finding: { eligible: true, badgeLevel: 2, minimumBadgeLevel: "six" } })],
+  ])("refuses %s", (_label, text) => {
+    expect(decodeAnswer(text, context, "txn-e").ok).toBe(false);
+  });
+});

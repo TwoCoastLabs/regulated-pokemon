@@ -204,6 +204,34 @@ function asClaim(value: unknown): Claim | null {
       }
       return null;
     }
+    case "eligibility": {
+      // No `finding`: the model names the species and the kernel derives what
+      // the rules say — verdict, governing rule, threshold, the trainer's own
+      // badge level. A stated finding (the raw arm's shape) is read strictly;
+      // whether it is *true* is the verifier's question, not the decoder's.
+      if (!isString(value.entityId)) return null;
+      if (value.finding === undefined) return { kind: "eligibility", entityId: value.entityId };
+      const finding = value.finding;
+      if (
+        !isObject(finding) ||
+        !isBoolean(finding.eligible) ||
+        !isNumber(finding.badgeLevel) ||
+        (finding.ruleId !== undefined && !isString(finding.ruleId)) ||
+        (finding.minimumBadgeLevel !== undefined && !isNumber(finding.minimumBadgeLevel))
+      ) {
+        return null;
+      }
+      return {
+        kind: "eligibility",
+        entityId: value.entityId,
+        finding: {
+          eligible: finding.eligible,
+          badgeLevel: finding.badgeLevel,
+          ...(finding.ruleId === undefined ? {} : { ruleId: finding.ruleId }),
+          ...(finding.minimumBadgeLevel === undefined ? {} : { minimumBadgeLevel: finding.minimumBadgeLevel }),
+        },
+      };
+    }
     case "recommendation":
       return isString(value.entityId) ? { kind: "recommendation", entityId: value.entityId } : null;
     case "action":

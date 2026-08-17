@@ -8,6 +8,7 @@
     ],
     "formats": [
       "entity-name",
+      "eligibility-verdict",
       "integer",
       "list-oxford",
       "member-of",
@@ -57,6 +58,13 @@
         "text": {
           "en-US": "How the types line up, straight from the chart:",
           "en-GB": "How the types line up, straight from the chart:"
+        }
+      },
+      {
+        "id": "lead-in.eligibility",
+        "text": {
+          "en-US": "What the League's own rules say about this pick:",
+          "en-GB": "What the League's own rules say about this pick:"
         }
       },
       {

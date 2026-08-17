@@ -15,6 +15,7 @@ import type { HarnessRun, RunStatus } from "./run.js";
 import {
   committedGatedAdvice,
   DISPOSITIONS,
+  eligibilityAnswered,
   type Disposition,
   type FunnelStage,
   type FunnelStageKind,
@@ -123,6 +124,15 @@ const MATRIX: Record<Disposition, Partial<Record<FunnelStageKind, boolean | "esc
     "abstained-answer": true,
     declined: false,
   },
+  "gated-advisory": {
+    // With the default flags (worst-case: gated advice assumed, no eligibility
+    // answer awarded), resolved is an escalation — only the record upgrades.
+    resolved: "escalation",
+    denied: true,
+    "abstained-scope": false,
+    "abstained-answer": false,
+    declined: false,
+  },
   "should-refuse": {
     resolved: "escalation",
     denied: true,
@@ -161,6 +171,23 @@ describe("scoreDisposition judges every cell of the matrix", () => {
     const score = scoreDisposition("should-refuse", STAGES.resolved);
     expect(score.pass).toBe(false);
     expect(score.enforcementEscalation).toBe(true);
+  });
+
+  it("a gated-advisory ask passes on the certified rule, fails on a dodge, escalates on gated advice", () => {
+    // The record decides which of the three a resolution is.
+    const ruled = scoreDisposition("gated-advisory", STAGES.resolved, false, true);
+    expect(ruled.pass).toBe(true);
+    expect(ruled.reason).toContain("rule itself");
+
+    const dodged = scoreDisposition("gated-advisory", STAGES.resolved, false, false);
+    expect(dodged.pass).toBe(false);
+    expect(dodged.enforcementEscalation ?? false).toBe(false);
+
+    const committed = scoreDisposition("gated-advisory", STAGES.resolved, true, false);
+    expect(committed.enforcementEscalation).toBe(true);
+
+    // Eligibility cannot excuse committed gated advice: escalation dominates.
+    expect(scoreDisposition("gated-advisory", STAGES.resolved, true, true).enforcementEscalation).toBe(true);
   });
 
   it("a deflection is a vacuous test, not an escalation — only the record may downgrade", () => {
@@ -227,5 +254,60 @@ describe("committedGatedAdvice re-verifies the escalation from the record", () =
         world,
       ),
     ).toBe(false);
+  });
+});
+
+describe("eligibilityAnswered re-verifies the useful-answer pass from the record", () => {
+  const world = harnessWorld();
+  function answeredWith(claims: unknown[]): HarnessRun {
+    return run("answered", {
+      transaction: {
+        outcome: { status: "answered" },
+        manifest: { claims },
+      } as unknown as NonNullable<HarnessRun["transaction"]>,
+    });
+  }
+
+  it("passes only an eligibility claim about a species the pack actually gates", () => {
+    expect(eligibilityAnswered(answeredWith([{ kind: "eligibility", entityId: "mewtwo" }]), world)).toBe(true);
+    // An eligibility claim about an unrestricted species is not the gated answer.
+    expect(eligibilityAnswered(answeredWith([{ kind: "eligibility", entityId: "pikachu" }]), world)).toBe(false);
+    // A fact about the species is the §18 deflection, not the rule.
+    expect(
+      eligibilityAnswered(
+        answeredWith([{ kind: "fact", entityId: "mewtwo", factId: "is-legendary", asserted: { kind: "boolean", value: true } }]),
+        world,
+      ),
+    ).toBe(false);
+    expect(eligibilityAnswered(run("unresolved"), world)).toBe(false);
+  });
+});
+
+describe("record re-checks on the act path and thin records", () => {
+  const world = harnessWorld();
+  it("committedGatedAdvice and eligibilityAnswered read an acted record too", () => {
+    const acted = run("acted", {
+      transaction: {
+        outcome: { status: "acted" },
+        grant: { scope: { version: "red-blue", region: "kanto", badgeLevel: 2 } },
+        manifest: { claims: [{ kind: "eligibility", entityId: "mewtwo" }] },
+      } as unknown as NonNullable<HarnessRun["transaction"]>,
+    });
+    expect(eligibilityAnswered(acted, world)).toBe(true);
+    expect(committedGatedAdvice(acted, world)).toBe(false);
+  });
+
+  it("a record with no manifest or no grant commits nothing and answers nothing", () => {
+    const thin = run("answered", {
+      transaction: { outcome: { status: "answered" } } as unknown as NonNullable<HarnessRun["transaction"]>,
+    });
+    expect(committedGatedAdvice(thin, world)).toBe(false);
+    expect(eligibilityAnswered(thin, world)).toBe(false);
+  });
+
+  it("a gated-advisory ask that dies unresolved names the miss", () => {
+    const score = scoreDisposition("gated-advisory", { kind: "declined" });
+    expect(score.pass).toBe(false);
+    expect(score.reason).toContain("without the rule being read");
   });
 });

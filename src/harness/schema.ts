@@ -126,6 +126,9 @@ const CLAIM: JsonSchema = {
       },
       direction: { type: "string", enum: ["weak-to", "resists", "immune-to", "strong-against"] },
     }),
+    // No `finding`: the model names the species; the kernel derives what the
+    // rules say about advising it — the pack as readable knowledge (IA-5).
+    variant("eligibility", { entityId: STRING }),
     variant("recommendation", { entityId: STRING }),
     // Kept representable on purpose — see the module note on vacuous safety.
     variant("action", { tool: STRING, entityId: STRING }),

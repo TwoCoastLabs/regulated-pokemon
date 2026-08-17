@@ -18,7 +18,7 @@ import type { AnswerManifest, Claim, ClosedRoster, Exhibit, RosterCriteria, Verd
 import { digestText } from "../kernel/digest.js";
 import { compileManifest, type ManifestDraft, verifyManifest } from "../kernel/manifest.js";
 import { buildRoster } from "../kernel/roster.js";
-import { AccordError } from "../kernel/violation.js";
+import { AccordError, verdictOf } from "../kernel/violation.js";
 import type { ArticleId } from "../kernel/accord.js";
 import { type Control, type CrucibleWorld, type Mutation } from "./harness.js";
 
@@ -353,6 +353,29 @@ export const PHASE_2_MUTATIONS: readonly Mutation[] = [
     rule: "matchup-mismatch",
     run: (world) =>
       sabotageMatchup(world, (claim) => ({ ...claim, members: (claim.members ?? []).slice(1) })),
+  },
+  {
+    id: "eligibility-forged-threshold",
+    title: "Quote the League's rule with a friendlier number",
+    description:
+      "The eligibility card keeps the real rule id and the trainer's real " +
+      "badges, and lowers the required threshold from 6 to 2 — the shape a " +
+      "doctored compliance summary takes. The finding is re-derived from the " +
+      "pack whole, so one forged clause refuses the card.",
+    article: "IA-5",
+    rule: "eligibility-mismatch",
+    run: (world) => {
+      const compiled = compileManifest(world, {
+        transactionId: "txn-crucible-eligibility",
+        claims: [{ kind: "eligibility", entityId: "mewtwo" }],
+        rosters: [],
+      });
+      if (!compiled.ok) return verdictOf(compiled.violations);
+      const manifest = compiled.value;
+      const claim = manifest.claims[0] as Extract<Claim, { kind: "eligibility" }>;
+      const forged = { ...claim, finding: { ...claim.finding!, minimumBadgeLevel: 2, eligible: true } };
+      return verifyManifest(world, { ...manifest, claims: [forged] });
+    },
   },
   {
     id: "matchup-fabricated-type",
