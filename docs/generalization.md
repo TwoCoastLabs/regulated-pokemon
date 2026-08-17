@@ -221,6 +221,38 @@ here: an agent whose safety depends on the model being smart is not safe, and
 this architecture's zeros are *supposed* to hold with a bad model in the loop —
 that is what the strong/weak A-B exists to show.
 
+### The read-only wedge
+
+The mappings above describe full deployments, but they share a common first
+step worth naming, because it is where the industry is actually stuck. The
+reported blocker for high-stakes agents — in banking and in asset-intensive
+field operations alike — is not runaway agency; it is that teams cannot trust
+the system in **basic, read-only Q&A**: stating facts about an account, a
+product, a well, a procedure. That is the *cheapest* slice of this
+architecture, and it is severable: a pack that disables the action and
+recommendation claim kinds leaves an agent that can do exactly two things —
+state certified facts, or honestly abstain. No consent ceremony, no act path,
+no advisory license question; the enforcement surface shrinks to the claims,
+display, authority, and replay articles, and the entire adoption cost
+concentrates where it belongs, in the knowledge-base certification pipeline.
+
+The read-only case has a characteristic hazard of its own, and it is usually
+misdiagnosed as hallucination: **right fact, wrong entity.** Industrial
+domains are dense with near-identical subjects — two wells on one pad, two
+share classes of one fund, two patients with one surname — and a model that
+retrieves a perfectly true value about the wrong one produces an answer that
+is *accurate, confident, and lethal*. Recomputing values does not fix this;
+the claim is internally true. Two disciplines in this design address it. The
+floor: the subject of every certified claim is bound to a typed, visible slot
+on the artifact — the answer is at least *visibly* about the entity it is
+about, never silently. The full treatment: give the subject entity the same
+consent gradient scope gets — deterministic binding when the principal names
+an identifier (asset IDs are the best closed vocabularies in existence), the
+answer-route when the system asked "which one?", and a one-click confirmation
+only under genuine ambiguity. "Well 7-A, Bakersfield pad 3 — yes?" costs a
+second; the alternative is a true fact about the wrong well read out to a
+crew at 2am.
+
 ## 4. Operating the knowledge base
 
 The user-facing question — "who maintains the facts, and how do decisions stay
