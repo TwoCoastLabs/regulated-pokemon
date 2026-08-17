@@ -39,13 +39,42 @@ crucible mutation and live run this project has thrown at them:
    vocabulary emit a value outside itself. Detection is a fallback; closure
    is the mechanism.
 4. **Interpretation binds only through consent — priced by ambiguity.**
-   Unambiguous statements bind deterministically; a direct answer to a
-   recorded question binds deterministically (the question is the context,
-   and it is in the record); genuinely ambiguous wording costs one model
-   proposal and one human confirmation of that exact candidate, by digest.
-   The gradient ends at structured input — a form control over the closed
-   vocabulary is the principal speaking unambiguously, and it is what
-   regulated industries already use.
+   Nothing personalized is released until the principal's material scope is
+   established, and how a statement gets to bind depends on how ambiguous it
+   is. The rule is a gradient, and each step up adds one more *recorded
+   witness* rather than one more guess:
+
+   ```
+   what the trainer did                 how it binds              model  clicks
+   ───────────────────────────────────────────────────────────────────────────
+   "I'm playing Red and Blue"           deterministic match:        0      0
+                                        value word + context word,
+                                        straight from the sentence
+
+   asked "Which version are you         answer route: the recorded  0      0
+   playing — Red/Blue, or Yellow?",     question supplies the
+   answered "Red"                       context the bare word lacks
+
+   said "whichever is quickest"         propose/confirm: the model  1      1
+                                        offers comparisonBasis =
+                                        base-speed; only the yes —
+                                        bound to that exact
+                                        candidate by digest — binds
+
+   picked "Red/Blue" from a dropdown    structured input: the
+                                        closed vocabulary worn as   0      1
+                                        a form control
+   ───────────────────────────────────────────────────────────────────────────
+   more ambiguity → one more witness in the record: first the question,
+   then the shown-and-confirmed candidate. Never a silent model guess.
+   ```
+
+   The worked example is one conversation: *"what types are there?"* → the
+   pack asks which version → *"Red"* binds with no model call and no card
+   (the question is in the transcript, so the leniency is auditable) → *"the
+   quickest one?"* → one proposal card, one yes, and the yes is cryptographic
+   consent to that candidate, not vibes. Ambiguous wording costs exactly as
+   much ceremony as it carries risk — and no more.
 5. **Every claim is recomputed, never trusted.** A stated fact is re-resolved
    against the pinned knowledge base; a count *is* its certified set's
    cardinality; a ranking's winner is derived, not asserted. Where a value is
@@ -107,6 +136,47 @@ left column is *small* — closed lists scale with the domain's schema, not with
 its corpus; adding the thousandth product to the snapshot costs nothing in the
 kernel. Second, the seams are already proven seams: the demo swapped models,
 renderers, and transports across them without touching enforcement.
+
+### Where a general-purpose policy engine fits — and why this kernel abstains
+
+The obvious challenge to the paragraph above: mature policy engines exist
+(OPA/Rego, Cedar, and their kin), compliance teams already write rules in
+them, and they hot-reload without redeploying anything. Why hand-roll a
+closed pack instead? The trade is real, so it deserves an honest ledger
+rather than a slogan.
+
+What an engine buys: **expressiveness without kernel changes** — a new rule
+is a policy diff, not a type change; **authoring leverage** — a policy team
+ships rules on its own cadence, which matters enormously in a product serving
+many tenants with divergent rulebooks; **ecosystem** — testing harnesses,
+IDE tooling, an evaluator hardened by wide use.
+
+What it costs, specifically against this design's claims: a general-purpose
+evaluator joins the **trusted computing base** of the enforcement path, and
+the thing being audited is no longer a few hundred lines of typed loader but
+an engine plus every policy expressible in it — rules can now *hide* (default
+decisions, negation subtleties, precedence between packages) exactly where
+this architecture promises they cannot. **Replay** acquires an engine-version
+pin: a verdict is reproducible only under the evaluator that produced it.
+The **in-browser crucible** — the same enforcement running live in a
+visitor's tab — gets heavy or impossible. And **fail-closed validation
+weakens**: this pack's loader refuses a rule that cites a nonexistent
+article, a threshold nobody can meet, a disclosure with no approved text — a
+Turing-flavored policy cannot be exhaustively validated at load, only tested.
+
+The resolution is about *where each belongs*, not which is better. An engine
+earns its place at the **act gateway of a product** — many tenants, fast-
+moving rulebooks, a dedicated policy team, decisions of the shape "may this
+tool call proceed, and under what obligations." This demo's kernel guards a
+larger and quieter surface — what may be *said*, shown, and consented to,
+recomputed from a pinned world — and its whole evidentiary posture rests on
+the rulebook being small enough to read and closed enough to validate. For a
+deployment that wants both: keep the pack as the reviewed source of truth and
+**compile it** into the engine's language for runtime enforcement at the
+gateway. Data stays closed, diffable, and load-validated; the engine becomes
+an execution detail rather than the place where policy lives. What this
+design declines on principle is only the inverse — authoring policy *in* the
+open-ended language and calling the result reviewable.
 
 ## 3. Industry mappings
 
@@ -255,12 +325,30 @@ same discipline the demo's results page enforces on itself.
   newcomer questions currently abstain for exactly this reason; the catalogue
   is the designed next step.) The ungoverned chat pane may still charm — the
   sales-call/prospectus split — but nothing said there carries a certificate.
-- **Recommendation-shaped answers carry a weaker certificate, and the
-  reporting must say so.** The kernel certifies an advised pick as *eligible*,
-  never as *correct* — "a real, allowed product," not "the best one." The
-  demo's coverage map reports advisory resolution apart from fact resolution
-  for that reason, and any deployment's dashboard should inherit the split;
-  summing them lets advice borrow a fact's guarantee.
+- **Recommendation-shaped answers carry a weaker certificate — and in several
+  target domains they are a licensed activity, not merely a softer claim.**
+  The kernel certifies an advised pick as *eligible*, never as *correct* —
+  "a real, allowed product," not "the best one." The demo's coverage map
+  reports advisory resolution apart from fact resolution for that reason, and
+  any deployment's dashboard should inherit the split; summing them lets
+  advice borrow a fact's guarantee. But the sharper point is legal, not
+  epistemic: individualized investment advice, medical advice, and legal
+  advice are activities a deployment must be *licensed to perform at all*
+  (in the U.S.: investment-adviser registration, the practice of medicine,
+  unauthorized-practice-of-law rules). That is an **operator-level gate,
+  distinct from the user-level accreditation gate** the demo's IA-5 models:
+  Article V asks "may *this trainer* be advised toward this thing?"; the
+  operator gate asks "may *this deployment* advise anyone at all?". In the
+  pack it is one line — an unlicensed deployment disables the recommendation
+  claim kind, and every advisory question refuses by name instead of
+  resolving — which converts "we accidentally gave investment advice" from a
+  discovered liability into a versioned policy decision. The line the
+  industry actually walks — *education* is permitted where *advice* is
+  licensed — is exactly the split this taxonomy already draws: certified
+  facts and selected-not-authored teaching content on one side, eligibility-
+  checked recommendation on the other. (The demo's fiction quietly assumes
+  the license: its Advisor speaks *as the League's own*. A real deployment
+  must earn that sentence.)
 - **This is priced for high stakes.** Scope establishment, confirmations, and
   consent-on-exact-artifact are friction. The demo's own iteration history
   shows the friction can be engineered down hard (a recorded question arms a
