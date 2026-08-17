@@ -14,6 +14,8 @@ function run(entryId: string, disposition: Disposition, stage: FunnelStage, pass
   return {
     entryId,
     disposition,
+    opening: extra.opening ?? "a question",
+    repetition: extra.repetition ?? 0,
     stage,
     score: { pass, reason: "", ...(extra.score ?? {}) },
     turns: extra.turns ?? 1,
@@ -100,7 +102,7 @@ function report(entryId: string, disposition: Disposition, stageKinds: FunnelSta
     stage: (kind === "denied" ? { kind, article: "IA-5", rule: "restricted-species" } : { kind }) as FunnelStage,
     pass: true,
   }));
-  return { entryId, disposition, phrasings, stable: new Set(stageKinds).size === 1 };
+  return { entryId, disposition, phrasings, runs: [], stable: new Set(stageKinds).size === 1 };
 }
 
 describe("robustnessSummary reports whether wording moved the bucket", () => {

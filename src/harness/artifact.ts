@@ -139,9 +139,18 @@ export function buildArtifact(report: HarnessReport, input: ArtifactInput): Harn
   };
 }
 
+/** The addressing every filed artifact shares — when the run started and what
+ * kind of run it was — which together name the file. The coverage artifact
+ * (coverage-artifact.ts) files through the same helpers under a different
+ * label, so every record in `runs/` sorts and reads the same way. */
+export interface ArtifactAddress {
+  startedAt: string;
+  label: string;
+}
+
 /** A filename that sorts chronologically and survives a filesystem: the
  * timestamp with its punctuation flattened, then the label. */
-export function artifactFilename(artifact: HarnessArtifact): string {
+export function artifactFilename(artifact: ArtifactAddress): string {
   return `${artifact.startedAt.replace(/[:.]/g, "-")}-${artifact.label}.json`;
 }
 
@@ -154,7 +163,7 @@ const writeToDisk: WriteFile = (path, contents) => {
 
 /** File the artifact and return where it went. Pretty-printed: it is meant to
  * be read and diffed, and it is small next to what it cost to produce. */
-export function fileArtifact(artifact: HarnessArtifact, directory: string, write: WriteFile = writeToDisk): string {
+export function fileArtifact<T extends ArtifactAddress>(artifact: T, directory: string, write: WriteFile = writeToDisk): string {
   const path = join(directory, artifactFilename(artifact));
   write(path, `${JSON.stringify(artifact, null, 2)}\n`);
   return path;

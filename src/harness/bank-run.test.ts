@@ -144,6 +144,21 @@ describe("runBankEntry buckets each disposition through the real session", () =>
     );
     expect(runs.map((run) => run.entryId)).toEqual(["ans-fact-speed-pikachu", "off-weather"]);
   });
+
+  it("carries the whole record behind the verdict — wording, transcript and transaction", async () => {
+    // What wave 4 files: a summary without its record would be a press release.
+    const run = await runBankEntry(world, entry("ans-fact-speed-pikachu"), model(pikachuSpeed()), clock());
+    expect(run.opening).toBe(entry("ans-fact-speed-pikachu").intent);
+    expect(run.run.transcript.length).toBeGreaterThan(0);
+    expect(run.run.transaction).toBeDefined();
+    expect(run.run.turns).toBe(run.turns);
+  });
+
+  it("stamps the pass a repeated run came from", async () => {
+    const runs = await runBank(world, [entry("off-weather")], model(""), clock, 2);
+    expect(runs[0]!.repetition).toBe(2);
+    expect(runs[0]!.run.repetition).toBe(2);
+  });
 });
 
 describe("robustness: whether the wording moves the bucket", () => {
@@ -169,6 +184,8 @@ describe("robustness: whether the wording moves the bucket", () => {
     const report = await runIntentRobustness(world, twoWordings, model(pikachuSpeed()), clock);
     expect(report.stable).toBe(true);
     expect(report.phrasings).toHaveLength(2);
+    // The whole runs travel with the reading, in phrasing order.
+    expect(report.runs.map((run) => run.opening)).toEqual(phrasingsOf(twoWordings));
   });
 
   it("is unstable when one wording resolves and another abstains — the finding", async () => {
