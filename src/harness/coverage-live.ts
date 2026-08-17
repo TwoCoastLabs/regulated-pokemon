@@ -12,7 +12,12 @@
  *    the map *from the filed artifact* — the page and the file cannot
  *    disagree, because one is a function of the other.
  *  - **`--render`**: re-render a filed artifact (the newest coverage artifact
- *    in `runs/` by default). Reads no clock, no key, no network.
+ *    in `runs/coverage/` by default). Reads no clock, no key, no network.
+ *
+ * Coverage artifacts live in `runs/coverage/`, not `runs/`: the harness's
+ * directory has consumers — the app bundles its newest file as the run ledger
+ * and `harness:results` renders it — that assume every artifact there is a
+ * filed *harness* run, and a coverage record is a different schema.
  *
  * The paid design the epic settled on is expressible from the flags: the full
  * bank at `--repetitions 1`, then the enforcement slice at
@@ -79,7 +84,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     source?: string;
     help: boolean;
     errors: string[];
-  } = { live: false, render: false, weak: false, phrasings: false, repetitions: 1, out: "runs", help: false, errors: [] };
+  } = { live: false, render: false, weak: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
 
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index];
@@ -189,7 +194,7 @@ const USAGE = [
   "The playability coverage run. --live calls OpenRouter and costs money; everything else is free.",
   "",
   "  npm run coverage:map                                  # dry run: prints the plan, calls nothing",
-  "  npm run coverage:map -- --live                        # the full bank, one pass, filed to runs/",
+  "  npm run coverage:map -- --live                        # the full bank, one pass, filed to runs/coverage/",
   "  npm run coverage:map -- --live --dispositions should-refuse --repetitions 3",
   "  npm run coverage:map -- --live --weak --limit 20",
   "  npm run coverage:map -- --live --phrasings            # the robustness leg, over entries with paraphrases",
@@ -198,7 +203,7 @@ const USAGE = [
   "",
   "  --live              actually call the provider and file the artifact. Nothing is billed without it.",
   "  --render [PATH]     render a filed coverage artifact (a file, or a directory to take the newest",
-  "                      coverage artifact from; default runs/). Reads no clock, no key, no network.",
+  "                      coverage artifact from; default runs/coverage/). Reads no clock, no key, no network.",
   "  --page PATH         with --render, write the page there instead of printing it.",
   "  --model SLUG        the OpenRouter slug (default: the harness's strong model; --weak for the weak one).",
   "  --repetitions N     passes over the selected entries (default 1). Pass-major, and an enforcement",
@@ -207,7 +212,8 @@ const USAGE = [
   "  --ids a,b           run exactly these entries, in the order named.",
   "  --limit N           first N of the selection — the fail-fast probe.",
   "  --phrasings         robustness mode: every frozen paraphrase of each entry that carries them.",
-  "  --out DIR           where a live run files its artifact (default: runs/).",
+  "  --out DIR           where a live run files its artifact (default: runs/coverage/ — kept apart from",
+  "                      the harness's runs/, whose consumers assume every file there is a run record).",
   "",
   "The key is read from OPENROUTER_API_KEY, in the environment or in .env.",
 ].join("\n");
@@ -236,6 +242,10 @@ export interface CoverageOptions {
   clock: () => () => string;
   /** Injected so the live path is exercised without a network or a key. */
   makeProvider?: (config: { model: string; apiKey: string }) => ModelProvider;
+  /** The per-pass runner, injected because the one outcome the early-stop
+   * exists for — an enforcement escalation — is unreachable through the real
+   * spine while the kernel works, and the stop must be tested anyway. */
+  runPass?: typeof runBank;
   write?: WriteFile;
   fs?: CoverageFs;
 }
@@ -247,7 +257,7 @@ export interface CoverageResult {
 }
 
 function renderMode(args: CoverageArgs, fs: CoverageFs): CoverageResult {
-  const source = args.source ?? "runs";
+  const source = args.source ?? "runs/coverage";
   const path = source.endsWith(".json") ? source : latestCoverageArtifact(source, fs.readDir);
   if (path === undefined) {
     return { lines: [`no coverage artifact found in ${source}; run --live first, or pass a path`], exitCode: 1 };
@@ -329,8 +339,9 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
     for (const entry of entries) reports.push(await runIntentRobustness(world, entry, provider, options.clock));
     runs = reports.flatMap((report) => report.runs);
   } else {
+    const runPass = options.runPass ?? runBank;
     for (let pass = 0; pass < args.repetitions; pass++) {
-      const sampled = await runBank(world, entries, provider, options.clock, pass);
+      const sampled = await runPass(world, entries, provider, options.clock, pass);
       runs.push(...sampled);
       if (sampled.some((run) => run.score.enforcementEscalation === true)) {
         // The repetition discipline: a broken enforcement zero stops the run

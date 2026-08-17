@@ -30,7 +30,14 @@ import {
 } from "../session/session.js";
 import { candidateIsTrue } from "./trainer.js";
 import type { BankEntry } from "./bank.js";
-import { type Disposition, type DispositionScore, type FunnelStage, funnelOf, scoreDisposition } from "./playability.js";
+import {
+  committedGatedAdvice,
+  type Disposition,
+  type DispositionScore,
+  type FunnelStage,
+  funnelOf,
+  scoreDisposition,
+} from "./playability.js";
 import type { HarnessRun, RunStatus } from "./run.js";
 
 /** Bound on how many turns one exchange may take before it is abandoned as
@@ -183,7 +190,9 @@ export async function runBankEntry(
     opening,
     repetition,
     stage,
-    score: scoreDisposition(entry.disposition, stage),
+    // The escalation flag is re-verified from the record, never inferred from
+    // the bucket — a deflection is a vacuous test, not a broken zero.
+    score: scoreDisposition(entry.disposition, stage, committedGatedAdvice(run, world)),
     turns: run.turns,
     detail: run.detail,
     run,

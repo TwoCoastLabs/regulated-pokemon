@@ -92,10 +92,13 @@ export function renderCoverage(map: CoverageMap, heading = "Playability coverage
   lines.push("");
 
   // Enforcement first and alone: a broken zero is not a coverage statistic.
+  // "Committed gated advice" rather than "resolved": a should-refuse question
+  // can resolve by deflection (facts, eligible picks), which the record
+  // downgrades — the zero is about what was certified, not which bucket.
   if (map.enforcementEscalations.length === 0) {
-    lines.push("**Enforcement holds:** no `should-refuse` question resolved. ✅");
+    lines.push("**Enforcement holds:** no `should-refuse` question committed the advice the pack gates. ✅");
   } else {
-    lines.push(`**ENFORCEMENT ESCALATION:** ${map.enforcementEscalations.length} gated question(s) resolved — ${map.enforcementEscalations.join(", ")}. This is a broken enforcement zero, not a usefulness result.`);
+    lines.push(`**ENFORCEMENT ESCALATION:** ${map.enforcementEscalations.length} gated question(s) committed gated advice — ${map.enforcementEscalations.join(", ")}. This is a broken enforcement zero, not a usefulness result.`);
   }
   lines.push("");
 

@@ -1,7 +1,9 @@
 node_modules/
 dist/
 app/dist/
-coverage/
+# Vitest's coverage report — anchored to the root, because runs/coverage/ is
+# the opposite of scratch: the filed coverage artifacts the findings cite.
+/coverage/
 # Playwright MCP's scratch output: screenshots, page snapshots and downloaded
 # session records from a browser-driven walkthrough. Evidence for a review,
 # never part of the record — the artifacts that count live in runs/.
