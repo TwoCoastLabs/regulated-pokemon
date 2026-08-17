@@ -429,3 +429,69 @@ The one-line version, for the reader deciding whether to try this at home:
 **the model makes it useful; the architecture makes it safe; the knowledge
 base makes it true — and each of the three is owned, versioned, and tested by
 a different mechanism, which is the entire trick.**
+
+## 7. Composing with the stack you already have
+
+An organization arriving at this design does not arrive empty-handed. It has
+retrieval pipelines, agent frameworks, orchestration, often a vendor-built
+knowledge graph — and a reasonable fear that a governance architecture means
+tearing that down. It does not, and the reason is structural rather than
+diplomatic: **everything upstream of the commit boundary is already untrusted
+here.** The kernel never asks how an answer was proposed — recall, RAG,
+graph-structured retrieval, a five-agent pipeline — it verifies typed claims
+against the certified substrate at the moment they would reach a person. The
+model seam and the ungoverned control arm are the existence proof: the same
+models, the same propose path, differing only in whether the gate is present,
+with only the gate deciding whether fabrication can commit.
+
+So the adoption shape is a **gate, not a platform**: intercept the egress,
+require answers in claim form, verify, render certified surfaces through
+slots, file the record. The retrieval investment is untouched — in fact it
+appreciates, because better retrieval raises the resolution rate while
+enforcement stays pinned at zero. This is also how compliance infrastructure
+has historically landed (inline XBRL atop existing reporting stacks; egress
+proxies atop existing mail), and it is why the kernel's smallness and
+neutrality are not modesty but the asset: the gate is the only part an
+auditor must read, and it must not be entangled with any pipeline it governs.
+
+**The one hard requirement composition cannot waive: a certified substrate.**
+Verification is only as strong as what it verifies against, and the popular
+graph pipelines build their knowledge graphs *with a model*, extracted from
+unstructured text. Such a graph is a recall structure — genuinely useful for
+finding things, unverified and unreproducible by construction. Point the
+verifier at it and the guarantee silently downgrades from "true per the
+certified source" to "faithful to an unverified graph": laundering, and it is
+exactly what will be asked for. The composition that holds is **two-tier**:
+
+- **The certified core** — the systems of record the organization already
+  trusts and often already owes: price lists, product catalogues, adopted
+  policy documents, regulatory filings. Pinned, checksummed, loaded
+  fail-closed; the only tier claims verify against.
+- **The recall layer** — everything else, graph-built or otherwise, serving
+  navigation and proposal *upstream* of the gate, where it can help and can
+  never attest. Lexical and semantic search gate recall; they never gate
+  proof. The same asymmetry that governs the scope resolver governs the
+  whole retrieval stack.
+
+Two consequences keep the two-tier story honest. First, **certificates carry
+a provenance grade**: an answer verified against the pinned catalogue names
+that catalogue and its digest; anything else is visibly a different, weaker
+artifact — one guarantee must never borrow another's clothes, which is the
+same rule that keeps advisory resolution off the factual resolution line.
+Second, **the claim is scoped to the governed egress**. A gate governs what
+flows through it; a side channel — an agent mailing directly, an ungoverned
+tool call — is outside the perimeter, and the honest statement of the
+guarantee says so, exactly as this demo's guarantees are scoped to the
+certified artifact and not the chat pane.
+
+Where this sits against the knowledge-graph tradition: the certified core
+*is* a knowledge graph — closed-world, strictly typed, shape-validated — and
+"the model names a typed intent, the kernel derives the value" is the
+semantic-parsing pattern that literature converged on. The departures are
+deliberate and load-bearing: the graph is vendored rather than
+model-extracted, the semantics are closed-world (which is what makes a
+certified count possible at all), and grounding is replaced by verification
+— a citation shows a source; this recomputes from one and refuses otherwise.
+Composition, then, is not a compromise of the architecture. It is the
+architecture: the propose side was never trusted, so it was never ours to
+replace.
