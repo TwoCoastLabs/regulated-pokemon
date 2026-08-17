@@ -42,12 +42,26 @@ const MAX_STEPS = 16;
 export interface BankRun {
   entryId: string;
   disposition: Disposition;
+  /** The wording actually asked — the canonical intent, or the paraphrase a
+   * robustness pass chose. */
+  opening: string;
+  /** Which pass this sample came from, when the run repeated; 0 otherwise. */
+  repetition: number;
   stage: FunnelStage;
   score: DispositionScore;
   /** Model calls made — the friction number, per entry. */
   turns: number;
   /** One human line on how it ended, for the report's detail column. */
   detail: string;
+}
+
+/** A bank run still carrying the whole record behind its verdict — transcript,
+ * usage and, when one was reached, the transaction replay re-executes. This is
+ * what a filed artifact stores: a summary would be a press release (see
+ * artifact.ts); the aggregation (`coverageMap`) needs only the {@link BankRun}
+ * summary, which is why the two are separate types. */
+export interface RecordedBankRun extends BankRun {
+  run: HarnessRun;
 }
 
 /** What the trainer says when the pack asks about a dimension — the profile
@@ -98,12 +112,12 @@ async function play(entry: BankEntry, opening: string, deps: SessionDeps): Promi
 
 /** Read a settled session as the minimal run the funnel needs. Exported so the
  * record-shape and friction branches are testable without a live session. */
-export function asRun(entry: BankEntry, state: SessionState, world: DemoWorld): HarnessRun {
+export function asRun(entry: BankEntry, state: SessionState, world: DemoWorld, repetition = 0): HarnessRun {
   const record = state.records.at(-1);
   const base = {
     scenarioId: entry.id,
     providerId: "bank",
-    repetition: 0,
+    repetition,
     transcript: state.transcript,
     turns: state.usage.calls,
     providerErrors: state.providerErrors,
@@ -158,32 +172,38 @@ export async function runBankEntry(
   provider: ModelProvider,
   now: () => string,
   opening: string = entry.intent,
-): Promise<BankRun> {
+  repetition = 0,
+): Promise<RecordedBankRun> {
   const state = await play(entry, opening, { world, provider, now });
-  const run = asRun(entry, state, world);
+  const run = asRun(entry, state, world, repetition);
   const stage = funnelOf(run, wantsAct(entry));
   return {
     entryId: entry.id,
     disposition: entry.disposition,
+    opening,
+    repetition,
     stage,
     score: scoreDisposition(entry.disposition, stage),
     turns: run.turns,
     detail: run.detail,
+    run,
   };
 }
 
-/** The whole bank, one provider, in order — the canonical phrasing of each. A
- * live caller pays for it; a scripted one proves the machinery in CI. `clock`
- * yields a fresh, strictly increasing clock per entry so ids do not collide. */
+/** The whole bank, one provider, in order — the canonical phrasing of each,
+ * one pass, stamped `repetition`. A live caller pays for it; a scripted one
+ * proves the machinery in CI. `clock` yields a fresh, strictly increasing
+ * clock per entry so ids do not collide. */
 export async function runBank(
   world: DemoWorld,
   entries: readonly BankEntry[],
   provider: ModelProvider,
   clock: () => () => string,
-): Promise<readonly BankRun[]> {
-  const runs: BankRun[] = [];
+  repetition = 0,
+): Promise<readonly RecordedBankRun[]> {
+  const runs: RecordedBankRun[] = [];
   for (const entry of entries) {
-    runs.push(await runBankEntry(world, entry, provider, clock()));
+    runs.push(await runBankEntry(world, entry, provider, clock(), entry.intent, repetition));
   }
   return runs;
 }
@@ -194,6 +214,9 @@ export interface IntentRobustness {
   disposition: Disposition;
   /** Each phrasing and where it landed. */
   phrasings: readonly { text: string; stage: FunnelStage; pass: boolean }[];
+  /** The whole runs behind those readings, in the same order — what a filed
+   * artifact stores, so a robustness number stays traceable to its records. */
+  runs: readonly RecordedBankRun[];
   /** True when every phrasing landed in the same funnel stage: the answer did
    * not depend on the wording. */
   stable: boolean;
@@ -212,11 +235,11 @@ export async function runIntentRobustness(
   provider: ModelProvider,
   clock: () => () => string,
 ): Promise<IntentRobustness> {
-  const phrasings: { text: string; stage: FunnelStage; pass: boolean }[] = [];
+  const runs: RecordedBankRun[] = [];
   for (const text of phrasingsOf(entry)) {
-    const run = await runBankEntry(world, entry, provider, clock(), text);
-    phrasings.push({ text, stage: run.stage, pass: run.score.pass });
+    runs.push(await runBankEntry(world, entry, provider, clock(), text));
   }
+  const phrasings = runs.map((run) => ({ text: run.opening, stage: run.stage, pass: run.score.pass }));
   const stages = new Set(phrasings.map((p) => p.stage.kind));
-  return { entryId: entry.id, disposition: entry.disposition, phrasings, stable: stages.size === 1 };
+  return { entryId: entry.id, disposition: entry.disposition, phrasings, runs, stable: stages.size === 1 };
 }

@@ -1,0 +1,154 @@
+/**
+ * The filed record of a coverage run — wave 4's precondition.
+ *
+ * The coverage map is the number the playability epic exists to publish, and a
+ * published number must be traceable to the run that produced it (CLAUDE.md).
+ * So a live coverage run files the same kind of record the live harness does
+ * (artifact.ts): whole runs — every transcript and, where one was reached, the
+ * transaction `replayTransaction` re-executes — with the provenance naming the
+ * certified world and the bank the numbers were measured in. The map itself is
+ * computed once, when the artifact is built, and rendered from the file ever
+ * after; a page can disagree with its artifact only by being regenerated from
+ * a different one.
+ */
+
+import { join } from "node:path";
+
+import type { AccordPack } from "../kernel/pack.js";
+import type { CertifiedRegistry } from "../kernel/registry.js";
+import type { ArtifactWorld } from "./artifact.js";
+import type { IntentRobustness, RecordedBankRun } from "./bank-run.js";
+import { type CoverageMap, coverageMap, renderCoverage, renderRobustness, type RobustnessSummary, robustnessSummary } from "./coverage.js";
+import type { Disposition } from "./playability.js";
+
+export const COVERAGE_ARTIFACT_SCHEMA_VERSION = 1;
+
+/** The two kinds of coverage run, doubling as the filename suffix. */
+export type CoverageLabel = "coverage" | "coverage-robustness";
+
+export interface CoverageModel {
+  /** The provider id the runs carry (`coverage:<slug>`). */
+  id: string;
+  /** The OpenRouter slug — the finding quotes this, never a nickname. */
+  slug: string;
+}
+
+export interface CoverageArtifact {
+  schemaVersion: typeof COVERAGE_ARTIFACT_SCHEMA_VERSION;
+  label: CoverageLabel;
+  /** When the run started, by the wall clock — the only real timestamp here;
+   * the runs below carry the harness's fixed clock so they replay (IA-10). */
+  startedAt: string;
+  world: ArtifactWorld;
+  /** Which reviewed bank these questions came from, by its versioned id. */
+  bankId: string;
+  model: CoverageModel;
+  /** Whether the answer grammar was enforced at decode time — it changes what
+   * the usefulness number means, so it travels with the number. */
+  structuredOutput: boolean;
+  /** Passes requested over the selected entries. The paid design runs the full
+   * bank at 1 and the `should-refuse` slice at 3 — two artifacts, each honest
+   * about which it is. */
+  repetitions: number;
+  /** The disposition filter the run was invoked with, when one was; absent
+   * means the whole bank was eligible. */
+  dispositions?: readonly Disposition[];
+  /** True when an enforcement escalation stopped the run before its last
+   * pass — the runs below are then fewer than requested, and say so. */
+  stoppedEarly: boolean;
+  /** Whole runs, never summaries. Each carries the wording asked, the pass it
+   * came from, and the full record behind its funnel verdict. */
+  runs: readonly RecordedBankRun[];
+  /** The aggregate the page renders — computed here, at filing time, from the
+   * runs above, and never recomputed downstream. */
+  map: CoverageMap;
+  /** The robustness reading, when the run iterated phrasings. */
+  robustness?: RobustnessSummary;
+}
+
+export interface CoverageArtifactInput {
+  label: CoverageLabel;
+  startedAt: string;
+  world: { registry: CertifiedRegistry; pack: AccordPack };
+  bankId: string;
+  model: CoverageModel;
+  structuredOutput: boolean;
+  repetitions: number;
+  dispositions?: readonly Disposition[];
+  stoppedEarly: boolean;
+  runs: readonly RecordedBankRun[];
+  /** The per-intent reports, when the run was a robustness pass. */
+  robustness?: readonly IntentRobustness[];
+}
+
+export function buildCoverageArtifact(input: CoverageArtifactInput): CoverageArtifact {
+  const { document, snapshot } = input.world.registry;
+  return {
+    schemaVersion: COVERAGE_ARTIFACT_SCHEMA_VERSION,
+    label: input.label,
+    startedAt: input.startedAt,
+    world: {
+      snapshotId: snapshot.id,
+      snapshotDigest: document.contentDigest,
+      sourceCommit: snapshot.sourceCommit,
+      packId: input.world.pack.id,
+    },
+    bankId: input.bankId,
+    model: input.model,
+    structuredOutput: input.structuredOutput,
+    repetitions: input.repetitions,
+    ...(input.dispositions === undefined ? {} : { dispositions: input.dispositions }),
+    stoppedEarly: input.stoppedEarly,
+    runs: input.runs,
+    map: coverageMap(input.runs),
+    ...(input.robustness === undefined ? {} : { robustness: robustnessSummary(input.robustness) }),
+  };
+}
+
+// --- rendering a filed artifact ---------------------------------------------
+
+/** The filed run as a Markdown page: provenance first, then the map it filed.
+ * A function of the artifact alone — same bytes in, same page out. */
+export function renderCoverageArtifact(artifact: CoverageArtifact): string {
+  const { world } = artifact;
+  const scope =
+    artifact.dispositions === undefined
+      ? "the whole bank was eligible"
+      : `restricted to disposition(s): ${artifact.dispositions.join(", ")}`;
+
+  const header = [
+    "# Playability coverage — filed run",
+    "",
+    "<!-- Generated from a coverage artifact; do not hand-edit. Regenerate with `npm run coverage:map`. -->",
+    "",
+    `Generated from a **${artifact.label}** run started \`${artifact.startedAt}\` on \`${artifact.model.slug}\`, ` +
+      `${artifact.repetitions} repetition(s)${artifact.stoppedEarly ? " — **stopped early** on an enforcement escalation; the runs below are fewer than requested" : ""}; ${scope}.`,
+    "",
+    "## Provenance",
+    "",
+    `Bank \`${artifact.bankId}\`, measured against snapshot \`${world.snapshotId}\` (\`${world.snapshotDigest}\`), ` +
+      `derived from upstream commit \`${world.sourceCommit}\`, under Accord pack \`${world.packId}\`. ` +
+      "A result against an unnamed world is not a result.",
+    "",
+  ];
+
+  const body =
+    artifact.robustness === undefined
+      ? renderCoverage(artifact.map, `Coverage map — ${artifact.model.slug}`)
+      : renderRobustness(artifact.robustness, `Phrasing robustness — ${artifact.model.slug}`);
+
+  return `${header.join("\n")}${body}`;
+}
+
+/**
+ * The newest coverage artifact in a directory, by filename — and only a
+ * coverage one: `runs/` also holds the live harness's artifacts, and rendering
+ * one of those here would be a shape error presented as a result.
+ */
+export function latestCoverageArtifact(directory: string, readDir: (directory: string) => readonly string[]): string | undefined {
+  const files = readDir(directory)
+    .filter((name) => name.endsWith("-coverage.json") || name.endsWith("-coverage-robustness.json"))
+    .sort();
+  const newest = files.at(-1);
+  return newest === undefined ? undefined : join(directory, newest);
+}
