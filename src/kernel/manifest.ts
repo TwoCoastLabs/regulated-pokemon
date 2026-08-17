@@ -90,6 +90,10 @@ export interface ManifestDraft {
 function deriveClaims(context: ManifestContext, claims: readonly Claim[], rosters: readonly ClosedRoster[]): Claim[] {
   const roster = (id: string): ClosedRoster | undefined => rosters.find((entry) => entry.id === id);
   return claims.map((claim) => {
+    if (claim.kind === "fact" && claim.asserted === undefined) {
+      const resolved = context.registry.resolve(claim.entityId, claim.factId);
+      return resolved.ok ? { ...claim, asserted: resolved.value } : claim;
+    }
     if (claim.kind === "count" && claim.reported === undefined) {
       const set = roster(claim.rosterId);
       return set === undefined ? claim : { ...claim, reported: set.cardinality };
@@ -316,6 +320,9 @@ function checkFact(context: ManifestContext, claim: Extract<Claim, { kind: "fact
   const resolved = context.registry.resolve(claim.entityId, claim.factId);
   if (!resolved.ok) return [...resolved.violations];
 
+  // An omitted value defers to the certified one and can never disagree — the
+  // entity and fact id already fixed it, and the compiler fills it in.
+  if (claim.asserted === undefined) return [];
   if (sameFactValue(resolved.value, claim.asserted)) return [];
   return [
     violation(

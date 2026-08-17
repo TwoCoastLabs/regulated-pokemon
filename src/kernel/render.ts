@@ -229,10 +229,13 @@ function unitForClaim(
   const built = ((): Resolution<{ id: string; kind: RenderUnitKind; slots: readonly RenderSlot[]; mentions: readonly string[] }> => {
     switch (claim.kind) {
       case "fact": {
+        // A rendered manifest is a verified one, and verification derives or
+        // confirms the value, so it is present here — a fact that could not
+        // resolve was refused and never reached render.
         const resolved = slots(
           slot(context, locale, "entity", entity(claim.entityId), "entity-name"),
           slot(context, locale, "fact", entity(claim.factId), "plain-text"),
-          slot(context, locale, "value", claim.asserted),
+          slot(context, locale, "value", claim.asserted ?? { kind: "absent" }),
         );
         if (!resolved.ok) return resolved;
         return {

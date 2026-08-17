@@ -116,7 +116,7 @@ function describeScope(derivation: ScopeDerivation): string[] {
 function describeClaim(claim: Claim): string {
   switch (claim.kind) {
     case "fact":
-      return `fact         ${claim.entityId}.${claim.factId} = ${formatFactValue(claim.asserted)}`;
+      return `fact         ${claim.entityId}.${claim.factId} = ${claim.asserted === undefined ? "(derived by the kernel)" : formatFactValue(claim.asserted)}`;
     case "count":
       return `count        ${claim.rosterId} = ${claim.reported}`;
     case "membership":

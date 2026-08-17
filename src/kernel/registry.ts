@@ -17,6 +17,7 @@ import { sha256Hex } from "./sha256.js";
 import {
   CHART_MULTIPLIERS,
   SNAPSHOT_SCHEMA_VERSION,
+  SNAPSHOT_VERSIONS,
   type SnapshotDocument,
   type SnapshotMove,
   type SnapshotSpecies,
@@ -63,6 +64,18 @@ const optionalNumber = (value: number | null): FactValue =>
  * The certified fact vocabulary. A fact id that is not a key here does not
  * exist: there is no fallback path that reads the snapshot directly.
  */
+/** An empty list is certified absence ("evolves into: none"), not a refusal —
+ * the list formatter cannot show an empty series, and "none" is the truth. */
+const listOrNone = (value: readonly string[]): FactValue =>
+  value.length === 0 ? { kind: "absent" } : list(value);
+
+/** One evolution edge as a deterministic phrase: the target and what it takes.
+ * Derived from vendored fields only, so two builds phrase it identically. */
+function evolutionMethod(edge: SnapshotSpecies["evolvesTo"][number]): string {
+  const means = edge.item ?? (edge.minLevel !== null ? `level ${edge.minLevel}` : edge.trigger);
+  return `${edge.to} via ${means}`;
+}
+
 const SPECIES_FACTS: Record<string, (species: SnapshotSpecies) => FactValue> = {
   "pokedex-number": (species) => number(species.pokedexNumber),
   types: (species) => list(species.types),
@@ -76,9 +89,16 @@ const SPECIES_FACTS: Record<string, (species: SnapshotSpecies) => FactValue> = {
   // of derivation this kernel permits.
   "base-stat-total": (species) =>
     number(STAT_NAMES.reduce((total, stat) => total + species.stats[stat], 0)),
+  "evolves-from": (species) => (species.evolvesFrom === null ? { kind: "absent" } : text(species.evolvesFrom)),
+  "evolves-to": (species) => listOrNone(species.evolvesTo.map((edge) => edge.to)),
+  "evolution-methods": (species) => listOrNone(species.evolvesTo.map(evolutionMethod)),
+  // Presence only, the union over this version group's cartridges; Mew's
+  // honest answer is "none" — it is event-only, and absence is certified too.
+  locations: (species) => listOrNone(species.encounters.map((entry) => entry.area)),
 };
 
 const MOVE_FACTS: Record<string, (move: SnapshotMove) => FactValue> = {
+  machine: (move) => (move.machine === null ? { kind: "absent" } : text(move.machine)),
   "move-type": (move) => text(move.type),
   "move-damage-class": (move) => text(move.damageClass),
   "move-power": (move) => optionalNumber(move.power),
@@ -385,6 +405,42 @@ function checkIntegrity(document: SnapshotDocument): Violation[] {
           ),
         );
       }
+    }
+  }
+
+  // The grown world's references and closed sets (schema v3). Evolution edges
+  // may only point at certified species; encounters may only cite this
+  // version group's own cartridges; a machine is a TM/HM slug or nothing.
+  for (const species of document.species) {
+    for (const cited of [species.evolvesFrom, ...species.evolvesTo.map((edge) => edge.to)]) {
+      if (cited !== null && !speciesIds.has(cited)) {
+        violations.push(
+          violation("IA-3", "dangling-evolution-reference", `${species.id}'s evolution cites "${cited}", which this snapshot does not certify`, {
+            actual: cited,
+          }),
+        );
+      }
+    }
+    for (const encounter of species.encounters) {
+      const unclosed = encounter.versions.filter((version) => !SNAPSHOT_VERSIONS.includes(version));
+      if (encounter.versions.length === 0 || unclosed.length > 0) {
+        violations.push(
+          violation("IA-2", "encounter-version-unclosed", `${species.id}'s encounter at ${encounter.area} cites a cartridge outside this version group`, {
+            expected: SNAPSHOT_VERSIONS.join(", "),
+            actual: unclosed.join(", ") || "no version at all",
+          }),
+        );
+      }
+    }
+  }
+  for (const move of document.moves) {
+    if (move.machine !== null && !/^(tm|hm)\d+$/.test(move.machine)) {
+      violations.push(
+        violation("IA-2", "machine-invalid", `${move.id} is taught by "${move.machine}", which is not a TM or HM`, {
+          expected: "tm<number> or hm<number>",
+          actual: move.machine,
+        }),
+      );
     }
   }
 

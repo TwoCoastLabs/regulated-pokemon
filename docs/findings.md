@@ -957,6 +957,45 @@ the escalation semantics, and other packs may pose such questions); the
 bank's by-construction test now asserts the emptiness rather than papering
 over it.
 
+### Iteration 5 — the data ceiling drops, and assertion stops being a spelling test (epic #54, slice 3)
+
+The third slice vendored what the `needs-data` declines had been pointing at:
+**evolution chains** (edges restricted at build time to certified species —
+Pichu cannot parent Pikachu in a world without Pichu), **presence-only
+encounters per cartridge** (the Ekans-in-Red / Sandshrew-in-Blue split
+preserved; Mew honestly nowhere), and **TM/HM machine records** (`fact(surf,
+machine) = hm03`). Snapshot schema v3, 806 pinned upstream documents, three
+new loader refusals with crucible mutations (`dangling-evolution-reference`,
+`encounter-version-unclosed`, `machine-invalid`). Seven bank entries retagged
+`needs-data → answerable`; the rates entry deliberately stays a wall
+(decision 5), its note sharpened: *where* is certified, *how rare* is not.
+
+**The first probe failed usefully: 1/7 and 2/7.** Every miss was
+`IA-2/fact-mismatch` with the *right fact and the wrong spelling* — the
+model asserting `"HM03"` against certified `hm03`, `"viridian-forest"`
+against `viridian-forest-area`, `"level 16"` against `charmeleon via level
+16` (artifacts `2026-08-17T10-4*`). Correct intent, denied on a canonical
+form the model has no way to recall. The kernel held — nothing false
+committed — but forcing the model to state registry-canonical strings had
+become a usefulness ceiling made of spelling.
+
+**So the fact claim joined the derivation discipline** — the epic's
+"name the fact, don't state it" trial, adopted on this evidence: `asserted`
+is now optional, exactly like a count's number, a ranking's winner, a
+matchup's members and an eligibility finding. The model names `(entity,
+fact)`; the kernel reads the certified value; a *stated* value is still
+verified and still refuses on mismatch, so the adversarial surface is
+unchanged — `swapped-stat` and its kin deny exactly as before. What changed
+is that correct intent no longer fails a spelling test it cannot study for.
+
+**Re-probed: 7/7 on both models** (artifacts `2026-08-17T10-5*`, pennies),
+certified content spot-verified — "charmeleon via level 16", the full Abra
+location list, `hm03` — identical across models, necessarily, because the
+values are read, not recalled. The §18 guard rides along: the deflection
+metric exists precisely to catch the risk this change carries (a model
+naming plausible-but-irrelevant facts now gets them certified), and the
+full-bank re-run (finding §19) is where that number gets checked.
+
 ---
 
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate

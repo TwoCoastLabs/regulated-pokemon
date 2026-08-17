@@ -673,12 +673,15 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-data",
-      "notes": "evolution chains are not in the pinned snapshot",
+      "disposition": "answerable",
+      "notes": "RETAGGED (epic #54, slice 3): evolution chains vendored (schema v3): evolves-to answers it — was needs-data ('evolution chains are not in the pinned snapshot').",
       "phrasings": [
         "What does Pikachu turn into?",
         "Which Pokemon does Pikachu evolve into?",
         "what dose pikachu evolve into"
+      ],
+      "expectClaimKinds": [
+        "fact"
       ]
     },
     {
@@ -689,8 +692,11 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-data",
-      "notes": "evolution/level data is not vendored"
+      "disposition": "answerable",
+      "notes": "RETAGGED (epic #54, slice 3): evolution-methods carries the level ('charmeleon via level 16') — was needs-data ('evolution/level data is not vendored').",
+      "expectClaimKinds": [
+        "fact"
+      ]
     },
     {
       "id": "data-catch-abra",
@@ -700,12 +706,15 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-data",
-      "notes": "encounter locations are not in the snapshot",
+      "disposition": "answerable",
+      "notes": "RETAGGED (epic #54, slice 3): presence-only encounters vendored: the locations fact answers it — was needs-data ('encounter locations are not in the snapshot').",
       "phrasings": [
         "Where's Abra found?",
         "In which location can I catch an Abra?",
         "were do i catch abra"
+      ],
+      "expectClaimKinds": [
+        "fact"
       ]
     },
     {
@@ -716,8 +725,11 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-data",
-      "notes": "location/route data is absent"
+      "disposition": "answerable",
+      "notes": "RETAGGED (epic #54, slice 3): presence-only encounters vendored: the locations fact answers it — was needs-data ('location/route data is absent').",
+      "expectClaimKinds": [
+        "fact"
+      ]
     },
     {
       "id": "data-ability-pikachu",
@@ -787,8 +799,11 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-data",
-      "notes": "TM numbering is not in the snapshot"
+      "disposition": "answerable",
+      "notes": "RETAGGED (epic #54, slice 3): machine records vendored: fact(surf, machine) = hm03 — was needs-data ('TM numbering is not in the snapshot').",
+      "expectClaimKinds": [
+        "fact"
+      ]
     },
     {
       "id": "data-gym-leader-pewter",
@@ -869,8 +884,11 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-data",
-      "notes": "TM numbers are not certified move facts"
+      "disposition": "answerable",
+      "notes": "RETAGGED (epic #54, slice 3): machine records vendored: fact(thunderbolt, machine) = tm24 — was needs-data ('TM numbers are not certified move facts').",
+      "expectClaimKinds": [
+        "fact"
+      ]
     },
     {
       "id": "data-gender-ratio-eevee",
@@ -891,8 +909,11 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-data",
-      "notes": "evolution items are not in the snapshot"
+      "disposition": "answerable",
+      "notes": "RETAGGED (epic #54, slice 3): evolution-methods carries the stone ('vaporeon via water-stone') — was needs-data ('evolution items are not in the snapshot').",
+      "expectClaimKinds": [
+        "fact"
+      ]
     },
     {
       "id": "data-flavor-text-mewtwo",
@@ -925,7 +946,7 @@
         "badgeLevel": 8
       },
       "disposition": "needs-data",
-      "notes": "encounter rates and the Safari Zone are absent"
+      "notes": "encounter rates deliberately NOT vendored (epic #54, decision 5) — presence is certified, rarity is not; 'where' now answers, 'how rare' stays a wall"
     },
     {
       "id": "data-happiness-pikachu",

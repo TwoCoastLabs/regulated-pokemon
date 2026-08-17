@@ -28,7 +28,10 @@ import { fileURLToPath } from "node:url";
 
 import {
   SNAPSHOT_SCHEMA_VERSION,
+  SNAPSHOT_VERSIONS,
   type SnapshotDocument,
+  type SnapshotEncounter,
+  type SnapshotEvolution,
   type SnapshotLearnedMove,
   type SnapshotMove,
   type SnapshotSpecies,
@@ -75,6 +78,15 @@ const CAVEATS = [
   "Move effect text is present-day upstream wording; it is not version-pinned.",
   "Species absent from this Pokédex are not certified by this snapshot and " +
     "cannot be asserted from it.",
+  "Evolution chains are NOT version-pinned upstream: edges are restricted at " +
+    "build time to species this snapshot certifies (excluding later relatives " +
+    "such as Pichu, Espeon and Crobat), but triggers and items are " +
+    "present-day upstream data.",
+  "Encounters are presence-only, per cartridge (red, blue), filtered from " +
+    "upstream version details. Rates and level ranges are deliberately not " +
+    "vendored.",
+  "TM/HM assignments are pinned to this version group via upstream machine " +
+    "records.",
 ] as const;
 
 const CONCURRENCY = 8;
@@ -107,6 +119,37 @@ interface SpeciesDocument {
   is_legendary: boolean;
   is_mythical: boolean;
   varieties: Array<{ is_default: boolean; pokemon: NamedResource }>;
+  evolution_chain: { url: string };
+}
+
+interface EvolutionDetail {
+  trigger: NamedResource;
+  min_level: number | null;
+  item: NamedResource | null;
+}
+
+interface ChainLink {
+  species: NamedResource;
+  evolution_details: EvolutionDetail[];
+  evolves_to: ChainLink[];
+}
+
+interface EvolutionChainDocument {
+  id: number;
+  chain: ChainLink;
+}
+
+interface EncounterDocument
+  extends Array<{
+    location_area: NamedResource;
+    version_details: Array<{ version: NamedResource }>;
+  }> {}
+
+interface MachineDocument {
+  id: number;
+  item: NamedResource;
+  move: NamedResource;
+  version_group: NamedResource;
 }
 
 interface PokemonDocument {
@@ -158,6 +201,7 @@ interface MoveDocument {
   damage_class: NamedResource;
   past_values: MovePastValue[];
   effect_entries: Array<{ short_effect: string; language: NamedResource }>;
+  machines: Array<{ machine: { url: string }; version_group: NamedResource }>;
 }
 
 // --- fetching ---------------------------------------------------------------
@@ -252,7 +296,7 @@ function typesAt(pokemon: PokemonDocument, generationOrder: Map<string, number>,
   return [...chosen].sort((a, b) => a.slot - b.slot).map((entry) => entry.type.name);
 }
 
-function moveAt(move: MoveDocument, versionGroupOrder: Map<string, number>, target: number): SnapshotMove {
+function moveAt(move: MoveDocument, versionGroupOrder: Map<string, number>, target: number): Omit<SnapshotMove, "machine"> {
   let power = move.power;
   let accuracy = move.accuracy;
   let pp = move.pp;
@@ -368,6 +412,70 @@ function learnsetOf(pokemon: PokemonDocument, moveIds: Map<string, number>): Sna
   );
 }
 
+/**
+ * The certified evolution edges around one species: its parent and children,
+ * both restricted to the ids this snapshot certifies. Upstream chains are not
+ * version-pinned, so the restriction is what keeps Pichu from parenting
+ * Pikachu in a world where Pichu does not exist. Upstream sometimes repeats an
+ * identical detail entry (Raichu's stone twice); edges are deduplicated on
+ * their whole shape.
+ */
+function evolutionEdges(
+  chain: EvolutionChainDocument,
+  speciesId: string,
+  certified: ReadonlySet<string>,
+): { evolvesFrom: string | null; evolvesTo: SnapshotEvolution[] } {
+  let evolvesFrom: string | null = null;
+  const evolvesTo: SnapshotEvolution[] = [];
+
+  const walk = (node: ChainLink, parent: string | null): void => {
+    if (node.species.name === speciesId) {
+      evolvesFrom = parent !== null && certified.has(parent) ? parent : null;
+      for (const child of node.evolves_to) {
+        if (!certified.has(child.species.name)) continue;
+        const seen = new Set<string>();
+        for (const detail of child.evolution_details) {
+          const edge: SnapshotEvolution = {
+            to: child.species.name,
+            trigger: detail.trigger.name,
+            minLevel: detail.min_level,
+            item: detail.item?.name ?? null,
+          };
+          const key = JSON.stringify(edge);
+          if (seen.has(key)) continue;
+          seen.add(key);
+          evolvesTo.push(edge);
+        }
+        // A certified child with no detail entries still evolves somehow;
+        // upstream owes the trigger, and silence here would drop the edge.
+        if (child.evolution_details.length === 0) {
+          evolvesTo.push({ to: child.species.name, trigger: "unknown", minLevel: null, item: null });
+        }
+      }
+    }
+    for (const child of node.evolves_to) walk(child, node.species.name);
+  };
+  walk(chain.chain, null);
+  return { evolvesFrom, evolvesTo };
+}
+
+/** Presence-only encounters for this version group's cartridges, sorted. */
+function encountersOf(document: EncounterDocument): SnapshotEncounter[] {
+  const byArea = new Map<string, Set<string>>();
+  for (const entry of document) {
+    const versions = entry.version_details
+      .map((detail) => detail.version.name)
+      .filter((version) => SNAPSHOT_VERSIONS.includes(version));
+    if (versions.length === 0) continue;
+    const set = byArea.get(entry.location_area.name) ?? new Set<string>();
+    for (const version of versions) set.add(version);
+    byArea.set(entry.location_area.name, set);
+  }
+  return [...byArea.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([area, versions]) => ({ area, versions: [...versions].sort() }));
+}
+
 // --- build ------------------------------------------------------------------
 
 async function build(commit: string): Promise<SnapshotDocument> {
@@ -410,13 +518,35 @@ async function build(commit: string): Promise<SnapshotDocument> {
   console.error(`pokédex ${POKEDEX_ID}: ${entries.length} entries`);
 
   const moveIds = new Map<string, number>();
-  const species = await mapPooled(entries, async (entry) => {
+  const gathered = await mapPooled(entries, async (entry) => {
     const speciesId = idFromUrl(entry.pokemon_species.url, "pokemon-species");
     const document = await registry.read<SpeciesDocument>(`pokemon-species/${speciesId}`);
     const variety = document.varieties.find((candidate) => candidate.is_default);
     if (!variety) throw new Error(`${document.name}: no default variety`);
     const pokemonId = idFromUrl(variety.pokemon.url, "pokemon");
     const pokemon = await registry.read<PokemonDocument>(`pokemon/${pokemonId}`);
+    return { entry, document, pokemon };
+  });
+
+  // Evolution needs the whole certified set before any edge is kept, so the
+  // chains are read in a second pass — one fetch per distinct chain.
+  const certified = new Set(gathered.map(({ document }) => document.name));
+  const chainIds = [...new Set(gathered.map(({ document }) => idFromUrl(document.evolution_chain.url, "evolution-chain")))].sort(
+    (a, b) => a - b,
+  );
+  const chains = new Map(
+    await mapPooled(chainIds, async (chainId) => {
+      const chain = await registry.read<EvolutionChainDocument>(`evolution-chain/${chainId}`);
+      return [chainId, chain] as const;
+    }),
+  );
+  console.error(`evolution: ${chains.size} distinct chains`);
+
+  const species = await mapPooled(gathered, async ({ entry, document, pokemon }) => {
+    const chain = chains.get(idFromUrl(document.evolution_chain.url, "evolution-chain"));
+    if (chain === undefined) throw new Error(`${document.name}: evolution chain not fetched`);
+    const edges = evolutionEdges(chain, document.name, certified);
+    const encounterDocument = await registry.read<EncounterDocument>(`pokemon/${pokemon.id}/encounters`);
     return {
       id: document.name,
       speciesId: document.id,
@@ -427,6 +557,9 @@ async function build(commit: string): Promise<SnapshotDocument> {
       types: typesAt(pokemon, generationOrder, targetGenerationOrder),
       stats: statsOf(pokemon),
       learnset: learnsetOf(pokemon, moveIds),
+      evolvesFrom: edges.evolvesFrom,
+      evolvesTo: edges.evolvesTo,
+      encounters: encountersOf(encounterDocument),
     } satisfies SnapshotSpecies;
   });
 
@@ -434,7 +567,12 @@ async function build(commit: string): Promise<SnapshotDocument> {
   console.error(`learnsets reference ${referenced.length} distinct moves`);
   const moves = await mapPooled(referenced, async ([, moveId]) => {
     const document = await registry.read<MoveDocument>(`move/${moveId}`);
-    return moveAt(document, versionGroupOrder, target.order);
+    const base = moveAt(document, versionGroupOrder, target.order);
+    // The TM/HM that carries the move in this version group, when one does.
+    const machineRef = document.machines.find((entry) => entry.version_group.name === VERSION_GROUP);
+    if (machineRef === undefined) return { ...base, machine: null };
+    const machine = await registry.read<MachineDocument>(`machine/${idFromUrl(machineRef.machine.url, "machine")}`);
+    return { ...base, machine: machine.item.name };
   });
 
   const content = {

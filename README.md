@@ -189,8 +189,8 @@ crucible by test, so it cannot drift from what actually runs.
 | Article | Title | Mutations |
 | --- | --- | --- |
 | IA-1 | Know Your Trainer | 12 |
-| IA-2 | Certified Facts Only | 10 |
-| IA-3 | No Fabrication (the MissingNo Clause) | 6 |
+| IA-2 | Certified Facts Only | 12 |
+| IA-3 | No Fabrication (the MissingNo Clause) | 7 |
 | IA-4 | Complete Answers Carry Certificates | 9 |
 | IA-5 | Restricted Species | 3 |
 | IA-6 | Disclosures Must Be Seen | 21 |
