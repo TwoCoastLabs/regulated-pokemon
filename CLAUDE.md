@@ -5,7 +5,9 @@
 A demonstration that provable factuality and compliance for AI agents come
 from architecture, not model capability. The canon is
 [docs/the-indigo-accord.md](docs/the-indigo-accord.md); the design is
-[docs/architecture.md](docs/architecture.md); the build plan is
+[docs/architecture.md](docs/architecture.md); the strategy for carrying the
+design into real high-stakes domains (and operating a knowledge base under
+it) is [docs/generalization.md](docs/generalization.md); the build plan is
 **epic #1** — work from the epic, keep its checkboxes honest.
 
 ## Publication posture (read first)
