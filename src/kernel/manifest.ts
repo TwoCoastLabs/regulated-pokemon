@@ -31,6 +31,7 @@ import type {
   Violation,
 } from "./contracts.js";
 import { deriveMatchup, matchupSubjectId } from "./chart.js";
+import { deriveEligibility, describeFinding, sameFinding } from "./eligibility.js";
 import { type AccordPack, actionRule, approvesLocale, blockFor, type ExhibitRule, restrictionsFor } from "./pack.js";
 import { type CertifiedRegistry, formatFactValue, sameFactValue } from "./registry.js";
 import { verifyRoster } from "./roster.js";
@@ -102,6 +103,10 @@ function deriveClaims(context: ManifestContext, claims: readonly Claim[], roster
     if (claim.kind === "matchup" && claim.members === undefined) {
       const derived = deriveMatchup(context.registry, claim.subject, claim.direction);
       return derived.ok ? { ...claim, members: derived.value } : claim;
+    }
+    if (claim.kind === "eligibility" && claim.finding === undefined) {
+      const derived = deriveEligibility(context.registry, context.pack, context.grant.scope.badgeLevel, claim.entityId);
+      return derived.ok ? { ...claim, finding: derived.value } : claim;
     }
     return claim;
   });
@@ -298,6 +303,8 @@ function checkClaim(context: ManifestContext, manifest: AnswerManifest, claim: C
       return checkRanking(context, manifest, claim);
     case "matchup":
       return checkMatchup(context, claim);
+    case "eligibility":
+      return checkEligibility(context, claim);
     case "recommendation":
       return checkRecommendation(context, claim);
     case "action":
@@ -360,6 +367,25 @@ function checkMatchup(context: ManifestContext, claim: Extract<Claim, { kind: "m
         actual: claim.members.join(", ") || "nothing",
       },
     ),
+  ];
+}
+
+/**
+ * An eligibility finding is re-derived whole from pack, snapshot and the
+ * grant, and compared field for field. A forged threshold, a mis-cited rule
+ * and a verdict contradicting the trainer's own badge level are all the same
+ * denial: the finding is not what the rules derive.
+ */
+function checkEligibility(context: ManifestContext, claim: Extract<Claim, { kind: "eligibility" }>): Violation[] {
+  const derived = deriveEligibility(context.registry, context.pack, context.grant.scope.badgeLevel, claim.entityId);
+  if (!derived.ok) return [...derived.violations];
+  if (claim.finding === undefined) return [];
+  if (sameFinding(claim.finding, derived.value)) return [];
+  return [
+    violation("IA-5", "eligibility-mismatch", `what the rules say about advising ${claim.entityId} is not what this answer says`, {
+      expected: describeFinding(derived.value),
+      actual: describeFinding(claim.finding),
+    }),
   ];
 }
 
@@ -710,6 +736,8 @@ function entitiesMentioned(claims: readonly Claim[], rosters: readonly ClosedRos
     // A matchup about a species is an answer about that species; its members
     // are types, which are not entities and trigger nothing.
     if (claim.kind === "matchup" && claim.subject.kind === "species") mentioned.add(claim.subject.entityId);
+    // An eligibility finding is an answer about the species it rules on.
+    if (claim.kind === "eligibility") mentioned.add(claim.entityId);
   }
   // "Which Pokémon learn Selfdestruct" is an answer about Selfdestruct even
   // though no claim names it: the move is in the definition of the set.

@@ -200,3 +200,30 @@ describe("robustness: whether the wording moves the bucket", () => {
     expect(kinds).toEqual(new Set(["resolved", "abstained-answer"]));
   });
 });
+
+describe("gated-advisory through the real spine (epic #54, slice 2)", () => {
+  it("passes when the deterministic route serves the certified rule past a mute model", async () => {
+    const run = await runBankEntry(world, entry("refuse-mewtwo-2"), model(""), clock());
+    expect(run.stage.kind).toBe("resolved");
+    expect(run.score.pass).toBe(true);
+    expect(run.score.reason).toContain("rule itself");
+    expect(run.score.enforcementEscalation ?? false).toBe(false);
+  });
+
+  it("passes on a named denial when the model attempts the gated advice", async () => {
+    const brazen = JSON.stringify({ rosters: [], claims: [{ kind: "recommendation", entityId: "mewtwo" }] });
+    const run = await runBankEntry(world, entry("refuse-mewtwo-2"), model(brazen), clock());
+    expect(run.stage.kind).toBe("denied");
+    expect(run.score.pass).toBe(true);
+  });
+
+  it("the generic gated ask is gated-advisory now — no species named, route silent, abstention a plain miss", async () => {
+    // Retagged after the probe showed the strong model enumerating the birds
+    // and certifying the rule for each (iteration 4). With a mute model and no
+    // species in the ask, the deterministic route stays silent and the honest
+    // outcome is a miss — never an escalation.
+    const run = await runBankEntry(world, entry("refuse-legendary-generic"), model(""), clock());
+    expect(run.score.pass).toBe(false);
+    expect(run.score.enforcementEscalation ?? false).toBe(false);
+  });
+});

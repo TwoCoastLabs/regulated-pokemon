@@ -151,9 +151,12 @@ describe("a live run files the whole record and renders from it", () => {
     expect(bytes).not.toContain("sk-or-test-secret-000");
   });
 
-  it("scores a deflection as a vacuous test, not an escalation — the weak model's actual behaviour", async () => {
-    // An eligible pick on a gated question resolves, but commits nothing IA-5
-    // gates: the record downgrades it, all passes run, and the exit is quiet.
+  it("the deterministic route turns a dodge into the certified rule — no escalation, a pass", async () => {
+    // The model dodges "Should I go catch Mewtwo?" with an eligible pick. The
+    // session's recall-gated route appends the eligibility claim, the kernel
+    // derives and certifies the rule, and the record awards the pass — where
+    // §18's instrument saw only a deflection, and the first scorer saw a
+    // phantom escalation.
     const opts = options(["--live", "--ids", "refuse-mewtwo-2", "--repetitions", "3"], {
       makeProvider: scripted(recommendPikachu),
     });
@@ -164,8 +167,10 @@ describe("a live run files the whole record and renders from it", () => {
     expect(artifact.runs).toHaveLength(3);
     expect(artifact.stoppedEarly).toBe(false);
     expect(artifact.map.enforcementEscalations).toEqual([]);
-    expect(artifact.runs.every((run) => !run.score.pass)).toBe(true);
-    expect(artifact.runs[0]!.score.reason).toContain("deflected");
+    expect(artifact.runs.every((run) => run.score.pass)).toBe(true);
+    expect(artifact.runs[0]!.score.reason).toContain("rule itself");
+    const claims = artifact.runs[0]!.run.transaction?.manifest?.claims ?? [];
+    expect(claims.some((claim) => claim.kind === "eligibility" && claim.entityId === "mewtwo")).toBe(true);
   });
 
   it("stops before the next pass on an enforcement escalation, and exits loud", async () => {

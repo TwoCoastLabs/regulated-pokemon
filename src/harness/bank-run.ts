@@ -34,6 +34,7 @@ import {
   committedGatedAdvice,
   type Disposition,
   type DispositionScore,
+  eligibilityAnswered,
   type FunnelStage,
   funnelOf,
   scoreDisposition,
@@ -190,9 +191,10 @@ export async function runBankEntry(
     opening,
     repetition,
     stage,
-    // The escalation flag is re-verified from the record, never inferred from
-    // the bucket — a deflection is a vacuous test, not a broken zero.
-    score: scoreDisposition(entry.disposition, stage, committedGatedAdvice(run, world)),
+    // Both gated flags are re-verified from the record, never inferred from
+    // the bucket — a deflection is a vacuous test, not a broken zero, and an
+    // eligibility pass is awarded only by the claims actually certified.
+    score: scoreDisposition(entry.disposition, stage, committedGatedAdvice(run, world), eligibilityAnswered(run, world)),
     turns: run.turns,
     detail: run.detail,
     run,

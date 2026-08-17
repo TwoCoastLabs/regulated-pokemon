@@ -33,12 +33,13 @@
  * repeats a millisecond would hand it a lie.
  */
 
-import type { ConfirmationEvent, ScopeDimension, ScopeEvent, ScopeTranscript } from "../kernel/contracts.js";
+import type { Claim, ConfirmationEvent, ScopeDimension, ScopeEvent, ScopeTranscript } from "../kernel/contracts.js";
 import { type DomElement, walkArtifact } from "../kernel/dom.js";
 import type { ManifestContext, ManifestDraft } from "../kernel/manifest.js";
 import type { AccordPack } from "../kernel/pack.js";
 import { planRender } from "../kernel/render.js";
 import type { CertifiedRegistry } from "../kernel/registry.js";
+import { restrictionsFor } from "../kernel/pack.js";
 import { REQUIRED_DIMENSIONS, resolveScope, type ScopeContext, unmatchedClauses } from "../kernel/scope.js";
 import { runTransaction, type Transaction } from "../kernel/transaction.js";
 import { renderAnswer } from "../render/reference.js";
@@ -370,6 +371,52 @@ function nextTransactionId(state: SessionState): string {
   return `session-${state.records.length + 1}`;
 }
 
+/**
+ * Advisory wording, stated as an explicit list rather than inferred. The gate
+ * trades recall for specificity on purpose (a miss falls through to today's
+ * behaviour, which is safe); what it may never do is fire on a plain factual
+ * question and dress it in advice.
+ */
+const ADVISORY_WORDING =
+  /\b(should|worth|recommend|advise|advice|catch|chase|hunt|pursue|go (?:for|get|after)|aim for|get one|team)\b/i;
+
+/**
+ * The deterministic eligibility route (epic #54, slice 2): when the ask names
+ * a restricted species in an advisory frame, the pack itself can answer — the
+ * governing rule, the threshold, the trainer's own standing — with no model in
+ * the loop. Lexical matching gates *recall* here, never proof: this function
+ * only nominates a claim, and the kernel derives and verifies everything in
+ * it. A model that already answered about the species advice-wise
+ * (recommendation, eligibility, act) is left alone; one that deflected into
+ * adjacent facts, or produced nothing, gets the on-target answer appended.
+ */
+export function eligibilityClaims(
+  world: SessionWorld,
+  ask: string,
+  proposed: readonly Claim[],
+): readonly Claim[] {
+  if (!ADVISORY_WORDING.test(ask)) return [];
+  const lowered = ask.toLowerCase();
+
+  const adviceAbout = new Set(
+    proposed.flatMap((claim) =>
+      claim.kind === "recommendation" || claim.kind === "eligibility" || claim.kind === "action"
+        ? [claim.entityId]
+        : [],
+    ),
+  );
+
+  const claims: Claim[] = [];
+  for (const species of world.registry.species) {
+    if (restrictionsFor(world.pack, species).length === 0) continue;
+    // Word-bounded, so "mew" never fires inside "mewtwo".
+    if (!new RegExp(`\\b${species.id}\\b`, "i").test(lowered)) continue;
+    if (adviceAbout.has(species.id)) continue;
+    claims.push({ kind: "eligibility", entityId: species.id });
+  }
+  return claims;
+}
+
 /** Scope is granted: ask the model for the answer and put it to the seam. */
 async function answer(state: SessionState, deps: SessionDeps): Promise<SessionState> {
   const { world, provider } = deps;
@@ -417,16 +464,40 @@ async function answer(state: SessionState, deps: SessionDeps): Promise<SessionSt
   }
 
   const withUsage = { ...state, usage: addUsage(state.usage, step.usage) };
+
+  // The ask, as the trainer worded it — what the deterministic route reads.
+  const ask = state.transcript
+    .slice(state.askStart)
+    .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
+    .join(" ");
+
   if (!step.decode.ok) {
-    return note(
-      { ...withUsage, phase: { kind: "gathering" } },
-      deps.now(),
-      `the model produced no usable answer (${step.decode.reason}) — nothing was committed`,
-      "abstention",
-    );
+    // Before conceding an abstention, let the pack answer what it can: a
+    // gated advisory ask has a deterministic, certified answer — the rule.
+    const routed = eligibilityClaims(world, ask, []);
+    if (routed.length === 0) {
+      return note(
+        { ...withUsage, phase: { kind: "gathering" } },
+        deps.now(),
+        `the model produced no usable answer (${step.decode.reason}) — nothing was committed`,
+        "abstention",
+      );
+    }
+    return commit(withUsage, deps, {
+      transactionId,
+      establishedAt,
+      draft: { transactionId, claims: routed, rosters: [] },
+    });
   }
 
-  const draft = step.decode.draft;
+  const decoded = step.decode.draft;
+  // A model that deflected a gated advisory ask into adjacent facts gets the
+  // on-target answer appended; one that addressed the species advice-wise —
+  // including by proposing the gated advice the kernel will deny — is left
+  // alone, so the route never softens a denial the gate has earned.
+  const routed = eligibilityClaims(world, ask, decoded.claims);
+  const draft: ManifestDraft =
+    routed.length === 0 ? decoded : { ...decoded, claims: [...decoded.claims, ...routed] };
 
   // The structural escalation: the model wants to rank, and no basis was ever
   // established. The kernel would refuse the draft by name (IA-1/
@@ -441,12 +512,25 @@ async function answer(state: SessionState, deps: SessionDeps): Promise<SessionSt
     return drive({ ...withUsage, required: [...REQUIRED_DIMENSIONS, "comparisonBasis"] }, deps);
   }
 
+  return commit(withUsage, deps, { transactionId, establishedAt, draft });
+}
+
+/**
+ * Put a draft to the seam and settle the exchange. One probe through the whole
+ * transaction with a transport that declines: it compiles, verifies, renders
+ * and attests — everything short of consent — so the page the visitor decides
+ * on is already the attested one.
+ */
+function commit(
+  state: SessionState,
+  deps: SessionDeps,
+  exchange: { transactionId: string; establishedAt: string; draft: ManifestDraft },
+): SessionState {
+  const { world } = deps;
+  const { transactionId, establishedAt, draft } = exchange;
   const committedAt = deps.now();
   const renderedAt = deps.now();
 
-  // One probe through the whole seam with a transport that declines: it
-  // compiles, verifies, renders and attests — everything short of consent —
-  // so the page the visitor decides on is already the attested one.
   const probe = runTransaction({
     id: transactionId,
     registry: world.registry,
@@ -471,15 +555,15 @@ async function answer(state: SessionState, deps: SessionDeps): Promise<SessionSt
       // No acts proposed: the probe is the exchange's record. The certified
       // page is rendered for display through the same planner the verifier
       // rules with — the record does not need it, the visitor does.
-      return file(withUsage, probe, displayPage(deps.world, probe));
+      return file(state, probe, displayPage(deps.world, probe));
     }
     case "declined": {
       // Acts proposed and attested; the decline is the probe's, not the
       // visitor's. Hold the page and wait for the person.
       const artifact = probe.artifact;
-      if (artifact === undefined) return file(withUsage, probe); // unreachable: declined carries its page
+      if (artifact === undefined) return file(state, probe); // unreachable: declined carries its page
       return {
-        ...withUsage,
+        ...state,
         phase: { kind: "confirming-act", artifact },
         pending: {
           transactionId,
@@ -494,7 +578,7 @@ async function answer(state: SessionState, deps: SessionDeps): Promise<SessionSt
     }
     default:
       // Denied at scope, answer or render — the named refusal is the record.
-      return file(withUsage, probe, displayPage(deps.world, probe));
+      return file(state, probe, displayPage(deps.world, probe));
   }
 }
 

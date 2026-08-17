@@ -201,6 +201,15 @@ export function describeClaim(claim: Claim): string {
         `${claim.subject.kind === "species" ? claim.subject.entityId : claim.subject.typeId} ${claim.direction}` +
         (claim.members === undefined ? " — derived by the kernel" : ` ${claim.members.join(", ")}`)
       );
+    case "eligibility":
+      return (
+        `eligibility of ${claim.entityId}` +
+        (claim.finding === undefined
+          ? " — derived by the kernel"
+          : claim.finding.eligible
+            ? " — within accreditation"
+            : ` — requires badge ${claim.finding.minimumBadgeLevel}, holds ${claim.finding.badgeLevel}`)
+      );
     case "recommendation":
       return `recommend ${claim.entityId}`;
     case "action":

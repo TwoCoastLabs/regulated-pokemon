@@ -403,3 +403,26 @@ describe("the filed artifact in runs/", () => {
     }
   });
 });
+
+describe("the console line for the derived claim kinds", () => {
+  it("states a matchup with and without its derived members", () => {
+    expect(describeClaim({ kind: "matchup", subject: { kind: "species", entityId: "gengar" }, direction: "weak-to" })).toContain("derived by the kernel");
+    expect(
+      describeClaim({ kind: "matchup", subject: { kind: "type", typeId: "electric" }, direction: "strong-against", members: ["flying", "water"] }),
+    ).toContain("flying, water");
+  });
+
+  it("states an eligibility finding in all three shapes", () => {
+    expect(describeClaim({ kind: "eligibility", entityId: "mewtwo" })).toContain("derived by the kernel");
+    expect(
+      describeClaim({ kind: "eligibility", entityId: "mewtwo", finding: { eligible: true, badgeLevel: 8 } }),
+    ).toContain("within accreditation");
+    expect(
+      describeClaim({
+        kind: "eligibility",
+        entityId: "mewtwo",
+        finding: { eligible: false, badgeLevel: 2, ruleId: "legendary-acquisition", minimumBadgeLevel: 6 },
+      }),
+    ).toContain("requires badge 6, holds 2");
+  });
+});

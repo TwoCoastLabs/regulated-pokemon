@@ -17,6 +17,7 @@ import { verifyReplay } from "../kernel/replay.js";
 import {
   decideAct,
   decideScope,
+  eligibilityClaims,
   MAX_LADDER_TURNS,
   retry,
   say,
@@ -358,5 +359,87 @@ describe("failures counted apart, never blended", () => {
     expect(state.notes).toHaveLength(1);
     expect(state.notes[0]!.tone).toBe("abstention");
     expect(state.notes[0]!.text).toContain("no usable answer");
+  });
+});
+
+describe("the deterministic eligibility route (epic #54, slice 2)", () => {
+  const mewtwoSpeed = () =>
+    JSON.stringify({
+      rosters: [],
+      claims: [
+        { kind: "fact", entityId: "mewtwo", factId: "is-legendary", asserted: { kind: "boolean", value: true } },
+      ],
+    });
+
+  it("serves the certified rule when the model produces nothing on a gated advisory ask", async () => {
+    const mute = scripted("scripted:mute", () => "no JSON at all");
+    let state = await say(startSession(), `Should I go catch Mewtwo? ${PROFILE}`, deps(mute));
+    const record = state.records.at(-1);
+    expect(record?.outcome.status).toBe("answered");
+    const claims = record?.manifest?.claims ?? [];
+    expect(claims.some((claim) => claim.kind === "eligibility" && claim.entityId === "mewtwo")).toBe(true);
+    // The rule, derived under the visitor's own grant — and the record replays.
+    expect(verifyReplay(world, record!).allowed).toBe(true);
+  });
+
+  it("appends the rule when the model deflects into adjacent facts", async () => {
+    const deflecting = scripted("scripted:deflect", (purpose) => (purpose === "answer" ? mewtwoSpeed() : "decline"));
+    const state = await say(startSession(), `Is Mewtwo worth chasing for me? ${PROFILE}`, deps(deflecting));
+    const claims = state.records.at(-1)?.manifest?.claims ?? [];
+    // The fact survives; the on-target answer arrives beside it.
+    expect(claims.some((claim) => claim.kind === "fact")).toBe(true);
+    expect(claims.some((claim) => claim.kind === "eligibility" && claim.entityId === "mewtwo")).toBe(true);
+  });
+
+  it("never fires on a plain factual question — specificity over recall", async () => {
+    const deflecting = scripted("scripted:fact", (purpose) => (purpose === "answer" ? mewtwoSpeed() : "decline"));
+    const state = await say(startSession(), `Is Mewtwo legendary? ${PROFILE}`, deps(deflecting));
+    const claims = state.records.at(-1)?.manifest?.claims ?? [];
+    expect(claims.some((claim) => claim.kind === "eligibility")).toBe(false);
+  });
+
+  it("never softens a denial the gate has earned", async () => {
+    const brazen = scripted("scripted:brazen", (purpose) =>
+      purpose === "answer"
+        ? JSON.stringify({ rosters: [], claims: [{ kind: "recommendation", entityId: "mewtwo" }] })
+        : "decline",
+    );
+    // Badge 2: the recommendation is gated, and the route must leave the
+    // attempt alone so the denial lands rather than being papered over.
+    const state = await say(
+      startSession(),
+      "Should I catch Mewtwo? I'm playing Red and Blue in Kanto with 2 badges.",
+      deps(brazen),
+    );
+    const record = state.records.at(-1);
+    expect(record?.outcome.status).toBe("denied");
+    expect(
+      record?.outcome.status === "denied" &&
+        record.outcome.violations.some((violation) => violation.rule === "restricted-species"),
+    ).toBe(true);
+  });
+});
+
+describe("eligibilityClaims — the recall gate's own edges", () => {
+  it("stays silent without advisory wording, a restricted mention, or when advice already landed", () => {
+    expect(eligibilityClaims(world, "What is Mewtwo's base speed?", [])).toEqual([]);
+    expect(eligibilityClaims(world, "Should I train my Pikachu harder?", [])).toEqual([]);
+    expect(
+      eligibilityClaims(world, "Should I catch Mewtwo?", [{ kind: "recommendation", entityId: "mewtwo" }]),
+    ).toEqual([]);
+    expect(
+      eligibilityClaims(world, "Should I catch Mewtwo?", [{ kind: "eligibility", entityId: "mewtwo" }]),
+    ).toEqual([]);
+  });
+
+  it("names every restricted species the ask mentions, and only those", () => {
+    expect(eligibilityClaims(world, "Should I chase Mew or Mewtwo first?", [])).toEqual([
+      { kind: "eligibility", entityId: "mewtwo" },
+      { kind: "eligibility", entityId: "mew" },
+    ]);
+    // Word-bounded: "mew" inside "mewtwo" is not a mention of Mew.
+    expect(eligibilityClaims(world, "Is Mewtwo worth catching?", [])).toEqual([
+      { kind: "eligibility", entityId: "mewtwo" },
+    ]);
   });
 });

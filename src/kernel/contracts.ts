@@ -242,6 +242,26 @@ export type Claim =
       members?: readonly string[];
     }
   /**
+   * What the Accord's own rules say about advising this trainer toward a
+   * species (epic #54, slice 2) — the pack as readable knowledge, not only as
+   * an enforcer. The `finding` — rarity-governing rule, threshold, the
+   * trainer's badge level, the verdict — is derivable and therefore optional,
+   * like a count's number: the kernel computes it from pack, snapshot and
+   * grant, and a stated finding is verified against the derived one. Not
+   * advice: IA-5 still gates any actual recommendation of the species, and
+   * the two may share a page, each under its own certificate.
+   */
+  | {
+      kind: "eligibility";
+      entityId: string;
+      finding?: {
+        eligible: boolean;
+        badgeLevel: number;
+        ruleId?: string;
+        minimumBadgeLevel?: number;
+      };
+    }
+  /**
    * A different speech act from `ranking`: "the fastest is Electrode" is a
    * claim about a set, "go and catch Mewtwo" is advice. IA-5 gates the second,
    * so it needs something of its own to gate.

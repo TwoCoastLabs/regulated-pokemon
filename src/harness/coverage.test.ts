@@ -132,3 +132,18 @@ describe("robustnessSummary reports whether wording moved the bucket", () => {
     expect(moved).toContain("`b`");
   });
 });
+
+describe("the gated-advisory line", () => {
+  it("reports useful-or-refused apart, and only when the slice ran", () => {
+    const md = renderCoverage(
+      coverageMap([
+        run("gate-1", "gated-advisory", { kind: "resolved" }, true),
+        run("gate-2", "gated-advisory", { kind: "denied", article: "IA-5", rule: "restricted-species" }, true),
+        run("gate-3", "gated-advisory", { kind: "resolved" }, false),
+      ]),
+    );
+    expect(md).toContain("Gated questions answered usefully or refused by name: 67%");
+    const without = renderCoverage(coverageMap([run("ans-1", "answerable", { kind: "resolved" }, true)]));
+    expect(without).not.toContain("Gated questions");
+  });
+});

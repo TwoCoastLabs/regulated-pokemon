@@ -121,6 +121,10 @@ export function renderCoverage(map: CoverageMap, heading = "Playability coverage
   if (advisory !== undefined && advisory.total > 0) {
     lines.push(`**Advisory resolution rate: ${pct(advisory.passRate)}** (${advisory.pass}/${advisory.total}) — reported apart: eligibility-checked advice, a weaker certificate than a fact.`);
   }
+  const gated = map.byDisposition.find((row) => row.disposition === "gated-advisory");
+  if (gated !== undefined && gated.total > 0) {
+    lines.push(`**Gated questions answered usefully or refused by name: ${pct(gated.passRate)}** (${gated.pass}/${gated.total}) — a certified eligibility answer and a named denial both count; a dodge counts against.`);
+  }
   const refusals = map.byDisposition.filter((row) => row.disposition === "needs-data" || row.disposition === "needs-claim-kind");
   const owed = refusals.reduce((sum, row) => sum + row.total, 0);
   const honest = refusals.reduce((sum, row) => sum + row.pass, 0);

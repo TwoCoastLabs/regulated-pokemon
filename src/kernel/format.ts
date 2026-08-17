@@ -42,7 +42,8 @@ export type FormatId =
   | "yes-no"
   | "no-value"
   | "member-of"
-  | "matchup-direction";
+  | "matchup-direction"
+  | "eligibility-verdict";
 
 /**
  * The locales the formatters below carry.
@@ -154,6 +155,16 @@ const FORMATTERS: Readonly<Record<FormatId, Formatter>> = {
     render: {
       "en-US": matchupPhrase,
       "en-GB": matchupPhrase,
+    },
+  },
+  // The verdict is the whole meaning of an eligibility card, so the words that
+  // state it are bound to the derived boolean, not written by the renderer —
+  // a page could not restyle "not yet" into "cleared" without a slot mismatch.
+  "eligibility-verdict": {
+    accepts: "boolean",
+    render: {
+      "en-US": (value) => (value ? "is within your accreditation" : "is not within your accreditation yet"),
+      "en-GB": (value) => (value ? "is within your accreditation" : "is not within your accreditation yet"),
     },
   },
 };

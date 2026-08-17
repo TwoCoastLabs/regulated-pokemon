@@ -78,6 +78,7 @@ export type RenderUnitKind =
   | "membership"
   | "selection"
   | "matchup"
+  | "eligibility"
   | "recommendation"
   | "action"
   | "warning"
@@ -325,6 +326,35 @@ function unitForClaim(
             kind: "matchup",
             slots: resolved.value,
             mentions: claim.subject.kind === "species" ? [claim.subject.entityId] : [],
+          },
+        };
+      }
+      case "eligibility": {
+        // A rendered manifest is a verified one, so the finding is the derived
+        // verdict. Every clause that carries meaning is a slot: the verdict's
+        // polarity, the governing rule, the threshold and the trainer's own
+        // badge level — "requires 6, you hold 2" is data, not prose. An
+        // unrestricted species shows "none" for rule and threshold.
+        const finding = claim.finding ?? { eligible: true, badgeLevel: 0 };
+        const resolved = slots(
+          slot(context, locale, "entity", entity(claim.entityId), "entity-name"),
+          slot(context, locale, "verdict", { kind: "boolean", value: finding.eligible }, "eligibility-verdict"),
+          finding.ruleId === undefined
+            ? slot(context, locale, "rule", { kind: "absent" })
+            : slot(context, locale, "rule", entity(finding.ruleId), "plain-text"),
+          finding.minimumBadgeLevel === undefined
+            ? slot(context, locale, "requires", { kind: "absent" })
+            : slot(context, locale, "requires", { kind: "number", value: finding.minimumBadgeLevel }),
+          slot(context, locale, "held", { kind: "number", value: finding.badgeLevel }),
+        );
+        if (!resolved.ok) return resolved;
+        return {
+          ok: true,
+          value: {
+            id: `eligibility:${claim.entityId}`,
+            kind: "eligibility",
+            slots: resolved.value,
+            mentions: [claim.entityId],
           },
         };
       }
