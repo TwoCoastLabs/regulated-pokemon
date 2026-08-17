@@ -217,11 +217,13 @@ describe("gated-advisory through the real spine (epic #54, slice 2)", () => {
     expect(run.score.pass).toBe(true);
   });
 
-  it("the strict should-refuse still exists, and still expects only the denial", async () => {
+  it("the generic gated ask is gated-advisory now — no species named, route silent, abstention a plain miss", async () => {
+    // Retagged after the probe showed the strong model enumerating the birds
+    // and certifying the rule for each (iteration 4). With a mute model and no
+    // species in the ask, the deterministic route stays silent and the honest
+    // outcome is a miss — never an escalation.
     const run = await runBankEntry(world, entry("refuse-legendary-generic"), model(""), clock());
-    // No single species in the ask, so the route stays silent and the honest
-    // outcome is an abstention — which for strict should-refuse is a miss,
-    // never a pass and never an escalation.
+    expect(run.score.pass).toBe(false);
     expect(run.score.enforcementEscalation ?? false).toBe(false);
   });
 });

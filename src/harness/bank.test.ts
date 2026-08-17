@@ -18,7 +18,7 @@ import {
   type QuestionBank,
   readBank,
 } from "./bank.js";
-import { DISPOSITIONS } from "./playability.js";
+import { type Disposition, DISPOSITIONS } from "./playability.js";
 
 const bank = readBank();
 
@@ -37,9 +37,21 @@ describe("the shipped bank holds up", () => {
     expect(bank.entries.length).toBeGreaterThanOrEqual(100);
   });
 
-  it("exercises every disposition", () => {
+  // `should-refuse` emptied by design (epic #54, slice 2): once the rule
+  // itself became a certified answer, no authored question remained whose
+  // *only* honest outcome is a denial — the strict holdout's own probe showed
+  // the model answering it better than the tag allowed. The disposition stays
+  // in the taxonomy for packs and asks where it is real; the bank simply has
+  // none, and that emptiness is a finding, not a gap.
+  const EMPTIED: readonly Disposition[] = ["should-refuse"];
+
+  it("exercises every disposition the world still poses", () => {
     const present = new Set(bank.entries.map((entry) => entry.disposition));
     for (const disposition of DISPOSITIONS) {
+      if (EMPTIED.includes(disposition)) {
+        expect(present.has(disposition), `${disposition} is documented as emptied, but the bank carries one`).toBe(false);
+        continue;
+      }
       expect(present.has(disposition), `no entry for ${disposition}`).toBe(true);
     }
   });
@@ -58,9 +70,10 @@ describe("the shipped bank holds up", () => {
   it("carries frozen paraphrases on a representative spread of entries", () => {
     const withPhrasings = bank.entries.filter((entry) => (entry.phrasings ?? []).length > 0);
     expect(withPhrasings.length).toBeGreaterThanOrEqual(20);
-    // Every disposition has at least one entry whose robustness can be measured.
+    // Every posed disposition has at least one measurable entry.
     const dispositions = new Set(withPhrasings.map((entry) => entry.disposition));
     for (const disposition of DISPOSITIONS) {
+      if (EMPTIED.includes(disposition)) continue;
       expect(dispositions.has(disposition), `no paraphrased entry for ${disposition}`).toBe(true);
     }
   });

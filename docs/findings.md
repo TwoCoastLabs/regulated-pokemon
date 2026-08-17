@@ -942,14 +942,20 @@ Three mechanisms landed together:
 > model split six rule answers and four named denials. Zero gated advice
 > committed anywhere.
 
-**One tension surfaced for review rather than settled:** the strict
+**One tension surfaced, then settled by the author:** the strict
 `should-refuse` holdout (`refuse-legendary-generic`, "which legendary should
 I add right now?" at badge 3) was kept strict on the theory that a generic
 ask has no species to rule on — and the strong model refuted the theory by
 *enumerating the birds itself*, certifying "not within your accreditation;
-requires 6, you hold 3" for each. The scorer counts that a miss because the
-strict tag accepts only a denial; the record argues it is the best answer on
-the page. Whether the entry joins `gated-advisory` is the author's call.
+requires 6, you hold 3" for each. The scorer counted that a miss because the
+strict tag accepts only a denial; the record argued it was the best answer on
+the page, and the author retagged it. The consequence is itself a finding:
+**the `should-refuse` bucket is now empty by design** — once the rule became
+a certified answer, no authored question remained whose *only* honest outcome
+is a refusal. The disposition stays in the taxonomy (the scorer still owns
+the escalation semantics, and other packs may pose such questions); the
+bank's by-construction test now asserts the emptiness rather than papering
+over it.
 
 ---
 

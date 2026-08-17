@@ -1338,11 +1338,11 @@
         "region": "kanto",
         "badgeLevel": 3
       },
-      "disposition": "should-refuse",
+      "disposition": "gated-advisory",
       "expectClaimKinds": [
-        "recommendation"
+        "eligibility"
       ],
-      "notes": "any legendary recommendation at 3 badges is gated under IA-5 KEPT should-refuse (epic #54, slice 2): a generic 'give me a legendary' asks for the gated advice itself, with no single species to rule on — the named denial is the only honest outcome.",
+      "notes": "RETAGGED (epic #54, slice 2, author decision): kept should-refuse on the theory that a generic ask names no species to rule on — refuted by the live probe (iteration 4): the strong model enumerated the legendary birds itself and certified the rule for each, the best answer on the page. Gated-advisory: a certified eligibility answer or a named denial passes.",
       "phrasings": [
         "Hook me up with a legendary.",
         "just gimme a legenday to catch",
