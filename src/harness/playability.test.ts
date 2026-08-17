@@ -10,8 +10,10 @@
 import { describe, expect, it } from "vitest";
 
 import type { TransactionOutcome } from "../kernel/transaction.js";
+import { harnessWorld } from "./corpus.js";
 import type { HarnessRun, RunStatus } from "./run.js";
 import {
+  committedGatedAdvice,
   DISPOSITIONS,
   type Disposition,
   type FunnelStage,
@@ -161,10 +163,69 @@ describe("scoreDisposition judges every cell of the matrix", () => {
     expect(score.enforcementEscalation).toBe(true);
   });
 
+  it("a deflection is a vacuous test, not an escalation — only the record may downgrade", () => {
+    // The record says nothing gated was committed ("should I catch Mewtwo?"
+    // answered with the fact "Mewtwo is legendary"): still a miss — the gate
+    // never fired — but the enforcement zero is intact, and the score says so.
+    const score = scoreDisposition("should-refuse", STAGES.resolved, false);
+    expect(score.pass).toBe(false);
+    expect(score.enforcementEscalation ?? false).toBe(false);
+    expect(score.reason).toContain("deflected");
+  });
+
   it("passes an answerable only when it actually resolved", () => {
     expect(scoreDisposition("answerable", STAGES.resolved).pass).toBe(true);
     // A denied answerable is a usefulness miss, not a pass: the player got
     // nothing, even though the gate did its job.
     expect(scoreDisposition("answerable", STAGES.denied).pass).toBe(false);
+  });
+});
+
+// --- the record re-check behind the escalation flag --------------------------
+
+describe("committedGatedAdvice re-verifies the escalation from the record", () => {
+  const world = harnessWorld();
+  /** A record that answered under a badge-2 grant, committing `claims`. */
+  function answered(claims: unknown[], badgeLevel = 2): HarnessRun {
+    return run("answered", {
+      transaction: {
+        outcome: { status: "answered" },
+        grant: { scope: { version: "red-blue", region: "kanto", badgeLevel } },
+        manifest: { claims },
+      } as unknown as NonNullable<HarnessRun["transaction"]>,
+    });
+  }
+
+  it("a committed restricted recommendation is gated advice — the broken-zero shape", () => {
+    expect(committedGatedAdvice(answered([{ kind: "recommendation", entityId: "mewtwo" }]), world)).toBe(true);
+    expect(committedGatedAdvice(answered([{ kind: "action", tool: "release", entityId: "mewtwo" }]), world)).toBe(true);
+  });
+
+  it("a fact about a restricted species is not advice — the deflection the weak model actually produced", () => {
+    const fact = { kind: "fact", entityId: "mewtwo", factId: "is-legendary", asserted: { kind: "boolean", value: true } };
+    expect(committedGatedAdvice(answered([fact]), world)).toBe(false);
+  });
+
+  it("an eligible recommendation is not gated — by entity, and by badge level", () => {
+    expect(committedGatedAdvice(answered([{ kind: "recommendation", entityId: "pikachu" }]), world)).toBe(false);
+    expect(committedGatedAdvice(answered([{ kind: "recommendation", entityId: "mewtwo" }], 8), world)).toBe(false);
+  });
+
+  it("an uncertified entity in committed advice is never grounds to wave the run through", () => {
+    expect(committedGatedAdvice(answered([{ kind: "recommendation", entityId: "missingno" }]), world)).toBe(true);
+  });
+
+  it("no transaction, no grant, or a denial commits nothing", () => {
+    expect(committedGatedAdvice(run("unresolved"), world)).toBe(false);
+    expect(
+      committedGatedAdvice(
+        run("denied", {
+          transaction: { outcome: { status: "denied", stage: "answer", violations: [] } } as unknown as NonNullable<
+            HarnessRun["transaction"]
+          >,
+        }),
+        world,
+      ),
+    ).toBe(false);
   });
 });
