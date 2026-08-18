@@ -210,6 +210,8 @@ export function describeClaim(claim: Claim): string {
             ? " — within accreditation"
             : ` — requires badge ${claim.finding.minimumBadgeLevel}, holds ${claim.finding.badgeLevel}`)
       );
+    case "explanation":
+      return `lesson ${claim.blockId} — reviewed text, shown verbatim`;
     case "recommendation":
       return `recommend ${claim.entityId}`;
     case "action":

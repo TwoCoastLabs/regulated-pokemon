@@ -172,6 +172,8 @@ function describeClaim(claim: Claim): string {
       return `matchup ${claim.subject.kind === "species" ? claim.subject.entityId : claim.subject.typeId} ${claim.direction}`;
     case "eligibility":
       return `eligibility ${claim.entityId}`;
+    case "explanation":
+      return `lesson ${claim.blockId}`;
     case "recommendation":
       return `recommendation ${claim.entityId}`;
     case "action":

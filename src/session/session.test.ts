@@ -443,3 +443,63 @@ describe("eligibilityClaims — the recall gate's own edges", () => {
     ]);
   });
 });
+
+describe("teach before interrogating — the lazy half of IA-1", () => {
+  const lessonAnswer = JSON.stringify({
+    rosters: [],
+    claims: [{ kind: "explanation", blockId: "what-is-badge" }],
+  });
+
+  it("commits a lesson on the first message, no scope questions asked, and the record is grantless", async () => {
+    const provider = scripted("teacher", (purpose) => (purpose === "answer" ? lessonAnswer : "decline"));
+    const state = await say(startSession(), "What's a badge?", deps(provider));
+
+    // No interrogation happened: the exchange settled without a single
+    // recorded question, and the filed record carries no grant, because
+    // nothing personalized was released.
+    expect(state.transcript.some((event) => event.kind === "question")).toBe(false);
+    expect(state.records).toHaveLength(1);
+    const record = state.records[0]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.grant).toBeUndefined();
+    expect(record.manifest?.scopeGrantId).toBeUndefined();
+    expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-badge" }]);
+
+    // The grantless record replays like any other (IA-10).
+    expect(verifyReplay(world, record).allowed).toBe(true);
+  });
+
+  it("falls to the pack's question when the model has nothing to teach", async () => {
+    const provider = scripted("silent", () => "decline");
+    const state = await say(startSession(), "Where can I catch Abra?", deps(provider));
+    // The teaching attempt was made and discarded; the interrogation begins
+    // only after it — the ask costs one question, never a wrong commit.
+    expect(state.transcript.some((event) => event.kind === "question")).toBe(true);
+    expect(state.records).toHaveLength(0);
+  });
+
+  it("cannot launder advice through the grantless door — the mixed draft is discarded, not committed", async () => {
+    const smuggled = JSON.stringify({
+      rosters: [],
+      claims: [
+        { kind: "explanation", blockId: "what-is-badge" },
+        { kind: "recommendation", entityId: "pikachu" },
+      ],
+    });
+    const provider = scripted("smuggler", (purpose) => (purpose === "answer" ? smuggled : "decline"));
+    const state = await say(startSession(), "What's a badge?", deps(provider));
+    // The session discards the mixed draft (the kernel would refuse it by
+    // name anyway — the crucible proves that leg) and the ladder proceeds.
+    expect(state.records).toHaveLength(0);
+    expect(state.transcript.some((event) => event.kind === "question")).toBe(true);
+  });
+});
+
+it("a failed teaching attempt falls to the question and moves the failure counter", async () => {
+  // The provider dies on the pre-scope attempt; the visitor still just gets
+  // the pack's question, and the meter says a call failed.
+  const provider = new FailingProvider("flaky");
+  const state = await say(startSession(), "What's a badge?", deps(provider));
+  expect(state.transcript.some((event) => event.kind === "question")).toBe(true);
+  expect(state.providerErrors).toBeGreaterThan(0);
+});

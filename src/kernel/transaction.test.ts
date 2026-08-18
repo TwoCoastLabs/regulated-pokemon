@@ -154,3 +154,43 @@ describe("the act path, walked through the kernel's own doors", () => {
     expect(transaction.outcome.violations.map(denialCode)).toContain("IA-8/confirmation-not-from-trainer");
   });
 });
+
+describe("the seam teaches before it interrogates", () => {
+  it("commits a lessons-only plan under a clarifying scope, grantless", () => {
+    const record = runTransaction({
+      id: "txn-teach",
+      registry: kantoRegistry(),
+      pack: kantoPack(),
+      transcript: [{ kind: "utterance", at: ISSUED_AT, source: "trainer", text: "What's a badge?" }],
+      establishedAt: ISSUED_AT,
+      committedAt: COMMIT_TIME,
+      locale: LOCALE,
+      plan: () => ({
+        transactionId: "txn-teach",
+        claims: [{ kind: "explanation", blockId: "what-is-badge" }],
+        rosters: [],
+      }),
+    });
+    expect(record.outcome.status).toBe("answered");
+    expect(record.grant).toBeUndefined();
+    expect(record.manifest?.scopeGrantId).toBeUndefined();
+  });
+
+  it("still asks when the plan wants anything personal", () => {
+    const record = runTransaction({
+      id: "txn-no-teach",
+      registry: kantoRegistry(),
+      pack: kantoPack(),
+      transcript: [{ kind: "utterance", at: ISSUED_AT, source: "trainer", text: "Where can I catch Abra?" }],
+      establishedAt: ISSUED_AT,
+      committedAt: COMMIT_TIME,
+      locale: LOCALE,
+      plan: () => ({
+        transactionId: "txn-no-teach",
+        claims: [{ kind: "fact", entityId: "abra", factId: "locations" }],
+        rosters: [],
+      }),
+    });
+    expect(record.outcome.status).toBe("clarifying");
+  });
+});

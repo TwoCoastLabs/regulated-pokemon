@@ -326,6 +326,28 @@ async function drive(state: SessionState, deps: SessionDeps): Promise<SessionSta
   const lastSaid = [...state.transcript]
     .reverse()
     .find((event): event is Extract<ScopeEvent, { kind: "utterance" }> => event.kind === "utterance" && event.source === "trainer");
+
+  // Teach before interrogating — the lazy half of IA-1. On the *first*
+  // clarify of an ask (no question has been posed for it yet), the model is
+  // asked once with no grant at all: under a grantless context only
+  // explanation claims can commit, so the sole thing this call can produce
+  // is a routed lesson — "what's a badge?" answered immediately, three
+  // interrogation answers not demanded for a text that is the same for
+  // every trainer. Anything else falls through to the pack's question. The
+  // price is one model call per under-scoped ask; the alternative was a
+  // deterministic router, which is a recall ceiling nobody measures.
+  const askedAlready = state.transcript
+    .slice(state.askStart)
+    .some((event) => event.kind === "question");
+  // Not during an escalation: a widened `required` means an answer was
+  // already attempted and wants more scope (the ranking-basis path) — the
+  // ask is established as personal, and a lesson is not what it needs.
+  if (lastSaid !== undefined && !askedAlready && state.required === undefined) {
+    const attempt = await teachWithoutScope(state, deps);
+    if (attempt.taught) return attempt.state;
+    state = attempt.state;
+  }
+
   const freshLongTail = lastSaid !== undefined && unmatchedClauses(world.pack, lastSaid.text).length > 0;
   if (!freshLongTail || state.ladderTurns >= MAX_LADDER_TURNS) {
     return ask(state, deps.now(), outcome.asking, outcome.question);
@@ -418,6 +440,56 @@ export function eligibilityClaims(
 }
 
 /** Scope is granted: ask the model for the answer and put it to the seam. */
+/**
+ * One grantless answer attempt: commit a lesson, or report "not taught".
+ *
+ * The model is prompted with scope explicitly absent, so it knows only a
+ * catalogue route can survive. A draft that is anything but non-empty,
+ * lessons-only is discarded without ceremony — the pack's question is the
+ * better next move, and a denial here would cost the visitor a refusal for
+ * what is really just an under-specified ask. Usage is kept either way; a
+ * discarded attempt still happened and the meter says so.
+ */
+async function teachWithoutScope(
+  state: SessionState,
+  deps: SessionDeps,
+): Promise<{ state: SessionState; taught: boolean }> {
+  const { world, provider } = deps;
+  const transactionId = nextTransactionId(state);
+  const establishedAt = deps.now();
+  const bare: ManifestContext = {
+    registry: world.registry,
+    pack: world.pack,
+    locale: deps.locale ?? LOCALE,
+    at: establishedAt,
+  };
+
+  let step;
+  try {
+    step = await proposeAnswer({
+      provider,
+      context: bare,
+      scenarioId: "session",
+      transactionId,
+      transcript: state.transcript.slice(state.askStart),
+    });
+  } catch {
+    // The question is still free: a failed teaching attempt falls to the
+    // ladder rather than surfacing an error for a call the visitor never
+    // asked for. The counter still moves — provider failures are never
+    // hidden inside semantic outcomes.
+    return { state: { ...state, providerErrors: state.providerErrors + 1 }, taught: false };
+  }
+
+  const spent = { ...state, usage: addUsage(state.usage, step.usage) };
+  if (!step.decode.ok) return { state: spent, taught: false };
+  const draft = step.decode.draft;
+  if (draft.claims.length === 0 || draft.claims.some((claim) => claim.kind !== "explanation")) {
+    return { state: spent, taught: false };
+  }
+  return { state: commit(spent, deps, { transactionId, establishedAt, draft }), taught: true };
+}
+
 async function answer(state: SessionState, deps: SessionDeps): Promise<SessionState> {
   const { world, provider } = deps;
   const transactionId = nextTransactionId(state);

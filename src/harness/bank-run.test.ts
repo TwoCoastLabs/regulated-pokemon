@@ -73,9 +73,11 @@ describe("runBankEntry buckets each disposition through the real session", () =>
   });
 
   it("a needs-claim-kind question passes on an honest abstention", async () => {
-    // Genuinely unexpressible: a "counter" is a judgement over speed, movesets
-    // and role — the chart (epic #54) made effectiveness expressible, not this.
-    const run = await runBankEntry(world, entry("kind-counter-mewtwo"), model(""), clock());
+    // The deliberate residual: a naming preference is not a certified claim of
+    // any kind, and slice 4 kept it that way on review — the marker for where
+    // the governed surface ends. (kind-counter-mewtwo, this test's previous
+    // exemplar, retagged to advisory in the same slice.)
+    const run = await runBankEntry(world, entry("kind-nickname"), model(""), clock());
     expect(run.score.pass).toBe(true);
   });
 

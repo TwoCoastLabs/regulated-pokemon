@@ -380,3 +380,59 @@ describe("the action registry is closed, and every irreversible act discloses", 
     ).toContain("IA-6/pack-slot-source-unavailable");
   });
 });
+
+describe("the explanation catalogue is policy, and the loader treats it as such", () => {
+  it("refuses a pack that never decided what may be taught", () => {
+    expect(
+      denials(loadWith((draft) => delete (draft as Partial<AccordPack>).curriculum)),
+    ).toEqual(["IA-6/pack-curriculum-missing"]);
+  });
+
+  it("refuses a doctored lesson — the digest no longer names its own text", () => {
+    expect(
+      denials(
+        loadWith((draft) => {
+          const lesson = draft.curriculum.find((rule) => rule.id === "what-is-badge")!;
+          (lesson.block.content[0] as { text: string }).text += " Also, badges are optional.";
+        }),
+      ),
+    ).toContain("IA-6/pack-block-digest-mismatch");
+  });
+
+  it("refuses a lesson with no text in an approved locale", () => {
+    expect(
+      denials(
+        loadWith((draft) => {
+          const lesson = draft.curriculum.find((rule) => rule.id === "objective")!;
+          (lesson.block as unknown as { content: { locale: string }[] }).content = lesson.block.content.filter(
+            (entry) => entry.locale !== "en-GB",
+          );
+        }),
+      ),
+    ).toContain("IA-6/pack-block-locale-missing");
+  });
+
+  it("refuses two lessons sharing an id", () => {
+    expect(
+      denials(
+        loadWith((draft) => {
+          (draft as unknown as { curriculum: unknown[] }).curriculum = [...draft.curriculum, structuredClone(draft.curriculum[0])];
+        }),
+      ),
+    ).toContain("IA-5/pack-duplicate-rule");
+  });
+
+  it("pins the what-is-type lesson to the certified chart — prose may not drift from the world", () => {
+    // The lesson enumerates the fifteen types in reviewed text. Editorial
+    // provenance is not a license to disagree with the snapshot: where a
+    // lesson overlaps something the registry certifies, this pin holds the
+    // two equal, and a chart change breaks the build until the lesson is
+    // re-reviewed with it.
+    const lesson = pack.curriculum.find((rule) => rule.id === "what-is-type")!;
+    const text = lesson.block.content[0]!.text.toLowerCase();
+    for (const type of registry.typeChart.types) {
+      expect(text).toContain(type);
+    }
+    expect(registry.typeChart.types).toHaveLength(15);
+  });
+});

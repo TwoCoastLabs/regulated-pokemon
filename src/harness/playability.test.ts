@@ -20,6 +20,7 @@ import {
   type FunnelStage,
   type FunnelStageKind,
   funnelOf,
+  routedLesson,
   scoreDisposition,
 } from "./playability.js";
 import { emptyUsage } from "./provider.js";
@@ -309,5 +310,29 @@ describe("record re-checks on the act path and thin records", () => {
     const score = scoreDisposition("gated-advisory", { kind: "declined" });
     expect(score.pass).toBe(false);
     expect(score.reason).toContain("without the rule being read");
+  });
+});
+
+describe("routedLesson reads the record, not the bucket", () => {
+  const lessonRun = (claims: unknown[], status = "answered") =>
+    ({
+      transaction: {
+        outcome: { status },
+        manifest: { claims },
+      },
+    }) as unknown as Parameters<typeof routedLesson>[0];
+
+  it("is vacuously true when the entry expects no lesson", () => {
+    expect(routedLesson({} as Parameters<typeof routedLesson>[0], undefined)).toBe(true);
+  });
+
+  it("is false with no transaction, an unanswered outcome, or no matching lesson", () => {
+    expect(routedLesson({} as Parameters<typeof routedLesson>[0], ["what-is-badge"])).toBe(false);
+    expect(routedLesson(lessonRun([], "denied"), ["what-is-badge"])).toBe(false);
+    expect(routedLesson(lessonRun([{ kind: "explanation", blockId: "objective" }]), ["what-is-badge"])).toBe(false);
+  });
+
+  it("passes exactly when a committed lesson is one the question accepts", () => {
+    expect(routedLesson(lessonRun([{ kind: "explanation", blockId: "what-is-badge" }]), ["what-is-badge"])).toBe(true);
   });
 });

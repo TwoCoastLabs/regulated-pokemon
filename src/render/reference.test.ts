@@ -76,3 +76,46 @@ describe("the reference renderer", () => {
     expect(denials(renamed)).toContain("IA-2/disclosure-block-altered");
   });
 });
+
+describe("a lesson on the page", () => {
+  function lessonAnswer(): AnswerManifest {
+    const compiled = compileManifest(world, {
+      transactionId: "txn-lesson",
+      claims: [{ kind: "explanation", blockId: "what-is-badge" }],
+      rosters: [],
+    });
+    if (!compiled.ok) throw new Error(compiled.violations.map(denialCode).join(", "));
+    return compiled.value;
+  }
+
+  function lessonDenials(pack: AccordPack): string[] {
+    const manifest = lessonAnswer();
+    const planned = planRender(world, manifest);
+    if (!planned.ok) throw new Error(planned.violations.map(denialCode).join(", "));
+    const artifact = renderAnswer(pack, planned.value);
+    const walked = attestRender(world, manifest, artifact, RENDERED_AT);
+    if (walked.ok) return verifyRender(world, manifest, artifact, walked.value).violations.map(denialCode);
+    return walked.violations.map(denialCode);
+  }
+
+  it("renders the reviewed text verbatim and the kernel signs it", () => {
+    expect(lessonDenials(world.pack)).toEqual([]);
+  });
+
+  it("a renderer drawing from a doctored catalogue is caught by the digest on screen", () => {
+    // The verifier's pack is the real one; the renderer's carries an edited
+    // lesson. The words on the page no longer digest to what the manifest
+    // owes — the same tamper-evidence a disclosure block has.
+    const doctored: AccordPack = {
+      ...world.pack,
+      curriculum: world.pack.curriculum.map((rule) => ({
+        ...rule,
+        block: {
+          ...rule.block,
+          content: rule.block.content.map((entry) => ({ ...entry, text: `${entry.text} Trust me.` })),
+        },
+      })),
+    };
+    expect(lessonDenials(doctored).length).toBeGreaterThan(0);
+  });
+});

@@ -208,6 +208,29 @@ export function runTransaction(input: TransactionInput): Transaction {
   };
 
   if (scope.status === "clarify") {
+    // The lazy half of IA-1 before the question: material scope is demanded
+    // when an answer depends on it, and a catalogue lesson depends on none of
+    // it. The plan is put to the compiler with no grant at all — under which
+    // every claim kind except `explanation` refuses by name
+    // (IA-1/scope-not-established) — so the only thing that can commit here
+    // is reviewed, impersonal teaching. Anything else falls to the question
+    // exactly as before; nothing is smoothed, and the filed record shows no
+    // grant because nothing personalized was released.
+    const bare: ManifestContext = {
+      registry: input.registry,
+      pack: input.pack,
+      locale: input.locale,
+      at: input.committedAt,
+    };
+    const taught = compileManifest(bare, input.plan(bare, input.id));
+    if (taught.ok) {
+      return {
+        ...record,
+        manifest: taught.value,
+        verdicts: [{ stage: "answer", verdict: verdictOf([]) }],
+        outcome: { status: "answered" },
+      };
+    }
     return {
       ...record,
       verdicts: [],

@@ -1,5 +1,5 @@
 {
-  "packVersion": 5,
+  "packVersion": 6,
   "id": "indigo-accord-v1",
   "presentation": {
     "locales": [
@@ -640,5 +640,207 @@
         ]
       }
     ]
-  }
+  },
+  "curriculum": [
+    {
+      "id": "what-is-game",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-game",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Pokémon Red and Blue are the first Kanto journeys. You travel the region town by town, catch wild Pokémon, train a team of up to six, and challenge the eight Gym Leaders on the way to the Pokémon League. The Advisor answers from the official Red and Blue records — what a Pokémon is, where it appears, what it learns, how types interact — and says so when a question falls outside those records.",
+            "digest": "sha256:e98a2dc4ae5366db04aece95edd74294a7bb005d8fcb54638a47163689b8c79f"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Pokémon Red and Blue are the first Kanto journeys. You travel the region town by town, catch wild Pokémon, train a team of up to six, and challenge the eight Gym Leaders on the way to the Pokémon League. The Advisor answers from the official Red and Blue records — what a Pokémon is, where it appears, what it learns, how types interact — and says so when a question falls outside those records.",
+            "digest": "sha256:e98a2dc4ae5366db04aece95edd74294a7bb005d8fcb54638a47163689b8c79f"
+          }
+        ]
+      }
+    },
+    {
+      "id": "how-to-play",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-how-to-play",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Play moves between exploring and battling. Walk the routes and tall grass to meet wild Pokémon; battle them to train your team, or throw a Poké Ball to catch them. Trainers on the road will challenge you as you pass. Keep your team healthy at any Pokémon Center — healing there is free — and stock up on Balls and Potions at the Poké Marts. Your team holds six Pokémon; the rest wait safely in the PC storage system.",
+            "digest": "sha256:fa245c8f93f29accf7dc530d0d846490f775598c8706d47aacb05b46f189056a"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Play moves between exploring and battling. Walk the routes and tall grass to meet wild Pokémon; battle them to train your team, or throw a Poké Ball to catch them. Trainers on the road will challenge you as you pass. Keep your team healthy at any Pokémon Center — healing there is free — and stock up on Balls and Potions at the Poké Marts. Your team holds six Pokémon; the rest wait safely in the PC storage system.",
+            "digest": "sha256:fa245c8f93f29accf7dc530d0d846490f775598c8706d47aacb05b46f189056a"
+          }
+        ]
+      }
+    },
+    {
+      "id": "objective",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-objective",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "The journey has two goals, and you set the pace for both. The League path: defeat the eight Gym Leaders of Kanto for their badges, then cross Victory Road and take on the Elite Four. The collector's path: complete the Pokédex by catching or trading for every species the records certify. Nothing stops you pursuing both.",
+            "digest": "sha256:2c75d52d08171c68b98cb64da6bb12d4123f1874fd42a0131ef563cc0abaed6e"
+          },
+          {
+            "locale": "en-GB",
+            "text": "The journey has two goals, and you set the pace for both. The League path: defeat the eight Gym Leaders of Kanto for their badges, then cross Victory Road and take on the Elite Four. The collector's path: complete the Pokédex by catching or trading for every species the records certify. Nothing stops you pursuing both.",
+            "digest": "sha256:2c75d52d08171c68b98cb64da6bb12d4123f1874fd42a0131ef563cc0abaed6e"
+          }
+        ]
+      }
+    },
+    {
+      "id": "what-is-badge",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-badge",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "A Gym Badge is the League's proof that you defeated one of Kanto's eight Gym Leaders. Badges are accreditation, not trophies: they persuade traded Pokémon of higher levels to obey you, they license moves like Fly and Surf outside battle — and under the Indigo Accord they set which recommendations the Advisor may give you. When the Advisor checks your accreditation, the number of badges you hold is what it is checking.",
+            "digest": "sha256:6ff477e16761eec72ac774f3dcfd6c1b61362eaa7d0572f666b357b185e7fe50"
+          },
+          {
+            "locale": "en-GB",
+            "text": "A Gym Badge is the League's proof that you defeated one of Kanto's eight Gym Leaders. Badges are accreditation, not trophies: they persuade traded Pokémon of higher levels to obey you, they license moves like Fly and Surf outside battle — and under the Indigo Accord they set which recommendations the Advisor may give you. When the Advisor checks your accreditation, the number of badges you hold is what it is checking.",
+            "digest": "sha256:6ff477e16761eec72ac774f3dcfd6c1b61362eaa7d0572f666b357b185e7fe50"
+          }
+        ]
+      }
+    },
+    {
+      "id": "what-is-type",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-type",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Every Pokémon and every move has a type, and battles turn on how those types meet. Red and Blue know exactly fifteen: Normal, Fighting, Flying, Poison, Ground, Rock, Bug, Ghost, Fire, Water, Grass, Electric, Psychic, Ice, and Dragon. An attack can be super effective, not very effective, or useless against a defender, exactly as the official type chart says — ask the Advisor about any Pokémon's weaknesses or resistances and it derives the answer from that chart, never from memory.",
+            "digest": "sha256:4f9892ade81e6c27562a7461d5683e89c9603602df027cba733add6c540a839d"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Every Pokémon and every move has a type, and battles turn on how those types meet. Red and Blue know exactly fifteen: Normal, Fighting, Flying, Poison, Ground, Rock, Bug, Ghost, Fire, Water, Grass, Electric, Psychic, Ice, and Dragon. An attack can be super effective, not very effective, or useless against a defender, exactly as the official type chart says — ask the Advisor about any Pokémon's weaknesses or resistances and it derives the answer from that chart, never from memory.",
+            "digest": "sha256:4f9892ade81e6c27562a7461d5683e89c9603602df027cba733add6c540a839d"
+          }
+        ]
+      }
+    },
+    {
+      "id": "how-catch",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-how-catch",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Catching starts with weakening: lower a wild Pokémon's HP in battle and it becomes easier to hold. Sleep or paralysis helps further. Then throw a Ball — a Great Ball or Ultra Ball holds better than a plain Poké Ball, and each failed throw costs the Ball. Some Pokémon are simply harder to keep in a Ball than others; legendary Pokémon most of all.",
+            "digest": "sha256:3cbb037d1fb8ec8e573249913f7817e4202935c9f03d0414509769a667498770"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Catching starts with weakening: lower a wild Pokémon's HP in battle and it becomes easier to hold. Sleep or paralysis helps further. Then throw a Ball — a Great Ball or Ultra Ball holds better than a plain Poké Ball, and each failed throw costs the Ball. Some Pokémon are simply harder to keep in a Ball than others; legendary Pokémon most of all.",
+            "digest": "sha256:3cbb037d1fb8ec8e573249913f7817e4202935c9f03d0414509769a667498770"
+          }
+        ]
+      }
+    },
+    {
+      "id": "first-steps",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-first-steps",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Every journey opens the same way: Professor Oak in Pallet Town offers you one starter — Bulbasaur, Charmander, or Squirtle. Head north through Route 1 to Viridian City, stock up, and continue through Viridian Forest to Pewter City, where Brock waits with the first badge. Catch a few Pokémon on the way; a team is easier to build early than to rebuild late.",
+            "digest": "sha256:547a4bd72e73a99ae9648a83636237f55bdaa550caff740b839c3cc5a6683520"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Every journey opens the same way: Professor Oak in Pallet Town offers you one starter — Bulbasaur, Charmander, or Squirtle. Head north through Route 1 to Viridian City, stock up, and continue through Viridian Forest to Pewter City, where Brock waits with the first badge. Catch a few Pokémon on the way; a team is easier to build early than to rebuild late.",
+            "digest": "sha256:547a4bd72e73a99ae9648a83636237f55bdaa550caff740b839c3cc5a6683520"
+          }
+        ]
+      }
+    },
+    {
+      "id": "leveling",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-leveling",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Pokémon grow by battling: every win pays experience, experience raises levels, and levels raise stats. New moves arrive at set levels — a Pokémon remembers only four, so choosing what to forget matters. Many species also evolve: some at a level, some by an evolution stone, some only when traded. Ask the Advisor for any certified species' evolution method and it reads the records.",
+            "digest": "sha256:058b6f395855c33f8ed942204016aef120f2f59855cc6e51ca47920227d157a0"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Pokémon grow by battling: every win pays experience, experience raises levels, and levels raise stats. New moves arrive at set levels — a Pokémon remembers only four, so choosing what to forget matters. Many species also evolve: some at a level, some by an evolution stone, some only when traded. Ask the Advisor for any certified species' evolution method and it reads the records.",
+            "digest": "sha256:058b6f395855c33f8ed942204016aef120f2f59855cc6e51ca47920227d157a0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "red-vs-blue",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-red-vs-blue",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Red and Blue are the same journey through the same Kanto — the difference is who lives in the grass. A few species appear only in one version: Ekans and Growlithe in Red, while Sandshrew and Vulpix answer only to Blue. Completing the Pokédex therefore takes trading with the other version. The records mark exactly which version certifies each encounter, so tell the Advisor which cartridge you are playing.",
+            "digest": "sha256:cc8f45c544694b3c68faa885d881315db684fb018cc6bbe72b5e36d41ee20c53"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Red and Blue are the same journey through the same Kanto — the difference is who lives in the grass. A few species appear only in one version: Ekans and Growlithe in Red, while Sandshrew and Vulpix answer only to Blue. Completing the Pokédex therefore takes trading with the other version. The records mark exactly which version certifies each encounter, so tell the Advisor which cartridge you are playing.",
+            "digest": "sha256:cc8f45c544694b3c68faa885d881315db684fb018cc6bbe72b5e36d41ee20c53"
+          }
+        ]
+      }
+    },
+    {
+      "id": "is-it-hard",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-is-it-hard",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Friendly to start, honest about depth. The early Gyms forgive a lot if your starter is healthy and a few levels ahead. The lasting lesson is that type matchups beat raw levels: a well-chosen Pokémon at a lower level often does what an over-trained one cannot. When you are stuck, ask about your opponent's type — the weakness the chart certifies is usually the door.",
+            "digest": "sha256:c3742cac08a89c7b267953be295f5699559d527a143c04ee192512a0a4e60ead"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Friendly to start, honest about depth. The early Gyms forgive a lot if your starter is healthy and a few levels ahead. The lasting lesson is that type matchups beat raw levels: a well-chosen Pokémon at a lower level often does what an over-trained one cannot. When you are stuck, ask about your opponent's type — the weakness the chart certifies is usually the door.",
+            "digest": "sha256:c3742cac08a89c7b267953be295f5699559d527a143c04ee192512a0a4e60ead"
+          }
+        ]
+      }
+    }
+  ]
 }

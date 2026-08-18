@@ -90,7 +90,7 @@ describe("an act is authorized only if the whole chain behind it holds", () => {
       confirmationEventId: confirmed.id,
       tool: "release",
       entityId: "pikachu",
-      scopeGrantId: world.grant.id,
+      scopeGrantId: world.grant!.id,
       authorizedAt: AUTHORIZED_AT,
     });
     expect(verifyAction(world, chain())).toEqual({ allowed: true, violations: [] });
@@ -205,7 +205,7 @@ describe("the chain is in order, and the scope is still good when it matters", (
     const record = chain();
     const undated = {
       ...world,
-      grant: { ...world.grant, expiresAt: "sometime next week" },
+      grant: { ...world.grant!, expiresAt: "sometime next week" },
     };
     const verdict = verifyAction(undated, record);
 

@@ -106,7 +106,7 @@ function grantFor(world: CrucibleWorld, manifest: AnswerManifest, confirmation: 
     confirmationEventId: confirmation.id,
     tool: TOOL,
     entityId: SUBJECT,
-    scopeGrantId: world.grant.id,
+    scopeGrantId: world.grant!.id,
     authorizedAt: AUTHORIZED_AT,
   };
 }

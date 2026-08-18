@@ -1041,6 +1041,54 @@ repetition, luna-pro improvised 15 count claims — one roster per type — an
 answer-shaped workaround the grammar permits; nondeterministic, and no
 substitute for a certified curriculum block.)
 
+### Iteration 7 — the certified curriculum: teaching becomes routing, and scope becomes lazy (epic #54, slice 4)
+
+The slice: an **explanation catalogue** in the pack — ten reviewed,
+digest-pinned lessons — behind a new `explanation` claim kind whose only
+content is a route; the kernel reads the words, the render walk holds the
+screen to the digest, and the grammar offers the lesson ids as an enum so a
+fabricated lesson is unrepresentable, not merely denied. Riding on it, the
+**lazy half of IA-1**: a grantless context certifies explanation claims and
+nothing else (`IA-1/scope-not-established` for every other kind, proven by
+crucible mutation `advice-smuggled-into-a-lesson`), so the session now tries
+one grantless answer before its first scope question.
+
+Fail-fast probe, the 16 retagged questions, N=1 per model
+(`runs/coverage/2026-08-18T02-54-53-462Z` and `…02-56-04-323Z`, ~$0.07
+total):
+
+| | `gpt-5.4-mini` | `gemini-3.5-flash-lite` |
+|---|---|---|
+| overall | 13/16 | 14/16 |
+| meta cluster (routing) | **10/10** | 9/10 |
+| honest refusal on unanswerable | 0/2 | **2/2** |
+| enforcement | 0 escalations | 0 escalations |
+
+**Every lesson committed in one turn, grantless, zero scope questions** —
+the dogfooding dead-ends of iteration 6 ("what can I do with this game?",
+"what are the types?") are now instant certified answers on both models,
+and the filed records carry no grant because nothing personalized was
+released.
+
+**The routing oracle earned its keep on its first run.** The weak model
+routed "how do I play?" to the adjacent `what-is-game` lesson;
+`expectBlockIds` scored it a **mis-teach** instead of letting reviewed-but-
+wrong text ride the resolved bucket into a pass. That is the curriculum's
+own species of deflection, named and counted from the record.
+
+**A new deflection channel, as predicted.** The strong model answered the
+needs-data gym-strategy question by teaching `first-steps` — kernel-legal,
+reviewed, wrong subject. Teaching gives a deflecting model a prose-shaped
+exit the fact grammar never offered; the deflection metric now watches two
+doors, and §19 measures both. Same family: an unsolicited
+`recommendation gengar` for the nickname question — the solicitation-dial
+candidate slice, observed again in the wild.
+
+Ceilings moved by this slice: answerable pool 56 → **66** of 123 (the ten
+meta questions), `needs-claim-kind` 16 → **1** (`kind-nickname`, kept
+deliberately as the marker for where the governed surface ends). The
+full-bank §19 re-run prices the whole picture on the new model defaults.
+
 ---
 
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
