@@ -495,3 +495,130 @@ certified count possible at all), and grounding is replaced by verification
 Composition, then, is not a compromise of the architecture. It is the
 architecture: the propose side was never trusted, so it was never ours to
 replace.
+
+## 8. The boundary of the guarantee: what the law requires, and what it doesn't
+
+The obvious objection to everything above: must *every* response really bind
+to certified knowledge? There will always be general questions no
+substrate anticipates, and an agent that refuses them all is buying its
+guarantee with its usefulness — while the enterprise buys it with an
+authoring burden that never ends. The tempting resolution is a **two-tier
+surface**: certified answers visually attested, and everything else answered
+from the model's own knowledge under a visible "not verified" label. Whether
+that resolution survives contact with the law is a checkable question, and
+the answer reshapes the design rather than merely permitting it.
+
+*(What follows summarizes regulatory and case-law research current to
+August 2026, verified against primary and reputable secondary sources; it is
+an engineering-design input, not legal advice.)*
+
+**No surveyed regulator requires per-response grounding.** Not the SEC, not
+FINRA, not the CFPB or FTC, not the FCA, not the EU AI Act. The operative
+standards are outcome- and process-shaped: communications must be *not
+misleading* and *fair and balanced* ([FINRA 2210(d)](https://www.finra.org/rules-guidance/rulebooks/finra-rules/2210);
+FTC Act §5; UDAP), *supervised* ([FINRA Regulatory Notice 24-09](https://www.finra.org/rules-guidance/notices/24-09):
+rules are "technology neutral" and firms answer for AI output as their own),
+*retained* (SEC 17a-4/204-2 — transcripts are business records), and
+*substantiable on demand* (the [Marketing Rule](https://www.sec.gov/investment/marketing-faq):
+fail to substantiate when asked and the claim is presumed baseless).
+Grounding appears nowhere as a duty — it is the *mechanism* that makes those
+duties cheap to prove, which is this architecture's actual legal role: the
+filed transaction record is supervision, retention and substantiation in one
+artifact.
+
+Two regimes force grounding in effect, and where they do is instructive.
+Pharmaceutical product communications carry strict misbranding liability
+(FDCA §502(a)) — which is why medical-information departments answer only
+from pre-approved response documents, an industry that already runs the
+certified-core pattern by necessity. And FDA's [Clinical Decision Support
+guidance](https://www.federalregister.gov/documents/2022/09/28/2022-20993/clinical-decision-support-software-guidance-for-industry-and-food-and-drug-administration-staff)
+makes "independent review of the basis" the price of not being a regulated
+medical device — the closest thing anywhere to an explicit
+transparency-of-basis mandate. The pattern: the law reaches for grounding
+exactly where the *content class* is dangerous, never as a blanket
+per-response rule. The boundary is drawn by subject matter, not by surface.
+
+**The labeled tier is lawful — one statute even codifies it.** California's
+[AB 3030](https://leginfo.legislature.ca.gov/faces/billNavClient.xhtml?bill_id=202320240AB3030)
+(Health & Safety Code §1339.75) requires AI-generated patient communications
+to carry a prominent disclaimer and a route to a human — *unless a licensed
+provider reviewed the message*, in which case no label is owed. A reviewed
+tier exempt, an unreviewed tier labeled: the two-tier surface, in statute.
+The EU AI Act's [Article 50](https://artificialintelligenceact.eu/article/50/)
+is the same shape at the horizontal level — chatbots must disclose their
+nature, and a limited-risk chatbot that does so may lawfully be imperfect.
+
+**But the label is a duty-satisfier, never a liability shield.** Every
+adjudicated case and every doctrine surveyed lands the same way:
+
+- **A disclosure can qualify a claim; it cannot cure one** (the FTC's
+  net-impression doctrine, imported by the CFPB and state UDAP law). A
+  banner reading "may be inaccurate" does not qualify a specific factual
+  answer to a specific question — it contradicts it, and the specific answer
+  *is* the net impression.
+- **[Moffatt v. Air Canada](https://www.canlii.org/en/bc/bccrt/doc/2024/2024bccrt149/2024bccrt149.html)**
+  (2024 BCCRT 149): the airline's chatbot invented a refund policy; the
+  tribunal called the chatbot-as-separate-entity defense "a remarkable
+  submission" and — the holding that matters most here — rejected the
+  argument that the customer should have double-checked against the accurate
+  page *on the same site*. Inconsistency between an operator's surfaces is
+  the operator's negligence, not the user's diligence failure.
+- **Substantive duties do not read the banner.** An in-substance
+  recommendation triggers Reg BI on an objective test regardless of labels;
+  the SEC holds fiduciary duty [non-waivable by hedge
+  clause](https://www.sec.gov/files/rules/interp/2019/ia-5248.pdf); Utah's
+  AI Policy Act states that generative AI "is not a defense" to consumer
+  protection liability; Illinois now bans AI psychotherapy outright, labels
+  irrelevant. The joint federal position is a sentence: *there is no AI
+  exemption from the laws on the books.*
+- The one disclaimer victory — *Walters v. OpenAI* (2025) — protected a
+  general-purpose **vendor** from a **third party** over output the user
+  elicited and disbelieved. It does not transfer to an operator aiming an
+  agent at its own customers about its own domain, which is the posture of
+  every deployment this document addresses.
+
+**And the certified badge cuts the other way: it is itself a regulated
+representation.** The Texas Attorney General's
+[Pieces settlement](https://www.texasattorneygeneral.gov/news/releases/attorney-general-ken-paxton-reaches-settlement-first-its-kind-healthcare-generative-ai-investigation)
+treated advertised hallucination rates as actionable claims; the SEC's
+Delphia and Global Predictions actions did the same for claims about AI
+systems. A surface that stamps "verified from official records" on a wrong
+answer has converted a quality failure into an affirmative
+misrepresentation. A certification mark is only an asset when every stamped
+answer can be proved — which is what the replayable record is for, and why
+the certified tier's threshold must never be diluted to cover more
+questions.
+
+Three design rules follow, and they are stronger than the two-tier proposal
+they started from:
+
+1. **The free tier needs a negative gate, not just a label.** The residual
+   risk of an ungoverned tier is not its existence but what leaks through
+   it: specific factual claims about the operator's own products and
+   policies (*Moffatt*'s exact posture), in-substance advice in regulated
+   categories, the substance of licensed activity. Those are claim-shaped,
+   and claim-shaped content is what this kernel detects. Run the same
+   detection at the free tier's egress with the opposite polarity: the
+   unverified label is *earned by verified absence of governed claims*, not
+   by hoping the model stayed general. Fail closed into routing or refusal
+   when a governed claim is found.
+2. **The tiers must never disagree.** *Moffatt* puts the burden of
+   consistency between an operator's own surfaces on the operator. If the
+   certified tier can answer a question, the free tier must route to it,
+   never improvise its own version — a two-tier surface without this rule
+   manufactures the exact liability it was built to avoid.
+3. **Provenance grades stay visibly distinct** — the same rule §7 imposes on
+   recall-layer answers. Certified, curriculum (reviewed prose), and
+   unverified are three different artifacts; one must never borrow
+   another's clothes, because the strongest mark is only worth what its
+   weakest borrower makes it.
+
+Read as a whole, the legal landscape is an endorsement of the architecture's
+shape with a correction to its scope. The law does not ask for everything to
+be certified; it asks the operator to own every word, supervise it, retain
+it, and prove the claims it makes — including the claim implicit in a
+verification badge. A governed core with a provably-general free tier
+around it satisfies that at the minimum authoring cost: certification is
+owed where content is governed and load-bearing, the negative gate polices
+the boundary from the free side, and the transaction record turns each of
+the law's process duties into a file the operator already has.
