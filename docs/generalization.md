@@ -654,3 +654,99 @@ around it satisfies that at the minimum authoring cost: certification is
 owed where content is governed and load-bearing, the negative gate polices
 the boundary from the free side, and the transaction record turns each of
 the law's process duties into a file the operator already has.
+
+## 9. Scale: retrieval nominates, the kernel disposes
+
+The curriculum mechanism as shipped is honest about its size. Ten lessons
+ride in the answer grammar as an enum and in the prompt as a listed
+vocabulary, and the model routes by reading the whole catalogue — a
+1-of-10 classification, which is why even the weak model routes it
+reliably. Three parts of that stop scaling together, somewhere in the low
+hundreds of entries: the prompt listing (linear token cost per call), the
+enum (providers cap schema size, and constrained decoding over a huge
+alternation is expensive), and the choice itself (1-of-50,000 is not a
+classification any model holds in its head). A real domain's approved
+content library is the larger number, so the scale path has to be stated —
+and it is the same asymmetry this design already lives by, applied one
+level up: **search gates recall; it never gates proof.**
+
+### The two-stage route
+
+1. **A recall tier nominates a shortlist.** Lexical search, embeddings, a
+   vendor graph pipeline — whatever the organization already runs (§7).
+   Given the ask, it retrieves the top-k candidate entries from the
+   catalogue. This tier is untrusted by construction and may be arbitrarily
+   sophisticated, because the *only* thing it can influence is which
+   reviewed texts are considered.
+2. **The grammar narrows to the shortlist.** The answer schema is already
+   built per call, from the pack; at scale it is built from the shortlist —
+   the explanation claim's enum offers exactly those k ids, and the prompt
+   shows each candidate's reviewed title and summary (pack data, so showing
+   them adds no fabrication surface). The model's job returns to what it is
+   measurably good at: 1-of-k, descriptions in hand, with abstention
+   representable.
+3. **Verification stays global.** The kernel checks the routed id against
+   the *full* catalogue, exactly as today — existence, locale, digest — and
+   the render walk holds the screen to the block's bytes. Nothing about the
+   shortlist is trusted at commit time; the enum was a recall aid, not an
+   authority.
+
+### The interplay, stated as worst cases
+
+The division of labor is what makes the composition safe to reason about:
+
+- **Retrieval can fail by omission.** A shortlist that misses the right
+  entry costs an abstention or a mis-route to an adjacent reviewed text — a
+  usefulness failure, measured, never an integrity failure. The certified
+  surface degrades toward silence, not toward invention.
+- **Retrieval cannot fail by commission.** A wrong, stale, or even
+  adversarial retriever can only nominate entries that exist in the
+  reviewed catalogue. Poisoning the recall tier buys an attacker relevance
+  mischief — showing the wrong approved text — and nothing else; the words
+  on screen are still digest-pinned to what review approved. This is the
+  precise sense in which the retrieval investment (§7) is composable: it
+  appreciates the certified surface without ever being able to breach it.
+- **The verifier cannot rescue recall.** The inverse limit is equally
+  real: a perfect kernel over a bad retriever is a system that refuses or
+  mis-teaches often. The guarantee was never "useful"; usefulness is
+  bought upstream and measured.
+
+Which dictates the measurement discipline: the headline routing number
+splits in two, **recall@k of the shortlist stage** and **routing accuracy
+given the shortlist**, instrumented separately — a retrieval miss looks
+identical to a model failure unless the funnel says which door failed, and
+a deterministic front door that never engages is a silent usefulness
+ceiling (the scope resolver taught this once already). The mis-teach
+oracle carries over unchanged, because it is per-question rather than
+per-catalogue; production monitoring leans on the deflection metric, which
+at scale watches the same two doors it watches today.
+
+### The catalogue at scale
+
+Load-time validation is linear digest work and stays cheap at any
+plausible size. What changes is packaging and identity: one reviewed JSON
+file becomes a content-addressed store of blocks, with the pack's identity
+a digest over the manifest of digests — one root naming the exact reviewed
+state of every entry, so a transaction still records a single pack
+identity and replays against it. Versioning discipline is unchanged in
+kind: an edit is a new version under review, and where an entry's prose
+overlaps what the substrate certifies, it is pinned by test — the
+what-is-type lesson's fifteen types held equal to the chart is the
+miniature of a rule that matters far more at fifty thousand entries than
+at ten.
+
+The pattern is not curriculum-specific. Any closed vocabulary that
+outgrows its grammar — fact ids over a product master of millions, entity
+ids over a real catalogue — scales the same way: **per-call grammars are
+recall-gated; the verifier is global.** The demo's 151 species let every
+vocabulary ride whole in the schema; that is a convenience of the toy, not
+a load-bearing assumption of the design.
+
+And the cost that has no technical fix, stated plainly because it is the
+honest half of the answer: **review is the dominant expense at scale.**
+Ten lessons were read by a person before their digests were pinned; fifty
+thousand entries mean authorship, approval workflow, re-review when the
+world changes, and retirement — the knowledge-operations reality §4
+already prices. The mechanism does not remove that cost; it is the reason
+the cost buys something: every one of those reviewed texts becomes a
+surface the model can reach and cannot alter.
