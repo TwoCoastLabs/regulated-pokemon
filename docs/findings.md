@@ -1016,11 +1016,21 @@ session each:
 
 `gpt-5.4-mini` was fastest and cheapest but volunteered an unsolicited
 (kernel-legal) Zapdos recommendation for "I'm playing Red in Kanto with 7
-badges" — a message that asks nothing. Certified non-sequiturs are the
-usefulness failure this project tracks, so speed did not win: the strong
-slot moved to `anthropic/claude-sonnet-5` (~$0.003/answer, ~3s/call, and
-the only audition beside grok to stay quiet on a non-question). Single
-sessions, not statistics — the §19 re-run on the new default is the number.
+badges" — a message that asks nothing. The first draft of this note picked
+`sonnet-5` for exactly that reason, and the reason was wrong: **selecting
+the model that behaves is selecting the model as the guard.** This project's
+claim is that the architecture absorbs misbehavior it does not control; a
+strong slot chosen for restraint would quietly launder model manners into
+architecture results, the same trap as prompt-engineering the advisor until
+it behaves. So the strong slot moved to `openai/gpt-5.4-mini` on the two
+criteria that are legitimately the operator's — ~$0.002/answer and ~1s/call
+— and its eagerness stays in the data as a *measured* behavior the kernel
+must own (today: kernel-legal non-sequitur; the deflection metric watches
+it, and unsolicited-advice discipline is now on the epic's radar rather
+than hidden by procurement). An eager model is also the better default
+adversary — lesson 7's too-timid-to-attack failure is the risk on this
+slot, not politeness. Single sessions, not statistics — the §19 re-run on
+the new default is the number.
 
 **Two dead ends the trace names precisely.** "What can I do with this
 game?" and "what are the types of pokemon?" both ended in the abstention

@@ -12,14 +12,19 @@
  * These two were chosen empirically — a recorded sweep for the first pair, and
  * a dogfooding audition when the strong slot was re-picked:
  *
- *  - **strong** `anthropic/claude-sonnet-5` replaced `openai/gpt-5.6-luna-pro`
+ *  - **strong** `openai/gpt-5.4-mini` replaced `openai/gpt-5.6-luna-pro`
  *    after live sessions showed luna-pro's low sticker price was an illusion:
  *    ~6k reasoning tokens per answer made it both the slowest and, at ~$0.007
- *    a call, among the dearest. Sonnet-5 answered the same script at ~$0.003
- *    a call in a third of the wall time — and, alone among the candidates
- *    auditioned, declined to invent an answer for a message that asked
- *    nothing. Judge models by measured cost per answer, never by per-token
- *    price: reasoning burn dominates both bills.
+ *    a call, among the dearest. The mini answered the same script at ~$0.002
+ *    a call in a tenth of the wall time. Judge models by measured cost per
+ *    answer, never by per-token price: reasoning burn dominates both bills.
+ *    One criterion was deliberately *rejected*: the mini volunteered an
+ *    unsolicited (kernel-legal) recommendation for a message that asked
+ *    nothing, and a better-mannered candidate was available for 2× the cost.
+ *    Picking the polite model would make the model the guard — this project
+ *    exists to show the architecture absorbing misbehavior, so the eager
+ *    model is the more honest choice and its non-sequiturs stay measured,
+ *    not selected away.
  *  - **weak** `google/gemini-3.5-flash-lite` is the point of the exercise: a
  *    real, cheaply-deployable model that resolves only part of the corpus,
  *    reliably (no provider errors), on the same gate. Its criterion was fixed
@@ -35,7 +40,7 @@
  * The adversary defaults to the strong slug: a capable attacker, because a weak
  * one that fails to fabricate would prove nothing about the gate.
  */
-export const DEFAULT_STRONG_MODEL = "anthropic/claude-sonnet-5";
+export const DEFAULT_STRONG_MODEL = "openai/gpt-5.4-mini";
 export const DEFAULT_WEAK_MODEL = "google/gemini-3.5-flash-lite";
 
 /**
