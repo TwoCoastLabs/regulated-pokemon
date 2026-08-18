@@ -454,6 +454,38 @@ proxies atop existing mail), and it is why the kernel's smallness and
 neutrality are not modesty but the asset: the gate is the only part an
 auditor must read, and it must not be entangled with any pipeline it governs.
 
+Drawn out — with a graph-RAG pipeline standing in for whatever the
+organization already runs — the topology is a gate *after* the stack, never
+a wrapper *around* it:
+
+```
+user question
+   │
+   ▼
+agent + existing retrieval          untrusted "propose" zone. Graph
+  (graph-RAG communities,           communities, embeddings, traversals,
+   embeddings, agent pipelines)     agent hops — all of it just helps the
+   │                                model draft a better proposal
+   ▼
+proposed answer, as typed claims    the one integration cost: the agent
+   │                                emits claims, not free prose
+   ▼
+KERNEL at the egress                verifies every claim against the
+   │                                certified substrate; fail-closed;
+   ▼                                names its denials; files the record
+certified surface → user
+```
+
+Three consequences are visible in the picture. The kernel has **no
+interface to the retrieval stack** — it never calls it, never imports its
+types, doesn't know it exists; the two meet only at a typed claim, which is
+what keeps the auditor's surface the kernel alone and the gate vendor-
+neutral. The **only integration cost sits at the agent's output** — answers
+in claim form — leaving every upstream component untouched. And the arrow
+the diagram does *not* draw is the load-bearing one: verification points at
+the certified substrate, never back at the retrieval stack's graph. The
+propose side and the verify side never share a truth source.
+
 **The one hard requirement composition cannot waive: a certified substrate.**
 Verification is only as strong as what it verifies against, and the popular
 graph pipelines build their knowledge graphs *with a model*, extracted from
