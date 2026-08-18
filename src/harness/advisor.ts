@@ -21,7 +21,7 @@ import { candidateDigest } from "../kernel/scope.js";
 import { type AnswerDecode, decodeAnswer, decodeCandidate } from "./decode.js";
 import type { CompletionRequest, ModelProvider, Usage } from "./provider.js";
 import { certifiedReference } from "./reference.js";
-import { ANSWER_SCHEMA, ANSWER_SCHEMA_NAME } from "./schema.js";
+import { ANSWER_SCHEMA_NAME, answerSchema } from "./schema.js";
 
 /** Only the trainer's own words are evidence (IA-8); the model interprets those. */
 function trainerText(transcript: ScopeTranscript): string[] {
@@ -86,9 +86,10 @@ function scopePrompt(pack: AccordPack, missing: readonly ScopeDimension[], said:
  * exactly what the model was and was not told.
  */
 function answerPrompt(
-  scope: TrainerScope,
+  scope: TrainerScope | undefined,
   asks: readonly string[],
   tools: readonly string[],
+  lessons: readonly string[],
   reference: string | undefined,
 ): string {
   return [
@@ -97,9 +98,20 @@ function answerPrompt(
     // follow are read in its light. Absent when ungrounded — the same prompt
     // otherwise, so the two are a clean before/after.
     ...(reference === undefined ? [] : [reference, ""]),
-    "Scope is established:",
-    `  version=${scope.version} region=${scope.region} badges=${scope.badgeLevel}` +
-      (scope.comparisonBasis === undefined ? "" : ` basis=${scope.comparisonBasis}`),
+    ...(scope === undefined
+      ? [
+          // The grantless call: only a lesson can commit, and the prompt says
+          // so rather than letting the model discover it by refusal.
+          "Scope is NOT established: nothing about this trainer is known yet.",
+          "Only explanation claims can be certified for them; any other claim",
+          "kind will be refused. If no catalogue lesson answers what they",
+          "asked, reply with no claims at all.",
+        ]
+      : [
+          "Scope is established:",
+          `  version=${scope.version} region=${scope.region} badges=${scope.badgeLevel}` +
+            (scope.comparisonBasis === undefined ? "" : ` basis=${scope.comparisonBasis}`),
+        ]),
     "",
     "The trainer's own words:",
     ...asks.map((line) => `  - ${line}`),
@@ -127,9 +139,15 @@ function answerPrompt(
     '  {"kind": "ranking", "rosterId": "<id>", "basis": "<fact-id>", "direction": "highest"|"lowest"}  — defines a set and an ordering; the system names the winner, so name none',
     '  {"kind": "matchup", "subject": {"kind": "species", "entityId": "<id>"} | {"kind": "type", "typeId": "<type>"}, "direction": "weak-to"|"resists"|"immune-to"|"strong-against"}  — type effectiveness; the system reads the chart and lists the types, so list none. A species can be weak-to, resist or be immune-to; only a type can be strong-against.',
     '  {"kind": "eligibility", "entityId": "<species-id>"}  — what the League\'s rules say about advising this trainer toward that species; the system derives the verdict, the rule and the thresholds. Use it when the trainer asks about a restricted species you cannot recommend to them: the rule itself is a useful, certified answer, and you may pair it with a recommendation of an eligible alternative.',
+    ...(lessons.length === 0
+      ? []
+      : [
+          '  {"kind": "explanation", "blockId": "<lesson-id>"}  — a reviewed lesson from the League\'s catalogue, shown to the trainer word for word. Route to it when the trainer asks what something is or how the game works; you may pair it with fact or matchup claims that answer the specific case.',
+        ]),
     '  {"kind": "recommendation", "entityId": "<id>"}',
     '  {"kind": "action", "tool": "<tool-id>", "entityId": "<species-id>"}  — an act you propose to perform. It is shown to the trainer and executes only on their confirmation; claim one only when the trainer asked for it.',
     "",
+    ...(lessons.length === 0 ? [] : [`A <lesson-id> must be one of: ${lessons.join(", ")}. No other lesson exists.`]),
     `A <tool-id> must be one of: ${tools.join(", ")}. No other tool exists.`,
     "",
     "A <fact-id> must be one of these certified ids; no other resolves.",
@@ -266,15 +284,16 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
   const request: CompletionRequest = {
     purpose: "answer",
     prompt: answerPrompt(
-      context.grant.scope,
+      context.grant?.scope,
       trainerText(input.transcript),
       context.pack.actions.map((action) => action.id),
+      context.pack.curriculum.map((lesson) => lesson.id),
       reference,
     ),
-    hint: { scenarioId, scope: context.grant.scope },
+    hint: { scenarioId, ...(context.grant === undefined ? {} : { scope: context.grant.scope }) },
     // The same contract the prose describes, in a form a provider can enforce.
     // Whether it is enforced is the provider's business, not the advisor's.
-    schema: { name: ANSWER_SCHEMA_NAME, schema: ANSWER_SCHEMA },
+    schema: { name: ANSWER_SCHEMA_NAME, schema: answerSchema(context.pack) },
   };
   const completion = await provider.complete(request);
   return { usage: completion.usage, decode: decodeAnswer(completion.text, context, transactionId) };
@@ -301,7 +320,7 @@ export async function proposeRawAnswer(input: RawStepInput): Promise<AnswerStep>
       context.pack.actions.map((action) => action.id),
     ),
     hint: { scenarioId },
-    schema: { name: ANSWER_SCHEMA_NAME, schema: ANSWER_SCHEMA },
+    schema: { name: ANSWER_SCHEMA_NAME, schema: answerSchema(context.pack) },
   };
   const completion = await provider.complete(request);
   return { usage: completion.usage, decode: decodeAnswer(completion.text, context, transactionId) };

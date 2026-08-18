@@ -68,7 +68,7 @@ import {
 } from "./dom.js";
 import { formatForValue, type FormatId, formatValue } from "./format.js";
 import { type ManifestContext, verifyManifest } from "./manifest.js";
-import { approvesFormat, copyFor, type ExhibitSlotSource } from "./pack.js";
+import { approvesFormat, blockFor, copyFor, curriculumRule, type ExhibitSlotSource } from "./pack.js";
 import { verdictOf, violation } from "./violation.js";
 
 /** What a governed unit is for. Drives nothing but the console and the copy. */
@@ -79,6 +79,7 @@ export type RenderUnitKind =
   | "selection"
   | "matchup"
   | "eligibility"
+  | "explanation"
   | "recommendation"
   | "action"
   | "warning"
@@ -226,7 +227,13 @@ function unitForClaim(
   claim: Claim,
 ): Resolution<{ unit: RenderUnit; mentions: readonly string[] }> {
   const locale = manifest.locale;
-  const built = ((): Resolution<{ id: string; kind: RenderUnitKind; slots: readonly RenderSlot[]; mentions: readonly string[] }> => {
+  const built = ((): Resolution<{
+    id: string;
+    kind: RenderUnitKind;
+    slots: readonly RenderSlot[];
+    mentions: readonly string[];
+    block?: DisclosureBlockRef;
+  }> => {
     switch (claim.kind) {
       case "fact": {
         // A rendered manifest is a verified one, and verification derives or
@@ -361,6 +368,24 @@ function unitForClaim(
           },
         };
       }
+      case "explanation": {
+        // A rendered manifest is a verified one, so the lesson exists and
+        // speaks this locale — checkExplanation refused anything else. The
+        // unit carries no slots: a lesson is all block, and the walk holds
+        // the screen to its digest exactly as it does a disclosure's.
+        const rule = curriculumRule(context.pack, claim.blockId)!;
+        const content = blockFor(rule, locale)!;
+        return {
+          ok: true,
+          value: {
+            id: `lesson:${claim.blockId}`,
+            kind: "explanation",
+            slots: [],
+            block: { id: rule.block.id, version: rule.block.version, locale, digest: content.digest },
+            mentions: [],
+          },
+        };
+      }
       case "recommendation": {
         const resolved = slots(slot(context, locale, "entity", entity(claim.entityId), "entity-name"));
         if (!resolved.ok) return resolved;
@@ -399,8 +424,11 @@ function unitForClaim(
   })();
 
   if (!built.ok) return built;
-  const { id, kind, slots: unitSlots, mentions } = built.value;
-  return { ok: true, value: { unit: { id, kind, slots: unitSlots, article: "IA-6" }, mentions } };
+  const { id, kind, slots: unitSlots, mentions, block } = built.value;
+  return {
+    ok: true,
+    value: { unit: { id, kind, slots: unitSlots, article: "IA-6", ...(block === undefined ? {} : { block }) }, mentions },
+  };
 }
 
 /**

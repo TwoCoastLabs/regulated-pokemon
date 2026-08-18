@@ -603,7 +603,7 @@ export function Live() {
                     <p class={`live-note ${item.note.tone}`} title={item.note.text}>
                       {item.note.tone === "error"
                         ? "The connection to the model failed — nothing was lost."
-                        : "The Advisor couldn't put together a checkable answer this time."}
+                        : "Nothing certified answers that, so the Advisor committed nothing — an honest pass, not a malfunction. A specific Pokémon, move, or how-the-game-works question usually lands."}
                       {latest && !busy && (
                         <button type="button" class="live-retry" onClick={() => run((s) => retry(s, deps))}>
                           try again

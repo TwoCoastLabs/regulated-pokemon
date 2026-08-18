@@ -196,7 +196,7 @@ function roster(registry: CertifiedRegistry, id: string, criteria: RosterCriteri
 export const demoPlan: AnswerPlan = (context, transactionId): ManifestDraft => {
   const electric = roster(context.registry, "electric-kanto", ELECTRIC);
   const boomers = roster(context.registry, "selfdestruct-learners", BOOMERS);
-  const basis = context.grant.scope.comparisonBasis ?? "base-speed";
+  const basis = context.grant?.scope.comparisonBasis ?? "base-speed";
 
   const claims: Claim[] = [
     { kind: "fact", entityId: "pikachu", factId: "base-speed", asserted: { kind: "number", value: 90 } },

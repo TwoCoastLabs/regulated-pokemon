@@ -188,12 +188,12 @@ crucible by test, so it cannot drift from what actually runs.
 
 | Article | Title | Mutations |
 | --- | --- | --- |
-| IA-1 | Know Your Trainer | 12 |
+| IA-1 | Know Your Trainer | 13 |
 | IA-2 | Certified Facts Only | 12 |
-| IA-3 | No Fabrication (the MissingNo Clause) | 7 |
+| IA-3 | No Fabrication (the MissingNo Clause) | 8 |
 | IA-4 | Complete Answers Carry Certificates | 9 |
 | IA-5 | Restricted Species | 3 |
-| IA-6 | Disclosures Must Be Seen | 21 |
+| IA-6 | Disclosures Must Be Seen | 22 |
 | IA-7 | What Was Shown Is What Executes | 13 |
 | IA-8 | Only the Trainer Speaks for the Trainer | 7 |
 | IA-9 | Irreversible Acts Need Informed Consent | 4 |

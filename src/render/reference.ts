@@ -46,6 +46,9 @@ const LEAD_IN: Record<RenderUnitKind, string | undefined> = {
   selection: "lead-in.selection",
   matchup: "lead-in.matchup",
   eligibility: "lead-in.eligibility",
+  // A lesson introduces itself the way a warning does: its block is the whole
+  // of what it has to say, and a lead-in would be prose about prose.
+  explanation: undefined,
   recommendation: "lead-in.recommendation",
   action: "lead-in.action",
   warning: undefined,
@@ -109,7 +112,9 @@ function card(pack: AccordPack, plan: RenderPlan, unit: RenderUnit, disclosures:
  */
 function block(pack: AccordPack, plan: RenderPlan, unit: RenderUnit): DomNode[] {
   if (unit.block === undefined) return [];
-  const rule = pack.exhibits.find((entry) => entry.block.id === unit.block?.id);
+  const rule =
+    pack.exhibits.find((entry) => entry.block.id === unit.block?.id) ??
+    pack.curriculum.find((entry) => entry.block.id === unit.block?.id);
   const content = rule === undefined ? undefined : blockFor(rule, plan.locale);
   return [element("p", { [BLOCK_ATTRIBUTE]: unit.block.id }, content === undefined ? [] : [text(content.text)])];
 }

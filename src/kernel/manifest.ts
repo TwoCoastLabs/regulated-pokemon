@@ -32,7 +32,7 @@ import type {
 } from "./contracts.js";
 import { deriveMatchup, matchupSubjectId } from "./chart.js";
 import { deriveEligibility, describeFinding, sameFinding } from "./eligibility.js";
-import { type AccordPack, actionRule, approvesLocale, blockFor, type ExhibitRule, restrictionsFor } from "./pack.js";
+import { type AccordPack, actionRule, approvesLocale, blockFor, curriculumRule, type ExhibitRule, restrictionsFor } from "./pack.js";
 import { type CertifiedRegistry, formatFactValue, sameFactValue } from "./registry.js";
 import { verifyRoster } from "./roster.js";
 import { verdictOf, violation } from "./violation.js";
@@ -45,7 +45,15 @@ import { verdictOf, violation } from "./violation.js";
 export interface ManifestContext {
   registry: CertifiedRegistry;
   pack: AccordPack;
-  grant: ScopeGrant;
+  /**
+   * The trainer's established scope — absent exactly when nothing has been
+   * established yet. IA-1 gates what is *personalized*, and a catalogue
+   * lesson is the same reviewed text for every trainer: a grantless context
+   * may certify explanation claims and nothing else. Every other claim kind
+   * refuses by name (`scope-not-established`) — the lazy half of material
+   * scope: demanded when an answer depends on it, never as ceremony.
+   */
+  grant?: ScopeGrant;
   /**
    * The locale the answer will be presented in, assigned by the transport.
    *
@@ -108,7 +116,7 @@ function deriveClaims(context: ManifestContext, claims: readonly Claim[], roster
       const derived = deriveMatchup(context.registry, claim.subject, claim.direction);
       return derived.ok ? { ...claim, members: derived.value } : claim;
     }
-    if (claim.kind === "eligibility" && claim.finding === undefined) {
+    if (claim.kind === "eligibility" && claim.finding === undefined && context.grant !== undefined) {
       const derived = deriveEligibility(context.registry, context.pack, context.grant.scope.badgeLevel, claim.entityId);
       return derived.ok ? { ...claim, finding: derived.value } : claim;
     }
@@ -120,7 +128,7 @@ export function compileManifest(context: ManifestContext, draft: ManifestDraft):
   const claims = deriveClaims(context, draft.claims, draft.rosters);
   const manifest: AnswerManifest = {
     transactionId: draft.transactionId,
-    scopeGrantId: context.grant.id,
+    ...(context.grant === undefined ? {} : { scopeGrantId: context.grant.id }),
     snapshotId: context.registry.snapshot.id,
     packId: context.pack.id,
     locale: context.locale,
@@ -200,11 +208,26 @@ function checkBinding(context: ManifestContext, manifest: AnswerManifest): Viola
     );
   }
 
-  if (manifest.scopeGrantId !== context.grant.id) {
+  const grant = context.grant;
+  if (grant === undefined) {
+    // A grantless verdict may not adopt a granted manifest: the cited grant
+    // was somebody's established scope, and this context cannot vouch for it.
+    if (manifest.scopeGrantId !== undefined) {
+      violations.push(
+        violation("IA-1", "scope-grant-mismatch", `manifest ${manifest.transactionId} cites a scope grant this context does not hold`, {
+          expected: "no scope grant",
+          actual: manifest.scopeGrantId,
+        }),
+      );
+    }
+    return violations;
+  }
+
+  if (manifest.scopeGrantId !== grant.id) {
     violations.push(
       violation("IA-1", "scope-grant-mismatch", `manifest ${manifest.transactionId} cites another trainer's scope`, {
-        expected: context.grant.id,
-        actual: manifest.scopeGrantId,
+        expected: grant.id,
+        actual: manifest.scopeGrantId ?? "no scope grant",
       }),
     );
   }
@@ -213,16 +236,16 @@ function checkBinding(context: ManifestContext, manifest: AnswerManifest): Viola
   // establishing scope over a different version group cannot authorise an
   // answer drawn from this one.
   const versionGroup = context.registry.document.scope.versionGroup;
-  if (context.grant.scope.version !== versionGroup) {
+  if (grant.scope.version !== versionGroup) {
     violations.push(
       violation("IA-2", "scope-version-mismatch", "scope was established over a different version group", {
         expected: versionGroup,
-        actual: context.grant.scope.version,
+        actual: grant.scope.version,
       }),
     );
   }
 
-  violations.push(...checkWindow(context));
+  violations.push(...checkWindow(grant, context.at));
   return violations;
 }
 
@@ -230,32 +253,32 @@ function checkBinding(context: ManifestContext, manifest: AnswerManifest): Viola
  * Scope valid when it was issued is not scope valid when the answer commits,
  * so the window is checked here rather than trusted from construction.
  */
-function checkWindow(context: ManifestContext): Violation[] {
-  const at = Date.parse(context.at);
-  const issued = Date.parse(context.grant.issuedAt);
-  const expires = Date.parse(context.grant.expiresAt);
+function checkWindow(grant: ScopeGrant, at: string): Violation[] {
+  const moment = Date.parse(at);
+  const issued = Date.parse(grant.issuedAt);
+  const expires = Date.parse(grant.expiresAt);
 
-  if (Number.isNaN(at) || Number.isNaN(issued) || Number.isNaN(expires)) {
+  if (Number.isNaN(moment) || Number.isNaN(issued) || Number.isNaN(expires)) {
     return [
       violation("IA-1", "scope-window-unreadable", "scope grant has no readable validity window", {
         expected: "RFC 3339 timestamps",
-        actual: `${context.grant.issuedAt}..${context.grant.expiresAt} at ${context.at}`,
+        actual: `${grant.issuedAt}..${grant.expiresAt} at ${at}`,
       }),
     ];
   }
   if (issued >= expires) {
     return [
-      violation("IA-1", "scope-window-empty", `scope grant ${context.grant.id} expires before it is issued`, {
-        expected: `after ${context.grant.issuedAt}`,
-        actual: context.grant.expiresAt,
+      violation("IA-1", "scope-window-empty", `scope grant ${grant.id} expires before it is issued`, {
+        expected: `after ${grant.issuedAt}`,
+        actual: grant.expiresAt,
       }),
     ];
   }
-  if (at < issued || at > expires) {
+  if (moment < issued || moment > expires) {
     return [
-      violation("IA-1", "scope-window-expired", `scope grant ${context.grant.id} is not valid at commit time`, {
-        expected: `${context.grant.issuedAt}..${context.grant.expiresAt}`,
-        actual: context.at,
+      violation("IA-1", "scope-window-expired", `scope grant ${grant.id} is not valid at commit time`, {
+        expected: `${grant.issuedAt}..${grant.expiresAt}`,
+        actual: at,
       }),
     ];
   }
@@ -296,6 +319,18 @@ function missingRoster(rosterId: string): Violation {
 // --- claims -----------------------------------------------------------------
 
 function checkClaim(context: ManifestContext, manifest: AnswerManifest, claim: Claim): Violation[] {
+  // The lazy half of IA-1: material scope is demanded exactly when a claim
+  // depends on it. A lesson is the same reviewed text for every trainer;
+  // everything else answers *someone*, and with no scope established there
+  // is no someone to answer.
+  if (context.grant === undefined && claim.kind !== "explanation") {
+    return [
+      violation("IA-1", "scope-not-established", `a ${claim.kind} claim is personalized and no scope is established`, {
+        expected: "an established scope grant, or explanation claims only",
+        actual: claim.kind,
+      }),
+    ];
+  }
   switch (claim.kind) {
     case "fact":
       return checkFact(context, claim);
@@ -309,6 +344,8 @@ function checkClaim(context: ManifestContext, manifest: AnswerManifest, claim: C
       return checkMatchup(context, claim);
     case "eligibility":
       return checkEligibility(context, claim);
+    case "explanation":
+      return checkExplanation(context, claim);
     case "recommendation":
       return checkRecommendation(context, claim);
     case "action":
@@ -383,8 +420,41 @@ function checkMatchup(context: ManifestContext, claim: Extract<Claim, { kind: "m
  * and a verdict contradicting the trainer's own badge level are all the same
  * denial: the finding is not what the rules derive.
  */
+/**
+ * A routed lesson must exist in the catalogue and speak this locale.
+ *
+ * That is the whole check, and deliberately so: the claim asserts nothing to
+ * recompute. What the trainer actually sees is verified downstream — the
+ * lesson's unit carries the block's digest, and the render walk holds the
+ * final DOM to it — so the text is as tamper-evident as a disclosure's.
+ */
+function checkExplanation(context: ManifestContext, claim: Extract<Claim, { kind: "explanation" }>): Violation[] {
+  const rule = curriculumRule(context.pack, claim.blockId);
+  if (rule === undefined) {
+    return [
+      violation("IA-3", "fabricated-lesson", `no lesson "${claim.blockId}" exists in pack ${context.pack.id}`, {
+        expected: context.pack.curriculum.map((entry) => entry.id).join(", ") || "an empty catalogue",
+        actual: claim.blockId,
+      }),
+    ];
+  }
+  if (blockFor(rule, context.locale) === undefined) {
+    // Same failure as an undischargeable disclosure: approved words exist,
+    // none of them in the locale this answer is planned for.
+    return [
+      violation(rule.article, "lesson-block-unavailable", `lesson "${rule.id}" has no approved text in ${context.locale}`, {
+        expected: rule.block.content.map((entry) => entry.locale).join(", ") || "nothing",
+        actual: context.locale || "no locale",
+      }),
+    ];
+  }
+  return [];
+}
+
 function checkEligibility(context: ManifestContext, claim: Extract<Claim, { kind: "eligibility" }>): Violation[] {
-  const derived = deriveEligibility(context.registry, context.pack, context.grant.scope.badgeLevel, claim.entityId);
+  // Behind checkClaim's scope gate: a grantless context never reaches a
+  // per-kind check for anything but an explanation.
+  const derived = deriveEligibility(context.registry, context.pack, context.grant!.scope.badgeLevel, claim.entityId);
   if (!derived.ok) return [...derived.violations];
   if (claim.finding === undefined) return [];
   if (sameFinding(claim.finding, derived.value)) return [];
@@ -477,7 +547,8 @@ function checkAccreditation(
   entityId: string,
   species: { isLegendary: boolean; isMythical: boolean },
 ): Violation[] {
-  const badgeLevel = context.grant.scope.badgeLevel;
+  // Behind checkClaim's scope gate, like every per-kind check below it.
+  const badgeLevel = context.grant!.scope.badgeLevel;
   return restrictionsFor(context.pack, species)
     .filter((rule) => badgeLevel < rule.minimumBadgeLevel)
     .map((rule) =>
@@ -574,7 +645,8 @@ function rankRoster(
  * answer may not rank on.
  */
 function checkRankingBasis(context: ManifestContext, claim: Extract<Claim, { kind: "ranking" }>): Violation[] {
-  const established = context.grant.scope.comparisonBasis;
+  // Behind checkClaim's scope gate, like every per-kind check.
+  const established = context.grant!.scope.comparisonBasis;
   if (claim.basis === established) return [];
   return [
     violation(

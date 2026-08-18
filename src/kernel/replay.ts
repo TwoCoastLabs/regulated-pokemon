@@ -96,6 +96,33 @@ export function replayTransaction(world: ReplayWorld, record: RecordedTransactio
   };
 
   if (scope.status === "clarify") {
+    // The seam's lazy-scope rule, mirrored: an under-scoped exchange that
+    // filed a manifest is a grantless teaching answer, and its verdict is
+    // re-derived the same way — the filed manifest through the same verifier,
+    // under a context holding no grant, where only explanation claims
+    // survive. A clarify record with no manifest is a question, as before.
+    if (record.manifest !== undefined) {
+      const bare: ManifestContext = {
+        registry: world.registry,
+        pack: world.pack,
+        locale: record.locale,
+        at: record.committedAt,
+      };
+      const verdict = verifyManifest(bare, record.manifest);
+      if (verdict.allowed) {
+        return {
+          ...base,
+          manifest: record.manifest,
+          verdicts: [{ stage: "answer", verdict: verdictOf([]) }],
+          outcome: { status: "answered" },
+        };
+      }
+      return {
+        ...base,
+        verdicts: [{ stage: "answer", verdict }],
+        outcome: { status: "denied", stage: "answer", violations: verdict.violations },
+      };
+    }
     return {
       ...base,
       verdicts: [],

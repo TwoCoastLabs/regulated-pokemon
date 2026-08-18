@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { ManifestContext } from "../kernel/manifest.js";
 import { harnessWorld } from "./corpus.js";
 import { decodeAnswer } from "./decode.js";
-import { ANSWER_SCHEMA, FACT_IDS } from "./schema.js";
+import { answerSchema, FACT_IDS } from "./schema.js";
 
 const world = harnessWorld();
 const context = {
@@ -28,6 +28,7 @@ function kindsOf(node: unknown): string[] {
   return variants.map((entry) => entry.properties?.kind?.enum?.[0]).filter((kind): kind is string => kind !== undefined);
 }
 
+const ANSWER_SCHEMA = answerSchema(world.pack);
 const properties = (ANSWER_SCHEMA as { properties: Record<string, { items: unknown }> }).properties;
 const claimKinds = kindsOf(properties.claims?.items);
 const criterionKinds = kindsOf(
@@ -48,8 +49,22 @@ describe("the answer grammar tracks the kernel, not a copy of it", () => {
 
   it("offers every claim kind the decoder accepts, so the grammar narrows nothing", () => {
     expect(new Set(claimKinds)).toEqual(
-      new Set(["fact", "count", "membership", "ranking", "matchup", "eligibility", "recommendation", "action"]),
+      new Set(["fact", "count", "membership", "ranking", "matchup", "eligibility", "explanation", "recommendation", "action"]),
     );
+  });
+
+  it("offers exactly the lessons the pack teaches, so a fabricated one is unrepresentable", () => {
+    const lessonClaim = (
+      properties.claims?.items as { anyOf: { properties: Record<string, { enum?: string[] }> }[] }
+    ).anyOf.find((entry) => entry.properties.kind?.enum?.[0] === "explanation");
+    expect(lessonClaim?.properties.blockId?.enum).toEqual(world.pack.curriculum.map((entry) => entry.id));
+  });
+
+  it("offers no explanation shape at all for a pack that teaches nothing", () => {
+    // An empty enum is a schema some providers reject wholesale; the variant
+    // vanishes with the catalogue instead.
+    const bare = answerSchema({ curriculum: [] }) as { properties: Record<string, { items: unknown }> };
+    expect(kindsOf(bare.properties.claims?.items)).not.toContain("explanation");
   });
 
   it("keeps a forbidden act representable — a grammar that cannot express one makes the gate vacuous", () => {
@@ -101,6 +116,7 @@ describe("anything the grammar admits, the decoder reads", () => {
       { kind: "ranking", rosterId: "electric", basis: "base-speed", direction: "highest", selectedEntityId: "electrode" },
       { kind: "matchup", subject: { kind: "species", entityId: "gengar" }, direction: "weak-to" },
       { kind: "eligibility", entityId: "mewtwo" },
+      { kind: "explanation", blockId: "what-is-badge" },
       { kind: "recommendation", entityId: "pikachu" },
       { kind: "action", tool: "catch", entityId: "pikachu" },
     ];

@@ -106,6 +106,8 @@ describe("decodeAnswer", () => {
     ["a matchup with an unknown subject kind", { kind: "matchup", subject: { kind: "move", entityId: "surf" }, direction: "weak-to" }],
     ["a matchup with an unknown direction", { kind: "matchup", subject: { kind: "type", typeId: "water" }, direction: "beats" }],
     ["a matchup with malformed members", { kind: "matchup", subject: { kind: "type", typeId: "water" }, direction: "weak-to", members: [1] }],
+    ["an explanation with no blockId", { kind: "explanation" }],
+    ["an explanation with a non-string blockId", { kind: "explanation", blockId: 7 }],
   ])("refuses %s", (_label, claim) => {
     const decoded = decodeAnswer(JSON.stringify({ rosters: [], claims: [claim] }), context, "txn-1");
     expect(decoded.ok).toBe(false);

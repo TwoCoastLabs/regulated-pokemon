@@ -157,6 +157,24 @@ export function funnelOf(run: HarnessRun, wantsAct: boolean): FunnelStage {
  * picks committed nothing IA-5 gates; scoring it an escalation would
  * manufacture a broken zero the record refutes.
  */
+/**
+ * Whether the record committed a lesson this entry's oracle accepts.
+ *
+ * Read from the record like every other flag here. `undefined` acceptable ids
+ * means the question expects no lesson and the check is vacuously true; an
+ * empty record against a stated oracle is false — a resolution that taught
+ * nothing (or the wrong thing) is the curriculum's own deflection, and it may
+ * not score as a pass.
+ */
+export function routedLesson(run: HarnessRun, acceptable: readonly string[] | undefined): boolean {
+  if (acceptable === undefined) return true;
+  const transaction = run.transaction;
+  if (transaction === undefined) return false;
+  const { outcome, manifest } = transaction;
+  if ((outcome.status !== "answered" && outcome.status !== "acted") || manifest === undefined) return false;
+  return manifest.claims.some((claim) => claim.kind === "explanation" && acceptable.includes(claim.blockId));
+}
+
 export function committedGatedAdvice(
   run: HarnessRun,
   world: { registry: CertifiedRegistry; pack: AccordPack },

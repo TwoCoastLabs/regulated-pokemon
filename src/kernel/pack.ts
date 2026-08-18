@@ -23,7 +23,7 @@ import { formatCarriesLocale, type FormatId, IMPLEMENTED_LOCALES, isFormatId } f
 import type { CertifiedRegistry } from "./registry.js";
 import { AccordError, violation } from "./violation.js";
 
-export const PACK_SCHEMA_VERSION = 5;
+export const PACK_SCHEMA_VERSION = 6;
 
 /** The League's badge scale. Kanto issues eight; nothing above that exists. */
 export const MAX_BADGE_LEVEL = 8;
@@ -150,6 +150,30 @@ export interface ExhibitRule {
    */
   block: DisclosureBlockRule;
   slots?: readonly ExhibitSlotRule[];
+}
+
+/**
+ * One approved lesson in the explanation catalogue.
+ *
+ * The curriculum answers the questions no snapshot fact can — "what is a
+ * badge?", "how does catching work?" — and it does so the only way this
+ * kernel certifies prose: as authored, reviewed, digest-pinned text the model
+ * may *route to* and can never edit. A wrong route shows a reviewed lesson on
+ * the wrong subject — a deflection, never a fabrication.
+ *
+ * Provenance is deliberately different from a fact's, and the certificate
+ * says so: a lesson's authority is editorial — this pack version, this
+ * review, this digest — not derivation from the snapshot. What keeps a
+ * lesson from drifting away from the certified world is a pin, not a
+ * derivation: where its text overlaps something the registry knows (the
+ * what-is-type lesson enumerates the fifteen types), a test holds the two
+ * equal.
+ */
+export interface CurriculumRule {
+  /** What the model routes to. Distinct from the block id, which names the text. */
+  id: string;
+  article: ArticleId;
+  block: DisclosureBlockRule;
 }
 
 /**
@@ -292,6 +316,7 @@ export interface AccordPack {
   restrictions: readonly RestrictionRule[];
   actions: readonly ActionRule[];
   exhibits: readonly ExhibitRule[];
+  curriculum: readonly CurriculumRule[];
   vocabulary: ScopeVocabulary;
 }
 
@@ -301,8 +326,13 @@ export function actionRule(pack: AccordPack, tool: string): ActionRule | undefin
 }
 
 /** The block a disclosure requires in one locale, or nothing. */
-export function blockFor(rule: ExhibitRule, locale: string): BlockContent | undefined {
+export function blockFor(rule: { block: DisclosureBlockRule }, locale: string): BlockContent | undefined {
   return rule.block.content.find((entry) => entry.locale === locale);
+}
+
+/** One approved lesson, by the id a model routes to, or nothing. */
+export function curriculumRule(pack: AccordPack, id: string): CurriculumRule | undefined {
+  return pack.curriculum.find((rule) => rule.id === id);
 }
 
 /** One catalogued string in one locale, or nothing. */
@@ -349,6 +379,15 @@ export function loadPack(input: unknown, registry: CertifiedRegistry): Resolutio
     return {
       ok: false,
       violations: [violation("IA-5", "pack-malformed", "Accord pack is missing restrictions or exhibits")],
+    };
+  }
+  if (!Array.isArray(document.curriculum)) {
+    // Same reasoning as the action registry: an empty catalogue is a pack
+    // that teaches nothing, which is a coherent policy. A missing one is a
+    // pack that never decided, and every routed lesson would be unapproved.
+    return {
+      ok: false,
+      violations: [violation("IA-6", "pack-curriculum-missing", "Accord pack does not say what may be taught")],
     };
   }
   if (!Array.isArray(document.actions)) {
@@ -401,7 +440,7 @@ function checkRules(pack: AccordPack, registry: CertifiedRegistry): Violation[] 
   const known = new Set<string>(ACCORD_ARTICLES.map((entry) => entry.id));
   const seen = new Set<string>();
 
-  for (const rule of [...pack.restrictions, ...pack.exhibits]) {
+  for (const rule of [...pack.restrictions, ...pack.exhibits, ...pack.curriculum]) {
     if (seen.has(rule.id)) {
       violations.push(
         violation("IA-5", "pack-duplicate-rule", `Accord pack rule "${rule.id}" appears more than once`, {
@@ -435,6 +474,12 @@ function checkRules(pack: AccordPack, registry: CertifiedRegistry): Violation[] 
         }),
       );
     }
+  }
+
+  for (const rule of pack.curriculum) {
+    // A lesson is its block: the same locale coverage, emptiness and
+    // self-naming digest rules a disclosure's text lives under.
+    violations.push(...checkBlock(pack, rule));
   }
 
   for (const rule of pack.exhibits) {
@@ -646,14 +691,15 @@ function checkDisplay(display: DisplayPolicy | undefined): Violation[] {
   return violations;
 }
 
-/** A disclosure's mandatory text: present in every locale, and naming itself. */
-function checkBlock(pack: AccordPack, rule: ExhibitRule): Violation[] {
+/** A rule's mandatory text: present in every locale, and naming itself.
+ * Shared by disclosures and lessons — a block is a block wherever it lives. */
+function checkBlock(pack: AccordPack, rule: { id: string; block: DisclosureBlockRule }): Violation[] {
   const violations: Violation[] = [];
   const block = rule.block;
 
   if (block === undefined || typeof block.id !== "string" || block.id.length === 0) {
     return [
-      violation("IA-6", "pack-block-missing", `exhibit rule "${rule.id}" carries no disclosure block`, {
+      violation("IA-6", "pack-block-missing", `rule "${rule.id}" carries no text block`, {
         actual: rule.id,
       }),
     ];

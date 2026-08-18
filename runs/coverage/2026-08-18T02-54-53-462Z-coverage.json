@@ -1,0 +1,2492 @@
+{
+  "schemaVersion": 1,
+  "label": "coverage",
+  "startedAt": "2026-08-18T02:54:53.462Z",
+  "world": {
+    "snapshotId": "kanto-red-blue",
+    "snapshotDigest": "sha256:dd55ccbf5375efb987a9f3857cd749a790a997d73513eb747df8225a5026eac9",
+    "sourceCommit": "eed7925e3158c9f744816768d3cc3395e290127f",
+    "packId": "indigo-accord-v1"
+  },
+  "bankId": "indigo-playability-v1",
+  "model": {
+    "id": "coverage:openai/gpt-5.4-mini",
+    "slug": "openai/gpt-5.4-mini"
+  },
+  "structuredOutput": true,
+  "repetitions": 1,
+  "stoppedEarly": false,
+  "runs": [
+    {
+      "entryId": "meta-what-is-game",
+      "disposition": "answerable",
+      "opening": "What is Pokemon?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "answered, as it should be"
+      },
+      "turns": 1,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "meta-what-is-game",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:54:53.489Z",
+            "source": "trainer",
+            "text": "What is Pokemon?"
+          }
+        ],
+        "turns": 1,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 2169,
+          "completionTokens": 30,
+          "calls": 1,
+          "costedCalls": 1,
+          "costUsd": 0.00176175
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-18T02:54:53.491Z",
+          "committedAt": "2026-08-18T02:54:55.327Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:54:53.489Z",
+              "source": "trainer",
+              "text": "What is Pokemon?"
+            }
+          ],
+          "derivation": {
+            "bindings": [],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "what is pokemon"
+            ]
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "explanation",
+                "blockId": "what-is-game"
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        }
+      }
+    },
+    {
+      "entryId": "meta-how-to-play",
+      "disposition": "answerable",
+      "opening": "I've never played before. How does this game work?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "answered, as it should be"
+      },
+      "turns": 1,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "meta-how-to-play",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:54:55.330Z",
+            "source": "trainer",
+            "text": "I've never played before. How does this game work?"
+          }
+        ],
+        "turns": 1,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 2176,
+          "completionTokens": 30,
+          "calls": 1,
+          "costedCalls": 1,
+          "costUsd": 0.001767
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-18T02:54:55.332Z",
+          "committedAt": "2026-08-18T02:54:56.320Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:54:55.330Z",
+              "source": "trainer",
+              "text": "I've never played before. How does this game work?"
+            }
+          ],
+          "derivation": {
+            "bindings": [],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "i've never played before",
+              "how does this game work"
+            ]
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "explanation",
+                "blockId": "how-to-play"
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        }
+      }
+    },
+    {
+      "entryId": "meta-objective",
+      "disposition": "answerable",
+      "opening": "What am I actually trying to do in this game?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "answered, as it should be"
+      },
+      "turns": 1,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "meta-objective",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:54:56.320Z",
+            "source": "trainer",
+            "text": "What am I actually trying to do in this game?"
+          }
+        ],
+        "turns": 1,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 2176,
+          "completionTokens": 28,
+          "calls": 1,
+          "costedCalls": 1,
+          "costUsd": 0.001758
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-18T02:54:56.322Z",
+          "committedAt": "2026-08-18T02:54:57.360Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:54:56.320Z",
+              "source": "trainer",
+              "text": "What am I actually trying to do in this game?"
+            }
+          ],
+          "derivation": {
+            "bindings": [],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "what am i actually trying to do in this game"
+            ]
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "explanation",
+                "blockId": "objective"
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        }
+      }
+    },
+    {
+      "entryId": "meta-what-is-badge",
+      "disposition": "answerable",
+      "opening": "What's a gym badge?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "answered, as it should be"
+      },
+      "turns": 1,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "meta-what-is-badge",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:54:57.361Z",
+            "source": "trainer",
+            "text": "What's a gym badge?"
+          }
+        ],
+        "turns": 1,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 2170,
+          "completionTokens": 31,
+          "calls": 1,
+          "costedCalls": 1,
+          "costUsd": 0.001767
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-18T02:54:57.363Z",
+          "committedAt": "2026-08-18T02:54:58.317Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:54:57.361Z",
+              "source": "trainer",
+              "text": "What's a gym badge?"
+            }
+          ],
+          "derivation": {
+            "bindings": [],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "what's a gym badge"
+            ]
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "explanation",
+                "blockId": "what-is-badge"
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        }
+      }
+    },
+    {
+      "entryId": "meta-what-is-type",
+      "disposition": "answerable",
+      "opening": "What does a Pokemon's type actually mean?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "answered, as it should be"
+      },
+      "turns": 1,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "meta-what-is-type",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:54:58.317Z",
+            "source": "trainer",
+            "text": "What does a Pokemon's type actually mean?"
+          }
+        ],
+        "turns": 1,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 2174,
+          "completionTokens": 30,
+          "calls": 1,
+          "costedCalls": 1,
+          "costUsd": 0.0017655
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-18T02:54:58.319Z",
+          "committedAt": "2026-08-18T02:54:59.161Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:54:58.317Z",
+              "source": "trainer",
+              "text": "What does a Pokemon's type actually mean?"
+            }
+          ],
+          "derivation": {
+            "bindings": [],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "what does a pokemon's type actually mean"
+            ]
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "explanation",
+                "blockId": "what-is-type"
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        }
+      }
+    },
+    {
+      "entryId": "meta-how-catch",
+      "disposition": "answerable",
+      "opening": "How do I catch a Pokemon?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "answered, as it should be"
+      },
+      "turns": 1,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "meta-how-catch",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:54:59.161Z",
+            "source": "trainer",
+            "text": "How do I catch a Pokemon?"
+          }
+        ],
+        "turns": 1,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 2172,
+          "completionTokens": 30,
+          "calls": 1,
+          "costedCalls": 1,
+          "costUsd": 0.001764
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-18T02:54:59.163Z",
+          "committedAt": "2026-08-18T02:55:01.464Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:54:59.161Z",
+              "source": "trainer",
+              "text": "How do I catch a Pokemon?"
+            }
+          ],
+          "derivation": {
+            "bindings": [],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "how do i catch a pokemon"
+            ]
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "explanation",
+                "blockId": "how-catch"
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        }
+      }
+    },
+    {
+      "entryId": "meta-first-steps",
+      "disposition": "answerable",
+      "opening": "I just started the game — what should I do first?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "answered, as it should be"
+      },
+      "turns": 1,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "meta-first-steps",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:55:01.464Z",
+            "source": "trainer",
+            "text": "I just started the game — what should I do first?"
+          }
+        ],
+        "turns": 1,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 2177,
+          "completionTokens": 30,
+          "calls": 1,
+          "costedCalls": 1,
+          "costUsd": 0.00176775
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-18T02:55:01.466Z",
+          "committedAt": "2026-08-18T02:55:02.426Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:55:01.464Z",
+              "source": "trainer",
+              "text": "I just started the game — what should I do first?"
+            }
+          ],
+          "derivation": {
+            "bindings": [],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "i just started the game",
+              "what should i do first"
+            ]
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "explanation",
+                "blockId": "first-steps"
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        }
+      }
+    },
+    {
+      "entryId": "meta-leveling",
+      "disposition": "answerable",
+      "opening": "What's the point of leveling up my Pokemon?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "answered, as it should be"
+      },
+      "turns": 1,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "meta-leveling",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:55:02.427Z",
+            "source": "trainer",
+            "text": "What's the point of leveling up my Pokemon?"
+          }
+        ],
+        "turns": 1,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 2174,
+          "completionTokens": 29,
+          "calls": 1,
+          "costedCalls": 1,
+          "costUsd": 0.001761
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-18T02:55:02.429Z",
+          "committedAt": "2026-08-18T02:55:03.438Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:55:02.427Z",
+              "source": "trainer",
+              "text": "What's the point of leveling up my Pokemon?"
+            }
+          ],
+          "derivation": {
+            "bindings": [],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "what's the point of leveling up my pokemon"
+            ]
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "explanation",
+                "blockId": "leveling"
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        }
+      }
+    },
+    {
+      "entryId": "meta-red-vs-blue",
+      "disposition": "answerable",
+      "opening": "What's the difference between the Red and Blue versions?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "answered, as it should be"
+      },
+      "turns": 1,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "meta-red-vs-blue",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:55:03.438Z",
+            "source": "trainer",
+            "text": "What's the difference between the Red and Blue versions?"
+          }
+        ],
+        "turns": 1,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 2175,
+          "completionTokens": 31,
+          "calls": 1,
+          "costedCalls": 1,
+          "costUsd": 0.00177075
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-18T02:55:03.440Z",
+          "committedAt": "2026-08-18T02:55:04.482Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:55:03.438Z",
+              "source": "trainer",
+              "text": "What's the difference between the Red and Blue versions?"
+            }
+          ],
+          "derivation": {
+            "bindings": [],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "what's the difference between the red",
+              "blue versions"
+            ]
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "explanation",
+                "blockId": "red-vs-blue"
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        }
+      }
+    },
+    {
+      "entryId": "meta-is-it-hard",
+      "disposition": "answerable",
+      "opening": "Is this game hard for a total beginner?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "answered, as it should be"
+      },
+      "turns": 1,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "meta-is-it-hard",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:55:04.483Z",
+            "source": "trainer",
+            "text": "Is this game hard for a total beginner?"
+          }
+        ],
+        "turns": 1,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 2174,
+          "completionTokens": 30,
+          "calls": 1,
+          "costedCalls": 1,
+          "costUsd": 0.0017655
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-18T02:55:04.485Z",
+          "committedAt": "2026-08-18T02:55:05.636Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:55:04.483Z",
+              "source": "trainer",
+              "text": "Is this game hard for a total beginner?"
+            }
+          ],
+          "derivation": {
+            "bindings": [],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "is this game hard for a total beginner"
+            ]
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "explanation",
+                "blockId": "is-it-hard"
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        }
+      }
+    },
+    {
+      "entryId": "kind-evolve-order",
+      "disposition": "advisory",
+      "opening": "Which of my Pokemon should I evolve first?",
+      "repetition": 0,
+      "stage": {
+        "kind": "denied",
+        "article": "IA-4",
+        "rule": "ranking-over-empty-roster"
+      },
+      "score": {
+        "pass": false,
+        "reason": "advice was gated (IA-4/ranking-over-empty-roster) — the player got nothing"
+      },
+      "turns": 6,
+      "detail": "denied",
+      "run": {
+        "scenarioId": "kind-evolve-order",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:55:05.637Z",
+            "source": "trainer",
+            "text": "Which of my Pokemon should I evolve first?"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-18T02:55:06.536Z",
+            "id": "prop-session-1",
+            "candidate": {
+              "region": "kanto"
+            },
+            "interpreting": "Which of my Pokemon should I evolve first?"
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-18T02:55:07.342Z",
+            "source": "trainer",
+            "proposalId": "prop-session-1",
+            "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+            "decision": "confirm"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-18T02:55:09.191Z",
+            "source": "advisor",
+            "dimension": "version",
+            "text": "Which game version are you playing — Red/Blue, or Yellow?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:55:09.192Z",
+            "source": "trainer",
+            "text": "red-blue"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-18T02:55:09.195Z",
+            "source": "advisor",
+            "dimension": "badgeLevel",
+            "text": "How many gym badges do you hold?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:55:09.196Z",
+            "source": "trainer",
+            "text": "8"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-18T02:55:10.424Z",
+            "source": "advisor",
+            "dimension": "comparisonBasis",
+            "text": "What should the comparison be based on — speed, attack, defense, HP, or base stat total?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:55:10.425Z",
+            "source": "trainer",
+            "text": "speed"
+          }
+        ],
+        "turns": 6,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 9079,
+          "completionTokens": 244,
+          "calls": 6,
+          "costedCalls": 6,
+          "costUsd": 0.00669765
+        },
+        "status": "denied",
+        "detail": "denied",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-18T02:55:10.427Z",
+          "committedAt": "2026-08-18T02:55:11.769Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:55:05.637Z",
+              "source": "trainer",
+              "text": "Which of my Pokemon should I evolve first?"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-18T02:55:06.536Z",
+              "id": "prop-session-1",
+              "candidate": {
+                "region": "kanto"
+              },
+              "interpreting": "Which of my Pokemon should I evolve first?"
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-18T02:55:07.342Z",
+              "source": "trainer",
+              "proposalId": "prop-session-1",
+              "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+              "decision": "confirm"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-18T02:55:09.191Z",
+              "source": "advisor",
+              "dimension": "version",
+              "text": "Which game version are you playing — Red/Blue, or Yellow?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:55:09.192Z",
+              "source": "trainer",
+              "text": "red-blue"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-18T02:55:09.195Z",
+              "source": "advisor",
+              "dimension": "badgeLevel",
+              "text": "How many gym badges do you hold?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:55:09.196Z",
+              "source": "trainer",
+              "text": "8"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-18T02:55:10.424Z",
+              "source": "advisor",
+              "dimension": "comparisonBasis",
+              "text": "What should the comparison be based on — speed, attack, defense, HP, or base stat total?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:55:10.425Z",
+              "source": "trainer",
+              "text": "speed"
+            }
+          ],
+          "required": [
+            "version",
+            "region",
+            "badgeLevel",
+            "comparisonBasis"
+          ],
+          "derivation": {
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "Which of my Pokemon should I evolve first?"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "8"
+              },
+              {
+                "dimension": "comparisonBasis",
+                "value": "base-speed",
+                "evidenceIndex": 8,
+                "route": "answer",
+                "matchedText": "speed"
+              }
+            ],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "which of my pokemon should i evolve first"
+            ]
+          },
+          "grant": {
+            "id": "grant-71015a467a19",
+            "packId": "indigo-accord-v1",
+            "scope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8,
+              "comparisonBasis": "base-speed"
+            },
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 4,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "Which of my Pokemon should I evolve first?"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "8"
+              },
+              {
+                "dimension": "comparisonBasis",
+                "value": "base-speed",
+                "evidenceIndex": 8,
+                "route": "answer",
+                "matchedText": "speed"
+              }
+            ],
+            "evidenceDigest": "sha256:71015a467a1994cf37897326a8d280a6e1194029ebd8fc026adce930768504bb",
+            "issuedAt": "2026-08-18T02:55:10.427Z",
+            "expiresAt": "2026-08-19T02:55:10.427Z"
+          },
+          "verdicts": [
+            {
+              "stage": "scope",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            },
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": false,
+                "violations": [
+                  {
+                    "article": "IA-4",
+                    "rule": "ranking-over-empty-roster",
+                    "message": "\"fastest-evolvers\" has no members, so nothing in it can be first",
+                    "actual": "fastest-evolvers"
+                  }
+                ]
+              }
+            }
+          ],
+          "outcome": {
+            "status": "denied",
+            "stage": "answer",
+            "violations": [
+              {
+                "article": "IA-4",
+                "rule": "ranking-over-empty-roster",
+                "message": "\"fastest-evolvers\" has no members, so nothing in it can be first",
+                "actual": "fastest-evolvers"
+              }
+            ]
+          }
+        },
+        "grantScope": {
+          "version": "red-blue",
+          "region": "kanto",
+          "badgeLevel": 8,
+          "comparisonBasis": "base-speed"
+        }
+      }
+    },
+    {
+      "entryId": "kind-moveset-build",
+      "disposition": "advisory",
+      "opening": "What's the best moveset for Alakazam?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "advised, with eligible picks"
+      },
+      "turns": 7,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "kind-moveset-build",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:55:11.771Z",
+            "source": "trainer",
+            "text": "What's the best moveset for Alakazam?"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-18T02:55:13.304Z",
+            "id": "prop-session-1",
+            "candidate": {
+              "version": "yellow",
+              "region": "kanto"
+            },
+            "interpreting": "\"What's the best moveset for Alakazam?\""
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-18T02:55:14.111Z",
+            "source": "trainer",
+            "proposalId": "prop-session-1",
+            "candidateDigest": "sha256:29e5cb4436ede1e1c97c53187418d8ffd6fc05a8d6f321b6b6e16aa98039f275",
+            "decision": "reject"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-18T02:55:15.132Z",
+            "id": "prop-session-3",
+            "candidate": {
+              "region": "kanto"
+            },
+            "interpreting": "\"What's the best moveset for Alakazam?\""
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-18T02:55:16.108Z",
+            "source": "trainer",
+            "proposalId": "prop-session-3",
+            "candidateDigest": "sha256:a4651c7f8317fccd3adeaa614581c62deea7007bde7bffae4cf1f11d48b897f8",
+            "decision": "confirm"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-18T02:55:18.319Z",
+            "source": "advisor",
+            "dimension": "version",
+            "text": "Which game version are you playing — Red/Blue, or Yellow?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:55:18.320Z",
+            "source": "trainer",
+            "text": "red-blue"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-18T02:55:18.322Z",
+            "source": "advisor",
+            "dimension": "badgeLevel",
+            "text": "How many gym badges do you hold?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:55:18.323Z",
+            "source": "trainer",
+            "text": "8"
+          }
+        ],
+        "turns": 7,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 9315,
+          "completionTokens": 403,
+          "calls": 7,
+          "costedCalls": 7,
+          "costUsd": 0.0063805500000000005
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-18T02:55:18.325Z",
+          "committedAt": "2026-08-18T02:55:20.202Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:55:11.771Z",
+              "source": "trainer",
+              "text": "What's the best moveset for Alakazam?"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-18T02:55:13.304Z",
+              "id": "prop-session-1",
+              "candidate": {
+                "version": "yellow",
+                "region": "kanto"
+              },
+              "interpreting": "\"What's the best moveset for Alakazam?\""
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-18T02:55:14.111Z",
+              "source": "trainer",
+              "proposalId": "prop-session-1",
+              "candidateDigest": "sha256:29e5cb4436ede1e1c97c53187418d8ffd6fc05a8d6f321b6b6e16aa98039f275",
+              "decision": "reject"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-18T02:55:15.132Z",
+              "id": "prop-session-3",
+              "candidate": {
+                "region": "kanto"
+              },
+              "interpreting": "\"What's the best moveset for Alakazam?\""
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-18T02:55:16.108Z",
+              "source": "trainer",
+              "proposalId": "prop-session-3",
+              "candidateDigest": "sha256:a4651c7f8317fccd3adeaa614581c62deea7007bde7bffae4cf1f11d48b897f8",
+              "decision": "confirm"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-18T02:55:18.319Z",
+              "source": "advisor",
+              "dimension": "version",
+              "text": "Which game version are you playing — Red/Blue, or Yellow?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:55:18.320Z",
+              "source": "trainer",
+              "text": "red-blue"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-18T02:55:18.322Z",
+              "source": "advisor",
+              "dimension": "badgeLevel",
+              "text": "How many gym badges do you hold?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:55:18.323Z",
+              "source": "trainer",
+              "text": "8"
+            }
+          ],
+          "derivation": {
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 4,
+                "route": "confirmed",
+                "matchedText": "\"What's the best moveset for Alakazam?\""
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 8,
+                "route": "answer",
+                "matchedText": "8"
+              }
+            ],
+            "contradicted": [],
+            "ignored": [
+              {
+                "dimension": "version",
+                "value": "yellow",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "\"What's the best moveset for Alakazam?\"",
+                "blockedBy": "rejected"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "\"What's the best moveset for Alakazam?\"",
+                "blockedBy": "rejected"
+              }
+            ],
+            "unmatched": [
+              "what's the best moveset for alakazam"
+            ]
+          },
+          "grant": {
+            "id": "grant-bc45fb3f5b75",
+            "packId": "indigo-accord-v1",
+            "scope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            },
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 6,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 4,
+                "route": "confirmed",
+                "matchedText": "\"What's the best moveset for Alakazam?\""
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 8,
+                "route": "answer",
+                "matchedText": "8"
+              }
+            ],
+            "evidenceDigest": "sha256:bc45fb3f5b75c140b2d06ef2a1dfb83813e973842d350aa8b5ab72e327052b95",
+            "issuedAt": "2026-08-18T02:55:18.325Z",
+            "expiresAt": "2026-08-19T02:55:18.325Z"
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "scopeGrantId": "grant-bc45fb3f5b75",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "recommendation",
+                "entityId": "alakazam"
+              },
+              {
+                "kind": "membership",
+                "rosterId": "alakazam-best-moveset-red-blue",
+                "entityId": "alakazam",
+                "asserted": true
+              },
+              {
+                "kind": "fact",
+                "entityId": "alakazam",
+                "factId": "types",
+                "asserted": {
+                  "kind": "list",
+                  "value": [
+                    "psychic"
+                  ]
+                }
+              },
+              {
+                "kind": "fact",
+                "entityId": "alakazam",
+                "factId": "learnset",
+                "asserted": {
+                  "kind": "list",
+                  "value": [
+                    "bide",
+                    "body-slam",
+                    "confusion",
+                    "counter",
+                    "dig",
+                    "disable",
+                    "double-edge",
+                    "double-team",
+                    "flash",
+                    "hyper-beam",
+                    "mega-kick",
+                    "mega-punch",
+                    "metronome",
+                    "mimic",
+                    "psybeam",
+                    "psychic",
+                    "psywave",
+                    "rage",
+                    "recover",
+                    "reflect",
+                    "rest",
+                    "seismic-toss",
+                    "skull-bash",
+                    "submission",
+                    "substitute",
+                    "take-down",
+                    "teleport",
+                    "thunder-wave",
+                    "toxic",
+                    "tri-attack"
+                  ]
+                }
+              }
+            ],
+            "rosters": [
+              {
+                "id": "alakazam-best-moveset-red-blue",
+                "snapshotId": "kanto-red-blue",
+                "criteria": {
+                  "all": [
+                    {
+                      "kind": "has-type",
+                      "type": "psychic"
+                    },
+                    {
+                      "kind": "learns-move",
+                      "move": "psychic"
+                    },
+                    {
+                      "kind": "learns-move",
+                      "move": "recover"
+                    },
+                    {
+                      "kind": "learns-move",
+                      "move": "reflect"
+                    },
+                    {
+                      "kind": "learns-move",
+                      "move": "seismic-toss"
+                    }
+                  ]
+                },
+                "memberIds": [
+                  "kadabra",
+                  "alakazam",
+                  "mewtwo"
+                ],
+                "cardinality": 3
+              }
+            ],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "scope",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            },
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        },
+        "grantScope": {
+          "version": "red-blue",
+          "region": "kanto",
+          "badgeLevel": 8
+        }
+      }
+    },
+    {
+      "entryId": "kind-team-synergy",
+      "disposition": "advisory",
+      "opening": "Do Snorlax and Gengar work well together?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "advised, with eligible picks"
+      },
+      "turns": 1,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "kind-team-synergy",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:55:20.205Z",
+            "source": "trainer",
+            "text": "Do Snorlax and Gengar work well together?"
+          }
+        ],
+        "turns": 1,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 2176,
+          "completionTokens": 31,
+          "calls": 1,
+          "costedCalls": 1,
+          "costUsd": 0.0017715
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-18T02:55:20.207Z",
+          "committedAt": "2026-08-18T02:55:21.404Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:55:20.205Z",
+              "source": "trainer",
+              "text": "Do Snorlax and Gengar work well together?"
+            }
+          ],
+          "derivation": {
+            "bindings": [],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "do snorlax",
+              "gengar work well together"
+            ]
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "explanation",
+                "blockId": "red-vs-blue"
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        }
+      }
+    },
+    {
+      "entryId": "kind-counter-mewtwo",
+      "disposition": "advisory",
+      "opening": "What counters Mewtwo?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": true,
+        "reason": "advised, with eligible picks"
+      },
+      "turns": 1,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "kind-counter-mewtwo",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:55:21.404Z",
+            "source": "trainer",
+            "text": "What counters Mewtwo?"
+          }
+        ],
+        "turns": 1,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 2171,
+          "completionTokens": 37,
+          "calls": 1,
+          "costedCalls": 1,
+          "costUsd": 0.00179475
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-18T02:55:21.406Z",
+          "committedAt": "2026-08-18T02:55:22.522Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:55:21.404Z",
+              "source": "trainer",
+              "text": "What counters Mewtwo?"
+            }
+          ],
+          "derivation": {
+            "bindings": [],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "what counters mewtwo"
+            ]
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "explanation",
+                "blockId": "red-vs-blue"
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        }
+      }
+    },
+    {
+      "entryId": "kind-strategy-gym",
+      "disposition": "needs-data",
+      "opening": "What strategy should I use against the next gym?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": false,
+        "reason": "certified an answer to a question the snapshot cannot ground"
+      },
+      "turns": 1,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "kind-strategy-gym",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:55:22.522Z",
+            "source": "trainer",
+            "text": "What strategy should I use against the next gym?"
+          }
+        ],
+        "turns": 1,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 2175,
+          "completionTokens": 30,
+          "calls": 1,
+          "costedCalls": 1,
+          "costUsd": 0.00176625
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-18T02:55:22.524Z",
+          "committedAt": "2026-08-18T02:55:23.669Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:55:22.522Z",
+              "source": "trainer",
+              "text": "What strategy should I use against the next gym?"
+            }
+          ],
+          "derivation": {
+            "bindings": [],
+            "contradicted": [],
+            "ignored": [],
+            "unmatched": [
+              "what strategy should i use against the next gym"
+            ]
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "explanation",
+                "blockId": "first-steps"
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        }
+      }
+    },
+    {
+      "entryId": "kind-nickname",
+      "disposition": "needs-claim-kind",
+      "opening": "What should I nickname my Gengar?",
+      "repetition": 0,
+      "stage": {
+        "kind": "resolved"
+      },
+      "score": {
+        "pass": false,
+        "reason": "certified an answer no claim kind should have been able to express"
+      },
+      "turns": 8,
+      "detail": "answered",
+      "run": {
+        "scenarioId": "kind-nickname",
+        "providerId": "bank",
+        "repetition": 0,
+        "transcript": [
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:55:23.670Z",
+            "source": "trainer",
+            "text": "What should I nickname my Gengar?"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-18T02:55:24.708Z",
+            "id": "prop-session-1",
+            "candidate": {
+              "region": "kanto"
+            },
+            "interpreting": "What should I nickname my Gengar?"
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-18T02:55:25.624Z",
+            "source": "trainer",
+            "proposalId": "prop-session-1",
+            "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+            "decision": "confirm"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-18T02:55:26.651Z",
+            "id": "prop-session-3",
+            "candidate": {
+              "version": "yellow"
+            },
+            "interpreting": "\"What should I nickname my Gengar?\""
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-18T02:55:27.478Z",
+            "source": "trainer",
+            "proposalId": "prop-session-3",
+            "candidateDigest": "sha256:702f6de0e38bf5800b4527747882254f8ff0bb8d7ab1c056e3177e388c22ccf6",
+            "decision": "reject"
+          },
+          {
+            "kind": "proposal",
+            "at": "2026-08-18T02:55:28.816Z",
+            "id": "prop-session-5",
+            "candidate": {
+              "version": "yellow"
+            },
+            "interpreting": "\"What should I nickname my Gengar?\""
+          },
+          {
+            "kind": "confirmation",
+            "at": "2026-08-18T02:55:29.847Z",
+            "source": "trainer",
+            "proposalId": "prop-session-5",
+            "candidateDigest": "sha256:8e8cd1d96a16815505bb904dc8b405fc354f095347539061f7659e34e79ff84d",
+            "decision": "reject"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-18T02:55:30.939Z",
+            "source": "advisor",
+            "dimension": "version",
+            "text": "Which game version are you playing — Red/Blue, or Yellow?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:55:30.940Z",
+            "source": "trainer",
+            "text": "red-blue"
+          },
+          {
+            "kind": "question",
+            "at": "2026-08-18T02:55:30.942Z",
+            "source": "advisor",
+            "dimension": "badgeLevel",
+            "text": "How many gym badges do you hold?"
+          },
+          {
+            "kind": "utterance",
+            "at": "2026-08-18T02:55:30.943Z",
+            "source": "trainer",
+            "text": "8"
+          }
+        ],
+        "turns": 8,
+        "providerErrors": 0,
+        "usage": {
+          "promptTokens": 11463,
+          "completionTokens": 240,
+          "calls": 8,
+          "costedCalls": 8,
+          "costUsd": 0.0060484499999999995
+        },
+        "status": "answered",
+        "detail": "answered",
+        "transaction": {
+          "id": "session-1",
+          "snapshotId": "kanto-red-blue",
+          "packId": "indigo-accord-v1",
+          "locale": "en-US",
+          "establishedAt": "2026-08-18T02:55:30.945Z",
+          "committedAt": "2026-08-18T02:55:31.983Z",
+          "transcript": [
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:55:23.670Z",
+              "source": "trainer",
+              "text": "What should I nickname my Gengar?"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-18T02:55:24.708Z",
+              "id": "prop-session-1",
+              "candidate": {
+                "region": "kanto"
+              },
+              "interpreting": "What should I nickname my Gengar?"
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-18T02:55:25.624Z",
+              "source": "trainer",
+              "proposalId": "prop-session-1",
+              "candidateDigest": "sha256:05bd8982b30a187c8ca50c538e06e6bb893cda62029ac7dc1c420f9ef3e87447",
+              "decision": "confirm"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-18T02:55:26.651Z",
+              "id": "prop-session-3",
+              "candidate": {
+                "version": "yellow"
+              },
+              "interpreting": "\"What should I nickname my Gengar?\""
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-18T02:55:27.478Z",
+              "source": "trainer",
+              "proposalId": "prop-session-3",
+              "candidateDigest": "sha256:702f6de0e38bf5800b4527747882254f8ff0bb8d7ab1c056e3177e388c22ccf6",
+              "decision": "reject"
+            },
+            {
+              "kind": "proposal",
+              "at": "2026-08-18T02:55:28.816Z",
+              "id": "prop-session-5",
+              "candidate": {
+                "version": "yellow"
+              },
+              "interpreting": "\"What should I nickname my Gengar?\""
+            },
+            {
+              "kind": "confirmation",
+              "at": "2026-08-18T02:55:29.847Z",
+              "source": "trainer",
+              "proposalId": "prop-session-5",
+              "candidateDigest": "sha256:8e8cd1d96a16815505bb904dc8b405fc354f095347539061f7659e34e79ff84d",
+              "decision": "reject"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-18T02:55:30.939Z",
+              "source": "advisor",
+              "dimension": "version",
+              "text": "Which game version are you playing — Red/Blue, or Yellow?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:55:30.940Z",
+              "source": "trainer",
+              "text": "red-blue"
+            },
+            {
+              "kind": "question",
+              "at": "2026-08-18T02:55:30.942Z",
+              "source": "advisor",
+              "dimension": "badgeLevel",
+              "text": "How many gym badges do you hold?"
+            },
+            {
+              "kind": "utterance",
+              "at": "2026-08-18T02:55:30.943Z",
+              "source": "trainer",
+              "text": "8"
+            }
+          ],
+          "derivation": {
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 8,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "What should I nickname my Gengar?"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 10,
+                "route": "answer",
+                "matchedText": "8"
+              }
+            ],
+            "contradicted": [],
+            "ignored": [
+              {
+                "dimension": "version",
+                "value": "yellow",
+                "evidenceIndex": 4,
+                "route": "confirmed",
+                "matchedText": "\"What should I nickname my Gengar?\"",
+                "blockedBy": "rejected"
+              },
+              {
+                "dimension": "version",
+                "value": "yellow",
+                "evidenceIndex": 6,
+                "route": "confirmed",
+                "matchedText": "\"What should I nickname my Gengar?\"",
+                "blockedBy": "rejected"
+              }
+            ],
+            "unmatched": [
+              "what should i nickname my gengar"
+            ]
+          },
+          "grant": {
+            "id": "grant-b6ebd66f284e",
+            "packId": "indigo-accord-v1",
+            "scope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            },
+            "bindings": [
+              {
+                "dimension": "version",
+                "value": "red-blue",
+                "evidenceIndex": 8,
+                "route": "answer",
+                "matchedText": "red-blue"
+              },
+              {
+                "dimension": "region",
+                "value": "kanto",
+                "evidenceIndex": 2,
+                "route": "confirmed",
+                "matchedText": "What should I nickname my Gengar?"
+              },
+              {
+                "dimension": "badgeLevel",
+                "value": 8,
+                "evidenceIndex": 10,
+                "route": "answer",
+                "matchedText": "8"
+              }
+            ],
+            "evidenceDigest": "sha256:b6ebd66f284e478a2140691b8d5e225335c1a56b5ac3b7a3327ae81f54ef6df9",
+            "issuedAt": "2026-08-18T02:55:30.945Z",
+            "expiresAt": "2026-08-19T02:55:30.945Z"
+          },
+          "manifest": {
+            "transactionId": "session-1",
+            "scopeGrantId": "grant-b6ebd66f284e",
+            "snapshotId": "kanto-red-blue",
+            "packId": "indigo-accord-v1",
+            "locale": "en-US",
+            "claims": [
+              {
+                "kind": "recommendation",
+                "entityId": "gengar"
+              }
+            ],
+            "rosters": [],
+            "exhibits": [
+              {
+                "id": "provenance",
+                "rule": "provenance",
+                "kind": "provenance",
+                "block": {
+                  "id": "pokeapi-attribution",
+                  "version": 1,
+                  "locale": "en-US",
+                  "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                },
+                "triggeredBy": "IA-2"
+              }
+            ]
+          },
+          "verdicts": [
+            {
+              "stage": "scope",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            },
+            {
+              "stage": "answer",
+              "verdict": {
+                "allowed": true,
+                "violations": []
+              }
+            }
+          ],
+          "outcome": {
+            "status": "answered"
+          }
+        },
+        "grantScope": {
+          "version": "red-blue",
+          "region": "kanto",
+          "badgeLevel": 8
+        }
+      }
+    }
+  ],
+  "map": {
+    "total": 16,
+    "pass": 13,
+    "byDisposition": [
+      {
+        "disposition": "answerable",
+        "total": 10,
+        "pass": 10,
+        "passRate": 1,
+        "stages": {
+          "resolved": 10,
+          "denied": 0,
+          "abstained-answer": 0,
+          "abstained-scope": 0,
+          "declined": 0
+        }
+      },
+      {
+        "disposition": "advisory",
+        "total": 4,
+        "pass": 3,
+        "passRate": 0.75,
+        "stages": {
+          "resolved": 3,
+          "denied": 1,
+          "abstained-answer": 0,
+          "abstained-scope": 0,
+          "declined": 0
+        }
+      },
+      {
+        "disposition": "needs-data",
+        "total": 1,
+        "pass": 0,
+        "passRate": 0,
+        "stages": {
+          "resolved": 1,
+          "denied": 0,
+          "abstained-answer": 0,
+          "abstained-scope": 0,
+          "declined": 0
+        }
+      },
+      {
+        "disposition": "needs-claim-kind",
+        "total": 1,
+        "pass": 0,
+        "passRate": 0,
+        "stages": {
+          "resolved": 1,
+          "denied": 0,
+          "abstained-answer": 0,
+          "abstained-scope": 0,
+          "declined": 0
+        }
+      },
+      {
+        "disposition": "gated-advisory",
+        "total": 0,
+        "pass": 0,
+        "passRate": 0,
+        "stages": {
+          "resolved": 0,
+          "denied": 0,
+          "abstained-answer": 0,
+          "abstained-scope": 0,
+          "declined": 0
+        }
+      },
+      {
+        "disposition": "should-refuse",
+        "total": 0,
+        "pass": 0,
+        "passRate": 0,
+        "stages": {
+          "resolved": 0,
+          "denied": 0,
+          "abstained-answer": 0,
+          "abstained-scope": 0,
+          "declined": 0
+        }
+      },
+      {
+        "disposition": "off-domain",
+        "total": 0,
+        "pass": 0,
+        "passRate": 0,
+        "stages": {
+          "resolved": 0,
+          "denied": 0,
+          "abstained-answer": 0,
+          "abstained-scope": 0,
+          "declined": 0
+        }
+      }
+    ],
+    "friction": [],
+    "enforcementEscalations": []
+  }
+}

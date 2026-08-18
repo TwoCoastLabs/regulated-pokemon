@@ -17,6 +17,7 @@
 import type { AnswerManifest, Claim, ClosedRoster, Exhibit, RosterCriteria, Verdict } from "../kernel/contracts.js";
 import { digestText } from "../kernel/digest.js";
 import { compileManifest, type ManifestDraft, verifyManifest } from "../kernel/manifest.js";
+import { type AccordPack, loadPack } from "../kernel/pack.js";
 import { buildRoster } from "../kernel/roster.js";
 import { AccordError, verdictOf } from "../kernel/violation.js";
 import type { ArticleId } from "../kernel/accord.js";
@@ -289,7 +290,8 @@ export const PHASE_2_MUTATIONS: readonly Mutation[] = [
     run: (world) =>
       sabotageWorld(world, (current) => ({
         ...current,
-        grant: { ...current.grant, scope: { ...current.grant.scope, badgeLevel: 2 } },
+        // The fixture world is always granted; the assertion says so once.
+        grant: { ...current.grant!, scope: { ...current.grant!.scope, badgeLevel: 2 } },
       })),
   },
   {
@@ -403,6 +405,71 @@ export const PHASE_2_MUTATIONS: readonly Mutation[] = [
     rule: "matchup-inapplicable",
     run: (world) =>
       sabotageMatchup(world, (claim) => ({ kind: "matchup", subject: claim.subject, direction: "strong-against" })),
+  },
+  {
+    id: "lesson-route-invented",
+    title: "Route the trainer to a lesson nobody approved",
+    description:
+      "The catalogue teaches ten reviewed lessons; the answer cites an " +
+      "eleventh. Prose that was never reviewed is not a worse lesson, it is " +
+      "not a lesson at all — the same closed-world rule a fabricated species " +
+      "gets, applied to teaching.",
+    article: "IA-3",
+    rule: "fabricated-lesson",
+    run: (world) => {
+      const compiled = compileManifest(world, {
+        transactionId: "txn-crucible-lesson",
+        claims: [{ kind: "explanation", blockId: "what-is-badge" }],
+        rosters: [],
+      });
+      if (!compiled.ok) return verdictOf(compiled.violations);
+      const forged: Claim = { kind: "explanation", blockId: "how-to-win-every-battle" };
+      return verifyManifest(world, replaceClaim(compiled.value, "explanation", forged));
+    },
+  },
+  {
+    id: "curriculum-doctored-at-load",
+    title: "Edit a lesson's words and keep its digest",
+    description:
+      "One sentence is appended to the badge lesson and the digest is left " +
+      "as reviewed. The digest is the block's identity, so the loader refuses " +
+      "the whole pack — a curriculum cannot drift from what was approved, " +
+      "one edit at a time.",
+    article: "IA-6",
+    rule: "pack-block-digest-mismatch",
+    run: (world) => {
+      const doctored = structuredClone(world.pack) as AccordPack;
+      const lesson = doctored.curriculum.find((rule) => rule.id === "what-is-badge")!;
+      (lesson.block.content[0] as { text: string }).text += " Badges are, of course, optional.";
+      const loaded = loadPack(doctored, world.registry);
+      return loaded.ok ? verdictOf([]) : verdictOf(loaded.violations);
+    },
+  },
+  {
+    id: "advice-smuggled-into-a-lesson",
+    title: "Slip a recommendation into a scope-free teaching answer",
+    description:
+      "A grantless context exists so a lesson can be taught before any " +
+      "interrogation. This answer rides it with a recommendation — advice to " +
+      "a trainer nothing is known about. Material scope is lazy, not " +
+      "optional: the personalized claim refuses by name and the free lesson " +
+      "cannot launder it.",
+    article: "IA-1",
+    rule: "scope-not-established",
+    run: (world) => {
+      const { grant: _grant, ...bare } = world;
+      const compiled = compileManifest(bare, {
+        transactionId: "txn-crucible-bare",
+        claims: [{ kind: "explanation", blockId: "first-steps" }],
+        rosters: [],
+      });
+      if (!compiled.ok) return verdictOf(compiled.violations);
+      const smuggled: AnswerManifest = {
+        ...compiled.value,
+        claims: [...compiled.value.claims, { kind: "recommendation", entityId: "pikachu" }],
+      };
+      return verifyManifest(bare, smuggled);
+    },
   },
 ];
 

@@ -37,6 +37,7 @@ import {
   eligibilityAnswered,
   type FunnelStage,
   funnelOf,
+  routedLesson,
   scoreDisposition,
 } from "./playability.js";
 import type { HarnessRun, RunStatus } from "./run.js";
@@ -92,6 +93,21 @@ export function profileWord(dimension: ScopeDimension, profile: TrainerScope): s
 
 function wantsAct(entry: BankEntry): boolean {
   return (entry.expectClaimKinds ?? []).includes("action");
+}
+
+/**
+ * The disposition score, then the routing oracle on top.
+ *
+ * Routing accuracy only ever narrows: a resolution that committed no lesson
+ * the entry accepts is a mis-teach — reviewed text on the wrong subject, the
+ * curriculum's own species of deflection — and it may not ride a "resolved"
+ * bucket into a pass. The override runs one way; nothing here can turn a fail
+ * into a pass.
+ */
+function scored(entry: BankEntry, run: HarnessRun, world: DemoWorld, stage: FunnelStage): DispositionScore {
+  const score = scoreDisposition(entry.disposition, stage, committedGatedAdvice(run, world), eligibilityAnswered(run, world));
+  if (!score.pass || routedLesson(run, entry.expectBlockIds)) return score;
+  return { pass: false, reason: "resolved, but no lesson this question accepts was taught — a mis-teach" };
 }
 
 /** Drive the session to a settled state, answering as the trainer would. The
@@ -194,7 +210,7 @@ export async function runBankEntry(
     // Both gated flags are re-verified from the record, never inferred from
     // the bucket — a deflection is a vacuous test, not a broken zero, and an
     // eligibility pass is awarded only by the claims actually certified.
-    score: scoreDisposition(entry.disposition, stage, committedGatedAdvice(run, world), eligibilityAnswered(run, world)),
+    score: scored(entry, run, world, stage),
     turns: run.turns,
     detail: run.detail,
     run,

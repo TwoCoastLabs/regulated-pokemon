@@ -9,6 +9,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { Claim } from "../kernel/contracts.js";
+import { demoWorld } from "../demo/files.js";
 import {
   BANK_PATH,
   BANK_SCHEMA_VERSION,
@@ -96,6 +97,7 @@ describe("the shipped bank holds up", () => {
       ranking: true,
       matchup: true,
       eligibility: true,
+      explanation: true,
       recommendation: true,
       action: true,
     };
@@ -195,4 +197,41 @@ describe("a bank that would make the map lie is refused by name", () => {
 // A trivial use so the schema version is referenced and drift is caught.
 it("declares the expected schema version", () => {
   expect(bank.bankVersion).toBe(BANK_SCHEMA_VERSION);
+});
+
+describe("the routing oracle is validated like every other oracle", () => {
+  function meta(draft: QuestionBank) {
+    return draft.entries.find((entry) => entry.id === "meta-what-is-badge")! as {
+      expectBlockIds?: readonly string[];
+      expectClaimKinds?: readonly string[];
+    };
+  }
+
+  it("refuses an explanation entry with no acceptable lesson — the mis-teach would be unmeasurable", () => {
+    expect(loadWith((draft) => delete meta(draft).expectBlockIds)).toThrowError(/bank-lessons-missing/);
+  });
+
+  it("refuses lessons on an entry that expects no explanation", () => {
+    expect(
+      loadWith((draft) => {
+        const entry = draft.entries.find((e) => e.id === "ans-fact-speed-pikachu")! as { expectBlockIds?: readonly string[] };
+        entry.expectBlockIds = ["what-is-badge"];
+      }),
+    ).toThrowError(/bank-lessons-unexpected/);
+  });
+
+  it("refuses an empty lesson id", () => {
+    expect(loadWith((draft) => (meta(draft).expectBlockIds = ["what-is-badge", " "]))).toThrowError(/bank-lesson-empty/);
+  });
+
+  it("every acceptable lesson the bank names exists in the pack's catalogue", () => {
+    // The loader cannot see the pack; this pin can. A routing oracle naming a
+    // lesson nobody approved would score every route as a mis-teach.
+    const lessons = new Set(demoWorld().pack.curriculum.map((rule) => rule.id));
+    for (const entry of bank.entries) {
+      for (const blockId of entry.expectBlockIds ?? []) {
+        expect(lessons.has(blockId), `${entry.id} names unknown lesson ${blockId}`).toBe(true);
+      }
+    }
+  });
 });

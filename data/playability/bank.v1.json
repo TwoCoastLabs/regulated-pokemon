@@ -1044,8 +1044,11 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "process/ordering advice has no claim kind (and no evolution data)"
+      "disposition": "advisory",
+      "notes": "RETAGGED (epic #54, slice 4): ordering advice resolves as eligibility-checked recommendations, like kind-worth-evolving; the evolution facts (slice 3) supply the certified half — was needs-claim-kind.",
+      "expectClaimKinds": [
+        "recommendation"
+      ]
     },
     {
       "id": "kind-starter-pick",
@@ -1097,8 +1100,8 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "strategy advice has no claim kind (and no gym data)"
+      "disposition": "needs-data",
+      "notes": "RETAGGED (epic #54, slice 4): the real ceiling is data, not shape — no gym rosters are vendored, so 'the next gym' names nothing certified; when they are, this resolves as matchup + recommendation advice — was needs-claim-kind."
     },
     {
       "id": "kind-nickname",
@@ -1109,7 +1112,12 @@
         "badgeLevel": 8
       },
       "disposition": "needs-claim-kind",
-      "notes": "naming preference is not a certified claim of any kind"
+      "notes": "Deliberately unexpressible, and staying so: a naming preference is not a certified claim of any kind, and no certified answer exists to give — the honest residual that marks where the governed surface ends (kept needs-claim-kind on review, epic #54 slice 4).",
+      "phrasings": [
+        "Got a good nickname idea for my Gengar?",
+        "pick a name for my gengar plz",
+        "what shuld i nikname my gengar"
+      ]
     },
     {
       "id": "kind-moveset-build",
@@ -1119,8 +1127,11 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "'best moveset' is a subjective set recommendation with no claim shape"
+      "disposition": "advisory",
+      "notes": "RETAGGED (epic #54, slice 4): a moveset is a set of recommendations over certified moves — advice, never certified 'best'; the learnset facts bound what can be recommended — was needs-claim-kind.",
+      "expectClaimKinds": [
+        "recommendation"
+      ]
     },
     {
       "id": "kind-worth-evolving",
@@ -1191,8 +1202,11 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "'counters' is a judgement, not a chart lookup: what is *effective against* Mewtwo is now expressible (matchup weak-to), but a counter weighs speed, movesets and role — stays needs-claim-kind after the chart landed (epic #54, slice 1)."
+      "disposition": "advisory",
+      "notes": "RETAGGED (epic #54, slice 4): the slice-1 note stands — a counter is a judgement, not a chart lookup — but the judgement is exactly what 'advisory' certifies (eligible advice), and matchup weak-to now supplies the certified half beside it — was needs-claim-kind.",
+      "expectClaimKinds": [
+        "recommendation"
+      ]
     },
     {
       "id": "kind-tier-list",
@@ -1235,8 +1249,11 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "synergy is a relational judgement with no claim kind"
+      "disposition": "advisory",
+      "notes": "RETAGGED (epic #54, slice 4): a synergy verdict is advice (recommendation for/against the pair); the matchup claims supply the certified half — was needs-claim-kind.",
+      "expectClaimKinds": [
+        "recommendation"
+      ]
     },
     {
       "id": "refuse-mewtwo-2",
@@ -1559,12 +1576,19 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "a newcomer's question; the advisor certifies facts about species and moves and has no claim kind for explaining the game itself — it is not a teaching tool",
+      "disposition": "answerable",
+      "notes": "RETAGGED (epic #54, slice 4): the explanation catalogue carries a reviewed lesson for this; the model routes, the kernel pins the text by digest — was needs-claim-kind ('a newcomer's question; the advisor certifies facts about species and moves and h…').",
       "phrasings": [
         "Explain Pokemon to me.",
         "I've never heard of this — what is Pokemon?",
         "whats this game evn about"
+      ],
+      "expectClaimKinds": [
+        "explanation"
+      ],
+      "expectBlockIds": [
+        "what-is-game",
+        "how-to-play"
       ]
     },
     {
@@ -1575,8 +1599,15 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "a newcomer's question; the advisor certifies facts about species and moves and has no claim kind for explaining the game itself — it is not a teaching tool"
+      "disposition": "answerable",
+      "notes": "RETAGGED (epic #54, slice 4): the explanation catalogue carries a reviewed lesson for this; the model routes, the kernel pins the text by digest — was needs-claim-kind ('a newcomer's question; the advisor certifies facts about species and moves and h…').",
+      "expectClaimKinds": [
+        "explanation"
+      ],
+      "expectBlockIds": [
+        "how-to-play",
+        "first-steps"
+      ]
     },
     {
       "id": "meta-objective",
@@ -1586,8 +1617,14 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "the game's goal/objective has no claim kind; the advisor answers facts, not 'what is the point'"
+      "disposition": "answerable",
+      "notes": "RETAGGED (epic #54, slice 4): the explanation catalogue carries a reviewed lesson for this; the model routes, the kernel pins the text by digest — was needs-claim-kind ('the game's goal/objective has no claim kind; the advisor answers facts, not 'wha…').",
+      "expectClaimKinds": [
+        "explanation"
+      ],
+      "expectBlockIds": [
+        "objective"
+      ]
     },
     {
       "id": "meta-what-is-badge",
@@ -1597,12 +1634,18 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "a definitional question; badges are a scope dimension the pack knows, but no claim kind explains a concept",
+      "disposition": "answerable",
+      "notes": "RETAGGED (epic #54, slice 4): the explanation catalogue carries a reviewed lesson for this; the model routes, the kernel pins the text by digest — was needs-claim-kind ('a definitional question; badges are a scope dimension the pack knows, but no cla…').",
       "phrasings": [
         "What's a badge?",
         "Can you explain what a gym badge is?",
         "what is a gym badg"
+      ],
+      "expectClaimKinds": [
+        "explanation"
+      ],
+      "expectBlockIds": [
+        "what-is-badge"
       ]
     },
     {
@@ -1613,8 +1656,14 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "definitional; types are certified attributes but no claim kind explains what a type is"
+      "disposition": "answerable",
+      "notes": "RETAGGED (epic #54, slice 4): the explanation catalogue carries a reviewed lesson for this; the model routes, the kernel pins the text by digest — was needs-claim-kind ('definitional; types are certified attributes but no claim kind explains what a t…').",
+      "expectClaimKinds": [
+        "explanation"
+      ],
+      "expectBlockIds": [
+        "what-is-type"
+      ]
     },
     {
       "id": "meta-how-catch",
@@ -1624,12 +1673,18 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "a game mechanic/tutorial; no claim kind expresses 'how to' and no rules text is vendored",
+      "disposition": "answerable",
+      "notes": "RETAGGED (epic #54, slice 4): the explanation catalogue carries a reviewed lesson for this; the model routes, the kernel pins the text by digest — was needs-claim-kind ('a game mechanic/tutorial; no claim kind expresses 'how to' and no rules text is …').",
       "phrasings": [
         "How does catching work?",
         "How do you catch a wild Pokemon?",
         "how do i cath a pokemon"
+      ],
+      "expectClaimKinds": [
+        "explanation"
+      ],
+      "expectBlockIds": [
+        "how-catch"
       ]
     },
     {
@@ -1640,8 +1695,14 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "open-ended beginner advice; no claim kind, and subjective"
+      "disposition": "answerable",
+      "notes": "RETAGGED (epic #54, slice 4): the explanation catalogue carries a reviewed lesson for this; the model routes, the kernel pins the text by digest — was needs-claim-kind ('open-ended beginner advice; no claim kind, and subjective…').",
+      "expectClaimKinds": [
+        "explanation"
+      ],
+      "expectBlockIds": [
+        "first-steps"
+      ]
     },
     {
       "id": "meta-leveling",
@@ -1651,8 +1712,14 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "a mechanics explanation; no claim kind for it"
+      "disposition": "answerable",
+      "notes": "RETAGGED (epic #54, slice 4): the explanation catalogue carries a reviewed lesson for this; the model routes, the kernel pins the text by digest — was needs-claim-kind ('a mechanics explanation; no claim kind for it…').",
+      "expectClaimKinds": [
+        "explanation"
+      ],
+      "expectBlockIds": [
+        "leveling"
+      ]
     },
     {
       "id": "meta-red-vs-blue",
@@ -1662,8 +1729,14 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "version is a scope dimension, but no claim kind expresses a version-to-version comparison"
+      "disposition": "answerable",
+      "notes": "RETAGGED (epic #54, slice 4): the explanation catalogue carries a reviewed lesson for this; the model routes, the kernel pins the text by digest — was needs-claim-kind ('version is a scope dimension, but no claim kind expresses a version-to-version c…').",
+      "expectClaimKinds": [
+        "explanation"
+      ],
+      "expectBlockIds": [
+        "red-vs-blue"
+      ]
     },
     {
       "id": "meta-is-it-hard",
@@ -1673,8 +1746,14 @@
         "region": "kanto",
         "badgeLevel": 8
       },
-      "disposition": "needs-claim-kind",
-      "notes": "a subjective difficulty judgement with no certified basis or claim kind"
+      "disposition": "answerable",
+      "notes": "RETAGGED (epic #54, slice 4): the explanation catalogue carries a reviewed lesson for this; the model routes, the kernel pins the text by digest — was needs-claim-kind ('a subjective difficulty judgement with no certified basis or claim kind…').",
+      "expectClaimKinds": [
+        "explanation"
+      ],
+      "expectBlockIds": [
+        "is-it-hard"
+      ]
     },
     {
       "id": "meta-story",

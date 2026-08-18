@@ -101,8 +101,9 @@ const ROSTER: JsonSchema = object({
   criteria: object({ all: { type: "array", items: CRITERION } }),
 });
 
-const CLAIM: JsonSchema = {
-  anyOf: [
+function claimSchema(lessonIds: readonly string[]): JsonSchema {
+  return {
+    anyOf: [
     // Two fact shapes rather than one optional field: strict-mode providers
     // reject schemas whose `required` omits a declared property, so the
     // choice between naming the fact and also asserting its value is a
@@ -136,17 +137,35 @@ const CLAIM: JsonSchema = {
     // No `finding`: the model names the species; the kernel derives what the
     // rules say about advising it — the pack as readable knowledge (IA-5).
     variant("eligibility", { entityId: STRING }),
+    // The lesson ids are an enum from the pack's catalogue, exactly as fact
+    // ids are an enum from the registry: a fabricated lesson is made
+    // unrepresentable rather than merely denied. A pack that teaches nothing
+    // offers no explanation shape at all — an empty enum is a schema some
+    // providers reject wholesale, and there is nothing it would admit.
+    ...(lessonIds.length === 0
+      ? []
+      : [variant("explanation", { blockId: { type: "string", enum: [...lessonIds] } })]),
     variant("recommendation", { entityId: STRING }),
     // Kept representable on purpose — see the module note on vacuous safety.
     variant("action", { tool: STRING, entityId: STRING }),
-  ],
-};
+    ],
+  };
+}
 
-/** The whole answer, as the decoder will insist on reading it. */
-export const ANSWER_SCHEMA: JsonSchema = object({
-  rosters: { type: "array", items: ROSTER },
-  claims: { type: "array", items: CLAIM },
-});
+/**
+ * The whole answer, as the decoder will insist on reading it.
+ *
+ * A function of the pack because the grammar tracks *two* closed worlds now:
+ * the registry's fact ids (compiled in) and the pack's lesson catalogue
+ * (versioned data). The schema a provider enforces is always the one the
+ * governing pack defines.
+ */
+export function answerSchema(pack: { curriculum: ReadonlyArray<{ id: string }> }): JsonSchema {
+  return object({
+    rosters: { type: "array", items: ROSTER },
+    claims: { type: "array", items: claimSchema(pack.curriculum.map((entry) => entry.id)) },
+  });
+}
 
 /** Named for the provider's schema slot; part of the recorded request. */
 export const ANSWER_SCHEMA_NAME = "certified_answer";

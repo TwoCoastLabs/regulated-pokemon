@@ -38,7 +38,7 @@ export const BANK_SCHEMA_VERSION = 1;
  * this list is a kind the kernel cannot compile, so an entry expecting it
  * could never pass.
  */
-export const CLAIM_KINDS = ["fact", "count", "membership", "ranking", "matchup", "eligibility", "recommendation", "action"] as const;
+export const CLAIM_KINDS = ["fact", "count", "membership", "ranking", "matchup", "eligibility", "explanation", "recommendation", "action"] as const;
 export type ClaimKind = (typeof CLAIM_KINDS)[number];
 
 /** One question, and the disposition it was authored to have. */
@@ -53,6 +53,13 @@ export interface BankEntry {
   /** For `answerable`/`should-refuse`: the claim kinds a good answer asserts —
    * the oracle, never a script. Absent for the unanswerable dispositions. */
   expectClaimKinds?: readonly ClaimKind[];
+  /**
+   * For entries expecting an `explanation`: the catalogue lessons any of which
+   * answers this question — the routing oracle. Scoring reads it as routing
+   * accuracy: a committed lesson outside this list is a mis-teach, the
+   * curriculum's own species of deflection.
+   */
+  expectBlockIds?: readonly string[];
   /**
    * Frozen paraphrases of the same intent — terse, verbose, misspelled — beside
    * the canonical `intent`. Fixtures, authored once and reviewed, never varied
@@ -138,6 +145,21 @@ export function loadBank(input: unknown): QuestionBank {
         if (!isClaimKind(kind)) {
           fail("bank-claim-kind-unknown", `entry "${label}" expects "${String(kind)}", which is not a claim kind`, String(kind));
         }
+      }
+    }
+
+    const expectsLesson = (entry.expectClaimKinds ?? []).includes("explanation");
+    if (expectsLesson && (!Array.isArray(entry.expectBlockIds) || entry.expectBlockIds.length === 0)) {
+      // An explanation entry with no routing oracle would score any lesson as
+      // a pass — the mis-teach would be unmeasurable by construction.
+      fail("bank-lessons-missing", `entry "${label}" expects an explanation and names no acceptable lesson`, label);
+    }
+    if (!expectsLesson && entry.expectBlockIds !== undefined) {
+      fail("bank-lessons-unexpected", `entry "${label}" names lessons and does not expect an explanation`, label);
+    }
+    for (const blockId of entry.expectBlockIds ?? []) {
+      if (typeof blockId !== "string" || blockId.trim().length === 0) {
+        fail("bank-lesson-empty", `entry "${label}" carries an empty lesson id`, label);
       }
     }
 

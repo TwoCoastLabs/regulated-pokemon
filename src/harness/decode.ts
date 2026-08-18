@@ -236,6 +236,11 @@ function asClaim(value: unknown): Claim | null {
         },
       };
     }
+    case "explanation":
+      // The grammar already narrows blockId to the catalogue; the decoder only
+      // reads the shape. Whether the lesson exists is the verifier's question,
+      // so a hand-written id still decodes and then refuses by name.
+      return isString(value.blockId) ? { kind: "explanation", blockId: value.blockId } : null;
     case "recommendation":
       return isString(value.entityId) ? { kind: "recommendation", entityId: value.entityId } : null;
     case "action":

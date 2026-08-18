@@ -127,6 +127,8 @@ function describeClaim(claim: Claim): string {
       return `matchup      ${claim.subject.kind === "species" ? claim.subject.entityId : claim.subject.typeId} ${claim.direction} ${claim.members?.join(", ") ?? "(derived by the kernel)"}`;
     case "eligibility":
       return `eligibility  ${claim.entityId} ${claim.finding === undefined ? "(derived by the kernel)" : claim.finding.eligible ? "eligible" : `requires badge ${claim.finding.minimumBadgeLevel}, holds ${claim.finding.badgeLevel}`}`;
+    case "explanation":
+      return `lesson       ${claim.blockId} (reviewed text, shown verbatim)`;
     case "recommendation":
       return `advice       ${claim.entityId}`;
     case "action":

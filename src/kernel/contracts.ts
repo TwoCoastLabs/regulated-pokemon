@@ -273,6 +273,17 @@ export type Claim =
       };
     }
   /**
+   * A routed lesson from the pack's explanation catalogue.
+   *
+   * The one claim kind that asserts nothing about the snapshot: it names a
+   * reviewed, digest-pinned text the answer will show verbatim. The model
+   * routes — "this question is asking about badges" — and can never edit a
+   * word; a wrong route shows a reviewed lesson on the wrong subject, which
+   * is a deflection and never a fabrication. A blockId the catalogue does not
+   * contain is refused by name, exactly as a fabricated species is.
+   */
+  | { kind: "explanation"; blockId: string }
+  /**
    * A different speech act from `ranking`: "the fastest is Electrode" is a
    * claim about a set, "go and catch Mewtwo" is advice. IA-5 gates the second,
    * so it needs something of its own to gate.
@@ -337,7 +348,9 @@ export interface Exhibit {
 /** The certified answer plan: what may be committed, and nothing else. */
 export interface AnswerManifest {
   transactionId: string;
-  scopeGrantId: string;
+  /** Absent exactly for a grantless answer — explanation claims only, which
+   * are the same reviewed text for every trainer (IA-1 gates the personal). */
+  scopeGrantId?: string;
   snapshotId: string;
   /** The Accord pack version whose rules governed this answer (IA-5, IA-6). */
   packId: string;

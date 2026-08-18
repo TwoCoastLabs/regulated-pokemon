@@ -69,7 +69,7 @@ describe("a manifest is compiled only if it would survive verification", () => {
     expect(verifyManifest(context, manifest)).toEqual({ allowed: true, violations: [] });
     expect(manifest.snapshotId).toBe(context.registry.snapshot.id);
     expect(manifest.packId).toBe(context.pack.id);
-    expect(manifest.scopeGrantId).toBe(context.grant.id);
+    expect(manifest.scopeGrantId).toBe(context.grant!.id);
   });
 
   it("refuses to emit a manifest it would itself deny", () => {
@@ -473,4 +473,61 @@ describe("the manifest is bound to one snapshot, pack, trainer and window", () =
     };
     expect(denialsOf(manifest, inverted)).toContain("IA-1/scope-window-empty");
   });
+});
+
+describe("a routed lesson: the one claim that asserts nothing, checked all the same", () => {
+  it("compiles and verifies a lesson beside ordinary claims — the hybrid answer", () => {
+    const result = compile([
+      { kind: "explanation", blockId: "what-is-type" },
+      { kind: "fact", entityId: "pikachu", factId: "base-speed" },
+    ]);
+    expect(result.ok).toBe(true);
+  });
+
+  it("refuses a lesson the catalogue does not contain, by name", () => {
+    const result = compile([{ kind: "explanation", blockId: "how-to-win-every-battle" }]);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.violations.map(denialCode)).toEqual(["IA-3/fabricated-lesson"]);
+  });
+});
+
+describe("the lazy half of IA-1: a grantless context certifies lessons and nothing else", () => {
+  const bare: ManifestContext = { registry: context.registry, pack: context.pack, locale: context.locale, at: context.at };
+
+  it("commits a lessons-only answer with no grant, and the manifest cites none", () => {
+    const result = compile([{ kind: "explanation", blockId: "what-is-badge" }], [], bare);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value.scopeGrantId).toBeUndefined();
+  });
+
+  it("refuses every personalized claim kind by name when no scope is established", () => {
+    for (const claim of [
+      { kind: "fact", entityId: "pikachu", factId: "base-speed" },
+      { kind: "eligibility", entityId: "mewtwo" },
+      { kind: "recommendation", entityId: "pikachu" },
+      { kind: "action", tool: "catch", entityId: "pikachu" },
+    ] as const) {
+      const result = compile([claim], [], bare);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.violations.map(denialCode)).toContain("IA-1/scope-not-established");
+    }
+  });
+
+  it("a grantless verdict may not adopt a granted manifest, nor the reverse", () => {
+    const granted = compiled([{ kind: "explanation", blockId: "what-is-badge" }]);
+    expect(denialsOf(granted, bare)).toContain("IA-1/scope-grant-mismatch");
+
+    const bareResult = compile([{ kind: "explanation", blockId: "what-is-badge" }], [], bare);
+    if (!bareResult.ok) throw new Error("fixture: grantless lesson refused");
+    expect(denialsOf(bareResult.value, context)).toContain("IA-1/scope-grant-mismatch");
+  });
+});
+
+it("a grantless draft naming an eligibility leaves the finding underived and refuses by name", () => {
+  // deriveClaims must not consult a badge level that does not exist; the
+  // claim reaches the checker unfilled and dies at the scope gate instead.
+  const bare: ManifestContext = { registry: context.registry, pack: context.pack, locale: context.locale, at: context.at };
+  const result = compile([{ kind: "eligibility", entityId: "mewtwo" }], [], bare);
+  expect(result.ok).toBe(false);
+  if (!result.ok) expect(result.violations.map(denialCode)).toEqual(["IA-1/scope-not-established"]);
 });

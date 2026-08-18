@@ -89,6 +89,14 @@ export interface ActionRequest extends Omit<ActionRecord, "grant"> {
  * one.
  */
 export function authorizeAction(context: ManifestContext, request: ActionRequest): Resolution<ActionGrant> {
+  // An act is always personal (IA-7 binds it to the trainer's confirmation),
+  // so a grantless context — legal for a lesson — can authorize nothing.
+  if (context.grant === undefined) {
+    return {
+      ok: false,
+      violations: [violation("IA-1", "scope-not-established", "an act cannot be authorized with no scope established")],
+    };
+  }
   const grant: ActionGrant = {
     transactionId: request.manifest.transactionId,
     confirmationEventId: request.confirmation.id,
@@ -110,6 +118,13 @@ export function authorizeAction(context: ManifestContext, request: ActionRequest
  * entry points, from a replay, or from a mutated fixture is read identically.
  */
 export function verifyAction(context: ManifestContext, record: ActionRecord): Verdict {
+  // Same rule as authorization: no scope, no act — judged before the chain,
+  // because every later check compares against the scope this context lacks.
+  if (context.grant === undefined) {
+    return verdictOf([
+      violation("IA-1", "scope-not-established", "an act cannot be verified with no scope established"),
+    ]);
+  }
   const rendered = verifyRender(context, record.manifest, record.artifact, record.affidavit);
 
   return verdictOf([
@@ -190,10 +205,10 @@ function checkGrant(context: ManifestContext, record: ActionRecord): Violation[]
       }),
     );
   }
-  if (grant.scopeGrantId !== context.grant.id) {
+  if (grant.scopeGrantId !== context.grant?.id) {
     violations.push(
       violation("IA-7", "action-scope-mismatch", "the act was authorised under another trainer's scope", {
-        expected: context.grant.id,
+        expected: context.grant?.id ?? "no scope grant",
         actual: grant.scopeGrantId || "no scope grant",
       }),
     );
