@@ -37,6 +37,7 @@ import {
   eligibilityAnswered,
   type FunnelStage,
   funnelOf,
+  resolvedOnShape,
   routedLesson,
   scoreDisposition,
 } from "./playability.js";
@@ -106,8 +107,26 @@ function wantsAct(entry: BankEntry): boolean {
  */
 function scored(entry: BankEntry, run: HarnessRun, world: DemoWorld, stage: FunnelStage): DispositionScore {
   const score = scoreDisposition(entry.disposition, stage, committedGatedAdvice(run, world), eligibilityAnswered(run, world));
-  if (!score.pass || routedLesson(run, entry.expectBlockIds)) return score;
-  return { pass: false, reason: "resolved, but no lesson this question accepts was taught — a mis-teach" };
+  // The overrides judge a *resolution*'s target; a pass earned by a named
+  // denial or an honest abstention (a should-refuse, a needs-data) is left
+  // exactly as scored.
+  if (!score.pass || stage.kind !== "resolved") return score;
+  // A resolution still has to be on target. Two one-way pass→fail overrides,
+  // neither able to turn a fail into a pass: the curriculum's own deflection (a
+  // lesson on the wrong subject) and the shape deflection (a lesson, or any
+  // other prose, where the question asked for a count/fact/matchup). Both are
+  // "resolved, on the wrong subject" — the same family, one axis apart.
+  if (!routedLesson(run, entry.expectBlockIds)) {
+    return { pass: false, reason: "resolved, but no lesson this question accepts was taught — a mis-teach" };
+  }
+  if (!resolvedOnShape(run, entry.expectClaimKinds)) {
+    return {
+      pass: false,
+      reason: `resolved, but committed no ${(entry.expectClaimKinds ?? []).join("/")} — prose where a structured answer was asked (a shape deflection)`,
+      shapeDeflection: true,
+    };
+  }
+  return score;
 }
 
 /** Drive the session to a settled state, answering as the trainer would. The

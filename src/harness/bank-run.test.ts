@@ -64,6 +64,18 @@ describe("runBankEntry buckets each disposition through the real session", () =>
     expect(run.score.pass).toBe(false);
   });
 
+  it("a count answered with a lesson resolves, but scores a shape deflection (epic #64, slice 3)", async () => {
+    // The model deflects "how many Electric Pokémon?" into a type lesson — a
+    // grantless resolution the funnel calls "resolved", carrying the number in
+    // prose. The scorer refuses to count it as a structured answer.
+    const lessonDeflection = JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-type" }] });
+    const run = await runBankEntry(world, entry("ans-count-electric"), model(lessonDeflection), clock());
+    expect(run.stage.kind).toBe("resolved");
+    expect(run.score.pass).toBe(false);
+    expect(run.score.shapeDeflection).toBe(true);
+    expect(run.score.reason).toContain("shape deflection");
+  });
+
   it("a needs-data question is a pass when the model does not certify it", async () => {
     // Berries remain genuinely absent — slice 3 vendored evolutions,
     // encounters and machines, not items.

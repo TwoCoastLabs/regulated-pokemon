@@ -20,6 +20,7 @@ import {
   type FunnelStage,
   type FunnelStageKind,
   funnelOf,
+  resolvedOnShape,
   routedLesson,
   scoreDisposition,
 } from "./playability.js";
@@ -46,6 +47,36 @@ function withOutcome(status: RunStatus, outcome: TransactionOutcome, extra: Part
 }
 
 const SCOPE = { version: "red-blue", region: "kanto", badgeLevel: 8 } as const;
+
+/** A resolved run committing claims of the given kinds — what the shape check
+ * reads. The kinds are all the scorer looks at, so the rest is cast away. */
+function resolvedWith(kinds: readonly string[]): HarnessRun {
+  const transaction = {
+    outcome: { status: "answered" },
+    manifest: { claims: kinds.map((kind) => ({ kind })) },
+  } as unknown as NonNullable<HarnessRun["transaction"]>;
+  return run("answered", { transaction });
+}
+
+describe("resolvedOnShape — a resolution has to be the shape that was asked", () => {
+  it("is vacuously true when the question pins no shape", () => {
+    expect(resolvedOnShape(resolvedWith(["explanation"]), undefined)).toBe(true);
+    expect(resolvedOnShape(resolvedWith(["explanation"]), [])).toBe(true);
+  });
+
+  it("passes when a committed claim is of an expected kind, even alongside a lesson", () => {
+    expect(resolvedOnShape(resolvedWith(["count"]), ["count"])).toBe(true);
+    expect(resolvedOnShape(resolvedWith(["explanation", "count"]), ["count"])).toBe(true);
+  });
+
+  it("fails a lesson where a count was asked — the shape deflection", () => {
+    expect(resolvedOnShape(resolvedWith(["explanation"]), ["count"])).toBe(false);
+  });
+
+  it("fails when nothing resolved — there is no shape to read", () => {
+    expect(resolvedOnShape(run("unresolved"), ["count"])).toBe(false);
+  });
+});
 
 describe("funnelOf reads where a run landed, from the record alone", () => {
   it("a question that answered is resolved", () => {

@@ -175,6 +175,25 @@ export function routedLesson(run: HarnessRun, acceptable: readonly string[] | un
   return manifest.claims.some((claim) => claim.kind === "explanation" && acceptable.includes(claim.blockId));
 }
 
+/**
+ * Whether a resolved run answered in the shape the question asked for: it
+ * committed at least one claim of an expected kind (epic #64, slice 3).
+ *
+ * `undefined`/empty expected kinds means the question pins no shape and the
+ * check is vacuously true. A resolution that committed only *other* kinds — a
+ * `what-is-type` lesson where a `count` was asked — is off-shape: the count/
+ * shape deflection this slice exists to measure. Read from the record like
+ * {@link routedLesson}; the funnel bucket only ever says "resolved".
+ */
+export function resolvedOnShape(run: HarnessRun, expected: readonly string[] | undefined): boolean {
+  if (expected === undefined || expected.length === 0) return true;
+  const transaction = run.transaction;
+  if (transaction === undefined) return false;
+  const { outcome, manifest } = transaction;
+  if ((outcome.status !== "answered" && outcome.status !== "acted") || manifest === undefined) return false;
+  return manifest.claims.some((claim) => expected.includes(claim.kind));
+}
+
 export function committedGatedAdvice(
   run: HarnessRun,
   world: { registry: CertifiedRegistry; pack: AccordPack },
@@ -228,6 +247,15 @@ export interface DispositionScore {
    * the enforcement side, never absorb it here.
    */
   enforcementEscalation?: boolean;
+  /**
+   * Set when an answerable question *resolved* but with the wrong shape — a
+   * lesson (or any other prose) where the question asked for a count, fact or
+   * matchup (epic #64, slice 3). A usefulness miss, counted apart so the
+   * coverage of *structured* answers is not inflated by curriculum deflections:
+   * the same "resolved, on the wrong subject" family as a mis-teach, one axis
+   * over.
+   */
+  shapeDeflection?: boolean;
 }
 
 /** True when the stage is any honest refusal to certify — the passing shape
