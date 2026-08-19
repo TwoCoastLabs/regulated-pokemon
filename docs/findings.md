@@ -1222,6 +1222,46 @@ the entry that exposed it.
 
 ---
 
+### Iteration 11 — the foundational curriculum, audited: one lesson was doing six jobs
+
+Dogfooding surfaced a repeat: two different newcomer questions ("what's it
+about?", "what is a Pokémon?") returned the *same* game-overview lesson. A probe
+of ten foundational questions showed why — **`what-is-game` had become a
+catch-all deflection sink**:
+
+| asked | routed to (before) |
+|---|---|
+| What is a Pokémon? | `what-is-game` |
+| What is a Gym Leader? | `what-is-game` |
+| What is evolution? | `what-is-game` |
+| What is a TM? | `what-is-game` |
+| What is the Pokémon League? | `what-is-game` |
+| What are stats? | `what-is-type` |
+
+The catalogue taught *processes* (how-to-play, catch, leveling) and two nouns
+(badge, type), but not the core **concept-nouns a beginner names**. So eight
+reviewed, digest-pinned lessons were added — `what-is-pokemon`, `what-is-move`,
+`what-is-evolution`, `what-is-gym-leader`, `what-is-league`, `what-are-stats`,
+`what-is-poke-ball`, `what-is-tm-hm` — taking the catalogue from 10 to 18, each
+with a bank entry and a mis-teach oracle. (All lesson text **flagged for author
+review**.) Re-probe: every one of the eight now routes to its *own* lesson, and
+"what's it about?" (→ `what-is-game`) and "what is a Pokémon?" (→
+`what-is-pokemon`) are finally distinct answers.
+
+**The residual is honest, and it is the eager model, not the content.**
+Out-of-scope questions — "who is Professor Oak?", "what's the story?" — still
+deflect to the nearest lesson rather than abstaining. Prompt guidance nudged but
+did not fix it, and a *concrete* example backfired (naming "Gym Leader" made the
+model route "Professor Oak" to `what-is-gym-leader`). This is finding #7's eager
+model, and the doctrine holds: deflection is **measured, not suppressed** — the
+bank tags these `needs-data`, so a lesson committed for them scores a fail, and
+§19 counts them. The guarantee is intact regardless: a deflected lesson is
+reviewed, certified text on the wrong subject, never a fabrication. Provenance
+here is `session:trace`, not a filed artifact; §19 prices the routing accuracy
+across all 18 lessons.
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's
