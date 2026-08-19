@@ -1,5 +1,5 @@
 {
-  "packVersion": 6,
+  "packVersion": 7,
   "id": "indigo-accord-v1",
   "presentation": {
     "locales": [
@@ -1001,6 +1001,38 @@
           }
         ]
       }
+    }
+  ],
+  "gameRules": [
+    {
+      "id": "party-size",
+      "value": 6,
+      "label": "Pokémon on your team at once"
+    },
+    {
+      "id": "moves-per-pokemon",
+      "value": 4,
+      "label": "moves a Pokémon can know at once"
+    },
+    {
+      "id": "badge-count",
+      "value": 8,
+      "label": "Gym Badges to earn in Kanto"
+    },
+    {
+      "id": "starter-count",
+      "value": 3,
+      "label": "starter Pokémon to choose from"
+    },
+    {
+      "id": "pc-box-count",
+      "value": 12,
+      "label": "storage boxes in the PC"
+    },
+    {
+      "id": "pc-box-capacity",
+      "value": 20,
+      "label": "Pokémon each PC box holds"
     }
   ]
 }

@@ -518,7 +518,11 @@ async function teachOrDiscover(
     return { state: spent, result: step.decode.reason === NO_CLAIMS_REASON ? "off-domain" : "unusable", claims: [] };
   }
   const draft = step.decode.draft;
-  if (draft.claims.every((claim) => claim.kind === "explanation")) {
+  // Commit grantless when nothing in the draft depends on scope — a lesson, a
+  // game-rule constant, the same answer for every trainer (epic #64). Derived
+  // from the one dependency table, so this never drifts from what the kernel's
+  // own scope gate will allow grantless.
+  if (requiredDimensionsFor(draft.claims).length === 0) {
     return { state: commit(spent, deps, { transactionId, establishedAt, draft }), result: "taught", claims: draft.claims };
   }
   return { state: spent, result: "needs-scope", claims: draft.claims };

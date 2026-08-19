@@ -228,6 +228,17 @@ export type Claim =
    * claim expressed it; now one does.
    */
   | { kind: "typeCount"; reported?: number }
+  /**
+   * A certified game-rule constant — "how many Pokémon on a team?", "how many
+   * moves can one know?" (epic #64, game-rules slice). The number is a fixed
+   * rule of Red and Blue, not species data, so it is looked up from the pack's
+   * reviewed `gameRules` table rather than derived from the snapshot. Like a
+   * count, `reported` is optional and the kernel fills and verifies it against
+   * the pack's value; a forged number is refused. Trainer-independent — the
+   * rule is the same for everyone — so it commits without a scope grant, like a
+   * lesson.
+   */
+  | { kind: "gameRule"; ruleId: string; reported?: number }
   | { kind: "membership"; rosterId: string; entityId: string; asserted: boolean }
   | {
       kind: "ranking";

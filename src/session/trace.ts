@@ -166,6 +166,8 @@ function describeClaim(claim: Claim): string {
       return `count of ${claim.rosterId}`;
     case "typeCount":
       return "count of types";
+    case "gameRule":
+      return `game rule ${claim.ruleId}`;
     case "membership":
       return `membership ${claim.entityId} in ${claim.rosterId}`;
     case "ranking":

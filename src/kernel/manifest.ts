@@ -32,7 +32,7 @@ import type {
 } from "./contracts.js";
 import { deriveMatchup, matchupSubjectId } from "./chart.js";
 import { deriveEligibility, describeFinding, sameFinding } from "./eligibility.js";
-import { type AccordPack, actionRule, approvesLocale, blockFor, curriculumRule, type ExhibitRule, restrictionsFor } from "./pack.js";
+import { type AccordPack, actionRule, approvesLocale, blockFor, curriculumRule, type ExhibitRule, gameRule, restrictionsFor } from "./pack.js";
 import { type CertifiedRegistry, formatFactValue, sameFactValue } from "./registry.js";
 import { verifyRoster } from "./roster.js";
 import { requiredDimensionsFor } from "./scope-deps.js";
@@ -109,6 +109,10 @@ function deriveClaims(context: ManifestContext, claims: readonly Claim[], roster
     }
     if (claim.kind === "typeCount" && claim.reported === undefined) {
       return { ...claim, reported: context.registry.typeChart.types.length };
+    }
+    if (claim.kind === "gameRule" && claim.reported === undefined) {
+      const rule = gameRule(context.pack, claim.ruleId);
+      return rule === undefined ? claim : { ...claim, reported: rule.value };
     }
     if (claim.kind === "ranking" && claim.selectedEntityId === undefined) {
       const set = roster(claim.rosterId);
@@ -363,13 +367,14 @@ function missingRoster(rosterId: string): Violation {
 
 function checkClaim(context: ManifestContext, manifest: AnswerManifest, claim: Claim): Violation[] {
   // The lazy half of IA-1: material scope is demanded exactly when a claim
-  // depends on it. A lesson is the same reviewed text for every trainer;
-  // everything else answers *someone*, and with no scope established there
-  // is no someone to answer.
-  if (context.grant === undefined && claim.kind !== "explanation") {
+  // depends on it, read from the one dependency table (epic #64). A claim with
+  // no scope dependency — a lesson, a game-rule constant — is the same answer
+  // for every trainer and commits grantless; everything else answers *someone*,
+  // and with no scope established there is no someone to answer.
+  if (context.grant === undefined && requiredDimensionsFor([claim]).length > 0) {
     return [
       violation("IA-1", "scope-not-established", `a ${claim.kind} claim is personalized and no scope is established`, {
-        expected: "an established scope grant, or explanation claims only",
+        expected: "an established scope grant, or trainer-independent claims only",
         actual: claim.kind,
       }),
     ];
@@ -381,6 +386,8 @@ function checkClaim(context: ManifestContext, manifest: AnswerManifest, claim: C
       return checkCount(manifest, claim);
     case "typeCount":
       return checkTypeCount(context, claim);
+    case "gameRule":
+      return checkGameRule(context, claim);
     case "membership":
       return checkMembership(context, manifest, claim);
     case "ranking":
@@ -444,6 +451,32 @@ function checkTypeCount(context: ManifestContext, claim: Extract<Claim, { kind: 
   return [
     violation("IA-4", "type-count-mismatch", `the number of types this generation certifies is not what this answer says`, {
       expected: String(actual),
+      actual: String(claim.reported),
+    }),
+  ];
+}
+
+/**
+ * A game-rule constant is looked up from the pack's reviewed table — a closed
+ * set, so an unnamed rule is a fabrication (IA-3), and a stated number that
+ * disagrees with the pack's value is a different claim, refused by name (IA-4).
+ * The pack's own value is trusted the way its badge thresholds are: reviewed
+ * data, correct by review, and a claim that contradicts it cannot commit.
+ */
+function checkGameRule(context: ManifestContext, claim: Extract<Claim, { kind: "gameRule" }>): Violation[] {
+  const rule = gameRule(context.pack, claim.ruleId);
+  if (rule === undefined) {
+    return [
+      violation("IA-3", "fabricated-game-rule", `no game rule "${claim.ruleId}" exists in pack ${context.pack.id}`, {
+        expected: context.pack.gameRules.map((entry) => entry.id).join(", ") || "no game rules",
+        actual: claim.ruleId,
+      }),
+    ];
+  }
+  if (claim.reported === undefined || claim.reported === rule.value) return [];
+  return [
+    violation("IA-4", "game-rule-mismatch", `the rule "${rule.id}" is not the number this answer says`, {
+      expected: String(rule.value),
       actual: String(claim.reported),
     }),
   ];

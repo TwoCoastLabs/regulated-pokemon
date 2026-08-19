@@ -101,7 +101,7 @@ const ROSTER: JsonSchema = object({
   criteria: object({ all: { type: "array", items: CRITERION } }),
 });
 
-function claimSchema(lessonIds: readonly string[]): JsonSchema {
+function claimSchema(lessonIds: readonly string[], ruleIds: readonly string[]): JsonSchema {
   return {
     anyOf: [
     // Two fact shapes rather than one optional field: strict-mode providers
@@ -120,6 +120,11 @@ function claimSchema(lessonIds: readonly string[]): JsonSchema {
     // certified type universe. Under enforced decoding the model cannot state a
     // number, so there is nothing here to get wrong.
     variant("typeCount"),
+    // A game-rule constant names a rule from the pack's closed table — an enum,
+    // like the lesson ids, so a fabricated rule is unrepresentable. The kernel
+    // fills the number, so none is stated here. Omitted whole when the pack
+    // declares no rules (an empty enum some providers reject).
+    ...(ruleIds.length === 0 ? [] : [variant("gameRule", { ruleId: { type: "string", enum: [...ruleIds] } })]),
     variant("membership", { rosterId: STRING, entityId: STRING, asserted: BOOLEAN }),
     // No `selectedEntityId`: the model declares the set, the basis and the
     // direction, and the kernel picks the extreme. Like the count, a wrong
@@ -164,10 +169,19 @@ function claimSchema(lessonIds: readonly string[]): JsonSchema {
  * (versioned data). The schema a provider enforces is always the one the
  * governing pack defines.
  */
-export function answerSchema(pack: { curriculum: ReadonlyArray<{ id: string }> }): JsonSchema {
+export function answerSchema(pack: {
+  curriculum: ReadonlyArray<{ id: string }>;
+  gameRules: ReadonlyArray<{ id: string }>;
+}): JsonSchema {
   return object({
     rosters: { type: "array", items: ROSTER },
-    claims: { type: "array", items: claimSchema(pack.curriculum.map((entry) => entry.id)) },
+    claims: {
+      type: "array",
+      items: claimSchema(
+        pack.curriculum.map((entry) => entry.id),
+        pack.gameRules.map((entry) => entry.id),
+      ),
+    },
   });
 }
 

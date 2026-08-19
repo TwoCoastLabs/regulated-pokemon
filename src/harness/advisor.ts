@@ -90,6 +90,7 @@ function answerPrompt(
   asks: readonly string[],
   tools: readonly string[],
   lessons: readonly string[],
+  rules: readonly { id: string; label: string }[],
   reference: string | undefined,
 ): string {
   return [
@@ -151,6 +152,11 @@ function answerPrompt(
     '  {"kind": "fact", "entityId": "<id>", "factId": "<fact-id>"}  — the system reads the certified value; you may add "asserted" only when you are certain of the exact certified form, and a wrong one refuses the whole answer',
     '  {"kind": "count", "rosterId": "<id>"}  — defines a set to be counted; the system counts it, so state no number',
     '  {"kind": "typeCount"}  — how many types exist in this generation; the system counts the certified type chart',
+    ...(rules.length === 0
+      ? []
+      : [
+          '  {"kind": "gameRule", "ruleId": "<rule-id>"}  — a fixed rule of the game as a certified number (how many Pokémon on a team, how many moves one can know, and the like); the system fills the number, so state none',
+        ]),
     '  {"kind": "membership", "rosterId": "<id>", "entityId": "<id>", "asserted": <boolean>}',
     '  {"kind": "ranking", "rosterId": "<id>", "basis": "<fact-id>", "direction": "highest"|"lowest"}  — defines a set and an ordering; the system names the winner, so name none',
     '  {"kind": "matchup", "subject": {"kind": "species", "entityId": "<id>"} | {"kind": "type", "typeId": "<type>"}, "direction": "weak-to"|"resists"|"immune-to"|"strong-against"}  — type effectiveness; the system reads the chart and lists the types, so list none. A species can be weak-to, resist or be immune-to; only a type can be strong-against.',
@@ -164,6 +170,9 @@ function answerPrompt(
     '  {"kind": "action", "tool": "<tool-id>", "entityId": "<species-id>"}  — an act you propose to perform. It is shown to the trainer and executes only on their confirmation; claim one only when the trainer asked for it.',
     "",
     ...(lessons.length === 0 ? [] : [`A <lesson-id> must be one of: ${lessons.join(", ")}. No other lesson exists.`]),
+    ...(rules.length === 0
+      ? []
+      : [`A <rule-id> must be one of, each with what it counts: ${rules.map((rule) => `${rule.id} (${rule.label})`).join(", ")}. No other rule exists.`]),
     `A <tool-id> must be one of: ${tools.join(", ")}. No other tool exists.`,
     "",
     "A <fact-id> must be one of these certified ids; no other resolves.",
@@ -305,6 +314,7 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
       trainerText(input.transcript),
       context.pack.actions.map((action) => action.id),
       context.pack.curriculum.map((lesson) => lesson.id),
+      context.pack.gameRules.map((rule) => ({ id: rule.id, label: rule.label })),
       reference,
     ),
     hint: { scenarioId, ...(context.grant === undefined ? {} : { scope: context.grant.scope }) },

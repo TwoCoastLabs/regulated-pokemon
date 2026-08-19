@@ -30,9 +30,11 @@ import type { Claim, ScopeDimension } from "./contracts.js";
  * when a claim kind is added, so a new kind cannot silently depend on nothing.
  */
 export const SCOPE_DEPENDENCIES: Record<Claim["kind"], readonly ScopeDimension[]> = {
-  // A lesson is the same reviewed text for every trainer — the lazy half of
-  // IA-1 that lets it be taught before any scope is established.
+  // A lesson is the same reviewed text for every trainer, and a game-rule
+  // constant is the same certified number for every trainer — the lazy half of
+  // IA-1 that lets both commit before any scope is established.
   explanation: [],
+  gameRule: [],
   // Facts, sets and matchups are certified within a version group; nothing
   // else about the trainer changes what the snapshot says.
   fact: ["version"],

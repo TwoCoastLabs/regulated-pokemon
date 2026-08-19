@@ -84,6 +84,8 @@ describe("decodeAnswer", () => {
         { kind: "fact", entityId: "e", factId: "f", asserted: { kind: "absent" } },
         { kind: "count", rosterId: "r", reported: 3 },
         { kind: "typeCount" },
+        { kind: "gameRule", ruleId: "party-size" },
+        { kind: "gameRule", ruleId: "party-size", reported: 6 },
         { kind: "membership", rosterId: "r", entityId: "e", asserted: false },
         { kind: "ranking", rosterId: "r", basis: "base-speed", direction: "lowest", selectedEntityId: "e" },
         { kind: "recommendation", entityId: "e" },
@@ -96,7 +98,7 @@ describe("decodeAnswer", () => {
     expect(decoded.ok).toBe(true);
     if (decoded.ok) {
       expect(decoded.draft.transactionId).toBe("txn-1");
-      expect(decoded.draft.claims).toHaveLength(13);
+      expect(decoded.draft.claims).toHaveLength(15);
       expect(decoded.draft.rosters).toHaveLength(1);
     }
   });
@@ -110,6 +112,9 @@ describe("decodeAnswer", () => {
     ["an explanation with no blockId", { kind: "explanation" }],
     ["an explanation with a non-string blockId", { kind: "explanation", blockId: 7 }],
     ["a typeCount with a non-numeric total", { kind: "typeCount", reported: "many" }],
+    ["a gameRule with no ruleId", { kind: "gameRule" }],
+    ["a gameRule with a non-numeric total", { kind: "gameRule", ruleId: "party-size", reported: "six" }],
+    ["a ranking with a non-string winner", { kind: "ranking", rosterId: "r", basis: "base-speed", direction: "highest", selectedEntityId: 7 }],
   ])("refuses %s", (_label, claim) => {
     const decoded = decodeAnswer(JSON.stringify({ rosters: [], claims: [claim] }), context, "txn-1");
     expect(decoded.ok).toBe(false);

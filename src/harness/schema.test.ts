@@ -49,7 +49,7 @@ describe("the answer grammar tracks the kernel, not a copy of it", () => {
 
   it("offers every claim kind the decoder accepts, so the grammar narrows nothing", () => {
     expect(new Set(claimKinds)).toEqual(
-      new Set(["fact", "count", "typeCount", "membership", "ranking", "matchup", "eligibility", "explanation", "recommendation", "action"]),
+      new Set(["fact", "count", "typeCount", "gameRule", "membership", "ranking", "matchup", "eligibility", "explanation", "recommendation", "action"]),
     );
   });
 
@@ -63,8 +63,9 @@ describe("the answer grammar tracks the kernel, not a copy of it", () => {
   it("offers no explanation shape at all for a pack that teaches nothing", () => {
     // An empty enum is a schema some providers reject wholesale; the variant
     // vanishes with the catalogue instead.
-    const bare = answerSchema({ curriculum: [] }) as { properties: Record<string, { items: unknown }> };
+    const bare = answerSchema({ curriculum: [], gameRules: [] }) as { properties: Record<string, { items: unknown }> };
     expect(kindsOf(bare.properties.claims?.items)).not.toContain("explanation");
+    expect(kindsOf(bare.properties.claims?.items)).not.toContain("gameRule");
   });
 
   it("keeps a forbidden act representable — a grammar that cannot express one makes the gate vacuous", () => {
@@ -113,6 +114,7 @@ describe("anything the grammar admits, the decoder reads", () => {
       { kind: "fact", entityId: "surf", factId: "machine" },
       { kind: "count", rosterId: "electric", reported: 9 },
       { kind: "typeCount" },
+      { kind: "gameRule", ruleId: "party-size" },
       { kind: "membership", rosterId: "electric", entityId: "pikachu", asserted: true },
       { kind: "ranking", rosterId: "electric", basis: "base-speed", direction: "highest", selectedEntityId: "electrode" },
       { kind: "matchup", subject: { kind: "species", entityId: "gengar" }, direction: "weak-to" },

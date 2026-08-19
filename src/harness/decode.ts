@@ -174,6 +174,15 @@ function asClaim(value: unknown): Claim | null {
       if (value.reported !== undefined && !isNumber(value.reported)) return null;
       return value.reported === undefined ? { kind: "typeCount" } : { kind: "typeCount", reported: value.reported };
     }
+    case "gameRule": {
+      // Names a rule; the kernel looks up and fills the number, so `reported`
+      // is optional exactly as a count's.
+      if (!isString(value.ruleId)) return null;
+      if (value.reported !== undefined && !isNumber(value.reported)) return null;
+      return value.reported === undefined
+        ? { kind: "gameRule", ruleId: value.ruleId }
+        : { kind: "gameRule", ruleId: value.ruleId, reported: value.reported };
+    }
     case "membership":
       if (!isString(value.rosterId) || !isString(value.entityId) || !isBoolean(value.asserted)) return null;
       return { kind: "membership", rosterId: value.rosterId, entityId: value.entityId, asserted: value.asserted };

@@ -1262,6 +1262,46 @@ across all 18 lessons.
 
 ---
 
+### Iteration 12 — game-rule constants: a rule is a number, not a paragraph (epic #64)
+
+Dogfooding: "how many Pokémon can I have on my team?" returned the `how-to-play`
+lesson, whose prose contains "six" — the answer buried, not a number. Unlike
+"how many types" (derivable from the vendored chart → a clean `typeCount`),
+party size is a **rule of the game**, not species data, and PokéAPI does not
+carry it. It lived only as reviewed prose, and so did moves-per-Pokémon, badge
+count, starters.
+
+So the game's constants were **promoted from prose to structured data**: a small
+reviewed, pack-level `gameRules` table (party-size 6, moves-per-pokemon 4,
+badge-count 8, starter-count 3, PC boxes 12 × 20 — **flagged for author
+review**) read by a new `gameRule` claim. It renders through the count
+presentation ("6 Pokémon on your team at once"), and a stated number that
+disagrees with the table is refused (`IA-4/game-rule-mismatch`), a rule the pack
+never set is a fabrication (`IA-3/fabricated-game-rule`) — both crucible-proven.
+
+**A rule is the same for every trainer, so it commits grantless — like a
+lesson.** That unified something worth naming: the manifest's scope gate and the
+session's grantless-commit check both used to hardcode "explanation" as the one
+scope-free kind. Both now derive grantless-eligibility from the *one* dependency
+table (`requiredDimensionsFor([claim]).length === 0`), so a game rule is
+scope-free by the same rule a lesson is, and the two can never drift. (The first
+probe caught the drift the hard way: before the session change, a game-rule draft
+fell to the scope path, minted an empty grant, and was rightly denied
+`IA-2/scope-version-mismatch` — the kernel refusing a versionless answer.)
+
+Live probe (`session:trace`): "how many on a team?" → `party-size` (6) and "how
+many moves can a Pokémon know?" → `moves-per-pokemon` (4), each **grantless, one
+turn, no scope question**, on both models.
+
+Why it's forge-worthy, not a one-off: this is a **reviewed-reference data
+surface** — the same kind the Accord pack already is, now structured for
+constants instead of prose. A regulated domain is full of them: contribution
+caps, holding limits, notice periods. "A certified constant, read from a
+reviewed table, that a claim cannot contradict" is the general shape, and the
+type/party/badge counts are its first instances.
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's
