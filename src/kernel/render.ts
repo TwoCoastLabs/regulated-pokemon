@@ -69,6 +69,7 @@ import {
 import { formatForValue, type FormatId, formatValue } from "./format.js";
 import { type ManifestContext, verifyManifest } from "./manifest.js";
 import { approvesFormat, blockFor, copyFor, curriculumRule, type ExhibitSlotSource } from "./pack.js";
+import { describeCriteria } from "./roster.js";
 import { verdictOf, violation } from "./violation.js";
 
 /** What a governed unit is for. Drives nothing but the console and the copy. */
@@ -260,11 +261,20 @@ function unitForClaim(
         // the set (IA-4). `compileManifest` has already reconciled any stated
         // number with it and filled an omitted one, so there is one true value
         // to show, whether the model stated it or left it to be derived.
+        //
+        // The number leads and the set is its label — a count is an answer to
+        // "how many", not a row of equal certified chips. The label is the
+        // set's certified *criteria*, read plainly, never the model's internal
+        // roster id (which the trainer never chose and reads as noise).
         const roster = manifest.rosters.find((entry) => entry.id === claim.rosterId);
         const shown = roster?.cardinality ?? claim.reported ?? 0;
+        const label =
+          roster === undefined || roster.criteria.all.length === 0
+            ? "certified Pokémon"
+            : `Pokémon ${describeCriteria(roster.criteria)}`;
         const resolved = slots(
-          slot(context, locale, "set", entity(claim.rosterId), "plain-text"),
           slot(context, locale, "count", { kind: "number", value: shown }),
+          slot(context, locale, "set", entity(label), "plain-text"),
         );
         if (!resolved.ok) return resolved;
         return {

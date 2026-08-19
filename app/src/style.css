@@ -488,6 +488,19 @@ body {
   border-bottom: 1px solid var(--indigo);
 }
 
+/* A count is an answer to "how many": the cardinality is the number and reads
+   as one, and the set beside it is a plain label, not another certified chip. */
+.exhibit-page [data-unit^="count:"] [data-slot="count"] {
+  font-size: 1.5em;
+  line-height: 1;
+  border-bottom: none;
+  margin-right: 0.15ch;
+}
+.exhibit-page [data-unit^="count:"] [data-slot="set"] {
+  font-weight: 400;
+  border-bottom: none;
+}
+
 /* The renderer emits copy and slots as bare sibling spans; on a real page the
  * walker's join-with-a-space rule has no visual counterpart, so the stylesheet
  * supplies the gap. */
