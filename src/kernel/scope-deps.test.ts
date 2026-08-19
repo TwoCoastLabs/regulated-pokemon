@@ -16,6 +16,7 @@ const CLAIM: Record<Claim["kind"], Claim> = {
   explanation: { kind: "explanation", blockId: "what-is-type" },
   fact: { kind: "fact", entityId: "pikachu", factId: "base-speed" },
   count: { kind: "count", rosterId: "electric-kanto" },
+  typeCount: { kind: "typeCount" },
   membership: { kind: "membership", rosterId: "electric-kanto", entityId: "zapdos", asserted: true },
   ranking: { kind: "ranking", rosterId: "electric-kanto", basis: "base-speed", direction: "highest" },
   matchup: { kind: "matchup", subject: { kind: "species", entityId: "gengar" }, direction: "weak-to" },

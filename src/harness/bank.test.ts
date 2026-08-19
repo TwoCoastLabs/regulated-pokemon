@@ -93,6 +93,7 @@ describe("the shipped bank holds up", () => {
     const _pinned: Record<Claim["kind"], true> = {
       fact: true,
       count: true,
+      typeCount: true,
       membership: true,
       ranking: true,
       matchup: true,

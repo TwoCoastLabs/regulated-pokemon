@@ -189,6 +189,8 @@ export function describeClaim(claim: Claim): string {
       return `${claim.entityId}: ${claim.factId}${claim.asserted === undefined ? " — derived by the kernel" : ` = ${factValue(claim.asserted)}`}`;
     case "count":
       return `count(${claim.rosterId})${claim.reported === undefined ? " — derived by the kernel" : ` = ${claim.reported}`}`;
+    case "typeCount":
+      return `typeCount()${claim.reported === undefined ? " — derived by the kernel" : ` = ${claim.reported}`}`;
     case "membership":
       return `${claim.entityId} ${claim.asserted ? "∈" : "∉"} ${claim.rosterId}`;
     case "ranking":

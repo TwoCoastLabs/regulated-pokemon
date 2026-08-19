@@ -217,6 +217,17 @@ export type Claim =
    * model's memory of it.
    */
   | { kind: "count"; rosterId: string; reported?: number }
+  /**
+   * A count of the certified **type universe** — "how many types are there?"
+   * (epic #64, slice 3b). Not a roster: types are not species, so no
+   * `ClosedRoster` expresses this. The chart's closed set of types *is* the
+   * count, so like a roster count `reported` is derivable and optional — the
+   * kernel fills and verifies it against the certified chart's cardinality, and
+   * a forged number is refused. The first growth of the certified vocabulary the
+   * shape-deflection metric justified: "how many types" was a lesson because no
+   * claim expressed it; now one does.
+   */
+  | { kind: "typeCount"; reported?: number }
   | { kind: "membership"; rosterId: string; entityId: string; asserted: boolean }
   | {
       kind: "ranking";

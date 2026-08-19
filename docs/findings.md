@@ -1189,6 +1189,39 @@ it justifies is the next slice, not this one.
 
 ---
 
+### Iteration 10 — the first vocabulary growth: the type universe becomes a count (epic #64, slice 3b)
+
+The gap iteration 9 measured, closed. "How many types are there?" was a lesson
+because no claim expressed it — types are not a species roster, so no `count`
+could reach them. A new claim kind, `typeCount`, counts the chart's closed set
+of types directly: `reported` is derivable and optional exactly as a roster
+count's, the kernel fills and verifies it against the certified chart, and a
+forged total is refused (crucible `type-count-forged` → `IA-4/
+type-count-mismatch`). It renders through the same count presentation as any
+other — "Counted by the League itself: **15** types" — so the number leads and
+reads as one.
+
+Live probe (`session:trace`, "how many types are there?", turn-count deltas):
+
+| model | before (iter 9) | after |
+|---|---|---|
+| `gpt-5.4-mini` | `what-is-type` lesson (15 in prose) | **`typeCount` → 15** |
+| `gemini-3.5-flash-lite` | `what-is-type` lesson | **`typeCount` → 15** (paired with a lesson, which the shape check passes) |
+
+Both models now answer the question as a number. The new bank entry
+`ans-type-count` is `answerable(typeCount)`; the pre-existing `meta-what-is-type`
+("what does a type *mean*?") stays on its lesson, because that question wants the
+prose, not the count — the two are deliberately distinct, which is the routing
+discipline working in the other direction.
+
+Why this is the pattern, not a one-off: the shape-deflection metric named a
+missing intent, and the vocabulary grew by exactly one closed-set count to meet
+it — the same move the scaling note (§9) describes for any closed vocabulary that
+outgrows its grammar. The answerable pool gains one; the deflection channel loses
+the entry that exposed it.
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's

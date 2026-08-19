@@ -38,7 +38,7 @@ export const BANK_SCHEMA_VERSION = 1;
  * this list is a kind the kernel cannot compile, so an entry expecting it
  * could never pass.
  */
-export const CLAIM_KINDS = ["fact", "count", "membership", "ranking", "matchup", "eligibility", "explanation", "recommendation", "action"] as const;
+export const CLAIM_KINDS = ["fact", "count", "typeCount", "membership", "ranking", "matchup", "eligibility", "explanation", "recommendation", "action"] as const;
 export type ClaimKind = (typeof CLAIM_KINDS)[number];
 
 /** One question, and the disposition it was authored to have. */
