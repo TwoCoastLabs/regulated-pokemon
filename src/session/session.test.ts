@@ -512,6 +512,11 @@ describe("teach before interrogating — the lazy half of IA-1", () => {
     expect(record.manifest?.scopeGrantId).toBeUndefined();
     expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-badge" }]);
 
+    // A grantless lesson has a page to show like any other answer: the display
+    // page renders from the manifest alone, so the app shows the lesson text and
+    // not just a bare provenance banner.
+    expect(state.pages[record.id]).toBeDefined();
+
     // The grantless record replays like any other (IA-10).
     expect(verifyReplay(world, record).allowed).toBe(true);
   });

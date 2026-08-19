@@ -174,6 +174,12 @@ function ArticleChip(props: { code: string; articleTitle: string; analog: string
   );
 }
 
+/** A copyable role tag on every turn: real text, not a CSS pseudo-element, so
+ * "You" / "Advisor" survives a copy-paste of the transcript. */
+function Role(props: { who: "you" | "advisor" }) {
+  return <span class={`live-role ${props.who}`}>{props.who === "you" ? "You" : "Advisor"}</span>;
+}
+
 function RecordItem(props: { record: Transaction; page: DomElement | undefined }) {
   const { record, page } = props;
   const outcome = record.outcome;
@@ -181,6 +187,7 @@ function RecordItem(props: { record: Transaction; page: DomElement | undefined }
     const denials = outcome.violations.map(plainViolation);
     return (
       <div class="live-item advisor">
+        <Role who="advisor" />
         <div class="live-denial">
           <p class="live-denial-lead">The League stepped in {plainStage(outcome.stage)}.</p>
           <ul>
@@ -201,6 +208,7 @@ function RecordItem(props: { record: Transaction; page: DomElement | undefined }
   }
   return (
     <div class="live-item advisor">
+      <Role who="advisor" />
       {page !== undefined && <Page artifact={page} />}
       <p class={`outcome ${outcome.status === "declined" ? "quiet" : "ok"}`}>
         {outcome.status === "acted"
@@ -540,12 +548,14 @@ export function Live() {
               case "visitor":
                 return (
                   <div class="live-item trainer">
+                    <Role who="you" />
                     <p class="live-bubble trainer">{item.text}</p>
                   </div>
                 );
               case "question":
                 return (
                   <div class="live-item advisor">
+                    <Role who="advisor" />
                     <p class="live-bubble advisor">{item.text}</p>
                   </div>
                 );
@@ -553,6 +563,7 @@ export function Live() {
                 const active = phase.kind === "confirming-scope" && phase.proposal.id === item.proposal.id && !busy;
                 return (
                   <div class="live-item advisor">
+                    <Role who="advisor" />
                     <div class="live-proposal">
                       <p
                         class="live-proposal-lead"
@@ -592,6 +603,7 @@ export function Live() {
               case "decision":
                 return (
                   <div class="live-item trainer">
+                    <Role who="you" />
                     <p class="live-bubble decision">
                       {item.decision === "confirm" ? "Yes — that's what I meant." : "No — not that."}
                     </p>
@@ -600,6 +612,7 @@ export function Live() {
               case "note":
                 return (
                   <div class="live-item advisor">
+                    <Role who="advisor" />
                     <p class={`live-note ${item.note.tone}`} title={item.note.text}>
                       {item.note.tone === "error"
                         ? "The connection to the model failed — nothing was lost."
@@ -621,12 +634,14 @@ export function Live() {
 
           {inFlight !== null && (
             <div class="live-item trainer">
+              <Role who="you" />
               <p class="live-bubble trainer">{inFlight}</p>
             </div>
           )}
 
           {phase.kind === "confirming-act" && (
             <div class="live-item advisor">
+              <Role who="advisor" />
               <Page artifact={phase.artifact} />
               <div class="live-actions">
                 <button type="button" disabled={busy} onClick={() => run((s) => decideAct(s, "confirm", deps))}>

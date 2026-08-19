@@ -694,11 +694,15 @@ function commit(
  */
 function displayPage(world: SessionWorld, record: Transaction): DomElement | undefined {
   if (record.artifact !== undefined) return record.artifact;
-  if (record.manifest === undefined || record.grant === undefined) return undefined;
+  // A manifest is all the planner needs — the grant is optional, exactly as it
+  // is in the kernel. A grantless answer is the taught lesson (the lazy half of
+  // IA-1), and it has a page to show like any other; requiring a grant here
+  // left every teaching answer rendering as a bare provenance banner.
+  if (record.manifest === undefined) return undefined;
   const context: ManifestContext = {
     registry: world.registry,
     pack: world.pack,
-    grant: record.grant,
+    ...(record.grant === undefined ? {} : { grant: record.grant }),
     locale: record.locale,
     at: record.committedAt,
   };
