@@ -40,10 +40,12 @@ import type { AccordPack } from "../kernel/pack.js";
 import { planRender } from "../kernel/render.js";
 import type { CertifiedRegistry } from "../kernel/registry.js";
 import { restrictionsFor } from "../kernel/pack.js";
-import { REQUIRED_DIMENSIONS, resolveScope, type ScopeContext, unmatchedClauses } from "../kernel/scope.js";
+import { resolveScope, type ScopeContext, unmatchedClauses } from "../kernel/scope.js";
+import { requiredDimensionsFor } from "../kernel/scope-deps.js";
 import { runTransaction, type Transaction } from "../kernel/transaction.js";
 import { renderAnswer } from "../render/reference.js";
 import { proposalDigest, proposeAnswer, proposeScope } from "../harness/advisor.js";
+import { NO_CLAIMS_REASON } from "../harness/decode.js";
 import { addUsage, emptyUsage, type ModelProvider, type Usage } from "../harness/provider.js";
 
 /** The certified world the session runs against — the same two values the
@@ -327,25 +329,32 @@ async function drive(state: SessionState, deps: SessionDeps): Promise<SessionSta
     .reverse()
     .find((event): event is Extract<ScopeEvent, { kind: "utterance" }> => event.kind === "utterance" && event.source === "trainer");
 
-  // Teach before interrogating — the lazy half of IA-1. On the *first*
-  // clarify of an ask (no question has been posed for it yet), the model is
-  // asked once with no grant at all: under a grantless context only
-  // explanation claims can commit, so the sole thing this call can produce
-  // is a routed lesson — "what's a badge?" answered immediately, three
-  // interrogation answers not demanded for a text that is the same for
-  // every trainer. Anything else falls through to the pack's question. The
-  // price is one model call per under-scoped ask; the alternative was a
-  // deterministic router, which is a recall ceiling nobody measures.
+  // Propose first, then gather only what the answer needs (epic #64, slice 2).
+  // On the *first* clarify of an ask, the model is asked once with no grant:
+  // a lesson commits immediately (the lazy half of IA-1 — "what's a badge?"
+  // answered with no interrogation), and any other claim it proposes is read
+  // as *intent*, telling us which scope to establish and — via
+  // `requiredDimensionsFor` — only what that claim depends on. Casual or
+  // off-topic words produce no claims and earn an honest redirect, not a
+  // three-question ceremony that could only end in an abstention.
   const askedAlready = state.transcript
     .slice(state.askStart)
     .some((event) => event.kind === "question");
-  // Not during an escalation: a widened `required` means an answer was
-  // already attempted and wants more scope (the ranking-basis path) — the
-  // ask is established as personal, and a lesson is not what it needs.
+  // Not during an escalation: a widened `required` means an answer was already
+  // attempted and wants more scope, so the shape is known and a fresh discovery
+  // would only re-ask the model what it just told us.
   if (lastSaid !== undefined && !askedAlready && state.required === undefined) {
-    const attempt = await teachWithoutScope(state, deps);
-    if (attempt.taught) return attempt.state;
+    const attempt = await teachOrDiscover(state, deps);
     state = attempt.state;
+    if (attempt.result === "taught") return state;
+    if (attempt.result === "off-domain") return redirect(state, deps);
+    // "needs-scope": gather exactly the dimensions the proposed claims depend
+    // on. "unusable" (the model gave no readable shape): fall to a version
+    // floor and let the answer-time escalation add anything more the eventual
+    // answer turns out to need — never the fixed triple, never `region`.
+    const nextRequired =
+      attempt.result === "needs-scope" ? requiredDimensionsFor(attempt.claims) : (["version"] as const);
+    return drive({ ...state, required: nextRequired }, deps);
   }
 
   const freshLongTail = lastSaid !== undefined && unmatchedClauses(world.pack, lastSaid.text).length > 0;
@@ -439,21 +448,40 @@ export function eligibilityClaims(
   return claims;
 }
 
+/**
+ * The redirect an off-domain opener earns instead of an interrogation.
+ *
+ * When the discovery call proposes no claims at all, nothing certified is even
+ * relevant — the words are casual or off-topic. A three-question intake could
+ * only end in an abstention, so the visitor gets an honest pointer at what the
+ * Advisor can answer. Like an abstention, it files no record.
+ */
+function redirect(state: SessionState, deps: SessionDeps): SessionState {
+  return note(
+    { ...state, phase: { kind: "gathering" } },
+    deps.now(),
+    "I couldn't line that up with anything I can certify. I answer questions about specific " +
+      "Pokémon, their moves and matchups, League eligibility, and how the game works — try one of those.",
+    "abstention",
+  );
+}
+
 /** Scope is granted: ask the model for the answer and put it to the seam. */
 /**
- * One grantless answer attempt: commit a lesson, or report "not taught".
+ * One grantless discovery call: learn what the answer needs before gathering.
  *
- * The model is prompted with scope explicitly absent, so it knows only a
- * catalogue route can survive. A draft that is anything but non-empty,
- * lessons-only is discarded without ceremony — the pack's question is the
- * better next move, and a denial here would cost the visitor a refusal for
- * what is really just an under-specified ask. Usage is kept either way; a
- * discarded attempt still happened and the meter says so.
+ * A lessons-only draft is committed on the spot — the lazy half of IA-1, a text
+ * that is the same for every trainer. Anything else is *not* committed here: a
+ * draft with any personalized claim reports `needs-scope` and hands its claims
+ * back, so the driver can establish exactly the dimensions those claims depend
+ * on and no more. No claims at all is `off-domain`; a provider failure or an
+ * unreadable reply is `unusable`, which falls to a version floor rather than a
+ * refusal. Usage is kept in every case — a discovery call still happened.
  */
-async function teachWithoutScope(
+async function teachOrDiscover(
   state: SessionState,
   deps: SessionDeps,
-): Promise<{ state: SessionState; taught: boolean }> {
+): Promise<{ state: SessionState; result: "taught" | "off-domain" | "needs-scope" | "unusable"; claims: readonly Claim[] }> {
   const { world, provider } = deps;
   const transactionId = nextTransactionId(state);
   const establishedAt = deps.now();
@@ -474,20 +502,26 @@ async function teachWithoutScope(
       transcript: state.transcript.slice(state.askStart),
     });
   } catch {
-    // The question is still free: a failed teaching attempt falls to the
-    // ladder rather than surfacing an error for a call the visitor never
-    // asked for. The counter still moves — provider failures are never
-    // hidden inside semantic outcomes.
-    return { state: { ...state, providerErrors: state.providerErrors + 1 }, taught: false };
+    // The question is still free: a failed discovery falls to the floor rather
+    // than surfacing an error for a call the visitor never asked for. The
+    // counter still moves — provider failures are never hidden in outcomes.
+    return { state: { ...state, providerErrors: state.providerErrors + 1 }, result: "unusable", claims: [] };
   }
 
   const spent = { ...state, usage: addUsage(state.usage, step.usage) };
-  if (!step.decode.ok) return { state: spent, taught: false };
-  const draft = step.decode.draft;
-  if (draft.claims.length === 0 || draft.claims.some((claim) => claim.kind !== "explanation")) {
-    return { state: spent, taught: false };
+  if (!step.decode.ok) {
+    // A well-formed reply with no claims is the model's own signal that nothing
+    // certified is relevant — off-domain, and the visitor gets a redirect. Any
+    // other decode failure is unreadable, not off-domain: it falls to the floor
+    // and gathers scope, so a real question the model merely fumbled is not
+    // waved away.
+    return { state: spent, result: step.decode.reason === NO_CLAIMS_REASON ? "off-domain" : "unusable", claims: [] };
   }
-  return { state: commit(spent, deps, { transactionId, establishedAt, draft }), taught: true };
+  const draft = step.decode.draft;
+  if (draft.claims.every((claim) => claim.kind === "explanation")) {
+    return { state: commit(spent, deps, { transactionId, establishedAt, draft }), result: "taught", claims: draft.claims };
+  }
+  return { state: spent, result: "needs-scope", claims: draft.claims };
 }
 
 async function answer(state: SessionState, deps: SessionDeps): Promise<SessionState> {
@@ -543,6 +577,7 @@ async function answer(state: SessionState, deps: SessionDeps): Promise<SessionSt
     .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
     .join(" ");
 
+  let draft: ManifestDraft;
   if (!step.decode.ok) {
     // Before conceding an abstention, let the pack answer what it can: a
     // gated advisory ask has a deterministic, certified answer — the rule.
@@ -555,33 +590,30 @@ async function answer(state: SessionState, deps: SessionDeps): Promise<SessionSt
         "abstention",
       );
     }
-    return commit(withUsage, deps, {
-      transactionId,
-      establishedAt,
-      draft: { transactionId, claims: routed, rosters: [] },
-    });
+    draft = { transactionId, claims: routed, rosters: [] };
+  } else {
+    const decoded = step.decode.draft;
+    // A model that deflected a gated advisory ask into adjacent facts gets the
+    // on-target answer appended; one that addressed the species advice-wise —
+    // including by proposing the gated advice the kernel will deny — is left
+    // alone, so the route never softens a denial the gate has earned.
+    const routed = eligibilityClaims(world, ask, decoded.claims);
+    draft = routed.length === 0 ? decoded : { ...decoded, claims: [...decoded.claims, ...routed] };
   }
 
-  const decoded = step.decode.draft;
-  // A model that deflected a gated advisory ask into adjacent facts gets the
-  // on-target answer appended; one that addressed the species advice-wise —
-  // including by proposing the gated advice the kernel will deny — is left
-  // alone, so the route never softens a denial the gate has earned.
-  const routed = eligibilityClaims(world, ask, decoded.claims);
-  const draft: ManifestDraft =
-    routed.length === 0 ? decoded : { ...decoded, claims: [...decoded.claims, ...routed] };
-
-  // The structural escalation: the model wants to rank, and no basis was ever
-  // established. The kernel would refuse the draft by name (IA-1/
-  // ranking-basis-not-established — the same denial a mismatched basis gets),
-  // so nothing rests on this branch; it exists so the exchange falls back to
-  // the ladder and costs the visitor a question rather than a denial, now
-  // required to establish the basis before any answer is compiled. The
-  // trigger is the decoded claim's type, never the wording; a miss costs a
-  // question — never a wrongly scoped commit, which the manifest gate holds.
-  const wantsRanking = draft.claims.some((claim) => claim.kind === "ranking");
-  if (wantsRanking && resolved.grant.scope.comparisonBasis === undefined) {
-    return drive({ ...withUsage, required: [...REQUIRED_DIMENSIONS, "comparisonBasis"] }, deps);
+  // The scope escalation, generalized (epic #64, slice 2). The proposed answer
+  // may depend on a dimension the grant does not hold — a ranking with no basis
+  // established, an eligibility ruling reached after only a version was asked.
+  // The kernel would refuse such a draft by name (scope-dimension-missing, or
+  // ranking-basis-not-established), so nothing rests on this branch; it exists
+  // so the exchange gathers exactly what the drafted claims require and costs
+  // the visitor a question rather than a denial. The trigger is the claims'
+  // declared dependencies, never the wording; a miss costs a question, never a
+  // wrongly scoped commit, which the manifest gate holds.
+  const needed = requiredDimensionsFor(draft.claims);
+  const unbound = needed.filter((dimension) => resolved.grant.scope[dimension] === undefined);
+  if (unbound.length > 0) {
+    return drive({ ...withUsage, required: needed }, deps);
   }
 
   return commit(withUsage, deps, { transactionId, establishedAt, draft });
@@ -662,11 +694,15 @@ function commit(
  */
 function displayPage(world: SessionWorld, record: Transaction): DomElement | undefined {
   if (record.artifact !== undefined) return record.artifact;
-  if (record.manifest === undefined || record.grant === undefined) return undefined;
+  // A manifest is all the planner needs — the grant is optional, exactly as it
+  // is in the kernel. A grantless answer is the taught lesson (the lazy half of
+  // IA-1), and it has a page to show like any other; requiring a grant here
+  // left every teaching answer rendering as a bare provenance banner.
+  if (record.manifest === undefined) return undefined;
   const context: ManifestContext = {
     registry: world.registry,
     pack: world.pack,
-    grant: record.grant,
+    ...(record.grant === undefined ? {} : { grant: record.grant }),
     locale: record.locale,
     at: record.committedAt,
   };

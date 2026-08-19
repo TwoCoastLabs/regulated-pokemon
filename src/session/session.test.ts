@@ -201,11 +201,12 @@ describe("the ladder with a person on the end", () => {
     expect(state.transcript.filter((event) => event.kind === "question")).toHaveLength(1);
   });
 
-  it("a catalogue opener is three questions and zero cards — not an interrogation", async () => {
-    // The conversation that exposed the rabbit hole, scripted: a question the
-    // vocabulary cannot read, then three plain answers. Each answer must bind
-    // against the recorded question — no proposal, no confirmation card, and
-    // no model call — until the profile is complete and the answer compiles.
+  it("a catalogue opener asks only the dimension the answer needs — one question, not three", async () => {
+    // The conversation that exposed the rabbit hole, now answered by the shape
+    // of the question: "what types" resolves to counts over rosters, which
+    // depend on the version and nothing else. Discovery reveals that shape, so
+    // the opener costs exactly one question — not the old fixed
+    // version/region/badges intake, most of which the answer never reads.
     const typesAnswer = JSON.stringify({
       rosters: [
         { id: "electric-kanto", criteria: { all: [{ kind: "has-type", type: "electric" }] } },
@@ -220,30 +221,76 @@ describe("the ladder with a person on the end", () => {
     const d = deps(provider);
 
     let state = await say(startSession(), "what types of pokemons do you have?", d);
+    // Discovery proposed the counts (one model call); the driver now gathers
+    // only the version those counts depend on.
     expect(state.phase.kind).toBe("asking");
-    const callsAfterOpener = state.usage.calls;
+    if (state.phase.kind !== "asking") throw new Error("unreachable");
+    expect(state.phase.dimension).toBe("version");
 
     state = await say(state, "Red", d);
-    expect(state.phase.kind).toBe("asking");
-    state = await say(state, "Kanto", d);
-    expect(state.phase.kind).toBe("asking");
-    // Answering the pack's own questions consulted no model at all.
-    expect(state.usage.calls).toBe(callsAfterOpener);
-
-    state = await say(state, "two badges", d);
+    // Version was the whole requirement, so the answer commits — no region or
+    // badge ceremony after it.
     expect(state.records).toHaveLength(1);
     expect(state.records[0]!.outcome.status).toBe("answered");
+    expect(state.phase.kind).toBe("gathering");
 
-    // The shape of the conversation: three questions, zero proposals.
-    expect(state.transcript.filter((event) => event.kind === "question")).toHaveLength(3);
+    // One question, zero proposals; the grant binds only what the counts need.
+    expect(state.transcript.filter((event) => event.kind === "question")).toHaveLength(1);
     expect(state.transcript.filter((event) => event.kind === "proposal")).toHaveLength(0);
-
-    // The bare answers bound on the answer route; the phrased one directly.
-    const routes = Object.fromEntries(
-      (state.records[0]!.grant?.bindings ?? []).map((binding) => [binding.dimension, binding.route]),
-    );
-    expect(routes).toEqual({ version: "answer", region: "answer", badgeLevel: "direct" });
+    expect((state.records[0]!.grant?.bindings ?? []).map((binding) => binding.dimension)).toEqual(["version"]);
     expect(verifyReplay(world, state.records[0]!).allowed).toBe(true);
+  });
+});
+
+describe("propose-first: minimal scope and the off-domain redirect (epic #64, slice 2)", () => {
+  it("redirects an off-domain opener instead of interrogating it", async () => {
+    // The chitchat that used to trigger a three-question intake ending in an
+    // abstention. Discovery proposes no claims — nothing certified is relevant
+    // — so the visitor gets an honest pointer, no questions, no record.
+    const chit = scripted("scripted:chit", () => JSON.stringify({ rosters: [], claims: [] }));
+    const state = await say(startSession(), "are you working?", deps(chit));
+
+    expect(state.records).toHaveLength(0);
+    expect(state.transcript.some((event) => event.kind === "question")).toBe(false);
+    expect(state.notes.some((note) => note.tone === "abstention")).toBe(true);
+    expect(state.phase.kind).toBe("gathering");
+  });
+
+  it("gathers the badge level for an advisory ask — version then badges, never region", async () => {
+    // A recommendation depends on the trainer's accreditation; discovery
+    // reveals that, so the driver asks the two dimensions it reads and stops.
+    const adviceAnswer = JSON.stringify({ rosters: [], claims: [{ kind: "recommendation", entityId: "pikachu" }] });
+    const provider = scripted("scripted:advice", (purpose) => (purpose === "answer" ? adviceAnswer : "no JSON"));
+    const d = deps(provider);
+
+    let state = await say(startSession(), "who should I train up?", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+    state = await say(state, "Red", d);
+    // Version is bound; the recommendation still needs the badge level.
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("badgeLevel");
+    state = await say(state, "eight badges", d);
+
+    expect(state.records).toHaveLength(1);
+    expect(state.records[0]!.outcome.status).toBe("answered");
+    // Two questions, and region — which nothing verifies against — was not one.
+    const questioned = state.transcript
+      .filter((event) => event.kind === "question")
+      .map((event) => (event.kind === "question" ? event.dimension : undefined));
+    expect(questioned).toEqual(["version", "badgeLevel"]);
+    expect(verifyReplay(world, state.records[0]!).allowed).toBe(true);
+  });
+
+  it("a fact still needs only its version, gathered in one question", async () => {
+    const provider = scripted("scripted:fact", (purpose) => (purpose === "answer" ? thunderboltAnswer() : "no JSON"));
+    const d = deps(provider);
+
+    let state = await say(startSession(), "What is Thunderbolt's power?", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+    state = await say(state, "Red and Blue", d);
+
+    expect(state.records).toHaveLength(1);
+    expect(state.records[0]!.outcome.status).toBe("answered");
+    expect(state.transcript.filter((event) => event.kind === "question")).toHaveLength(1);
   });
 });
 
@@ -464,6 +511,11 @@ describe("teach before interrogating — the lazy half of IA-1", () => {
     expect(record.grant).toBeUndefined();
     expect(record.manifest?.scopeGrantId).toBeUndefined();
     expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-badge" }]);
+
+    // A grantless lesson has a page to show like any other answer: the display
+    // page renders from the manifest alone, so the app shows the lesson text and
+    // not just a bare provenance banner.
+    expect(state.pages[record.id]).toBeDefined();
 
     // The grantless record replays like any other (IA-10).
     expect(verifyReplay(world, record).allowed).toBe(true);

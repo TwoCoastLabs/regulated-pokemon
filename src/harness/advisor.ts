@@ -100,12 +100,20 @@ function answerPrompt(
     ...(reference === undefined ? [] : [reference, ""]),
     ...(scope === undefined
       ? [
-          // The grantless call: only a lesson can commit, and the prompt says
-          // so rather than letting the model discover it by refusal.
-          "Scope is NOT established: nothing about this trainer is known yet.",
-          "Only explanation claims can be certified for them; any other claim",
-          "kind will be refused. If no catalogue lesson answers what they",
-          "asked, reply with no claims at all.",
+          // The discovery call (epic #64, slice 2): scope is gathered *after*
+          // the answer's shape is known, so this call learns that shape. A
+          // lesson certifies now; any other claim is read as intent — it names
+          // the scope to establish first, and only what that claim needs.
+          "Scope is NOT established yet: nothing about this trainer is known.",
+          "A lesson (explanation claim) can be certified right now. Any other",
+          "claim you propose is read as intent: it will not be certified here,",
+          "it tells the system which scope to establish first, and only what",
+          "that claim needs. Propose the claims that answer what they asked.",
+          "Small talk, greetings, or questions about you rather than the game —",
+          '"hi", "are you working?", "thanks" — are off-topic: reply with no',
+          "claims at all. Do not reach for a lesson that is merely adjacent; a",
+          "lesson is for a real question about what something is or how the game",
+          "works, not a way to avoid saying nothing.",
         ]
       : [
           "Scope is established:",

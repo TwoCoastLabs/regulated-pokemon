@@ -119,6 +119,15 @@ export type AnswerDecode =
   | { ok: true; draft: ManifestDraft }
   | { ok: false; reason: string };
 
+/**
+ * The reason a well-formed reply carrying zero claims is refused. Exported
+ * because it is a distinct *signal*, not just an error string: a model that
+ * asserts nothing on a granted ask is abstaining, and one that asserts nothing
+ * on the grantless discovery call is reporting the question off-domain (epic
+ * #64, slice 2). Both read this one constant so the two cannot drift.
+ */
+export const NO_CLAIMS_REASON = "the answer asserts no claims at all";
+
 function asFactValue(value: unknown): FactValue | null {
   if (!isObject(value)) return null;
   switch (value.kind) {
@@ -292,7 +301,7 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
   // honest reading of an empty claims list is that the model had nothing to
   // say, which is an abstention, and abstentions are counted, not certified.
   if (claims.length === 0) {
-    return { ok: false, reason: "the answer asserts no claims at all" };
+    return { ok: false, reason: NO_CLAIMS_REASON };
   }
 
   return { ok: true, draft: { transactionId, claims, rosters } };

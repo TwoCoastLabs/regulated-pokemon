@@ -1091,6 +1091,57 @@ full-bank §19 re-run prices the whole picture on the new model defaults.
 
 ---
 
+### Iteration 8 — scope proportional to the question: the ceremony ends (epic #64, slices 1–2)
+
+Dogfooding the merged slice-4 build surfaced a failure the bank never posed: a
+fixed scope ceremony. Every under-scoped ask was dragged through
+`version → region → badges` **before** the system knew whether any answerable
+claim existed or which dimensions it needed — so "are you working?" triggered a
+three-question intake that could only end in an abstention, and `region` was
+asked though the kernel verifies against it **nowhere**.
+
+The fix, forged as the general mechanism rather than a session patch:
+
+- **Slice 1 (soundness).** A kernel table declares which scope dimensions each
+  claim kind's verification actually reads; the verifier now *derives* an
+  answer's required material scope from its own committed claims and refuses a
+  grant that does not bind them. This closed a latent hole — an accreditation
+  check reading an unbound `badgeLevel` compares `undefined < 6` (false) and
+  would wave a restricted legendary through — proven by crucible mutation
+  `advise-before-badges-established` (`IA-1/scope-dimension-missing`).
+- **Slice 2 (the felt change).** The session proposes first, then gathers only
+  the dimensions the proposed claims depend on; off-domain openers earn an
+  honest redirect, not an intake.
+
+Live probe via `session:trace` on `gpt-5.4-mini` (billable pennies each; these
+are turn/question-count deltas from a live driver, **not** filed coverage
+artifacts — the §19 bank run is the filed-artifact version):
+
+| ask | before | after |
+|---|---|---|
+| "what is Pikachu's speed?" | version, region, badges (3 questions) | **version only (1)** |
+| "how do I play this game?" | 3 questions → abstention | **grantless lesson, 0 questions** |
+| "what is Gengar weak to?" | 3 questions | **version only**, then commits |
+| "are you working?" | 3 questions → abstention | **redirect, 0 questions** |
+
+**The eager model mis-taught the chitchat first.** On the initial probe
+`gpt-5.4-mini` routed "are you working?" to the `first-steps` lesson rather
+than proposing no claims — the curriculum-deflection channel from iteration 7,
+live again. The redirect fires on the model's own empty-claims *signal* (the
+locked Fork 3), so the fix was to name small talk as off-topic in the prompt,
+not to select a more obedient model; after that, "are you working?" and "hello
+there" both redirect. The weak-model reliability of that signal is a §19
+question.
+
+**Still deferred:** "how many types" commits the `what-is-type` lesson (the
+number 15 in reviewed prose), because types are not a countable roster. Getting
+it as a standalone certified number is a kernel roster-domain extension, left to
+slice 3's coverage discipline — routing prefers the most structured certifiable
+claim, and the certified vocabulary grows to the intents a shape-deflection
+metric shows matter, rather than one roster at a time.
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's
