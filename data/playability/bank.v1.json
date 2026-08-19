@@ -425,13 +425,15 @@
       },
       "disposition": "answerable",
       "expectClaimKinds": [
-        "membership"
+        "membership",
+        "fact"
       ],
       "phrasings": [
         "Zapdos — Electric, right?",
         "Is Zapdos classified as an Electric type?",
         "is zapdoss electric"
-      ]
+      ],
+      "notes": "REVIEWED (down-sample iter): a fact stating Zapdos types answers this as well as a membership; both accepted."
     },
     {
       "id": "ans-member-gyarados-water",
@@ -2053,6 +2055,21 @@
       ],
       "phrasings": [
         "how many starters are there?"
+      ]
+    },
+    {
+      "id": "data-my-team",
+      "intent": "What are the Pokémon on my team?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-data",
+      "notes": "NEW (down-sample iter): the trainers own party is not in the pinned snapshot; the system has no way to know it. Expected: honest non-certification, never the party-size rule.",
+      "phrasings": [
+        "what are the pokemons on my team?",
+        "list my current team"
       ]
     }
   ]
