@@ -119,6 +119,18 @@ describe("claims are recomputed, not believed", () => {
     }
   });
 
+  it("counts the type universe, and refuses a forged total (epic #64, slice 3b)", () => {
+    const universe = context.registry.typeChart.types.length;
+    const manifest = compiled([{ kind: "typeCount" }]);
+    // Derived from the chart, exactly like a roster count from its set.
+    expect(manifest.claims[0]).toEqual({ kind: "typeCount", reported: universe });
+    expect(verifyManifest(context, manifest)).toEqual({ allowed: true, violations: [] });
+    // A stated number that disagrees with the chart is a different claim.
+    expect(denialsOf({ ...manifest, claims: [{ kind: "typeCount", reported: universe + 3 }] })).toContain(
+      "IA-4/type-count-mismatch",
+    );
+  });
+
   it("denies membership asserted the wrong way round", () => {
     const claim: Claim = { kind: "membership", rosterId: "electric-kanto", entityId: "zapdos", asserted: true };
     const manifest = compiled([claim], [ELECTRIC]);

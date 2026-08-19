@@ -119,6 +119,8 @@ function describeClaim(claim: Claim): string {
       return `fact         ${claim.entityId}.${claim.factId} = ${claim.asserted === undefined ? "(derived by the kernel)" : formatFactValue(claim.asserted)}`;
     case "count":
       return `count        ${claim.rosterId} = ${claim.reported}`;
+    case "typeCount":
+      return `type-count   types = ${claim.reported}`;
     case "membership":
       return `membership   ${claim.entityId} ${claim.asserted ? "is in" : "is not in"} ${claim.rosterId}`;
     case "ranking":

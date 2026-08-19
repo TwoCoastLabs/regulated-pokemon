@@ -287,6 +287,19 @@ function unitForClaim(
           },
         };
       }
+      case "typeCount": {
+        // Renders as a count — same unit kind, so the number leads and the
+        // certified-count presentation and copy apply unchanged. The label is
+        // the fixed word "types"; the set is the chart's whole type universe,
+        // no roster and no entities to mention.
+        const shown = context.registry.typeChart.types.length;
+        const resolved = slots(
+          slot(context, locale, "count", { kind: "number", value: shown }),
+          slot(context, locale, "set", entity("types"), "plain-text"),
+        );
+        if (!resolved.ok) return resolved;
+        return { ok: true, value: { id: "count:types", kind: "count", slots: resolved.value, mentions: [] } };
+      }
       case "membership": {
         const resolved = slots(
           slot(context, locale, "entity", entity(claim.entityId), "entity-name"),

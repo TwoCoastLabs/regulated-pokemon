@@ -107,6 +107,9 @@ function deriveClaims(context: ManifestContext, claims: readonly Claim[], roster
       const set = roster(claim.rosterId);
       return set === undefined ? claim : { ...claim, reported: set.cardinality };
     }
+    if (claim.kind === "typeCount" && claim.reported === undefined) {
+      return { ...claim, reported: context.registry.typeChart.types.length };
+    }
     if (claim.kind === "ranking" && claim.selectedEntityId === undefined) {
       const set = roster(claim.rosterId);
       if (set === undefined) return claim;
@@ -376,6 +379,8 @@ function checkClaim(context: ManifestContext, manifest: AnswerManifest, claim: C
       return checkFact(context, claim);
     case "count":
       return checkCount(manifest, claim);
+    case "typeCount":
+      return checkTypeCount(context, claim);
     case "membership":
       return checkMembership(context, manifest, claim);
     case "ranking":
@@ -422,6 +427,23 @@ function checkCount(manifest: AnswerManifest, claim: Extract<Claim, { kind: "cou
   return [
     violation("IA-4", "count-mismatch", `the count shown for "${roster.id}" is not the cardinality of its set`, {
       expected: String(roster.cardinality),
+      actual: String(claim.reported),
+    }),
+  ];
+}
+
+/**
+ * The certified type universe is the count. Like a roster count, an omitted
+ * number defers to the chart's cardinality and cannot disagree; a stated number
+ * that does is a different claim, refused by name. The chart itself is a loader
+ * refusal if it was doctored, so there is nothing to re-derive here but its size.
+ */
+function checkTypeCount(context: ManifestContext, claim: Extract<Claim, { kind: "typeCount" }>): Violation[] {
+  const actual = context.registry.typeChart.types.length;
+  if (claim.reported === undefined || claim.reported === actual) return [];
+  return [
+    violation("IA-4", "type-count-mismatch", `the number of types this generation certifies is not what this answer says`, {
+      expected: String(actual),
       actual: String(claim.reported),
     }),
   ];

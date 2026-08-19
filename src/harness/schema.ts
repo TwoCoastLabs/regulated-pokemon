@@ -116,6 +116,10 @@ function claimSchema(lessonIds: readonly string[]): JsonSchema {
     // enforced decoding a live model *cannot* state a count, so a wrong one is
     // not a reachable output — the arithmetic is taken off the model entirely.
     variant("count", { rosterId: STRING }),
+    // "How many types are there?" — no roster, no fields; the kernel counts the
+    // certified type universe. Under enforced decoding the model cannot state a
+    // number, so there is nothing here to get wrong.
+    variant("typeCount"),
     variant("membership", { rosterId: STRING, entityId: STRING, asserted: BOOLEAN }),
     // No `selectedEntityId`: the model declares the set, the basis and the
     // direction, and the kernel picks the extreme. Like the count, a wrong

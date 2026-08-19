@@ -154,6 +154,15 @@ describe("the plan derived from a manifest", () => {
     expect(units.filter((entry) => entry.id === "fact:pikachu:base-speed")).toHaveLength(1);
   });
 
+  it("renders the type universe as a count — the number, then the word 'types'", () => {
+    const unit = plan(answer([{ kind: "typeCount" }])).units.find((entry) => entry.id === "count:types");
+    expect(unit?.kind).toBe("count");
+    expect(unit?.slots.map((entry) => [entry.name, entry.expected])).toEqual([
+      ["count", String(world.registry.typeChart.types.length)],
+      ["set", "types"],
+    ]);
+  });
+
   it("anchors a triggered disclosure to the unit that triggered it", () => {
     const manifest = answer([{ kind: "count", rosterId: "selfdestruct-learners", reported: boomers().cardinality }], [boomers()]);
     const warning = plan(manifest).units.find((entry) => entry.id === "selfdestruct-warning");

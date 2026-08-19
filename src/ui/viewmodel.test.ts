@@ -294,6 +294,8 @@ describe("describeClaim", () => {
     );
     expect(describeClaim({ kind: "count", rosterId: "poison-types" })).toBe("count(poison-types) — derived by the kernel");
     expect(describeClaim({ kind: "count", rosterId: "poison-types", reported: 33 })).toBe("count(poison-types) = 33");
+    expect(describeClaim({ kind: "typeCount" })).toBe("typeCount() — derived by the kernel");
+    expect(describeClaim({ kind: "typeCount", reported: 15 })).toBe("typeCount() = 15");
     expect(describeClaim({ kind: "membership", rosterId: "poison-types", entityId: "grimer", asserted: true })).toBe(
       "grimer ∈ poison-types",
     );

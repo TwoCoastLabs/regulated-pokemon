@@ -1666,6 +1666,24 @@
       ]
     },
     {
+      "id": "ans-type-count",
+      "intent": "How many types of Pokemon are there?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "notes": "NEW (epic #64, slice 3b): the type-universe count. 'How many types' was a lesson that happened to mention 'fifteen' in prose — a shape deflection the metric marked. A typeCount claim over the certified chart now answers it as a number. The first vocabulary growth the discipline justified. Distinct from meta-what-is-type, which asks what a type *is* and rightly routes to the lesson.",
+      "expectClaimKinds": [
+        "typeCount"
+      ],
+      "phrasings": [
+        "how many types of Pokemons are out there?",
+        "how many different types exist in Red and Blue?"
+      ]
+    },
+    {
       "id": "meta-how-catch",
       "intent": "How do I catch a Pokemon?",
       "profile": {

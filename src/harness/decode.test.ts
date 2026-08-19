@@ -83,6 +83,7 @@ describe("decodeAnswer", () => {
         { kind: "fact", entityId: "e", factId: "f", asserted: { kind: "list", value: ["a", "b"] } },
         { kind: "fact", entityId: "e", factId: "f", asserted: { kind: "absent" } },
         { kind: "count", rosterId: "r", reported: 3 },
+        { kind: "typeCount" },
         { kind: "membership", rosterId: "r", entityId: "e", asserted: false },
         { kind: "ranking", rosterId: "r", basis: "base-speed", direction: "lowest", selectedEntityId: "e" },
         { kind: "recommendation", entityId: "e" },
@@ -95,7 +96,7 @@ describe("decodeAnswer", () => {
     expect(decoded.ok).toBe(true);
     if (decoded.ok) {
       expect(decoded.draft.transactionId).toBe("txn-1");
-      expect(decoded.draft.claims).toHaveLength(12);
+      expect(decoded.draft.claims).toHaveLength(13);
       expect(decoded.draft.rosters).toHaveLength(1);
     }
   });
@@ -108,10 +109,17 @@ describe("decodeAnswer", () => {
     ["a matchup with malformed members", { kind: "matchup", subject: { kind: "type", typeId: "water" }, direction: "weak-to", members: [1] }],
     ["an explanation with no blockId", { kind: "explanation" }],
     ["an explanation with a non-string blockId", { kind: "explanation", blockId: 7 }],
+    ["a typeCount with a non-numeric total", { kind: "typeCount", reported: "many" }],
   ])("refuses %s", (_label, claim) => {
     const decoded = decodeAnswer(JSON.stringify({ rosters: [], claims: [claim] }), context, "txn-1");
     expect(decoded.ok).toBe(false);
     if (!decoded.ok) expect(decoded.reason).toContain("claim is malformed");
+  });
+
+  it("carries a stated typeCount through — decode admits it, the kernel refuses a wrong one", () => {
+    const decoded = decodeAnswer(JSON.stringify({ rosters: [], claims: [{ kind: "typeCount", reported: 99 }] }), context, "txn-1");
+    expect(decoded.ok).toBe(true);
+    if (decoded.ok) expect(decoded.draft.claims[0]).toEqual({ kind: "typeCount", reported: 99 });
   });
 
   it("carries a well-formed lie through intact — catching it is the kernel's job", () => {

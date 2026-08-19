@@ -168,6 +168,12 @@ function asClaim(value: unknown): Claim | null {
         ? { kind: "count", rosterId: value.rosterId }
         : { kind: "count", rosterId: value.rosterId, reported: value.reported };
     }
+    case "typeCount": {
+      // No roster and no entity: the type universe is fixed. `reported` is
+      // optional exactly as a count's — the kernel fills it from the chart.
+      if (value.reported !== undefined && !isNumber(value.reported)) return null;
+      return value.reported === undefined ? { kind: "typeCount" } : { kind: "typeCount", reported: value.reported };
+    }
     case "membership":
       if (!isString(value.rosterId) || !isString(value.entityId) || !isBoolean(value.asserted)) return null;
       return { kind: "membership", rosterId: value.rosterId, entityId: value.entityId, asserted: value.asserted };

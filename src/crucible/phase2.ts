@@ -472,6 +472,28 @@ export const PHASE_2_MUTATIONS: readonly Mutation[] = [
     },
   },
   {
+    id: "type-count-forged",
+    title: "Claim a different number of types than the chart certifies",
+    description:
+      "The type universe is the count — the gen-I chart certifies exactly " +
+      "fifteen types. An answer stating eighteen is the same shape as a " +
+      "doctored total on a compliance summary: the number is re-derived from " +
+      "the certified chart, so a forged one refuses by name.",
+    article: "IA-4",
+    rule: "type-count-mismatch",
+    run: (world) => {
+      const compiled = compileManifest(world, {
+        transactionId: "txn-crucible-type-count",
+        claims: [{ kind: "typeCount" }],
+        rosters: [],
+      });
+      if (!compiled.ok) return verdictOf(compiled.violations);
+      const claim = compiled.value.claims[0] as Extract<Claim, { kind: "typeCount" }>;
+      const forged: Claim = { ...claim, reported: (claim.reported ?? 0) + 3 };
+      return verifyManifest(world, replaceClaim(compiled.value, "typeCount", forged));
+    },
+  },
+  {
     id: "advise-before-badges-established",
     title: "Rule on eligibility before badges were ever established",
     description:

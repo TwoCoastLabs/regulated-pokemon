@@ -164,6 +164,8 @@ function describeClaim(claim: Claim): string {
       return `fact ${claim.entityId}.${claim.factId}`;
     case "count":
       return `count of ${claim.rosterId}`;
+    case "typeCount":
+      return "count of types";
     case "membership":
       return `membership ${claim.entityId} in ${claim.rosterId}`;
     case "ranking":

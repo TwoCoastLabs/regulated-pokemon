@@ -37,6 +37,7 @@ export const SCOPE_DEPENDENCIES: Record<Claim["kind"], readonly ScopeDimension[]
   // else about the trainer changes what the snapshot says.
   fact: ["version"],
   count: ["version"],
+  typeCount: ["version"],
   membership: ["version"],
   matchup: ["version"],
   // A superlative is a claim about an ordering, and which ordering was asked
