@@ -116,6 +116,27 @@ describe("a pack that cannot be trusted is refused by name", () => {
     ).toContain("IA-5/pack-unknown-article");
   });
 
+  it("refuses a pack that never states the game's rules", () => {
+    expect(denials(loadWith((draft) => delete (draft as { gameRules?: unknown }).gameRules))).toContain(
+      "IA-6/pack-game-rules-missing",
+    );
+  });
+
+  it("refuses a game rule with no positive value, no label, or a duplicate id", () => {
+    expect(denials(loadWith((draft) => ((draft.gameRules[0] as { id: string }).id = "")))).toContain(
+      "IA-6/pack-game-rule-malformed",
+    );
+    expect(denials(loadWith((draft) => ((draft.gameRules[0] as { value: number }).value = 0)))).toContain(
+      "IA-6/pack-game-rule-malformed",
+    );
+    expect(denials(loadWith((draft) => ((draft.gameRules[0] as { label: string }).label = "  ")))).toContain(
+      "IA-6/pack-game-rule-malformed",
+    );
+    expect(denials(loadWith((draft) => (draft.gameRules as unknown[]).push({ ...draft.gameRules[0] })))).toContain(
+      "IA-6/pack-duplicate-game-rule",
+    );
+  });
+
   it("refuses two rules sharing one id", () => {
     expect(
       denials(loadWith((draft) => (draft.restrictions as unknown[]).push({ ...draft.restrictions[0] }))),

@@ -121,6 +121,8 @@ function describeClaim(claim: Claim): string {
       return `count        ${claim.rosterId} = ${claim.reported}`;
     case "typeCount":
       return `type-count   types = ${claim.reported}`;
+    case "gameRule":
+      return `game-rule    ${claim.ruleId} = ${claim.reported ?? "(derived by the kernel)"}`;
     case "membership":
       return `membership   ${claim.entityId} ${claim.asserted ? "is in" : "is not in"} ${claim.rosterId}`;
     case "ranking":

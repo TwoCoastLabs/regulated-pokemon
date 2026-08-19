@@ -494,6 +494,48 @@ export const PHASE_2_MUTATIONS: readonly Mutation[] = [
     },
   },
   {
+    id: "game-rule-forged",
+    title: "Quote a game rule with a friendlier number",
+    description:
+      "Red and Blue hold six Pokémon on a team; this answer says eight. The " +
+      "number is re-read from the pack's reviewed rule table, so a claim that " +
+      "contradicts the certified constant is refused by name — the same shape " +
+      "as a doctored figure on a compliance summary.",
+    article: "IA-4",
+    rule: "game-rule-mismatch",
+    run: (world) => {
+      const compiled = compileManifest(world, {
+        transactionId: "txn-crucible-game-rule",
+        claims: [{ kind: "gameRule", ruleId: "party-size" }],
+        rosters: [],
+      });
+      if (!compiled.ok) return verdictOf(compiled.violations);
+      const claim = compiled.value.claims[0] as Extract<Claim, { kind: "gameRule" }>;
+      const forged: Claim = { ...claim, reported: (claim.reported ?? 0) + 2 };
+      return verifyManifest(world, replaceClaim(compiled.value, "gameRule", forged));
+    },
+  },
+  {
+    id: "game-rule-invented",
+    title: "Cite a game rule the pack never set",
+    description:
+      "The answer names a rule — \"unlimited-team\" — that the pack's table does " +
+      "not carry. A constant nobody reviewed is not a laxer rule, it is not a " +
+      "rule at all: the same closed-world refusal a fabricated lesson gets.",
+    article: "IA-3",
+    rule: "fabricated-game-rule",
+    run: (world) => {
+      const compiled = compileManifest(world, {
+        transactionId: "txn-crucible-game-rule-2",
+        claims: [{ kind: "gameRule", ruleId: "party-size" }],
+        rosters: [],
+      });
+      if (!compiled.ok) return verdictOf(compiled.violations);
+      const forged: Claim = { kind: "gameRule", ruleId: "unlimited-team" };
+      return verifyManifest(world, replaceClaim(compiled.value, "gameRule", forged));
+    },
+  },
+  {
     id: "advise-before-badges-established",
     title: "Rule on eligibility before badges were ever established",
     description:

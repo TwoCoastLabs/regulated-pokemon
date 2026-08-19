@@ -1985,6 +1985,75 @@
         "what's an HM?",
         "what are TMs and HMs?"
       ]
+    },
+    {
+      "id": "ans-party-size",
+      "intent": "How many Pokémon can I have on my team?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "notes": "NEW (epic #64, game-rules slice): a game-rule constant, answered as a certified number via the pack table, not a lesson that mentions it in prose.",
+      "expectClaimKinds": [
+        "gameRule"
+      ],
+      "phrasings": [
+        "how many pokemons can I have on my team?",
+        "what is the max team size?"
+      ]
+    },
+    {
+      "id": "ans-moves-per-pokemon",
+      "intent": "How many moves can a Pokémon know at once?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "notes": "NEW (epic #64, game-rules slice): a game-rule constant, answered as a certified number via the pack table, not a lesson that mentions it in prose.",
+      "expectClaimKinds": [
+        "gameRule"
+      ],
+      "phrasings": [
+        "how many attacks can a Pokémon have?"
+      ]
+    },
+    {
+      "id": "ans-badge-count",
+      "intent": "How many Gym Badges are there in Kanto?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "notes": "NEW (epic #64, game-rules slice): a game-rule constant, answered as a certified number via the pack table, not a lesson that mentions it in prose.",
+      "expectClaimKinds": [
+        "gameRule"
+      ],
+      "phrasings": [
+        "how many badges do I need?"
+      ]
+    },
+    {
+      "id": "ans-starter-count",
+      "intent": "How many starter Pokémon can I choose from?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "notes": "NEW (epic #64, game-rules slice): a game-rule constant, answered as a certified number via the pack table, not a lesson that mentions it in prose.",
+      "expectClaimKinds": [
+        "gameRule"
+      ],
+      "phrasings": [
+        "how many starters are there?"
+      ]
     }
   ]
 }

@@ -163,6 +163,16 @@ describe("the plan derived from a manifest", () => {
     ]);
   });
 
+  it("renders a game rule as a count — the number, then the rule's label", () => {
+    const rule = world.pack.gameRules.find((entry) => entry.id === "party-size")!;
+    const unit = plan(answer([{ kind: "gameRule", ruleId: "party-size" }])).units.find((entry) => entry.id === "count:rule:party-size");
+    expect(unit?.kind).toBe("count");
+    expect(unit?.slots.map((entry) => [entry.name, entry.expected])).toEqual([
+      ["count", String(rule.value)],
+      ["set", rule.label],
+    ]);
+  });
+
   it("anchors a triggered disclosure to the unit that triggered it", () => {
     const manifest = answer([{ kind: "count", rosterId: "selfdestruct-learners", reported: boomers().cardinality }], [boomers()]);
     const warning = plan(manifest).units.find((entry) => entry.id === "selfdestruct-warning");

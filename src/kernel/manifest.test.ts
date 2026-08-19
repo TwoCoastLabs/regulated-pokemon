@@ -131,6 +131,32 @@ describe("claims are recomputed, not believed", () => {
     );
   });
 
+  it("answers a game-rule constant as a number, refusing a forged or invented one (epic #64)", () => {
+    const partySize = context.pack.gameRules.find((rule) => rule.id === "party-size")!.value;
+    const manifest = compiled([{ kind: "gameRule", ruleId: "party-size" }]);
+    // Filled from the pack's reviewed value, like a count from its set.
+    expect(manifest.claims[0]).toEqual({ kind: "gameRule", ruleId: "party-size", reported: partySize });
+    expect(verifyManifest(context, manifest)).toEqual({ allowed: true, violations: [] });
+    // A stated number that disagrees with the pack.
+    expect(denialsOf({ ...manifest, claims: [{ kind: "gameRule", ruleId: "party-size", reported: 99 }] })).toContain(
+      "IA-4/game-rule-mismatch",
+    );
+    // A rule the pack never set — refused at compile as at verify, so the
+    // fill step cannot quietly invent a value the auditor would then miss.
+    expect(denialsOf({ ...manifest, claims: [{ kind: "gameRule", ruleId: "unlimited-team" }] })).toContain(
+      "IA-3/fabricated-game-rule",
+    );
+    expect(compile([{ kind: "gameRule", ruleId: "unlimited-team" }]).ok).toBe(false);
+  });
+
+  it("commits a game-rule constant with no grant — it is the same for every trainer (epic #64)", () => {
+    const bare: ManifestContext = { registry: context.registry, pack: context.pack, locale: context.locale, at: context.at };
+    const result = compile([{ kind: "gameRule", ruleId: "party-size" }], [], bare);
+    expect(result.ok).toBe(true);
+    // A fact, by contrast, still needs scope even here.
+    expect(compile([PIKACHU_SPEED], [], bare).ok).toBe(false);
+  });
+
   it("denies membership asserted the wrong way round", () => {
     const claim: Claim = { kind: "membership", rosterId: "electric-kanto", entityId: "zapdos", asserted: true };
     const manifest = compiled([claim], [ELECTRIC]);
@@ -563,6 +589,18 @@ describe("the lazy half of IA-1: a grantless context certifies lessons and nothi
     const bareResult = compile([{ kind: "explanation", blockId: "what-is-badge" }], [], bare);
     if (!bareResult.ok) throw new Error("fixture: grantless lesson refused");
     expect(denialsOf(bareResult.value, context)).toContain("IA-1/scope-grant-mismatch");
+  });
+
+  it("refuses a routed lesson with no approved text in the answer's locale", () => {
+    // Approved words exist in some locale, none in the one this answer is
+    // planned for — the same failure an undischargeable disclosure gets.
+    const doctored = structuredClone(context.pack);
+    const lesson = doctored.curriculum.find((rule) => rule.id === "what-is-badge")!;
+    (lesson.block as unknown as { content: { locale: string }[] }).content = lesson.block.content.filter(
+      (entry) => entry.locale !== "en-US",
+    );
+    const manifest = compiled([{ kind: "explanation", blockId: "what-is-badge" }]);
+    expect(denialsOf(manifest, { ...context, pack: doctored })).toContain("IA-6/lesson-block-unavailable");
   });
 });
 

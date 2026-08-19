@@ -94,6 +94,7 @@ describe("the shipped bank holds up", () => {
       fact: true,
       count: true,
       typeCount: true,
+      gameRule: true,
       membership: true,
       ranking: true,
       matchup: true,

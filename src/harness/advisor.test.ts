@@ -115,6 +115,27 @@ describe("proposeAnswer", () => {
     await proposeAnswer({ provider, context, scenarioId: "s", transactionId: "txn-1", transcript: [] });
     for (const factId of SPECIES_FACT_IDS) expect(seen).toContain(factId);
   });
+
+  it("offers the game-rule and lesson vocabularies when the pack has them, and omits them when it does not", async () => {
+    let full = "";
+    let empty = "";
+    const capture = (into: (text: string) => void) =>
+      new ScriptedProvider("m", (req) => {
+        into(req.prompt);
+        return JSON.stringify({ rosters: [], claims: [] });
+      });
+    await proposeAnswer({ provider: capture((t) => (full = t)), context, scenarioId: "s", transactionId: "t", transcript: [] });
+    // The gameRule claim and a rule id are disclosed, exactly like the lessons.
+    expect(full).toContain("gameRule");
+    expect(full).toContain("party-size");
+
+    // A pack that states no rules and teaches nothing offers neither shape.
+    const barePack = { ...context.pack, gameRules: [], curriculum: [] };
+    const bare: ManifestContext = { ...context, pack: barePack };
+    await proposeAnswer({ provider: capture((t) => (empty = t)), context: bare, scenarioId: "s", transactionId: "t", transcript: [] });
+    expect(empty).not.toContain("gameRule");
+    expect(empty).not.toContain("lesson-id");
+  });
 });
 
 describe("proposalDigest", () => {

@@ -68,7 +68,7 @@ import {
 } from "./dom.js";
 import { formatForValue, type FormatId, formatValue } from "./format.js";
 import { type ManifestContext, verifyManifest } from "./manifest.js";
-import { approvesFormat, blockFor, copyFor, curriculumRule, type ExhibitSlotSource } from "./pack.js";
+import { approvesFormat, blockFor, copyFor, curriculumRule, type ExhibitSlotSource, gameRule } from "./pack.js";
 import { describeCriteria } from "./roster.js";
 import { verdictOf, violation } from "./violation.js";
 
@@ -299,6 +299,19 @@ function unitForClaim(
         );
         if (!resolved.ok) return resolved;
         return { ok: true, value: { id: "count:types", kind: "count", slots: resolved.value, mentions: [] } };
+      }
+      case "gameRule": {
+        // Renders as a count: the number leads, and the rule's label is the
+        // noun it counts ("6 Pokémon on your team at once"). A rendered manifest
+        // is a verified one, so the rule is present — a fabricated one was
+        // refused and never reached render.
+        const rule = gameRule(context.pack, claim.ruleId)!;
+        const resolved = slots(
+          slot(context, locale, "count", { kind: "number", value: rule.value }),
+          slot(context, locale, "set", entity(rule.label), "plain-text"),
+        );
+        if (!resolved.ok) return resolved;
+        return { ok: true, value: { id: `count:rule:${claim.ruleId}`, kind: "count", slots: resolved.value, mentions: [] } };
       }
       case "membership": {
         const resolved = slots(

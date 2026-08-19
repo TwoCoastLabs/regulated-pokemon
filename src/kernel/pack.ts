@@ -23,7 +23,7 @@ import { formatCarriesLocale, type FormatId, IMPLEMENTED_LOCALES, isFormatId } f
 import type { CertifiedRegistry } from "./registry.js";
 import { AccordError, violation } from "./violation.js";
 
-export const PACK_SCHEMA_VERSION = 6;
+export const PACK_SCHEMA_VERSION = 7;
 
 /** The League's badge scale. Kanto issues eight; nothing above that exists. */
 export const MAX_BADGE_LEVEL = 8;
@@ -308,6 +308,22 @@ export interface ScopeVocabulary {
   dimensions: readonly DimensionRule[];
 }
 
+/**
+ * A certified game-rule constant (epic #64, game-rules slice): a fixed number
+ * of Red and Blue — six Pokémon on a team, four moves each — that no snapshot
+ * fact carries because it is a rule, not species data. Reviewed reference data,
+ * exactly like the curriculum, but structured: a `gameRule` claim reads the
+ * value here, so "how many can I have on my team?" answers as a certified
+ * number, never as a paragraph that happens to mention one. Count-shaped by
+ * design — `label` is the plural noun the number counts ("Pokémon on your team
+ * at once"), so it reads "6 Pokémon on your team at once".
+ */
+export interface GameRule {
+  id: string;
+  value: number;
+  label: string;
+}
+
 export interface AccordPack {
   packVersion: typeof PACK_SCHEMA_VERSION;
   /** Stable, versioned id recorded in every manifest this pack governed. */
@@ -317,6 +333,7 @@ export interface AccordPack {
   actions: readonly ActionRule[];
   exhibits: readonly ExhibitRule[];
   curriculum: readonly CurriculumRule[];
+  gameRules: readonly GameRule[];
   vocabulary: ScopeVocabulary;
 }
 
@@ -333,6 +350,11 @@ export function blockFor(rule: { block: DisclosureBlockRule }, locale: string): 
 /** One approved lesson, by the id a model routes to, or nothing. */
 export function curriculumRule(pack: AccordPack, id: string): CurriculumRule | undefined {
   return pack.curriculum.find((rule) => rule.id === id);
+}
+
+/** One certified game-rule constant, by the id a model names, or nothing. */
+export function gameRule(pack: AccordPack, id: string): GameRule | undefined {
+  return pack.gameRules.find((rule) => rule.id === id);
 }
 
 /** One catalogued string in one locale, or nothing. */
@@ -399,6 +421,15 @@ export function loadPack(input: unknown, registry: CertifiedRegistry): Resolutio
       violations: [violation("IA-7", "pack-actions-missing", "Accord pack does not say which actions exist")],
     };
   }
+  if (!Array.isArray(document.gameRules)) {
+    // Like the curriculum: an empty list is a pack that states no constants, a
+    // missing one is a pack that never decided, and every gameRule claim would
+    // then name a rule nobody approved.
+    return {
+      ok: false,
+      violations: [violation("IA-6", "pack-game-rules-missing", "Accord pack does not state the game's rules")],
+    };
+  }
   if (
     document.vocabulary === null ||
     typeof document.vocabulary !== "object" ||
@@ -429,10 +460,40 @@ export function loadPack(input: unknown, registry: CertifiedRegistry): Resolutio
     ...checkPresentation(pack.presentation),
     ...checkRules(pack, registry),
     ...checkActions(pack),
+    ...checkGameRules(pack.gameRules),
     ...checkVocabulary(pack.vocabulary),
   ];
   if (violations.length > 0) return { ok: false, violations };
   return { ok: true, value: pack };
+}
+
+/**
+ * Every game-rule constant is a whole, positive number with a label that reads
+ * after it. Reviewed data, so this catches a malformation, not a wrong value —
+ * the value's correctness is the reviewer's, exactly as a lesson's text is.
+ */
+function checkGameRules(rules: readonly GameRule[]): Violation[] {
+  const violations: Violation[] = [];
+  const seen = new Set<string>();
+  for (const rule of rules) {
+    if (typeof rule.id !== "string" || rule.id.length === 0) {
+      violations.push(violation("IA-6", "pack-game-rule-malformed", "a game rule has no id"));
+      continue;
+    }
+    if (seen.has(rule.id)) {
+      violations.push(violation("IA-6", "pack-duplicate-game-rule", `game rule "${rule.id}" appears more than once`, { actual: rule.id }));
+    }
+    seen.add(rule.id);
+    if (!Number.isInteger(rule.value) || rule.value <= 0) {
+      violations.push(
+        violation("IA-6", "pack-game-rule-malformed", `game rule "${rule.id}" has no positive whole value`, { actual: String(rule.value) }),
+      );
+    }
+    if (typeof rule.label !== "string" || rule.label.trim().length === 0) {
+      violations.push(violation("IA-6", "pack-game-rule-malformed", `game rule "${rule.id}" has no label`, { actual: rule.id }));
+    }
+  }
+  return violations;
 }
 
 function checkRules(pack: AccordPack, registry: CertifiedRegistry): Violation[] {
