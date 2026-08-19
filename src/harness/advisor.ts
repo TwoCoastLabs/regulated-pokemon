@@ -155,7 +155,7 @@ function answerPrompt(
     ...(rules.length === 0
       ? []
       : [
-          '  {"kind": "gameRule", "ruleId": "<rule-id>"}  — a fixed rule of the game as a certified number (how many Pokémon on a team, how many moves one can know, and the like); the system fills the number, so state none',
+          '  {"kind": "gameRule", "ruleId": "<rule-id>"}  — a fixed rule of the game as a certified number. Use it only for a "how many" question about a rule (how many Pokémon fit on a team, how many moves one can know). It counts a rule; it does not list what a trainer owns — the records do not know this trainer\'s team, so "what is on my team?" gets no claim. The system fills the number, so state none.',
         ]),
     '  {"kind": "membership", "rosterId": "<id>", "entityId": "<id>", "asserted": <boolean>}',
     '  {"kind": "ranking", "rosterId": "<id>", "basis": "<fact-id>", "direction": "highest"|"lowest"}  — defines a set and an ordering; the system names the winner, so name none',

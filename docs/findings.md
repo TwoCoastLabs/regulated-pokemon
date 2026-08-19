@@ -1302,6 +1302,50 @@ type/party/badge counts are its first instances.
 
 ---
 
+### Iteration 13 — the eval loop starts small: a 25-question smoke set, run and fixed (docs/eval.md)
+
+Instead of the full-bank §19 run, a **stratified smoke set** — one or two
+questions per disposition × claim kind × epic-#64 surface, 25 in all — run on
+both models for a few cents, to find gaps and grow from. The loop is
+`down-sample → run → document → fix → grow`, and the process and set live in
+[docs/eval.md](eval.md).
+
+First pass, N=1:
+
+| | `gpt-5.4-mini` | `gemini-3.5-flash-lite` |
+|---|---|---|
+| overall | 19/25 | 21/25 |
+| answerable (structured) | **16/16** | **16/16** |
+| enforcement (gated commits) | **0** | **0** |
+| honest-refusal on unanswerable | 20% (1/5) | 40% (2/5) |
+
+**Every structured surface resolves on both models** — facts, counts, the type
+count, the game-rule constants, matchups, the 18-lesson curriculum, eligibility.
+Enforcement is a hard zero on both. The whole gap is **subject deflection** on
+unanswerable questions: "who is the Pewter gym leader?" → the `what-is-gym-leader`
+lesson, "final boss?" → `what-is-league`. The weak model is the *more* honest of
+the two (40% vs 20% refusal) — it deflects less, which is the opposite of a
+capability story and exactly the point.
+
+The run separated three kinds of red, and only two are the system's:
+
+- **Over-strict oracle** (fixed the eval): "is Zapdos electric?" answered with a
+  `fact` (its types), which the entry did not accept beside `membership`. It does
+  now — answerable went 15/16 → **16/16**.
+- **Shape deflection** (fixed the system): "what are on my team?" grabbed the
+  `party-size` rule. The `gameRule` prompt now says it counts a rule and does not
+  list what a trainer owns; the question abstains, and a new `data-my-team`
+  `needs-data` entry pins that expectation.
+- **Subject deflection** (documented, not suppressed): the character and no-data
+  lessons above. Prompt nudging is unreliable and backfired once (iteration 11);
+  the guarantee holds regardless — reviewed, certified text on the wrong subject,
+  never a fabrication, and the bank scores each a miss so §19 will count them.
+
+Provenance: `runs/coverage/2026-08-19T11-35-13…` (strong) and `…11-36-41…`
+(weak). The set only grows from here; §19 is where it arrives at the whole bank.
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's
