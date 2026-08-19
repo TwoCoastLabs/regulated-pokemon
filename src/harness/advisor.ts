@@ -113,7 +113,10 @@ function answerPrompt(
           '"hi", "are you working?", "thanks" — are off-topic: reply with no',
           "claims at all. Do not reach for a lesson that is merely adjacent; a",
           "lesson is for a real question about what something is or how the game",
-          "works, not a way to avoid saying nothing.",
+          "works, not a way to avoid saying nothing. A question about a specific",
+          "character or how the story unfolds, or anything no lesson squarely",
+          "covers, also gets no claims — the records certify Pokémon and rules,",
+          "not people or plot, and an honest pass beats teaching the nearest thing.",
         ]
       : [
           "Scope is established:",

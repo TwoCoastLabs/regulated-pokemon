@@ -841,6 +841,166 @@
           }
         ]
       }
+    },
+    {
+      "id": "what-is-pokemon",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-pokemon",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "A Pokémon is a creature you catch in the wild and keep on your team to battle with. Each one has a species — Pikachu, Charmander, Snorlax — and one or two types, like Fire or Water, that decide what it resists and what it is weak to. You raise a Pokémon by battling: it grows stronger, learns new moves, and some evolve into a new form along the way. Ask the Advisor about any specific Pokémon and it answers from the official Red and Blue records — its stats, its types, where it appears, and what it can learn.",
+            "digest": "sha256:45ac815ec5da9050cb804c2f9d7556358d0c463d121ed913d9be85d0a24bb90a"
+          },
+          {
+            "locale": "en-GB",
+            "text": "A Pokémon is a creature you catch in the wild and keep on your team to battle with. Each one has a species — Pikachu, Charmander, Snorlax — and one or two types, like Fire or Water, that decide what it resists and what it is weak to. You raise a Pokémon by battling: it grows stronger, learns new moves, and some evolve into a new form along the way. Ask the Advisor about any specific Pokémon and it answers from the official Red and Blue records — its stats, its types, where it appears, and what it can learn.",
+            "digest": "sha256:45ac815ec5da9050cb804c2f9d7556358d0c463d121ed913d9be85d0a24bb90a"
+          }
+        ]
+      }
+    },
+    {
+      "id": "what-is-move",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-move",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "A move is an action a Pokémon uses in battle — Tackle, Thunderbolt, Surf. Every move has a type, just like the Pokémon that use it, and most deal damage while some raise or lower a battler's stats. A Pokémon can know up to four moves at once, and each move has limited PP — the number of times it can be used before resting at a Pokémon Center. Ask the Advisor which moves a specific Pokémon can learn, and it answers from the official Red and Blue records.",
+            "digest": "sha256:c6c4f97d3f407416df6c2c1f9f4c0e8d058a9ccb033844e964691bc0b2bb6eff"
+          },
+          {
+            "locale": "en-GB",
+            "text": "A move is an action a Pokémon uses in battle — Tackle, Thunderbolt, Surf. Every move has a type, just like the Pokémon that use it, and most deal damage while some raise or lower a battler's stats. A Pokémon can know up to four moves at once, and each move has limited PP — the number of times it can be used before resting at a Pokémon Center. Ask the Advisor which moves a specific Pokémon can learn, and it answers from the official Red and Blue records.",
+            "digest": "sha256:c6c4f97d3f407416df6c2c1f9f4c0e8d058a9ccb033844e964691bc0b2bb6eff"
+          }
+        ]
+      }
+    },
+    {
+      "id": "what-is-evolution",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-evolution",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Evolution is a Pokémon changing into a new, usually stronger form. Most evolve by reaching a certain level through battling; some evolve when given a special stone; and a few only after being traded to another player. An evolved Pokémon keeps the moves it knew and its species changes — Charmander becomes Charmeleon, then Charizard. Ask the Advisor how a specific Pokémon evolves, and it answers from the official Red and Blue records.",
+            "digest": "sha256:a95e6c07f6ecdd7c43772ec67b9097e9dd42737ad67f4fc508e64a06b7113d9e"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Evolution is a Pokémon changing into a new, usually stronger form. Most evolve by reaching a certain level through battling; some evolve when given a special stone; and a few only after being traded to another player. An evolved Pokémon keeps the moves it knew and its species changes — Charmander becomes Charmeleon, then Charizard. Ask the Advisor how a specific Pokémon evolves, and it answers from the official Red and Blue records.",
+            "digest": "sha256:a95e6c07f6ecdd7c43772ec67b9097e9dd42737ad67f4fc508e64a06b7113d9e"
+          }
+        ]
+      }
+    },
+    {
+      "id": "what-is-gym-leader",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-gym-leader",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "A Gym Leader is the trainer in charge of one of Kanto's eight Gyms, and each one specialises in a single type — the first Gym, Brock's in Pewter City, is all Rock. Defeating a Gym Leader earns their Badge, and the eight Badges are what let you enter the Pokémon League. The Gyms are meant to be taken roughly in order, each tougher than the last. The Advisor certifies facts about Pokémon and the rules; a Leader's own team is not part of the pinned records.",
+            "digest": "sha256:983b4a1d03366d83a4a8d5900e4603566c5f19632e72e86bb3e62d4c3da17471"
+          },
+          {
+            "locale": "en-GB",
+            "text": "A Gym Leader is the trainer in charge of one of Kanto's eight Gyms, and each one specialises in a single type — the first Gym, Brock's in Pewter City, is all Rock. Defeating a Gym Leader earns their Badge, and the eight Badges are what let you enter the Pokémon League. The Gyms are meant to be taken roughly in order, each tougher than the last. The Advisor certifies facts about Pokémon and the rules; a Leader's own team is not part of the pinned records.",
+            "digest": "sha256:983b4a1d03366d83a4a8d5900e4603566c5f19632e72e86bb3e62d4c3da17471"
+          }
+        ]
+      }
+    },
+    {
+      "id": "what-is-league",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-league",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "The Pokémon League is the final challenge, and the reason you collect all eight Badges. It is guarded by the Elite Four — four expert trainers battled one after another, with no chance to heal in between — and then the Champion, the strongest trainer of all. Beating them completes the main journey and makes you the new Champion. The Advisor certifies facts about Pokémon and the rules; the League trainers' own teams are not part of the pinned records.",
+            "digest": "sha256:12c3bbf85c916225b5917fe9e9ed6024d0ca27fb75dc245c75d1d949ba2d1770"
+          },
+          {
+            "locale": "en-GB",
+            "text": "The Pokémon League is the final challenge, and the reason you collect all eight Badges. It is guarded by the Elite Four — four expert trainers battled one after another, with no chance to heal in between — and then the Champion, the strongest trainer of all. Beating them completes the main journey and makes you the new Champion. The Advisor certifies facts about Pokémon and the rules; the League trainers' own teams are not part of the pinned records.",
+            "digest": "sha256:12c3bbf85c916225b5917fe9e9ed6024d0ca27fb75dc245c75d1d949ba2d1770"
+          }
+        ]
+      }
+    },
+    {
+      "id": "what-are-stats",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-are-stats",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Stats are the numbers that decide how a Pokémon performs in battle. Red and Blue give each Pokémon five: HP, how much damage it can take before fainting; Attack and Defense, for physical moves; Speed, which decides who strikes first; and Special, which covers both special attack and defense. Levelling up raises every stat, and each species leans a different way — a Snorlax toward HP, an Alakazam toward Speed and Special. Ask the Advisor for any Pokémon's stats, and it answers from the official Red and Blue records.",
+            "digest": "sha256:44fa18daf543e2db8d3fc1970f4690d9392d9977d6c276db2316a3d3f63750bb"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Stats are the numbers that decide how a Pokémon performs in battle. Red and Blue give each Pokémon five: HP, how much damage it can take before fainting; Attack and Defense, for physical moves; Speed, which decides who strikes first; and Special, which covers both special attack and defense. Levelling up raises every stat, and each species leans a different way — a Snorlax toward HP, an Alakazam toward Speed and Special. Ask the Advisor for any Pokémon's stats, and it answers from the official Red and Blue records.",
+            "digest": "sha256:44fa18daf543e2db8d3fc1970f4690d9392d9977d6c276db2316a3d3f63750bb"
+          }
+        ]
+      }
+    },
+    {
+      "id": "what-is-poke-ball",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-poke-ball",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "A Poké Ball is the device you throw to catch a wild Pokémon. Weaken it first — lower its HP, or put it to sleep or paralyse it — and a thrown ball is far more likely to hold. Stronger balls hold better: a Great Ball beats a standard Poké Ball, and an Ultra Ball beats both. Balls work only on wild Pokémon, never on another trainer's, and you buy them at any Poké Mart.",
+            "digest": "sha256:cdaf082c86d849b017380fa3821032e4c69b090232a219d6ba23dc6a94471098"
+          },
+          {
+            "locale": "en-GB",
+            "text": "A Poké Ball is the device you throw to catch a wild Pokémon. Weaken it first — lower its HP, or put it to sleep or paralyse it — and a thrown ball is far more likely to hold. Stronger balls hold better: a Great Ball beats a standard Poké Ball, and an Ultra Ball beats both. Balls work only on wild Pokémon, never on another trainer's, and you buy them at any Poké Mart.",
+            "digest": "sha256:cdaf082c86d849b017380fa3821032e4c69b090232a219d6ba23dc6a94471098"
+          }
+        ]
+      }
+    },
+    {
+      "id": "what-is-tm-hm",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-tm-hm",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "A TM or HM is a machine that teaches a Pokémon a move. A TM — Technical Machine — is used up once it teaches its move; an HM — Hidden Machine — can be used again and again, and its moves also work outside battle, like Surf across water or Cut through a small tree. No Pokémon can learn every machine. Ask the Advisor whether a specific Pokémon can learn a given move, and it answers from the official Red and Blue records.",
+            "digest": "sha256:96c274e70b49087e58368fc269e9653d2f616db5a3eef5e8640f657d4769930b"
+          },
+          {
+            "locale": "en-GB",
+            "text": "A TM or HM is a machine that teaches a Pokémon a move. A TM — Technical Machine — is used up once it teaches its move; an HM — Hidden Machine — can be used again and again, and its moves also work outside battle, like Surf across water or Cut through a small tree. No Pokémon can learn every machine. Ask the Advisor whether a specific Pokémon can learn a given move, and it answers from the official Red and Blue records.",
+            "digest": "sha256:96c274e70b49087e58368fc269e9653d2f616db5a3eef5e8640f657d4769930b"
+          }
+        ]
+      }
     }
   ]
 }

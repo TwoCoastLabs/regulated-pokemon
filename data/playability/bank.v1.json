@@ -1588,7 +1588,8 @@
       ],
       "expectBlockIds": [
         "what-is-game",
-        "how-to-play"
+        "how-to-play",
+        "what-is-pokemon"
       ]
     },
     {
@@ -1816,6 +1817,174 @@
       },
       "disposition": "needs-data",
       "notes": "playtime/completion data is not a certified fact"
+    },
+    {
+      "id": "meta-what-is-pokemon",
+      "intent": "What is a Pokémon?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "notes": "NEW (epic #64, foundational-curriculum audit): a beginner's core concept-noun that had no lesson and was deflecting to what-is-game. Reviewed text, digest-pinned. FLAGGED FOR AUTHOR REVIEW.",
+      "expectClaimKinds": [
+        "explanation"
+      ],
+      "expectBlockIds": [
+        "what-is-pokemon"
+      ],
+      "phrasings": [
+        "What is a Pokemon?",
+        "what exactly is a Pokémon?"
+      ]
+    },
+    {
+      "id": "meta-what-is-move",
+      "intent": "What is a move?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "notes": "NEW (epic #64, foundational-curriculum audit): a beginner's core concept-noun that had no lesson and was deflecting to what-is-game. Reviewed text, digest-pinned. FLAGGED FOR AUTHOR REVIEW.",
+      "expectClaimKinds": [
+        "explanation"
+      ],
+      "expectBlockIds": [
+        "what-is-move"
+      ],
+      "phrasings": [
+        "what's a move?",
+        "what are a Pokémon's attacks?"
+      ]
+    },
+    {
+      "id": "meta-what-is-evolution",
+      "intent": "What is evolution?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "notes": "NEW (epic #64, foundational-curriculum audit): a beginner's core concept-noun that had no lesson and was deflecting to what-is-game. Reviewed text, digest-pinned. FLAGGED FOR AUTHOR REVIEW.",
+      "expectClaimKinds": [
+        "explanation"
+      ],
+      "expectBlockIds": [
+        "what-is-evolution"
+      ],
+      "phrasings": [
+        "how does a Pokémon evolve?",
+        "what does evolving do?"
+      ]
+    },
+    {
+      "id": "meta-what-is-gym-leader",
+      "intent": "What is a Gym Leader?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "notes": "NEW (epic #64, foundational-curriculum audit): a beginner's core concept-noun that had no lesson and was deflecting to what-is-game. Reviewed text, digest-pinned. FLAGGED FOR AUTHOR REVIEW.",
+      "expectClaimKinds": [
+        "explanation"
+      ],
+      "expectBlockIds": [
+        "what-is-gym-leader"
+      ],
+      "phrasings": [
+        "what's a gym leader?",
+        "who are the gym leaders?"
+      ]
+    },
+    {
+      "id": "meta-what-is-league",
+      "intent": "What is the Pokémon League?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "notes": "NEW (epic #64, foundational-curriculum audit): a beginner's core concept-noun that had no lesson and was deflecting to what-is-game. Reviewed text, digest-pinned. FLAGGED FOR AUTHOR REVIEW.",
+      "expectClaimKinds": [
+        "explanation"
+      ],
+      "expectBlockIds": [
+        "what-is-league"
+      ],
+      "phrasings": [
+        "what is the pokemon league?",
+        "what's the Elite Four?"
+      ]
+    },
+    {
+      "id": "meta-what-are-stats",
+      "intent": "What are stats?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "notes": "NEW (epic #64, foundational-curriculum audit): a beginner's core concept-noun that had no lesson and was deflecting to what-is-game. Reviewed text, digest-pinned. FLAGGED FOR AUTHOR REVIEW.",
+      "expectClaimKinds": [
+        "explanation"
+      ],
+      "expectBlockIds": [
+        "what-are-stats"
+      ],
+      "phrasings": [
+        "what do the stats mean?",
+        "what is HP and Attack?"
+      ]
+    },
+    {
+      "id": "meta-what-is-poke-ball",
+      "intent": "What is a Poké Ball?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "notes": "NEW (epic #64, foundational-curriculum audit): a beginner's core concept-noun that had no lesson and was deflecting to what-is-game. Reviewed text, digest-pinned. FLAGGED FOR AUTHOR REVIEW.",
+      "expectClaimKinds": [
+        "explanation"
+      ],
+      "expectBlockIds": [
+        "what-is-poke-ball"
+      ],
+      "phrasings": [
+        "what's a pokeball?",
+        "how do Poké Balls work?"
+      ]
+    },
+    {
+      "id": "meta-what-is-tm-hm",
+      "intent": "What is a TM or HM?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "notes": "NEW (epic #64, foundational-curriculum audit): a beginner's core concept-noun that had no lesson and was deflecting to what-is-game. Reviewed text, digest-pinned. FLAGGED FOR AUTHOR REVIEW.",
+      "expectClaimKinds": [
+        "explanation"
+      ],
+      "expectBlockIds": [
+        "what-is-tm-hm"
+      ],
+      "phrasings": [
+        "what's an HM?",
+        "what are TMs and HMs?"
+      ]
     }
   ]
 }
