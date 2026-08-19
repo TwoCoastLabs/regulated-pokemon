@@ -422,6 +422,29 @@ body {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   padding: 3px 10px;
+  border: none;
+  border-radius: 2px;
+  font-family: inherit;
+  cursor: pointer;
+}
+.exhibit-tag:hover {
+  filter: brightness(1.12);
+}
+.exhibit-tag-chev {
+  font-size: 9px;
+  opacity: 0.85;
+}
+/* Progressive disclosure: the reassurance header is folded away until the
+   badge is clicked. The answer units and the provenance footer are never
+   hidden — the certified signal and the mandatory disclosure stay in view. */
+.exhibit:not(.revealed) .exhibit-page header {
+  display: none;
+}
+/* The provenance disclosure stays legible, but subordinate to the answer —
+   present and readable, not competing with it. */
+.exhibit-page footer {
+  font-size: 13px;
+  color: #6b6656;
 }
 
 .exhibit-refusal {
