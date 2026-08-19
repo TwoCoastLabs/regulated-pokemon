@@ -277,6 +277,37 @@ describe("a ranking's basis is scope, not content", () => {
   });
 });
 
+describe("material scope is derived from the answer's own claims (epic #64)", () => {
+  // The fixture grant minus its badge binding: a scope in which a version was
+  // established and the trainer's accreditation never was.
+  const noBadge = (): ManifestContext => {
+    const grant = trainerGrant();
+    const scope = { ...grant.scope };
+    delete (scope as { badgeLevel?: number }).badgeLevel;
+    return { ...context, grant: { ...grant, scope } };
+  };
+
+  it("commits a world fact under a grant that establishes only what a fact needs", () => {
+    // A fact depends on the version and nothing about the trainer, so a grant
+    // that never bound a badge level is complete *for this answer*.
+    const manifest = compiled([{ kind: "fact", entityId: "pikachu", factId: "base-speed" }]);
+    expect(verifyManifest(noBadge(), manifest)).toEqual({ allowed: true, violations: [] });
+  });
+
+  it("refuses an eligibility ruling when the grant never established badges", () => {
+    const manifest = compiled([{ kind: "eligibility", entityId: "mewtwo" }]);
+    expect(denialsOf(manifest, noBadge())).toContain("IA-1/scope-dimension-missing");
+  });
+
+  it("closes the unbound-badge hole: a restricted recommendation is refused, not waved through", () => {
+    // Without the coverage check, checkAccreditation would read the unbound
+    // badgeLevel, compare `undefined < 6` (false), and allow the legendary.
+    const manifest = compiled([{ kind: "recommendation", entityId: "mewtwo" }]);
+    expect(denialsOf(manifest, noBadge())).toContain("IA-1/scope-dimension-missing");
+    expect(verifyManifest(noBadge(), manifest).allowed).toBe(false);
+  });
+});
+
 describe("the Accord pack decides who may be told what", () => {
   it("allows a recommendation the trainer is accredited for", () => {
     expect(compile([{ kind: "recommendation", entityId: "mewtwo" }]).ok).toBe(true);

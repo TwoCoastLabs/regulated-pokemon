@@ -35,6 +35,7 @@ import { deriveEligibility, describeFinding, sameFinding } from "./eligibility.j
 import { type AccordPack, actionRule, approvesLocale, blockFor, curriculumRule, type ExhibitRule, restrictionsFor } from "./pack.js";
 import { type CertifiedRegistry, formatFactValue, sameFactValue } from "./registry.js";
 import { verifyRoster } from "./roster.js";
+import { requiredDimensionsFor } from "./scope-deps.js";
 import { verdictOf, violation } from "./violation.js";
 
 /**
@@ -153,6 +154,14 @@ export function verifyManifest(context: ManifestContext, manifest: AnswerManifes
   // would be answering a question nobody asked.
   const binding = checkBinding(context, manifest);
   if (binding.length > 0) return verdictOf(binding);
+
+  // Scope sufficiency next, and before any per-kind value is read: the material
+  // dimensions this answer depends on are derived from its own committed claims
+  // (epic #64, slice 1), so a grant that never established one of them refuses
+  // the answer by name rather than letting a downstream check read the unbound
+  // value and default it.
+  const coverage = checkScopeCoverage(context, manifest);
+  if (coverage.length > 0) return verdictOf(coverage);
 
   const violations = [
     ...checkRosters(context, manifest),
@@ -283,6 +292,37 @@ function checkWindow(grant: ScopeGrant, at: string): Violation[] {
     ];
   }
   return [];
+}
+
+/**
+ * The material scope this answer's own claims depend on, and whether the grant
+ * establishes it (epic #64, slice 1).
+ *
+ * `requiredDimensionsFor` derives the demand from the committed claims, so
+ * scope sufficiency is a property of what was answered, not a trusted field on
+ * the record. The refusal must land here, before any per-kind check runs: an
+ * accreditation check reading an unbound `badgeLevel` would compare
+ * `undefined < 6` — which is `false` — and wave a restricted species straight
+ * through. `comparisonBasis` is comparison scope rather than material, and its
+ * own value check (`checkRankingBasis`) already fails closed on an unbound
+ * basis, so it is not re-checked here.
+ *
+ * Grantless answers are left to `checkClaim`'s per-kind scope gate, which names
+ * the harm for the only claim kind that can appear without a grant at all.
+ */
+function checkScopeCoverage(context: ManifestContext, manifest: AnswerManifest): Violation[] {
+  const grant = context.grant;
+  if (grant === undefined) return [];
+  const required = requiredDimensionsFor(manifest.claims).filter((dimension) => dimension !== "comparisonBasis");
+  const bound = required.filter((dimension) => grant.scope[dimension] !== undefined);
+  return required
+    .filter((dimension) => grant.scope[dimension] === undefined)
+    .map((dimension) =>
+      violation("IA-1", "scope-dimension-missing", `this answer's claims require "${dimension}" and the grant does not establish it`, {
+        expected: required.join(", ") || "no material scope",
+        actual: bound.join(", ") || "nothing established",
+      }),
+    );
 }
 
 // --- rosters ----------------------------------------------------------------
