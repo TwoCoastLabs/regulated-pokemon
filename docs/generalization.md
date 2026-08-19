@@ -111,7 +111,7 @@ core of a regulated agent can be small enough to audit line by line.
 ## 2. What a port re-instantiates (and why it is not a config file)
 
 The type vocabulary is compiled in on purpose. `TrainerScope` has exactly four
-dimensions; claims come in exactly six kinds; roster criteria in five;
+dimensions; claims come in eleven kinds; roster criteria in five;
 formatters in seven. Making those a configuration language would recreate the
 thing this design exists to avoid — a policy engine expressive enough to hide
 rules in, sitting in an enforcement path. The stated non-goal ("not a
@@ -657,10 +657,10 @@ the law's process duties into a file the operator already has.
 
 ## 9. Scale: retrieval nominates, the kernel disposes
 
-The curriculum mechanism as shipped is honest about its size. Ten lessons
-ride in the answer grammar as an enum and in the prompt as a listed
+The curriculum mechanism as shipped is honest about its size. Eighteen
+lessons ride in the answer grammar as an enum and in the prompt as a listed
 vocabulary, and the model routes by reading the whole catalogue — a
-1-of-10 classification, which is why even the weak model routes it
+1-of-18 classification, which is why even the weak model routes it
 reliably. Three parts of that stop scaling together, somewhere in the low
 hundreds of entries: the prompt listing (linear token cost per call), the
 enum (providers cap schema size, and constrained decoding over a huge
@@ -744,9 +744,120 @@ a load-bearing assumption of the design.
 
 And the cost that has no technical fix, stated plainly because it is the
 honest half of the answer: **review is the dominant expense at scale.**
-Ten lessons were read by a person before their digests were pinned; fifty
-thousand entries mean authorship, approval workflow, re-review when the
+Eighteen lessons were read by a person before their digests were pinned;
+fifty thousand entries mean authorship, approval workflow, re-review when the
 world changes, and retirement — the knowledge-operations reality §4
 already prices. The mechanism does not remove that cost; it is the reason
 the cost buys something: every one of those reviewed texts becomes a
 surface the model can reach and cannot alter.
+
+## 10. What iteration actually cost
+
+Sections 1–9 argue the scalability from the design. This one reports it from
+the build log, because the design's central promise — that the enforcement
+core converges while usefulness is bought incrementally and never trades
+against safety — is a claim about *cost over time*, and this project ran
+enough successive slices to measure the shape of that cost rather than assert
+it. The honest summary in one line: **the kernel converged, the knowledge is
+linear-forever but delegable, routing-by-prose hit its ceiling on schedule,
+and the pinned enforcement zero is what made the whole treadmill safe to
+run.**
+
+### The slice gradient is the evidence
+
+The useful thing to watch across a run of slices is not whether each landed
+but *what kind of work each was.* Early slices were kernel surgery. The
+scope-dependency table that made scope requirements derivable from committed
+claims, and the propose-first ladder that priced ambiguity into recorded
+witnesses, were both changes to enforcement structure — new invariants, new
+crucible mutations, the load-bearing walls going up. Later slices were
+increasingly *data plus one sentence of prompt.* A certified type count was a
+single claim case over a set whose cardinality the kernel already owned. The
+game-rule constants — party size, moves per Pokémon, box capacity — were a
+reviewed table in the pack and a claim kind that reads it; and the last
+*structural* work that surface needed was a one-line unification, deriving
+"may this commit without a scope grant?" from the same dependency table that
+already answered "what scope does this claim require?" After that line, "how
+many Pokémon fit in a box?" was answerable with a table row and zero kernel
+change.
+
+That gradient is the convergence, made concrete: **claim kinds are speech
+acts, not topics.** A domain has a small, closing set of things an agent can
+*do with words* — state a fact, count a set, test membership, rank by a named
+basis, describe a matchup, check eligibility, teach from reviewed prose, cite
+a fixed rule, recommend an eligible pick, act on an exact artifact. This build
+is at eleven and the curve has visibly flattened: new questions increasingly
+reuse existing shapes, and the marginal question costs curation, not
+engineering. The claim-kind vocabulary is the part that amortizes.
+
+### Knowledge never amortizes — and that is the design working, not failing
+
+The curriculum grew from ten lessons toward the high teens as *pure pack
+data*: no kernel diff, no new invariant, each entry read by a person and
+pinned by digest. That is the cost that has no technical fix (§9), and the
+slice history prices it honestly — the engineering went to zero while the
+authoring did not. The structural saving is only this, and it is enough:
+closed lists scale with the domain's **schema**, not its **corpus**. The
+eleventh claim kind was engineering; the ten-thousandth fact is a snapshot
+row. What a builder feels as "continuous iteration to capture the questions"
+is real and permanent, but it is a linear curation function that the §4
+policy-owner and data-steward roles absorb — not a compounding engineering
+burden that only the kernel owner can touch.
+
+### Why the iteration was safe to run at speed
+
+This is the load-bearing observation, and it is the one only a multi-slice run
+can supply. In an ungoverned system every prompt tweak and every added entry
+can regress safety, so iteration velocity is bounded by re-verifying
+everything, every time. Here the failure asymmetry makes iteration a **one-way
+ratchet**: a gap degrades to an honest abstention or a wrong-subject
+*certified* answer, never to a fabrication or an unauthorized act. Across this
+entire run of slices the enforcement metrics stayed hard zeros while
+usefulness climbed, and at no point was one traded for the other — the eval
+loop ratchets usefulness, the crucible pins enforcement, and the two never
+share a dial. That decoupling *is* the scalability result: the
+knowledge-engineering treadmill can be handed to a non-engineering curation
+function precisely because their mistakes fall closed and cannot reach the
+kernel.
+
+### The ceilings the iteration surfaced (on schedule)
+
+- **Routing by hand-tuned prompt prose does not scale, and the run proved it
+  the hard way.** Tightening one claim's description to stop it answering out
+  of shape worked; an earlier attempt to *name* an out-of-scope subject in a
+  prompt to suppress deflection backfired, routing a related concept into the
+  wrong reviewed lesson. English-per-claim is fine at eleven kinds and
+  eighteen lessons; it is hopeless at a real catalogue. The designed answer is
+  §9's two-stage route — retrieval nominates a shortlist, the per-call grammar
+  narrows to it, verification stays global — and the deflection metric is the
+  instrument that says when that threshold has arrived.
+- **Subject deflection scales *with* the catalogue.** Every reviewed entry
+  added is one more adjacent-but-wrong certified text a question can deflect
+  into. It stays a usefulness number and never an integrity one — the answer
+  is still reviewed, certified content — but it is the number to watch as the
+  knowledge base grows, and per doctrine it is measured, not prompt-suppressed.
+- **"Capture a significant portion of the possible questions" is the wrong
+  target.** §8 is the reason: no surveyed regulator requires per-response
+  grounding. The scalable posture is a governed core answering the
+  claim-shaped questions, wrapped by a free tier whose "unverified" label is
+  earned by a *negative* gate — verified absence of governed claims — not by
+  aspiring to certify everything askable. The authoring burden is bounded by
+  what is governed, not by what a user might type.
+
+### The axis this run did not measure: multi-turn
+
+The evaluation to date is single-turn, and that is the honest gap in the
+scalability evidence. The *architecture* is multi-turn native — grants with
+validity windows, a recorded question that arms a later bare answer, a
+confirmation bound to an artifact digest are all conversation state — but
+without dialogue evals there are no numbers on the failure modes that exist
+only across turns: a grant gone stale between render and act (lesson 8: scope
+valid at render is not scope valid at execution), a question's answer-route
+binding the wrong later utterance, deflection compounding across a thread,
+ceremony cost measured as prompts-to-answer over a whole task rather than one
+exchange. The machinery already speaks this shape — the live session driver
+drives scripted multi-turn conversations today — so it is an eval extension, a
+`dialogue` bank entry with per-turn expectations, not new kernel work. It is
+the next axis of eval growth to prioritize before widening the single-turn set
+much further, because multi-turn is where the remaining interesting
+enforcement cases most likely live.
