@@ -138,6 +138,12 @@ function chatItems(state: SessionState): ChatItem[] {
  * the ledger's exhibit: what is on screen must be what the record can say. */
 function Page(props: { artifact: DomElement }) {
   const [refusal, setRefusal] = useState<string | null>(null);
+  // Progressive disclosure: the answer leads, the reassurance ceremony (the
+  // "Your certified answer / every value was checked" header) is folded behind
+  // the badge until asked for. The badge itself, and the provenance footer that
+  // names the source, stay put — the certified *signal* and the mandatory
+  // disclosure are always in view; only the restatement of trust collapses.
+  const [revealed, setRevealed] = useState(false);
 
   const attach = (element: HTMLDivElement | null) => {
     if (element === null) return;
@@ -151,13 +157,19 @@ function Page(props: { artifact: DomElement }) {
   };
 
   return (
-    <figure class="exhibit">
-      <figcaption
+    <figure class={`exhibit${revealed ? " revealed" : ""}`}>
+      <button
+        type="button"
         class="exhibit-tag"
-        title="The League checked every value on this page against its own frozen copy of the official records. The Advisor cannot write a word here — it only fills approved slots."
+        aria-expanded={revealed}
+        title="The League checked every value on this page against its own frozen copy of the official records. The Advisor cannot write a word here — it only fills approved slots. Click to read how it says so."
+        onClick={() => setRevealed((value) => !value)}
       >
-        Checked &amp; certified
-      </figcaption>
+        <span aria-hidden="true">✓</span> Certified{" "}
+        <span class="exhibit-tag-chev" aria-hidden="true">
+          {revealed ? "▾" : "▸"}
+        </span>
+      </button>
       {refusal !== null && <p class="exhibit-refusal">{refusal}</p>}
       <div class="exhibit-page" ref={attach} />
     </figure>
@@ -210,13 +222,15 @@ function RecordItem(props: { record: Transaction; page: DomElement | undefined }
     <div class="live-item advisor">
       <Role who="advisor" />
       {page !== undefined && <Page artifact={page} />}
-      <p class={`outcome ${outcome.status === "declined" ? "quiet" : "ok"}`}>
-        {outcome.status === "acted"
-          ? "Done — exactly what the page showed, nothing more."
-          : outcome.status === "declined"
-            ? "No problem — nothing was done. The answer above still stands."
-            : "Every value on this page was checked against the official records before you saw it."}
-      </p>
+      {/* The certified badge already carries the reassurance for a plain
+          answer; only an act or a decline needs a word about what happened. */}
+      {(outcome.status === "acted" || outcome.status === "declined") && (
+        <p class={`outcome ${outcome.status === "declined" ? "quiet" : "ok"}`}>
+          {outcome.status === "acted"
+            ? "Done — exactly what the page showed, nothing more."
+            : "No problem — nothing was done. The answer above still stands."}
+        </p>
+      )}
     </div>
   );
 }
