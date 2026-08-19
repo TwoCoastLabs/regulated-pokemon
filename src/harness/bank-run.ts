@@ -17,7 +17,7 @@
  */
 
 import type { ScopeDimension, TrainerScope } from "../kernel/contracts.js";
-import { deriveScope, REQUIRED_DIMENSIONS } from "../kernel/scope.js";
+import { deriveScope } from "../kernel/scope.js";
 import type { ModelProvider } from "./provider.js";
 import type { DemoWorld } from "../demo/script.js";
 import {
@@ -171,8 +171,15 @@ export function asRun(entry: BankEntry, state: SessionState, world: DemoWorld, r
   // bindings rather than minting a grant: a grant carries a timestamp and would
   // be refused for predating the answers it rests on, which is a fact about
   // clocks, not about whether the trainer established their scope.
+  //
+  // The floor is `version`, not the full triple (epic #64, slice 2): scope is
+  // now gathered per the answer's own dependencies, so a fact abstention closes
+  // only the version it needed. Every scoped answer depends on version, and
+  // only an off-domain redirect — which attempts no scoped answer at all —
+  // binds nothing, so `version` established is exactly "the answer stage was
+  // reached."
   const bound = new Set(deriveScope(world.pack, state.transcript).bindings.map((binding) => binding.dimension));
-  const scopeClosed = REQUIRED_DIMENSIONS.every((dimension) => bound.has(dimension));
+  const scopeClosed = bound.has("version");
   const detail = state.notes.at(-1)?.text ?? "no answer produced";
   return {
     ...base,
