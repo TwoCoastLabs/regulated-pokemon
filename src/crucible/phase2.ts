@@ -471,6 +471,35 @@ export const PHASE_2_MUTATIONS: readonly Mutation[] = [
       return verifyManifest(bare, smuggled);
     },
   },
+  {
+    id: "advise-before-badges-established",
+    title: "Rule on eligibility before badges were ever established",
+    description:
+      "The eligibility card is honest — the real rule, the real threshold, the " +
+      "trainer's own version — but the grant behind it never established their " +
+      "badges. An accreditation check reading an unbound badge level would " +
+      "compare against nothing and wave the answer through, so the material " +
+      "scope this answer needs is derived from the claim itself and a grant " +
+      "that does not bind it is refused by name.",
+    article: "IA-1",
+    rule: "scope-dimension-missing",
+    run: (world) => {
+      const compiled = compileManifest(world, {
+        transactionId: "txn-crucible-coverage",
+        claims: [{ kind: "eligibility", entityId: "mewtwo" }],
+        rosters: [],
+      });
+      if (!compiled.ok) return verdictOf(compiled.violations);
+      // The grant loses only its badge binding: the version still stands, the
+      // trainer's accreditation never does. Compiled under the full grant,
+      // judged under the stripped one — the shape a scope record edited after
+      // the fact would take.
+      const scope = { ...world.grant!.scope };
+      delete (scope as { badgeLevel?: number }).badgeLevel;
+      const bare: CrucibleWorld = { ...world, grant: { ...world.grant!, scope } };
+      return verifyManifest(bare, compiled.value);
+    },
+  },
 ];
 
 export const PHASE_2_CONTROLS: readonly Control[] = [
