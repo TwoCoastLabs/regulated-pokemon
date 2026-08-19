@@ -128,6 +128,10 @@ function answerPrompt(
     "claim is one more thing that can be wrong, and one wrong claim refuses the",
     "whole answer. Omit anything you cannot support rather than guess.",
     "",
+    "Prefer the most specific claim the question calls for: a \"how many\" is a",
+    "count, a stat question a fact, a weakness question a matchup. Reach for a",
+    "lesson only when no such claim fits.",
+    "",
     'Reply with one JSON object, {"rosters": [...], "claims": [...]}, and nothing else.',
     "",
     "A roster is a declarative set you name and then cite by id:",
@@ -150,7 +154,7 @@ function answerPrompt(
     ...(lessons.length === 0
       ? []
       : [
-          '  {"kind": "explanation", "blockId": "<lesson-id>"}  — a reviewed lesson from the League\'s catalogue, shown to the trainer word for word. Route to it when the trainer asks what something is or how the game works; you may pair it with fact or matchup claims that answer the specific case.',
+          '  {"kind": "explanation", "blockId": "<lesson-id>"}  — a reviewed lesson from the League\'s catalogue, shown to the trainer word for word. Route to it when the trainer asks what something is or how the game works. It is a last resort, never a shortcut: if a count, fact, matchup or eligibility claim can answer the question, use that — a lesson that merely mentions the answer in prose is a worse answer than the certified value itself. You may pair a lesson with the structured claims that answer the specific case.',
         ]),
     '  {"kind": "recommendation", "entityId": "<id>"}',
     '  {"kind": "action", "tool": "<tool-id>", "entityId": "<species-id>"}  — an act you propose to perform. It is shown to the trainer and executes only on their confirmation; claim one only when the trainer asked for it.',

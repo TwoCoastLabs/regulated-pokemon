@@ -1142,6 +1142,53 @@ metric shows matter, rather than one roster at a time.
 
 ---
 
+### Iteration 9 — the coverage discipline: a resolution has to be the right shape (epic #64, slice 3)
+
+The dogfooding miss this closes: `gemini-3.5-flash-lite`, asked "how many
+different Pokémon are out there", answered with two *lessons* about the game and
+its versions — reviewed, certified-correct prose, the number nowhere in a
+structured form. The funnel calls that "resolved"; the player asked "how many"
+and got paragraphs. It is the curriculum-deflection channel of iteration 7, one
+axis over: a lesson used as a prose escape hatch from a question a `count` claim
+answers exactly.
+
+Two moves, matched to the epic's sequencing (measure first, grow the vocabulary
+reactively):
+
+- **The metric.** An `answerable` run that *resolved* now has to be on-shape —
+  it must commit at least one claim of a kind the question asked for
+  (`resolvedOnShape` over the entry's `expectClaimKinds`). A resolution that
+  committed only a lesson where a count/fact/matchup was asked is a **shape
+  deflection**: a one-way pass→fail override beside the mis-teach oracle, so
+  the coverage of *structured* answers is no longer inflated by prose that
+  merely mentions the number. Before this, line-of-sight to the bug was zero —
+  a lesson-deflected count scored a clean pass.
+- **The routing preference.** The answer prompt now names the lesson a last
+  resort: "a 'how many' is a count, a stat question a fact, a weakness question
+  a matchup — reach for a lesson only when no such claim fits."
+
+Live probe (`session:trace`, "how many Electric Pokémon are there", turn-count
+deltas, not a filed artifact — the §19 bank run is that):
+
+| model | before | after |
+|---|---|---|
+| `gpt-5.4-mini` | count | **count** (unchanged — the strong model already routed) |
+| `gemini-3.5-flash-lite` | two lessons, no count | **count** (paired with one lesson, which the shape check passes) |
+
+The weak model — the one that deflected — now commits the certified count, on
+target. When it also pairs a lesson alongside, that is fine: the shape check
+fails only a resolution with *no* structured claim, never one that answered and
+taught.
+
+**The type-universe count stays a gap, now a measured one.** "How many types
+exist" is still not a `count` (types are not a species roster), so a lesson
+remains its honest ceiling — the metric marks it, and closing it is the first
+deliberate vocabulary growth (slice 3b): a certified count over the chart's
+closed type set, with its own crucible. The discipline is in place; the growth
+it justifies is the next slice, not this one.
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's
