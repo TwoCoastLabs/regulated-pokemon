@@ -64,6 +64,11 @@ export interface CoverageArgs {
    * output is a `dialogue` artifact, aggregated per turn with the ceremony
    * cost of each whole conversation. */
   dialogues: boolean;
+  /** Hand the proposer the certified facts to compose from (a retrieval lever
+   * on the *value* errors a model makes recalling). Enforcement is unaffected —
+   * every value is still recomputed — so it is a usefulness dial, and it travels
+   * with the artifact because it changes what the number measures. */
+  grounded: boolean;
   model?: string;
   limit?: number;
   ids?: readonly string[];
@@ -86,6 +91,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     render: boolean;
     weak: boolean;
     dialogues: boolean;
+    grounded: boolean;
     model?: string;
     limit?: number;
     ids?: string[];
@@ -97,7 +103,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     source?: string;
     help: boolean;
     errors: string[];
-  } = { live: false, render: false, weak: false, dialogues: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
+  } = { live: false, render: false, weak: false, dialogues: false, grounded: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
 
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index];
@@ -114,6 +120,9 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
         break;
       case "--dialogues":
         args.dialogues = true;
+        break;
+      case "--grounded":
+        args.grounded = true;
         break;
       case "--phrasings":
         args.phrasings = true;
@@ -192,6 +201,9 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
   if (args.dialogues && args.repetitions > 1) {
     args.errors.push("--repetitions is a single-turn dial; a dialogue is one scripted conversation, run once");
   }
+  if (args.grounded && args.phrasings) {
+    args.errors.push("--grounded is not threaded through the robustness pass; run it on the coverage or dialogue banks");
+  }
   if (!args.render && args.source !== undefined) {
     args.errors.push(`an artifact path only makes sense with --render, got: ${args.source}`);
   }
@@ -202,6 +214,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     render: args.render,
     weak: args.weak,
     dialogues: args.dialogues,
+    grounded: args.grounded,
     phrasings: args.phrasings,
     repetitions: args.repetitions,
     out: args.out,
@@ -233,6 +246,8 @@ const USAGE = [
   "  --live              actually call the provider and file the artifact. Nothing is billed without it.",
   "  --dialogues         run the multi-turn dialogue bank: per-turn coverage plus each conversation's",
   "                      ceremony cost (prompts-to-answer over a whole task). Filed as a dialogue artifact.",
+  "  --grounded          hand the proposer the certified facts to compose from (a retrieval lever on the",
+  "                      value errors a model makes recalling). Enforcement is unchanged; the flag is recorded.",
   "  --render [PATH]     render a filed coverage artifact (a file, or a directory to take the newest",
   "                      coverage artifact from; default runs/coverage/). Reads no clock, no key, no network.",
   "  --page PATH         with --render, write the page there instead of printing it.",
@@ -334,6 +349,7 @@ async function runDialogueMode(args: CoverageArgs, options: CoverageOptions, mod
         "Playability dialogue coverage — DRY RUN (nothing billed).",
         `  bank:          ${bank.id} (${bank.dialogues.length} conversations)`,
         `  running:       ${entries.length} conversation(s), ${turns} turn(s) in total`,
+        `  grounded:      ${args.grounded ? "yes — the proposer composes from the certified facts" : "no — the proposer answers from its own knowledge"}`,
         `  model:         ${model}`,
         `  artifact:      filed under ${args.out}/`,
         `  add --live to run it against the model and bill your key.`,
@@ -356,7 +372,7 @@ async function runDialogueMode(args: CoverageArgs, options: CoverageOptions, mod
   const provider = makeProvider({ model, apiKey });
   const world = demoWorld();
 
-  const runs = await runDialogues(world, entries, provider, options.clock);
+  const runs = await runDialogues(world, entries, provider, options.clock, args.grounded);
   const artifact = buildDialogueArtifact({
     startedAt: options.now,
     world,
@@ -365,6 +381,7 @@ async function runDialogueMode(args: CoverageArgs, options: CoverageOptions, mod
     // The dialogue run, like the single-turn one, always offers the answer
     // grammar as a decoding constraint — the measured default (findings §4).
     structuredOutput: true,
+    grounded: args.grounded,
     runs,
   });
   const artifactPath = fileArtifact(artifact, resolve(args.out), options.write);
@@ -412,6 +429,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
           : `  running:       ${entries.length} questions`,
         `  dispositions:  ${args.dispositions?.join(", ") ?? "all"}`,
         `  repetitions:   ${args.repetitions}`,
+        `  grounded:      ${args.grounded ? "yes — the proposer composes from the certified facts" : "no — the proposer answers from its own knowledge"}`,
         `  model:         ${model}`,
         `  artifact:      filed under ${args.out}/`,
         `  add --live to run it against the model and bill your key.`,
@@ -445,7 +463,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
   } else {
     const runPass = options.runPass ?? runBank;
     for (let pass = 0; pass < args.repetitions; pass++) {
-      const sampled = await runPass(world, entries, provider, options.clock, pass);
+      const sampled = await runPass(world, entries, provider, options.clock, pass, args.grounded);
       runs.push(...sampled);
       if (sampled.some((run) => run.score.enforcementEscalation === true)) {
         // The repetition discipline: a broken enforcement zero stops the run
@@ -465,6 +483,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
     // The coverage run always offers the answer grammar as a decoding
     // constraint — the measured default configuration (findings §4).
     structuredOutput: true,
+    grounded: args.grounded,
     repetitions: args.repetitions,
     ...(args.dispositions === undefined ? {} : { dispositions: args.dispositions }),
     stoppedEarly,

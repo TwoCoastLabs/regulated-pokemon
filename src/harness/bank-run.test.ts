@@ -170,6 +170,28 @@ describe("runBankEntry buckets each disposition through the real session", () =>
     expect(run.run.turns).toBe(run.turns);
   });
 
+  it("threads grounding to the answer step — the certified reference only when asked", async () => {
+    // The proof the coverage --grounded flag actually reaches the proposer:
+    // the answer-step prompt carries the certified registry when grounded, and
+    // does not when it is not. Enforcement is untouched either way — the value
+    // is recomputed regardless — so this is a usefulness dial, not a gate change.
+    const grounded: string[] = [];
+    const spyGround = new ScriptedProvider("scripted:ground", (request) => {
+      if (request.purpose === "answer") grounded.push(request.prompt);
+      return request.purpose === "answer" ? pikachuSpeed() : "decline";
+    });
+    await runBankEntry(world, entry("ans-fact-speed-pikachu"), spyGround, clock(), undefined, 0, true);
+    expect(grounded.some((prompt) => prompt.includes("CERTIFIED REGISTRY"))).toBe(true);
+
+    const plain: string[] = [];
+    const spyPlain = new ScriptedProvider("scripted:plain", (request) => {
+      if (request.purpose === "answer") plain.push(request.prompt);
+      return request.purpose === "answer" ? pikachuSpeed() : "decline";
+    });
+    await runBankEntry(world, entry("ans-fact-speed-pikachu"), spyPlain, clock());
+    expect(plain.some((prompt) => prompt.includes("CERTIFIED REGISTRY"))).toBe(false);
+  });
+
   it("stamps the pass a repeated run came from", async () => {
     const runs = await runBank(world, [entry("off-weather")], model(""), clock, 2);
     expect(runs[0]!.repetition).toBe(2);

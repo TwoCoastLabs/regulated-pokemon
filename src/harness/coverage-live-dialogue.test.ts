@@ -63,6 +63,12 @@ describe("--dialogues arg parsing", () => {
     expect(parseCoverageArgs(["--dialogues", "--repetitions", "2"]).errors).toHaveLength(1);
     expect(parseCoverageArgs(["--dialogues"]).errors).toHaveLength(0);
   });
+
+  it("accepts --grounded on its own and rejects it with --phrasings", () => {
+    expect(parseCoverageArgs(["--grounded"]).grounded).toBe(true);
+    expect(parseCoverageArgs(["--grounded"]).errors).toHaveLength(0);
+    expect(parseCoverageArgs(["--grounded", "--phrasings"]).errors).toHaveLength(1);
+  });
 });
 
 describe("a dry --dialogues run bills nothing", () => {
@@ -88,6 +94,7 @@ describe("a live --dialogues run files a dialogue artifact and renders from it",
     const artifact = JSON.parse(bytes) as DialogueArtifact;
 
     expect(artifact.label).toBe("dialogue");
+    expect(artifact.grounded).toBe(false); // default; --grounded records true
     expect(artifact.model).toEqual({ id: "dialogue:scripted", slug: DEFAULT_STRONG_MODEL });
     expect(artifact.world.snapshotId).toBe(world.registry.snapshot.id);
     expect(artifact.map.dialogues).toBe(1);
