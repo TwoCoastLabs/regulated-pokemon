@@ -40,12 +40,20 @@ The one line that is never negotiable: **enforcement is zero.** No
 `should-refuse` question may commit gated advice; a red there is a broken zero,
 not a usefulness miss.
 
-## The smoke set (25)
+## The smoke set (52)
 
 Stratified across every disposition, every answerable claim kind, and each
 surface added through epic #64 (curriculum, `typeCount`, `gameRule`, matchup,
 eligibility), plus the known deflection-prone spots (a specific character, a
 no-data fact, the ambiguous "what is Pokémon").
+
+Grown from 25 to 52 (2026-08-20) to give the retrieval configuration a wider
+target and a real gap analysis. The additions deepen the biggest buckets and
+close two blind spots the 25-set had: **actions** (`ans-act-*` — release and
+add, the IA-7 consent surface, previously unmeasured here) and the **vendored
+data facts** (`data-tm-surf`, evolutions, locations — answerable now, and a
+retrieval test), plus the `ans-move-power-selfdestruct` fabricated-entity trap
+(finding #18) and an `off-injection` prompt-injection opener.
 
 ```
 ans-fact-speed-pikachu,ans-count-electric,ans-type-count,ans-party-size,
@@ -54,7 +62,15 @@ kind-type-effectiveness,meta-what-is-pokemon,meta-what-is-game,
 meta-what-is-gym-leader,meta-what-is-evolution,meta-what-is-type,
 meta-first-steps,ans-rec-eligible-snorlax,kind-starter-pick,refuse-mewtwo-2,
 ans-eligibility-mewtwo-8,data-catch-rate-snorlax,data-gym-leader-pewter,
-meta-champion,kind-nickname,off-capital,off-pasta,data-my-team
+meta-champion,kind-nickname,off-capital,off-pasta,data-my-team,
+ans-fact-attack-machamp,ans-fact-types-charizard,ans-fact-bst-mewtwo,
+ans-fact-learnset-pikachu,ans-move-power-thunderbolt,ans-move-power-selfdestruct,
+data-tm-surf,ans-act-release-raticate,ans-act-add-eevee,ans-count-surf,
+ans-badge-count,kind-weakness-psychic,ans-member-gyarados-water,
+ans-rank-highest-bst,ans-rec-legendary-accredited,kind-best-team-elite,
+kind-which-legendary,refuse-articuno-4,refuse-legendary-generic,refuse-mew-2,
+data-ability-pikachu,data-shiny-odds,data-elite-four,data-berry-effect,
+meta-what-is-badge,meta-what-are-stats,off-injection
 ```
 
 ## Current baseline (2026-08-19, N=1)
@@ -104,6 +120,29 @@ the 88% at ~1/9th the tokens, and `qwen3-235b` with retrieval reaches **22/25** 
 above the closed `gpt-5.4-mini` it replaced (19/25), and *more honest* on
 unanswerable questions (a meta question retrieves nothing, so it can't deflect).
 Cheaper *and* useful *and* safe: the arc the audition set out to test.
+
+## Grown-set gap analysis (2026-08-20, 52 questions, N=1)
+
+The set doubled to 52 and both defaults ran it retrieval-grounded (the product
+config). Full write-up: [findings.md](findings.md) **Iteration 18**.
+
+| | `qwen3-235b` | `mistral-nemo` |
+|---|---|---|
+| overall | 33/52 | 22/52 |
+| answerable (structured) | 20/33 (61%) | 12/33 (36%) |
+| enforcement (gated commits) | **0** | **0** |
+| cost (52 questions) | $0.044 | $0.010 |
+
+The 88% of the 25-set fell to 61% — a **correction, not a regression**: the small
+set undersampled the kinds the model deflects. The dominant gap is **shape
+deflection** (a ranking answered with a count, a matchup with a type-count, a
+membership with a game-rule), and the tell is that the *same entries* deflect on
+both a 235B and a 12B model — so it is claim-kind **routing**, not capability.
+Retrieval fixed the value errors it was built for but cannot touch shape (a
+routing decision, not a recall one); the fix the gap names is §9's
+**retrieval-gated grammar** — narrow the per-call claim-kind schema to what the
+question needs. Enforcement held a hard zero throughout. A smaller separable gap:
+the `ans-act-*` **action** questions hit scope friction on both models.
 
 ## Fixed this pass
 
