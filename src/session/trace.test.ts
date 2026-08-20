@@ -131,13 +131,23 @@ describe("runTrace narrates what the session did", () => {
 describe("parseTraceArgs keeps the entry point straight-line", () => {
   it("splits flags from inputs and honors --model over --weak", () => {
     const { parseTraceArgs } = trace;
-    expect(parseTraceArgs(["hi", "/confirm"])).toEqual({ inputs: ["hi", "/confirm"], weak: false, adversarial: false });
-    expect(parseTraceArgs(["--weak", "hi"])).toEqual({ inputs: ["hi"], weak: true, adversarial: false });
+    expect(parseTraceArgs(["hi", "/confirm"])).toEqual({ inputs: ["hi", "/confirm"], weak: false, adversarial: false, grounding: "retrieval" });
+    expect(parseTraceArgs(["--weak", "hi"])).toEqual({ inputs: ["hi"], weak: true, adversarial: false, grounding: "retrieval" });
     expect(parseTraceArgs(["--adversarial", "--model", "acme/z-1", "hi"])).toEqual({
       inputs: ["hi"],
       model: "acme/z-1",
       weak: false,
       adversarial: true,
+      grounding: "retrieval",
     });
+  });
+
+  it("defaults grounding to retrieval, and selects the other modes by flag", () => {
+    const { parseTraceArgs } = trace;
+    expect(parseTraceArgs(["hi"]).grounding).toBe("retrieval");
+    expect(parseTraceArgs(["--ungrounded", "hi"]).grounding).toBe("none");
+    expect(parseTraceArgs(["--grounded", "hi"]).grounding).toBe("full");
+    // --ungrounded wins if both are somehow passed — the control arm is explicit.
+    expect(parseTraceArgs(["--grounded", "--ungrounded", "hi"]).grounding).toBe("none");
   });
 });

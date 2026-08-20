@@ -33,6 +33,18 @@ import {
  * standing in for the page's buttons. */
 export const TRACE_COMMANDS = ["/confirm", "/reject", "/act", "/decline", "/retry"] as const;
 
+/**
+ * How the proposer is grounded in a live trace.
+ *
+ *  - `retrieval` the product default (findings §17): only the facts each
+ *                question needs — useful and cheap, the reason a cheaper model
+ *                can be the default at all.
+ *  - `none`      the control-arm demo (§14): the model answers from memory, so a
+ *                trace can show a benign fabrication caught by the gate.
+ *  - `full`      the whole certified registry, kept for comparison (§16).
+ */
+export type TraceGrounding = "none" | "full" | "retrieval";
+
 /** What argv asks for, parsed here so the entry point stays straight-line. */
 export interface TraceArgs {
   inputs: readonly string[];
@@ -40,16 +52,20 @@ export interface TraceArgs {
   model?: string;
   weak: boolean;
   adversarial: boolean;
+  /** Defaults to `retrieval`; `--ungrounded` selects `none`, `--grounded` full. */
+  grounding: TraceGrounding;
 }
 
 export function parseTraceArgs(argv: readonly string[]): TraceArgs {
   const modelFlag = argv.indexOf("--model");
   const model = modelFlag >= 0 ? argv[modelFlag + 1] : undefined;
+  const grounding: TraceGrounding = argv.includes("--ungrounded") ? "none" : argv.includes("--grounded") ? "full" : "retrieval";
   return {
     inputs: argv.filter((arg, index) => !arg.startsWith("--") && !(modelFlag >= 0 && index === modelFlag + 1)),
     ...(model === undefined ? {} : { model }),
     weak: argv.includes("--weak"),
     adversarial: argv.includes("--adversarial"),
+    grounding,
   };
 }
 
