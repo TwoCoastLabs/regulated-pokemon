@@ -54,6 +54,10 @@ export interface TraceArgs {
   adversarial: boolean;
   /** Defaults to `retrieval`; `--ungrounded` selects `none`, `--grounded` full. */
   grounding: TraceGrounding;
+  /** Narrow the answer grammar to each question's nominated kinds — on by
+   * default (the §19 shape-deflection fix, the product posture); `--loose-grammar`
+   * offers every claim kind, the pre-§19 behaviour. */
+  gatedGrammar: boolean;
 }
 
 export function parseTraceArgs(argv: readonly string[]): TraceArgs {
@@ -66,6 +70,7 @@ export function parseTraceArgs(argv: readonly string[]): TraceArgs {
     weak: argv.includes("--weak"),
     adversarial: argv.includes("--adversarial"),
     grounding,
+    gatedGrammar: !argv.includes("--loose-grammar"),
   };
 }
 

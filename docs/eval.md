@@ -139,10 +139,19 @@ deflection** (a ranking answered with a count, a matchup with a type-count, a
 membership with a game-rule), and the tell is that the *same entries* deflect on
 both a 235B and a 12B model — so it is claim-kind **routing**, not capability.
 Retrieval fixed the value errors it was built for but cannot touch shape (a
-routing decision, not a recall one); the fix the gap names is §9's
+routing decision, not a recall one); the fix the gap named is §9's
 **retrieval-gated grammar** — narrow the per-call claim-kind schema to what the
 question needs. Enforcement held a hard zero throughout. A smaller separable gap:
 the `ans-act-*` **action** questions hit scope friction on both models.
+
+That fix is now built and measured ([findings.md](findings.md) **Iteration 19**,
+`--gated-grammar`): gating the three aggregate kinds behind nomination took
+`qwen3-235b` 33 → **41/52** (answerable 61% → 79%) and `mistral-nemo` 22 →
+**31/52** (36% → 61%), enforcement still a hard zero, cost slightly *down*. It
+also bought two subtler wins — ungroundable questions abstain instead of
+deflecting into a rule, and gated questions provoke the gate by name instead of
+dodging — so it strengthened the enforcement demonstration while fixing
+usefulness.
 
 ## Fixed this pass
 

@@ -72,6 +72,9 @@ export interface CoverageArgs {
   /** Ground with only the rows each question needs (retrieval) rather than the
    * whole registry — grounding's usefulness at a fraction of the tokens. */
   retrieval: boolean;
+  /** Narrow the answer grammar to the filler kinds each question nominates — the
+   * shape-deflection fix (§19). Composes with any grounding mode. */
+  gatedGrammar: boolean;
   model?: string;
   limit?: number;
   ids?: readonly string[];
@@ -96,6 +99,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     dialogues: boolean;
     grounded: boolean;
     retrieval: boolean;
+    gatedGrammar: boolean;
     model?: string;
     limit?: number;
     ids?: string[];
@@ -107,7 +111,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     source?: string;
     help: boolean;
     errors: string[];
-  } = { live: false, render: false, weak: false, dialogues: false, grounded: false, retrieval: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
+  } = { live: false, render: false, weak: false, dialogues: false, grounded: false, retrieval: false, gatedGrammar: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
 
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index];
@@ -130,6 +134,9 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
         break;
       case "--retrieval":
         args.retrieval = true;
+        break;
+      case "--gated-grammar":
+        args.gatedGrammar = true;
         break;
       case "--phrasings":
         args.phrasings = true;
@@ -229,6 +236,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     dialogues: args.dialogues,
     grounded: args.grounded,
     retrieval: args.retrieval,
+    gatedGrammar: args.gatedGrammar,
     phrasings: args.phrasings,
     repetitions: args.repetitions,
     out: args.out,
@@ -264,6 +272,8 @@ const USAGE = [
   "                      value errors a model makes recalling). Enforcement is unchanged; the flag is recorded.",
   "  --retrieval         ground with only the rows each question needs, not the whole registry — grounding's",
   "                      usefulness at a fraction of the tokens. Recorded in the artifact; not with --grounded.",
+  "  --gated-grammar     narrow the answer schema to the claim kinds each question nominates (the shape-",
+  "                      deflection fix). Composes with any grounding mode; recorded in the artifact.",
   "  --render [PATH]     render a filed coverage artifact (a file, or a directory to take the newest",
   "                      coverage artifact from; default runs/coverage/). Reads no clock, no key, no network.",
   "  --page PATH         with --render, write the page there instead of printing it.",
@@ -366,6 +376,7 @@ async function runDialogueMode(args: CoverageArgs, options: CoverageOptions, mod
         `  bank:          ${bank.id} (${bank.dialogues.length} conversations)`,
         `  running:       ${entries.length} conversation(s), ${turns} turn(s) in total`,
         `  grounding:     ${args.retrieval ? "retrieval — only the facts each question needs" : args.grounded ? "full — the whole certified registry" : "none — the model answers from its own knowledge"}`,
+        `  gated grammar: ${args.gatedGrammar ? "yes — the answer schema narrows to the kinds each question nominates" : "no — every claim kind is offered"}`,
         `  model:         ${model}`,
         `  artifact:      filed under ${args.out}/`,
         `  add --live to run it against the model and bill your key.`,
@@ -388,7 +399,7 @@ async function runDialogueMode(args: CoverageArgs, options: CoverageOptions, mod
   const provider = makeProvider({ model, apiKey });
   const world = demoWorld();
 
-  const runs = await runDialogues(world, entries, provider, options.clock, args.grounded, args.retrieval);
+  const runs = await runDialogues(world, entries, provider, options.clock, args.grounded, args.retrieval, args.gatedGrammar);
   const artifact = buildDialogueArtifact({
     startedAt: options.now,
     world,
@@ -399,6 +410,7 @@ async function runDialogueMode(args: CoverageArgs, options: CoverageOptions, mod
     structuredOutput: true,
     grounded: args.grounded,
     retrieval: args.retrieval,
+    gatedGrammar: args.gatedGrammar,
     runs,
   });
   const artifactPath = fileArtifact(artifact, resolve(args.out), options.write);
@@ -447,6 +459,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
         `  dispositions:  ${args.dispositions?.join(", ") ?? "all"}`,
         `  repetitions:   ${args.repetitions}`,
         `  grounding:     ${args.retrieval ? "retrieval — only the facts each question needs" : args.grounded ? "full — the whole certified registry" : "none — the model answers from its own knowledge"}`,
+        `  gated grammar: ${args.gatedGrammar ? "yes — the answer schema narrows to the kinds each question nominates" : "no — every claim kind is offered"}`,
         `  model:         ${model}`,
         `  artifact:      filed under ${args.out}/`,
         `  add --live to run it against the model and bill your key.`,
@@ -480,7 +493,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
   } else {
     const runPass = options.runPass ?? runBank;
     for (let pass = 0; pass < args.repetitions; pass++) {
-      const sampled = await runPass(world, entries, provider, options.clock, pass, args.grounded, args.retrieval);
+      const sampled = await runPass(world, entries, provider, options.clock, pass, args.grounded, args.retrieval, args.gatedGrammar);
       runs.push(...sampled);
       if (sampled.some((run) => run.score.enforcementEscalation === true)) {
         // The repetition discipline: a broken enforcement zero stops the run
@@ -502,6 +515,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
     structuredOutput: true,
     grounded: args.grounded,
     retrieval: args.retrieval,
+    gatedGrammar: args.gatedGrammar,
     repetitions: args.repetitions,
     ...(args.dispositions === undefined ? {} : { dispositions: args.dispositions }),
     stoppedEarly,

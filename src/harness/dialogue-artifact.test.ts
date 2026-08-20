@@ -52,6 +52,7 @@ function artifact() {
     structuredOutput: true,
     grounded: false,
     retrieval: false,
+    gatedGrammar: false,
     runs,
   });
 }

@@ -22,6 +22,7 @@ import { type AnswerDecode, decodeAnswer, decodeCandidate } from "./decode.js";
 import type { CompletionRequest, ModelProvider, Usage } from "./provider.js";
 import { certifiedReference, retrieveReference } from "./reference.js";
 import { ANSWER_SCHEMA_NAME, answerSchema } from "./schema.js";
+import { nominateFillerKinds } from "./grammar-gate.js";
 
 /** Only the trainer's own words are evidence (IA-8); the model interprets those. */
 function trainerText(transcript: ScopeTranscript): string[] {
@@ -304,6 +305,10 @@ export interface AnswerStepInput {
    *  rather than the whole registry — grounding's usefulness without its token
    *  bill. Takes precedence over {@link grounded} when both are set. */
   retrieval?: boolean;
+  /** Narrow the answer grammar to the filler kinds this question nominates
+   *  ({@link nominateFillerKinds}) — the shape-deflection fix (§19). Independent
+   *  of grounding; only the three aggregate kinds are ever gated. */
+  gatedGrammar?: boolean;
 }
 
 /** Ask the model for the certified answer and decode it into a draft. Whether
@@ -311,13 +316,17 @@ export interface AnswerStepInput {
 export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep> {
   const { provider, context, scenarioId, transactionId } = input;
   const trainerLines = trainerText(input.transcript);
+  const question = trainerLines.join(" ");
   // Retrieval first: the rows this question needs, not the whole registry. Full
   // grounding is the fallback when retrieval is off but grounding is on.
   const reference = input.retrieval
-    ? retrieveReference(context.registry, trainerLines.join(" "))
+    ? retrieveReference(context.registry, question)
     : input.grounded
       ? certifiedReference(context.registry)
       : undefined;
+  // Grammar gating: offer the three aggregate kinds only when the question
+  // nominates them, so a ranking cannot decode as a count (§19).
+  const fillerKinds = input.gatedGrammar ? nominateFillerKinds(question) : undefined;
   const request: CompletionRequest = {
     purpose: "answer",
     prompt: answerPrompt(
@@ -331,7 +340,7 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
     hint: { scenarioId, ...(context.grant === undefined ? {} : { scope: context.grant.scope }) },
     // The same contract the prose describes, in a form a provider can enforce.
     // Whether it is enforced is the provider's business, not the advisor's.
-    schema: { name: ANSWER_SCHEMA_NAME, schema: answerSchema(context.pack) },
+    schema: { name: ANSWER_SCHEMA_NAME, schema: answerSchema(context.pack, fillerKinds) },
   };
   const completion = await provider.complete(request);
   return { usage: completion.usage, decode: decodeAnswer(completion.text, context, transactionId) };

@@ -202,8 +202,9 @@ export async function runDialogue(
   now: () => string,
   grounded = false,
   retrieval = false,
+  gatedGrammar = false,
 ): Promise<RecordedDialogueRun> {
-  const deps: SessionDeps = { world, provider, now, grounded, retrieval };
+  const deps: SessionDeps = { world, provider, now, grounded, retrieval, gatedGrammar };
   let state = startSession();
   const turns: RecordedDialogueTurnRun[] = [];
 
@@ -249,10 +250,11 @@ export async function runDialogues(
   clock: () => () => string,
   grounded = false,
   retrieval = false,
+  gatedGrammar = false,
 ): Promise<readonly RecordedDialogueRun[]> {
   const runs: RecordedDialogueRun[] = [];
   for (const entry of entries) {
-    runs.push(await runDialogue(world, entry, provider, clock(), grounded, retrieval));
+    runs.push(await runDialogue(world, entry, provider, clock(), grounded, retrieval, gatedGrammar));
   }
   return runs;
 }

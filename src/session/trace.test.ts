@@ -131,23 +131,27 @@ describe("runTrace narrates what the session did", () => {
 describe("parseTraceArgs keeps the entry point straight-line", () => {
   it("splits flags from inputs and honors --model over --weak", () => {
     const { parseTraceArgs } = trace;
-    expect(parseTraceArgs(["hi", "/confirm"])).toEqual({ inputs: ["hi", "/confirm"], weak: false, adversarial: false, grounding: "retrieval" });
-    expect(parseTraceArgs(["--weak", "hi"])).toEqual({ inputs: ["hi"], weak: true, adversarial: false, grounding: "retrieval" });
+    expect(parseTraceArgs(["hi", "/confirm"])).toEqual({ inputs: ["hi", "/confirm"], weak: false, adversarial: false, grounding: "retrieval", gatedGrammar: true });
+    expect(parseTraceArgs(["--weak", "hi"])).toEqual({ inputs: ["hi"], weak: true, adversarial: false, grounding: "retrieval", gatedGrammar: true });
     expect(parseTraceArgs(["--adversarial", "--model", "acme/z-1", "hi"])).toEqual({
       inputs: ["hi"],
       model: "acme/z-1",
       weak: false,
       adversarial: true,
       grounding: "retrieval",
+      gatedGrammar: true,
     });
   });
 
-  it("defaults grounding to retrieval, and selects the other modes by flag", () => {
+  it("defaults grounding to retrieval and the grammar to gated, and selects the others by flag", () => {
     const { parseTraceArgs } = trace;
     expect(parseTraceArgs(["hi"]).grounding).toBe("retrieval");
     expect(parseTraceArgs(["--ungrounded", "hi"]).grounding).toBe("none");
     expect(parseTraceArgs(["--grounded", "hi"]).grounding).toBe("full");
     // --ungrounded wins if both are somehow passed — the control arm is explicit.
     expect(parseTraceArgs(["--grounded", "--ungrounded", "hi"]).grounding).toBe("none");
+    // The grammar is gated by default; --loose-grammar restores the pre-§19 schema.
+    expect(parseTraceArgs(["hi"]).gatedGrammar).toBe(true);
+    expect(parseTraceArgs(["--loose-grammar", "hi"]).gatedGrammar).toBe(false);
   });
 });

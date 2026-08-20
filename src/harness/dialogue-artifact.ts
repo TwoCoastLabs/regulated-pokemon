@@ -47,6 +47,9 @@ export interface DialogueArtifact {
   /** Whether grounding was retrieval-scoped (only what each question needs)
    * rather than the whole registry. At most one of this and {@link grounded}. */
   retrieval: boolean;
+  /** Whether the answer grammar was narrowed to each question's nominated kinds
+   * (§19) — recorded with the number. */
+  gatedGrammar: boolean;
   /** Whole conversations, never summaries. Each turn carries the wording asked
    * and the full record behind its funnel verdict. */
   runs: readonly RecordedDialogueRun[];
@@ -63,6 +66,7 @@ export interface DialogueArtifactInput {
   structuredOutput: boolean;
   grounded: boolean;
   retrieval: boolean;
+  gatedGrammar: boolean;
   runs: readonly RecordedDialogueRun[];
 }
 
@@ -83,6 +87,7 @@ export function buildDialogueArtifact(input: DialogueArtifactInput): DialogueArt
     structuredOutput: input.structuredOutput,
     grounded: input.grounded,
     retrieval: input.retrieval,
+    gatedGrammar: input.gatedGrammar,
     runs: input.runs,
     map: dialogueCoverage(input.runs),
   };
@@ -100,7 +105,7 @@ export function renderDialogueArtifact(artifact: DialogueArtifact): string {
     "<!-- Generated from a dialogue artifact; do not hand-edit. Regenerate with `npm run coverage:map -- --dialogues`. -->",
     "",
     `Generated from a **dialogue** run started \`${artifact.startedAt}\` on \`${artifact.model.slug}\`, ` +
-      `${artifact.retrieval ? "**grounded by retrieval** (only the facts each question needs)" : artifact.grounded ? "**grounded** (the whole certified registry)" : "ungrounded (answered from its own knowledge)"}.`,
+      `${artifact.retrieval ? "**grounded by retrieval** (only the facts each question needs)" : artifact.grounded ? "**grounded** (the whole certified registry)" : "ungrounded (answered from its own knowledge)"}${artifact.gatedGrammar ? ", **gated grammar**" : ""}.`,
     "",
     "## Provenance",
     "",

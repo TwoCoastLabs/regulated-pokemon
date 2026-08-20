@@ -1647,6 +1647,59 @@ retrieval), `…11-42-31…-coverage.json` (nemo, 52, retrieval).
 
 ---
 
+### Iteration 19 — retrieval-gated grammar closes the shape-deflection gap §18 named
+
+§18 named the dominant gap (shape deflection) and its fix (narrow the answer
+grammar to the kinds a question wants). Built as `--gated-grammar`: the three
+aggregate kinds — `count`, `typeCount`, `gameRule` — are offered only when a
+question nominates them (`nominateFillerKinds`, deterministic lexical
+nomination over the closed rule/type vocabulary), so a ranking question cannot
+*decode* as a count. Nothing else is ever gated, so every entity/relation kind —
+and every kind the gate must be seen refusing — stays representable. Run over
+the same 52-set, retrieval-grounded, it is a clean A/B against §18:
+
+| | retrieval (§18) | retrieval + gated grammar | Δ | fixed / broke |
+|---|---|---|---|---|
+| `qwen3-235b` | 33/52 (ans 61%) | **41/52 (ans 79%)** | **+8** | 11 / 3 |
+| `mistral-nemo` | 22/52 (ans 36%) | **31/52 (ans 61%)** | **+9** | 14 / 5 |
+
+Enforcement stayed a hard zero on both; cost went *down* (qwen $0.044 → $0.032),
+because a narrower schema emits fewer filler claims. The 25 fixes across the two
+models land squarely on the deflection targets — a ranking, a matchup, a
+membership, a move-power fact that had all been decoding as a count or a
+game-rule now decode as themselves. The 8 regressions are on kinds the gate does
+not touch at all (`explanation`, `off-domain`, `needs-claim-kind`): N=1 provider
+noise (§6), not a cost of gating.
+
+**Two of the fixes are subtler than "the right shape," and they vindicate the
+design's one hard rule.** Gating removed the model's favourite escape hatch, and
+where it used to flee:
+
+- **an ungroundable question now abstains honestly.** `data-gym-leader-pewter`
+  and `data-catch-rate-snorlax` had been deflecting into a `gameRule`; with that
+  gone, the model has no adjacent certified thing to reach for and correctly
+  declines. Gating bought *honesty*, not just shape.
+- **a gated question now provokes the gate.** `refuse-mew-2`,
+  `refuse-legendary-generic` had been dodging into a `gameRule`; with the filler
+  removed the model reaches for the actual gated advice, and the gate refuses it
+  *by name*. Because the design keeps `recommendation`/`action`/`eligibility`
+  always representable (finding #7's rule), narrowing the *filler* kinds pushes a
+  dodgy model *toward* the gated kinds — making the safety test **less** vacuous,
+  not more. Removing the escape hatch strengthened the enforcement demonstration
+  at the same time it fixed usefulness.
+
+So the mechanism is exactly §9's: the same retrieval step that scopes the
+reference (§17) scopes the grammar (§19), and the two together take the cheap
+open model from deflecting (§18) to answering in shape — cheaper, useful, honest,
+and safe on the hardest set yet. N=1 (§6): the per-model rates are
+sample-bounded, but the direction is unambiguous and consistent across a 235B and
+a 12B model, and the gate held throughout.
+
+Provenance: `runs/coverage/2026-08-20T20-58-15…-coverage.json` (qwen, 52,
+retrieval + gated grammar), `…21-05-19…-coverage.json` (nemo, same).
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's

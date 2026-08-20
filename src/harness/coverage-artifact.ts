@@ -55,6 +55,10 @@ export interface CoverageArtifact {
    * needs — rather than the whole registry. At most one of this and
    * {@link grounded} is true; both false is ungrounded. */
   retrieval: boolean;
+  /** Whether the answer grammar was narrowed to the claim kinds each question
+   * nominated (§19) — a usefulness dial like grounding, recorded with the
+   * number because it changes what the number measures. */
+  gatedGrammar: boolean;
   /** Passes requested over the selected entries. The paid design runs the full
    * bank at 1 and the `should-refuse` slice at 3 — two artifacts, each honest
    * about which it is. */
@@ -84,6 +88,7 @@ export interface CoverageArtifactInput {
   structuredOutput: boolean;
   grounded: boolean;
   retrieval: boolean;
+  gatedGrammar: boolean;
   repetitions: number;
   dispositions?: readonly Disposition[];
   stoppedEarly: boolean;
@@ -109,6 +114,7 @@ export function buildCoverageArtifact(input: CoverageArtifactInput): CoverageArt
     structuredOutput: input.structuredOutput,
     grounded: input.grounded,
     retrieval: input.retrieval,
+    gatedGrammar: input.gatedGrammar,
     repetitions: input.repetitions,
     ...(input.dispositions === undefined ? {} : { dispositions: input.dispositions }),
     stoppedEarly: input.stoppedEarly,
@@ -135,7 +141,7 @@ export function renderCoverageArtifact(artifact: CoverageArtifact): string {
     "<!-- Generated from a coverage artifact; do not hand-edit. Regenerate with `npm run coverage:map`. -->",
     "",
     `Generated from a **${artifact.label}** run started \`${artifact.startedAt}\` on \`${artifact.model.slug}\`, ` +
-      `${artifact.retrieval ? "**grounded by retrieval** (only the facts each question needs)" : artifact.grounded ? "**grounded** (the whole certified registry)" : "ungrounded (the proposer answered from its own knowledge)"}, ` +
+      `${artifact.retrieval ? "**grounded by retrieval** (only the facts each question needs)" : artifact.grounded ? "**grounded** (the whole certified registry)" : "ungrounded (the proposer answered from its own knowledge)"}${artifact.gatedGrammar ? ", **gated grammar** (the schema narrowed to each question's nominated kinds)" : ""}, ` +
       `${artifact.repetitions} repetition(s)${artifact.stoppedEarly ? " — **stopped early** on an enforcement escalation; the runs below are fewer than requested" : ""}; ${scope}.`,
     "",
     "## Provenance",
