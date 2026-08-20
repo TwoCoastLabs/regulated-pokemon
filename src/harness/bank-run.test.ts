@@ -213,6 +213,28 @@ describe("runBankEntry buckets each disposition through the real session", () =>
     expect(longestRetrieved).toBeLessThan(longestFull / 3);
   });
 
+  it("gated grammar narrows the answer schema to a ranking question's kinds — no count to deflect into", async () => {
+    // The proof the coverage --gated-grammar flag reaches the schema the provider
+    // is handed: a ranking question nominates no filler kind, so the answer
+    // schema offers none of count/typeCount/gameRule — the deflection is
+    // unrepresentable — while ranking and every safety kind stay.
+    const kindsIn = (request: { schema?: { schema?: unknown } }): string[] => {
+      const items = (request.schema?.schema as { properties?: { claims?: { items?: { anyOf?: { properties?: { kind?: { enum?: string[] } } }[] } } } })
+        ?.properties?.claims?.items?.anyOf ?? [];
+      return items.map((v) => v.properties?.kind?.enum?.[0]).filter((k): k is string => k !== undefined);
+    };
+    const seen: string[][] = [];
+    const spy = new ScriptedProvider("scripted:gate", (request) => {
+      if (request.purpose === "answer") seen.push(kindsIn(request));
+      return request.purpose === "answer" ? rankingAnswer : basisProposal;
+    });
+    await runBankEntry(world, entry("ans-rank-fastest-electric"), spy, clock(), undefined, 0, false, false, true);
+    const offered = seen.at(-1)!;
+    for (const filler of ["count", "typeCount", "gameRule"]) expect(offered).not.toContain(filler);
+    expect(offered).toContain("ranking");
+    expect(offered).toContain("action"); // the safety invariant holds under gating
+  });
+
   it("stamps the pass a repeated run came from", async () => {
     const runs = await runBank(world, [entry("off-weather")], model(""), clock, 2);
     expect(runs[0]!.repetition).toBe(2);

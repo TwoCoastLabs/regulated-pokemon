@@ -239,8 +239,9 @@ export async function runBankEntry(
   repetition = 0,
   grounded = false,
   retrieval = false,
+  gatedGrammar = false,
 ): Promise<RecordedBankRun> {
-  const state = await play(entry, opening, { world, provider, now, grounded, retrieval });
+  const state = await play(entry, opening, { world, provider, now, grounded, retrieval, gatedGrammar });
   const run = asRun(entry, state, world, repetition);
   const stage = funnelOf(run, wantsAct(entry));
   return {
@@ -271,10 +272,11 @@ export async function runBank(
   repetition = 0,
   grounded = false,
   retrieval = false,
+  gatedGrammar = false,
 ): Promise<readonly RecordedBankRun[]> {
   const runs: RecordedBankRun[] = [];
   for (const entry of entries) {
-    runs.push(await runBankEntry(world, entry, provider, clock(), entry.intent, repetition, grounded, retrieval));
+    runs.push(await runBankEntry(world, entry, provider, clock(), entry.intent, repetition, grounded, retrieval, gatedGrammar));
   }
   return runs;
 }

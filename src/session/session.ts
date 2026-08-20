@@ -76,6 +76,9 @@ export interface SessionDeps {
    * whole registry — grounding's usefulness without its token bill. Takes
    * precedence over {@link grounded}. */
   retrieval?: boolean;
+  /** Narrow the answer grammar to the filler kinds each question nominates — the
+   * shape-deflection fix (§19). Independent of grounding. */
+  gatedGrammar?: boolean;
 }
 
 export type ScopeProposal = Extract<ScopeEvent, { kind: "proposal" }>;
@@ -516,6 +519,7 @@ async function teachOrDiscover(
       transcript: state.transcript.slice(state.askStart),
       ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
       ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
+      ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
     });
   } catch {
     // The question is still free: a failed discovery falls to the floor rather
@@ -581,6 +585,7 @@ async function answer(state: SessionState, deps: SessionDeps): Promise<SessionSt
       transcript: state.transcript.slice(state.askStart),
       ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
       ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
+      ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
     });
   } catch (cause) {
     return note(

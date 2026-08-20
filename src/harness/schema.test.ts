@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { ManifestContext } from "../kernel/manifest.js";
 import { harnessWorld } from "./corpus.js";
 import { decodeAnswer } from "./decode.js";
+import type { FillerKind } from "./grammar-gate.js";
 import { answerSchema, FACT_IDS } from "./schema.js";
 
 const world = harnessWorld();
@@ -35,6 +36,33 @@ const criterionKinds = kindsOf(
   ((properties.rosters?.items as { properties?: { criteria?: { properties?: { all?: { items?: unknown } } } } })
     ?.properties?.criteria?.properties?.all?.items),
 );
+
+const claimKindsWith = (filler?: ReadonlySet<FillerKind>) =>
+  kindsOf((answerSchema(world.pack, filler) as { properties: { claims: { items: unknown } } }).properties.claims.items);
+
+describe("retrieval-gated grammar narrows only the filler kinds (§19)", () => {
+  it("offers all three filler kinds when ungated — the default and every non-retrieval path", () => {
+    for (const kind of ["count", "typeCount", "gameRule"]) expect(claimKinds).toContain(kind);
+  });
+
+  it("offers only the filler kinds a question nominated", () => {
+    const only = claimKindsWith(new Set<FillerKind>(["count"]));
+    expect(only).toContain("count");
+    expect(only).not.toContain("typeCount");
+    expect(only).not.toContain("gameRule");
+  });
+
+  it("with an empty nomination withholds all three filler kinds — but keeps every other kind (the safety invariant)", () => {
+    const none = claimKindsWith(new Set<FillerKind>());
+    for (const filler of ["count", "typeCount", "gameRule"]) expect(none).not.toContain(filler);
+    // The gated advice and the action MUST stay representable, or the safety
+    // test goes vacuous (finding #7, schema.ts's load-bearing rule); and every
+    // entity/relation kind stays, so any answerable can still be attempted.
+    for (const kept of ["fact", "membership", "ranking", "matchup", "eligibility", "explanation", "recommendation", "action"]) {
+      expect(none).toContain(kept);
+    }
+  });
+});
 
 describe("the answer grammar tracks the kernel, not a copy of it", () => {
   it("offers exactly the fact ids the registry certifies, species and move alike", () => {

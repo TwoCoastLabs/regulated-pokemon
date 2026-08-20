@@ -34,6 +34,7 @@
 
 import { MOVE_FACT_IDS, SPECIES_FACT_IDS } from "../kernel/registry.js";
 import { STAT_NAMES } from "../kernel/snapshot-format.js";
+import type { FillerKind } from "./grammar-gate.js";
 
 /** Every certified fact id, species and move alike: a fact claim's `entityId`
  * may name either, and the registry resolves each against its own vocabulary. */
@@ -101,7 +102,13 @@ const ROSTER: JsonSchema = object({
   criteria: object({ all: { type: "array", items: CRITERION } }),
 });
 
-function claimSchema(lessonIds: readonly string[], ruleIds: readonly string[]): JsonSchema {
+function claimSchema(lessonIds: readonly string[], ruleIds: readonly string[], fillerKinds?: ReadonlySet<FillerKind>): JsonSchema {
+  // Retrieval-gated grammar (grammar-gate.ts): the three aggregate/constant
+  // kinds are offered only when a question nominates them; `undefined` means no
+  // gate and all three are offered (the default, and every non-retrieval path).
+  // Nothing else is ever gated — the entity/relation kinds, and every kind the
+  // gate must be *seen* refusing, stay representable.
+  const filler = (kind: FillerKind): boolean => fillerKinds === undefined || fillerKinds.has(kind);
   return {
     anyOf: [
     // Two fact shapes rather than one optional field: strict-mode providers
@@ -115,16 +122,16 @@ function claimSchema(lessonIds: readonly string[], ruleIds: readonly string[]): 
     // No `reported`: the model defines the set and the kernel counts it. Under
     // enforced decoding a live model *cannot* state a count, so a wrong one is
     // not a reachable output — the arithmetic is taken off the model entirely.
-    variant("count", { rosterId: STRING }),
+    ...(filler("count") ? [variant("count", { rosterId: STRING })] : []),
     // "How many types are there?" — no roster, no fields; the kernel counts the
     // certified type universe. Under enforced decoding the model cannot state a
     // number, so there is nothing here to get wrong.
-    variant("typeCount"),
+    ...(filler("typeCount") ? [variant("typeCount")] : []),
     // A game-rule constant names a rule from the pack's closed table — an enum,
     // like the lesson ids, so a fabricated rule is unrepresentable. The kernel
     // fills the number, so none is stated here. Omitted whole when the pack
     // declares no rules (an empty enum some providers reject).
-    ...(ruleIds.length === 0 ? [] : [variant("gameRule", { ruleId: { type: "string", enum: [...ruleIds] } })]),
+    ...(ruleIds.length === 0 || !filler("gameRule") ? [] : [variant("gameRule", { ruleId: { type: "string", enum: [...ruleIds] } })]),
     variant("membership", { rosterId: STRING, entityId: STRING, asserted: BOOLEAN }),
     // No `selectedEntityId`: the model declares the set, the basis and the
     // direction, and the kernel picks the extreme. Like the count, a wrong
@@ -169,10 +176,16 @@ function claimSchema(lessonIds: readonly string[], ruleIds: readonly string[]): 
  * (versioned data). The schema a provider enforces is always the one the
  * governing pack defines.
  */
-export function answerSchema(pack: {
-  curriculum: ReadonlyArray<{ id: string }>;
-  gameRules: ReadonlyArray<{ id: string }>;
-}): JsonSchema {
+export function answerSchema(
+  pack: {
+    curriculum: ReadonlyArray<{ id: string }>;
+    gameRules: ReadonlyArray<{ id: string }>;
+  },
+  /** When present, the filler kinds (`count`/`typeCount`/`gameRule`) a question
+   * nominated; the schema offers only those three. Absent means no gate — all
+   * three are offered, the default for every path that has not opted in. */
+  fillerKinds?: ReadonlySet<FillerKind>,
+): JsonSchema {
   return object({
     rosters: { type: "array", items: ROSTER },
     claims: {
@@ -180,6 +193,7 @@ export function answerSchema(pack: {
       items: claimSchema(
         pack.curriculum.map((entry) => entry.id),
         pack.gameRules.map((entry) => entry.id),
+        fillerKinds,
       ),
     },
   });

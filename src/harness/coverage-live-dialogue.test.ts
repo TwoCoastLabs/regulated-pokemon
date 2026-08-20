@@ -76,6 +76,12 @@ describe("--dialogues arg parsing", () => {
     expect(parseCoverageArgs(["--retrieval", "--grounded"]).errors).toHaveLength(1);
     expect(parseCoverageArgs(["--retrieval", "--phrasings"]).errors).toHaveLength(1);
   });
+
+  it("accepts --gated-grammar and composes it with a grounding mode", () => {
+    expect(parseCoverageArgs(["--gated-grammar"]).gatedGrammar).toBe(true);
+    expect(parseCoverageArgs(["--retrieval", "--gated-grammar"]).errors).toHaveLength(0);
+    expect(parseCoverageArgs(["--retrieval", "--gated-grammar"]).gatedGrammar).toBe(true);
+  });
 });
 
 describe("a dry --dialogues run bills nothing", () => {

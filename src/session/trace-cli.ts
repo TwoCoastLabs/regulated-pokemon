@@ -8,12 +8,15 @@
  * costs real money, exactly as the live harness does; a conversation of a few
  * turns costs well under a cent, and the summary line prints what it was.
  *
- * Grounded by retrieval by default (findings §17): the proposer composes from
- * only the facts each question needs, which is what lets a cheap model be the
- * default. `--ungrounded` is the control-arm demo (§14) — the model answers from
- * memory, so a benign fabrication can be watched hitting the gate; `--grounded`
- * is the whole-registry variant. Enforcement is identical under all three: the
- * kernel recomputes every value regardless of what the model was handed.
+ * Grounded by retrieval with a gated grammar by default (findings §17, §19):
+ * the proposer composes from only the facts each question needs, and the answer
+ * schema is narrowed to the claim kinds the question nominates — which is what
+ * lets a cheap model be the default. `--ungrounded` is the control-arm demo
+ * (§14) — the model answers from memory, so a benign fabrication can be watched
+ * hitting the gate; `--grounded` is the whole-registry variant; `--loose-grammar`
+ * offers every claim kind (the pre-§19 behaviour, for the shape-deflection demo).
+ * Enforcement is identical under all of them: the kernel recomputes every value,
+ * and every gated kind stays representable so the refusal is never made vacuous.
  *
  *   npm run session:trace -- "what types of pokemons do you have?"
  *   npm run session:trace -- --weak "hi" "Red and Blue" /confirm
@@ -54,12 +57,15 @@ function makeClock(): () => string {
   };
 }
 
-// The product default is retrieval grounding; the flags select the other two.
+// The product default is retrieval grounding with a gated grammar; the flags
+// select the other grounding modes and loosen the grammar.
 const grounded = args.grounding === "full";
 const retrieval = args.grounding === "retrieval";
-console.log(`[config] model ${model}, grounding ${args.grounding}${args.adversarial ? ", adversarial" : ""}`);
+console.log(
+  `[config] model ${model}, grounding ${args.grounding}, grammar ${args.gatedGrammar ? "gated" : "loose"}${args.adversarial ? ", adversarial" : ""}`,
+);
 
-runTrace(args.inputs, { world: demoWorld(), provider, now: makeClock(), grounded, retrieval }).then((result) => {
+runTrace(args.inputs, { world: demoWorld(), provider, now: makeClock(), grounded, retrieval, gatedGrammar: args.gatedGrammar }).then((result) => {
   for (const line of result.lines) console.log(line);
   process.exit(result.exitCode);
 });
