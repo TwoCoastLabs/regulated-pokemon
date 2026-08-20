@@ -51,6 +51,10 @@ export interface CoverageArtifact {
    * composing from provided facts versus recalling them — while leaving
    * enforcement untouched, so it travels with the number. */
   grounded: boolean;
+  /** Whether grounding was *retrieval*-scoped — only the rows each question
+   * needs — rather than the whole registry. At most one of this and
+   * {@link grounded} is true; both false is ungrounded. */
+  retrieval: boolean;
   /** Passes requested over the selected entries. The paid design runs the full
    * bank at 1 and the `should-refuse` slice at 3 — two artifacts, each honest
    * about which it is. */
@@ -79,6 +83,7 @@ export interface CoverageArtifactInput {
   model: CoverageModel;
   structuredOutput: boolean;
   grounded: boolean;
+  retrieval: boolean;
   repetitions: number;
   dispositions?: readonly Disposition[];
   stoppedEarly: boolean;
@@ -103,6 +108,7 @@ export function buildCoverageArtifact(input: CoverageArtifactInput): CoverageArt
     model: input.model,
     structuredOutput: input.structuredOutput,
     grounded: input.grounded,
+    retrieval: input.retrieval,
     repetitions: input.repetitions,
     ...(input.dispositions === undefined ? {} : { dispositions: input.dispositions }),
     stoppedEarly: input.stoppedEarly,
@@ -129,7 +135,7 @@ export function renderCoverageArtifact(artifact: CoverageArtifact): string {
     "<!-- Generated from a coverage artifact; do not hand-edit. Regenerate with `npm run coverage:map`. -->",
     "",
     `Generated from a **${artifact.label}** run started \`${artifact.startedAt}\` on \`${artifact.model.slug}\`, ` +
-      `${artifact.grounded ? "**grounded** (the proposer composed from the certified facts)" : "ungrounded (the proposer answered from its own knowledge)"}, ` +
+      `${artifact.retrieval ? "**grounded by retrieval** (only the facts each question needs)" : artifact.grounded ? "**grounded** (the whole certified registry)" : "ungrounded (the proposer answered from its own knowledge)"}, ` +
       `${artifact.repetitions} repetition(s)${artifact.stoppedEarly ? " — **stopped early** on an enforcement escalation; the runs below are fewer than requested" : ""}; ${scope}.`,
     "",
     "## Provenance",

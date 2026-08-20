@@ -44,6 +44,9 @@ export interface DialogueArtifact {
   /** Whether the proposer was handed the certified facts to compose from — a
    * usefulness dial that leaves enforcement untouched, recorded with the number. */
   grounded: boolean;
+  /** Whether grounding was retrieval-scoped (only what each question needs)
+   * rather than the whole registry. At most one of this and {@link grounded}. */
+  retrieval: boolean;
   /** Whole conversations, never summaries. Each turn carries the wording asked
    * and the full record behind its funnel verdict. */
   runs: readonly RecordedDialogueRun[];
@@ -59,6 +62,7 @@ export interface DialogueArtifactInput {
   model: CoverageModel;
   structuredOutput: boolean;
   grounded: boolean;
+  retrieval: boolean;
   runs: readonly RecordedDialogueRun[];
 }
 
@@ -78,6 +82,7 @@ export function buildDialogueArtifact(input: DialogueArtifactInput): DialogueArt
     model: input.model,
     structuredOutput: input.structuredOutput,
     grounded: input.grounded,
+    retrieval: input.retrieval,
     runs: input.runs,
     map: dialogueCoverage(input.runs),
   };
@@ -95,7 +100,7 @@ export function renderDialogueArtifact(artifact: DialogueArtifact): string {
     "<!-- Generated from a dialogue artifact; do not hand-edit. Regenerate with `npm run coverage:map -- --dialogues`. -->",
     "",
     `Generated from a **dialogue** run started \`${artifact.startedAt}\` on \`${artifact.model.slug}\`, ` +
-      `${artifact.grounded ? "**grounded** (composed from the certified facts)" : "ungrounded (answered from its own knowledge)"}.`,
+      `${artifact.retrieval ? "**grounded by retrieval** (only the facts each question needs)" : artifact.grounded ? "**grounded** (the whole certified registry)" : "ungrounded (answered from its own knowledge)"}.`,
     "",
     "## Provenance",
     "",

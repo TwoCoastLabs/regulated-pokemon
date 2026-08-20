@@ -192,6 +192,27 @@ describe("runBankEntry buckets each disposition through the real session", () =>
     expect(plain.some((prompt) => prompt.includes("CERTIFIED REGISTRY"))).toBe(false);
   });
 
+  it("retrieval grounds the answer step with only the rows the question needs — shorter than full", async () => {
+    const capture = (bucket: string[]) =>
+      new ScriptedProvider("scripted:probe", (request) => {
+        if (request.purpose === "answer") bucket.push(request.prompt);
+        return request.purpose === "answer" ? pikachuSpeed() : "decline";
+      });
+
+    const full: string[] = [];
+    await runBankEntry(world, entry("ans-fact-speed-pikachu"), capture(full), clock(), undefined, 0, true, false);
+    const retrieved: string[] = [];
+    await runBankEntry(world, entry("ans-fact-speed-pikachu"), capture(retrieved), clock(), undefined, 0, false, true);
+
+    // Both grounded; the retrieved block still names the reference and Pikachu's
+    // row, but is far smaller than the whole registry.
+    expect(retrieved.some((prompt) => prompt.includes("CERTIFIED REGISTRY"))).toBe(true);
+    expect(retrieved.some((prompt) => /pikachu \| 25 \| electric/.test(prompt))).toBe(true);
+    const longestRetrieved = Math.max(...retrieved.map((prompt) => prompt.length));
+    const longestFull = Math.max(...full.map((prompt) => prompt.length));
+    expect(longestRetrieved).toBeLessThan(longestFull / 3);
+  });
+
   it("stamps the pass a repeated run came from", async () => {
     const runs = await runBank(world, [entry("off-weather")], model(""), clock, 2);
     expect(runs[0]!.repetition).toBe(2);

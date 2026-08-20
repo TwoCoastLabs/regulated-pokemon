@@ -51,6 +51,7 @@ function artifact() {
     model: { id: "dialogue:test-slug", slug: "test-slug" },
     structuredOutput: true,
     grounded: false,
+    retrieval: false,
     runs,
   });
 }

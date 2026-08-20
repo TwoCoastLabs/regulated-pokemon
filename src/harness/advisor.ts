@@ -20,7 +20,7 @@ import { MOVE_FACT_IDS, SPECIES_FACT_IDS } from "../kernel/registry.js";
 import { candidateDigest } from "../kernel/scope.js";
 import { type AnswerDecode, decodeAnswer, decodeCandidate } from "./decode.js";
 import type { CompletionRequest, ModelProvider, Usage } from "./provider.js";
-import { certifiedReference } from "./reference.js";
+import { certifiedReference, retrieveReference } from "./reference.js";
 import { ANSWER_SCHEMA_NAME, answerSchema } from "./schema.js";
 
 /** Only the trainer's own words are evidence (IA-8); the model interprets those. */
@@ -300,18 +300,29 @@ export interface AnswerStepInput {
   /** Hand the model the certified registry to compose from, instead of asking
    *  it to recall. Facts only, never policy — see {@link certifiedReference}. */
   grounded?: boolean;
+  /** Ground with only the rows *this question* needs ({@link retrieveReference})
+   *  rather than the whole registry — grounding's usefulness without its token
+   *  bill. Takes precedence over {@link grounded} when both are set. */
+  retrieval?: boolean;
 }
 
 /** Ask the model for the certified answer and decode it into a draft. Whether
  * the draft survives is `compileManifest`'s ruling, not the advisor's. */
 export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep> {
   const { provider, context, scenarioId, transactionId } = input;
-  const reference = input.grounded ? certifiedReference(context.registry) : undefined;
+  const trainerLines = trainerText(input.transcript);
+  // Retrieval first: the rows this question needs, not the whole registry. Full
+  // grounding is the fallback when retrieval is off but grounding is on.
+  const reference = input.retrieval
+    ? retrieveReference(context.registry, trainerLines.join(" "))
+    : input.grounded
+      ? certifiedReference(context.registry)
+      : undefined;
   const request: CompletionRequest = {
     purpose: "answer",
     prompt: answerPrompt(
       context.grant?.scope,
-      trainerText(input.transcript),
+      trainerLines,
       context.pack.actions.map((action) => action.id),
       context.pack.curriculum.map((lesson) => lesson.id),
       context.pack.gameRules.map((rule) => ({ id: rule.id, label: rule.label })),

@@ -72,6 +72,10 @@ export interface SessionDeps {
    * unless a caller opts in.
    */
   grounded?: boolean;
+  /** Ground with only the rows each question needs (retrieval) rather than the
+   * whole registry — grounding's usefulness without its token bill. Takes
+   * precedence over {@link grounded}. */
+  retrieval?: boolean;
 }
 
 export type ScopeProposal = Extract<ScopeEvent, { kind: "proposal" }>;
@@ -511,6 +515,7 @@ async function teachOrDiscover(
       transactionId,
       transcript: state.transcript.slice(state.askStart),
       ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
+      ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
     });
   } catch {
     // The question is still free: a failed discovery falls to the floor rather
@@ -575,6 +580,7 @@ async function answer(state: SessionState, deps: SessionDeps): Promise<SessionSt
       // transcript, but the answer should be responsive to the current words.
       transcript: state.transcript.slice(state.askStart),
       ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
+      ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
     });
   } catch (cause) {
     return note(

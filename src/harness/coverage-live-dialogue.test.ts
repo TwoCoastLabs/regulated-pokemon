@@ -69,6 +69,13 @@ describe("--dialogues arg parsing", () => {
     expect(parseCoverageArgs(["--grounded"]).errors).toHaveLength(0);
     expect(parseCoverageArgs(["--grounded", "--phrasings"]).errors).toHaveLength(1);
   });
+
+  it("accepts --retrieval and rejects it with --grounded or --phrasings", () => {
+    expect(parseCoverageArgs(["--retrieval"]).retrieval).toBe(true);
+    expect(parseCoverageArgs(["--retrieval"]).errors).toHaveLength(0);
+    expect(parseCoverageArgs(["--retrieval", "--grounded"]).errors).toHaveLength(1);
+    expect(parseCoverageArgs(["--retrieval", "--phrasings"]).errors).toHaveLength(1);
+  });
 });
 
 describe("a dry --dialogues run bills nothing", () => {
