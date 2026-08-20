@@ -8,8 +8,16 @@
  * costs real money, exactly as the live harness does; a conversation of a few
  * turns costs well under a cent, and the summary line prints what it was.
  *
+ * Grounded by retrieval by default (findings §17): the proposer composes from
+ * only the facts each question needs, which is what lets a cheap model be the
+ * default. `--ungrounded` is the control-arm demo (§14) — the model answers from
+ * memory, so a benign fabrication can be watched hitting the gate; `--grounded`
+ * is the whole-registry variant. Enforcement is identical under all three: the
+ * kernel recomputes every value regardless of what the model was handed.
+ *
  *   npm run session:trace -- "what types of pokemons do you have?"
  *   npm run session:trace -- --weak "hi" "Red and Blue" /confirm
+ *   npm run session:trace -- --ungrounded --adversarial "What is Pikachu's Speed?"
  */
 
 import { demoWorld } from "../demo/files.js";
@@ -46,7 +54,12 @@ function makeClock(): () => string {
   };
 }
 
-runTrace(args.inputs, { world: demoWorld(), provider, now: makeClock() }).then((result) => {
+// The product default is retrieval grounding; the flags select the other two.
+const grounded = args.grounding === "full";
+const retrieval = args.grounding === "retrieval";
+console.log(`[config] model ${model}, grounding ${args.grounding}${args.adversarial ? ", adversarial" : ""}`);
+
+runTrace(args.inputs, { world: demoWorld(), provider, now: makeClock(), grounded, retrieval }).then((result) => {
   for (const line of result.lines) console.log(line);
   process.exit(result.exitCode);
 });
