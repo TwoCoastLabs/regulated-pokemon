@@ -39,6 +39,14 @@ import {
   latestCoverageArtifact,
   renderCoverageArtifact,
 } from "./coverage-artifact.js";
+import {
+  buildDialogueArtifact,
+  type DialogueArtifact,
+  latestDialogueArtifact,
+  renderDialogueArtifact,
+} from "./dialogue-artifact.js";
+import { runDialogues } from "./dialogue-run.js";
+import { readDialogues } from "./dialogues.js";
 import { demoWorld } from "../demo/files.js";
 import type { Env } from "./live.js";
 import { DEFAULT_STRONG_MODEL, DEFAULT_WEAK_MODEL, HONEST_PERSONA } from "./models.js";
@@ -52,6 +60,10 @@ export interface CoverageArgs {
   live: boolean;
   render: boolean;
   weak: boolean;
+  /** Run the multi-turn dialogue bank instead of the single-turn one. Its
+   * output is a `dialogue` artifact, aggregated per turn with the ceremony
+   * cost of each whole conversation. */
+  dialogues: boolean;
   model?: string;
   limit?: number;
   ids?: readonly string[];
@@ -73,6 +85,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     live: boolean;
     render: boolean;
     weak: boolean;
+    dialogues: boolean;
     model?: string;
     limit?: number;
     ids?: string[];
@@ -84,7 +97,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     source?: string;
     help: boolean;
     errors: string[];
-  } = { live: false, render: false, weak: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
+  } = { live: false, render: false, weak: false, dialogues: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
 
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index];
@@ -98,6 +111,9 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
         break;
       case "--weak":
         args.weak = true;
+        break;
+      case "--dialogues":
+        args.dialogues = true;
         break;
       case "--phrasings":
         args.phrasings = true;
@@ -167,6 +183,15 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
   if (args.phrasings && args.repetitions > 1) {
     args.errors.push("--repetitions applies to the coverage run; a robustness pass already runs each phrasing once");
   }
+  if (args.dialogues && args.phrasings) {
+    args.errors.push("--dialogues and --phrasings are different banks; pick one");
+  }
+  if (args.dialogues && args.dispositions !== undefined) {
+    args.errors.push("--dispositions filters single-turn questions; a dialogue's disposition is per turn, not per conversation");
+  }
+  if (args.dialogues && args.repetitions > 1) {
+    args.errors.push("--repetitions is a single-turn dial; a dialogue is one scripted conversation, run once");
+  }
   if (!args.render && args.source !== undefined) {
     args.errors.push(`an artifact path only makes sense with --render, got: ${args.source}`);
   }
@@ -176,6 +201,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     live: args.live,
     render: args.render,
     weak: args.weak,
+    dialogues: args.dialogues,
     phrasings: args.phrasings,
     repetitions: args.repetitions,
     out: args.out,
@@ -198,10 +224,15 @@ const USAGE = [
   "  npm run coverage:map -- --live --dispositions should-refuse --repetitions 3",
   "  npm run coverage:map -- --live --weak --limit 20",
   "  npm run coverage:map -- --live --phrasings            # the robustness leg, over entries with paraphrases",
+  "  npm run coverage:map -- --dialogues                   # dry run of the multi-turn dialogue bank",
+  "  npm run coverage:map -- --live --dialogues            # the dialogue bank, filed as a dialogue artifact",
   "  npm run coverage:map -- --render                      # re-render the newest filed coverage artifact",
+  "  npm run coverage:map -- --render --dialogues          # re-render the newest filed dialogue artifact",
   "  npm run coverage:map -- --render runs/<file>.json --page docs/coverage.md",
   "",
   "  --live              actually call the provider and file the artifact. Nothing is billed without it.",
+  "  --dialogues         run the multi-turn dialogue bank: per-turn coverage plus each conversation's",
+  "                      ceremony cost (prompts-to-answer over a whole task). Filed as a dialogue artifact.",
   "  --render [PATH]     render a filed coverage artifact (a file, or a directory to take the newest",
   "                      coverage artifact from; default runs/coverage/). Reads no clock, no key, no network.",
   "  --page PATH         with --render, write the page there instead of printing it.",
@@ -258,22 +289,93 @@ export interface CoverageResult {
 
 function renderMode(args: CoverageArgs, fs: CoverageFs): CoverageResult {
   const source = args.source ?? "runs/coverage";
-  const path = source.endsWith(".json") ? source : latestCoverageArtifact(source, fs.readDir);
+  const kind = args.dialogues ? "dialogue" : "coverage";
+  const path = source.endsWith(".json")
+    ? source
+    : args.dialogues
+      ? latestDialogueArtifact(source, fs.readDir)
+      : latestCoverageArtifact(source, fs.readDir);
   if (path === undefined) {
-    return { lines: [`no coverage artifact found in ${source}; run --live first, or pass a path`], exitCode: 1 };
+    return { lines: [`no ${kind} artifact found in ${source}; run --live first, or pass a path`], exitCode: 1 };
   }
 
-  let artifact: CoverageArtifact;
+  let page: string;
   try {
-    artifact = JSON.parse(fs.readFile(path)) as CoverageArtifact;
+    const parsed = JSON.parse(fs.readFile(path)) as CoverageArtifact | DialogueArtifact;
+    page = args.dialogues ? renderDialogueArtifact(parsed as DialogueArtifact) : renderCoverageArtifact(parsed as CoverageArtifact);
   } catch (error) {
-    return { lines: [`could not read a coverage artifact from ${path}: ${(error as Error).message}`], exitCode: 1 };
+    return { lines: [`could not read a ${kind} artifact from ${path}: ${(error as Error).message}`], exitCode: 1 };
   }
 
-  const page = renderCoverageArtifact(artifact);
   if (args.page === undefined) return { lines: [page.replace(/\n$/, "")], exitCode: 0 };
   fs.writeFile(args.page, page);
-  return { lines: [`coverage page written to ${args.page}`, `  from ${path}`], exitCode: 0 };
+  return { lines: [`${kind} page written to ${args.page}`, `  from ${path}`], exitCode: 0 };
+}
+
+/**
+ * The multi-turn dialogue run — the same three modes as the single-turn path,
+ * over the dialogue bank. Dry by default; `--live` bills the key and files a
+ * `dialogue` artifact whose map carries both the per-turn coverage and each
+ * conversation's ceremony cost.
+ */
+async function runDialogueMode(args: CoverageArgs, options: CoverageOptions, model: string): Promise<CoverageResult> {
+  const bank = readDialogues();
+  let all = bank.dialogues;
+  if (args.ids !== undefined) {
+    const byId = new Map(all.map((entry) => [entry.id, entry]));
+    all = args.ids.map((id) => byId.get(id)).filter((entry): entry is (typeof bank.dialogues)[number] => entry !== undefined);
+  }
+  const entries = args.limit === undefined ? all : all.slice(0, args.limit);
+
+  if (!args.live) {
+    const turns = entries.reduce((sum, entry) => sum + entry.turns.length, 0);
+    return {
+      lines: [
+        "Playability dialogue coverage — DRY RUN (nothing billed).",
+        `  bank:          ${bank.id} (${bank.dialogues.length} conversations)`,
+        `  running:       ${entries.length} conversation(s), ${turns} turn(s) in total`,
+        `  model:         ${model}`,
+        `  artifact:      filed under ${args.out}/`,
+        `  add --live to run it against the model and bill your key.`,
+      ],
+      exitCode: 0,
+    };
+  }
+
+  const apiKey = (options.env.OPENROUTER_API_KEY ?? "").trim();
+  if (apiKey === "") {
+    return {
+      lines: ["no OPENROUTER_API_KEY in the environment or .env — a live dialogue run needs a real model"],
+      exitCode: 2,
+    };
+  }
+  const makeProvider =
+    options.makeProvider ??
+    (({ model: slug, apiKey: key }: { model: string; apiKey: string }): ModelProvider =>
+      new OpenRouterProvider({ id: `dialogue:${slug}`, model: slug, apiKey: key, system: HONEST_PERSONA, structured: true }));
+  const provider = makeProvider({ model, apiKey });
+  const world = demoWorld();
+
+  const runs = await runDialogues(world, entries, provider, options.clock);
+  const artifact = buildDialogueArtifact({
+    startedAt: options.now,
+    world,
+    bankId: bank.id,
+    model: { id: provider.id, slug: model },
+    // The dialogue run, like the single-turn one, always offers the answer
+    // grammar as a decoding constraint — the measured default (findings §4).
+    structuredOutput: true,
+    runs,
+  });
+  const artifactPath = fileArtifact(artifact, resolve(args.out), options.write);
+
+  return {
+    lines: [renderDialogueArtifact(artifact), "", "ARTIFACT", `  ${artifactPath}`],
+    // The cross-turn enforcement zero is the gate: a turn that committed gated
+    // advice mid-conversation fails the run, exactly as it does single-turn.
+    exitCode: artifact.map.map.enforcementEscalations.length > 0 ? 1 : 0,
+    artifactPath,
+  };
 }
 
 export async function runCoverage(options: CoverageOptions): Promise<CoverageResult> {
@@ -284,6 +386,8 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
   if (args.render) return renderMode(args, options.fs ?? diskFs);
 
   const model = args.model ?? (args.weak ? DEFAULT_WEAK_MODEL : DEFAULT_STRONG_MODEL);
+  if (args.dialogues) return runDialogueMode(args, options, model);
+
   const bank = readBank();
 
   let all = args.phrasings ? bank.entries.filter((entry) => phrasingsOf(entry).length > 1) : bank.entries;

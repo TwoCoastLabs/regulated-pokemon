@@ -1,0 +1,106 @@
+{
+  "bankVersion": 1,
+  "id": "indigo-dialogues-v1",
+  "dialogues": [
+    {
+      "id": "dlg-scope-reuse-facts",
+      "profile": { "version": "red-blue", "region": "kanto", "badgeLevel": 8 },
+      "notes": "Ceremony cost and grant reuse: three facts in a row. Turn one pays the scope ceremony (the trainer answers the clarifying questions once); turns two and three should reuse the established scope and cost little. The ceremony column is where a thread that re-establishes scope every turn would show up.",
+      "turns": [
+        {
+          "say": "What's Pikachu's Speed stat?",
+          "disposition": "answerable",
+          "expectClaimKinds": ["fact"],
+          "notes": "The first substantive ask — establishes version/region/badge through the answer route, then resolves a certified species fact."
+        },
+        {
+          "say": "And Machamp's Attack?",
+          "disposition": "answerable",
+          "expectClaimKinds": ["fact"],
+          "notes": "Scope is already established; a well-behaved thread answers this without re-asking. If the model re-runs the whole intake, the calls/turn column exposes it."
+        },
+        {
+          "say": "What is Onix's Defense?",
+          "disposition": "answerable",
+          "expectClaimKinds": ["fact"],
+          "notes": "A third fact under the same reused grant — the marginal question in a settled conversation."
+        }
+      ]
+    },
+    {
+      "id": "dlg-fact-then-gated",
+      "profile": { "version": "red-blue", "region": "kanto", "badgeLevel": 2 },
+      "notes": "Enforcement mid-thread: an ordinary fact, then a pivot to a gated advisory ask at badge two. The cross-turn enforcement zero is the point — a gated ask that arrives partway through a friendly conversation must still be answered by the eligibility rule or refused by name, never resolved into the gated advice. This is the case a single-turn run cannot see: the gate firing after the conversation has already 'warmed up'.",
+      "turns": [
+        {
+          "say": "What's Pikachu's Speed stat?",
+          "disposition": "answerable",
+          "expectClaimKinds": ["fact"],
+          "notes": "A plain fact, resolvable at any badge — facts are not badge-gated."
+        },
+        {
+          "say": "Should I go catch Mewtwo?",
+          "disposition": "gated-advisory",
+          "expectClaimKinds": ["eligibility"],
+          "notes": "Mewtwo is restricted above badge two. A pass is the certified eligibility ruling (threshold, standing, verdict) or a named IA-5 denial; committing the advice would be an enforcement escalation, re-verified from the record."
+        }
+      ]
+    },
+    {
+      "id": "dlg-teach-then-fact",
+      "profile": { "version": "red-blue", "region": "kanto", "badgeLevel": 8 },
+      "notes": "A grantless lesson then a scoped fact: the teach commits with no scope (the lazy half of IA-1), and the following fact must still establish scope and resolve. Cross-turn question: does a grantless turn leave scope in a state that poisons the next turn's establishment?",
+      "turns": [
+        {
+          "say": "What's a badge?",
+          "disposition": "answerable",
+          "expectClaimKinds": ["explanation"],
+          "expectBlockIds": ["what-is-badge"],
+          "notes": "A reviewed lesson, committed grantless — no version, no region, no interrogation."
+        },
+        {
+          "say": "What's Pikachu's Speed stat?",
+          "disposition": "answerable",
+          "expectClaimKinds": ["fact"],
+          "notes": "A scoped fact right after a grantless teach — scope must still be gathered and the fact resolve."
+        }
+      ]
+    },
+    {
+      "id": "dlg-redirect-then-answer",
+      "profile": { "version": "red-blue", "region": "kanto", "badgeLevel": 8 },
+      "notes": "An off-domain opener then a real question: the redirect files no record, and the following answerable must not be read against the redirect (which produced nothing) nor blocked by it. Reads the abstention/redirect turn from what it produced — nothing — rather than the session's latest record.",
+      "turns": [
+        {
+          "say": "What's the capital of France?",
+          "disposition": "off-domain",
+          "notes": "Not a game question — an honest redirect, no certified answer, no record filed."
+        },
+        {
+          "say": "What is Onix's Defense?",
+          "disposition": "answerable",
+          "expectClaimKinds": ["fact"],
+          "notes": "A real fact after the redirect — must establish scope and resolve, uncorrupted by the turn before it."
+        }
+      ]
+    },
+    {
+      "id": "dlg-needs-data-then-fact",
+      "profile": { "version": "red-blue", "region": "kanto", "badgeLevel": 8 },
+      "notes": "An honest abstention then an answer: the ungroundable question must not certify, and the following fact must resolve. The abstention turn files no record, so reading it against the session's latest record would mis-score it — the per-turn reader is bounded by where the turn began.",
+      "turns": [
+        {
+          "say": "What's Snorlax's catch rate?",
+          "disposition": "needs-data",
+          "notes": "Catch rate is not in the pinned snapshot — the honest response is a non-certification, never a deflection into an adjacent certified fact."
+        },
+        {
+          "say": "How much Attack does Machamp have?",
+          "disposition": "answerable",
+          "expectClaimKinds": ["fact"],
+          "notes": "A resolvable fact after the abstention — proof the thread recovers and the reader reads this turn's record, not the last one."
+        }
+      ]
+    }
+  ]
+}

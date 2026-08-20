@@ -861,3 +861,17 @@ drives scripted multi-turn conversations today — so it is an eval extension, a
 the next axis of eval growth to prioritize before widening the single-turn set
 much further, because multi-turn is where the remaining interesting
 enforcement cases most likely live.
+
+The **instrument now exists** (`data/playability/dialogues.v1.json`, run with
+`npm run coverage:map -- --dialogues`; see `docs/eval.md`): a `dialogue` entry
+is one truthful trainer speaking a scripted sequence of turns into a single
+session, each turn scored by the same oracle a single-turn question is, read
+from the record that turn produced, plus a thread-level ceremony cost —
+prompts-to-answer over the whole task — that a single-turn run cannot report.
+It is proven key-free in CI, and the cross-turn enforcement zero (a turn that
+commits gated advice part-way through a thread) holds by the same kernel the
+single-turn path uses. What is still missing is the honest part: **numbers.**
+A `dialogue` run over a real model has not been paid for, so this section's
+"did not measure" stands as written until the two-model dialogue run lands its
+figures in `docs/findings.md` — a claim without a number is a note, not a
+finding.
