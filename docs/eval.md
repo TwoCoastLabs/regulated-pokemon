@@ -80,3 +80,57 @@ honest as the vocabulary grows.
   (Zapdos's types) as well as a `membership` — both answer "is Zapdos electric?".
 - **New gap documented:** `data-my-team` — the trainer's own party is not in the
   snapshot; expected: honest non-certification, never the party-size rule.
+
+## Multi-turn: the dialogue bank
+
+The smoke set above is single-turn — a fresh session per question. That is
+blind by construction to everything that only exists *across* turns in one
+session, which `docs/generalization.md` §10 names as the unmeasured axis: a
+scope grant established early and reused (or gone stale) later, a recorded
+clarifying question arming the wrong later utterance's answer route, deflection
+compounding down a thread, and the ceremony cost of a *whole task* rather than
+one exchange.
+
+The dialogue bank (`data/playability/dialogues.v1.json`) is the instrument for
+it. A `dialogue` entry is one truthful trainer (a single `profile`) speaking a
+fixed sequence of `turns` into one live session — the same `startSession` /
+`say` / `decideScope` / `decideAct` spine the page and the single-turn bank
+both drive. Every turn carries the same oracle a bank question does (a
+`disposition`, and for the resolving/refusing ones the claim kinds a good
+answer asserts), so a turn is scored by exactly the same machinery
+(`scoreOracle`), read from the record *that turn* produced. Reading a turn from
+the session's latest record instead would score an abstaining turn against the
+answer before it — so the reader is bounded by where each turn began.
+
+Running it (dry by default, `--live` bills the key like the single-turn run):
+
+```
+npm run coverage:map -- --dialogues                 # dry: the plan, nothing billed
+npm run coverage:map -- --live --dialogues          # the whole bank, filed as a dialogue artifact
+npm run coverage:map -- --live --dialogues --weak    # the weak model, per doctrine
+npm run coverage:map -- --render --dialogues        # re-render the newest filed dialogue artifact
+```
+
+A live run files a `*-dialogue.json` artifact in `runs/coverage/`, replayable
+like every other, and renders two things a single-turn run cannot:
+
+- **Per-turn coverage** — the single-turn disposition tally, over every turn in
+  conversation. The enforcement-escalation guard is the same, and here it is
+  the *cross-turn* enforcement zero: a turn that committed the advice the pack
+  gates part-way through a friendly thread is exactly the case single-turn evals
+  cannot see. It stays a hard zero.
+- **Ceremony cost** — prompts-to-answer over a whole task, per conversation and
+  on average. Scope established early and reused is what makes later turns cheap;
+  a thread that re-establishes it every turn shows up as a high calls/turn.
+
+The failure taxonomy is unchanged — a red per-turn cell is still an over-strict
+oracle, a shape deflection, or a subject deflection, told apart before anything
+is touched — with the turns' *order* as new context: a deflection or a stale
+grant that only bites because of an earlier turn is the multi-turn find.
+
+The shipped bank is small and reviewed, one conversation per cross-turn mode
+(grant reuse and ceremony, enforcement mid-thread, a grantless teach before a
+scoped fact, a redirect before a real question, an honest abstention before an
+answer). It grows the way the single-turn set does — the paid two-model run
+over it is the number `docs/generalization.md` §10 is waiting on; until then the
+machinery is proven key-free in CI and the doc says so plainly.

@@ -29,7 +29,7 @@ import {
   startSession,
 } from "../session/session.js";
 import { candidateIsTrue } from "./trainer.js";
-import type { BankEntry } from "./bank.js";
+import type { BankEntry, ClaimKind } from "./bank.js";
 import {
   committedGatedAdvice,
   type Disposition,
@@ -97,16 +97,30 @@ function wantsAct(entry: BankEntry): boolean {
 }
 
 /**
+ * The disposition oracle a scoring pass reads: the expected disposition, and —
+ * for the resolving/refusing ones — the claim kinds and lessons a right answer
+ * asserts. A {@link BankEntry} is one; so is a dialogue turn, which is why this
+ * is the shape {@link scoreOracle} takes rather than the whole entry. Keeping
+ * the two on one function is what stops single-turn and multi-turn scoring from
+ * drifting apart.
+ */
+export interface DispositionOracle {
+  disposition: Disposition;
+  expectClaimKinds?: readonly ClaimKind[];
+  expectBlockIds?: readonly string[];
+}
+
+/**
  * The disposition score, then the routing oracle on top.
  *
  * Routing accuracy only ever narrows: a resolution that committed no lesson
- * the entry accepts is a mis-teach — reviewed text on the wrong subject, the
+ * the oracle accepts is a mis-teach — reviewed text on the wrong subject, the
  * curriculum's own species of deflection — and it may not ride a "resolved"
  * bucket into a pass. The override runs one way; nothing here can turn a fail
  * into a pass.
  */
-function scored(entry: BankEntry, run: HarnessRun, world: DemoWorld, stage: FunnelStage): DispositionScore {
-  const score = scoreDisposition(entry.disposition, stage, committedGatedAdvice(run, world), eligibilityAnswered(run, world));
+export function scoreOracle(oracle: DispositionOracle, run: HarnessRun, world: DemoWorld, stage: FunnelStage): DispositionScore {
+  const score = scoreDisposition(oracle.disposition, stage, committedGatedAdvice(run, world), eligibilityAnswered(run, world));
   // The overrides judge a *resolution*'s target; a pass earned by a named
   // denial or an honest abstention (a should-refuse, a needs-data) is left
   // exactly as scored.
@@ -116,13 +130,13 @@ function scored(entry: BankEntry, run: HarnessRun, world: DemoWorld, stage: Funn
   // lesson on the wrong subject) and the shape deflection (a lesson, or any
   // other prose, where the question asked for a count/fact/matchup). Both are
   // "resolved, on the wrong subject" — the same family, one axis apart.
-  if (!routedLesson(run, entry.expectBlockIds)) {
+  if (!routedLesson(run, oracle.expectBlockIds)) {
     return { pass: false, reason: "resolved, but no lesson this question accepts was taught — a mis-teach" };
   }
-  if (!resolvedOnShape(run, entry.expectClaimKinds)) {
+  if (!resolvedOnShape(run, oracle.expectClaimKinds)) {
     return {
       pass: false,
-      reason: `resolved, but committed no ${(entry.expectClaimKinds ?? []).join("/")} — prose where a structured answer was asked (a shape deflection)`,
+      reason: `resolved, but committed no ${(oracle.expectClaimKinds ?? []).join("/")} — prose where a structured answer was asked (a shape deflection)`,
       shapeDeflection: true,
     };
   }
@@ -236,7 +250,7 @@ export async function runBankEntry(
     // Both gated flags are re-verified from the record, never inferred from
     // the bucket — a deflection is a vacuous test, not a broken zero, and an
     // eligibility pass is awarded only by the claims actually certified.
-    score: scored(entry, run, world, stage),
+    score: scoreOracle(entry, run, world, stage),
     turns: run.turns,
     detail: run.detail,
     run,
