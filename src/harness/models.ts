@@ -6,42 +6,50 @@
  */
 
 /**
- * Deliberately overridable: a slug is a moving target, and a harness pinned to
+ * Deliberately overridable (`HARNESS_STRONG_MODEL` / `HARNESS_WEAK_MODEL` in the
+ * environment, or `--model`): a slug is a moving target, and a harness pinned to
  * one that has been retired is a harness nobody can re-run.
  *
- * These two were chosen empirically — a recorded sweep for the first pair, and
- * a dogfooding audition when the strong slot was re-picked:
+ * Both defaults are **open-weights** models, chosen to sharpen the exhibit's own
+ * point — a governed *cheap, open* model resolving the corpus at a fraction of a
+ * closed model's price — and to cut the cost of every default run:
  *
- *  - **strong** `openai/gpt-5.4-mini` replaced `openai/gpt-5.6-luna-pro`
- *    after live sessions showed luna-pro's low sticker price was an illusion:
- *    ~6k reasoning tokens per answer made it both the slowest and, at ~$0.007
- *    a call, among the dearest. The mini answered the same script at ~$0.002
- *    a call in a tenth of the wall time. Judge models by measured cost per
- *    answer, never by per-token price: reasoning burn dominates both bills.
- *    One criterion was deliberately *rejected*: the mini volunteered an
- *    unsolicited (kernel-legal) recommendation for a message that asked
- *    nothing, and a better-mannered candidate was available for 2× the cost.
- *    Picking the polite model would make the model the guard — this project
- *    exists to show the architecture absorbing misbehavior, so the eager
- *    model is the more honest choice and its non-sequiturs stay measured,
- *    not selected away.
- *  - **weak** `google/gemini-3.5-flash-lite` is the point of the exercise: a
- *    real, cheaply-deployable model that resolves only part of the corpus,
- *    reliably (no provider errors), on the same gate. Its criterion was fixed
- *    before it was picked — a model a cost-constrained team would actually ship,
- *    not a strawman, and one whose lower usefulness is the model's, not an
- *    outage's. That an invariant holds on it and on the strong model alike is
+ *  - **strong** `qwen/qwen3-235b-a22b-2507` — a frontier-class open model
+ *    (235B MoE, 22B active), non-reasoning, well-served (≈11 providers, most
+ *    honouring strict structured output, so the gate's usefulness is the model's
+ *    and not an outage's). At roughly $0.55/M output it is about an eighth the
+ *    price of the closed `openai/gpt-5.4-mini` it replaces. Putting a *leading
+ *    open* model in the strong slot is the message: the architecture carries the
+ *    guarantee, so a cheaper, open model loses nothing that mattered.
+ *  - **weak** `mistralai/mistral-nemo` — a genuinely small, genuinely cheap
+ *    (~$0.03/M output, 12B) open model a cost-constrained team would actually
+ *    ship, non-reasoning, that resolves only part of the corpus. It replaces
+ *    `google/gemini-3.5-flash-lite`, which was both dear (~$2.50/M output) and a
+ *    *reasoning* model — the burn the lesson below warns about, hidden in a
+ *    "lite" name. That an invariant holds on it and on the strong model alike is
  *    the evidence the architecture does not lean on model capability.
  *
- * The sweep that chose the weak model ran *unconstrained*, when its misses
- * were mostly malformed shape rather than wrong facts; with the grammar enforced
- * it does considerably better, and the gap that remains is the substantive one.
+ * One lesson is load-bearing and kept from the previous pick: **judge a model by
+ * measured cost per answer, never by per-token price — reasoning burn dominates
+ * both bills** (the retired `openai/gpt-5.6-luna-pro` was cheapest on paper and
+ * dearest in practice, ~6k reasoning tokens an answer). Both slugs above are
+ * non-reasoning precisely so sticker price is a fair proxy — but the pick is
+ * still **provisional**: it was made on price, architecture and provider
+ * redundancy, not a live audition. Their cost-per-answer and usefulness rates
+ * are not findings until a paid `coverage:map --live` on each records them in
+ * docs/findings.md — a claim without a number is a note, not a finding.
+ *
+ * One criterion is deliberately *rejected* for the strong slot: politeness. A
+ * model that volunteers unsolicited (kernel-legal) recommendations is left as
+ * it is, because selecting a better-mannered model would make the model the
+ * guard — this project exists to show the architecture absorbing misbehaviour,
+ * so an eager model's non-sequiturs stay measured, not selected away.
  *
  * The adversary defaults to the strong slug: a capable attacker, because a weak
  * one that fails to fabricate would prove nothing about the gate.
  */
-export const DEFAULT_STRONG_MODEL = "openai/gpt-5.4-mini";
-export const DEFAULT_WEAK_MODEL = "google/gemini-3.5-flash-lite";
+export const DEFAULT_STRONG_MODEL = "qwen/qwen3-235b-a22b-2507";
+export const DEFAULT_WEAK_MODEL = "mistralai/mistral-nemo";
 
 /**
  * The honest Advisor. Deliberately thin: the prompt is not where compliance

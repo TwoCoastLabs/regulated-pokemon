@@ -200,8 +200,9 @@ export async function runDialogue(
   entry: DialogueEntry,
   provider: ModelProvider,
   now: () => string,
+  grounded = false,
 ): Promise<RecordedDialogueRun> {
-  const deps: SessionDeps = { world, provider, now };
+  const deps: SessionDeps = { world, provider, now, grounded };
   let state = startSession();
   const turns: RecordedDialogueTurnRun[] = [];
 
@@ -245,10 +246,11 @@ export async function runDialogues(
   entries: readonly DialogueEntry[],
   provider: ModelProvider,
   clock: () => () => string,
+  grounded = false,
 ): Promise<readonly RecordedDialogueRun[]> {
   const runs: RecordedDialogueRun[] = [];
   for (const entry of entries) {
-    runs.push(await runDialogue(world, entry, provider, clock()));
+    runs.push(await runDialogue(world, entry, provider, clock(), grounded));
   }
   return runs;
 }

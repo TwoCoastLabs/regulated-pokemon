@@ -50,6 +50,7 @@ function artifact() {
     bankId: "test-dialogues",
     model: { id: "dialogue:test-slug", slug: "test-slug" },
     structuredOutput: true,
+    grounded: false,
     runs,
   });
 }

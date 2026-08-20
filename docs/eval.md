@@ -71,6 +71,37 @@ deflection on unanswerable questions, and the weak model is the *more* honest of
 the two — it deflects less. That is the finding the smoke set exists to keep
 honest as the vocabulary grows.
 
+## New-default audition (2026-08-20, N=1)
+
+The defaults moved to open-weights models (strong `qwen/qwen3-235b-a22b-2507`,
+weak `mistralai/mistral-nemo`); the smoke set is what auditioned them, plus the
+first live run of the dialogue bank below. The full write-up with provenance is
+[findings.md](findings.md) **Iteration 14**; the short of it:
+
+| | `qwen3-235b` (strong) | `mistral-nemo` (weak) |
+|---|---|---|
+| overall | 16/25 | 9/25 |
+| answerable (structured) | 11/16 (69%) | 5/16 (31%) |
+| enforcement (gated commits) | **0** | **0** |
+| honest-refusal on unanswerable | 60% (3/5) | 40% (2/5) |
+
+Cost fell ~10–40× per call and enforcement stayed a hard zero — but usefulness
+dropped from the closed models' 16/16 structured baseline, `qwen3-235b` by a new
+failure mode the map named on sight: **shape deflection on facts** (a certified,
+verified *count* where a `fact` was asked). The smoke set caught it before the
+pick could ever be published as a claim — which is what the loop is for. The
+alternative (`llama-3.3-70b`) was then auditioned too ([findings.md](findings.md)
+**Iteration 15**): 15/25, also short of the closed baseline, but missing by
+*value* (wrong stats, denied by the kernel) where `qwen3-235b` missed by *shape*
+— the two halves of the gap, pointing at grounding and retrieval-gated grammar
+respectively. No open model matched 16/16 structured; enforcement stayed a hard
+zero on all five. Then **grounding** ([findings.md](findings.md) **Iteration
+16**) closed the gap: grounded, `qwen3-235b` reaches 19/25 and `llama-3.3-70b`
+21/25 — the closed defaults' marks — but whole-registry grounding inflates the
+prompt ~13× and spends the cost advantage. The cost-preserving fix is retrieval
+(fetch the facts a question needs, not the whole KB) — the next build. The
+open-weights default is provisional pending that.
+
 ## Fixed this pass
 
 - **Shape deflection:** "what are on my team?" was grabbing the `party-size`

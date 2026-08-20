@@ -62,6 +62,16 @@ export interface SessionDeps {
   /** RFC 3339, strictly increasing across calls. The transport owns time. */
   now: () => string;
   locale?: string;
+  /**
+   * Hand the proposer the certified registry to compose from, instead of asking
+   * it to recall (facts only, never policy — see {@link certifiedReference}).
+   * Nothing downstream trusts a grounded answer any more for having been
+   * grounded: the manifest gate recomputes every value regardless, so this
+   * changes only what the model is *asked*, never what may commit. Off by
+   * default — the session measures a model answering from its own knowledge
+   * unless a caller opts in.
+   */
+  grounded?: boolean;
 }
 
 export type ScopeProposal = Extract<ScopeEvent, { kind: "proposal" }>;
@@ -500,6 +510,7 @@ async function teachOrDiscover(
       scenarioId: "session",
       transactionId,
       transcript: state.transcript.slice(state.askStart),
+      ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
     });
   } catch {
     // The question is still free: a failed discovery falls to the floor rather
@@ -563,6 +574,7 @@ async function answer(state: SessionState, deps: SessionDeps): Promise<SessionSt
       // The ask being answered, not the whole session: scope reads the full
       // transcript, but the answer should be responsive to the current words.
       transcript: state.transcript.slice(state.askStart),
+      ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
     });
   } catch (cause) {
     return note(

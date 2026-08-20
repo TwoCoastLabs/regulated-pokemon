@@ -41,6 +41,9 @@ export interface DialogueArtifact {
   /** Whether the answer grammar was enforced at decode time — it changes what
    * the usefulness number means, so it travels with the number. */
   structuredOutput: boolean;
+  /** Whether the proposer was handed the certified facts to compose from — a
+   * usefulness dial that leaves enforcement untouched, recorded with the number. */
+  grounded: boolean;
   /** Whole conversations, never summaries. Each turn carries the wording asked
    * and the full record behind its funnel verdict. */
   runs: readonly RecordedDialogueRun[];
@@ -55,6 +58,7 @@ export interface DialogueArtifactInput {
   bankId: string;
   model: CoverageModel;
   structuredOutput: boolean;
+  grounded: boolean;
   runs: readonly RecordedDialogueRun[];
 }
 
@@ -73,6 +77,7 @@ export function buildDialogueArtifact(input: DialogueArtifactInput): DialogueArt
     bankId: input.bankId,
     model: input.model,
     structuredOutput: input.structuredOutput,
+    grounded: input.grounded,
     runs: input.runs,
     map: dialogueCoverage(input.runs),
   };
@@ -89,7 +94,8 @@ export function renderDialogueArtifact(artifact: DialogueArtifact): string {
     "",
     "<!-- Generated from a dialogue artifact; do not hand-edit. Regenerate with `npm run coverage:map -- --dialogues`. -->",
     "",
-    `Generated from a **dialogue** run started \`${artifact.startedAt}\` on \`${artifact.model.slug}\`.`,
+    `Generated from a **dialogue** run started \`${artifact.startedAt}\` on \`${artifact.model.slug}\`, ` +
+      `${artifact.grounded ? "**grounded** (composed from the certified facts)" : "ungrounded (answered from its own knowledge)"}.`,
     "",
     "## Provenance",
     "",

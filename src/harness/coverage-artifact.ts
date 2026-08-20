@@ -46,6 +46,11 @@ export interface CoverageArtifact {
   /** Whether the answer grammar was enforced at decode time — it changes what
    * the usefulness number means, so it travels with the number. */
   structuredOutput: boolean;
+  /** Whether the proposer was handed the certified facts to compose from. Like
+   * {@link structuredOutput}, it changes what the usefulness number measures —
+   * composing from provided facts versus recalling them — while leaving
+   * enforcement untouched, so it travels with the number. */
+  grounded: boolean;
   /** Passes requested over the selected entries. The paid design runs the full
    * bank at 1 and the `should-refuse` slice at 3 — two artifacts, each honest
    * about which it is. */
@@ -73,6 +78,7 @@ export interface CoverageArtifactInput {
   bankId: string;
   model: CoverageModel;
   structuredOutput: boolean;
+  grounded: boolean;
   repetitions: number;
   dispositions?: readonly Disposition[];
   stoppedEarly: boolean;
@@ -96,6 +102,7 @@ export function buildCoverageArtifact(input: CoverageArtifactInput): CoverageArt
     bankId: input.bankId,
     model: input.model,
     structuredOutput: input.structuredOutput,
+    grounded: input.grounded,
     repetitions: input.repetitions,
     ...(input.dispositions === undefined ? {} : { dispositions: input.dispositions }),
     stoppedEarly: input.stoppedEarly,
@@ -122,6 +129,7 @@ export function renderCoverageArtifact(artifact: CoverageArtifact): string {
     "<!-- Generated from a coverage artifact; do not hand-edit. Regenerate with `npm run coverage:map`. -->",
     "",
     `Generated from a **${artifact.label}** run started \`${artifact.startedAt}\` on \`${artifact.model.slug}\`, ` +
+      `${artifact.grounded ? "**grounded** (the proposer composed from the certified facts)" : "ungrounded (the proposer answered from its own knowledge)"}, ` +
       `${artifact.repetitions} repetition(s)${artifact.stoppedEarly ? " — **stopped early** on an enforcement escalation; the runs below are fewer than requested" : ""}; ${scope}.`,
     "",
     "## Provenance",

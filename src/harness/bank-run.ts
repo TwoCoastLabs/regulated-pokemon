@@ -237,8 +237,9 @@ export async function runBankEntry(
   now: () => string,
   opening: string = entry.intent,
   repetition = 0,
+  grounded = false,
 ): Promise<RecordedBankRun> {
-  const state = await play(entry, opening, { world, provider, now });
+  const state = await play(entry, opening, { world, provider, now, grounded });
   const run = asRun(entry, state, world, repetition);
   const stage = funnelOf(run, wantsAct(entry));
   return {
@@ -267,10 +268,11 @@ export async function runBank(
   provider: ModelProvider,
   clock: () => () => string,
   repetition = 0,
+  grounded = false,
 ): Promise<readonly RecordedBankRun[]> {
   const runs: RecordedBankRun[] = [];
   for (const entry of entries) {
-    runs.push(await runBankEntry(world, entry, provider, clock(), entry.intent, repetition));
+    runs.push(await runBankEntry(world, entry, provider, clock(), entry.intent, repetition, grounded));
   }
   return runs;
 }
