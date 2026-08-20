@@ -201,8 +201,9 @@ export async function runDialogue(
   provider: ModelProvider,
   now: () => string,
   grounded = false,
+  retrieval = false,
 ): Promise<RecordedDialogueRun> {
-  const deps: SessionDeps = { world, provider, now, grounded };
+  const deps: SessionDeps = { world, provider, now, grounded, retrieval };
   let state = startSession();
   const turns: RecordedDialogueTurnRun[] = [];
 
@@ -247,10 +248,11 @@ export async function runDialogues(
   provider: ModelProvider,
   clock: () => () => string,
   grounded = false,
+  retrieval = false,
 ): Promise<readonly RecordedDialogueRun[]> {
   const runs: RecordedDialogueRun[] = [];
   for (const entry of entries) {
-    runs.push(await runDialogue(world, entry, provider, clock(), grounded));
+    runs.push(await runDialogue(world, entry, provider, clock(), grounded, retrieval));
   }
   return runs;
 }

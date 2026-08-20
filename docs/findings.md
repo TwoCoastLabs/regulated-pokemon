@@ -1527,6 +1527,59 @@ Provenance: `runs/coverage/2026-08-20T09-54-47…-coverage.json` (qwen grounded)
 
 ---
 
+### Iteration 17 — retrieval closes the cost gap grounding opened: cheaper *and* useful
+
+Iteration 16 left the cheap-model story one step from done: grounding recovered
+the usefulness but spent the cheapness (a ~13× prompt-token blowup). The fix it
+named — fetch only the facts a question needs — is now built (`--retrieval`,
+`retrieveReference`: deterministic lexical retrieval over the closed vocabulary)
+and measured on the smoke set:
+
+| `qwen3-235b` | overall | answerable | prompt tokens (25q) | cost |
+|---|---|---|---|---|
+| ungrounded | 16/25 | 11/16 (69%) | 55k | $0.009 |
+| full grounding | 19/25 | 14/16 (88%) | 742k | $0.118 |
+| **retrieval** | **22/25** | **14/16 (88%)** | **79k** | **$0.014** |
+
+Retrieval holds full grounding's 88% on the strong guarantee at **~1/9th the
+tokens** — 79k, essentially the ungrounded prompt — and an eighth the cost.
+`llama-3.3-70b` retrieval matched the same 88% answerable at 91k tokens. The
+usefulness grounding bought is kept; the price it charged is given back.
+
+**And retrieval *beat* full grounding overall — for a reason worth stating.**
+`qwen3-235b` retrieval scored 22/25, above both full grounding (19) and the
+closed `gpt-5.4-mini` it was chosen to undercut (19), with **100% honest-refusal**
+on the unanswerable questions (up from 60%). The scoped reference is why: a meta
+or ungroundable question retrieves *nothing*, so there is no adjacent fact to
+deflect into — retrieval narrows the deflection surface at the same time it
+narrows the prompt, where whole-registry grounding puts every adjacent true fact
+in front of the model on every question. So on this bank the cheap open model,
+governed and retrieval-grounded, is **cheaper *and* more useful *and* more honest**
+than the pricier closed model it replaced — the result the whole thread chased.
+
+**No recall penalty here, and the honest asterisk on it.** Retrieval lost no
+answerable question against full grounding (14/16 both); its two misses are the
+hard-fact residual §18 named (a fabricated move-power entity), caught by the gate,
+not a retrieval gap. But retrieval is a deterministic front door and trades recall
+for cost (lesson 6): every answerable question here *named* its entity, so the
+lexical index found it. A larger or adversarial bank with paraphrased or
+misspelled entities would retrieve empty on some and fall back to ungrounded —
+safe (the gate still recomputes), just unhelped — and the eval is the instrument
+that counts them. `llama`'s overall dip (18 vs 21) is on the honesty axis, not the
+guarantee; N=1 on all legs (§6), effect large, figures sample-bounded.
+
+**Enforcement stayed a hard zero on every retrieval run.** Grounding — full or
+retrieved — changes only what the model is *asked*; the manifest gate recomputes
+every value, so the safety floor never moved across the whole audition. The arc,
+complete: cheap models deflect (§14–15) → grounding fixes usefulness not cost
+(§16) → **retrieval fixes both** (§17).
+
+Provenance: `runs/coverage/2026-08-20T10-52-04…-coverage.json` (qwen retrieval),
+`…10-59-38…-coverage.json` (llama retrieval); full-grounding and ungrounded legs
+in §14–16.
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's

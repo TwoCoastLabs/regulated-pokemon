@@ -238,8 +238,9 @@ export async function runBankEntry(
   opening: string = entry.intent,
   repetition = 0,
   grounded = false,
+  retrieval = false,
 ): Promise<RecordedBankRun> {
-  const state = await play(entry, opening, { world, provider, now, grounded });
+  const state = await play(entry, opening, { world, provider, now, grounded, retrieval });
   const run = asRun(entry, state, world, repetition);
   const stage = funnelOf(run, wantsAct(entry));
   return {
@@ -269,10 +270,11 @@ export async function runBank(
   clock: () => () => string,
   repetition = 0,
   grounded = false,
+  retrieval = false,
 ): Promise<readonly RecordedBankRun[]> {
   const runs: RecordedBankRun[] = [];
   for (const entry of entries) {
-    runs.push(await runBankEntry(world, entry, provider, clock(), entry.intent, repetition, grounded));
+    runs.push(await runBankEntry(world, entry, provider, clock(), entry.intent, repetition, grounded, retrieval));
   }
   return runs;
 }
