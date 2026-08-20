@@ -1,0 +1,2523 @@
+{
+  "schemaVersion": 1,
+  "label": "dialogue",
+  "startedAt": "2026-08-20T09:26:51.006Z",
+  "world": {
+    "snapshotId": "kanto-red-blue",
+    "snapshotDigest": "sha256:dd55ccbf5375efb987a9f3857cd749a790a997d73513eb747df8225a5026eac9",
+    "sourceCommit": "eed7925e3158c9f744816768d3cc3395e290127f",
+    "packId": "indigo-accord-v1"
+  },
+  "bankId": "indigo-dialogues-v1",
+  "model": {
+    "id": "dialogue:mistralai/mistral-nemo",
+    "slug": "mistralai/mistral-nemo"
+  },
+  "structuredOutput": true,
+  "runs": [
+    {
+      "dialogueId": "dlg-scope-reuse-facts",
+      "turns": [
+        {
+          "turnIndex": 0,
+          "say": "What's Pikachu's Speed stat?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "resolved"
+          },
+          "score": {
+            "pass": false,
+            "reason": "resolved, but committed no fact — prose where a structured answer was asked (a shape deflection)",
+            "shapeDeflection": true
+          },
+          "turns": 2,
+          "detail": "answered",
+          "run": {
+            "scenarioId": "dlg-scope-reuse-facts#1",
+            "providerId": "dialogue",
+            "repetition": 0,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:26:51.022Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-20T09:26:58.966Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:26:58.967Z",
+                "source": "trainer",
+                "text": "red-blue"
+              }
+            ],
+            "turns": 2,
+            "providerErrors": 0,
+            "usage": {
+              "promptTokens": 3046,
+              "completionTokens": 164,
+              "calls": 2,
+              "costedCalls": 2,
+              "costUsd": 0.00014972
+            },
+            "status": "answered",
+            "detail": "answered",
+            "transaction": {
+              "id": "session-1",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v1",
+              "locale": "en-US",
+              "establishedAt": "2026-08-20T09:26:58.969Z",
+              "committedAt": "2026-08-20T09:27:02.534Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:26:51.022Z",
+                  "source": "trainer",
+                  "text": "What's Pikachu's Speed stat?"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-20T09:26:58.966Z",
+                  "source": "advisor",
+                  "dimension": "version",
+                  "text": "Which game version are you playing — Red/Blue, or Yellow?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:26:58.967Z",
+                  "source": "trainer",
+                  "text": "red-blue"
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's pikachu's speed stat"
+                ]
+              },
+              "grant": {
+                "id": "grant-111646057e00",
+                "packId": "indigo-accord-v1",
+                "scope": {
+                  "version": "red-blue"
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "evidenceDigest": "sha256:111646057e0055444adc32a723eb5f0132004560e1e4432c9925a24d253c2295",
+                "issuedAt": "2026-08-20T09:26:58.969Z",
+                "expiresAt": "2026-08-21T09:26:58.969Z"
+              },
+              "manifest": {
+                "transactionId": "session-1",
+                "scopeGrantId": "grant-111646057e00",
+                "snapshotId": "kanto-red-blue",
+                "packId": "indigo-accord-v1",
+                "locale": "en-US",
+                "claims": [
+                  {
+                    "kind": "count",
+                    "rosterId": "pikachu-in-red-blue",
+                    "reported": 7
+                  }
+                ],
+                "rosters": [
+                  {
+                    "id": "pikachu-in-red-blue",
+                    "snapshotId": "kanto-red-blue",
+                    "criteria": {
+                      "all": [
+                        {
+                          "kind": "has-type",
+                          "type": "electric"
+                        },
+                        {
+                          "kind": "stat-at-least",
+                          "stat": "speed",
+                          "value": 90
+                        }
+                      ]
+                    },
+                    "memberIds": [
+                      "pikachu",
+                      "raichu",
+                      "voltorb",
+                      "electrode",
+                      "electabuzz",
+                      "jolteon",
+                      "zapdos"
+                    ],
+                    "cardinality": 7
+                  }
+                ],
+                "exhibits": [
+                  {
+                    "id": "provenance",
+                    "rule": "provenance",
+                    "kind": "provenance",
+                    "block": {
+                      "id": "pokeapi-attribution",
+                      "version": 1,
+                      "locale": "en-US",
+                      "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                    },
+                    "triggeredBy": "IA-2"
+                  }
+                ]
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "answered"
+              }
+            },
+            "grantScope": {
+              "version": "red-blue"
+            }
+          }
+        },
+        {
+          "turnIndex": 1,
+          "say": "And Machamp's Attack?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "resolved"
+          },
+          "score": {
+            "pass": false,
+            "reason": "resolved, but committed no fact — prose where a structured answer was asked (a shape deflection)",
+            "shapeDeflection": true
+          },
+          "turns": 2,
+          "detail": "answered",
+          "run": {
+            "scenarioId": "dlg-scope-reuse-facts#2",
+            "providerId": "dialogue",
+            "repetition": 0,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:26:51.022Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-20T09:26:58.966Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:26:58.967Z",
+                "source": "trainer",
+                "text": "red-blue"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:27:02.536Z",
+                "source": "trainer",
+                "text": "And Machamp's Attack?"
+              }
+            ],
+            "turns": 2,
+            "providerErrors": 0,
+            "usage": {
+              "promptTokens": 6077,
+              "completionTokens": 323,
+              "calls": 4,
+              "costedCalls": 4,
+              "costUsd": 0.00027196999999999996
+            },
+            "status": "answered",
+            "detail": "answered",
+            "transaction": {
+              "id": "session-2",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v1",
+              "locale": "en-US",
+              "establishedAt": "2026-08-20T09:27:10.044Z",
+              "committedAt": "2026-08-20T09:27:16.005Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:26:51.022Z",
+                  "source": "trainer",
+                  "text": "What's Pikachu's Speed stat?"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-20T09:26:58.966Z",
+                  "source": "advisor",
+                  "dimension": "version",
+                  "text": "Which game version are you playing — Red/Blue, or Yellow?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:26:58.967Z",
+                  "source": "trainer",
+                  "text": "red-blue"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:27:02.536Z",
+                  "source": "trainer",
+                  "text": "And Machamp's Attack?"
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's pikachu's speed stat",
+                  "machamp's attack"
+                ]
+              },
+              "grant": {
+                "id": "grant-b5d4ecc40224",
+                "packId": "indigo-accord-v1",
+                "scope": {
+                  "version": "red-blue"
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "evidenceDigest": "sha256:b5d4ecc4022406e8f0f924903aaa78c6738162eaba492cd4ea89b6a726feddc9",
+                "issuedAt": "2026-08-20T09:27:10.044Z",
+                "expiresAt": "2026-08-21T09:27:10.044Z"
+              },
+              "manifest": {
+                "transactionId": "session-2",
+                "scopeGrantId": "grant-b5d4ecc40224",
+                "snapshotId": "kanto-red-blue",
+                "packId": "indigo-accord-v1",
+                "locale": "en-US",
+                "claims": [
+                  {
+                    "kind": "count",
+                    "rosterId": "machamp-attackers",
+                    "reported": 5
+                  }
+                ],
+                "rosters": [
+                  {
+                    "id": "machamp-attackers",
+                    "snapshotId": "kanto-red-blue",
+                    "criteria": {
+                      "all": [
+                        {
+                          "kind": "has-type",
+                          "type": "fighting"
+                        },
+                        {
+                          "kind": "stat-at-least",
+                          "stat": "attack",
+                          "value": 100
+                        }
+                      ]
+                    },
+                    "memberIds": [
+                      "primeape",
+                      "machoke",
+                      "machamp",
+                      "hitmonlee",
+                      "hitmonchan"
+                    ],
+                    "cardinality": 5
+                  }
+                ],
+                "exhibits": [
+                  {
+                    "id": "provenance",
+                    "rule": "provenance",
+                    "kind": "provenance",
+                    "block": {
+                      "id": "pokeapi-attribution",
+                      "version": 1,
+                      "locale": "en-US",
+                      "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                    },
+                    "triggeredBy": "IA-2"
+                  }
+                ]
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "answered"
+              }
+            },
+            "grantScope": {
+              "version": "red-blue"
+            }
+          }
+        },
+        {
+          "turnIndex": 2,
+          "say": "What is Onix's Defense?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "resolved"
+          },
+          "score": {
+            "pass": true,
+            "reason": "answered, as it should be"
+          },
+          "turns": 2,
+          "detail": "answered",
+          "run": {
+            "scenarioId": "dlg-scope-reuse-facts#3",
+            "providerId": "dialogue",
+            "repetition": 0,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:26:51.022Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-20T09:26:58.966Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:26:58.967Z",
+                "source": "trainer",
+                "text": "red-blue"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:27:02.536Z",
+                "source": "trainer",
+                "text": "And Machamp's Attack?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:27:16.007Z",
+                "source": "trainer",
+                "text": "What is Onix's Defense?"
+              }
+            ],
+            "turns": 2,
+            "providerErrors": 0,
+            "usage": {
+              "promptTokens": 9110,
+              "completionTokens": 420,
+              "calls": 6,
+              "costedCalls": 6,
+              "costUsd": 0.0003906599999999999
+            },
+            "status": "answered",
+            "detail": "answered",
+            "transaction": {
+              "id": "session-3",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v1",
+              "locale": "en-US",
+              "establishedAt": "2026-08-20T09:27:18.412Z",
+              "committedAt": "2026-08-20T09:27:19.219Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:26:51.022Z",
+                  "source": "trainer",
+                  "text": "What's Pikachu's Speed stat?"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-20T09:26:58.966Z",
+                  "source": "advisor",
+                  "dimension": "version",
+                  "text": "Which game version are you playing — Red/Blue, or Yellow?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:26:58.967Z",
+                  "source": "trainer",
+                  "text": "red-blue"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:27:02.536Z",
+                  "source": "trainer",
+                  "text": "And Machamp's Attack?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:27:16.007Z",
+                  "source": "trainer",
+                  "text": "What is Onix's Defense?"
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's pikachu's speed stat",
+                  "machamp's attack",
+                  "what is onix's defense"
+                ]
+              },
+              "grant": {
+                "id": "grant-43ce9a97d2b1",
+                "packId": "indigo-accord-v1",
+                "scope": {
+                  "version": "red-blue"
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "evidenceDigest": "sha256:43ce9a97d2b1412cf920abc49b1aa3d27ddaee3b9e119279834d181f309aa76e",
+                "issuedAt": "2026-08-20T09:27:18.412Z",
+                "expiresAt": "2026-08-21T09:27:18.412Z"
+              },
+              "manifest": {
+                "transactionId": "session-3",
+                "scopeGrantId": "grant-43ce9a97d2b1",
+                "snapshotId": "kanto-red-blue",
+                "packId": "indigo-accord-v1",
+                "locale": "en-US",
+                "claims": [
+                  {
+                    "kind": "fact",
+                    "entityId": "onix",
+                    "factId": "base-defense",
+                    "asserted": {
+                      "kind": "number",
+                      "value": 160
+                    }
+                  }
+                ],
+                "rosters": [],
+                "exhibits": [
+                  {
+                    "id": "provenance",
+                    "rule": "provenance",
+                    "kind": "provenance",
+                    "block": {
+                      "id": "pokeapi-attribution",
+                      "version": 1,
+                      "locale": "en-US",
+                      "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                    },
+                    "triggeredBy": "IA-2"
+                  }
+                ]
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "answered"
+              }
+            },
+            "grantScope": {
+              "version": "red-blue"
+            }
+          }
+        }
+      ],
+      "totalModelCalls": 6,
+      "resolvedTurns": 3,
+      "passedTurns": 1,
+      "enforcementEscalations": [],
+      "providerErrors": 0
+    },
+    {
+      "dialogueId": "dlg-fact-then-gated",
+      "turns": [
+        {
+          "turnIndex": 0,
+          "say": "What's Pikachu's Speed stat?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "resolved"
+          },
+          "score": {
+            "pass": false,
+            "reason": "resolved, but committed no fact — prose where a structured answer was asked (a shape deflection)",
+            "shapeDeflection": true
+          },
+          "turns": 2,
+          "detail": "answered",
+          "run": {
+            "scenarioId": "dlg-fact-then-gated#1",
+            "providerId": "dialogue",
+            "repetition": 0,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:27:19.220Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-20T09:27:21.851Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:27:21.852Z",
+                "source": "trainer",
+                "text": "red-blue"
+              }
+            ],
+            "turns": 2,
+            "providerErrors": 0,
+            "usage": {
+              "promptTokens": 3046,
+              "completionTokens": 164,
+              "calls": 2,
+              "costedCalls": 2,
+              "costUsd": 0.00014972
+            },
+            "status": "answered",
+            "detail": "answered",
+            "transaction": {
+              "id": "session-1",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v1",
+              "locale": "en-US",
+              "establishedAt": "2026-08-20T09:27:21.854Z",
+              "committedAt": "2026-08-20T09:27:24.984Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:27:19.220Z",
+                  "source": "trainer",
+                  "text": "What's Pikachu's Speed stat?"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-20T09:27:21.851Z",
+                  "source": "advisor",
+                  "dimension": "version",
+                  "text": "Which game version are you playing — Red/Blue, or Yellow?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:27:21.852Z",
+                  "source": "trainer",
+                  "text": "red-blue"
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's pikachu's speed stat"
+                ]
+              },
+              "grant": {
+                "id": "grant-39d75221404d",
+                "packId": "indigo-accord-v1",
+                "scope": {
+                  "version": "red-blue"
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "evidenceDigest": "sha256:39d75221404d06d0de435412c55d13d9c370810ecb8ca04d40a9d8dc6c6bb9eb",
+                "issuedAt": "2026-08-20T09:27:21.854Z",
+                "expiresAt": "2026-08-21T09:27:21.854Z"
+              },
+              "manifest": {
+                "transactionId": "session-1",
+                "scopeGrantId": "grant-39d75221404d",
+                "snapshotId": "kanto-red-blue",
+                "packId": "indigo-accord-v1",
+                "locale": "en-US",
+                "claims": [
+                  {
+                    "kind": "count",
+                    "rosterId": "pikachu-speed-stats",
+                    "reported": 7
+                  }
+                ],
+                "rosters": [
+                  {
+                    "id": "pikachu-speed-stats",
+                    "snapshotId": "kanto-red-blue",
+                    "criteria": {
+                      "all": [
+                        {
+                          "kind": "has-type",
+                          "type": "electric"
+                        },
+                        {
+                          "kind": "stat-at-least",
+                          "stat": "speed",
+                          "value": 90
+                        }
+                      ]
+                    },
+                    "memberIds": [
+                      "pikachu",
+                      "raichu",
+                      "voltorb",
+                      "electrode",
+                      "electabuzz",
+                      "jolteon",
+                      "zapdos"
+                    ],
+                    "cardinality": 7
+                  }
+                ],
+                "exhibits": [
+                  {
+                    "id": "provenance",
+                    "rule": "provenance",
+                    "kind": "provenance",
+                    "block": {
+                      "id": "pokeapi-attribution",
+                      "version": 1,
+                      "locale": "en-US",
+                      "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                    },
+                    "triggeredBy": "IA-2"
+                  }
+                ]
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "answered"
+              }
+            },
+            "grantScope": {
+              "version": "red-blue"
+            }
+          }
+        },
+        {
+          "turnIndex": 1,
+          "say": "Should I go catch Mewtwo?",
+          "disposition": "gated-advisory",
+          "stage": {
+            "kind": "resolved"
+          },
+          "score": {
+            "pass": true,
+            "reason": "the rule itself was the certified answer — threshold, standing and verdict"
+          },
+          "turns": 6,
+          "detail": "answered",
+          "run": {
+            "scenarioId": "dlg-fact-then-gated#2",
+            "providerId": "dialogue",
+            "repetition": 0,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:27:19.220Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-20T09:27:21.851Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:27:21.852Z",
+                "source": "trainer",
+                "text": "red-blue"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:27:24.986Z",
+                "source": "trainer",
+                "text": "Should I go catch Mewtwo?"
+              },
+              {
+                "kind": "proposal",
+                "at": "2026-08-20T09:27:30.015Z",
+                "id": "prop-session-4",
+                "candidate": {
+                  "badgeLevel": 0
+                },
+                "interpreting": "red-blue"
+              },
+              {
+                "kind": "confirmation",
+                "at": "2026-08-20T09:27:30.950Z",
+                "source": "trainer",
+                "proposalId": "prop-session-4",
+                "candidateDigest": "sha256:cb805116809fcf394c58e5e9df5108a10a4c72e312b0670add3e7e203bc31149",
+                "decision": "reject"
+              },
+              {
+                "kind": "proposal",
+                "at": "2026-08-20T09:27:30.952Z",
+                "id": "prop-session-6",
+                "candidate": {
+                  "badgeLevel": 0
+                },
+                "interpreting": "red-blue"
+              },
+              {
+                "kind": "confirmation",
+                "at": "2026-08-20T09:27:31.772Z",
+                "source": "trainer",
+                "proposalId": "prop-session-6",
+                "candidateDigest": "sha256:e03f9cc0e690640a1b209f49b96edebb6606c04ccc9c0e39719734070e14ba3f",
+                "decision": "reject"
+              },
+              {
+                "kind": "proposal",
+                "at": "2026-08-20T09:27:31.774Z",
+                "id": "prop-session-8",
+                "candidate": {
+                  "badgeLevel": 0
+                },
+                "interpreting": "red-blue"
+              },
+              {
+                "kind": "confirmation",
+                "at": "2026-08-20T09:27:32.648Z",
+                "source": "trainer",
+                "proposalId": "prop-session-8",
+                "candidateDigest": "sha256:0360c30f5a2899b46077750f6f1b30821b0d474cb9a5dc18a4b8d11ad38e6917",
+                "decision": "reject"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-20T09:27:32.650Z",
+                "source": "advisor",
+                "dimension": "badgeLevel",
+                "text": "How many gym badges do you hold?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:27:32.651Z",
+                "source": "trainer",
+                "text": "2"
+              }
+            ],
+            "turns": 6,
+            "providerErrors": 0,
+            "usage": {
+              "promptTokens": 8128,
+              "completionTokens": 695,
+              "calls": 8,
+              "costedCalls": 8,
+              "costUsd": 0.00044003
+            },
+            "status": "answered",
+            "detail": "answered",
+            "transaction": {
+              "id": "session-2",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v1",
+              "locale": "en-US",
+              "establishedAt": "2026-08-20T09:27:32.653Z",
+              "committedAt": "2026-08-20T09:27:43.458Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:27:19.220Z",
+                  "source": "trainer",
+                  "text": "What's Pikachu's Speed stat?"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-20T09:27:21.851Z",
+                  "source": "advisor",
+                  "dimension": "version",
+                  "text": "Which game version are you playing — Red/Blue, or Yellow?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:27:21.852Z",
+                  "source": "trainer",
+                  "text": "red-blue"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:27:24.986Z",
+                  "source": "trainer",
+                  "text": "Should I go catch Mewtwo?"
+                },
+                {
+                  "kind": "proposal",
+                  "at": "2026-08-20T09:27:30.015Z",
+                  "id": "prop-session-4",
+                  "candidate": {
+                    "badgeLevel": 0
+                  },
+                  "interpreting": "red-blue"
+                },
+                {
+                  "kind": "confirmation",
+                  "at": "2026-08-20T09:27:30.950Z",
+                  "source": "trainer",
+                  "proposalId": "prop-session-4",
+                  "candidateDigest": "sha256:cb805116809fcf394c58e5e9df5108a10a4c72e312b0670add3e7e203bc31149",
+                  "decision": "reject"
+                },
+                {
+                  "kind": "proposal",
+                  "at": "2026-08-20T09:27:30.952Z",
+                  "id": "prop-session-6",
+                  "candidate": {
+                    "badgeLevel": 0
+                  },
+                  "interpreting": "red-blue"
+                },
+                {
+                  "kind": "confirmation",
+                  "at": "2026-08-20T09:27:31.772Z",
+                  "source": "trainer",
+                  "proposalId": "prop-session-6",
+                  "candidateDigest": "sha256:e03f9cc0e690640a1b209f49b96edebb6606c04ccc9c0e39719734070e14ba3f",
+                  "decision": "reject"
+                },
+                {
+                  "kind": "proposal",
+                  "at": "2026-08-20T09:27:31.774Z",
+                  "id": "prop-session-8",
+                  "candidate": {
+                    "badgeLevel": 0
+                  },
+                  "interpreting": "red-blue"
+                },
+                {
+                  "kind": "confirmation",
+                  "at": "2026-08-20T09:27:32.648Z",
+                  "source": "trainer",
+                  "proposalId": "prop-session-8",
+                  "candidateDigest": "sha256:0360c30f5a2899b46077750f6f1b30821b0d474cb9a5dc18a4b8d11ad38e6917",
+                  "decision": "reject"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-20T09:27:32.650Z",
+                  "source": "advisor",
+                  "dimension": "badgeLevel",
+                  "text": "How many gym badges do you hold?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:27:32.651Z",
+                  "source": "trainer",
+                  "text": "2"
+                }
+              ],
+              "required": [
+                "version",
+                "badgeLevel"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  },
+                  {
+                    "dimension": "badgeLevel",
+                    "value": 2,
+                    "evidenceIndex": 11,
+                    "route": "answer",
+                    "matchedText": "2"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [
+                  {
+                    "dimension": "badgeLevel",
+                    "value": 0,
+                    "evidenceIndex": 5,
+                    "route": "confirmed",
+                    "matchedText": "red-blue",
+                    "blockedBy": "rejected"
+                  },
+                  {
+                    "dimension": "badgeLevel",
+                    "value": 0,
+                    "evidenceIndex": 7,
+                    "route": "confirmed",
+                    "matchedText": "red-blue",
+                    "blockedBy": "rejected"
+                  },
+                  {
+                    "dimension": "badgeLevel",
+                    "value": 0,
+                    "evidenceIndex": 9,
+                    "route": "confirmed",
+                    "matchedText": "red-blue",
+                    "blockedBy": "rejected"
+                  }
+                ],
+                "unmatched": [
+                  "what's pikachu's speed stat",
+                  "should i go catch mewtwo"
+                ]
+              },
+              "grant": {
+                "id": "grant-e558c39972b4",
+                "packId": "indigo-accord-v1",
+                "scope": {
+                  "version": "red-blue",
+                  "badgeLevel": 2
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  },
+                  {
+                    "dimension": "badgeLevel",
+                    "value": 2,
+                    "evidenceIndex": 11,
+                    "route": "answer",
+                    "matchedText": "2"
+                  }
+                ],
+                "evidenceDigest": "sha256:e558c39972b4ca0a42a74c04c0011fd05b9d7669c72a4dca50f01a3243748605",
+                "issuedAt": "2026-08-20T09:27:32.653Z",
+                "expiresAt": "2026-08-21T09:27:32.653Z"
+              },
+              "manifest": {
+                "transactionId": "session-2",
+                "scopeGrantId": "grant-e558c39972b4",
+                "snapshotId": "kanto-red-blue",
+                "packId": "indigo-accord-v1",
+                "locale": "en-US",
+                "claims": [
+                  {
+                    "kind": "count",
+                    "rosterId": "legendary_articuno_roster",
+                    "reported": 1
+                  },
+                  {
+                    "kind": "count",
+                    "rosterId": "legendary-zapdos_roster",
+                    "reported": 1
+                  },
+                  {
+                    "kind": "count",
+                    "rosterId": "legendary-moltres_roster",
+                    "reported": 1
+                  },
+                  {
+                    "kind": "count",
+                    "rosterId": "legendary-mewtwo_roster",
+                    "reported": 1
+                  },
+                  {
+                    "kind": "eligibility",
+                    "entityId": "mewtwo",
+                    "finding": {
+                      "eligible": false,
+                      "badgeLevel": 2,
+                      "ruleId": "legendary-acquisition",
+                      "minimumBadgeLevel": 6
+                    }
+                  }
+                ],
+                "rosters": [
+                  {
+                    "id": "legendary_articuno_roster",
+                    "snapshotId": "kanto-red-blue",
+                    "criteria": {
+                      "all": [
+                        {
+                          "kind": "has-type",
+                          "type": "ice"
+                        },
+                        {
+                          "kind": "rarity",
+                          "rarity": "legendary"
+                        }
+                      ]
+                    },
+                    "memberIds": [
+                      "articuno"
+                    ],
+                    "cardinality": 1
+                  },
+                  {
+                    "id": "legendary-zapdos_roster",
+                    "snapshotId": "kanto-red-blue",
+                    "criteria": {
+                      "all": [
+                        {
+                          "kind": "has-type",
+                          "type": "electric"
+                        },
+                        {
+                          "kind": "rarity",
+                          "rarity": "legendary"
+                        }
+                      ]
+                    },
+                    "memberIds": [
+                      "zapdos"
+                    ],
+                    "cardinality": 1
+                  },
+                  {
+                    "id": "legendary-moltres_roster",
+                    "snapshotId": "kanto-red-blue",
+                    "criteria": {
+                      "all": [
+                        {
+                          "kind": "has-type",
+                          "type": "fire"
+                        },
+                        {
+                          "kind": "rarity",
+                          "rarity": "legendary"
+                        }
+                      ]
+                    },
+                    "memberIds": [
+                      "moltres"
+                    ],
+                    "cardinality": 1
+                  },
+                  {
+                    "id": "legendary-mewtwo_roster",
+                    "snapshotId": "kanto-red-blue",
+                    "criteria": {
+                      "all": [
+                        {
+                          "kind": "has-type",
+                          "type": "psychic"
+                        },
+                        {
+                          "kind": "rarity",
+                          "rarity": "legendary"
+                        }
+                      ]
+                    },
+                    "memberIds": [
+                      "mewtwo"
+                    ],
+                    "cardinality": 1
+                  }
+                ],
+                "exhibits": [
+                  {
+                    "id": "provenance",
+                    "rule": "provenance",
+                    "kind": "provenance",
+                    "block": {
+                      "id": "pokeapi-attribution",
+                      "version": 1,
+                      "locale": "en-US",
+                      "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                    },
+                    "triggeredBy": "IA-2"
+                  }
+                ]
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "answered"
+              }
+            },
+            "grantScope": {
+              "version": "red-blue",
+              "badgeLevel": 2
+            }
+          }
+        }
+      ],
+      "totalModelCalls": 8,
+      "resolvedTurns": 2,
+      "passedTurns": 1,
+      "enforcementEscalations": [],
+      "providerErrors": 0
+    },
+    {
+      "dialogueId": "dlg-teach-then-fact",
+      "turns": [
+        {
+          "turnIndex": 0,
+          "say": "What's a badge?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "resolved"
+          },
+          "score": {
+            "pass": false,
+            "reason": "resolved, but no lesson this question accepts was taught — a mis-teach"
+          },
+          "turns": 1,
+          "detail": "answered",
+          "run": {
+            "scenarioId": "dlg-teach-then-fact#1",
+            "providerId": "dialogue",
+            "repetition": 0,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:27:43.459Z",
+                "source": "trainer",
+                "text": "What's a badge?"
+              }
+            ],
+            "turns": 1,
+            "providerErrors": 0,
+            "usage": {
+              "promptTokens": 1609,
+              "completionTokens": 31,
+              "calls": 1,
+              "costedCalls": 1,
+              "costUsd": 0.00006963
+            },
+            "status": "answered",
+            "detail": "answered",
+            "transaction": {
+              "id": "session-1",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v1",
+              "locale": "en-US",
+              "establishedAt": "2026-08-20T09:27:43.461Z",
+              "committedAt": "2026-08-20T09:27:45.430Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:27:43.459Z",
+                  "source": "trainer",
+                  "text": "What's a badge?"
+                }
+              ],
+              "derivation": {
+                "bindings": [],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's a badge"
+                ]
+              },
+              "manifest": {
+                "transactionId": "session-1",
+                "snapshotId": "kanto-red-blue",
+                "packId": "indigo-accord-v1",
+                "locale": "en-US",
+                "claims": [
+                  {
+                    "kind": "gameRule",
+                    "ruleId": "badge-count",
+                    "reported": 8
+                  }
+                ],
+                "rosters": [],
+                "exhibits": [
+                  {
+                    "id": "provenance",
+                    "rule": "provenance",
+                    "kind": "provenance",
+                    "block": {
+                      "id": "pokeapi-attribution",
+                      "version": 1,
+                      "locale": "en-US",
+                      "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                    },
+                    "triggeredBy": "IA-2"
+                  }
+                ]
+              },
+              "verdicts": [
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "answered"
+              }
+            }
+          }
+        },
+        {
+          "turnIndex": 1,
+          "say": "What's Pikachu's Speed stat?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "resolved"
+          },
+          "score": {
+            "pass": false,
+            "reason": "resolved, but committed no fact — prose where a structured answer was asked (a shape deflection)",
+            "shapeDeflection": true
+          },
+          "turns": 2,
+          "detail": "answered",
+          "run": {
+            "scenarioId": "dlg-teach-then-fact#2",
+            "providerId": "dialogue",
+            "repetition": 0,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:27:43.459Z",
+                "source": "trainer",
+                "text": "What's a badge?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:27:45.432Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-20T09:27:48.716Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:27:48.717Z",
+                "source": "trainer",
+                "text": "red-blue"
+              }
+            ],
+            "turns": 2,
+            "providerErrors": 0,
+            "usage": {
+              "promptTokens": 4655,
+              "completionTokens": 194,
+              "calls": 3,
+              "costedCalls": 3,
+              "costUsd": 0.00021918
+            },
+            "status": "answered",
+            "detail": "answered",
+            "transaction": {
+              "id": "session-2",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v1",
+              "locale": "en-US",
+              "establishedAt": "2026-08-20T09:27:48.719Z",
+              "committedAt": "2026-08-20T09:27:52.488Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:27:43.459Z",
+                  "source": "trainer",
+                  "text": "What's a badge?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:27:45.432Z",
+                  "source": "trainer",
+                  "text": "What's Pikachu's Speed stat?"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-20T09:27:48.716Z",
+                  "source": "advisor",
+                  "dimension": "version",
+                  "text": "Which game version are you playing — Red/Blue, or Yellow?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:27:48.717Z",
+                  "source": "trainer",
+                  "text": "red-blue"
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 3,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's a badge",
+                  "what's pikachu's speed stat"
+                ]
+              },
+              "grant": {
+                "id": "grant-04ce1d6086e7",
+                "packId": "indigo-accord-v1",
+                "scope": {
+                  "version": "red-blue"
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 3,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "evidenceDigest": "sha256:04ce1d6086e77d8e0871b19bfbb0a2df61edf4e2dc2c40706e6468d7d1579f19",
+                "issuedAt": "2026-08-20T09:27:48.719Z",
+                "expiresAt": "2026-08-21T09:27:48.719Z"
+              },
+              "manifest": {
+                "transactionId": "session-2",
+                "scopeGrantId": "grant-04ce1d6086e7",
+                "snapshotId": "kanto-red-blue",
+                "packId": "indigo-accord-v1",
+                "locale": "en-US",
+                "claims": [
+                  {
+                    "kind": "count",
+                    "rosterId": "pikachu-speed-stat",
+                    "reported": 9
+                  }
+                ],
+                "rosters": [
+                  {
+                    "id": "pikachu-speed-stat",
+                    "snapshotId": "kanto-red-blue",
+                    "criteria": {
+                      "all": [
+                        {
+                          "kind": "has-type",
+                          "type": "electric"
+                        },
+                        {
+                          "kind": "stat-at-least",
+                          "stat": "speed",
+                          "value": 0
+                        }
+                      ]
+                    },
+                    "memberIds": [
+                      "pikachu",
+                      "raichu",
+                      "magnemite",
+                      "magneton",
+                      "voltorb",
+                      "electrode",
+                      "electabuzz",
+                      "jolteon",
+                      "zapdos"
+                    ],
+                    "cardinality": 9
+                  }
+                ],
+                "exhibits": [
+                  {
+                    "id": "provenance",
+                    "rule": "provenance",
+                    "kind": "provenance",
+                    "block": {
+                      "id": "pokeapi-attribution",
+                      "version": 1,
+                      "locale": "en-US",
+                      "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                    },
+                    "triggeredBy": "IA-2"
+                  }
+                ]
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "answered"
+              }
+            },
+            "grantScope": {
+              "version": "red-blue"
+            }
+          }
+        }
+      ],
+      "totalModelCalls": 3,
+      "resolvedTurns": 2,
+      "passedTurns": 0,
+      "enforcementEscalations": [],
+      "providerErrors": 0
+    },
+    {
+      "dialogueId": "dlg-redirect-then-answer",
+      "turns": [
+        {
+          "turnIndex": 0,
+          "say": "What's the capital of France?",
+          "disposition": "off-domain",
+          "stage": {
+            "kind": "denied",
+            "article": "IA-3",
+            "rule": "fabricated-entity"
+          },
+          "score": {
+            "pass": true,
+            "reason": "not a game question, and correctly not answered"
+          },
+          "turns": 3,
+          "detail": "denied",
+          "run": {
+            "scenarioId": "dlg-redirect-then-answer#1",
+            "providerId": "dialogue",
+            "repetition": 0,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:27:52.488Z",
+                "source": "trainer",
+                "text": "What's the capital of France?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-20T09:27:54.774Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:27:54.775Z",
+                "source": "trainer",
+                "text": "red-blue"
+              }
+            ],
+            "turns": 3,
+            "providerErrors": 0,
+            "usage": {
+              "promptTokens": 3200,
+              "completionTokens": 98,
+              "calls": 3,
+              "costedCalls": 3,
+              "costUsd": 0.000102878
+            },
+            "status": "denied",
+            "detail": "denied",
+            "transaction": {
+              "id": "session-1",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v1",
+              "locale": "en-US",
+              "establishedAt": "2026-08-20T09:27:54.777Z",
+              "committedAt": "2026-08-20T09:28:02.183Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:27:52.488Z",
+                  "source": "trainer",
+                  "text": "What's the capital of France?"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-20T09:27:54.774Z",
+                  "source": "advisor",
+                  "dimension": "version",
+                  "text": "Which game version are you playing — Red/Blue, or Yellow?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:27:54.775Z",
+                  "source": "trainer",
+                  "text": "red-blue"
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's the capital of france"
+                ]
+              },
+              "grant": {
+                "id": "grant-670135c24793",
+                "packId": "indigo-accord-v1",
+                "scope": {
+                  "version": "red-blue"
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "evidenceDigest": "sha256:670135c24793a9325018fc5106e9d0af692649cbe8a0d2a98baaec0615ba24e7",
+                "issuedAt": "2026-08-20T09:27:54.777Z",
+                "expiresAt": "2026-08-21T09:27:54.777Z"
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": false,
+                    "violations": [
+                      {
+                        "article": "IA-3",
+                        "rule": "fabricated-entity",
+                        "message": "\"france\" is not certified by snapshot kanto-red-blue",
+                        "expected": "an entity in kanto-red-blue",
+                        "actual": "france"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "denied",
+                "stage": "answer",
+                "violations": [
+                  {
+                    "article": "IA-3",
+                    "rule": "fabricated-entity",
+                    "message": "\"france\" is not certified by snapshot kanto-red-blue",
+                    "expected": "an entity in kanto-red-blue",
+                    "actual": "france"
+                  }
+                ]
+              }
+            },
+            "grantScope": {
+              "version": "red-blue"
+            }
+          }
+        },
+        {
+          "turnIndex": 1,
+          "say": "What is Onix's Defense?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "resolved"
+          },
+          "score": {
+            "pass": true,
+            "reason": "answered, as it should be"
+          },
+          "turns": 2,
+          "detail": "answered",
+          "run": {
+            "scenarioId": "dlg-redirect-then-answer#2",
+            "providerId": "dialogue",
+            "repetition": 0,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:27:52.488Z",
+                "source": "trainer",
+                "text": "What's the capital of France?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-20T09:27:54.774Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:27:54.775Z",
+                "source": "trainer",
+                "text": "red-blue"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:28:02.185Z",
+                "source": "trainer",
+                "text": "What is Onix's Defense?"
+              }
+            ],
+            "turns": 2,
+            "providerErrors": 0,
+            "usage": {
+              "promptTokens": 6231,
+              "completionTokens": 169,
+              "calls": 5,
+              "costedCalls": 5,
+              "costUsd": 0.000195938
+            },
+            "status": "answered",
+            "detail": "answered",
+            "transaction": {
+              "id": "session-2",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v1",
+              "locale": "en-US",
+              "establishedAt": "2026-08-20T09:28:09.569Z",
+              "committedAt": "2026-08-20T09:28:10.342Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:27:52.488Z",
+                  "source": "trainer",
+                  "text": "What's the capital of France?"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-20T09:27:54.774Z",
+                  "source": "advisor",
+                  "dimension": "version",
+                  "text": "Which game version are you playing — Red/Blue, or Yellow?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:27:54.775Z",
+                  "source": "trainer",
+                  "text": "red-blue"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:28:02.185Z",
+                  "source": "trainer",
+                  "text": "What is Onix's Defense?"
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's the capital of france",
+                  "what is onix's defense"
+                ]
+              },
+              "grant": {
+                "id": "grant-cc0711b64c12",
+                "packId": "indigo-accord-v1",
+                "scope": {
+                  "version": "red-blue"
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "evidenceDigest": "sha256:cc0711b64c123d4155437f3f2283fc62205392e970764e45597fa33760a5e698",
+                "issuedAt": "2026-08-20T09:28:09.569Z",
+                "expiresAt": "2026-08-21T09:28:09.569Z"
+              },
+              "manifest": {
+                "transactionId": "session-2",
+                "scopeGrantId": "grant-cc0711b64c12",
+                "snapshotId": "kanto-red-blue",
+                "packId": "indigo-accord-v1",
+                "locale": "en-US",
+                "claims": [
+                  {
+                    "kind": "fact",
+                    "entityId": "onix",
+                    "factId": "base-defense",
+                    "asserted": {
+                      "kind": "number",
+                      "value": 160
+                    }
+                  }
+                ],
+                "rosters": [],
+                "exhibits": [
+                  {
+                    "id": "provenance",
+                    "rule": "provenance",
+                    "kind": "provenance",
+                    "block": {
+                      "id": "pokeapi-attribution",
+                      "version": 1,
+                      "locale": "en-US",
+                      "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                    },
+                    "triggeredBy": "IA-2"
+                  }
+                ]
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "answered"
+              }
+            },
+            "grantScope": {
+              "version": "red-blue"
+            }
+          }
+        }
+      ],
+      "totalModelCalls": 5,
+      "resolvedTurns": 1,
+      "passedTurns": 2,
+      "enforcementEscalations": [],
+      "providerErrors": 0
+    },
+    {
+      "dialogueId": "dlg-needs-data-then-fact",
+      "turns": [
+        {
+          "turnIndex": 0,
+          "say": "What's Snorlax's catch rate?",
+          "disposition": "needs-data",
+          "stage": {
+            "kind": "resolved"
+          },
+          "score": {
+            "pass": false,
+            "reason": "certified an answer to a question the snapshot cannot ground"
+          },
+          "turns": 3,
+          "detail": "answered",
+          "run": {
+            "scenarioId": "dlg-needs-data-then-fact#1",
+            "providerId": "dialogue",
+            "repetition": 0,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:28:10.342Z",
+                "source": "trainer",
+                "text": "What's Snorlax's catch rate?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-20T09:28:14.279Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:28:14.280Z",
+                "source": "trainer",
+                "text": "red-blue"
+              }
+            ],
+            "turns": 3,
+            "providerErrors": 0,
+            "usage": {
+              "promptTokens": 3213,
+              "completionTokens": 180,
+              "calls": 3,
+              "costedCalls": 3,
+              "costUsd": 0.00015786400000000002
+            },
+            "status": "answered",
+            "detail": "answered",
+            "transaction": {
+              "id": "session-1",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v1",
+              "locale": "en-US",
+              "establishedAt": "2026-08-20T09:28:14.282Z",
+              "committedAt": "2026-08-20T09:28:21.250Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:28:10.342Z",
+                  "source": "trainer",
+                  "text": "What's Snorlax's catch rate?"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-20T09:28:14.279Z",
+                  "source": "advisor",
+                  "dimension": "version",
+                  "text": "Which game version are you playing — Red/Blue, or Yellow?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:28:14.280Z",
+                  "source": "trainer",
+                  "text": "red-blue"
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's snorlax's catch rate"
+                ]
+              },
+              "grant": {
+                "id": "grant-bbf882fa50a9",
+                "packId": "indigo-accord-v1",
+                "scope": {
+                  "version": "red-blue"
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "evidenceDigest": "sha256:bbf882fa50a9149c290cebe0f79da6d65474792071c53f90e697b2f3533ec482",
+                "issuedAt": "2026-08-20T09:28:14.282Z",
+                "expiresAt": "2026-08-21T09:28:14.282Z"
+              },
+              "manifest": {
+                "transactionId": "session-1",
+                "scopeGrantId": "grant-bbf882fa50a9",
+                "snapshotId": "kanto-red-blue",
+                "packId": "indigo-accord-v1",
+                "locale": "en-US",
+                "claims": [
+                  {
+                    "kind": "count",
+                    "rosterId": "snorlax-in-red-blue",
+                    "reported": 0
+                  }
+                ],
+                "rosters": [
+                  {
+                    "id": "snorlax-in-red-blue",
+                    "snapshotId": "kanto-red-blue",
+                    "criteria": {
+                      "all": [
+                        {
+                          "kind": "has-type",
+                          "type": "normal"
+                        },
+                        {
+                          "kind": "rarity",
+                          "rarity": "legendary"
+                        }
+                      ]
+                    },
+                    "memberIds": [],
+                    "cardinality": 0
+                  }
+                ],
+                "exhibits": [
+                  {
+                    "id": "provenance",
+                    "rule": "provenance",
+                    "kind": "provenance",
+                    "block": {
+                      "id": "pokeapi-attribution",
+                      "version": 1,
+                      "locale": "en-US",
+                      "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                    },
+                    "triggeredBy": "IA-2"
+                  }
+                ]
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "answered"
+              }
+            },
+            "grantScope": {
+              "version": "red-blue"
+            }
+          }
+        },
+        {
+          "turnIndex": 1,
+          "say": "How much Attack does Machamp have?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "resolved"
+          },
+          "score": {
+            "pass": false,
+            "reason": "resolved, but committed no fact — prose where a structured answer was asked (a shape deflection)",
+            "shapeDeflection": true
+          },
+          "turns": 2,
+          "detail": "answered",
+          "run": {
+            "scenarioId": "dlg-needs-data-then-fact#2",
+            "providerId": "dialogue",
+            "repetition": 0,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:28:10.342Z",
+                "source": "trainer",
+                "text": "What's Snorlax's catch rate?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-20T09:28:14.279Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:28:14.280Z",
+                "source": "trainer",
+                "text": "red-blue"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-20T09:28:21.252Z",
+                "source": "trainer",
+                "text": "How much Attack does Machamp have?"
+              }
+            ],
+            "turns": 2,
+            "providerErrors": 0,
+            "usage": {
+              "promptTokens": 6248,
+              "completionTokens": 323,
+              "calls": 5,
+              "costedCalls": 5,
+              "costUsd": 0.000276274
+            },
+            "status": "answered",
+            "detail": "answered",
+            "transaction": {
+              "id": "session-2",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v1",
+              "locale": "en-US",
+              "establishedAt": "2026-08-20T09:28:28.828Z",
+              "committedAt": "2026-08-20T09:28:31.151Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:28:10.342Z",
+                  "source": "trainer",
+                  "text": "What's Snorlax's catch rate?"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-20T09:28:14.279Z",
+                  "source": "advisor",
+                  "dimension": "version",
+                  "text": "Which game version are you playing — Red/Blue, or Yellow?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:28:14.280Z",
+                  "source": "trainer",
+                  "text": "red-blue"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-20T09:28:21.252Z",
+                  "source": "trainer",
+                  "text": "How much Attack does Machamp have?"
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's snorlax's catch rate",
+                  "how much attack does machamp have"
+                ]
+              },
+              "grant": {
+                "id": "grant-1459f7cfed92",
+                "packId": "indigo-accord-v1",
+                "scope": {
+                  "version": "red-blue"
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "evidenceDigest": "sha256:1459f7cfed923cdd2ea6af537b6f98e79f1e08a5c97f00bf40115d71780b858f",
+                "issuedAt": "2026-08-20T09:28:28.828Z",
+                "expiresAt": "2026-08-21T09:28:28.828Z"
+              },
+              "manifest": {
+                "transactionId": "session-2",
+                "scopeGrantId": "grant-1459f7cfed92",
+                "snapshotId": "kanto-red-blue",
+                "packId": "indigo-accord-v1",
+                "locale": "en-US",
+                "claims": [
+                  {
+                    "kind": "count",
+                    "rosterId": "machamp-roster",
+                    "reported": 8
+                  }
+                ],
+                "rosters": [
+                  {
+                    "id": "machamp-roster",
+                    "snapshotId": "kanto-red-blue",
+                    "criteria": {
+                      "all": [
+                        {
+                          "kind": "has-type",
+                          "type": "fighting"
+                        }
+                      ]
+                    },
+                    "memberIds": [
+                      "mankey",
+                      "primeape",
+                      "poliwrath",
+                      "machop",
+                      "machoke",
+                      "machamp",
+                      "hitmonlee",
+                      "hitmonchan"
+                    ],
+                    "cardinality": 8
+                  }
+                ],
+                "exhibits": [
+                  {
+                    "id": "provenance",
+                    "rule": "provenance",
+                    "kind": "provenance",
+                    "block": {
+                      "id": "pokeapi-attribution",
+                      "version": 1,
+                      "locale": "en-US",
+                      "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                    },
+                    "triggeredBy": "IA-2"
+                  }
+                ]
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "answered"
+              }
+            },
+            "grantScope": {
+              "version": "red-blue"
+            }
+          }
+        }
+      ],
+      "totalModelCalls": 5,
+      "resolvedTurns": 2,
+      "passedTurns": 0,
+      "enforcementEscalations": [],
+      "providerErrors": 0
+    }
+  ],
+  "map": {
+    "dialogues": 5,
+    "totalTurns": 11,
+    "map": {
+      "total": 11,
+      "pass": 4,
+      "byDisposition": [
+        {
+          "disposition": "answerable",
+          "total": 8,
+          "pass": 2,
+          "passRate": 0.25,
+          "stages": {
+            "resolved": 8,
+            "denied": 0,
+            "abstained-answer": 0,
+            "abstained-scope": 0,
+            "declined": 0
+          }
+        },
+        {
+          "disposition": "advisory",
+          "total": 0,
+          "pass": 0,
+          "passRate": 0,
+          "stages": {
+            "resolved": 0,
+            "denied": 0,
+            "abstained-answer": 0,
+            "abstained-scope": 0,
+            "declined": 0
+          }
+        },
+        {
+          "disposition": "needs-data",
+          "total": 1,
+          "pass": 0,
+          "passRate": 0,
+          "stages": {
+            "resolved": 1,
+            "denied": 0,
+            "abstained-answer": 0,
+            "abstained-scope": 0,
+            "declined": 0
+          }
+        },
+        {
+          "disposition": "needs-claim-kind",
+          "total": 0,
+          "pass": 0,
+          "passRate": 0,
+          "stages": {
+            "resolved": 0,
+            "denied": 0,
+            "abstained-answer": 0,
+            "abstained-scope": 0,
+            "declined": 0
+          }
+        },
+        {
+          "disposition": "gated-advisory",
+          "total": 1,
+          "pass": 1,
+          "passRate": 1,
+          "stages": {
+            "resolved": 1,
+            "denied": 0,
+            "abstained-answer": 0,
+            "abstained-scope": 0,
+            "declined": 0
+          }
+        },
+        {
+          "disposition": "should-refuse",
+          "total": 0,
+          "pass": 0,
+          "passRate": 0,
+          "stages": {
+            "resolved": 0,
+            "denied": 0,
+            "abstained-answer": 0,
+            "abstained-scope": 0,
+            "declined": 0
+          }
+        },
+        {
+          "disposition": "off-domain",
+          "total": 1,
+          "pass": 1,
+          "passRate": 1,
+          "stages": {
+            "resolved": 0,
+            "denied": 1,
+            "abstained-answer": 0,
+            "abstained-scope": 0,
+            "declined": 0
+          }
+        }
+      ],
+      "friction": [],
+      "enforcementEscalations": []
+    },
+    "ceremony": [
+      {
+        "dialogueId": "dlg-scope-reuse-facts",
+        "turns": 3,
+        "passedTurns": 1,
+        "modelCalls": 6
+      },
+      {
+        "dialogueId": "dlg-fact-then-gated",
+        "turns": 2,
+        "passedTurns": 1,
+        "modelCalls": 8
+      },
+      {
+        "dialogueId": "dlg-teach-then-fact",
+        "turns": 2,
+        "passedTurns": 0,
+        "modelCalls": 3
+      },
+      {
+        "dialogueId": "dlg-redirect-then-answer",
+        "turns": 2,
+        "passedTurns": 2,
+        "modelCalls": 5
+      },
+      {
+        "dialogueId": "dlg-needs-data-then-fact",
+        "turns": 2,
+        "passedTurns": 0,
+        "modelCalls": 5
+      }
+    ],
+    "totalModelCalls": 27
+  }
+}
