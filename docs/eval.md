@@ -98,9 +98,12 @@ respectively. No open model matched 16/16 structured; enforcement stayed a hard
 zero on all five. Then **grounding** ([findings.md](findings.md) **Iteration
 16**) closed the gap: grounded, `qwen3-235b` reaches 19/25 and `llama-3.3-70b`
 21/25 — the closed defaults' marks — but whole-registry grounding inflates the
-prompt ~13× and spends the cost advantage. The cost-preserving fix is retrieval
-(fetch the facts a question needs, not the whole KB) — the next build. The
-open-weights default is provisional pending that.
+prompt ~13× and spends the cost advantage. **Retrieval** ([findings.md](findings.md)
+**Iteration 17**) closes that too: grounding only the rows a question needs holds
+the 88% at ~1/9th the tokens, and `qwen3-235b` with retrieval reaches **22/25** —
+above the closed `gpt-5.4-mini` it replaced (19/25), and *more honest* on
+unanswerable questions (a meta question retrieves nothing, so it can't deflect).
+Cheaper *and* useful *and* safe: the arc the audition set out to test.
 
 ## Fixed this pass
 
