@@ -1478,6 +1478,55 @@ Provenance: `runs/coverage/2026-08-20T09-38-41…-coverage.json` (smoke),
 
 ---
 
+### Iteration 16 — grounding closes the usefulness gap on cheap models, and names its own price: retrieval
+
+Iterations 14–15 left one question open: can the cheap open models be *made*
+useful enough to keep as the default? Measured yes — with a caveat that points
+straight at the next build. The smoke set was re-run **grounded** (the proposer
+handed the certified facts to compose from — `--grounded`, now threaded through
+the session and coverage path — with the manifest gate still recomputing every
+value, so nothing about enforcement changed):
+
+| answerable (structured facts) | ungrounded | grounded |
+|---|---|---|
+| `qwen3-235b` | 11/16 (69%) | **14/16 (88%)** |
+| `llama-3.3-70b` | 10/16 (63%) | **14/16 (88%)** |
+
+Overall, `qwen3-235b` went 16 → **19/25** (`gpt-5.4-mini`'s mark) and
+`llama-3.3-70b` 15 → **21/25** (the old weak model's), enforcement an unchanged
+hard zero on both. Grounding lifted *both* failure modes from iteration 15:
+`llama`'s value errors (as expected — it was handed the right stat) and `qwen`'s
+shape deflection (14/16 vs 11/16 — the fact in front of it made `fact` the easy
+choice over `count`). So the usefulness gap is not a floor; grounding closes it.
+
+**But grounding spent the cost advantage, and the token counts say how.**
+`certifiedReference` is the *whole* registry — every species' stats, every move,
+every learnset — in front of every answer:
+
+| | prompt tokens (25q) | cost |
+|---|---|---|
+| `qwen3-235b` ungrounded | 55k | $0.009 |
+| `qwen3-235b` **grounded** | **742k** | **$0.118** |
+
+A ~13× prompt-token blowup, which puts grounded `qwen3-235b` at roughly the
+*per-call* cost of the `gpt-5.4-mini` it was meant to undercut. Whole-registry
+grounding buys the number back by giving the cheapness back — and it does not
+scale past a 151-species snapshot anyway.
+
+**The resolution is retrieval — the technique the record owner named.** Fetch
+only the facts a question needs — Pikachu's row for "Pikachu's Speed," not every
+Pokémon's learnset — the top-k step of ordinary RAG. That keeps the 88% and the
+small prompt at once, and it is the same retrieval §9's grammar-gating wants
+(retrieval narrows the grammar *and* the grounding context). The measured arc:
+cheap models deflect (§14–15) → grounding fixes usefulness but not cost (§16) →
+**retrieval fixes both**, and it is the next build. N=1 on all legs; the effect
+is large and directional, the exact figures sample-bounded (§6).
+
+Provenance: `runs/coverage/2026-08-20T09-54-47…-coverage.json` (qwen grounded),
+`…10-06-05…-coverage.json` (llama grounded); ungrounded legs in §14–15.
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's

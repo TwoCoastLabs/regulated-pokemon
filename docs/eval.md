@@ -95,8 +95,12 @@ alternative (`llama-3.3-70b`) was then auditioned too ([findings.md](findings.md
 *value* (wrong stats, denied by the kernel) where `qwen3-235b` missed by *shape*
 — the two halves of the gap, pointing at grounding and retrieval-gated grammar
 respectively. No open model matched 16/16 structured; enforcement stayed a hard
-zero on all five. The open-weights default is provisional pending the record
-owner's call on the cost/usefulness trade.
+zero on all five. Then **grounding** ([findings.md](findings.md) **Iteration
+16**) closed the gap: grounded, `qwen3-235b` reaches 19/25 and `llama-3.3-70b`
+21/25 — the closed defaults' marks — but whole-registry grounding inflates the
+prompt ~13× and spends the cost advantage. The cost-preserving fix is retrieval
+(fetch the facts a question needs, not the whole KB) — the next build. The
+open-weights default is provisional pending that.
 
 ## Fixed this pass
 
