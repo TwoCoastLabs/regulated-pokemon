@@ -1580,6 +1580,73 @@ in §14–16.
 
 ---
 
+### Iteration 18 — the smoke set doubled (25→52), and the gap it exposed has one dominant shape
+
+Growing the smoke set to 52 — adding the claim kinds the 25-set undersampled
+(ranking, matchup, membership, recommendation), the **action** surface it missed
+entirely, the vendored data facts, and the §18 fabrication trap — did what a
+grown set is for: it corrected an overstatement and named the next build. Both
+defaults, retrieval-grounded (the product configuration):
+
+| | `qwen3-235b` | `mistral-nemo` |
+|---|---|---|
+| overall | 33/52 | 22/52 |
+| answerable (structured) | 20/33 (61%) | 12/33 (36%) |
+| **enforcement (gated commits)** | **0** | **0** |
+| honest-refusal on unanswerable | 6/8 | 5/9 |
+| cost (52 questions) | $0.044 | $0.010 |
+
+The answerable rate fell from the 25-set's 88% — not a regression but a
+**correction**: the small set undersampled the kinds the model deflects, and the
+big one samples them. Retrieval held the cost low (193k / 210k prompt tokens,
+where full grounding would be ~1.5M), and enforcement stayed a hard zero. The
+misses, categorised (`qwen3-235b`'s 19):
+
+| gap | count | what it is |
+|---|---|---|
+| **shape deflection** | **8** | the asked kind (ranking, matchup, membership, recommendation, fact) answered with the wrong one (count, typeCount, **gameRule**) — resolved, certified, off-shape |
+| value error, gate-denied | 4 | a wrong stat or invented entity, refused by name (IA-2/IA-3) — enforcement working |
+| subject deflection (needs-data) | 2 | an ungroundable question answered with an adjacent certified fact — measured, not suppressed |
+| abstention / scope friction | 3 | no usable answer, incl. the `add-eevee` action dying in scope |
+| gated deflection | 2 | resolved with ungated claims — safe, but the gate was never provoked |
+
+**Shape deflection is the dominant gap, and the tell is cross-model
+consistency.** The *same* entries deflect on both `qwen3-235b` (235B) and
+`mistral-nemo` (12B) — `ans-rank-fastest-electric`, `kind-type-effectiveness`,
+`ans-member-gyarados-water`, `ans-move-power-thunderbolt`, `data-tm-surf` — a
+ranking answered with a count, a matchup with a type-count, a membership with a
+game-rule. When two models of wildly different capability miss the *same*
+questions the *same* way, the gap is not capability; it is the **claim-kind
+routing** §9 and §10 name. And `gameRule` is the model's favourite wrong answer —
+it reads a fixed pack constant, so it is the easiest claim to emit, and both
+models reach for it as filler.
+
+**Retrieval cannot fix this — by construction.** Retrieval closed the *value*
+errors it was built for (§17); shape is a *routing* decision, not a recall one,
+so handing the model the right facts does not stop it choosing the wrong claim
+kind to wrap them in. The grown set makes that limit legible: retrieval-grounded,
+the value-error denials dropped, but the shape deflections did not.
+
+**So the gap analysis names the next build precisely: retrieval-gated grammar
+(§9).** Retrieval already nominates the *rows* a question needs; the same step
+can nominate the *claim kinds* it needs and narrow the per-call output schema to
+them, so the model cannot emit a `count` where a `ranking` was asked. It is the
+structural fix — not prompt-nudging, which §11 showed backfires — and the 52-set
+is now the instrument that would score it. A smaller, separable gap the set also
+surfaced: the **action** questions (`ans-act-*`) hit scope friction on both
+models, a scope-handling issue distinct from routing.
+
+**Enforcement held, again — on the hardest set and the cheapest models yet.**
+Every value error was denied by name; no gated question committed advice. The
+safety floor is a fact; the usefulness gap is a build. N=1 (§6): the rates are
+sample-bounded, but the *shape* of the gap — one kind of miss, the same across
+two models — is the robust result, precisely because it is consistent.
+
+Provenance: `runs/coverage/2026-08-20T11-29-47…-coverage.json` (qwen, 52,
+retrieval), `…11-42-31…-coverage.json` (nemo, 52, retrieval).
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's
