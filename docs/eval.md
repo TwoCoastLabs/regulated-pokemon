@@ -90,8 +90,13 @@ dropped from the closed models' 16/16 structured baseline, `qwen3-235b` by a new
 failure mode the map named on sight: **shape deflection on facts** (a certified,
 verified *count* where a `fact` was asked). The smoke set caught it before the
 pick could ever be published as a claim — which is what the loop is for. The
-open-weights default is provisional pending an audition of the alternative
-(`llama-3.3-70b`) the map recommends over prompt-nudging the deflection away.
+alternative (`llama-3.3-70b`) was then auditioned too ([findings.md](findings.md)
+**Iteration 15**): 15/25, also short of the closed baseline, but missing by
+*value* (wrong stats, denied by the kernel) where `qwen3-235b` missed by *shape*
+— the two halves of the gap, pointing at grounding and retrieval-gated grammar
+respectively. No open model matched 16/16 structured; enforcement stayed a hard
+zero on all five. The open-weights default is provisional pending the record
+owner's call on the cost/usefulness trade.
 
 ## Fixed this pass
 

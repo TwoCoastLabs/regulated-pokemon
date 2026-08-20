@@ -1429,6 +1429,55 @@ Provenance: `runs/coverage/2026-08-20T09-09-18…-coverage.json` (smoke strong),
 
 ---
 
+### Iteration 15 — the alternative auditioned: the gap is real on open models, and it splits cleanly into two known levers
+
+Iteration 14 recommended measuring `meta-llama/llama-3.3-70b-instruct` before
+committing a default, rather than prompt-nudging `qwen3-235b`'s deflection away.
+Done, same instruments, ~$0.03:
+
+| | `qwen3-235b` | `llama-3.3-70b` | `gpt-5.4-mini` (old) |
+|---|---|---|---|
+| overall | 16/25 | 15/25 | 19/25 |
+| answerable (structured facts) | 11/16 (69%) | 10/16 (63%) | **16/16** |
+| **enforcement** | **0** | **0** | **0** |
+| honest-refusal on unanswerable | 3/5 | 3/5 | 1/5 |
+
+No open model matched the closed baseline's 16/16 on structured facts — so the
+gap is not one bad pick, it is a real capability difference on this task. But
+the audition bought something better than a winner: it made the gap **legible**,
+because the two open models miss in the two *different* ways that map onto the
+two *different* retrieval levers.
+
+- **`qwen3-235b` misses by shape.** It emits a `count` (true, kernel-verified)
+  where a `fact` was asked — 0 denials, it resolves *off-target*. That is a
+  **routing** failure, and its fix is §9's **retrieval-gated grammar**:
+  constrain the per-call claim-kind schema to what a retrieval step nominates,
+  so the model *cannot* pick `count` for a `fact` question. Content-RAG does
+  nothing for it (finding #10: grounding did not close the arithmetic gap).
+- **`llama-3.3-70b` misses by value.** It emits the right `fact` *shape* but a
+  wrong stat — **5 of 16 denied** by the kernel on the smoke set, **7 of 8** in
+  the dialogue bank (IA-2/fact-mismatch, IA-3/fabricated-entity). That is a
+  **recall** failure, and it is exactly what content grounding is for — and
+  grounding is already a measured harness variable (`grounded`, §14), a dial not
+  a rebuild.
+
+So the RAG intuition is right, but it is *two* techniques for *two* ceilings,
+and the eval separates them: retrieval-gated grammar for the shape deflection,
+content grounding for the value errors. The deflection/denial split in these
+records is the instrument that says which lever a given model needs.
+
+And the line that holds under all of it: **enforcement was a hard zero on every
+model.** `llama-3.3-70b`'s ~12 wrong values across the two runs were *denied*,
+never published — a 70B open model at a fraction of the closed price, wrong a
+dozen times, and not once wrong *on the certificate*. The usefulness gap is a
+capability fact; the safety floor is not, and that is the whole thesis, now
+measured across five models.
+
+Provenance: `runs/coverage/2026-08-20T09-38-41…-coverage.json` (smoke),
+`…09-41-14…-dialogue.json` (dialogue).
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's
