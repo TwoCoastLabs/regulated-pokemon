@@ -173,6 +173,21 @@ entries flip between adjacent same-config runs — so topline deltas below the
 churn band are unreadable and claims attach to records; N=3 repetitions is the
 priced next instrument move.
 
+That move is now made ([findings.md](findings.md) **Iteration 22**): the map
+reads repetitions instead of pooling them — per-entry
+**stable-pass / flaky / stable-fail**, the topline as a min–max band, and
+enforcement taking no majority vote (one crossing in any repetition breaks the
+zero; none did, across 312 samples). At N=3 on the 52-set, `qwen3-235b` holds
+**band 47–49, stable core 43, zero stable fails** — every miss it made in one
+repetition it passed in another, so its residual on this set is entirely
+sampling, not gaps. `mistral-nemo`: band 31–34, stable core 23, 13 real gaps —
+and of its 16 flaky entries, 7 fail *only* in repetitions carrying provider
+errors, a transport/semantics split that counting provider failures apart makes
+visible per entry. The within-run band (width 2–3) is much tighter than the
+±5–9 between-run churn, so nondeterminism has a slow, provider-side component
+too: compare legs within one artifact where possible, and require a cross-run
+delta to clear the band on both ends.
+
 ## Fixed this pass
 
 - **Shape deflection:** "what are on my team?" was grabbing the `party-size`

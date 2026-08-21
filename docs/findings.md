@@ -1806,6 +1806,66 @@ Provenance: `runs/coverage/2026-08-21T06-15-06…-coverage.json` (qwen, 52,
 retrieval + gated grammar + repair, canonical decoder),
 `…06-26-03…-coverage.json` (nemo, same).
 
+### Iteration 22 — N=3: the band measured, and what the flake turns out to be made of
+
+The instrument move §21 priced: the coverage map now reads repetitions
+(`repetitionSummary`) instead of pooling them — each entry graded
+**stable-pass / flaky / stable-fail** across its passes, the topline reported
+as passes-per-repetition with its min–max band, and enforcement taking **no
+majority vote** (escalations are still collected over every sample, so one
+crossing in any repetition breaks the zero). The run: the 52-entry smoke set
+at N=3 on both defaults, same config as §21 (retrieval + gated grammar +
+repair + canonical decoder). 312 samples, enforcement **hard zero on all of
+them**; cost $0.135 (qwen) / $0.022 (nemo).
+
+**qwen: band 47–49 of 52 (per-rep 49, 48, 47), stable core 43, and — the
+headline — zero stable fails.** Every entry qwen missed in one repetition it
+passed in another: on this set there is *no deterministic gap left*, only
+sampling. Its 9 flaky entries are pure model churn (479 calls, **zero
+provider errors**), and almost all flip between `resolved` and `denied` —
+mostly meta lessons and advisory picks where the model sometimes reaches for
+a claim the gate refuses. The stable core is the number a single pass cannot
+name: **43/52 is what qwen actually guarantees**, and it equals §21's N=1
+topline by coincidence, not construction.
+
+**nemo: band 31–34, stable core 23, 13 stable fails — and its flake
+decomposes.** Of its 16 flaky entries, **7 fail only in repetitions that
+carried provider errors** (31 errors across 430 calls, concentrated in the
+first pass — a transient availability window, visible *because* provider
+failures are counted apart from abstentions, the CLAUDE.md doctrine paying
+off at the entry level); 9 churn semantically on clean calls. So the weak
+model's apparent volatility is roughly half transport, half model — a split
+no pooled rate could see. The 13 stable fails are its real gaps (the advisory
+0/9 among them), the honest target list for any nemo-specific work.
+
+**The §21 noise floor refines: churn has two timescales.** Within one run,
+the band is tight — width 2 (qwen) and 3 (nemo). But *every* qwen repetition
+(47–49) sits 4–6 above the §21 same-config topline of 43, measured a day
+earlier — the between-run shift exceeds the within-run band, while nemo's
+band (31–34) brackets its §21 value (32). The ±5–9 per-entry churn §21
+measured between adjacent runs is therefore not per-call sampling alone;
+there is a slower between-run component (provider-side routing, load, or
+drift — cause unattributed, and stated as such). Instrument rule, sharpened:
+**compare legs within one artifact where possible; a cross-run delta must
+clear the band on both ends before it is a result.**
+
+**The flake space is bounded by the kernel.** Nemo's two gated-advisory
+flakes (`refuse-articuno-4`, `refuse-legendary-generic`) flipped between a
+named denial and an abstention — between two *safe* outcomes. Across all 312
+samples the churn moves within {resolved, denied, abstained}; it never once
+crossed the gate. Nondeterminism under this architecture degrades usefulness,
+never enforcement — which is the A/B the whole project exists to state, now
+visible per entry.
+
+**Repair at N=3 shows persistence.** Four repaired outcomes on qwen, none on
+nemo — including `data-tm-surf` repaired in *two of three* repetitions: the
+same mis-recalled value, stripped and re-read from the registry each time. A
+repeatable mis-recall is exactly what the strip-assertion channel is for, and
+exactly what a content fix would retire.
+
+Provenance: `runs/coverage/2026-08-21T09-59-39…-coverage.json` (qwen, 52×3),
+`…09-59-44…-coverage.json` (nemo, same config).
+
 ---
 
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
