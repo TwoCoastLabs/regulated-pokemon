@@ -7,7 +7,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { BankRun, IntentRobustness } from "./bank-run.js";
-import { coverageMap, renderCoverage, renderRobustness, robustnessSummary } from "./coverage.js";
+import { coverageMap, renderCoverage, renderRobustness, repetitionSummary, robustnessSummary } from "./coverage.js";
 import type { Disposition, FunnelStage } from "./playability.js";
 
 function run(entryId: string, disposition: Disposition, stage: FunnelStage, pass: boolean, extra: Partial<BankRun> = {}): BankRun {
@@ -92,6 +92,69 @@ describe("renderCoverage is a faithful, pure Markdown view", () => {
     );
     expect(md).toContain("ENFORCEMENT ESCALATION");
     expect(md).toContain("refuse-2");
+  });
+});
+
+// --- repetition stability (the §21 noise-floor instrument) ------------------
+
+describe("repetitionSummary reads the churn band", () => {
+  // Three entries over three passes: `a` always passes, `c` always fails, and
+  // `b` flips — the trichotomy in miniature, with a measurable band.
+  const reps = [
+    run("a", "answerable", { kind: "resolved" }, true),
+    run("b", "answerable", { kind: "resolved" }, true),
+    run("c", "answerable", { kind: "abstained-answer" }, false),
+    run("a", "answerable", { kind: "resolved" }, true, { repetition: 1 }),
+    run("b", "answerable", { kind: "abstained-answer" }, false, { repetition: 1 }),
+    run("c", "answerable", { kind: "abstained-answer" }, false, { repetition: 1 }),
+    run("a", "answerable", { kind: "resolved" }, true, { repetition: 2 }),
+    run("b", "answerable", { kind: "resolved" }, true, { repetition: 2 }),
+    run("c", "answerable", { kind: "abstained-answer" }, false, { repetition: 2 }),
+  ];
+
+  it("is undefined over a single pass — an N=1 run has no churn to read", () => {
+    expect(repetitionSummary(RUNS)).toBeUndefined();
+    expect(coverageMap(RUNS).repetition).toBeUndefined();
+  });
+
+  it("grades stable-pass, flaky and stable-fail, and measures the band", () => {
+    const summary = repetitionSummary(reps)!;
+    expect(summary.repetitions).toBe(3);
+    expect(summary.entries).toBe(3);
+    expect(summary.passPerRepetition).toEqual([2, 1, 2]);
+    expect(summary.band).toEqual({ min: 1, max: 2 });
+    expect(summary.stablePass).toBe(1);
+    expect(summary.stableFail).toBe(1);
+    expect(summary.flaky).toEqual([
+      {
+        entryId: "b",
+        disposition: "answerable",
+        outcomes: [true, false, true],
+        stages: ["resolved", "abstained-answer"],
+        verdict: "flaky",
+      },
+    ]);
+  });
+
+  it("renders the band ahead of the rates and names each flaky entry", () => {
+    const md = renderCoverage(coverageMap(reps));
+    expect(md).toContain("samples pooled over every repetition");
+    expect(md).toContain("N=3 repetitions over 3 entries");
+    expect(md).toContain("passes per repetition: 2, 1, 2 (band 1–2)");
+    expect(md).toContain("Stable core: 1/3");
+    expect(md).toContain("1 stable fails");
+    expect(md).toContain("`b` (answerable) — ✓✗✓; landed in resolved / abstained-answer");
+  });
+
+  it("groups an entry repaired in several repetitions with a count", () => {
+    const md = renderCoverage(
+      coverageMap([
+        run("fix", "answerable", { kind: "resolved" }, true, { repaired: true }),
+        run("fix", "answerable", { kind: "resolved" }, true, { repetition: 1, repaired: true }),
+      ]),
+    );
+    expect(md).toContain("2 outcome(s) followed a strip-assertion repair");
+    expect(md).toContain("`fix` ×2");
   });
 });
 

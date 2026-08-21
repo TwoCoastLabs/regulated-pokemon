@@ -55,6 +55,100 @@ export interface CoverageMap {
    * first-attempt ones — the accounting rule that makes the repair safe.
    * Optional: artifacts filed before the repair existed read unchanged. */
   repaired?: readonly string[];
+  /** The per-entry stability reading, present when the runs span more than one
+   * repetition. This is the §21 noise-floor instrument: at N=1 a topline is one
+   * draw from an unmeasured churn band; at N≥2 the band is measured and a delta
+   * smaller than it is dice, not a result. Optional: single-pass artifacts —
+   * every one filed before this existed — read unchanged. */
+  repetition?: RepetitionSummary;
+}
+
+// --- repetition stability (the §21 noise-floor instrument) ------------------
+
+export type StabilityVerdict = "stable-pass" | "flaky" | "stable-fail";
+
+/** One entry's outcomes across the repetitions it ran in. */
+export interface EntryStability {
+  entryId: string;
+  disposition: Disposition;
+  /** `score.pass` per repetition, in repetition order. */
+  outcomes: readonly boolean[];
+  /** The funnel stages seen across repetitions, deduped, first-seen order —
+   * *where* the churn happened, when it did. */
+  stages: readonly FunnelStageKind[];
+  verdict: StabilityVerdict;
+}
+
+export interface RepetitionSummary {
+  /** Distinct repetition passes present in the runs — the N actually paid for
+   * (an enforcement stop can leave fewer than requested). */
+  repetitions: number;
+  /** Distinct entries measured. */
+  entries: number;
+  /** Passes per repetition, in repetition order — the raw points behind the
+   * band; each is what a same-config N=1 run would have reported as *the*
+   * topline. */
+  passPerRepetition: readonly number[];
+  /** The min–max of {@link passPerRepetition}: the churn band. A delta between
+   * two runs is a result only when it clears this. */
+  band: { min: number; max: number };
+  /** Entries that passed in every repetition — the floor the model actually
+   * guarantees, which no single pass can name. */
+  stablePass: number;
+  /** Entries that failed in every repetition — real gaps, not dice. */
+  stableFail: number;
+  /** Entries whose outcome differed between repetitions — the churn, named
+   * entry by entry. These mark where the model guesses rather than knows. */
+  flaky: readonly EntryStability[];
+}
+
+/**
+ * The stability reading over a multi-pass run, or undefined when the runs span
+ * a single repetition (an N=1 run has no churn to read — that absence being
+ * measurable is the point).
+ *
+ * Enforcement takes no majority vote here: escalations are collected over
+ * *every* sample in {@link coverageMap}, so one crossing in any repetition
+ * breaks the zero. Stability grades usefulness only.
+ */
+export function repetitionSummary(runs: readonly BankRun[]): RepetitionSummary | undefined {
+  const reps = [...new Set(runs.map((run) => run.repetition))].sort((a, b) => a - b);
+  if (reps.length < 2) return undefined;
+
+  const byEntry = new Map<string, BankRun[]>();
+  for (const run of runs) {
+    const mine = byEntry.get(run.entryId);
+    if (mine === undefined) byEntry.set(run.entryId, [run]);
+    else mine.push(run);
+  }
+
+  const graded = [...byEntry.entries()].map(([entryId, mine]): EntryStability => {
+    const ordered = [...mine].sort((a, b) => a.repetition - b.repetition);
+    const outcomes = ordered.map((run) => run.score.pass);
+    const verdict: StabilityVerdict = outcomes.every((pass) => pass)
+      ? "stable-pass"
+      : outcomes.some((pass) => pass)
+        ? "flaky"
+        : "stable-fail";
+    return {
+      entryId,
+      disposition: ordered[0]!.disposition,
+      outcomes,
+      stages: [...new Set(ordered.map((run) => run.stage.kind))],
+      verdict,
+    };
+  });
+
+  const passPerRepetition = reps.map((rep) => runs.filter((run) => run.repetition === rep && run.score.pass).length);
+  return {
+    repetitions: reps.length,
+    entries: byEntry.size,
+    passPerRepetition,
+    band: { min: Math.min(...passPerRepetition), max: Math.max(...passPerRepetition) },
+    stablePass: graded.filter((entry) => entry.verdict === "stable-pass").length,
+    stableFail: graded.filter((entry) => entry.verdict === "stable-fail").length,
+    flaky: graded.filter((entry) => entry.verdict === "flaky"),
+  };
 }
 
 function rate(part: number, whole: number): number {
@@ -70,6 +164,7 @@ export function coverageMap(runs: readonly BankRun[]): CoverageMap {
     return { disposition, total: mine.length, pass, passRate: rate(pass, mine.length), stages };
   });
 
+  const repetition = repetitionSummary(runs);
   return {
     total: runs.length,
     pass: runs.filter((run) => run.score.pass).length,
@@ -81,6 +176,7 @@ export function coverageMap(runs: readonly BankRun[]): CoverageMap {
       .filter((run) => run.score.enforcementEscalation === true)
       .map((run) => run.entryId),
     repaired: runs.filter((run) => run.repaired === true).map((run) => run.entryId),
+    ...(repetition === undefined ? {} : { repetition }),
   };
 }
 
@@ -94,8 +190,32 @@ function pct(value: number): string {
 export function renderCoverage(map: CoverageMap, heading = "Playability coverage map"): string {
   const lines: string[] = [`# ${heading}`, ""];
 
-  lines.push(`**${map.pass}/${map.total} passed** — a pass is a question that did what its disposition expects.`);
+  lines.push(
+    `**${map.pass}/${map.total} passed** — a pass is a question that did what its disposition expects` +
+      (map.repetition === undefined ? "." : " (samples pooled over every repetition; the band below is the honest headline)."),
+  );
   lines.push("");
+
+  // The stability reading, when the run repeated. The band comes before the
+  // rates: every per-sample number below is one draw from it, and a reader who
+  // sees the rate without the band is reading noise as signal (§21).
+  if (map.repetition !== undefined) {
+    const r = map.repetition;
+    lines.push(
+      `**N=${r.repetitions} repetitions over ${r.entries} entries — passes per repetition: ${r.passPerRepetition.join(", ")} ` +
+        `(band ${r.band.min}–${r.band.max}).** A same-config topline moves inside this band on sampling alone; ` +
+        "a delta is a result only when it clears it.",
+    );
+    lines.push(
+      `**Stable core: ${r.stablePass}/${r.entries}** pass in every repetition — the floor the model actually guarantees. ` +
+        `**${r.stableFail} stable fails** — real gaps, not dice. **${r.flaky.length} flaky** — where the model guesses:`,
+    );
+    for (const entry of r.flaky) {
+      const marks = entry.outcomes.map((pass) => (pass ? "✓" : "✗")).join("");
+      lines.push(`- \`${entry.entryId}\` (${entry.disposition}) — ${marks}; landed in ${entry.stages.join(" / ")}`);
+    }
+    lines.push("");
+  }
 
   // Enforcement first and alone: a broken zero is not a coverage statistic.
   // "Committed gated advice" rather than "resolved": a should-refuse question
@@ -149,9 +269,14 @@ export function renderCoverage(map: CoverageMap, heading = "Playability coverage
   // as a first-attempt resolution — the accounting rule of docs/recovery.md.
   const repaired = map.repaired ?? [];
   if (repaired.length > 0) {
+    // One list item per repaired *run*: at N>1 the same entry can repair in
+    // several repetitions, so duplicates group with a count rather than repeat.
+    const counts = new Map<string, number>();
+    for (const id of repaired) counts.set(id, (counts.get(id) ?? 0) + 1);
+    const named = [...counts.entries()].map(([id, count]) => (count === 1 ? `\`${id}\`` : `\`${id}\` ×${count}`)).join(", ");
     lines.push(
       `**${repaired.length} outcome(s) followed a strip-assertion repair** — the model mis-recalled a value, ` +
-        `the system stripped the assertion and the kernel read the certified one: ${repaired.map((id) => `\`${id}\``).join(", ")}. ` +
+        `the system stripped the assertion and the kernel read the certified one: ${named}. ` +
         "First-attempt, these were IA-2 denials; they are counted apart.",
     );
     lines.push("");
