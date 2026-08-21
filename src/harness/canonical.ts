@@ -33,7 +33,20 @@
 import type { Claim } from "../kernel/contracts.js";
 import type { CertifiedRegistry } from "../kernel/registry.js";
 
-/** Case and separators gone: the name reduced to what it names. */
+/**
+ * Case and separators gone: the name reduced to what it names.
+ *
+ * Deliberately locale-independent and ASCII-scoped. `toLowerCase()` — never
+ * `toLocaleLowerCase()` — applies Unicode's default case mappings, so the fold
+ * is identical on every host locale and a canonicalized run replays anywhere.
+ * And `[a-z0-9]` is not "English": it is the certified vocabulary's own
+ * alphabet (ASCII slugs). A spelling from outside it ("Pikáchu", a kana name)
+ * loses those letters in the fold, lands on no certified key, and fails closed
+ * to IA-3 like any unknown — a miss, never a nearest-neighbour guess. If the
+ * certified world ever localizes, this fold widens with the vocabulary
+ * (Unicode normalization plus case folding); the injectivity check below is
+ * what holds the same-name-only doctrine, and it carries over unchanged.
+ */
 function fold(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]/g, "");
 }

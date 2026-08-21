@@ -53,4 +53,13 @@ describe("canonicalizeClaims never guesses — the doctrine's line", () => {
       expect(read).toEqual({ kind: "fact", entityId, factId: "base-speed" });
     }
   });
+
+  it("is locale-independent and vocabulary-scoped: an accented spelling maps nowhere", () => {
+    // The fold's alphabet is the certified vocabulary's own (ASCII slugs), not
+    // a natural language's. "Pikáchu" folds to "pikchu" — the á strips away —
+    // which is no certified key, so it passes through unchanged and fails
+    // closed to IA-3: a miss, never a nearest-neighbour guess at pikachu.
+    const read = one({ kind: "fact", entityId: "Pikáchu", factId: "base-speed" });
+    expect(read).toEqual({ kind: "fact", entityId: "Pikáchu", factId: "base-speed" });
+  });
 });
