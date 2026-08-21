@@ -59,6 +59,10 @@ export interface CoverageArtifact {
    * nominated (§19) — a usefulness dial like grounding, recorded with the
    * number because it changes what the number measures. */
   gatedGrammar: boolean;
+  /** Whether strip-assertion resubmit was enabled (docs/recovery.md, channel
+   * 2) — post-repair outcomes are then possible and are named apart in the
+   * map (`repaired`), so the flag travels with the number. */
+  repair: boolean;
   /** Passes requested over the selected entries. The paid design runs the full
    * bank at 1 and the `should-refuse` slice at 3 — two artifacts, each honest
    * about which it is. */
@@ -89,6 +93,7 @@ export interface CoverageArtifactInput {
   grounded: boolean;
   retrieval: boolean;
   gatedGrammar: boolean;
+  repair: boolean;
   repetitions: number;
   dispositions?: readonly Disposition[];
   stoppedEarly: boolean;
@@ -115,6 +120,7 @@ export function buildCoverageArtifact(input: CoverageArtifactInput): CoverageArt
     grounded: input.grounded,
     retrieval: input.retrieval,
     gatedGrammar: input.gatedGrammar,
+    repair: input.repair,
     repetitions: input.repetitions,
     ...(input.dispositions === undefined ? {} : { dispositions: input.dispositions }),
     stoppedEarly: input.stoppedEarly,
@@ -141,7 +147,7 @@ export function renderCoverageArtifact(artifact: CoverageArtifact): string {
     "<!-- Generated from a coverage artifact; do not hand-edit. Regenerate with `npm run coverage:map`. -->",
     "",
     `Generated from a **${artifact.label}** run started \`${artifact.startedAt}\` on \`${artifact.model.slug}\`, ` +
-      `${artifact.retrieval ? "**grounded by retrieval** (only the facts each question needs)" : artifact.grounded ? "**grounded** (the whole certified registry)" : "ungrounded (the proposer answered from its own knowledge)"}${artifact.gatedGrammar ? ", **gated grammar** (the schema narrowed to each question's nominated kinds)" : ""}, ` +
+      `${artifact.retrieval ? "**grounded by retrieval** (only the facts each question needs)" : artifact.grounded ? "**grounded** (the whole certified registry)" : "ungrounded (the proposer answered from its own knowledge)"}${artifact.gatedGrammar ? ", **gated grammar** (the schema narrowed to each question's nominated kinds)" : ""}${artifact.repair ? ", **repair** (strip-assertion resubmit on fact-mismatch denials)" : ""}, ` +
       `${artifact.repetitions} repetition(s)${artifact.stoppedEarly ? " — **stopped early** on an enforcement escalation; the runs below are fewer than requested" : ""}; ${scope}.`,
     "",
     "## Provenance",

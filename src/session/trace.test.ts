@@ -37,6 +37,25 @@ const basisProposal = JSON.stringify({
 });
 
 describe("runTrace narrates what the session did", () => {
+  it("narrates a strip-assertion repair, and the record carries the certified value", async () => {
+    // The model asserts a wrong Pikachu speed; with repair on, the trace shows
+    // the [repair] line and the exchange still files an answered record.
+    const wrongSpeed = JSON.stringify({
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "pikachu", factId: "base-speed", asserted: { kind: "number", value: 42 } }],
+    });
+    const provider = new ScriptedProvider("scripted:misremember", (request) =>
+      request.purpose === "answer" ? wrongSpeed : "decline",
+    );
+    const result = await runTrace(
+      [`${PROFILE} What is Pikachu's Speed?`],
+      { ...deps(provider), repair: true },
+    );
+    const page = result.lines.join("\n");
+    expect(page).toContain("[repair]");
+    expect(page).toContain("answered");
+  });
+
   it("traces a whole exchange: proposal, confirmation, record, scope and cost", async () => {
     const provider = new ScriptedProvider("scripted:ranker", (request) =>
       request.purpose === "scope" ? basisProposal : rankingAnswer,
@@ -131,8 +150,8 @@ describe("runTrace narrates what the session did", () => {
 describe("parseTraceArgs keeps the entry point straight-line", () => {
   it("splits flags from inputs and honors --model over --weak", () => {
     const { parseTraceArgs } = trace;
-    expect(parseTraceArgs(["hi", "/confirm"])).toEqual({ inputs: ["hi", "/confirm"], weak: false, adversarial: false, grounding: "retrieval", gatedGrammar: true });
-    expect(parseTraceArgs(["--weak", "hi"])).toEqual({ inputs: ["hi"], weak: true, adversarial: false, grounding: "retrieval", gatedGrammar: true });
+    expect(parseTraceArgs(["hi", "/confirm"])).toEqual({ inputs: ["hi", "/confirm"], weak: false, adversarial: false, grounding: "retrieval", gatedGrammar: true, repair: true });
+    expect(parseTraceArgs(["--weak", "hi"])).toEqual({ inputs: ["hi"], weak: true, adversarial: false, grounding: "retrieval", gatedGrammar: true, repair: true });
     expect(parseTraceArgs(["--adversarial", "--model", "acme/z-1", "hi"])).toEqual({
       inputs: ["hi"],
       model: "acme/z-1",
@@ -140,7 +159,14 @@ describe("parseTraceArgs keeps the entry point straight-line", () => {
       adversarial: true,
       grounding: "retrieval",
       gatedGrammar: true,
+      repair: true,
     });
+  });
+
+  it("repair defaults on and --no-repair files the first-attempt denial instead", () => {
+    const { parseTraceArgs } = trace;
+    expect(parseTraceArgs(["hi"]).repair).toBe(true);
+    expect(parseTraceArgs(["--no-repair", "hi"]).repair).toBe(false);
   });
 
   it("defaults grounding to retrieval and the grammar to gated, and selects the others by flag", () => {

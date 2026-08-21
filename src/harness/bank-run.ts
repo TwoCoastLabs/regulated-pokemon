@@ -61,6 +61,10 @@ export interface BankRun {
   score: DispositionScore;
   /** Model calls made — the friction number, per entry. */
   turns: number;
+  /** True when the outcome followed a strip-assertion repair (docs/recovery.md,
+   * channel 2) — a post-repair resolution, counted apart from first-attempt
+   * ones so the retry can never launder the model's mis-recall rate. */
+  repaired?: boolean;
   /** One human line on how it ended, for the report's detail column. */
   detail: string;
 }
@@ -240,8 +244,9 @@ export async function runBankEntry(
   grounded = false,
   retrieval = false,
   gatedGrammar = false,
+  repair = false,
 ): Promise<RecordedBankRun> {
-  const state = await play(entry, opening, { world, provider, now, grounded, retrieval, gatedGrammar });
+  const state = await play(entry, opening, { world, provider, now, grounded, retrieval, gatedGrammar, repair });
   const run = asRun(entry, state, world, repetition);
   const stage = funnelOf(run, wantsAct(entry));
   return {
@@ -255,6 +260,7 @@ export async function runBankEntry(
     // eligibility pass is awarded only by the claims actually certified.
     score: scoreOracle(entry, run, world, stage),
     turns: run.turns,
+    ...(state.repairs > 0 ? { repaired: true } : {}),
     detail: run.detail,
     run,
   };
@@ -273,10 +279,11 @@ export async function runBank(
   grounded = false,
   retrieval = false,
   gatedGrammar = false,
+  repair = false,
 ): Promise<readonly RecordedBankRun[]> {
   const runs: RecordedBankRun[] = [];
   for (const entry of entries) {
-    runs.push(await runBankEntry(world, entry, provider, clock(), entry.intent, repetition, grounded, retrieval, gatedGrammar));
+    runs.push(await runBankEntry(world, entry, provider, clock(), entry.intent, repetition, grounded, retrieval, gatedGrammar, repair));
   }
   return runs;
 }

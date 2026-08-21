@@ -153,6 +153,18 @@ deflecting into a rule, and gated questions provoke the gate by name instead of
 dodging — so it strengthened the enforcement demonstration while fixing
 usefulness.
 
+The residual's one repairable species — a named fact with a mis-recalled value
+(IA-2/fact-mismatch) — is now recovered by **strip-assertion repair**
+([findings.md](findings.md) **Iteration 20**, `--repair`, on by default in
+`session:trace`): the system strips the assertion and the kernel reads the
+certified value, with post-repair outcomes named apart in the map. Its first
+live run is a case study in the accounting rule: topline `qwen3-235b`
+41 → 45/52, but the `repaired` list attributes exactly **one** fix to the
+mechanism (`data-tm-surf`) and **zero** on `mistral-nemo` — the rest is N=1
+variance the separate accounting refuses to launder. The remaining residual is
+dominated by IA-3/fabricated-entity, unrepairable by design; the doctrine's
+channel-3 option (a clarifying "did you mean X?") is the lever that owns it.
+
 ## Fixed this pass
 
 - **Shape deflection:** "what are on my team?" was grabbing the `party-size`

@@ -58,6 +58,10 @@ export interface TraceArgs {
    * default (the §19 shape-deflection fix, the product posture); `--loose-grammar`
    * offers every claim kind, the pre-§19 behaviour. */
   gatedGrammar: boolean;
+  /** Strip-assertion resubmit on fact-mismatch denials — on by default (the
+   * player gets the certified value instead of a denial; docs/recovery.md,
+   * channel 2); `--no-repair` files the first-attempt denial instead. */
+  repair: boolean;
 }
 
 export function parseTraceArgs(argv: readonly string[]): TraceArgs {
@@ -71,6 +75,7 @@ export function parseTraceArgs(argv: readonly string[]): TraceArgs {
     adversarial: argv.includes("--adversarial"),
     grounding,
     gatedGrammar: !argv.includes("--loose-grammar"),
+    repair: !argv.includes("--no-repair"),
   };
 }
 
@@ -154,6 +159,13 @@ function narrate(before: SessionState, after: SessionState): string[] {
   const calls = after.usage.calls - before.usage.calls;
   const cost = after.usage.costUsd - before.usage.costUsd;
   if (calls > 0) lines.push(`  [model] ${calls} call${calls === 1 ? "" : "s"}, $${cost.toFixed(4)}`);
+
+  if (after.repairs > before.repairs) {
+    // The mis-recall on the books, in the visitor's view: the answer that
+    // follows was reached after the system stripped a wrong asserted value and
+    // the kernel read the certified one (docs/recovery.md, channel 2).
+    lines.push("  [repair] the model mis-recalled a value; the assertion was stripped and the certified value read");
+  }
 
   lines.push(`  [phase] ${describePhase(after)}`);
   return lines;
