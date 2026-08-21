@@ -1753,6 +1753,61 @@ retrieval + gated grammar + repair), `…04-44-04…-coverage.json` (nemo, same)
 
 ---
 
+### Iteration 21 — canonical surface forms, and the noise floor the run pairs finally quantify
+
+The §20 residual's IA-3 population, read from the records, was mostly not
+fabrication: "Bulbasaur" for `bulbasaur`, "selfdestruct" for `self-destruct`
+(both models, three runs in a row), a matchup naming "electric" in the
+*species* slot. The name was right; the surface form was wrong — and denying
+the same name over a spelling is the decoder failing to read what the model
+plainly said (finding #3's family). So the decoder now folds entity names to
+their canonical certified form (`canonicalizeClaims`): case and separators
+stripped, mapped only when the fold lands on **exactly one** certified id (the
+fold over the 314-id vocabulary is verified collision-free; ambiguous keys map
+nowhere), with the one unambiguous union re-slot (a species-slot name that is
+exactly a type's name reads as the type). Content stays verbatim and faces the
+same gate; a person, a concept, a dex number, an invention folds to nothing and
+earns its IA-3 exactly as before — reference-system translation ("144" →
+articuno) is deliberately excluded as a guess about intent (channel 3's
+business, docs/recovery.md).
+
+**Attributable effect: one persistent miss converted, and a class closed.**
+`ans-move-power-selfdestruct` — the §18 fabrication trap, an IA-3 on every
+prior qwen run — now resolves: the model says "selfdestruct", the decoder reads
+`self-destruct`, the kernel reads the certified power. On `mistral-nemo` the
+mechanism converted *nothing*, exactly as the records predicted: its IA-3s
+("france", "oran-berry", "gym-leader-4", "tm03") were never surface forms.
+The offline tests pin the rest of the class the earlier runs produced
+("Bulbasaur", the type-in-species-slot re-slot) plus the must-not-map list
+taken verbatim from the filed §20 artifacts.
+
+**The unplanned finding is the noise floor.** With §20 this makes four
+adjacent run pairs of identical (or one-change) configuration, and the churn
+between them is now measurable: qwen 4 fixed / 6 broke, nemo 6 fixed / 9 broke
+— **±5–9 entries of the 52 flip between any two N=1 runs**, almost all on
+entries no changed mechanism touches. Toplines moved *down* through a slice
+that only adds correct readings (qwen 45 → 43, nemo 35 → 32) — which is not
+the mechanism regressing but the dice rerolling, and only the record-level
+attribution (the `repaired` list, the violation diffs, the persistent-entry
+histories) can see through it. Stated as the instrument rule it implies: **at
+N=1 on this set, a topline delta smaller than the churn band is unreadable;
+claims attach to records, not toplines** — and the next instrument move this
+prices is N=3 repetitions, which the harness's repetition machinery already
+speaks.
+
+**The IA-3 residual is now at its honest floor.** What remains denied is
+out-of-world naming — people (`misty`, `red`), concepts (`elite-four`,
+`gym-badge`, `oran-berry`), ids from other vocabularies used as entities —
+which *should* stay denied: the fix, where one is owed, is expressible content
+(a champions/leaders lesson, an items decision), not a cleverer reader.
+Enforcement: hard zero, both models, again; cost $0.039 / $0.008 per 52.
+
+Provenance: `runs/coverage/2026-08-21T06-15-06…-coverage.json` (qwen, 52,
+retrieval + gated grammar + repair, canonical decoder),
+`…06-26-03…-coverage.json` (nemo, same).
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's

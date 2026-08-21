@@ -235,6 +235,29 @@ describe("runBankEntry buckets each disposition through the real session", () =>
     expect(offered).toContain("action"); // the safety invariant holds under gating
   });
 
+  it("a canonical surface form resolves; an invented entity is still denied (channel 1 vs IA-3)", async () => {
+    // "Selfdestruct" is the certified move `self-destruct` in a different
+    // spelling — the decoder reads it canonically and the fact resolves. An
+    // invented species maps to nothing and the gate fires exactly as before,
+    // so the fold cannot have neutered IA-3.
+    const surface = JSON.stringify({
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "Selfdestruct", factId: "move-power" }],
+    });
+    const resolved = await runBankEntry(world, entry("ans-move-power-selfdestruct"), model(surface), clock());
+    expect(resolved.stage.kind).toBe("resolved");
+    expect(resolved.score.pass).toBe(true);
+
+    const invented = JSON.stringify({
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "shadowmon", factId: "move-power" }],
+    });
+    const denied = await runBankEntry(world, entry("ans-move-power-selfdestruct"), model(invented), clock());
+    expect(denied.stage.kind).toBe("denied");
+    if (denied.stage.kind !== "denied") throw new Error("unreachable");
+    expect(denied.stage.article).toBe("IA-3");
+  });
+
   it("strip-assertion repair turns a mis-recalled fact into the certified answer, counted apart", async () => {
     // The model names the right fact and asserts a wrong value — first attempt
     // is an IA-2/fact-mismatch denial. With repair, the system strips the
