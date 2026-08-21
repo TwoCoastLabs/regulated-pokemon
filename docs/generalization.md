@@ -875,3 +875,90 @@ A `dialogue` run over a real model has not been paid for, so this section's
 "did not measure" stands as written until the two-model dialogue run lands its
 figures in `docs/findings.md` — a claim without a number is a note, not a
 finding.
+
+## 11. The improvement loop: operating the governed agent as a discipline
+
+§10 measured the *build* arc — the cost of standing the architecture up. A
+second arc then ran on top of the finished kernel (findings §§14–22, distilled
+in [lessons.md](lessons.md)): the defaults were swapped to deliberately cheap
+open-weights models, usefulness cratered, and it was rebuilt layer by layer —
+retrieval, grammar gating, deterministic repair, canonical decoding — without
+one enforcement change and without one safety re-certification. The shape of
+that arc is itself the operational product: a loop an organization can run,
+staff, and audit. This section states it as one.
+
+### The loop
+
+1. **Run the banked eval under the current configuration and file the whole
+   record** — transcripts, transactions, provenance, flags. The artifact is
+   the unit of evidence; a topline is a view of it, never a substitute.
+2. **Read the misses from the records, not the rates.** Every denial names
+   its article; every abstention names its stage; every deflection is visible
+   as certified-text-on-the-wrong-subject. A miss read from a record arrives
+   pre-diagnosed.
+3. **Classify each miss by the layer that owes the fix.** The arc's residual
+   taxonomy: *content debt* (the certified world lacks the answer), a
+   *retrieval gap* (the right rows were never offered), a *grammar gap* (the
+   right shape was never nominated), a *surface-form gap* (the decoder
+   refused a spelling of a certified name), a *recoverable mis-recall* (a
+   named fact with a wrong value, repairable by falling to the grounded
+   shape), a *meaning gap* (only a human may resolve it), or a *true model
+   limit* — the residual of residuals, reached only after the others are
+   excluded.
+4. **Build the smallest deterministic mechanism at that layer.** Never a
+   verdict fed back to the model; never a nearest-neighbour guess about
+   intent (docs/recovery.md draws the line channel by channel).
+5. **Re-measure at known noise.** Toplines carry bands; comparisons stay
+   within one artifact where possible; a cross-run delta is a result only
+   when it clears the band on both ends.
+6. **Record with provenance and ratchet.** A claim without a number is a
+   note; a number without an artifact is a press release.
+
+### Why the loop distributes: every layer has a natural owner
+
+The taxonomy in step 3 is not just diagnosis — it is a routing table for
+work. Content debt is the knowledge steward's backlog (§4's curation
+function; §22's stable-fail list *is* that backlog, named per entry).
+Retrieval, grammar, decoder, and repair mechanisms belong to the platform
+team, and each is ordinary deterministic software with ordinary tests.
+Meaning gaps route to UX — the ladder, the confirmation card, the clarifying
+question. Permission denials route to nobody, by design: they are the product
+working. And the model itself becomes the one component *without* a backlog:
+it is a commodity input, replaced rather than repaired. "The AI was wrong"
+stops being a ticket category; each miss becomes a routed work item with an
+owner, an artifact behind it, and a layer-appropriate fix in front of it.
+
+### The SLO framing: a floor, a band, and a zero
+
+The repetition instrument (§22) hands operations exactly the three numbers a
+service contract needs. The **stable core** — entries that pass in every
+repetition — is the floor the system actually guarantees, the number to put
+in front of a customer. The **band** is the variance budget: same-config
+toplines move inside it on sampling alone, so alerting below the band is
+noise and regression means falling *out* of it. And **enforcement is not an
+SLO at all** — it is an invariant, a zero verified per artifact with no error
+budget, no majority vote across repetitions, and no trade against the other
+two. This maps onto reliability practice enterprises already run (floors,
+error budgets, hard invariants) — the governed agent drops into existing
+operational muscle rather than demanding new kinds of trust.
+
+### The procurement consequence
+
+Because usefulness is rebuilt from layers the operator owns, model choice
+becomes reversible and competitive. The arc's evidence: two default swaps, a
+usefulness collapse, and a full recovery by architecture — with the cheap
+open-weights strong model ending *above* the expensive closed one it
+replaced, at a fraction of the price, and the enforcement zeros never
+wavering across any of it. Capability rents at the propose step only. An
+organization running this loop negotiates with model vendors from the
+position that the guarantee, the evidence chain, and most of the usefulness
+live in-house.
+
+### The honest boundary
+
+All of this is demonstrated inside one domain, one reviewed bank, a
+cooperative scripted counterparty, and N=3 on a 52-entry smoke set
+([lessons.md](lessons.md), third direction). The loop's *mechanics* — record
+reading, layer routing, deterministic fixes, banded measurement — carry by
+construction; its *rates* do not, and a port should expect to re-earn every
+number in its own domain before quoting any of these.
