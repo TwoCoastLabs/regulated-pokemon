@@ -162,8 +162,16 @@ live run is a case study in the accounting rule: topline `qwen3-235b`
 41 → 45/52, but the `repaired` list attributes exactly **one** fix to the
 mechanism (`data-tm-surf`) and **zero** on `mistral-nemo` — the rest is N=1
 variance the separate accounting refuses to launder. The remaining residual is
-dominated by IA-3/fabricated-entity, unrepairable by design; the doctrine's
-channel-3 option (a clarifying "did you mean X?") is the lever that owns it.
+dominated by IA-3/fabricated-entity, unrepairable by design; reading the
+records showed most of it was *surface form*, not fabrication, and the decoder
+now reads canonical spellings ([findings.md](findings.md) **Iteration 21**:
+"selfdestruct" is `self-destruct` — one persistent miss converted, the class
+closed offline, nothing new made committable). What still denies is
+out-of-world naming that *should* deny; the fix, where owed, is content, not a
+cleverer reader. Iteration 21 also quantified the N=1 noise floor — ±5–9 of 52
+entries flip between adjacent same-config runs — so topline deltas below the
+churn band are unreadable and claims attach to records; N=3 repetitions is the
+priced next instrument move.
 
 ## Fixed this pass
 
