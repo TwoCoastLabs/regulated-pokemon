@@ -30,6 +30,7 @@ import type { ManifestContext, ManifestDraft } from "../kernel/manifest.js";
 import { buildRoster } from "../kernel/roster.js";
 import type { AccordPack } from "../kernel/pack.js";
 import { denialCode } from "../kernel/violation.js";
+import { canonicalizeClaims } from "./canonical.js";
 
 // --- tiny typed predicates --------------------------------------------------
 
@@ -280,9 +281,14 @@ function asClaim(value: unknown): Claim | null {
  *
  * Rosters are built through the kernel's own {@link buildRoster}, so a set the
  * registry cannot support is refused here with the article it earned rather
- * than smuggled downstream. Claims are carried verbatim — a swapped stat or a
- * wrong count survives decoding intact and is denied by `compileManifest`,
- * which is exactly where enforcement is proven.
+ * than smuggled downstream. Claims are carried verbatim in *content* — a
+ * swapped stat or a wrong count survives decoding intact and is denied by
+ * `compileManifest`, which is exactly where enforcement is proven. Entity
+ * *names*, though, are read in their canonical surface form
+ * ({@link canonicalizeClaims}): "Bulbasaur" is `bulbasaur` and "selfdestruct"
+ * is `self-destruct` — the same name, spelled the way the snapshot spells it.
+ * A name that is not a surface form of any certified id passes through
+ * unchanged and earns its IA-3 exactly as before.
  */
 export function decodeAnswer(text: string, context: ManifestContext, transactionId: string): AnswerDecode {
   const parsed = parse(text);
@@ -309,6 +315,7 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
     if (claim === null) return { ok: false, reason: "a claim is malformed" };
     claims.push(claim);
   }
+  const canonical = canonicalizeClaims(context.registry, claims);
 
   // An answer that asserts nothing is not an answer. Compiled, it would mint
   // a certified page whose only content is the standing provenance footer —
@@ -319,5 +326,5 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
     return { ok: false, reason: NO_CLAIMS_REASON };
   }
 
-  return { ok: true, draft: { transactionId, claims, rosters } };
+  return { ok: true, draft: { transactionId, claims: canonical, rosters } };
 }

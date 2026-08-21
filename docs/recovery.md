@@ -57,6 +57,18 @@ a verdict. Retrying it re-litigates nothing.
   (constraining shape lifted the weak model more than grounding would have) is
   this channel's success story. The best syntax repair is the one that never
   has to run.
+- **Built: canonical surface forms** (`canonicalizeClaims`, in the decoder).
+  "Bulbasaur" is `bulbasaur` and "selfdestruct" is `self-destruct` — the same
+  name in a different spelling, which the §20 residual showed was most of what
+  IA-3 was catching on live models. The decoder folds case and separators and
+  maps a name only when the fold lands on *exactly one* certified id
+  (ambiguous keys are dropped); a matchup naming a type in the species slot
+  re-slots, because type names and entity ids are disjoint. This is encoding,
+  not repair: the verifier has not ruled, no verdict leaks, content stays
+  verbatim and faces the same gate — and anything that is not the same name (a
+  person, a concept, a dex number, an invention) maps nowhere and earns its
+  IA-3 exactly as before. Reference-system translation ("144" → articuno) is
+  deliberately excluded: that is a guess about intent, channel 3's business.
 - **Safe to add:** one automatic re-ask on a decode failure when the endpoint
   did not enforce the grammar, with content-free feedback only — "the reply was
   not readable," never "the value was wrong." The verifier saw nothing, so

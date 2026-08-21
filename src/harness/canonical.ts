@@ -1,0 +1,115 @@
+/**
+ * Canonical surface forms: reading the model's entity names correctly
+ * (findings §20→§21; docs/recovery.md, channel 1).
+ *
+ * The residual IA-3 population after the grammar was gated turned out to be
+ * mostly *not* fabrication: "Bulbasaur" for `bulbasaur`, "selfdestruct" for
+ * `self-destruct`, a matchup naming "electric" in the species slot. The name is
+ * right; the *surface form* is wrong — casing, separators, or the union
+ * variant. Denying those as fabricated entities is the decoder failing to read
+ * what the model plainly said (finding #3's family), so this module folds
+ * names to their canonical certified form at decode time, before the kernel
+ * ever rules.
+ *
+ * Three lines hold it to the doctrine:
+ *
+ *  - **Same name only, never a nearest neighbour.** The fold strips case and
+ *    separators and must land on *exactly one* certified id — the fold over
+ *    the certified vocabulary is checked injective, and a key two ids share is
+ *    dropped so an ambiguous name maps nowhere. "brock", "elite-four", a dex
+ *    number, an invented species: none of them fold to anything, and IA-3
+ *    denies them exactly as before. Reference-system translation ("144" →
+ *    articuno) is deliberately out: that is a guess about intent, and guesses
+ *    belong to a human (channel 3), not a decoder.
+ *  - **Content stays verbatim.** Only the *spelling of names* is read
+ *    canonically; every asserted value survives untouched and faces the same
+ *    verification. An adversary's wrong value about "Pikachu" now reads as a
+ *    wrong value about `pikachu` — a fact-mismatch instead of a fabrication —
+ *    and is denied either way. Nothing becomes committable that was not.
+ *  - **Deterministic and pure.** Same registry, same claims, same output; a
+ *    canonicalized run replays like any other.
+ */
+
+import type { Claim } from "../kernel/contracts.js";
+import type { CertifiedRegistry } from "../kernel/registry.js";
+
+/** Case and separators gone: the name reduced to what it names. */
+function fold(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+/**
+ * The folded-form index over the certified vocabulary, ambiguous keys dropped.
+ * Built per call — ~300 ids — so the module holds no state and tracks the
+ * registry it is handed, not the one it first saw.
+ */
+function canonicalIndex(registry: CertifiedRegistry): ReadonlyMap<string, string> {
+  const index = new Map<string, string>();
+  const ambiguous = new Set<string>();
+  for (const id of [...registry.speciesIds, ...registry.moveIds]) {
+    const key = fold(id);
+    if (index.has(key) && index.get(key) !== id) ambiguous.add(key);
+    index.set(key, id);
+  }
+  for (const key of ambiguous) index.delete(key);
+  return index;
+}
+
+/** The certified id this name is a surface form of, or the name unchanged —
+ * an unchanged unknown falls through to the kernel's IA-3, as it must. */
+function canonicalEntity(registry: CertifiedRegistry, index: ReadonlyMap<string, string>, entityId: string): string {
+  if (registry.knowsEntity(entityId)) return entityId;
+  return index.get(fold(entityId)) ?? entityId;
+}
+
+/**
+ * Read every entity name in a draft's claims in its canonical form.
+ *
+ * Also re-slots the one unambiguous union mix-up the runs actually produced: a
+ * matchup subject declared as a *species* whose name is a certified *type* (and
+ * not any certified entity) is read as the type subject. Type names and entity
+ * ids are disjoint in the certified world, so this is the same name in the
+ * right variant, not a guess.
+ */
+export function canonicalizeClaims(registry: CertifiedRegistry, claims: readonly Claim[]): readonly Claim[] {
+  const index = canonicalIndex(registry);
+  const entity = (entityId: string): string => canonicalEntity(registry, index, entityId);
+
+  return claims.map((claim): Claim => {
+    switch (claim.kind) {
+      case "fact":
+        return { ...claim, entityId: entity(claim.entityId) };
+      case "membership":
+        return { ...claim, entityId: entity(claim.entityId) };
+      case "eligibility":
+        return { ...claim, entityId: entity(claim.entityId) };
+      case "recommendation":
+        return { ...claim, entityId: entity(claim.entityId) };
+      case "action":
+        return { ...claim, entityId: entity(claim.entityId) };
+      case "matchup": {
+        if (claim.subject.kind === "species") {
+          const named = entity(claim.subject.entityId);
+          if (named !== claim.subject.entityId || registry.knowsEntity(named)) {
+            return { ...claim, subject: { kind: "species", entityId: named } };
+          }
+          // Not an entity under any surface form — but exactly a type's name in
+          // the wrong slot is still the same name, so it re-slots.
+          const asType = claim.subject.entityId.toLowerCase();
+          if (registry.typeNames.has(asType)) {
+            return { ...claim, subject: { kind: "type", typeId: asType } };
+          }
+          return claim;
+        }
+        // A type subject in the wrong case is the same type.
+        const asType = claim.subject.typeId.toLowerCase();
+        if (asType !== claim.subject.typeId && registry.typeNames.has(asType)) {
+          return { ...claim, subject: { kind: "type", typeId: asType } };
+        }
+        return claim;
+      }
+      default:
+        return claim;
+    }
+  });
+}
