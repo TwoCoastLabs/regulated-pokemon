@@ -75,6 +75,12 @@ export interface CoverageArgs {
   /** Narrow the answer grammar to the filler kinds each question nominates — the
    * shape-deflection fix (§19). Composes with any grounding mode. */
   gatedGrammar: boolean;
+  /** Strip-assertion resubmit (docs/recovery.md, channel 2): on an all-IA-2
+   * fact-mismatch denial the driver strips the assertions and re-runs the full
+   * gate once, so the kernel reads the certified value. Recorded per entry
+   * (`repaired`) and in the map, so post-repair is never blended with
+   * first-attempt. */
+  repair: boolean;
   model?: string;
   limit?: number;
   ids?: readonly string[];
@@ -100,6 +106,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     grounded: boolean;
     retrieval: boolean;
     gatedGrammar: boolean;
+    repair: boolean;
     model?: string;
     limit?: number;
     ids?: string[];
@@ -111,7 +118,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     source?: string;
     help: boolean;
     errors: string[];
-  } = { live: false, render: false, weak: false, dialogues: false, grounded: false, retrieval: false, gatedGrammar: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
+  } = { live: false, render: false, weak: false, dialogues: false, grounded: false, retrieval: false, gatedGrammar: false, repair: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
 
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index];
@@ -137,6 +144,9 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
         break;
       case "--gated-grammar":
         args.gatedGrammar = true;
+        break;
+      case "--repair":
+        args.repair = true;
         break;
       case "--phrasings":
         args.phrasings = true;
@@ -221,6 +231,9 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
   if (args.retrieval && args.phrasings) {
     args.errors.push("--retrieval is not threaded through the robustness pass; run it on the coverage or dialogue banks");
   }
+  if (args.repair && args.phrasings) {
+    args.errors.push("--repair is not threaded through the robustness pass; run it on the coverage or dialogue banks");
+  }
   if (args.grounded && args.retrieval) {
     args.errors.push("--grounded (whole registry) and --retrieval (only what each question needs) are different grounding modes; pick one");
   }
@@ -237,6 +250,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     grounded: args.grounded,
     retrieval: args.retrieval,
     gatedGrammar: args.gatedGrammar,
+    repair: args.repair,
     phrasings: args.phrasings,
     repetitions: args.repetitions,
     out: args.out,
@@ -274,6 +288,8 @@ const USAGE = [
   "                      usefulness at a fraction of the tokens. Recorded in the artifact; not with --grounded.",
   "  --gated-grammar     narrow the answer schema to the claim kinds each question nominates (the shape-",
   "                      deflection fix). Composes with any grounding mode; recorded in the artifact.",
+  "  --repair            strip-assertion resubmit: on an all-IA-2 fact-mismatch denial, strip the asserted",
+  "                      values and run the full gate once more (docs/recovery.md). Counted apart, recorded.",
   "  --render [PATH]     render a filed coverage artifact (a file, or a directory to take the newest",
   "                      coverage artifact from; default runs/coverage/). Reads no clock, no key, no network.",
   "  --page PATH         with --render, write the page there instead of printing it.",
@@ -377,6 +393,7 @@ async function runDialogueMode(args: CoverageArgs, options: CoverageOptions, mod
         `  running:       ${entries.length} conversation(s), ${turns} turn(s) in total`,
         `  grounding:     ${args.retrieval ? "retrieval — only the facts each question needs" : args.grounded ? "full — the whole certified registry" : "none — the model answers from its own knowledge"}`,
         `  gated grammar: ${args.gatedGrammar ? "yes — the answer schema narrows to the kinds each question nominates" : "no — every claim kind is offered"}`,
+        `  repair:        ${args.repair ? "yes — an all-fact-mismatch denial is stripped and re-verified once" : "no — a mis-recalled value stays a denial"}`,
         `  model:         ${model}`,
         `  artifact:      filed under ${args.out}/`,
         `  add --live to run it against the model and bill your key.`,
@@ -399,7 +416,7 @@ async function runDialogueMode(args: CoverageArgs, options: CoverageOptions, mod
   const provider = makeProvider({ model, apiKey });
   const world = demoWorld();
 
-  const runs = await runDialogues(world, entries, provider, options.clock, args.grounded, args.retrieval, args.gatedGrammar);
+  const runs = await runDialogues(world, entries, provider, options.clock, args.grounded, args.retrieval, args.gatedGrammar, args.repair);
   const artifact = buildDialogueArtifact({
     startedAt: options.now,
     world,
@@ -411,6 +428,7 @@ async function runDialogueMode(args: CoverageArgs, options: CoverageOptions, mod
     grounded: args.grounded,
     retrieval: args.retrieval,
     gatedGrammar: args.gatedGrammar,
+    repair: args.repair,
     runs,
   });
   const artifactPath = fileArtifact(artifact, resolve(args.out), options.write);
@@ -460,6 +478,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
         `  repetitions:   ${args.repetitions}`,
         `  grounding:     ${args.retrieval ? "retrieval — only the facts each question needs" : args.grounded ? "full — the whole certified registry" : "none — the model answers from its own knowledge"}`,
         `  gated grammar: ${args.gatedGrammar ? "yes — the answer schema narrows to the kinds each question nominates" : "no — every claim kind is offered"}`,
+        `  repair:        ${args.repair ? "yes — an all-fact-mismatch denial is stripped and re-verified once" : "no — a mis-recalled value stays a denial"}`,
         `  model:         ${model}`,
         `  artifact:      filed under ${args.out}/`,
         `  add --live to run it against the model and bill your key.`,
@@ -493,7 +512,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
   } else {
     const runPass = options.runPass ?? runBank;
     for (let pass = 0; pass < args.repetitions; pass++) {
-      const sampled = await runPass(world, entries, provider, options.clock, pass, args.grounded, args.retrieval, args.gatedGrammar);
+      const sampled = await runPass(world, entries, provider, options.clock, pass, args.grounded, args.retrieval, args.gatedGrammar, args.repair);
       runs.push(...sampled);
       if (sampled.some((run) => run.score.enforcementEscalation === true)) {
         // The repetition discipline: a broken enforcement zero stops the run
@@ -516,6 +535,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
     grounded: args.grounded,
     retrieval: args.retrieval,
     gatedGrammar: args.gatedGrammar,
+    repair: args.repair,
     repetitions: args.repetitions,
     ...(args.dispositions === undefined ? {} : { dispositions: args.dispositions }),
     stoppedEarly,

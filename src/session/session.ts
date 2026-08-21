@@ -33,7 +33,7 @@
  * repeats a millisecond would hand it a lie.
  */
 
-import type { Claim, ConfirmationEvent, ScopeDimension, ScopeEvent, ScopeTranscript } from "../kernel/contracts.js";
+import type { Claim, ConfirmationEvent, ScopeDimension, ScopeEvent, ScopeTranscript, Violation } from "../kernel/contracts.js";
 import { type DomElement, walkArtifact } from "../kernel/dom.js";
 import type { ManifestContext, ManifestDraft } from "../kernel/manifest.js";
 import type { AccordPack } from "../kernel/pack.js";
@@ -79,6 +79,15 @@ export interface SessionDeps {
   /** Narrow the answer grammar to the filler kinds each question nominates — the
    * shape-deflection fix (§19). Independent of grounding. */
   gatedGrammar?: boolean;
+  /**
+   * Strip-assertion resubmit (docs/recovery.md, channel 2): when a probe is
+   * denied and *every* violation is IA-2/fact-mismatch — the model named the
+   * right fact and mis-recalled its value — the driver strips the assertions
+   * and re-runs the whole gate once, so the kernel reads the certified value
+   * instead. Deterministic, no model call, no verdict fed back; the mis-recall
+   * is still counted ({@link SessionState.repairs}). Off by default.
+   */
+  repair?: boolean;
 }
 
 export type ScopeProposal = Extract<ScopeEvent, { kind: "proposal" }>;
@@ -121,6 +130,11 @@ export interface SessionState {
   /** Where the current exchange's words begin: the answer step is shown the
    * ask it is answering, not the whole session (scope still reads it all). */
   askStart: number;
+  /** Strip-assertion repairs performed (docs/recovery.md, channel 2) — the
+   * count that keeps a repaired mis-recall on the books: a filed answer that
+   * followed a repair is a post-repair resolution, and the accounting rule is
+   * that first-attempt and post-repair are never blended. */
+  repairs: number;
   /** Ladder proposals spent on the current ask; a fresh utterance resets it. */
   ladderTurns: number;
   /**
@@ -163,6 +177,7 @@ export function startSession(): SessionState {
     providerErrors: 0,
     phase: { kind: "gathering" },
     askStart: 0,
+    repairs: 0,
     ladderTurns: 0,
   };
 }
@@ -659,40 +674,71 @@ function commit(
 ): SessionState {
   const { world } = deps;
   const { transactionId, establishedAt, draft } = exchange;
-  const committedAt = deps.now();
-  const renderedAt = deps.now();
 
-  const probe = runTransaction({
-    id: transactionId,
-    registry: world.registry,
-    pack: world.pack,
-    transcript: state.transcript,
-    establishedAt,
-    committedAt,
-    locale: deps.locale ?? LOCALE,
-    ...(state.required === undefined ? {} : { required: state.required }),
-    plan: () => draft,
-    act: {
-      render: renderAnswer,
-      confirm: () => null,
-      renderedAt,
-      authorizedAt: renderedAt,
-      executedAt: renderedAt,
-    },
-  });
+  /** One full pass through the seam — compile, verify, render, attest — with
+   * fresh moments from the transport's clock. Called at most twice: the first
+   * probe, and once more after a strip-assertion repair; the repaired draft
+   * re-enters the *entire* gate, never a delta check. */
+  const attempt = (planned: ManifestDraft): { record: Transaction; committedAt: string; renderedAt: string } => {
+    const committedAt = deps.now();
+    const renderedAt = deps.now();
+    const record = runTransaction({
+      id: transactionId,
+      registry: world.registry,
+      pack: world.pack,
+      transcript: state.transcript,
+      establishedAt,
+      committedAt,
+      locale: deps.locale ?? LOCALE,
+      ...(state.required === undefined ? {} : { required: state.required }),
+      plan: () => planned,
+      act: {
+        render: renderAnswer,
+        confirm: () => null,
+        renderedAt,
+        authorizedAt: renderedAt,
+        executedAt: renderedAt,
+      },
+    });
+    return { record, committedAt, renderedAt };
+  };
 
-  switch (probe.outcome.status) {
+  let planned = draft;
+  let ran = attempt(planned);
+
+  // Strip-assertion resubmit (docs/recovery.md, channel 2). Only when every
+  // violation is IA-2/fact-mismatch — the model named the right fact and
+  // mis-recalled its value — the driver strips the assertions and runs the
+  // whole gate once more; the kernel then reads the certified value, because
+  // an omitted value defers to it and can never disagree. Deterministic, no
+  // model call, no verdict fed back to the model; any other violation in the
+  // denial (a fabricated entity, a gated recommendation) falls closed to the
+  // denial exactly as before. Capped structurally at one repair — the second
+  // outcome files whatever it is.
+  if (ran.record.outcome.status === "denied" && deps.repair === true) {
+    const stripped = stripAssertions(planned, ran.record.outcome.violations);
+    if (stripped !== undefined) {
+      planned = stripped;
+      ran = attempt(planned);
+      // The mis-recall stays on the books: whatever files below is a
+      // post-repair outcome, and the accounting never blends the two.
+      state = { ...state, repairs: state.repairs + 1 };
+    }
+  }
+
+  const { record, committedAt, renderedAt } = ran;
+  switch (record.outcome.status) {
     case "answered": {
       // No acts proposed: the probe is the exchange's record. The certified
       // page is rendered for display through the same planner the verifier
       // rules with — the record does not need it, the visitor does.
-      return file(state, probe, displayPage(deps.world, probe));
+      return file(state, record, displayPage(deps.world, record));
     }
     case "declined": {
       // Acts proposed and attested; the decline is the probe's, not the
       // visitor's. Hold the page and wait for the person.
-      const artifact = probe.artifact;
-      if (artifact === undefined) return file(state, probe); // unreachable: declined carries its page
+      const artifact = record.artifact;
+      if (artifact === undefined) return file(state, record); // unreachable: declined carries its page
       return {
         ...state,
         phase: { kind: "confirming-act", artifact },
@@ -702,15 +748,40 @@ function commit(
           committedAt,
           renderedAt,
           ...(state.required === undefined ? {} : { required: state.required }),
-          draft,
+          draft: planned,
           artifact,
         },
       };
     }
     default:
       // Denied at scope, answer or render — the named refusal is the record.
-      return file(state, probe, displayPage(deps.world, probe));
+      return file(state, record, displayPage(deps.world, record));
   }
+}
+
+/**
+ * The repaired draft, or `undefined` when the denial is not repairable.
+ *
+ * Repairable means *every* violation is IA-2/fact-mismatch and the draft
+ * actually carries an asserted fact value to strip. All asserted fact values
+ * are stripped, not just provably-offending ones: a name-only fact defers to
+ * the certified value, so stripping a *correct* assertion changes nothing —
+ * which is what makes the repair safe without matching violations to claims.
+ * A membership's `asserted` is never stripped: there the assertion *is* the
+ * claim, and removing it would leave nothing to verify.
+ */
+function stripAssertions(draft: ManifestDraft, violations: readonly Violation[]): ManifestDraft | undefined {
+  if (violations.length === 0) return undefined;
+  if (!violations.every((item) => item.article === "IA-2" && item.rule === "fact-mismatch")) return undefined;
+  let stripped = false;
+  const claims = draft.claims.map((claim) => {
+    if (claim.kind !== "fact" || claim.asserted === undefined) return claim;
+    stripped = true;
+    const { asserted: _asserted, ...named } = claim;
+    return named;
+  });
+  if (!stripped) return undefined;
+  return { ...draft, claims };
 }
 
 /**

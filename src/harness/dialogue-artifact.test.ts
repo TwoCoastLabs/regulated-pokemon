@@ -53,6 +53,7 @@ function artifact() {
     grounded: false,
     retrieval: false,
     gatedGrammar: false,
+    repair: false,
     runs,
   });
 }
@@ -83,6 +84,12 @@ describe("buildDialogueArtifact files a faithful record", () => {
     expect(page).toContain("test-slug");
     expect(page).toContain(world.registry.snapshot.id);
     expect(page).toContain("Ceremony cost");
+  });
+
+  it("names the repair mode in the header when it was on", () => {
+    const withRepair = { ...artifact(), repair: true };
+    expect(renderDialogueArtifact(withRepair)).toContain("**repair**");
+    expect(renderDialogueArtifact(artifact())).not.toContain("**repair**");
   });
 });
 

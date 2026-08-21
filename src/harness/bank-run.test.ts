@@ -235,6 +235,59 @@ describe("runBankEntry buckets each disposition through the real session", () =>
     expect(offered).toContain("action"); // the safety invariant holds under gating
   });
 
+  it("strip-assertion repair turns a mis-recalled fact into the certified answer, counted apart", async () => {
+    // The model names the right fact and asserts a wrong value — first attempt
+    // is an IA-2/fact-mismatch denial. With repair, the system strips the
+    // assertion, the full gate runs once more, and the kernel reads the
+    // certified value. The run is marked repaired so post-repair can never
+    // read as first-attempt (docs/recovery.md).
+    const wrongSpeed = JSON.stringify({
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "pikachu", factId: "base-speed", asserted: { kind: "number", value: 42 } }],
+    });
+
+    const denied = await runBankEntry(world, entry("ans-fact-speed-pikachu"), model(wrongSpeed), clock());
+    expect(denied.stage.kind).toBe("denied");
+    expect(denied.repaired).toBeUndefined();
+
+    const repaired = await runBankEntry(
+      world, entry("ans-fact-speed-pikachu"), model(wrongSpeed), clock(), undefined, 0, false, false, false, true);
+    expect(repaired.stage.kind).toBe("resolved");
+    expect(repaired.score.pass).toBe(true);
+    expect(repaired.repaired).toBe(true);
+    // The filed record carries the certified value, not the model's 42.
+    const fact = repaired.run.transaction!.manifest!.claims.find((claim) => claim.kind === "fact") as
+      | { asserted?: { value?: unknown } } | undefined;
+    expect(fact?.asserted?.value).not.toBe(42);
+  });
+
+  it("repair never touches a fabricated entity, and a mixed denial falls closed", async () => {
+    // IA-3: the named thing does not exist — nothing to strip toward; the
+    // denial stands even with repair on.
+    const fabricated = JSON.stringify({
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "digimon", factId: "base-speed", asserted: { kind: "number", value: 9 } }],
+    });
+    const still = await runBankEntry(
+      world, entry("ans-fact-speed-pikachu"), model(fabricated), clock(), undefined, 0, false, false, false, true);
+    expect(still.stage.kind).toBe("denied");
+    expect(still.repaired).toBeUndefined();
+
+    // Mixed: a repairable mismatch beside a fabricated entity — any
+    // non-repairable violation means no repair; the whole denial files.
+    const mixed = JSON.stringify({
+      rosters: [],
+      claims: [
+        { kind: "fact", entityId: "pikachu", factId: "base-speed", asserted: { kind: "number", value: 42 } },
+        { kind: "fact", entityId: "digimon", factId: "base-speed", asserted: { kind: "number", value: 9 } },
+      ],
+    });
+    const closed = await runBankEntry(
+      world, entry("ans-fact-speed-pikachu"), model(mixed), clock(), undefined, 0, false, false, false, true);
+    expect(closed.stage.kind).toBe("denied");
+    expect(closed.repaired).toBeUndefined();
+  });
+
   it("stamps the pass a repeated run came from", async () => {
     const runs = await runBank(world, [entry("off-weather")], model(""), clock, 2);
     expect(runs[0]!.repetition).toBe(2);

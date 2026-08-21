@@ -62,10 +62,18 @@ function makeClock(): () => string {
 const grounded = args.grounding === "full";
 const retrieval = args.grounding === "retrieval";
 console.log(
-  `[config] model ${model}, grounding ${args.grounding}, grammar ${args.gatedGrammar ? "gated" : "loose"}${args.adversarial ? ", adversarial" : ""}`,
+  `[config] model ${model}, grounding ${args.grounding}, grammar ${args.gatedGrammar ? "gated" : "loose"}, repair ${args.repair ? "on" : "off"}${args.adversarial ? ", adversarial" : ""}`,
 );
 
-runTrace(args.inputs, { world: demoWorld(), provider, now: makeClock(), grounded, retrieval, gatedGrammar: args.gatedGrammar }).then((result) => {
+runTrace(args.inputs, {
+  world: demoWorld(),
+  provider,
+  now: makeClock(),
+  grounded,
+  retrieval,
+  gatedGrammar: args.gatedGrammar,
+  repair: args.repair,
+}).then((result) => {
   for (const line of result.lines) console.log(line);
   process.exit(result.exitCode);
 });

@@ -19,6 +19,7 @@ function run(entryId: string, disposition: Disposition, stage: FunnelStage, pass
     stage,
     score: { pass, reason: "", ...(extra.score ?? {}) },
     turns: extra.turns ?? 1,
+    ...(extra.repaired === undefined ? {} : { repaired: extra.repaired }),
     detail: extra.detail ?? "",
   };
 }
@@ -104,6 +105,26 @@ function report(entryId: string, disposition: Disposition, stageKinds: FunnelSta
   }));
   return { entryId, disposition, phrasings, runs: [], stable: new Set(stageKinds).size === 1 };
 }
+
+describe("post-repair outcomes are named apart (docs/recovery.md accounting)", () => {
+  it("collects repaired entry ids and renders them as their own line", () => {
+    const map = coverageMap([
+      run("fixed-fact", "answerable", { kind: "resolved" }, true, { repaired: true }),
+      run("plain-fact", "answerable", { kind: "resolved" }, true),
+    ]);
+    expect(map.repaired).toEqual(["fixed-fact"]);
+    const page = renderCoverage(map);
+    expect(page).toContain("strip-assertion repair");
+    expect(page).toContain("`fixed-fact`");
+    expect(page).not.toContain("`plain-fact`\`");
+  });
+
+  it("an artifact filed before the repair existed renders without the line", () => {
+    const map = coverageMap([run("plain-fact", "answerable", { kind: "resolved" }, true)]);
+    const { repaired: _repaired, ...legacy } = map;
+    expect(renderCoverage(legacy)).not.toContain("strip-assertion repair");
+  });
+});
 
 describe("robustnessSummary reports whether wording moved the bucket", () => {
   it("counts only entries that carry more than one wording", () => {

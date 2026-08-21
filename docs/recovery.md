@@ -70,16 +70,21 @@ fact without asserting its value, and the kernel then reads the certified value
 itself — the grounded shape (`src/harness/schema.ts`). That makes one repair
 purely deterministic:
 
-- **Open option — strip-assertion resubmit.** On an IA-2/fact-mismatch, the
-  system (not the model) strips the wrong `asserted` value and resubmits the
-  claim name-only. The model's proposal still chose the entity and the fact —
-  the *intent* is its own — but the value now comes from the registry. The
-  player gets the true answer instead of a denial; the mis-recall is still
-  counted (the mismatch happened and is recorded); no verdict ever reaches the
-  model. On-target by construction, because the repaired claim is the same
-  entity and fact the model chose. This is the cleanest unbuilt recovery in the
-  design space, and the §19 residual analysis says it is also the largest: most
-  of the strong model's remaining misses are first-attempt IA-2/IA-3 denials.
+- **Built — strip-assertion resubmit** (`--repair` on the coverage runs, on by
+  default in `session:trace`, `--no-repair` to file the first-attempt denial).
+  On a denial whose violations are *all* IA-2/fact-mismatch, the system (not
+  the model) strips the `asserted` values and re-runs the entire gate once; the
+  claims fall to their name-only shape and the kernel reads the certified
+  values. The model's proposal still chose the entity and the fact — the
+  *intent* is its own — but the value now comes from the registry. The player
+  gets the true answer instead of a denial; the mis-recall stays on the books
+  (the run is marked `repaired`, the coverage map names post-repair outcomes
+  apart); no verdict ever reaches the model. On-target by construction, because
+  the repaired claim is the same entity and fact the model chose. Any other
+  violation in the denial — a fabricated entity beside the mismatch, a gated
+  recommendation — falls closed to the denial exactly as before, and a
+  membership's `asserted` is never stripped (there the assertion *is* the
+  claim). Capped structurally at one repair.
 - **Not repairable here:** IA-3/fabricated-entity. The named thing does not
   exist, and any nearest-neighbour guess would be the *system* fabricating an
   interpretation. That either stays a denial or moves to channel 3.

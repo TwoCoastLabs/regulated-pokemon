@@ -50,6 +50,11 @@ export interface CoverageMap {
   /** `should-refuse` questions that resolved. Must be empty: a non-empty list
    * is a broken enforcement zero, surfaced here, never a usefulness verdict. */
   enforcementEscalations: readonly string[];
+  /** Entries whose outcome followed a strip-assertion repair (docs/recovery.md,
+   * channel 2). Surfaced so post-repair resolutions are never mistaken for
+   * first-attempt ones — the accounting rule that makes the repair safe.
+   * Optional: artifacts filed before the repair existed read unchanged. */
+  repaired?: readonly string[];
 }
 
 function rate(part: number, whole: number): number {
@@ -75,6 +80,7 @@ export function coverageMap(runs: readonly BankRun[]): CoverageMap {
     enforcementEscalations: runs
       .filter((run) => run.score.enforcementEscalation === true)
       .map((run) => run.entryId),
+    repaired: runs.filter((run) => run.repaired === true).map((run) => run.entryId),
   };
 }
 
@@ -136,6 +142,18 @@ export function renderCoverage(map: CoverageMap, heading = "Playability coverage
   if (map.friction.length > 0) {
     lines.push("**Answerable questions that died of scope friction** (the next slice):");
     for (const item of map.friction) lines.push(`- \`${item.entryId}\` — ${item.turns} turns`);
+    lines.push("");
+  }
+
+  // Post-repair outcomes named apart, so a repaired mis-recall can never read
+  // as a first-attempt resolution — the accounting rule of docs/recovery.md.
+  const repaired = map.repaired ?? [];
+  if (repaired.length > 0) {
+    lines.push(
+      `**${repaired.length} outcome(s) followed a strip-assertion repair** — the model mis-recalled a value, ` +
+        `the system stripped the assertion and the kernel read the certified one: ${repaired.map((id) => `\`${id}\``).join(", ")}. ` +
+        "First-attempt, these were IA-2 denials; they are counted apart.",
+    );
     lines.push("");
   }
 

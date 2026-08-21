@@ -71,6 +71,15 @@ describe("dialogueCoverage aggregates turns and prices each conversation", () =>
     expect(needsData.pass).toBe(1);
     expect(coverage.map.enforcementEscalations).toEqual([]);
   });
+
+  it("post-repair turns are named apart in the map and its render", () => {
+    const repairedTurn = { ...turn(0, "answerable", "resolved", true, 2), repaired: true };
+    const coverage = dialogueCoverage([dialogue("fixed", [repairedTurn])]);
+    expect(coverage.map.repaired).toEqual(["fixed#1"]);
+    const page = renderDialogueCoverage(coverage);
+    expect(page).toContain("strip-assertion repair");
+    expect(page).toContain("`fixed#1`");
+  });
 });
 
 describe("renderDialogueCoverage renders from the aggregate", () => {

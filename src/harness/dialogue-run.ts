@@ -69,6 +69,9 @@ export interface DialogueTurnRun {
   /** Model calls this turn made — the per-turn ceremony cost, including any
    * scope clarification the utterance provoked. */
   turns: number;
+  /** True when this turn's outcome followed a strip-assertion repair
+   * (docs/recovery.md, channel 2) — counted apart from first-attempt outcomes. */
+  repaired?: boolean;
   /** One human line on how the turn ended, for the report's detail column. */
   detail: string;
 }
@@ -136,6 +139,7 @@ interface TurnStart {
   notes: number;
   calls: number;
   errors: number;
+  repairs: number;
 }
 
 /**
@@ -203,8 +207,9 @@ export async function runDialogue(
   grounded = false,
   retrieval = false,
   gatedGrammar = false,
+  repair = false,
 ): Promise<RecordedDialogueRun> {
-  const deps: SessionDeps = { world, provider, now, grounded, retrieval, gatedGrammar };
+  const deps: SessionDeps = { world, provider, now, grounded, retrieval, gatedGrammar, repair };
   let state = startSession();
   const turns: RecordedDialogueTurnRun[] = [];
 
@@ -215,6 +220,7 @@ export async function runDialogue(
       notes: state.notes.length,
       calls: state.usage.calls,
       errors: state.providerErrors,
+      repairs: state.repairs,
     };
 
     state = await say(state, turn.say, deps);
@@ -226,7 +232,17 @@ export async function runDialogue(
     // re-verified from the record, a deflection scored a vacuous miss not a
     // broken zero.
     const score = scoreOracle(turn, run, world, stage);
-    turns.push({ turnIndex: index, say: turn.say, disposition: turn.disposition, stage, score, turns: run.turns, detail: run.detail, run });
+    turns.push({
+      turnIndex: index,
+      say: turn.say,
+      disposition: turn.disposition,
+      stage,
+      score,
+      turns: run.turns,
+      ...(state.repairs > start.repairs ? { repaired: true } : {}),
+      detail: run.detail,
+      run,
+    });
   }
 
   return {
@@ -251,10 +267,11 @@ export async function runDialogues(
   grounded = false,
   retrieval = false,
   gatedGrammar = false,
+  repair = false,
 ): Promise<readonly RecordedDialogueRun[]> {
   const runs: RecordedDialogueRun[] = [];
   for (const entry of entries) {
-    runs.push(await runDialogue(world, entry, provider, clock(), grounded, retrieval, gatedGrammar));
+    runs.push(await runDialogue(world, entry, provider, clock(), grounded, retrieval, gatedGrammar, repair));
   }
   return runs;
 }

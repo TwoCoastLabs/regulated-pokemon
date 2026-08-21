@@ -82,6 +82,12 @@ describe("--dialogues arg parsing", () => {
     expect(parseCoverageArgs(["--retrieval", "--gated-grammar"]).errors).toHaveLength(0);
     expect(parseCoverageArgs(["--retrieval", "--gated-grammar"]).gatedGrammar).toBe(true);
   });
+
+  it("accepts --repair, composes it with everything but the robustness pass", () => {
+    expect(parseCoverageArgs(["--repair"]).repair).toBe(true);
+    expect(parseCoverageArgs(["--retrieval", "--gated-grammar", "--repair"]).errors).toHaveLength(0);
+    expect(parseCoverageArgs(["--repair", "--phrasings"]).errors).toHaveLength(1);
+  });
 });
 
 describe("a dry --dialogues run bills nothing", () => {

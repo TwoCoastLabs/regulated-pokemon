@@ -59,6 +59,7 @@ function asBankRuns(runs: readonly RecordedDialogueRun[]): BankRun[] {
       stage: turn.stage,
       score: turn.score,
       turns: turn.turns,
+      ...(turn.repaired === true ? { repaired: true } : {}),
       detail: turn.detail,
     })),
   );
