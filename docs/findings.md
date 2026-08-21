@@ -1700,6 +1700,59 @@ retrieval + gated grammar), `…21-05-19…-coverage.json` (nemo, same).
 
 ---
 
+### Iteration 20 — strip-assertion repair, live: it fires exactly once, and the accounting is the finding
+
+The channel-2 recovery [docs/recovery.md](recovery.md) named is built (`--repair`;
+on by default in `session:trace`): on a denial whose violations are *all*
+IA-2/fact-mismatch, the driver strips the asserted values and re-runs the entire
+gate once, so the claims fall to their name-only shape and the kernel reads the
+certified values. No model call, no verdict fed back; any other violation falls
+closed to the denial; post-repair outcomes are marked (`repaired`) and named
+apart in the map. The 52-set, retrieval + gated grammar + repair:
+
+| | Iter 19 (gated) | Iter 20 (+ repair) | attributable to repair |
+|---|---|---|---|
+| `qwen3-235b` | 41/52 (ans 79%) | 45/52 (ans 88%) | **1 entry** (`data-tm-surf`) |
+| `mistral-nemo` | 31/52 (ans 61%) | 35/52 (ans 64%) | **0 entries** |
+
+**The honest headline is the attribution, not the delta.** The map's `repaired`
+list shows the mechanism converted exactly one miss: `data-tm-surf` on
+`qwen3-235b` — a mis-recalled TM fact, first-attempt an IA-2 denial, now the
+certified value with the repair on the books. On `mistral-nemo` it converted
+*nothing*: its IA-2 denials were `uncertified-fact`, not `fact-mismatch`, and
+the strict rule correctly refused to fire. Everything else in the ±deltas
+(7 fixed / 3 broke on each model, disjoint sets) is N=1 provider
+nondeterminism (§6). Without the separate accounting, this iteration would have
+been written up as "repair fixed seven entries per model" — **which is false**,
+and the instrument is what made the false claim unmakeable. The accounting rule
+the recovery doctrine demanded (first-attempt and post-repair never blended)
+earned its keep on its very first live run, by preventing this log's own
+overstatement.
+
+**The mechanism's boundary is its result.** The repair fired only where the
+doctrine permits — a named fact with a mis-recalled value — and the residual it
+cannot touch is now visibly dominated by **IA-3/fabricated-entity**: the model
+naming things the snapshot does not certify. That is unrepairable *by design*
+(any nearest-neighbour guess would be the system fabricating an interpretation),
+and it points at the next recovery lever the doctrine already names: channel 3,
+a clarifying "did you mean X?" proposal whose confirmation a human commits —
+the scope ladder's pattern, applied to entities.
+
+**Enforcement: hard zero, both models, again** — across a run whose whole point
+was re-submitting denied drafts. The repaired draft re-enters the entire gate,
+and nothing gated, fabricated, or unauthorized rode a repair through. Cost
+stayed at pennies ($0.035 / $0.016 per 52).
+
+The arc across the three instrument slices, one line: `qwen3-235b`
+33 → 41 → 45 of 52 (answerable 61% → 79% → 88%), `mistral-nemo` 22 → 31 → 35
+(36% → 61% → 64%), enforcement zero at every step — with each step's *cause*
+named and its noise counted apart. N=1 per leg; the trend is the robust part.
+
+Provenance: `runs/coverage/2026-08-21T04-34-22…-coverage.json` (qwen, 52,
+retrieval + gated grammar + repair), `…04-44-04…-coverage.json` (nemo, same).
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's
