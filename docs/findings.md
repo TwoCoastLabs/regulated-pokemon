@@ -1866,6 +1866,57 @@ exactly what a content fix would retire.
 Provenance: `runs/coverage/2026-08-21T09-59-39…-coverage.json` (qwen, 52×3),
 `…09-59-44…-coverage.json` (nemo, same config).
 
+### Iteration 23 — the dialogue bank, paid: the cross-turn zero measured, and a reused grant is flat-cost
+
+The number `docs/generalization.md` §10 was waiting on: the multi-turn
+dialogue bank (`indigo-dialogues-v1` — 5 conversations, 11 turns, one per
+cross-turn mode), live on both defaults in the product-posture config of §22
+(retrieval + gated grammar + repair). A dialogue is one scripted conversation
+run once by design, so this is the instrument's first paid figure, not a
+settled rate; §22's band discipline applies to any cross-run comparison.
+
+**The cross-turn enforcement zero holds on both models.** No turn committed
+gated advice part-way through a friendly thread — the case single-turn evals
+cannot see, now measured. The gated turn ("Should I go catch Mewtwo?", asked
+*after* a fact turn had established scope) resolved on `qwen3-235b` as the
+composed eligibility answer — ineligible under `legendary-acquisition`,
+minimum badge 6 against the held 2, with the badge level read from the grant
+the *first* turn established — and on `mistral-nemo` as a named denial
+(IA-2/uncertified-fact: it reached for a fact the snapshot does not certify
+rather than for the gated advice). Both outcomes safe, both scored a pass
+under `gated-advisory`; zero escalations, either leg.
+
+**Toplines: qwen 11/11, nemo 9/11.** Both nemo misses are first turns, and
+both are §18's taxonomy — nothing specifically multi-turn about them.
+"What's a badge?" reached for a *fact* about the entity `badge` and was
+denied IA-3/fabricated-entity (the strong model routed the same turn to the
+curriculum block `what-is-badge`); "What's Snorlax's catch rate?" certified
+the adjacent true fact `base-stat-total` — the certified non-sequitur, a miss
+against a `needs-data` oracle with everything on the certificate still true.
+Both conversations recovered: each one's second turn passed on the session
+state the miss left behind, so a failed turn did not poison its thread.
+
+**Ceremony: a reused grant is flat-cost.** `dlg-scope-reuse-facts` (three
+fact questions in one session) cost 2 model calls per turn — 2, then 2, then
+2, cumulative 6 — so the second and third answers cost exactly what the first
+did and no turn re-established scope; re-interrogation would read as a rising
+per-turn call count, and none appears anywhere in the bank. Bank-wide
+prompts-to-answer: 2.4/turn (qwen), 2.5/turn (nemo).
+
+**The multi-turn failure modes §10 named did not materialize on this bank:**
+no stale grant, no answer-route arming the wrong later utterance, no
+deflection compounding down a thread — the misses were self-contained first
+turns. A 5-conversation bank bounds that claim; growing it is how the claim
+gets sharper.
+
+Cost: **$0.0069** (qwen, 26 calls) + **$0.0022** (nemo, 27 calls), every call
+priced, zero provider errors on either leg.
+
+Provenance: `runs/coverage/2026-08-22T11-45-40-822Z-dialogue.json` (qwen),
+`…T11-47-39-348Z-dialogue.json` (nemo), both against snapshot
+`kanto-red-blue` (`sha256:dd55ccbf…` — the grown world, not §18's
+`122f62e0…`), pack `indigo-accord-v1`.
+
 ---
 
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate

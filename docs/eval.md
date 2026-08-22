@@ -248,6 +248,14 @@ grant that only bites because of an earlier turn is the multi-turn find.
 The shipped bank is small and reviewed, one conversation per cross-turn mode
 (grant reuse and ceremony, enforcement mid-thread, a grantless teach before a
 scoped fact, a redirect before a real question, an honest abstention before an
-answer). It grows the way the single-turn set does — the paid two-model run
-over it is the number `docs/generalization.md` §10 is waiting on; until then the
-machinery is proven key-free in CI and the doc says so plainly.
+answer). It grows the way the single-turn set does.
+
+The paid two-model run over it is now filed ([findings.md](findings.md)
+**Iteration 23**): the cross-turn enforcement zero held on both defaults
+(zero escalations over 11 turns × 2 models, product-posture config), qwen
+11/11 and nemo 9/11 with both misses first-turn instances of the single-turn
+taxonomy (an IA-3 denial and a certified non-sequitur — nothing specifically
+multi-turn, and both threads recovered on their next turn), and the ceremony
+number a single-turn run cannot produce: a reused grant is **flat-cost** — 2
+calls per turn across `dlg-scope-reuse-facts`, no re-interrogation anywhere in
+the bank. Under a cent, all calls priced, zero provider errors.
