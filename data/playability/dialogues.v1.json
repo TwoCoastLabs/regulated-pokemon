@@ -11,18 +11,21 @@
           "say": "What's Pikachu's Speed stat?",
           "disposition": "answerable",
           "expectClaimKinds": ["fact"],
+          "expectFacts": [{ "entityId": "pikachu", "factId": "base-speed" }],
           "notes": "The first substantive ask — establishes version/region/badge through the answer route, then resolves a certified species fact."
         },
         {
           "say": "And Machamp's Attack?",
           "disposition": "answerable",
           "expectClaimKinds": ["fact"],
+          "expectFacts": [{ "entityId": "machamp", "factId": "base-attack" }],
           "notes": "Scope is already established; a well-behaved thread answers this without re-asking. If the model re-runs the whole intake, the calls/turn column exposes it."
         },
         {
           "say": "What is Onix's Defense?",
           "disposition": "answerable",
           "expectClaimKinds": ["fact"],
+          "expectFacts": [{ "entityId": "onix", "factId": "base-defense" }],
           "notes": "A third fact under the same reused grant — the marginal question in a settled conversation."
         }
       ]
@@ -36,6 +39,7 @@
           "say": "What's Pikachu's Speed stat?",
           "disposition": "answerable",
           "expectClaimKinds": ["fact"],
+          "expectFacts": [{ "entityId": "pikachu", "factId": "base-speed" }],
           "notes": "A plain fact, resolvable at any badge — facts are not badge-gated."
         },
         {
@@ -62,6 +66,7 @@
           "say": "What's Pikachu's Speed stat?",
           "disposition": "answerable",
           "expectClaimKinds": ["fact"],
+          "expectFacts": [{ "entityId": "pikachu", "factId": "base-speed" }],
           "notes": "A scoped fact right after a grantless teach — scope must still be gathered and the fact resolve."
         }
       ]
@@ -80,6 +85,7 @@
           "say": "What is Onix's Defense?",
           "disposition": "answerable",
           "expectClaimKinds": ["fact"],
+          "expectFacts": [{ "entityId": "onix", "factId": "base-defense" }],
           "notes": "A real fact after the redirect — must establish scope and resolve, uncorrupted by the turn before it."
         }
       ]
@@ -98,6 +104,7 @@
           "say": "How much Attack does Machamp have?",
           "disposition": "answerable",
           "expectClaimKinds": ["fact"],
+          "expectFacts": [{ "entityId": "machamp", "factId": "base-attack" }],
           "notes": "A resolvable fact after the abstention — proof the thread recovers and the reader reads this turn's record, not the last one."
         }
       ]

@@ -237,3 +237,50 @@ describe("the routing oracle is validated like every other oracle", () => {
     }
   });
 });
+
+describe("the subject oracle is validated like the routing oracle (epic #87, slice 1)", () => {
+  function speedEntry(draft: QuestionBank) {
+    return draft.entries.find((entry) => entry.id === "ans-fact-speed-pikachu")! as {
+      expectFacts?: readonly { entityId: string; factId?: string }[];
+    };
+  }
+
+  it("refuses a fact entry with no acceptable fact — the subject deflection would be unmeasurable", () => {
+    expect(loadWith((draft) => delete speedEntry(draft).expectFacts)).toThrowError(/bank-facts-missing/);
+  });
+
+  it("refuses facts on an entry that expects no fact", () => {
+    expect(
+      loadWith((draft) => {
+        const entry = draft.entries.find((e) => e.id === "meta-what-is-badge")! as {
+          expectFacts?: readonly { entityId: string }[];
+        };
+        entry.expectFacts = [{ entityId: "pikachu" }];
+      }),
+    ).toThrowError(/bank-facts-unexpected/);
+  });
+
+  it("refuses an acceptable fact with no entity, and an empty fact id", () => {
+    expect(loadWith((draft) => (speedEntry(draft).expectFacts = [{ entityId: " " }]))).toThrowError(/bank-fact-empty/);
+    expect(loadWith((draft) => (speedEntry(draft).expectFacts = [{ entityId: "pikachu", factId: " " }]))).toThrowError(
+      /bank-fact-empty/,
+    );
+  });
+
+  it("every acceptable fact the bank names is certified by the snapshot", () => {
+    // The loader cannot see the snapshot; this pin can. An oracle naming an
+    // uncertified fact would score every on-target answer as a deflection.
+    const { registry } = demoWorld();
+    for (const entry of bank.entries) {
+      for (const want of entry.expectFacts ?? []) {
+        if (want.factId === undefined) {
+          const known = registry.findSpecies(want.entityId) !== undefined || registry.findMove(want.entityId) !== undefined;
+          expect(known, `${entry.id} names unknown entity ${want.entityId}`).toBe(true);
+        } else {
+          const resolved = registry.resolve(want.entityId, want.factId);
+          expect(resolved.ok, `${entry.id} names uncertified fact ${want.entityId}/${want.factId}`).toBe(true);
+        }
+      }
+    }
+  });
+});

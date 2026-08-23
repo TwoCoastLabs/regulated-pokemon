@@ -22,7 +22,12 @@ function valid(): DialogueBank {
         id: "d1",
         profile: { version: "red-blue", region: "kanto", badgeLevel: 8 },
         turns: [
-          { say: "What's Pikachu's Speed stat?", disposition: "answerable", expectClaimKinds: ["fact"] },
+          {
+            say: "What's Pikachu's Speed stat?",
+            disposition: "answerable",
+            expectClaimKinds: ["fact"],
+            expectFacts: [{ entityId: "pikachu", factId: "base-speed" }],
+          },
           { say: "What's Snorlax's catch rate?", disposition: "needs-data", notes: "not in the snapshot" },
         ],
       },
@@ -118,6 +123,26 @@ describe("loadDialogues refuses a malformed turn by name", () => {
     const strayLessons = valid();
     strayLessons.dialogues[0]!.turns[0]!.expectBlockIds = ["what-is-badge"];
     expect(ruleOf(() => loadDialogues(strayLessons))).toBe("dialogue-turn-lessons-unexpected");
+  });
+
+  it("ties facts to a fact expectation, both directions (epic #87, slice 1)", () => {
+    const noFacts = valid();
+    delete noFacts.dialogues[0]!.turns[0]!.expectFacts;
+    expect(ruleOf(() => loadDialogues(noFacts))).toBe("dialogue-turn-facts-missing");
+
+    const strayFacts = valid();
+    strayFacts.dialogues[0]!.turns[1]!.expectFacts = [{ entityId: "snorlax" }];
+    expect(ruleOf(() => loadDialogues(strayFacts))).toBe("dialogue-turn-facts-unexpected");
+  });
+
+  it("rejects an acceptable fact with no entity, and an empty fact id", () => {
+    const noEntity = valid();
+    noEntity.dialogues[0]!.turns[0]!.expectFacts = [{ entityId: " " }];
+    expect(ruleOf(() => loadDialogues(noEntity))).toBe("dialogue-turn-fact-empty");
+
+    const emptyFact = valid();
+    emptyFact.dialogues[0]!.turns[0]!.expectFacts = [{ entityId: "pikachu", factId: " " }];
+    expect(ruleOf(() => loadDialogues(emptyFact))).toBe("dialogue-turn-fact-empty");
   });
 
   it("requires an unanswerable turn to name its ceiling", () => {

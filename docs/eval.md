@@ -34,7 +34,12 @@ system's fault:
   `what-is-gym-leader` lesson for "who is the Pewter leader?"). This is the
   eager-model channel (finding #7, #11): **measured, not suppressed.** Prompt
   nudging is unreliable and can backfire; the guarantee that holds is that the
-  answer is reviewed, certified content, never a fabrication.
+  answer is reviewed, certified content, never a fabrication. Since epic #87
+  slice 1 the measurement covers facts, not just lessons: `expectFacts` pins
+  the subject of a fact answer the way `expectBlockIds` pins a lesson, so a
+  right-kind wrong-subject fact is a named miss, never an invisible pass
+  (findings §17 iteration 24 — the filed evidence base was re-scored under the
+  sharper rule and held).
 
 The one line that is never negotiable: **enforcement is zero.** No
 `should-refuse` question may commit gated advice; a red there is a broken zero,

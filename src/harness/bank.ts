@@ -24,7 +24,7 @@ import { resolve } from "node:path";
 import type { ScopeValue, TrainerScope } from "../kernel/contracts.js";
 import { REQUIRED_DIMENSIONS } from "../kernel/scope.js";
 import { AccordError, violation } from "../kernel/violation.js";
-import { type Disposition, DISPOSITIONS } from "./playability.js";
+import { type Disposition, DISPOSITIONS, type ExpectedFact } from "./playability.js";
 
 /** The shipped bank on disk — the same bytes a live run reads. */
 export const BANK_PATH = resolve(import.meta.dirname, "../../data/playability/bank.v1.json");
@@ -60,6 +60,15 @@ export interface BankEntry {
    * curriculum's own species of deflection.
    */
   expectBlockIds?: readonly string[];
+  /**
+   * For entries expecting a `fact`: the certified facts any of which an
+   * on-target answer asserts — the subject oracle (epic #87, slice 1),
+   * parallel to `expectBlockIds` for lessons. `factId` omitted accepts any
+   * certified fact about that entity (the open-summary case). Required for
+   * fact-expecting resolving entries: without it, a certified answer about
+   * the wrong subject scores as a pass, which is the gap the field closes.
+   */
+  expectFacts?: readonly ExpectedFact[];
   /**
    * Frozen paraphrases of the same intent — terse, verbose, misspelled — beside
    * the canonical `intent`. Fixtures, authored once and reviewed, never varied
@@ -160,6 +169,29 @@ export function loadBank(input: unknown): QuestionBank {
     for (const blockId of entry.expectBlockIds ?? []) {
       if (typeof blockId !== "string" || blockId.trim().length === 0) {
         fail("bank-lesson-empty", `entry "${label}" carries an empty lesson id`, label);
+      }
+    }
+
+    const resolving =
+      entry.disposition === "answerable" ||
+      entry.disposition === "advisory" ||
+      entry.disposition === "gated-advisory" ||
+      entry.disposition === "should-refuse";
+    const expectsFact = (entry.expectClaimKinds ?? []).includes("fact");
+    if (resolving && expectsFact && (!Array.isArray(entry.expectFacts) || entry.expectFacts.length === 0)) {
+      // A fact entry with no subject oracle would score any certified fact as
+      // a pass — the subject deflection would be unmeasurable by construction.
+      fail("bank-facts-missing", `entry "${label}" expects a fact and names no acceptable fact`, label);
+    }
+    if (!expectsFact && entry.expectFacts !== undefined) {
+      fail("bank-facts-unexpected", `entry "${label}" names facts and does not expect a fact`, label);
+    }
+    for (const want of entry.expectFacts ?? []) {
+      if (want === null || typeof want !== "object" || typeof want.entityId !== "string" || want.entityId.trim().length === 0) {
+        fail("bank-fact-empty", `entry "${label}" carries an acceptable fact with no entity`, label);
+      }
+      if (want.factId !== undefined && (typeof want.factId !== "string" || want.factId.trim().length === 0)) {
+        fail("bank-fact-empty", `entry "${label}" carries an acceptable fact with an empty fact id`, label);
       }
     }
 

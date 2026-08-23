@@ -31,7 +31,7 @@ import type { ScopeValue, TrainerScope } from "../kernel/contracts.js";
 import { REQUIRED_DIMENSIONS } from "../kernel/scope.js";
 import { AccordError, violation } from "../kernel/violation.js";
 import { type ClaimKind, CLAIM_KINDS } from "./bank.js";
-import { type Disposition, DISPOSITIONS } from "./playability.js";
+import { type Disposition, DISPOSITIONS, type ExpectedFact } from "./playability.js";
 
 /** The shipped dialogue bank on disk — the same bytes a live run reads. */
 export const DIALOGUE_BANK_PATH = resolve(import.meta.dirname, "../../data/playability/dialogues.v1.json");
@@ -58,6 +58,10 @@ export interface DialogueTurn {
    * answers it — the routing oracle. A committed lesson outside this list is a
    * mis-teach, scored as a deflection like everywhere else. */
   expectBlockIds?: readonly string[];
+  /** For a turn expecting a `fact`: the certified facts any of which an
+   * on-target answer asserts — the subject oracle (epic #87, slice 1), exactly
+   * as in the single-turn bank. */
+  expectFacts?: readonly ExpectedFact[];
   /** Why this disposition, in this position. Required for the unanswerable
    * dispositions, where it names the ceiling; useful everywhere to say what the
    * *cross-turn* point of the turn is (a reused grant, a stale one, a
@@ -186,6 +190,22 @@ function validateTurn(
   for (const blockId of turn.expectBlockIds ?? []) {
     if (typeof blockId !== "string" || blockId.trim().length === 0) {
       fail("dialogue-turn-lesson-empty", `turn ${where} carries an empty lesson id`, where);
+    }
+  }
+
+  const expectsFact = (turn.expectClaimKinds ?? []).includes("fact");
+  if (NAMES_CLAIM_KINDS.includes(turn.disposition) && expectsFact && (!Array.isArray(turn.expectFacts) || turn.expectFacts.length === 0)) {
+    fail("dialogue-turn-facts-missing", `turn ${where} expects a fact and names no acceptable fact`, where);
+  }
+  if (!expectsFact && turn.expectFacts !== undefined) {
+    fail("dialogue-turn-facts-unexpected", `turn ${where} names facts and does not expect a fact`, where);
+  }
+  for (const want of turn.expectFacts ?? []) {
+    if (want === null || typeof want !== "object" || typeof want.entityId !== "string" || want.entityId.trim().length === 0) {
+      fail("dialogue-turn-fact-empty", `turn ${where} carries an acceptable fact with no entity`, where);
+    }
+    if (want.factId !== undefined && (typeof want.factId !== "string" || want.factId.trim().length === 0)) {
+      fail("dialogue-turn-fact-empty", `turn ${where} carries an acceptable fact with an empty fact id`, where);
     }
   }
 

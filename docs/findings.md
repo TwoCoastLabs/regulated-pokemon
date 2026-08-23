@@ -1917,6 +1917,52 @@ Provenance: `runs/coverage/2026-08-22T11-45-40-822Z-dialogue.json` (qwen),
 `kanto-red-blue` (`sha256:dd55ccbf…` — the grown world, not §18's
 `122f62e0…`), pack `indigo-accord-v1`.
 
+### Iteration 24 — the subject oracle: "resolved" now means "answered the question", and the filed evidence passes it
+
+The first slice of the measurement epic (#87), driven by a metrics audit
+rather than a live run: the scorer verified that a resolution committed the
+expected claim *kinds*, never that the claim was about the right *thing*.
+"What's Pikachu's Speed?" answered with a certified fact about Pikachu's
+Attack — true, grounded, wrong question — scored as a pass, and the
+answerable headline could in principle be earned by right-kind wrong-subject
+answers. The certified non-sequitur was already instrumented on `needs-data`
+questions (where any resolution is a fail, §18) and on lessons
+(`expectBlockIds`, the mis-teach rule); facts — the biggest bucket — had no
+subject oracle at all.
+
+**The fix is the same move the curriculum got.** Fact-expecting entries now
+carry `expectFacts` — the certified `(entity, fact)` pairs any of which an
+on-target answer asserts, with `factId` omitted accepting any fact about the
+entity (the open-summary oracle). One-way pass→fail in `scoreOracle`,
+parallel to the mis-teach and shape overrides: a resolution whose certificate
+carries no accepted fact is a **subject deflection** — the name the failure
+taxonomy already used, now measured for facts. An answer that rode a
+different expected kind (the Zapdos question passing on a membership) is
+judged by that kind's own oracle, never failed here. The loader requires the
+oracle on every fact-expecting resolving entry — without it the deflection is
+unmeasurable by construction — and a test pins every authored pair to the
+snapshot, so the oracle itself cannot name an uncertified fact. Thirty bank
+entries and seven dialogue turns authored and reviewed.
+
+**The free probe: the filed evidence base re-scored, zero flips.** Every
+resolved pass in the current-bank artifacts — 101 (qwen 52×3) + 65 (nemo
+52×3) single-turn samples from §22's runs, plus 9 + 7 dialogue turns from
+§23's — re-scored under the sharper rule: **182 of 182 stay passes.** No
+off-target certification was hiding in a "resolved" bucket, so §22's bands
+and §23's toplines survive unchanged — which is the good outcome for the
+numbers and the necessary outcome for the instrument: the gap was real (the
+scorer *could not* see this miss), and now there is a measurement where
+there was an assumption. Scope stated honestly: the probe covers artifacts
+whose entries match the current bank; §18's 08-17 legs are excluded because
+the bank's dispositions have since changed under them, and re-scoring a
+record against an oracle authored for a different question would not be a
+result.
+
+Provenance: scorer at this commit over
+`runs/coverage/2026-08-21T09-59-39-441Z-coverage.json`,
+`…09-59-44-646Z-coverage.json`, `…2026-08-22T11-45-40-822Z-dialogue.json`,
+`…T11-47-39-348Z-dialogue.json`; zero model calls, zero dollars.
+
 ---
 
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate

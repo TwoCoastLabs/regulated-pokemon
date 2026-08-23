@@ -76,6 +76,23 @@ describe("runBankEntry buckets each disposition through the real session", () =>
     expect(run.score.reason).toContain("shape deflection");
   });
 
+  it("a certified fact on the wrong subject resolves, but scores a subject deflection (epic #87, slice 1)", async () => {
+    // The model answers "What's Pikachu's Speed?" with Pikachu's Attack — a
+    // certified, true, wrong-subject fact the funnel calls resolved. Before the
+    // subject oracle this rode the "resolved" bucket into the headline number.
+    const resolved = world.registry.resolve("pikachu", "base-attack");
+    if (!resolved.ok) throw new Error("pikachu base-attack did not resolve");
+    const wrongSubject = JSON.stringify({
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "pikachu", factId: "base-attack", asserted: resolved.value }],
+    });
+    const run = await runBankEntry(world, entry("ans-fact-speed-pikachu"), model(wrongSubject), clock());
+    expect(run.stage.kind).toBe("resolved");
+    expect(run.score.pass).toBe(false);
+    expect(run.score.subjectDeflection).toBe(true);
+    expect(run.score.reason).toContain("subject deflection");
+  });
+
   it("a needs-data question is a pass when the model does not certify it", async () => {
     // Berries remain genuinely absent — slice 3 vendored evolutions,
     // encounters and machines, not items.
