@@ -353,15 +353,13 @@ describe("the gate, live in the loop", () => {
     expect(record.outcome.stage).toBe("answer");
     expect(record.outcome.violations.some((entry) => entry.article === "IA-2")).toBe(true);
 
-    // The kernel's existing replay boundary, stated rather than papered over:
-    // a denial at the answer stage kept the violations, not the refused draft
-    // (a Transaction carries what was *certified*; the harness keeps the draft
-    // beside its records as `proposedClaims`). Replay therefore refuses it as
-    // incomplete — the ledger's replayability claim is about committed
-    // exchanges, here exactly as in a harness run.
-    const verdict = verifyReplay(world, record);
-    expect(verdict.allowed).toBe(false);
-    expect(verdict.violations.some((entry) => entry.rule === "record-incomplete")).toBe(true);
+    // The boundary this test used to state — a denial at the answer stage did
+    // not replay, because the record kept the violations but not the refused
+    // draft — closed with epic #87 slice 2b: the draft is a recorded input
+    // now, replay re-compiles it, and a denial verdict is as reproducible as
+    // an answered one.
+    expect(record.refused).toBeDefined();
+    expect(verifyReplay(world, record)).toEqual({ allowed: true, violations: [] });
   });
 });
 

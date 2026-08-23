@@ -41,6 +41,15 @@ const actPlan: AnswerPlan = (context, transactionId) => {
   };
 };
 
+/** A plan compilation refuses: a fact about an entity the snapshot does not
+ * certify. The denial this produces carries the refused draft, not a manifest
+ * (epic #87, slice 2b). */
+const fabricatingPlan: AnswerPlan = (_context, transactionId) => ({
+  transactionId,
+  rosters: [],
+  claims: [{ kind: "fact", entityId: "missingno", factId: "base-speed" }],
+});
+
 function trainerConfirms(artifact: DomElement): ConfirmationEvent {
   const seen = walkArtifact(artifact);
   return {
@@ -65,7 +74,7 @@ function world() {
 }
 
 /** An honest exchange, filed through the kernel's own front door. */
-function file(id: string, transcript = trainerTranscript(), required = REQUIRED): Transaction {
+function file(id: string, transcript = trainerTranscript(), required = REQUIRED, chosenPlan: AnswerPlan = plan): Transaction {
   return runTransaction({
     id,
     registry: kantoRegistry(),
@@ -75,7 +84,7 @@ function file(id: string, transcript = trainerTranscript(), required = REQUIRED)
     committedAt: COMMIT_TIME,
     locale: LOCALE,
     required,
-    plan,
+    plan: chosenPlan,
   });
 }
 
@@ -113,6 +122,17 @@ describe("a genuine record reproduces bit-for-bit", () => {
       { kind: "utterance", at: ISSUED_AT, source: "trainer", text: "Which is quickest?" },
     ]);
     expect(record.outcome.status).toBe("clarifying");
+
+    const replayed = replayTransaction(world(), record);
+    expect(canonicalDigest(replayed)).toBe(canonicalDigest(record));
+    expect(verifyReplay(world(), record)).toEqual({ allowed: true, violations: [] });
+  });
+
+  it("replays a denial that refused a draft to the identical record (epic #87, slice 2b)", () => {
+    const record = file("txn-refused", trainerTranscript(), REQUIRED, fabricatingPlan);
+    expect(record.outcome.status).toBe("denied");
+    expect(record.manifest).toBeUndefined();
+    expect(record.refused).toBeDefined();
 
     const replayed = replayTransaction(world(), record);
     expect(canonicalDigest(replayed)).toBe(canonicalDigest(record));
@@ -172,6 +192,30 @@ describe("replay refuses to invent what the record does not carry", () => {
     const verdict = verifyReplay(world(), withoutManifest as Transaction);
     expect(verdict.allowed).toBe(false);
     expect(verdict.violations.map(denialCode)).toContain("IA-10/record-incomplete");
+  });
+
+  it("a denial stripped of its refused draft is incomplete, by name (epic #87, slice 2b)", () => {
+    const record = file("txn-stripped-draft", trainerTranscript(), REQUIRED, fabricatingPlan);
+    const { refused: _shredded, ...withoutDraft } = record;
+
+    const verdict = verifyReplay(world(), withoutDraft as Transaction);
+    expect(verdict.allowed).toBe(false);
+    expect(verdict.violations.map(denialCode)).toContain("IA-10/record-incomplete");
+  });
+
+  it("a doctored draft that now compiles clean does not reproduce the filed denial", () => {
+    // The forger swaps the refused draft for a certifiable one, hoping the
+    // denial reads as the kernel's fault. Replay honestly answers the doctored
+    // draft, and the digest comparison names the disagreement.
+    const record = file("txn-doctored-draft", trainerTranscript(), REQUIRED, fabricatingPlan);
+    const doctored: Transaction = {
+      ...record,
+      refused: { ...record.refused!, claims: [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }] },
+    };
+
+    const verdict = verifyReplay(world(), doctored);
+    expect(verdict.allowed).toBe(false);
+    expect(verdict.violations.map(denialCode)).toContain("IA-10/verdict-not-reproduced");
   });
 
   it("refuses an acted record that kept no artifact — the page cannot be re-rendered", () => {

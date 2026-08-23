@@ -162,6 +162,16 @@ export interface Transaction {
   grant?: ScopeGrant;
   manifest?: AnswerManifest;
   /**
+   * The draft the answer stage refused, recorded exactly as submitted — when
+   * compilation itself refuses, no manifest ever exists, and without the
+   * draft the denial verdict cannot be re-derived from the record (IA-10;
+   * epic #87 slice 2b — the first replay sweep found 176 such records).
+   * Kept apart from `manifest` on purpose: a refused draft is hostile input
+   * a replay re-compiles, never a certificate anything downstream may read
+   * values from.
+   */
+  refused?: ManifestDraft;
+  /**
    * The act path's record, present exactly when the exchange entered it. The
    * artifact and the confirmation are the two inputs a replay cannot re-derive
    * — the renderer is untrusted and the trainer is a person — so both travel
@@ -264,11 +274,13 @@ export function runTransaction(input: TransactionInput): Transaction {
   // returning it, so this resolution *is* the verification result. Re-running
   // the verifier here would check the same function's answer twice and prove
   // nothing the first call did not.
-  const compiled = compileManifest(context, input.plan(context, input.id));
+  const draft = input.plan(context, input.id);
+  const compiled = compileManifest(context, draft);
   if (!compiled.ok) {
     return {
       ...record,
       grant: scope.grant,
+      refused: draft,
       verdicts: [scopeVerdict, { stage: "answer", verdict: verdictOf(compiled.violations) }],
       outcome: { status: "denied", stage: "answer", violations: compiled.violations },
     };
