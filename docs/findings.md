@@ -1963,6 +1963,51 @@ Provenance: scorer at this commit over
 `…09-59-44-646Z-coverage.json`, `…2026-08-22T11-45-40-822Z-dialogue.json`,
 `…T11-47-39-348Z-dialogue.json`; zero model calls, zero dollars.
 
+### Iteration 25 — replay as a metric step: 860 verdicts re-derived, and the recorder gap the first sweep caught
+
+Slice 2 of the measurement epic (#87). The zeros for gated advice and
+unauthorized actions were already re-verified from records, but the
+fabrication and wrong-scope zeros rested on the kernel that ran in the same
+process that filed the artifact — the referee was also the scorekeeper.
+Every artifact has been replayable by construction since phase 6; nothing
+routinely replayed them. Now CI does (`verify-runs`): every filed artifact
+whose pinned world the tree reproduces is re-executed, key-free — each
+transaction through `verifyReplay`, each run's committed claims re-read
+against the pack — and the leg carries its own theater check: a filed fact
+with its asserted value doctored must come back with a named violation, or
+the sweep itself fails.
+
+**The result: 30 artifacts, 860 transactions re-executed, zero
+disagreements.** Every re-derived verdict matches the filed one, so the
+published zeros over the current world's evidence base are now earned twice
+— once by the process that produced them, once by one that had no hand in
+it. Thirteen artifacts are skipped, counted and named: they pin the two
+superseded snapshot digests (`122f62e0…`, `2519b032…` — the §18-era world,
+before the content slices grew it), so their numbers stay traceable to their
+records but are no longer re-executable against this tree. That boundary is
+IA-10's own third breakage class, reported instead of silently passed over.
+
+**The catch, on the sweep's very first run: 176 denial records are
+unreplayable.** `IA-10/record-incomplete`, every one the same shape — denied
+at the answer stage, no manifest in the record. The cause is a seam
+mismatch: the completeness rule was written for the crucible seam, where a
+denied answer always keeps the (doctored) manifest it refused; but when the
+*session* seam denies, it is usually compilation itself refusing the model's
+draft — no manifest ever existed to record, and the refused draft is not
+filed either. The denials are real and nothing enforcement-shaped weakened;
+what is missing is their *reproducibility*: a denial verdict cannot be
+re-derived from the record alone, which is precisely the property IA-10
+promises. The sweep counts this class apart (never folded into failures, per
+the no-silent-caps rule), and slice 2b now owes the recorder fix: file the
+refused draft as a recorded input, teach replay to re-compile it, and then
+remove the tolerance so an incomplete denial goes back to being a hard
+failure. An instrument built to harden the zeros instead caught the recorder
+— which is the measurement story working.
+
+Provenance: the sweep runs in `npm test`
+(`src/harness/verify-runs.test.ts`) and prints its counts and skip list on
+every run; zero model calls, zero dollars.
+
 ---
 
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
