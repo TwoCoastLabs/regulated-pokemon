@@ -35,8 +35,10 @@ import {
   type Disposition,
   type DispositionScore,
   eligibilityAnswered,
+  type ExpectedFact,
   type FunnelStage,
   funnelOf,
+  resolvedOnFact,
   resolvedOnShape,
   routedLesson,
   scoreDisposition,
@@ -112,6 +114,10 @@ export interface DispositionOracle {
   disposition: Disposition;
   expectClaimKinds?: readonly ClaimKind[];
   expectBlockIds?: readonly string[];
+  /** For entries expecting a `fact`: the certified facts any of which an
+   * on-target answer asserts — the subject oracle, parallel to
+   * `expectBlockIds` for lessons (epic #87, slice 1). */
+  expectFacts?: readonly ExpectedFact[];
 }
 
 /**
@@ -144,7 +150,27 @@ export function scoreOracle(oracle: DispositionOracle, run: HarnessRun, world: D
       shapeDeflection: true,
     };
   }
+  // The subject check (epic #87, slice 1): the right shape came back, but was
+  // it about the right thing? An answer that rode a *different* expected kind
+  // (the Zapdos question passing on a membership) is judged by that kind's own
+  // oracle, never failed here for lacking a fact it did not need.
+  if (!resolvedOnFact(run, oracle.expectFacts) && !answeredThroughOtherKind(run, oracle.expectClaimKinds)) {
+    return {
+      pass: false,
+      reason: "resolved, but no certified fact this question accepts — right shape, wrong subject (a subject deflection)",
+      subjectDeflection: true,
+    };
+  }
   return score;
+}
+
+/** Whether the certificate carries a claim of an expected kind other than
+ * `fact` — the escape hatch that keeps the subject check from failing an
+ * answer the question accepts through another route. */
+function answeredThroughOtherKind(run: HarnessRun, expected: readonly ClaimKind[] | undefined): boolean {
+  const manifest = run.transaction?.manifest;
+  if (manifest === undefined || expected === undefined) return false;
+  return manifest.claims.some((claim) => claim.kind !== "fact" && expected.includes(claim.kind));
 }
 
 /** Drive the session to a settled state, answering as the trainer would. The

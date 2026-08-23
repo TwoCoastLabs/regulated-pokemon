@@ -176,6 +176,42 @@ export function routedLesson(run: HarnessRun, acceptable: readonly string[] | un
 }
 
 /**
+ * One certified fact an on-target answer may assert: an entity, and optionally
+ * the specific fact about it. `factId` omitted means any certified fact about
+ * that entity answers the question — the oracle for an open summary, where
+ * pinning one fact id would be the bank guessing the model's composition.
+ */
+export interface ExpectedFact {
+  entityId: string;
+  factId?: string;
+}
+
+/**
+ * Whether a resolved run's certificate carries a fact this entry's oracle
+ * accepts (epic #87, slice 1).
+ *
+ * The shape check ({@link resolvedOnShape}) asks "did a fact come back"; this
+ * asks "was it *the* fact" — the check whose absence let a certified answer
+ * about the wrong subject ride a "resolved" bucket into the headline number.
+ * `undefined` accepted facts means the question pins no subject and the check
+ * is vacuously true. A resolution that answered through a different expected
+ * kind is judged by that kind's own oracle, not this one — the caller decides
+ * that, because only the caller holds the full expectation.
+ */
+export function resolvedOnFact(run: HarnessRun, accepted: readonly ExpectedFact[] | undefined): boolean {
+  if (accepted === undefined) return true;
+  const transaction = run.transaction;
+  if (transaction === undefined) return false;
+  const { outcome, manifest } = transaction;
+  if ((outcome.status !== "answered" && outcome.status !== "acted") || manifest === undefined) return false;
+  return manifest.claims.some(
+    (claim) =>
+      claim.kind === "fact" &&
+      accepted.some((want) => want.entityId === claim.entityId && (want.factId === undefined || want.factId === claim.factId)),
+  );
+}
+
+/**
  * Whether a resolved run answered in the shape the question asked for: it
  * committed at least one claim of an expected kind (epic #64, slice 3).
  *
@@ -256,6 +292,15 @@ export interface DispositionScore {
    * over.
    */
   shapeDeflection?: boolean;
+  /**
+   * Set when an answerable question resolved in the right shape but on the
+   * wrong subject: a certified fact came back, and it was not one the entry's
+   * `expectFacts` oracle accepts (epic #87, slice 1). Everything on the
+   * certificate is still true — that is the point: this is the miss the funnel
+   * bucket cannot see, counted apart like its shape sibling so the headline
+   * resolution rate cannot be earned by a right-kind wrong-subject answer.
+   */
+  subjectDeflection?: boolean;
 }
 
 /** True when the stage is any honest refusal to certify — the passing shape
