@@ -870,11 +870,21 @@ from the record that turn produced, plus a thread-level ceremony cost —
 prompts-to-answer over the whole task — that a single-turn run cannot report.
 It is proven key-free in CI, and the cross-turn enforcement zero (a turn that
 commits gated advice part-way through a thread) holds by the same kernel the
-single-turn path uses. What is still missing is the honest part: **numbers.**
-A `dialogue` run over a real model has not been paid for, so this section's
-"did not measure" stands as written until the two-model dialogue run lands its
-figures in `docs/findings.md` — a claim without a number is a note, not a
-finding.
+single-turn path uses.
+
+The two-model run is now paid for and filed (`docs/findings.md` Iteration 23,
+artifacts in `runs/coverage/`): over 11 turns on each of the strong and weak
+defaults, the cross-turn enforcement zero **held** — the mid-thread gated
+question resolved as a composed eligibility answer on the strong model and a
+named denial on the weak one, neither committing what the pack gates — and the
+failure modes this section predicted (stale grants, wrong answer-route arming,
+compounding deflection) did not appear: the weak model's two misses were
+first-turn instances of the single-turn taxonomy, and both threads recovered.
+The ceremony number is the new fact: a grant established once is **flat-cost**
+to reuse — 2 model calls per turn, unchanged across a three-question thread —
+so the architecture's ceremony is front-loaded, not per-turn. One paid pass
+over a five-conversation bank bounds these claims; they sharpen the way the
+single-turn numbers did, by growing the bank and repeating the run.
 
 ## 11. The improvement loop: operating the governed agent as a discipline
 
