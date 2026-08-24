@@ -16,6 +16,42 @@ export const SNAPSHOT_SCHEMA_VERSION = 3;
  * encounter recorded against any other version fails the loader. */
 export const SNAPSHOT_VERSIONS: readonly string[] = ["red", "blue"];
 
+/**
+ * How faithfully one certified surface tracks the era its snapshot names
+ * (epic #87, slice 3). The snapshot is called `kanto-red-blue`, but upstream
+ * does not version everything: some surfaces are pinned to the era via
+ * `past_*` data, some are present-day values scoped to the era's roster.
+ * Declaring which is which per surface is IA-2 as truth-in-labeling — a
+ * certificate can then never imply more than its world's provenance backs.
+ */
+export type FidelityClass =
+  /** Pinned to this version group / generation via upstream past-values data
+   * (types, the chart, move stats, learnsets, machines, encounters). */
+  | "era-true"
+  /** Present-day upstream values, certified as this snapshot's content and
+   * not as the original cartridge's (base stats, effect text, damage class —
+   * which generation I derived from the move's type). */
+  | "modern-values"
+  /** Present-day data restricted at build time to the entities this world
+   * certifies (evolution edges, with later relatives cut). */
+  | "era-restricted";
+
+export const FIDELITY_CLASSES: readonly FidelityClass[] = ["era-true", "modern-values", "era-restricted"];
+
+/**
+ * Fidelity per certified surface, keyed by fact id plus `"type-chart"` for
+ * the matchup matrix. Closed in both directions by the loader: every surface
+ * the registry certifies must be declared, and nothing undeclared may appear
+ * — so a new fact family cannot land without stating its era fidelity.
+ *
+ * Lives in `source`, not `scope`, on purpose: the content digest pins *what*
+ * is certified (the values); fidelity states *how those values were derived*
+ * — provenance, like `commit` and `caveats`, which the digest also excludes.
+ * Moving it inside the digest would re-pin the world and orphan every filed
+ * artifact without changing one certified value.
+ */
+export type SnapshotFidelity = Readonly<Record<string, FidelityClass>>;
+
 /** Provenance of the projection, including the limits of its certification. */
 export interface SnapshotSource {
   repository: string;
@@ -34,6 +70,9 @@ export interface SnapshotSource {
    * limits of its own certification; the kernel never infers past them.
    */
   caveats: readonly string[];
+  /** The caveats' structured half: era fidelity per certified surface,
+   * machine-checkable where the prose is only readable. */
+  fidelity: SnapshotFidelity;
 }
 
 /** The single version-group world this snapshot describes. */

@@ -87,7 +87,44 @@ const CAVEATS = [
     "vendored.",
   "TM/HM assignments are pinned to this version group via upstream machine " +
     "records.",
+  "Move damage classes are present-day, per-move (the physical/special " +
+    "split of generation IV onward); in generation I a move's class " +
+    "followed its type. Not version-pinned.",
 ] as const;
+
+/**
+ * The caveats' structured half (epic #87, slice 3): era fidelity per
+ * certified surface, keyed by fact id plus `type-chart`. The loader closes
+ * this in both directions against the registry's fact ids, so a new
+ * certified surface cannot land without declaring how faithfully it tracks
+ * the era this snapshot names.
+ */
+const FIDELITY = {
+  "pokedex-number": "era-true",
+  types: "era-true",
+  "is-legendary": "modern-values",
+  "is-mythical": "modern-values",
+  learnset: "era-true",
+  "base-hp": "modern-values",
+  "base-attack": "modern-values",
+  "base-defense": "modern-values",
+  "base-special-attack": "modern-values",
+  "base-special-defense": "modern-values",
+  "base-speed": "modern-values",
+  "base-stat-total": "modern-values",
+  "evolves-from": "era-restricted",
+  "evolves-to": "era-restricted",
+  "evolution-methods": "modern-values",
+  locations: "era-true",
+  machine: "era-true",
+  "move-type": "era-true",
+  "move-power": "era-true",
+  "move-accuracy": "era-true",
+  "move-pp": "era-true",
+  "move-damage-class": "modern-values",
+  "move-effect": "modern-values",
+  "type-chart": "era-true",
+} as const;
 
 const CONCURRENCY = 8;
 
@@ -602,6 +639,7 @@ async function build(commit: string): Promise<SnapshotDocument> {
       documentCount: registry.documentCount,
       documentsDigest: registry.documentsDigest,
       caveats: CAVEATS,
+      fidelity: FIDELITY,
     },
   };
 }

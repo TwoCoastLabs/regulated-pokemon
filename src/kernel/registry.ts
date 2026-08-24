@@ -16,6 +16,8 @@ import type { CertifiedSnapshot, FactValue, Resolution, Violation } from "./cont
 import { sha256Hex } from "./sha256.js";
 import {
   CHART_MULTIPLIERS,
+  FIDELITY_CLASSES,
+  type FidelityClass,
   SNAPSHOT_SCHEMA_VERSION,
   SNAPSHOT_VERSIONS,
   type SnapshotDocument,
@@ -230,10 +232,73 @@ export function loadRegistry(input: unknown): Resolution<CertifiedRegistry> {
   if (structural.length > 0) return { ok: false, violations: structural };
 
   const document = input as SnapshotDocument;
-  const violations = [...checkIntegrity(document), ...checkChart(document), ...checkDigest(document)];
+  const violations = [
+    ...checkIntegrity(document),
+    ...checkChart(document),
+    ...checkFidelity(document),
+    ...checkDigest(document),
+  ];
   if (violations.length > 0) return { ok: false, violations };
 
   return { ok: true, value: new CertifiedRegistry(document) };
+}
+
+/** Every surface the fidelity declaration must cover: each fact id this
+ * registry can certify, plus the matchup matrix. */
+export function fidelitySurfaces(): readonly string[] {
+  return [...SPECIES_FACT_IDS, ...MOVE_FACT_IDS, "type-chart"].sort();
+}
+
+/**
+ * The era-fidelity declaration, closed in both directions (epic #87,
+ * slice 3): every certified surface must state how faithfully it tracks the
+ * era the snapshot names, and nothing undeclared may appear. This is what
+ * turns the caveats' prose into a check — a new fact family cannot land
+ * without declaring its fidelity, and a certificate can never imply more
+ * than the world's provenance backs (IA-2 as truth-in-labeling).
+ */
+function checkFidelity(document: SnapshotDocument): Violation[] {
+  const declared = document.source.fidelity;
+  if (declared === undefined || declared === null || typeof declared !== "object") {
+    return [
+      violation("IA-2", "fidelity-undeclared", "snapshot declares no era fidelity for its certified surfaces", {
+        expected: "source.fidelity covering every certified surface",
+        actual: "not declared",
+      }),
+    ];
+  }
+
+  const violations: Violation[] = [];
+  const surfaces = new Set(fidelitySurfaces());
+  for (const surface of surfaces) {
+    if (declared[surface] === undefined) {
+      violations.push(
+        violation("IA-2", "fidelity-surface-undeclared", `certified surface "${surface}" declares no era fidelity`, {
+          expected: `a fidelity class for "${surface}"`,
+          actual: "not declared",
+        }),
+      );
+    }
+  }
+  for (const [surface, fidelity] of Object.entries(declared)) {
+    if (!surfaces.has(surface)) {
+      violations.push(
+        violation("IA-2", "fidelity-surface-unknown", `fidelity is declared for "${surface}", which this registry does not certify`, {
+          expected: "a certified fact id, or type-chart",
+          actual: surface,
+        }),
+      );
+    }
+    if (!FIDELITY_CLASSES.includes(fidelity as FidelityClass)) {
+      violations.push(
+        violation("IA-2", "fidelity-class-unknown", `surface "${surface}" declares fidelity "${String(fidelity)}", which is not a class`, {
+          expected: FIDELITY_CLASSES.join(", "),
+          actual: String(fidelity),
+        }),
+      );
+    }
+  }
+  return violations;
 }
 
 function checkStructure(input: unknown): Violation[] {

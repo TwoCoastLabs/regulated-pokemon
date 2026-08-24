@@ -273,6 +273,23 @@ Mandatory texts are digest-self-naming, so an id can never drift from its
 words. Every filed record carries `snapshotId` and `packId`, so a decision
 replays under the world it was made in, not the world of the audit.
 
+**The world states its own fidelity, per surface.** A snapshot named for an
+era can carry data the era never had — this one is called `kanto-red-blue`,
+and its base stats are present-day upstream values (Snorlax's certified
+stat total is 540; the 1996 cartridge's was 430), because upstream versions
+some surfaces (`past_types`, `past_damage_relations`, `past_values`) and
+not others. That boundary was always stated in the provenance caveats as
+prose; it is now also **structured, loader-enforced data**: `source.fidelity`
+classifies every certified surface — each fact id and the type chart — as
+`era-true`, `modern-values`, or `era-restricted`, closed in both directions,
+so a new fact family cannot land without declaring how faithfully it tracks
+the era its world names. This is IA-2 as truth-in-labeling: the digest pins
+*what* is certified; the fidelity declaration pins *what that certification
+means*. The generic seam is real — an "approved product master as of Q3"
+carries yesterday's ratings beside today's prices in every target domain —
+and the portable rule is that the knowledge base, not the marketing name on
+it, declares which is which.
+
 **The roles this implies.** Three, cleanly separated by the seams:
 
 - a **data steward** owns the snapshot: the designation of upstream authority,
