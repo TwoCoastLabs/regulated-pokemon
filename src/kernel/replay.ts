@@ -34,7 +34,7 @@
 import { authorizeAction } from "./action.js";
 import type { ActionGrant, AnswerManifest, Claim, Verdict, Violation } from "./contracts.js";
 import { sha256Hex } from "./sha256.js";
-import { type ManifestContext, verifyManifest } from "./manifest.js";
+import { compileManifest, type ManifestContext, verifyManifest } from "./manifest.js";
 import type { AccordPack } from "./pack.js";
 import { attestRender, planRender } from "./render.js";
 import type { CertifiedRegistry } from "./registry.js";
@@ -140,21 +140,6 @@ export function replayTransaction(world: ReplayWorld, record: RecordedTransactio
 
   const scopeVerdict: StageVerdict = { stage: "scope", verdict: verdictOf([]) };
 
-  // Scope granted, so an answer was released, so the record must carry the
-  // manifest that answer was. A granted record with no manifest cannot be
-  // replayed to an answered verdict at all — it is incomplete, not merely
-  // divergent — so this refuses to guess rather than reconstructing a verdict
-  // out of nothing. {@link verifyReplay} catches this before replaying and
-  // turns the throw into a named denial for callers that go through the gate.
-  if (record.manifest === undefined) {
-    throw new AccordError([
-      violation("IA-10", "record-incomplete", `cannot replay ${record.id}: scope was granted but no answer is on file`, {
-        expected: "the manifest the answer was certified from",
-        actual: "no manifest recorded",
-      }),
-    ]);
-  }
-
   const context: ManifestContext = {
     registry: world.registry,
     pack: world.pack,
@@ -162,6 +147,50 @@ export function replayTransaction(world: ReplayWorld, record: RecordedTransactio
     locale: record.locale,
     at: record.committedAt,
   };
+
+  // A denial at the answer stage usually refused a *draft*: compilation
+  // failed, so no manifest ever existed, and the refused draft is the
+  // recorded input (epic #87 slice 2b). Re-compiling it must refuse again —
+  // the replayed record mirrors what `runTransaction` files, and the digest
+  // comparison holds the rest: different violations do not reproduce, and a
+  // doctored draft that now compiles clean comes back `answered`, which is a
+  // disagreement the gate names.
+  if (record.manifest === undefined && record.refused !== undefined) {
+    const recompiled = compileManifest(context, record.refused);
+    if (!recompiled.ok) {
+      return {
+        ...base,
+        grant: scope.grant,
+        refused: record.refused,
+        verdicts: [scopeVerdict, { stage: "answer", verdict: verdictOf(recompiled.violations) }],
+        outcome: { status: "denied", stage: "answer", violations: recompiled.violations },
+      };
+    }
+    return {
+      ...base,
+      grant: scope.grant,
+      manifest: recompiled.value,
+      verdicts: [scopeVerdict, { stage: "answer", verdict: verdictOf([]) }],
+      outcome: { status: "answered" },
+    };
+  }
+
+  // Scope granted, so an answer was released, so the record must carry the
+  // manifest that answer was — or, for a denial, the draft it refused. A
+  // granted record with neither cannot be replayed to a verdict at all — it
+  // is incomplete, not merely divergent — so this refuses to guess rather
+  // than reconstructing a verdict out of nothing. {@link verifyReplay}
+  // catches this before replaying and turns the throw into a named denial
+  // for callers that go through the gate.
+  if (record.manifest === undefined) {
+    throw new AccordError([
+      violation("IA-10", "record-incomplete", `cannot replay ${record.id}: scope was granted but no answer is on file`, {
+        expected: "the manifest the answer was certified from, or the draft it refused",
+        actual: "no manifest recorded",
+      }),
+    ]);
+  }
+
   const answer = verifyManifest(context, record.manifest);
   if (!answer.allowed) {
     return {
@@ -406,8 +435,16 @@ function checkComplete(record: RecordedTransaction): Violation[] {
     deniedAt === "answer" ||
     deniedAt === "render" ||
     deniedAt === "action";
-  if (judgedAnAnswer && record.manifest === undefined) {
-    missing("reached an answer verdict but kept no manifest to replay", "the manifest the answer verdict was reached over");
+  // A denial at the answer stage is complete with either side of the verdict:
+  // the manifest that was refused (the crucible seam's shape) or the draft
+  // compilation refused (the session seam's — epic #87 slice 2b). Everything
+  // that *committed* an answer still requires the manifest itself.
+  const refusedOnFile = deniedAt === "answer" && record.refused !== undefined;
+  if (judgedAnAnswer && record.manifest === undefined && !refusedOnFile) {
+    missing(
+      "reached an answer verdict but kept neither a manifest nor the refused draft to replay",
+      "the manifest the answer verdict was reached over, or the draft it refused",
+    );
   }
 
   const walkedActPath =

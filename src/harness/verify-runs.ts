@@ -70,14 +70,26 @@ export type ArtifactVerification =
       reason: string;
     };
 
-/** The legacy shape slice 2b exists to eliminate: a denial at the answer
- * stage, no manifest kept, flagged by replay only as incomplete. */
+/**
+ * When the recorder learned to file the refused draft (epic #87 slice 2b).
+ * Artifacts started before this moment may carry denial records with neither
+ * a manifest nor the draft — the shape the first sweep counted 176 of; they
+ * stay tolerated, counted and named, because their findings pin them by
+ * name. An artifact started *after* it has no excuse: an incomplete denial
+ * there is a recorder regression and fails the sweep hard.
+ */
+export const REFUSED_DRAFTS_RECORDED_SINCE = "2026-08-23T00:00:00.000Z";
+
+/** The legacy shape slice 2b eliminated at the recorder: a denial at the
+ * answer stage, neither manifest nor refused draft kept, flagged by replay
+ * only as incomplete. */
 function isIncompleteDenial(transaction: Transaction, violations: readonly Violation[]): boolean {
   const { outcome } = transaction;
   return (
     outcome.status === "denied" &&
     outcome.stage === "answer" &&
     transaction.manifest === undefined &&
+    transaction.refused === undefined &&
     violations.every((entry) => entry.article === "IA-10" && entry.rule === "record-incomplete")
   );
 }
@@ -141,6 +153,11 @@ export function verifyArtifact(world: DemoWorld, artifact: unknown): ArtifactVer
     return { kind: "skipped", reason: `pinned to pack ${pin.packId}, tree carries ${world.pack.id}` };
   }
 
+  // The legacy tolerance is bounded in time, not open-ended: only artifacts
+  // filed before the recorder fix may carry incomplete denials.
+  const startedAt = (artifact as { startedAt?: string }).startedAt ?? "";
+  const legacy = startedAt !== "" && startedAt < REFUSED_DRAFTS_RECORDED_SINCE;
+
   const failures: { where: string; violations: readonly Violation[] }[] = [];
   const incompleteDenials: string[] = [];
   let transactions = 0;
@@ -150,7 +167,7 @@ export function verifyArtifact(world: DemoWorld, artifact: unknown): ArtifactVer
       transactions += 1;
       const verdict = verifyReplay(world, run.transaction as Transaction);
       if (!verdict.allowed) {
-        if (isIncompleteDenial(run.transaction as Transaction, verdict.violations)) incompleteDenials.push(where);
+        if (legacy && isIncompleteDenial(run.transaction as Transaction, verdict.violations)) incompleteDenials.push(where);
         else failures.push({ where, violations: verdict.violations });
       }
     }

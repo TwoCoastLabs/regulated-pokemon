@@ -155,6 +155,26 @@ describe("the act path, walked through the kernel's own doors", () => {
   });
 });
 
+describe("a denial records the draft it refused (epic #87, slice 2b)", () => {
+  it("files the refused draft beside the denial, and no manifest", () => {
+    // Compilation itself refuses this plan, so no manifest ever exists; the
+    // draft is the input a replay re-compiles to reproduce the verdict.
+    const fabricating: AnswerPlan = (_context, transactionId) => ({
+      transactionId,
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "missingno", factId: "base-speed" }],
+    });
+    const transaction = run("txn-refused-draft", fabricating);
+
+    expect(transaction.outcome.status).toBe("denied");
+    if (transaction.outcome.status !== "denied") throw new Error("unreachable");
+    expect(transaction.outcome.stage).toBe("answer");
+    expect(transaction.outcome.violations.map(denialCode)).toContain("IA-3/fabricated-entity");
+    expect(transaction.manifest).toBeUndefined();
+    expect(transaction.refused?.claims).toEqual([{ kind: "fact", entityId: "missingno", factId: "base-speed" }]);
+  });
+});
+
 describe("the seam teaches before it interrogates", () => {
   it("commits a lessons-only plan under a clarifying scope, grantless", () => {
     const record = runTransaction({

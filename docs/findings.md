@@ -2008,6 +2008,44 @@ Provenance: the sweep runs in `npm test`
 (`src/harness/verify-runs.test.ts`) and prints its counts and skip list on
 every run; zero model calls, zero dollars.
 
+### Iteration 26 — the refused draft recorded: a denial verdict now replays like an answered one
+
+Slice 2b, closing the gap §25's sweep caught. When compilation refuses the
+model's draft, no manifest ever exists — so the session seam's denials filed
+the violations without the input that produced them, and 176 records could
+not re-derive their own verdicts. The fix is one recorded input:
+`Transaction` now carries the **refused draft** beside a denied-at-answer
+outcome — kept apart from `manifest` on purpose, because a refused draft is
+hostile input a replay re-compiles, never a certificate anything downstream
+may read values from. `replayTransaction` re-compiles it and must refuse
+again with the same violations; the completeness rule accepts either side of
+the verdict (the manifest the crucible seam refuses, or the draft the
+session seam does); and the session picks the change up for free because it
+files through `runTransaction` — the seam being shared is the fix
+propagating.
+
+**The adversarial half is what makes it worth having.** A doctored draft —
+swapped after the fact for one that compiles clean, hoping the denial reads
+as the kernel's fault — replays to an *answered* record, and the digest
+comparison names the disagreement (`IA-10/verdict-not-reproduced`). A denial
+stripped of its draft is `IA-10/record-incomplete`, exactly as a committed
+answer stripped of its manifest is. Both are pinned by test, as is the
+round trip: a live-session denial (the fabricated Thunderbolt 999) now
+replays bit-for-bit, which retired the session test that had *documented*
+the old boundary as a known limit.
+
+**The sweep's tolerance is now bounded in time, not open-ended.** Artifacts
+started before the recorder fix (`REFUSED_DRAFTS_RECORDED_SINCE`,
+2026-08-23) may carry the legacy shape — the 176 stay counted and named,
+their findings still traceable — but an incomplete denial in anything filed
+after the cutoff is a recorder regression and fails CI hard. The next paid
+run files complete denials with no further change, and the legacy count can
+only shrink.
+
+Provenance: kernel and sweep tests
+(`replay.test.ts`, `transaction.test.ts`, `session.test.ts`,
+`verify-runs.test.ts`), all in `npm test`; zero model calls, zero dollars.
+
 ---
 
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate

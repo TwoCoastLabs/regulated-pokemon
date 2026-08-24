@@ -19,6 +19,9 @@ import { join, relative, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { demoWorld } from "../demo/files.js";
+import { REQUIRED_DIMENSIONS } from "../kernel/scope.js";
+import { runTransaction } from "../kernel/transaction.js";
+import { COMMIT_TIME, ISSUED_AT, LOCALE, trainerTranscript } from "../testing/fixtures.js";
 import { locateRuns, verifyArtifact } from "./verify-runs.js";
 
 const RUNS_DIR = resolve(import.meta.dirname, "../../runs");
@@ -119,6 +122,57 @@ describe("the filed evidence base replays (epic #87, slice 2)", () => {
     expect(outcome.kind).toBe("skipped");
     if (outcome.kind !== "skipped") throw new Error("unreachable");
     expect(outcome.reason).toContain("pinned to snapshot");
+  });
+
+  it("the incomplete-denial tolerance is bounded in time (epic #87, slice 2b)", () => {
+    // Today's recorder files the refused draft with every denial; strip it to
+    // fake the legacy shape, then file that record in artifacts on both sides
+    // of the recorder-fix cutoff. Before: counted and named. After: a recorder
+    // regression, failed hard.
+    const denied = runTransaction({
+      id: "txn-legacy-shape",
+      registry: world.registry,
+      pack: world.pack,
+      transcript: trainerTranscript(),
+      establishedAt: ISSUED_AT,
+      committedAt: COMMIT_TIME,
+      locale: LOCALE,
+      required: [...REQUIRED_DIMENSIONS, "comparisonBasis"],
+      plan: (_context, transactionId) => ({
+        transactionId,
+        rosters: [],
+        claims: [{ kind: "fact", entityId: "missingno", factId: "base-speed" }],
+      }),
+    });
+    expect(denied.outcome.status).toBe("denied");
+    const { refused: _stripped, ...legacyShaped } = denied;
+
+    const document = world.registry.document;
+    const artifactAt = (startedAt: string) => ({
+      startedAt,
+      world: { snapshotId: document.id, snapshotDigest: document.contentDigest, packId: world.pack.id },
+      runs: [{ entryId: "legacy", repetition: 0, run: { scenarioId: "legacy", transaction: legacyShaped } }],
+    });
+
+    const before = verifyArtifact(world, artifactAt("2026-08-20T00:00:00.000Z"));
+    if (before.kind !== "verified") throw new Error("unexpectedly skipped");
+    expect(before.failures).toEqual([]);
+    expect(before.incompleteDenials).toEqual(["legacy#0"]);
+
+    const after = verifyArtifact(world, artifactAt("2026-08-24T00:00:00.000Z"));
+    if (after.kind !== "verified") throw new Error("unexpectedly skipped");
+    expect(after.failures.length).toBe(1);
+    expect(after.incompleteDenials).toEqual([]);
+
+    // And the unstripped record — what the recorder files now — verifies
+    // cleanly on either side of the cutoff.
+    const complete = verifyArtifact(world, {
+      ...artifactAt("2026-08-24T00:00:00.000Z"),
+      runs: [{ entryId: "fixed", repetition: 0, run: { scenarioId: "fixed", transaction: denied } }],
+    });
+    if (complete.kind !== "verified") throw new Error("unexpectedly skipped");
+    expect(complete.failures).toEqual([]);
+    expect(complete.incompleteDenials).toEqual([]);
   });
 
   it("locates runs in all three artifact shapes", () => {
