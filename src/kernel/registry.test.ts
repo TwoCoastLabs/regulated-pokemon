@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { kantoRegistry, readSnapshot, SNAPSHOT_PATH } from "../testing/fixtures.js";
 import { readRegistry } from "./files.js";
-import { loadRegistry, sameFactValue } from "./registry.js";
+import { fidelitySurfaces, loadRegistry, sameFactValue } from "./registry.js";
 import { denialCode } from "./violation.js";
 
 describe("the vendored snapshot loads as a certified registry", () => {
@@ -112,6 +112,62 @@ describe("a snapshot that cannot be trusted is refused at load", () => {
 
   it("refuses an unreadable file by name rather than crashing", () => {
     expect(() => readRegistry("/nonexistent/kanto.json")).toThrow("IA-2/snapshot-unreadable");
+  });
+});
+
+describe("era fidelity is declared, closed, and pinned (epic #87, slice 3)", () => {
+  const doctored = (sabotage: (document: ReturnType<typeof readSnapshot>) => void): string[] => {
+    const document = structuredClone(readSnapshot());
+    sabotage(document);
+    const loaded = loadRegistry(document);
+    return loaded.ok ? [] : loaded.violations.map(denialCode);
+  };
+
+  it("refuses a snapshot with no fidelity declaration at all", () => {
+    expect(doctored((document) => delete (document.source as { fidelity?: unknown }).fidelity)).toContain(
+      "IA-2/fidelity-undeclared",
+    );
+  });
+
+  it("refuses a certified surface with no declared fidelity", () => {
+    expect(
+      doctored((document) => delete (document.source.fidelity as Record<string, unknown>)["base-speed"]),
+    ).toContain("IA-2/fidelity-surface-undeclared");
+  });
+
+  it("refuses a declaration for a surface the registry does not certify", () => {
+    expect(
+      doctored((document) => ((document.source.fidelity as Record<string, unknown>)["catch-rate"] = "era-true")),
+    ).toContain("IA-2/fidelity-surface-unknown");
+  });
+
+  it("refuses a fidelity class the schema does not know", () => {
+    expect(
+      doctored((document) => ((document.source.fidelity as Record<string, unknown>)["base-speed"] = "probably-fine")),
+    ).toContain("IA-2/fidelity-class-unknown");
+  });
+
+  it("the declaration covers every certified surface, exactly", () => {
+    const declared = Object.keys(readSnapshot().source.fidelity).sort();
+    expect(declared).toEqual(fidelitySurfaces());
+  });
+
+  it("pins the reviewed classifications: stats are modern values, the era-pinned surfaces say so", () => {
+    // These are reviewed data, like a bank retag: changing one is a conscious
+    // provenance decision, not a drive-by. Base stats are present-day upstream
+    // values under an era-named snapshot — the boundary this declaration
+    // exists to state (base-stat-total 540 for Snorlax is this snapshot's
+    // truth; the 1996 cartridge's was 430).
+    const fidelity = readSnapshot().source.fidelity;
+    for (const stat of ["base-hp", "base-attack", "base-defense", "base-special-attack", "base-special-defense", "base-speed", "base-stat-total"]) {
+      expect(fidelity[stat], stat).toBe("modern-values");
+    }
+    expect(fidelity["move-damage-class"]).toBe("modern-values");
+    expect(fidelity["move-effect"]).toBe("modern-values");
+    for (const pinned of ["types", "type-chart", "learnset", "machine", "locations", "move-power", "move-accuracy", "move-pp", "move-type"]) {
+      expect(fidelity[pinned], pinned).toBe("era-true");
+    }
+    expect(fidelity["evolves-to"]).toBe("era-restricted");
   });
 });
 
