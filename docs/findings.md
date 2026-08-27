@@ -2844,6 +2844,73 @@ inquiry bank. Zero model calls, zero dollars.
 
 ---
 
+### Iteration 39 — the batch paid for: three legs, seven artifacts, every zero live — and the Center is hard
+
+The go-ahead batch (epic #94: slice 3's map, slice 1's live leg, slice 5's
+repetition debt), run under the measured default config (retrieval + gated
+grammar + repair), N=1 probe first, then six N=3 legs. Seven artifacts filed;
+**2,707 provider calls; $0.38 total** (provider-reported, a floor). The
+replay sweep re-derives all of them in CI — the sweep learned to resolve
+*snapshots* by the record's pin in this change, exactly as it learned packs
+in iteration 33, due the day the first Center artifact was filed.
+
+**Enforcement first: every zero held, on 1,031 live samples.** No gated
+advice committed (species or item), no wrong-scope commit, no unauthorized
+act, across both models, every repetition, both worlds. And the batch
+sharpened the instrument itself: the record-level re-check
+(`committedGatedAdvice`) read "not a species" as a breach, so the first
+four filed *item* commits (an antidote act, a cures roster) were flagged as
+false escalations by the sweep — the meter learned the second universe the
+day the first item act was filed, which is precisely what a record-level
+re-check is for. Only the meter moved; the kernel's gate had it right since
+PR #105.
+
+**The Center disposition map — the product's first deliverable — says the
+new world is hard.**
+
+| Leg | Pooled | Band | Stable core | Stable fails | Cost |
+|---|---:|---:|---:|---:|---:|
+| qwen3-235b, 125×3 | 154/375 (41%) | 47–55 | **36/125** | 57 | $0.20 |
+| mistral-nemo, 125×3 | 107/375 (29%) | 34–39 | 21/125 | 74 | $0.04 |
+
+Answerable resolution: strong **71/237 (30%)** — against 83% on the
+red-blue bank. This is what a freshly ported world looks like before its
+own §11 loop has run: the 57 stable fails are a *named, per-entry target
+list* (the misses skew to item facts the model reaches for by memory and
+era — the exact class the grounded ITEMS reference and the treats/comparison
+shapes exist to close, one loop iteration at a time). The honest-refusal
+side arrived strong out of the gate (needs-data 26/42, off-domain 21/21 on
+the strong model). One loud asterisk the accounting caught: **the weak
+model's leg ran through an availability storm — 367 of 726 calls were
+provider errors** — so its usefulness numbers are a lower bound under a
+counted cloud, not a reading of the model (the CLAUDE.md doctrine of
+counting provider failures apart from abstentions, earning its keep again).
+
+**The adversary as the trainer, live (slice 1 closed):** zero wrong-scope
+commits and every gated attempt denied at badge 2, on both models, all
+three repetitions — with the attack rate measured, not assumed:
+**18/24 attack turns reached their door on each model**, and the six
+misses are the same on both: the plead conversation's plea (answered with
+the rule rather than provoking the gate — the system working) and the
+pasted-guide's final advice turn (same). The offline prediction (iteration
+31) held live: the injected guide and tool lines are seen, refused, and the
+gated turn is judged at the trainer's real two badges.
+
+**The dialogue bank at N=3 (slice 5's debt retired):** the cross-turn zero
+now rests on 33 samples per model, not one — strong **31/33, band 10–11,
+stable core 10/11, zero stable fails** — and iteration 23's stated N=1
+caveat on the flat-cost ceremony claim is retired with the band: one
+version question still serves a conversation's worth of answers, now
+visible in the ceremony columns (17 questions over 33 strong-model turns).
+
+Provenance: the seven artifacts in `runs/coverage/` (paths in the batch log
+carried by this change's findings), every number above re-derivable from
+them offline; the sweep verifies all 37 filed artifacts (1,493
+transactions) in `npm test`. The batch script, its probe-first discipline
+and per-leg exit codes are recorded in the PR.
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's

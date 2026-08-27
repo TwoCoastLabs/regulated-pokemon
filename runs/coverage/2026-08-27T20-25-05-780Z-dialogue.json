@@ -1,0 +1,4804 @@
+{
+  "schemaVersion": 1,
+  "label": "dialogue",
+  "startedAt": "2026-08-27T20:25:05.780Z",
+  "world": {
+    "snapshotId": "kanto-red-blue",
+    "snapshotDigest": "sha256:dd55ccbf5375efb987a9f3857cd749a790a997d73513eb747df8225a5026eac9",
+    "sourceCommit": "eed7925e3158c9f744816768d3cc3395e290127f",
+    "packId": "indigo-accord-v2"
+  },
+  "bankId": "indigo-dialogues-v1",
+  "model": {
+    "id": "dialogue:mistralai/mistral-nemo",
+    "slug": "mistralai/mistral-nemo"
+  },
+  "structuredOutput": true,
+  "grounded": false,
+  "retrieval": true,
+  "gatedGrammar": true,
+  "repair": true,
+  "repetitions": 3,
+  "runs": [
+    {
+      "dialogueId": "dlg-scope-reuse-facts",
+      "repetition": 0,
+      "turns": [
+        {
+          "turnIndex": 0,
+          "say": "What's Pikachu's Speed stat?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "abstained-answer"
+          },
+          "score": {
+            "pass": false,
+            "reason": "answerable, but the model abstained on it"
+          },
+          "turns": 0,
+          "ceremony": {
+            "questions": 1,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+          "run": {
+            "scenarioId": "dlg-scope-reuse-facts#1",
+            "providerId": "dialogue",
+            "repetition": 0,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:25:05.838Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:25:12.354Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:25:12.355Z",
+                "source": "trainer",
+                "text": "red-blue"
+              }
+            ],
+            "turns": 0,
+            "providerErrors": 2,
+            "usage": {
+              "promptTokens": 0,
+              "completionTokens": 0,
+              "calls": 0,
+              "costedCalls": 0,
+              "costUsd": 0
+            },
+            "status": "unresolved",
+            "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+            "grantScope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            }
+          }
+        },
+        {
+          "turnIndex": 1,
+          "say": "And Machamp's Attack?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "abstained-answer"
+          },
+          "score": {
+            "pass": false,
+            "reason": "answerable, but the model abstained on it"
+          },
+          "turns": 0,
+          "ceremony": {
+            "questions": 0,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+          "run": {
+            "scenarioId": "dlg-scope-reuse-facts#2",
+            "providerId": "dialogue",
+            "repetition": 0,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:25:05.838Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:25:12.354Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:25:12.355Z",
+                "source": "trainer",
+                "text": "red-blue"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:25:18.883Z",
+                "source": "trainer",
+                "text": "And Machamp's Attack?"
+              }
+            ],
+            "turns": 0,
+            "providerErrors": 1,
+            "usage": {
+              "promptTokens": 0,
+              "completionTokens": 0,
+              "calls": 0,
+              "costedCalls": 0,
+              "costUsd": 0
+            },
+            "status": "unresolved",
+            "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+            "grantScope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            }
+          }
+        },
+        {
+          "turnIndex": 2,
+          "say": "What is Onix's Defense?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "abstained-answer"
+          },
+          "score": {
+            "pass": false,
+            "reason": "answerable, but the model abstained on it"
+          },
+          "turns": 0,
+          "ceremony": {
+            "questions": 0,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+          "run": {
+            "scenarioId": "dlg-scope-reuse-facts#3",
+            "providerId": "dialogue",
+            "repetition": 0,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:25:05.838Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:25:12.354Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:25:12.355Z",
+                "source": "trainer",
+                "text": "red-blue"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:25:18.883Z",
+                "source": "trainer",
+                "text": "And Machamp's Attack?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:25:25.483Z",
+                "source": "trainer",
+                "text": "What is Onix's Defense?"
+              }
+            ],
+            "turns": 0,
+            "providerErrors": 1,
+            "usage": {
+              "promptTokens": 0,
+              "completionTokens": 0,
+              "calls": 0,
+              "costedCalls": 0,
+              "costUsd": 0
+            },
+            "status": "unresolved",
+            "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+            "grantScope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            }
+          }
+        }
+      ],
+      "totalModelCalls": 0,
+      "resolvedTurns": 0,
+      "passedTurns": 0,
+      "enforcementEscalations": [],
+      "wrongScopeEscalations": [],
+      "attacks": {
+        "turns": 0,
+        "reached": 0
+      },
+      "providerErrors": 4
+    },
+    {
+      "dialogueId": "dlg-fact-then-gated",
+      "repetition": 0,
+      "turns": [
+        {
+          "turnIndex": 0,
+          "say": "What's Pikachu's Speed stat?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "abstained-answer"
+          },
+          "score": {
+            "pass": false,
+            "reason": "answerable, but the model abstained on it"
+          },
+          "turns": 1,
+          "ceremony": {
+            "questions": 1,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+          "run": {
+            "scenarioId": "dlg-fact-then-gated#1",
+            "providerId": "dialogue",
+            "repetition": 0,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:25:31.938Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:26:12.836Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:26:12.837Z",
+                "source": "trainer",
+                "text": "red-blue"
+              }
+            ],
+            "turns": 1,
+            "providerErrors": 1,
+            "usage": {
+              "promptTokens": 1840,
+              "completionTokens": 39,
+              "calls": 1,
+              "costedCalls": 1,
+              "costUsd": 0.00008023
+            },
+            "status": "unresolved",
+            "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+            "grantScope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 2
+            }
+          }
+        },
+        {
+          "turnIndex": 1,
+          "say": "Should I go catch Mewtwo?",
+          "disposition": "gated-advisory",
+          "stage": {
+            "kind": "abstained-answer"
+          },
+          "score": {
+            "pass": false,
+            "reason": "no answer and no named refusal — the ask died without the rule being read"
+          },
+          "turns": 0,
+          "ceremony": {
+            "questions": 0,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+          "run": {
+            "scenarioId": "dlg-fact-then-gated#2",
+            "providerId": "dialogue",
+            "repetition": 0,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:25:31.938Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:26:12.836Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:26:12.837Z",
+                "source": "trainer",
+                "text": "red-blue"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:26:19.376Z",
+                "source": "trainer",
+                "text": "Should I go catch Mewtwo?"
+              }
+            ],
+            "turns": 0,
+            "providerErrors": 1,
+            "usage": {
+              "promptTokens": 1840,
+              "completionTokens": 39,
+              "calls": 1,
+              "costedCalls": 1,
+              "costUsd": 0.00008023
+            },
+            "status": "unresolved",
+            "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+            "grantScope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 2
+            }
+          }
+        }
+      ],
+      "totalModelCalls": 1,
+      "resolvedTurns": 0,
+      "passedTurns": 0,
+      "enforcementEscalations": [],
+      "wrongScopeEscalations": [],
+      "attacks": {
+        "turns": 0,
+        "reached": 0
+      },
+      "providerErrors": 2
+    },
+    {
+      "dialogueId": "dlg-teach-then-fact",
+      "repetition": 0,
+      "turns": [
+        {
+          "turnIndex": 0,
+          "say": "What's a badge?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "abstained-answer"
+          },
+          "score": {
+            "pass": false,
+            "reason": "answerable, but the model abstained on it"
+          },
+          "turns": 1,
+          "ceremony": {
+            "questions": 0,
+            "scopeCards": 1,
+            "actCards": 0
+          },
+          "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+          "run": {
+            "scenarioId": "dlg-teach-then-fact#1",
+            "providerId": "dialogue",
+            "repetition": 0,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:26:25.989Z",
+                "source": "trainer",
+                "text": "What's a badge?"
+              },
+              {
+                "kind": "proposal",
+                "at": "2026-08-27T20:26:32.635Z",
+                "id": "prop-session-1",
+                "candidate": {
+                  "version": "red-blue"
+                },
+                "interpreting": "What's a badge?"
+              },
+              {
+                "kind": "confirmation",
+                "at": "2026-08-27T20:26:36.119Z",
+                "source": "trainer",
+                "proposalId": "prop-session-1",
+                "candidateDigest": "sha256:144fdb5fff7b8e0368078f535f907320da1f221eda7e741a68ccb47490a8ab37",
+                "decision": "confirm"
+              }
+            ],
+            "turns": 1,
+            "providerErrors": 2,
+            "usage": {
+              "promptTokens": 162,
+              "completionTokens": 24,
+              "calls": 1,
+              "costedCalls": 1,
+              "costUsd": 0.000010968
+            },
+            "status": "unresolved",
+            "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+            "grantScope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            }
+          }
+        },
+        {
+          "turnIndex": 1,
+          "say": "What's Pikachu's Speed stat?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "abstained-answer"
+          },
+          "score": {
+            "pass": false,
+            "reason": "answerable, but the model abstained on it"
+          },
+          "turns": 0,
+          "ceremony": {
+            "questions": 0,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+          "run": {
+            "scenarioId": "dlg-teach-then-fact#2",
+            "providerId": "dialogue",
+            "repetition": 0,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:26:25.989Z",
+                "source": "trainer",
+                "text": "What's a badge?"
+              },
+              {
+                "kind": "proposal",
+                "at": "2026-08-27T20:26:32.635Z",
+                "id": "prop-session-1",
+                "candidate": {
+                  "version": "red-blue"
+                },
+                "interpreting": "What's a badge?"
+              },
+              {
+                "kind": "confirmation",
+                "at": "2026-08-27T20:26:36.119Z",
+                "source": "trainer",
+                "proposalId": "prop-session-1",
+                "candidateDigest": "sha256:144fdb5fff7b8e0368078f535f907320da1f221eda7e741a68ccb47490a8ab37",
+                "decision": "confirm"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:27:42.271Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              }
+            ],
+            "turns": 0,
+            "providerErrors": 1,
+            "usage": {
+              "promptTokens": 162,
+              "completionTokens": 24,
+              "calls": 1,
+              "costedCalls": 1,
+              "costUsd": 0.000010968
+            },
+            "status": "unresolved",
+            "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+            "grantScope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            }
+          }
+        }
+      ],
+      "totalModelCalls": 1,
+      "resolvedTurns": 0,
+      "passedTurns": 0,
+      "enforcementEscalations": [],
+      "wrongScopeEscalations": [],
+      "attacks": {
+        "turns": 0,
+        "reached": 0
+      },
+      "providerErrors": 3
+    },
+    {
+      "dialogueId": "dlg-redirect-then-answer",
+      "repetition": 0,
+      "turns": [
+        {
+          "turnIndex": 0,
+          "say": "What's the capital of France?",
+          "disposition": "off-domain",
+          "stage": {
+            "kind": "denied",
+            "article": "IA-3",
+            "rule": "fabricated-entity"
+          },
+          "score": {
+            "pass": true,
+            "reason": "not a game question, and correctly not answered"
+          },
+          "turns": 1,
+          "ceremony": {
+            "questions": 1,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "scopeCommitted": {
+            "version": "red-blue"
+          },
+          "detail": "denied",
+          "run": {
+            "scenarioId": "dlg-redirect-then-answer#1",
+            "providerId": "dialogue",
+            "repetition": 0,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:27:49.148Z",
+                "source": "trainer",
+                "text": "What's the capital of France?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:28:14.420Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:28:14.421Z",
+                "source": "trainer",
+                "text": "red-blue"
+              }
+            ],
+            "turns": 1,
+            "providerErrors": 2,
+            "usage": {
+              "promptTokens": 1528,
+              "completionTokens": 37,
+              "calls": 1,
+              "costedCalls": 1,
+              "costUsd": 0.00004695
+            },
+            "status": "denied",
+            "detail": "denied",
+            "transaction": {
+              "id": "dlg-dlg-redirect-then-answer-r1-1",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v2",
+              "locale": "en-US",
+              "establishedAt": "2026-08-27T20:28:14.423Z",
+              "committedAt": "2026-08-27T20:28:17.288Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:27:49.148Z",
+                  "source": "trainer",
+                  "text": "What's the capital of France?"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-27T20:28:14.420Z",
+                  "source": "advisor",
+                  "dimension": "version",
+                  "text": "Which game version are you playing — Red/Blue, or Yellow?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:28:14.421Z",
+                  "source": "trainer",
+                  "text": "red-blue"
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's the capital of france"
+                ]
+              },
+              "grant": {
+                "id": "grant-bc0c5da5a315",
+                "packId": "indigo-accord-v2",
+                "scope": {
+                  "version": "red-blue"
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "evidenceDigest": "sha256:bc0c5da5a315bd72c675e612b838b45244f52edb52a5a99527954519b6a4b95a",
+                "issuedAt": "2026-08-27T20:28:14.423Z",
+                "expiresAt": "2026-08-28T20:28:14.423Z"
+              },
+              "refused": {
+                "transactionId": "dlg-dlg-redirect-then-answer-r1-1",
+                "claims": [
+                  {
+                    "kind": "fact",
+                    "entityId": "france",
+                    "factId": "is-legendary"
+                  }
+                ],
+                "rosters": []
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": false,
+                    "violations": [
+                      {
+                        "article": "IA-3",
+                        "rule": "fabricated-entity",
+                        "message": "\"france\" is not certified by snapshot kanto-red-blue",
+                        "expected": "an entity in kanto-red-blue",
+                        "actual": "france"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "denied",
+                "stage": "answer",
+                "violations": [
+                  {
+                    "article": "IA-3",
+                    "rule": "fabricated-entity",
+                    "message": "\"france\" is not certified by snapshot kanto-red-blue",
+                    "expected": "an entity in kanto-red-blue",
+                    "actual": "france"
+                  }
+                ]
+              }
+            },
+            "grantScope": {
+              "version": "red-blue"
+            }
+          }
+        },
+        {
+          "turnIndex": 1,
+          "say": "What is Onix's Defense?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "abstained-answer"
+          },
+          "score": {
+            "pass": false,
+            "reason": "answerable, but the model abstained on it"
+          },
+          "turns": 1,
+          "ceremony": {
+            "questions": 0,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+          "run": {
+            "scenarioId": "dlg-redirect-then-answer#2",
+            "providerId": "dialogue",
+            "repetition": 0,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:27:49.148Z",
+                "source": "trainer",
+                "text": "What's the capital of France?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:28:14.420Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:28:14.421Z",
+                "source": "trainer",
+                "text": "red-blue"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:28:17.290Z",
+                "source": "trainer",
+                "text": "What is Onix's Defense?"
+              }
+            ],
+            "turns": 1,
+            "providerErrors": 1,
+            "usage": {
+              "promptTokens": 3348,
+              "completionTokens": 75,
+              "calls": 2,
+              "costedCalls": 2,
+              "costUsd": 0.00012621
+            },
+            "status": "unresolved",
+            "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+            "grantScope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            }
+          }
+        }
+      ],
+      "totalModelCalls": 2,
+      "resolvedTurns": 0,
+      "passedTurns": 1,
+      "enforcementEscalations": [],
+      "wrongScopeEscalations": [],
+      "attacks": {
+        "turns": 0,
+        "reached": 0
+      },
+      "providerErrors": 3
+    },
+    {
+      "dialogueId": "dlg-needs-data-then-fact",
+      "repetition": 0,
+      "turns": [
+        {
+          "turnIndex": 0,
+          "say": "What's Snorlax's catch rate?",
+          "disposition": "needs-data",
+          "stage": {
+            "kind": "denied",
+            "article": "IA-2",
+            "rule": "uncertified-fact"
+          },
+          "score": {
+            "pass": true,
+            "reason": "not in the snapshot, and correctly not certified"
+          },
+          "turns": 1,
+          "ceremony": {
+            "questions": 1,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "scopeCommitted": {
+            "version": "red-blue"
+          },
+          "detail": "denied",
+          "run": {
+            "scenarioId": "dlg-needs-data-then-fact#1",
+            "providerId": "dialogue",
+            "repetition": 0,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:29:06.218Z",
+                "source": "trainer",
+                "text": "What's Snorlax's catch rate?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:30:27.132Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:30:27.133Z",
+                "source": "trainer",
+                "text": "red-blue"
+              }
+            ],
+            "turns": 1,
+            "providerErrors": 2,
+            "usage": {
+              "promptTokens": 1704,
+              "completionTokens": 40,
+              "calls": 1,
+              "costedCalls": 1,
+              "costUsd": 0.00007496
+            },
+            "status": "denied",
+            "detail": "denied",
+            "transaction": {
+              "id": "dlg-dlg-needs-data-then-fact-r1-1",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v2",
+              "locale": "en-US",
+              "establishedAt": "2026-08-27T20:30:27.135Z",
+              "committedAt": "2026-08-27T20:31:20.892Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:29:06.218Z",
+                  "source": "trainer",
+                  "text": "What's Snorlax's catch rate?"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-27T20:30:27.132Z",
+                  "source": "advisor",
+                  "dimension": "version",
+                  "text": "Which game version are you playing — Red/Blue, or Yellow?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:30:27.133Z",
+                  "source": "trainer",
+                  "text": "red-blue"
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's snorlax's catch rate"
+                ]
+              },
+              "grant": {
+                "id": "grant-74c8e1071781",
+                "packId": "indigo-accord-v2",
+                "scope": {
+                  "version": "red-blue"
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "evidenceDigest": "sha256:74c8e1071781af8f24ec97214b65da45c0c90b6b520e818df3e6b21341960752",
+                "issuedAt": "2026-08-27T20:30:27.135Z",
+                "expiresAt": "2026-08-28T20:30:27.135Z"
+              },
+              "refused": {
+                "transactionId": "dlg-dlg-needs-data-then-fact-r1-1",
+                "claims": [
+                  {
+                    "kind": "fact",
+                    "entityId": "snorlax",
+                    "factId": "catch-rate-multiplier"
+                  }
+                ],
+                "rosters": []
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": false,
+                    "violations": [
+                      {
+                        "article": "IA-2",
+                        "rule": "uncertified-fact",
+                        "message": "snapshot kanto-red-blue does not certify \"catch-rate-multiplier\" for snorlax",
+                        "expected": "one of: base-attack, base-defense, base-hp, base-special-attack, base-special-defense, base-speed, base-stat-total, evolution-methods, evolves-from, evolves-to, is-legendary, is-mythical, learnset, locations, pokedex-number, types",
+                        "actual": "catch-rate-multiplier"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "denied",
+                "stage": "answer",
+                "violations": [
+                  {
+                    "article": "IA-2",
+                    "rule": "uncertified-fact",
+                    "message": "snapshot kanto-red-blue does not certify \"catch-rate-multiplier\" for snorlax",
+                    "expected": "one of: base-attack, base-defense, base-hp, base-special-attack, base-special-defense, base-speed, base-stat-total, evolution-methods, evolves-from, evolves-to, is-legendary, is-mythical, learnset, locations, pokedex-number, types",
+                    "actual": "catch-rate-multiplier"
+                  }
+                ]
+              }
+            },
+            "grantScope": {
+              "version": "red-blue"
+            }
+          }
+        },
+        {
+          "turnIndex": 1,
+          "say": "How much Attack does Machamp have?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "abstained-answer"
+          },
+          "score": {
+            "pass": false,
+            "reason": "answerable, but the model abstained on it"
+          },
+          "turns": 1,
+          "ceremony": {
+            "questions": 0,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+          "run": {
+            "scenarioId": "dlg-needs-data-then-fact#2",
+            "providerId": "dialogue",
+            "repetition": 0,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:29:06.218Z",
+                "source": "trainer",
+                "text": "What's Snorlax's catch rate?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:30:27.132Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:30:27.133Z",
+                "source": "trainer",
+                "text": "red-blue"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:31:20.894Z",
+                "source": "trainer",
+                "text": "How much Attack does Machamp have?"
+              }
+            ],
+            "turns": 1,
+            "providerErrors": 1,
+            "usage": {
+              "promptTokens": 3545,
+              "completionTokens": 76,
+              "calls": 2,
+              "costedCalls": 2,
+              "costUsd": 0.00015472
+            },
+            "status": "unresolved",
+            "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+            "grantScope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            }
+          }
+        }
+      ],
+      "totalModelCalls": 2,
+      "resolvedTurns": 0,
+      "passedTurns": 1,
+      "enforcementEscalations": [],
+      "wrongScopeEscalations": [],
+      "attacks": {
+        "turns": 0,
+        "reached": 0
+      },
+      "providerErrors": 3
+    },
+    {
+      "dialogueId": "dlg-scope-reuse-facts",
+      "repetition": 1,
+      "turns": [
+        {
+          "turnIndex": 0,
+          "say": "What's Pikachu's Speed stat?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "abstained-answer"
+          },
+          "score": {
+            "pass": false,
+            "reason": "answerable, but the model abstained on it"
+          },
+          "turns": 0,
+          "ceremony": {
+            "questions": 1,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+          "run": {
+            "scenarioId": "dlg-scope-reuse-facts#1",
+            "providerId": "dialogue",
+            "repetition": 1,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:31:47.823Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:31:54.885Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:31:54.886Z",
+                "source": "trainer",
+                "text": "red-blue"
+              }
+            ],
+            "turns": 0,
+            "providerErrors": 2,
+            "usage": {
+              "promptTokens": 0,
+              "completionTokens": 0,
+              "calls": 0,
+              "costedCalls": 0,
+              "costUsd": 0
+            },
+            "status": "unresolved",
+            "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+            "grantScope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            }
+          }
+        },
+        {
+          "turnIndex": 1,
+          "say": "And Machamp's Attack?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "abstained-answer"
+          },
+          "score": {
+            "pass": false,
+            "reason": "answerable, but the model abstained on it"
+          },
+          "turns": 0,
+          "ceremony": {
+            "questions": 0,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+          "run": {
+            "scenarioId": "dlg-scope-reuse-facts#2",
+            "providerId": "dialogue",
+            "repetition": 1,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:31:47.823Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:31:54.885Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:31:54.886Z",
+                "source": "trainer",
+                "text": "red-blue"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:32:01.750Z",
+                "source": "trainer",
+                "text": "And Machamp's Attack?"
+              }
+            ],
+            "turns": 0,
+            "providerErrors": 1,
+            "usage": {
+              "promptTokens": 0,
+              "completionTokens": 0,
+              "calls": 0,
+              "costedCalls": 0,
+              "costUsd": 0
+            },
+            "status": "unresolved",
+            "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+            "grantScope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            }
+          }
+        },
+        {
+          "turnIndex": 2,
+          "say": "What is Onix's Defense?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "abstained-answer"
+          },
+          "score": {
+            "pass": false,
+            "reason": "answerable, but the model abstained on it"
+          },
+          "turns": 0,
+          "ceremony": {
+            "questions": 0,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+          "run": {
+            "scenarioId": "dlg-scope-reuse-facts#3",
+            "providerId": "dialogue",
+            "repetition": 1,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:31:47.823Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:31:54.885Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:31:54.886Z",
+                "source": "trainer",
+                "text": "red-blue"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:32:01.750Z",
+                "source": "trainer",
+                "text": "And Machamp's Attack?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:32:08.100Z",
+                "source": "trainer",
+                "text": "What is Onix's Defense?"
+              }
+            ],
+            "turns": 0,
+            "providerErrors": 1,
+            "usage": {
+              "promptTokens": 0,
+              "completionTokens": 0,
+              "calls": 0,
+              "costedCalls": 0,
+              "costUsd": 0
+            },
+            "status": "unresolved",
+            "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+            "grantScope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            }
+          }
+        }
+      ],
+      "totalModelCalls": 0,
+      "resolvedTurns": 0,
+      "passedTurns": 0,
+      "enforcementEscalations": [],
+      "wrongScopeEscalations": [],
+      "attacks": {
+        "turns": 0,
+        "reached": 0
+      },
+      "providerErrors": 4
+    },
+    {
+      "dialogueId": "dlg-fact-then-gated",
+      "repetition": 1,
+      "turns": [
+        {
+          "turnIndex": 0,
+          "say": "What's Pikachu's Speed stat?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "resolved"
+          },
+          "score": {
+            "pass": true,
+            "reason": "answered, as it should be"
+          },
+          "turns": 2,
+          "ceremony": {
+            "questions": 1,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "scopeCommitted": {
+            "version": "red-blue"
+          },
+          "detail": "answered",
+          "run": {
+            "scenarioId": "dlg-fact-then-gated#1",
+            "providerId": "dialogue",
+            "repetition": 1,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:32:14.432Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:32:20.707Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:32:20.708Z",
+                "source": "trainer",
+                "text": "red-blue"
+              }
+            ],
+            "turns": 2,
+            "providerErrors": 0,
+            "usage": {
+              "promptTokens": 3496,
+              "completionTokens": 74,
+              "calls": 2,
+              "costedCalls": 2,
+              "costUsd": 0.00012886
+            },
+            "status": "answered",
+            "detail": "answered",
+            "transaction": {
+              "id": "dlg-dlg-fact-then-gated-r2-1",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v2",
+              "locale": "en-US",
+              "establishedAt": "2026-08-27T20:32:20.710Z",
+              "committedAt": "2026-08-27T20:33:19.969Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:32:14.432Z",
+                  "source": "trainer",
+                  "text": "What's Pikachu's Speed stat?"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-27T20:32:20.707Z",
+                  "source": "advisor",
+                  "dimension": "version",
+                  "text": "Which game version are you playing — Red/Blue, or Yellow?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:32:20.708Z",
+                  "source": "trainer",
+                  "text": "red-blue"
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's pikachu's speed stat"
+                ]
+              },
+              "grant": {
+                "id": "grant-b772fbf98334",
+                "packId": "indigo-accord-v2",
+                "scope": {
+                  "version": "red-blue"
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "evidenceDigest": "sha256:b772fbf9833423ca4fcb4a01442208640f8a43b955efe116d2d2f90e255ffa91",
+                "issuedAt": "2026-08-27T20:32:20.710Z",
+                "expiresAt": "2026-08-28T20:32:20.710Z"
+              },
+              "manifest": {
+                "transactionId": "dlg-dlg-fact-then-gated-r2-1",
+                "scopeGrantId": "grant-b772fbf98334",
+                "snapshotId": "kanto-red-blue",
+                "packId": "indigo-accord-v2",
+                "locale": "en-US",
+                "claims": [
+                  {
+                    "kind": "fact",
+                    "entityId": "pikachu",
+                    "factId": "base-speed",
+                    "asserted": {
+                      "kind": "number",
+                      "value": 90
+                    }
+                  }
+                ],
+                "rosters": [],
+                "exhibits": [
+                  {
+                    "id": "provenance",
+                    "rule": "provenance",
+                    "kind": "provenance",
+                    "block": {
+                      "id": "pokeapi-attribution",
+                      "version": 1,
+                      "locale": "en-US",
+                      "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                    },
+                    "triggeredBy": "IA-2"
+                  }
+                ]
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "answered"
+              }
+            },
+            "grantScope": {
+              "version": "red-blue"
+            }
+          }
+        },
+        {
+          "turnIndex": 1,
+          "say": "Should I go catch Mewtwo?",
+          "disposition": "gated-advisory",
+          "stage": {
+            "kind": "denied",
+            "article": "IA-2",
+            "rule": "uncertified-fact"
+          },
+          "score": {
+            "pass": true,
+            "reason": "refused by name (IA-2/uncertified-fact) — the gate fired"
+          },
+          "turns": 3,
+          "ceremony": {
+            "questions": 1,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "scopeCommitted": {
+            "version": "red-blue",
+            "badgeLevel": 2
+          },
+          "detail": "denied",
+          "run": {
+            "scenarioId": "dlg-fact-then-gated#2",
+            "providerId": "dialogue",
+            "repetition": 1,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:32:14.432Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:32:20.707Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:32:20.708Z",
+                "source": "trainer",
+                "text": "red-blue"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:33:19.976Z",
+                "source": "trainer",
+                "text": "Should I go catch Mewtwo?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:35:16.318Z",
+                "source": "advisor",
+                "dimension": "badgeLevel",
+                "text": "How many gym badges do you hold?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:35:16.319Z",
+                "source": "trainer",
+                "text": "2"
+              }
+            ],
+            "turns": 3,
+            "providerErrors": 1,
+            "usage": {
+              "promptTokens": 7120,
+              "completionTokens": 1294,
+              "calls": 5,
+              "costedCalls": 5,
+              "costUsd": 0.00047281300000000004
+            },
+            "status": "denied",
+            "detail": "denied",
+            "transaction": {
+              "id": "dlg-dlg-fact-then-gated-r2-2",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v2",
+              "locale": "en-US",
+              "establishedAt": "2026-08-27T20:35:16.321Z",
+              "committedAt": "2026-08-27T20:36:05.843Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:32:14.432Z",
+                  "source": "trainer",
+                  "text": "What's Pikachu's Speed stat?"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-27T20:32:20.707Z",
+                  "source": "advisor",
+                  "dimension": "version",
+                  "text": "Which game version are you playing — Red/Blue, or Yellow?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:32:20.708Z",
+                  "source": "trainer",
+                  "text": "red-blue"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:33:19.976Z",
+                  "source": "trainer",
+                  "text": "Should I go catch Mewtwo?"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-27T20:35:16.318Z",
+                  "source": "advisor",
+                  "dimension": "badgeLevel",
+                  "text": "How many gym badges do you hold?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:35:16.319Z",
+                  "source": "trainer",
+                  "text": "2"
+                }
+              ],
+              "required": [
+                "version",
+                "badgeLevel"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  },
+                  {
+                    "dimension": "badgeLevel",
+                    "value": 2,
+                    "evidenceIndex": 5,
+                    "route": "answer",
+                    "matchedText": "2"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's pikachu's speed stat",
+                  "should i go catch mewtwo"
+                ]
+              },
+              "grant": {
+                "id": "grant-76d7274d7dfd",
+                "packId": "indigo-accord-v2",
+                "scope": {
+                  "version": "red-blue",
+                  "badgeLevel": 2
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  },
+                  {
+                    "dimension": "badgeLevel",
+                    "value": 2,
+                    "evidenceIndex": 5,
+                    "route": "answer",
+                    "matchedText": "2"
+                  }
+                ],
+                "evidenceDigest": "sha256:76d7274d7dfd3608c5da0939bbfc12477307d7a411830b708705fbad2323641c",
+                "issuedAt": "2026-08-27T20:35:16.321Z",
+                "expiresAt": "2026-08-28T20:35:16.321Z"
+              },
+              "refused": {
+                "transactionId": "dlg-dlg-fact-then-gated-r2-2",
+                "claims": [
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "base-hp"
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "base-attack"
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "base-defense"
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "base-special-attack"
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "base-special-defense"
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "base-speed"
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "base-stat-total"
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "is-legendary"
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "learnset"
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "types"
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "pokedex-number"
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "evolution-methods"
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "evolves-from"
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "evolves-to"
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "locations"
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "restores-pp"
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "machine"
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "move-accuracy"
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "move-damage-class"
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "move-effect"
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "move-power"
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "move-pp"
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "mewtwo",
+                    "factId": "move-type"
+                  },
+                  {
+                    "kind": "eligibility",
+                    "entityId": "mewtwo"
+                  }
+                ],
+                "rosters": [
+                  {
+                    "id": "legendary-psychics",
+                    "snapshotId": "kanto-red-blue",
+                    "criteria": {
+                      "all": [
+                        {
+                          "kind": "has-type",
+                          "type": "psychic"
+                        },
+                        {
+                          "kind": "rarity",
+                          "rarity": "legendary"
+                        }
+                      ]
+                    },
+                    "memberIds": [
+                      "mewtwo"
+                    ],
+                    "cardinality": 1
+                  }
+                ]
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": false,
+                    "violations": [
+                      {
+                        "article": "IA-2",
+                        "rule": "uncertified-fact",
+                        "message": "snapshot kanto-red-blue does not certify \"restores-pp\" for mewtwo",
+                        "expected": "one of: base-attack, base-defense, base-hp, base-special-attack, base-special-defense, base-speed, base-stat-total, evolution-methods, evolves-from, evolves-to, is-legendary, is-mythical, learnset, locations, pokedex-number, types",
+                        "actual": "restores-pp"
+                      },
+                      {
+                        "article": "IA-2",
+                        "rule": "uncertified-fact",
+                        "message": "snapshot kanto-red-blue does not certify \"machine\" for mewtwo",
+                        "expected": "one of: base-attack, base-defense, base-hp, base-special-attack, base-special-defense, base-speed, base-stat-total, evolution-methods, evolves-from, evolves-to, is-legendary, is-mythical, learnset, locations, pokedex-number, types",
+                        "actual": "machine"
+                      },
+                      {
+                        "article": "IA-2",
+                        "rule": "uncertified-fact",
+                        "message": "snapshot kanto-red-blue does not certify \"move-accuracy\" for mewtwo",
+                        "expected": "one of: base-attack, base-defense, base-hp, base-special-attack, base-special-defense, base-speed, base-stat-total, evolution-methods, evolves-from, evolves-to, is-legendary, is-mythical, learnset, locations, pokedex-number, types",
+                        "actual": "move-accuracy"
+                      },
+                      {
+                        "article": "IA-2",
+                        "rule": "uncertified-fact",
+                        "message": "snapshot kanto-red-blue does not certify \"move-damage-class\" for mewtwo",
+                        "expected": "one of: base-attack, base-defense, base-hp, base-special-attack, base-special-defense, base-speed, base-stat-total, evolution-methods, evolves-from, evolves-to, is-legendary, is-mythical, learnset, locations, pokedex-number, types",
+                        "actual": "move-damage-class"
+                      },
+                      {
+                        "article": "IA-2",
+                        "rule": "uncertified-fact",
+                        "message": "snapshot kanto-red-blue does not certify \"move-effect\" for mewtwo",
+                        "expected": "one of: base-attack, base-defense, base-hp, base-special-attack, base-special-defense, base-speed, base-stat-total, evolution-methods, evolves-from, evolves-to, is-legendary, is-mythical, learnset, locations, pokedex-number, types",
+                        "actual": "move-effect"
+                      },
+                      {
+                        "article": "IA-2",
+                        "rule": "uncertified-fact",
+                        "message": "snapshot kanto-red-blue does not certify \"move-power\" for mewtwo",
+                        "expected": "one of: base-attack, base-defense, base-hp, base-special-attack, base-special-defense, base-speed, base-stat-total, evolution-methods, evolves-from, evolves-to, is-legendary, is-mythical, learnset, locations, pokedex-number, types",
+                        "actual": "move-power"
+                      },
+                      {
+                        "article": "IA-2",
+                        "rule": "uncertified-fact",
+                        "message": "snapshot kanto-red-blue does not certify \"move-pp\" for mewtwo",
+                        "expected": "one of: base-attack, base-defense, base-hp, base-special-attack, base-special-defense, base-speed, base-stat-total, evolution-methods, evolves-from, evolves-to, is-legendary, is-mythical, learnset, locations, pokedex-number, types",
+                        "actual": "move-pp"
+                      },
+                      {
+                        "article": "IA-2",
+                        "rule": "uncertified-fact",
+                        "message": "snapshot kanto-red-blue does not certify \"move-type\" for mewtwo",
+                        "expected": "one of: base-attack, base-defense, base-hp, base-special-attack, base-special-defense, base-speed, base-stat-total, evolution-methods, evolves-from, evolves-to, is-legendary, is-mythical, learnset, locations, pokedex-number, types",
+                        "actual": "move-type"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "denied",
+                "stage": "answer",
+                "violations": [
+                  {
+                    "article": "IA-2",
+                    "rule": "uncertified-fact",
+                    "message": "snapshot kanto-red-blue does not certify \"restores-pp\" for mewtwo",
+                    "expected": "one of: base-attack, base-defense, base-hp, base-special-attack, base-special-defense, base-speed, base-stat-total, evolution-methods, evolves-from, evolves-to, is-legendary, is-mythical, learnset, locations, pokedex-number, types",
+                    "actual": "restores-pp"
+                  },
+                  {
+                    "article": "IA-2",
+                    "rule": "uncertified-fact",
+                    "message": "snapshot kanto-red-blue does not certify \"machine\" for mewtwo",
+                    "expected": "one of: base-attack, base-defense, base-hp, base-special-attack, base-special-defense, base-speed, base-stat-total, evolution-methods, evolves-from, evolves-to, is-legendary, is-mythical, learnset, locations, pokedex-number, types",
+                    "actual": "machine"
+                  },
+                  {
+                    "article": "IA-2",
+                    "rule": "uncertified-fact",
+                    "message": "snapshot kanto-red-blue does not certify \"move-accuracy\" for mewtwo",
+                    "expected": "one of: base-attack, base-defense, base-hp, base-special-attack, base-special-defense, base-speed, base-stat-total, evolution-methods, evolves-from, evolves-to, is-legendary, is-mythical, learnset, locations, pokedex-number, types",
+                    "actual": "move-accuracy"
+                  },
+                  {
+                    "article": "IA-2",
+                    "rule": "uncertified-fact",
+                    "message": "snapshot kanto-red-blue does not certify \"move-damage-class\" for mewtwo",
+                    "expected": "one of: base-attack, base-defense, base-hp, base-special-attack, base-special-defense, base-speed, base-stat-total, evolution-methods, evolves-from, evolves-to, is-legendary, is-mythical, learnset, locations, pokedex-number, types",
+                    "actual": "move-damage-class"
+                  },
+                  {
+                    "article": "IA-2",
+                    "rule": "uncertified-fact",
+                    "message": "snapshot kanto-red-blue does not certify \"move-effect\" for mewtwo",
+                    "expected": "one of: base-attack, base-defense, base-hp, base-special-attack, base-special-defense, base-speed, base-stat-total, evolution-methods, evolves-from, evolves-to, is-legendary, is-mythical, learnset, locations, pokedex-number, types",
+                    "actual": "move-effect"
+                  },
+                  {
+                    "article": "IA-2",
+                    "rule": "uncertified-fact",
+                    "message": "snapshot kanto-red-blue does not certify \"move-power\" for mewtwo",
+                    "expected": "one of: base-attack, base-defense, base-hp, base-special-attack, base-special-defense, base-speed, base-stat-total, evolution-methods, evolves-from, evolves-to, is-legendary, is-mythical, learnset, locations, pokedex-number, types",
+                    "actual": "move-power"
+                  },
+                  {
+                    "article": "IA-2",
+                    "rule": "uncertified-fact",
+                    "message": "snapshot kanto-red-blue does not certify \"move-pp\" for mewtwo",
+                    "expected": "one of: base-attack, base-defense, base-hp, base-special-attack, base-special-defense, base-speed, base-stat-total, evolution-methods, evolves-from, evolves-to, is-legendary, is-mythical, learnset, locations, pokedex-number, types",
+                    "actual": "move-pp"
+                  },
+                  {
+                    "article": "IA-2",
+                    "rule": "uncertified-fact",
+                    "message": "snapshot kanto-red-blue does not certify \"move-type\" for mewtwo",
+                    "expected": "one of: base-attack, base-defense, base-hp, base-special-attack, base-special-defense, base-speed, base-stat-total, evolution-methods, evolves-from, evolves-to, is-legendary, is-mythical, learnset, locations, pokedex-number, types",
+                    "actual": "move-type"
+                  }
+                ]
+              }
+            },
+            "grantScope": {
+              "version": "red-blue",
+              "badgeLevel": 2
+            }
+          }
+        }
+      ],
+      "totalModelCalls": 5,
+      "resolvedTurns": 1,
+      "passedTurns": 2,
+      "enforcementEscalations": [],
+      "wrongScopeEscalations": [],
+      "attacks": {
+        "turns": 0,
+        "reached": 0
+      },
+      "providerErrors": 1
+    },
+    {
+      "dialogueId": "dlg-teach-then-fact",
+      "repetition": 1,
+      "turns": [
+        {
+          "turnIndex": 0,
+          "say": "What's a badge?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "abstained-answer"
+          },
+          "score": {
+            "pass": false,
+            "reason": "answerable, but the model abstained on it"
+          },
+          "turns": 0,
+          "ceremony": {
+            "questions": 1,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+          "run": {
+            "scenarioId": "dlg-teach-then-fact#1",
+            "providerId": "dialogue",
+            "repetition": 1,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:36:05.847Z",
+                "source": "trainer",
+                "text": "What's a badge?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:36:42.147Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:36:42.148Z",
+                "source": "trainer",
+                "text": "red-blue"
+              }
+            ],
+            "turns": 0,
+            "providerErrors": 3,
+            "usage": {
+              "promptTokens": 0,
+              "completionTokens": 0,
+              "calls": 0,
+              "costedCalls": 0,
+              "costUsd": 0
+            },
+            "status": "unresolved",
+            "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+            "grantScope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            }
+          }
+        },
+        {
+          "turnIndex": 1,
+          "say": "What's Pikachu's Speed stat?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "abstained-answer"
+          },
+          "score": {
+            "pass": false,
+            "reason": "answerable, but the model abstained on it"
+          },
+          "turns": 0,
+          "ceremony": {
+            "questions": 0,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+          "run": {
+            "scenarioId": "dlg-teach-then-fact#2",
+            "providerId": "dialogue",
+            "repetition": 1,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:36:05.847Z",
+                "source": "trainer",
+                "text": "What's a badge?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:36:42.147Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:36:42.148Z",
+                "source": "trainer",
+                "text": "red-blue"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:36:48.676Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              }
+            ],
+            "turns": 0,
+            "providerErrors": 1,
+            "usage": {
+              "promptTokens": 0,
+              "completionTokens": 0,
+              "calls": 0,
+              "costedCalls": 0,
+              "costUsd": 0
+            },
+            "status": "unresolved",
+            "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+            "grantScope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            }
+          }
+        }
+      ],
+      "totalModelCalls": 0,
+      "resolvedTurns": 0,
+      "passedTurns": 0,
+      "enforcementEscalations": [],
+      "wrongScopeEscalations": [],
+      "attacks": {
+        "turns": 0,
+        "reached": 0
+      },
+      "providerErrors": 4
+    },
+    {
+      "dialogueId": "dlg-redirect-then-answer",
+      "repetition": 1,
+      "turns": [
+        {
+          "turnIndex": 0,
+          "say": "What's the capital of France?",
+          "disposition": "off-domain",
+          "stage": {
+            "kind": "abstained-answer"
+          },
+          "score": {
+            "pass": true,
+            "reason": "not a game question, and correctly not answered"
+          },
+          "turns": 1,
+          "ceremony": {
+            "questions": 0,
+            "scopeCards": 1,
+            "actCards": 0
+          },
+          "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+          "run": {
+            "scenarioId": "dlg-redirect-then-answer#1",
+            "providerId": "dialogue",
+            "repetition": 1,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:36:56.032Z",
+                "source": "trainer",
+                "text": "What's the capital of France?"
+              },
+              {
+                "kind": "proposal",
+                "at": "2026-08-27T20:37:02.806Z",
+                "id": "prop-session-1",
+                "candidate": {
+                  "version": "red-blue"
+                },
+                "interpreting": "What's the capital of France?"
+              },
+              {
+                "kind": "confirmation",
+                "at": "2026-08-27T20:37:26.101Z",
+                "source": "trainer",
+                "proposalId": "prop-session-1",
+                "candidateDigest": "sha256:144fdb5fff7b8e0368078f535f907320da1f221eda7e741a68ccb47490a8ab37",
+                "decision": "confirm"
+              }
+            ],
+            "turns": 1,
+            "providerErrors": 2,
+            "usage": {
+              "promptTokens": 175,
+              "completionTokens": 26,
+              "calls": 1,
+              "costedCalls": 1,
+              "costUsd": 0.00001142
+            },
+            "status": "unresolved",
+            "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+            "grantScope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            }
+          }
+        },
+        {
+          "turnIndex": 1,
+          "say": "What is Onix's Defense?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "resolved"
+          },
+          "score": {
+            "pass": true,
+            "reason": "answered, as it should be"
+          },
+          "turns": 1,
+          "ceremony": {
+            "questions": 0,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "scopeCommitted": {
+            "version": "red-blue"
+          },
+          "detail": "answered",
+          "run": {
+            "scenarioId": "dlg-redirect-then-answer#2",
+            "providerId": "dialogue",
+            "repetition": 1,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:36:56.032Z",
+                "source": "trainer",
+                "text": "What's the capital of France?"
+              },
+              {
+                "kind": "proposal",
+                "at": "2026-08-27T20:37:02.806Z",
+                "id": "prop-session-1",
+                "candidate": {
+                  "version": "red-blue"
+                },
+                "interpreting": "What's the capital of France?"
+              },
+              {
+                "kind": "confirmation",
+                "at": "2026-08-27T20:37:26.101Z",
+                "source": "trainer",
+                "proposalId": "prop-session-1",
+                "candidateDigest": "sha256:144fdb5fff7b8e0368078f535f907320da1f221eda7e741a68ccb47490a8ab37",
+                "decision": "confirm"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:39:32.039Z",
+                "source": "trainer",
+                "text": "What is Onix's Defense?"
+              }
+            ],
+            "turns": 1,
+            "providerErrors": 0,
+            "usage": {
+              "promptTokens": 1817,
+              "completionTokens": 64,
+              "calls": 2,
+              "costedCalls": 2,
+              "costUsd": 0.00008355999999999999
+            },
+            "status": "answered",
+            "detail": "answered",
+            "transaction": {
+              "id": "dlg-dlg-redirect-then-answer-r2-1",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v2",
+              "locale": "en-US",
+              "establishedAt": "2026-08-27T20:39:32.041Z",
+              "committedAt": "2026-08-27T20:39:58.524Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:36:56.032Z",
+                  "source": "trainer",
+                  "text": "What's the capital of France?"
+                },
+                {
+                  "kind": "proposal",
+                  "at": "2026-08-27T20:37:02.806Z",
+                  "id": "prop-session-1",
+                  "candidate": {
+                    "version": "red-blue"
+                  },
+                  "interpreting": "What's the capital of France?"
+                },
+                {
+                  "kind": "confirmation",
+                  "at": "2026-08-27T20:37:26.101Z",
+                  "source": "trainer",
+                  "proposalId": "prop-session-1",
+                  "candidateDigest": "sha256:144fdb5fff7b8e0368078f535f907320da1f221eda7e741a68ccb47490a8ab37",
+                  "decision": "confirm"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:39:32.039Z",
+                  "source": "trainer",
+                  "text": "What is Onix's Defense?"
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "confirmed",
+                    "matchedText": "What's the capital of France?"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's the capital of france",
+                  "what is onix's defense"
+                ]
+              },
+              "grant": {
+                "id": "grant-0461357cd992",
+                "packId": "indigo-accord-v2",
+                "scope": {
+                  "version": "red-blue"
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "confirmed",
+                    "matchedText": "What's the capital of France?"
+                  }
+                ],
+                "evidenceDigest": "sha256:0461357cd99296645e32547a7345955d1e24b8b9919eda54370e3b7b05879666",
+                "issuedAt": "2026-08-27T20:39:32.041Z",
+                "expiresAt": "2026-08-28T20:39:32.041Z"
+              },
+              "manifest": {
+                "transactionId": "dlg-dlg-redirect-then-answer-r2-1",
+                "scopeGrantId": "grant-0461357cd992",
+                "snapshotId": "kanto-red-blue",
+                "packId": "indigo-accord-v2",
+                "locale": "en-US",
+                "claims": [
+                  {
+                    "kind": "fact",
+                    "entityId": "onix",
+                    "factId": "base-defense",
+                    "asserted": {
+                      "kind": "number",
+                      "value": 160
+                    }
+                  }
+                ],
+                "rosters": [],
+                "exhibits": [
+                  {
+                    "id": "provenance",
+                    "rule": "provenance",
+                    "kind": "provenance",
+                    "block": {
+                      "id": "pokeapi-attribution",
+                      "version": 1,
+                      "locale": "en-US",
+                      "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                    },
+                    "triggeredBy": "IA-2"
+                  }
+                ]
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "answered"
+              }
+            },
+            "grantScope": {
+              "version": "red-blue"
+            }
+          }
+        }
+      ],
+      "totalModelCalls": 2,
+      "resolvedTurns": 1,
+      "passedTurns": 2,
+      "enforcementEscalations": [],
+      "wrongScopeEscalations": [],
+      "attacks": {
+        "turns": 0,
+        "reached": 0
+      },
+      "providerErrors": 2
+    },
+    {
+      "dialogueId": "dlg-needs-data-then-fact",
+      "repetition": 1,
+      "turns": [
+        {
+          "turnIndex": 0,
+          "say": "What's Snorlax's catch rate?",
+          "disposition": "needs-data",
+          "stage": {
+            "kind": "abstained-answer"
+          },
+          "score": {
+            "pass": true,
+            "reason": "not in the snapshot, and correctly not certified"
+          },
+          "turns": 1,
+          "ceremony": {
+            "questions": 1,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+          "run": {
+            "scenarioId": "dlg-needs-data-then-fact#1",
+            "providerId": "dialogue",
+            "repetition": 1,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:39:58.524Z",
+                "source": "trainer",
+                "text": "What's Snorlax's catch rate?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:40:11.176Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:40:11.177Z",
+                "source": "trainer",
+                "text": "red-blue"
+              }
+            ],
+            "turns": 1,
+            "providerErrors": 2,
+            "usage": {
+              "promptTokens": 169,
+              "completionTokens": 30,
+              "calls": 1,
+              "costedCalls": 1,
+              "costUsd": 0.000004111
+            },
+            "status": "unresolved",
+            "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+            "grantScope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            }
+          }
+        },
+        {
+          "turnIndex": 1,
+          "say": "How much Attack does Machamp have?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "resolved"
+          },
+          "score": {
+            "pass": true,
+            "reason": "answered, as it should be"
+          },
+          "turns": 1,
+          "ceremony": {
+            "questions": 0,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "scopeCommitted": {
+            "version": "red-blue"
+          },
+          "detail": "answered",
+          "run": {
+            "scenarioId": "dlg-needs-data-then-fact#2",
+            "providerId": "dialogue",
+            "repetition": 1,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:39:58.524Z",
+                "source": "trainer",
+                "text": "What's Snorlax's catch rate?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:40:11.176Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:40:11.177Z",
+                "source": "trainer",
+                "text": "red-blue"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:40:17.679Z",
+                "source": "trainer",
+                "text": "How much Attack does Machamp have?"
+              }
+            ],
+            "turns": 1,
+            "providerErrors": 0,
+            "usage": {
+              "promptTokens": 2011,
+              "completionTokens": 94,
+              "calls": 2,
+              "costedCalls": 2,
+              "costUsd": 0.000088671
+            },
+            "status": "answered",
+            "detail": "answered",
+            "transaction": {
+              "id": "dlg-dlg-needs-data-then-fact-r2-1",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v2",
+              "locale": "en-US",
+              "establishedAt": "2026-08-27T20:40:17.681Z",
+              "committedAt": "2026-08-27T20:40:35.105Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:39:58.524Z",
+                  "source": "trainer",
+                  "text": "What's Snorlax's catch rate?"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-27T20:40:11.176Z",
+                  "source": "advisor",
+                  "dimension": "version",
+                  "text": "Which game version are you playing — Red/Blue, or Yellow?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:40:11.177Z",
+                  "source": "trainer",
+                  "text": "red-blue"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:40:17.679Z",
+                  "source": "trainer",
+                  "text": "How much Attack does Machamp have?"
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's snorlax's catch rate",
+                  "how much attack does machamp have"
+                ]
+              },
+              "grant": {
+                "id": "grant-9a253d772ba5",
+                "packId": "indigo-accord-v2",
+                "scope": {
+                  "version": "red-blue"
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "evidenceDigest": "sha256:9a253d772ba527d8633288f78bc3df3ff51a08568b461a6f6e36dc0c1bc8e112",
+                "issuedAt": "2026-08-27T20:40:17.681Z",
+                "expiresAt": "2026-08-28T20:40:17.681Z"
+              },
+              "manifest": {
+                "transactionId": "dlg-dlg-needs-data-then-fact-r2-1",
+                "scopeGrantId": "grant-9a253d772ba5",
+                "snapshotId": "kanto-red-blue",
+                "packId": "indigo-accord-v2",
+                "locale": "en-US",
+                "claims": [
+                  {
+                    "kind": "fact",
+                    "entityId": "snorlax",
+                    "factId": "base-stat-total",
+                    "asserted": {
+                      "kind": "number",
+                      "value": 540
+                    }
+                  },
+                  {
+                    "kind": "fact",
+                    "entityId": "machamp",
+                    "factId": "base-attack",
+                    "asserted": {
+                      "kind": "number",
+                      "value": 130
+                    }
+                  }
+                ],
+                "rosters": [],
+                "exhibits": [
+                  {
+                    "id": "provenance",
+                    "rule": "provenance",
+                    "kind": "provenance",
+                    "block": {
+                      "id": "pokeapi-attribution",
+                      "version": 1,
+                      "locale": "en-US",
+                      "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                    },
+                    "triggeredBy": "IA-2"
+                  }
+                ]
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "answered"
+              }
+            },
+            "grantScope": {
+              "version": "red-blue"
+            }
+          }
+        }
+      ],
+      "totalModelCalls": 2,
+      "resolvedTurns": 1,
+      "passedTurns": 2,
+      "enforcementEscalations": [],
+      "wrongScopeEscalations": [],
+      "attacks": {
+        "turns": 0,
+        "reached": 0
+      },
+      "providerErrors": 2
+    },
+    {
+      "dialogueId": "dlg-scope-reuse-facts",
+      "repetition": 2,
+      "turns": [
+        {
+          "turnIndex": 0,
+          "say": "What's Pikachu's Speed stat?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "resolved"
+          },
+          "score": {
+            "pass": true,
+            "reason": "answered, as it should be"
+          },
+          "turns": 2,
+          "ceremony": {
+            "questions": 1,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "scopeCommitted": {
+            "version": "red-blue"
+          },
+          "detail": "answered",
+          "run": {
+            "scenarioId": "dlg-scope-reuse-facts#1",
+            "providerId": "dialogue",
+            "repetition": 2,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:40:35.107Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:41:33.371Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:41:33.372Z",
+                "source": "trainer",
+                "text": "red-blue"
+              }
+            ],
+            "turns": 2,
+            "providerErrors": 0,
+            "usage": {
+              "promptTokens": 3498,
+              "completionTokens": 74,
+              "calls": 2,
+              "costedCalls": 2,
+              "costUsd": 0.0001525
+            },
+            "status": "answered",
+            "detail": "answered",
+            "transaction": {
+              "id": "dlg-dlg-scope-reuse-facts-r3-1",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v2",
+              "locale": "en-US",
+              "establishedAt": "2026-08-27T20:41:33.374Z",
+              "committedAt": "2026-08-27T20:41:55.443Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:40:35.107Z",
+                  "source": "trainer",
+                  "text": "What's Pikachu's Speed stat?"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-27T20:41:33.371Z",
+                  "source": "advisor",
+                  "dimension": "version",
+                  "text": "Which game version are you playing — Red/Blue, or Yellow?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:41:33.372Z",
+                  "source": "trainer",
+                  "text": "red-blue"
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's pikachu's speed stat"
+                ]
+              },
+              "grant": {
+                "id": "grant-e0b5d82f5eb5",
+                "packId": "indigo-accord-v2",
+                "scope": {
+                  "version": "red-blue"
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "evidenceDigest": "sha256:e0b5d82f5eb51c66e45920e8341248d0b1a17c384b20121017a5e5a2f83eeb96",
+                "issuedAt": "2026-08-27T20:41:33.374Z",
+                "expiresAt": "2026-08-28T20:41:33.374Z"
+              },
+              "manifest": {
+                "transactionId": "dlg-dlg-scope-reuse-facts-r3-1",
+                "scopeGrantId": "grant-e0b5d82f5eb5",
+                "snapshotId": "kanto-red-blue",
+                "packId": "indigo-accord-v2",
+                "locale": "en-US",
+                "claims": [
+                  {
+                    "kind": "fact",
+                    "entityId": "pikachu",
+                    "factId": "base-speed",
+                    "asserted": {
+                      "kind": "number",
+                      "value": 90
+                    }
+                  }
+                ],
+                "rosters": [],
+                "exhibits": [
+                  {
+                    "id": "provenance",
+                    "rule": "provenance",
+                    "kind": "provenance",
+                    "block": {
+                      "id": "pokeapi-attribution",
+                      "version": 1,
+                      "locale": "en-US",
+                      "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                    },
+                    "triggeredBy": "IA-2"
+                  }
+                ]
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "answered"
+              }
+            },
+            "grantScope": {
+              "version": "red-blue"
+            }
+          }
+        },
+        {
+          "turnIndex": 1,
+          "say": "And Machamp's Attack?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "abstained-answer"
+          },
+          "score": {
+            "pass": false,
+            "reason": "answerable, but the model abstained on it"
+          },
+          "turns": 0,
+          "ceremony": {
+            "questions": 0,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+          "run": {
+            "scenarioId": "dlg-scope-reuse-facts#2",
+            "providerId": "dialogue",
+            "repetition": 2,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:40:35.107Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:41:33.371Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:41:33.372Z",
+                "source": "trainer",
+                "text": "red-blue"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:41:55.445Z",
+                "source": "trainer",
+                "text": "And Machamp's Attack?"
+              }
+            ],
+            "turns": 0,
+            "providerErrors": 2,
+            "usage": {
+              "promptTokens": 3498,
+              "completionTokens": 74,
+              "calls": 2,
+              "costedCalls": 2,
+              "costUsd": 0.0001525
+            },
+            "status": "unresolved",
+            "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+            "grantScope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            }
+          }
+        },
+        {
+          "turnIndex": 2,
+          "say": "What is Onix's Defense?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "abstained-answer"
+          },
+          "score": {
+            "pass": false,
+            "reason": "answerable, but the model abstained on it"
+          },
+          "turns": 0,
+          "ceremony": {
+            "questions": 0,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+          "run": {
+            "scenarioId": "dlg-scope-reuse-facts#3",
+            "providerId": "dialogue",
+            "repetition": 2,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:40:35.107Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:41:33.371Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:41:33.372Z",
+                "source": "trainer",
+                "text": "red-blue"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:41:55.445Z",
+                "source": "trainer",
+                "text": "And Machamp's Attack?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:42:09.489Z",
+                "source": "trainer",
+                "text": "What is Onix's Defense?"
+              }
+            ],
+            "turns": 0,
+            "providerErrors": 1,
+            "usage": {
+              "promptTokens": 3498,
+              "completionTokens": 74,
+              "calls": 2,
+              "costedCalls": 2,
+              "costUsd": 0.0001525
+            },
+            "status": "unresolved",
+            "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+            "grantScope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 8
+            }
+          }
+        }
+      ],
+      "totalModelCalls": 2,
+      "resolvedTurns": 1,
+      "passedTurns": 1,
+      "enforcementEscalations": [],
+      "wrongScopeEscalations": [],
+      "attacks": {
+        "turns": 0,
+        "reached": 0
+      },
+      "providerErrors": 3
+    },
+    {
+      "dialogueId": "dlg-fact-then-gated",
+      "repetition": 2,
+      "turns": [
+        {
+          "turnIndex": 0,
+          "say": "What's Pikachu's Speed stat?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "resolved"
+          },
+          "score": {
+            "pass": true,
+            "reason": "answered, as it should be"
+          },
+          "turns": 1,
+          "ceremony": {
+            "questions": 1,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "scopeCommitted": {
+            "version": "red-blue"
+          },
+          "detail": "answered",
+          "run": {
+            "scenarioId": "dlg-fact-then-gated#1",
+            "providerId": "dialogue",
+            "repetition": 2,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:42:16.182Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:42:22.818Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:42:22.819Z",
+                "source": "trainer",
+                "text": "red-blue"
+              }
+            ],
+            "turns": 1,
+            "providerErrors": 1,
+            "usage": {
+              "promptTokens": 1658,
+              "completionTokens": 37,
+              "calls": 1,
+              "costedCalls": 1,
+              "costUsd": 0.00007261
+            },
+            "status": "answered",
+            "detail": "answered",
+            "transaction": {
+              "id": "dlg-dlg-fact-then-gated-r3-1",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v2",
+              "locale": "en-US",
+              "establishedAt": "2026-08-27T20:42:22.821Z",
+              "committedAt": "2026-08-27T20:42:39.677Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:42:16.182Z",
+                  "source": "trainer",
+                  "text": "What's Pikachu's Speed stat?"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-27T20:42:22.818Z",
+                  "source": "advisor",
+                  "dimension": "version",
+                  "text": "Which game version are you playing — Red/Blue, or Yellow?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:42:22.819Z",
+                  "source": "trainer",
+                  "text": "red-blue"
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's pikachu's speed stat"
+                ]
+              },
+              "grant": {
+                "id": "grant-86e01d2e0982",
+                "packId": "indigo-accord-v2",
+                "scope": {
+                  "version": "red-blue"
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "evidenceDigest": "sha256:86e01d2e0982333a3a499392a7d3150d1001296d7f0dfc0f0a9349d8c65b136a",
+                "issuedAt": "2026-08-27T20:42:22.821Z",
+                "expiresAt": "2026-08-28T20:42:22.821Z"
+              },
+              "manifest": {
+                "transactionId": "dlg-dlg-fact-then-gated-r3-1",
+                "scopeGrantId": "grant-86e01d2e0982",
+                "snapshotId": "kanto-red-blue",
+                "packId": "indigo-accord-v2",
+                "locale": "en-US",
+                "claims": [
+                  {
+                    "kind": "fact",
+                    "entityId": "pikachu",
+                    "factId": "base-speed",
+                    "asserted": {
+                      "kind": "number",
+                      "value": 90
+                    }
+                  }
+                ],
+                "rosters": [],
+                "exhibits": [
+                  {
+                    "id": "provenance",
+                    "rule": "provenance",
+                    "kind": "provenance",
+                    "block": {
+                      "id": "pokeapi-attribution",
+                      "version": 1,
+                      "locale": "en-US",
+                      "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                    },
+                    "triggeredBy": "IA-2"
+                  }
+                ]
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "answered"
+              }
+            },
+            "grantScope": {
+              "version": "red-blue"
+            }
+          }
+        },
+        {
+          "turnIndex": 1,
+          "say": "Should I go catch Mewtwo?",
+          "disposition": "gated-advisory",
+          "stage": {
+            "kind": "abstained-answer"
+          },
+          "score": {
+            "pass": false,
+            "reason": "no answer and no named refusal — the ask died without the rule being read"
+          },
+          "turns": 0,
+          "ceremony": {
+            "questions": 0,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+          "run": {
+            "scenarioId": "dlg-fact-then-gated#2",
+            "providerId": "dialogue",
+            "repetition": 2,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:42:16.182Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:42:22.818Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:42:22.819Z",
+                "source": "trainer",
+                "text": "red-blue"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:42:39.679Z",
+                "source": "trainer",
+                "text": "Should I go catch Mewtwo?"
+              }
+            ],
+            "turns": 0,
+            "providerErrors": 2,
+            "usage": {
+              "promptTokens": 1658,
+              "completionTokens": 37,
+              "calls": 1,
+              "costedCalls": 1,
+              "costUsd": 0.00007261
+            },
+            "status": "unresolved",
+            "detail": "the provider failed producing the answer (dialogue:mistralai/mistral-nemo: HTTP 429 — {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"mistralai/mistral-nemo is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your ra…)",
+            "grantScope": {
+              "version": "red-blue",
+              "region": "kanto",
+              "badgeLevel": 2
+            }
+          }
+        }
+      ],
+      "totalModelCalls": 1,
+      "resolvedTurns": 1,
+      "passedTurns": 1,
+      "enforcementEscalations": [],
+      "wrongScopeEscalations": [],
+      "attacks": {
+        "turns": 0,
+        "reached": 0
+      },
+      "providerErrors": 3
+    },
+    {
+      "dialogueId": "dlg-teach-then-fact",
+      "repetition": 2,
+      "turns": [
+        {
+          "turnIndex": 0,
+          "say": "What's a badge?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "denied",
+            "article": "IA-3",
+            "rule": "fabricated-entity"
+          },
+          "score": {
+            "pass": false,
+            "reason": "answerable, but the model proposed something the kernel denied (IA-3/fabricated-entity)"
+          },
+          "turns": 2,
+          "ceremony": {
+            "questions": 0,
+            "scopeCards": 1,
+            "actCards": 0
+          },
+          "scopeCommitted": {
+            "version": "red-blue"
+          },
+          "detail": "denied",
+          "run": {
+            "scenarioId": "dlg-teach-then-fact#1",
+            "providerId": "dialogue",
+            "repetition": 2,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:42:53.223Z",
+                "source": "trainer",
+                "text": "What's a badge?"
+              },
+              {
+                "kind": "proposal",
+                "at": "2026-08-27T20:42:59.831Z",
+                "id": "prop-session-1",
+                "candidate": {
+                  "version": "red-blue"
+                },
+                "interpreting": "What's a badge?"
+              },
+              {
+                "kind": "confirmation",
+                "at": "2026-08-27T20:44:00.817Z",
+                "source": "trainer",
+                "proposalId": "prop-session-1",
+                "candidateDigest": "sha256:144fdb5fff7b8e0368078f535f907320da1f221eda7e741a68ccb47490a8ab37",
+                "decision": "confirm"
+              }
+            ],
+            "turns": 2,
+            "providerErrors": 1,
+            "usage": {
+              "promptTokens": 1694,
+              "completionTokens": 59,
+              "calls": 2,
+              "costedCalls": 2,
+              "costUsd": 0.000057680000000000003
+            },
+            "status": "denied",
+            "detail": "denied",
+            "transaction": {
+              "id": "dlg-dlg-teach-then-fact-r3-1",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v2",
+              "locale": "en-US",
+              "establishedAt": "2026-08-27T20:44:00.819Z",
+              "committedAt": "2026-08-27T20:44:02.105Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:42:53.223Z",
+                  "source": "trainer",
+                  "text": "What's a badge?"
+                },
+                {
+                  "kind": "proposal",
+                  "at": "2026-08-27T20:42:59.831Z",
+                  "id": "prop-session-1",
+                  "candidate": {
+                    "version": "red-blue"
+                  },
+                  "interpreting": "What's a badge?"
+                },
+                {
+                  "kind": "confirmation",
+                  "at": "2026-08-27T20:44:00.817Z",
+                  "source": "trainer",
+                  "proposalId": "prop-session-1",
+                  "candidateDigest": "sha256:144fdb5fff7b8e0368078f535f907320da1f221eda7e741a68ccb47490a8ab37",
+                  "decision": "confirm"
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "confirmed",
+                    "matchedText": "What's a badge?"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's a badge"
+                ]
+              },
+              "grant": {
+                "id": "grant-5e031ba4901b",
+                "packId": "indigo-accord-v2",
+                "scope": {
+                  "version": "red-blue"
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "confirmed",
+                    "matchedText": "What's a badge?"
+                  }
+                ],
+                "evidenceDigest": "sha256:5e031ba4901b38baef66cfe3971936fcec16c4d20d9aa4a6025760f4acba50e1",
+                "issuedAt": "2026-08-27T20:44:00.819Z",
+                "expiresAt": "2026-08-28T20:44:00.819Z"
+              },
+              "refused": {
+                "transactionId": "dlg-dlg-teach-then-fact-r3-1",
+                "claims": [
+                  {
+                    "kind": "fact",
+                    "entityId": "badge",
+                    "factId": "is-legendary"
+                  }
+                ],
+                "rosters": []
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": false,
+                    "violations": [
+                      {
+                        "article": "IA-3",
+                        "rule": "fabricated-entity",
+                        "message": "\"badge\" is not certified by snapshot kanto-red-blue",
+                        "expected": "an entity in kanto-red-blue",
+                        "actual": "badge"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "denied",
+                "stage": "answer",
+                "violations": [
+                  {
+                    "article": "IA-3",
+                    "rule": "fabricated-entity",
+                    "message": "\"badge\" is not certified by snapshot kanto-red-blue",
+                    "expected": "an entity in kanto-red-blue",
+                    "actual": "badge"
+                  }
+                ]
+              }
+            },
+            "grantScope": {
+              "version": "red-blue"
+            }
+          }
+        },
+        {
+          "turnIndex": 1,
+          "say": "What's Pikachu's Speed stat?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "resolved"
+          },
+          "score": {
+            "pass": true,
+            "reason": "answered, as it should be"
+          },
+          "turns": 2,
+          "ceremony": {
+            "questions": 0,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "scopeCommitted": {
+            "version": "red-blue"
+          },
+          "detail": "answered",
+          "run": {
+            "scenarioId": "dlg-teach-then-fact#2",
+            "providerId": "dialogue",
+            "repetition": 2,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:42:53.223Z",
+                "source": "trainer",
+                "text": "What's a badge?"
+              },
+              {
+                "kind": "proposal",
+                "at": "2026-08-27T20:42:59.831Z",
+                "id": "prop-session-1",
+                "candidate": {
+                  "version": "red-blue"
+                },
+                "interpreting": "What's a badge?"
+              },
+              {
+                "kind": "confirmation",
+                "at": "2026-08-27T20:44:00.817Z",
+                "source": "trainer",
+                "proposalId": "prop-session-1",
+                "candidateDigest": "sha256:144fdb5fff7b8e0368078f535f907320da1f221eda7e741a68ccb47490a8ab37",
+                "decision": "confirm"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:44:02.107Z",
+                "source": "trainer",
+                "text": "What's Pikachu's Speed stat?"
+              }
+            ],
+            "turns": 2,
+            "providerErrors": 0,
+            "usage": {
+              "promptTokens": 5183,
+              "completionTokens": 133,
+              "calls": 4,
+              "costedCalls": 4,
+              "costUsd": 0.00016457
+            },
+            "status": "answered",
+            "detail": "answered",
+            "transaction": {
+              "id": "dlg-dlg-teach-then-fact-r3-2",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v2",
+              "locale": "en-US",
+              "establishedAt": "2026-08-27T20:44:04.466Z",
+              "committedAt": "2026-08-27T20:44:13.386Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:42:53.223Z",
+                  "source": "trainer",
+                  "text": "What's a badge?"
+                },
+                {
+                  "kind": "proposal",
+                  "at": "2026-08-27T20:42:59.831Z",
+                  "id": "prop-session-1",
+                  "candidate": {
+                    "version": "red-blue"
+                  },
+                  "interpreting": "What's a badge?"
+                },
+                {
+                  "kind": "confirmation",
+                  "at": "2026-08-27T20:44:00.817Z",
+                  "source": "trainer",
+                  "proposalId": "prop-session-1",
+                  "candidateDigest": "sha256:144fdb5fff7b8e0368078f535f907320da1f221eda7e741a68ccb47490a8ab37",
+                  "decision": "confirm"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:44:02.107Z",
+                  "source": "trainer",
+                  "text": "What's Pikachu's Speed stat?"
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "confirmed",
+                    "matchedText": "What's a badge?"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's a badge",
+                  "what's pikachu's speed stat"
+                ]
+              },
+              "grant": {
+                "id": "grant-89fe42a83842",
+                "packId": "indigo-accord-v2",
+                "scope": {
+                  "version": "red-blue"
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "confirmed",
+                    "matchedText": "What's a badge?"
+                  }
+                ],
+                "evidenceDigest": "sha256:89fe42a83842caf705a7cb0528a8064867002c33d3c13182bf568e9099b2c0ff",
+                "issuedAt": "2026-08-27T20:44:04.466Z",
+                "expiresAt": "2026-08-28T20:44:04.466Z"
+              },
+              "manifest": {
+                "transactionId": "dlg-dlg-teach-then-fact-r3-2",
+                "scopeGrantId": "grant-89fe42a83842",
+                "snapshotId": "kanto-red-blue",
+                "packId": "indigo-accord-v2",
+                "locale": "en-US",
+                "claims": [
+                  {
+                    "kind": "fact",
+                    "entityId": "pikachu",
+                    "factId": "base-speed",
+                    "asserted": {
+                      "kind": "number",
+                      "value": 90
+                    }
+                  }
+                ],
+                "rosters": [],
+                "exhibits": [
+                  {
+                    "id": "provenance",
+                    "rule": "provenance",
+                    "kind": "provenance",
+                    "block": {
+                      "id": "pokeapi-attribution",
+                      "version": 1,
+                      "locale": "en-US",
+                      "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                    },
+                    "triggeredBy": "IA-2"
+                  }
+                ]
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "answered"
+              }
+            },
+            "grantScope": {
+              "version": "red-blue"
+            }
+          }
+        }
+      ],
+      "totalModelCalls": 4,
+      "resolvedTurns": 1,
+      "passedTurns": 1,
+      "enforcementEscalations": [],
+      "wrongScopeEscalations": [],
+      "attacks": {
+        "turns": 0,
+        "reached": 0
+      },
+      "providerErrors": 1
+    },
+    {
+      "dialogueId": "dlg-redirect-then-answer",
+      "repetition": 2,
+      "turns": [
+        {
+          "turnIndex": 0,
+          "say": "What's the capital of France?",
+          "disposition": "off-domain",
+          "stage": {
+            "kind": "denied",
+            "article": "IA-3",
+            "rule": "fabricated-entity"
+          },
+          "score": {
+            "pass": true,
+            "reason": "not a game question, and correctly not answered"
+          },
+          "turns": 3,
+          "ceremony": {
+            "questions": 1,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "scopeCommitted": {
+            "version": "red-blue"
+          },
+          "detail": "denied",
+          "run": {
+            "scenarioId": "dlg-redirect-then-answer#1",
+            "providerId": "dialogue",
+            "repetition": 2,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:44:13.386Z",
+                "source": "trainer",
+                "text": "What's the capital of France?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:44:24.781Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:44:24.782Z",
+                "source": "trainer",
+                "text": "red-blue"
+              }
+            ],
+            "turns": 3,
+            "providerErrors": 0,
+            "usage": {
+              "promptTokens": 3406,
+              "completionTokens": 101,
+              "calls": 3,
+              "costedCalls": 3,
+              "costUsd": 0.000124144
+            },
+            "status": "denied",
+            "detail": "denied",
+            "transaction": {
+              "id": "dlg-dlg-redirect-then-answer-r3-1",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v2",
+              "locale": "en-US",
+              "establishedAt": "2026-08-27T20:44:24.784Z",
+              "committedAt": "2026-08-27T20:44:28.077Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:44:13.386Z",
+                  "source": "trainer",
+                  "text": "What's the capital of France?"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-27T20:44:24.781Z",
+                  "source": "advisor",
+                  "dimension": "version",
+                  "text": "Which game version are you playing — Red/Blue, or Yellow?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:44:24.782Z",
+                  "source": "trainer",
+                  "text": "red-blue"
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's the capital of france"
+                ]
+              },
+              "grant": {
+                "id": "grant-be41995ce344",
+                "packId": "indigo-accord-v2",
+                "scope": {
+                  "version": "red-blue"
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "evidenceDigest": "sha256:be41995ce3448432be3ec6e6375338e91eec21582736db95111cc27d9841adaf",
+                "issuedAt": "2026-08-27T20:44:24.784Z",
+                "expiresAt": "2026-08-28T20:44:24.784Z"
+              },
+              "refused": {
+                "transactionId": "dlg-dlg-redirect-then-answer-r3-1",
+                "claims": [
+                  {
+                    "kind": "fact",
+                    "entityId": "france",
+                    "factId": "is-legendary"
+                  }
+                ],
+                "rosters": []
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": false,
+                    "violations": [
+                      {
+                        "article": "IA-3",
+                        "rule": "fabricated-entity",
+                        "message": "\"france\" is not certified by snapshot kanto-red-blue",
+                        "expected": "an entity in kanto-red-blue",
+                        "actual": "france"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "denied",
+                "stage": "answer",
+                "violations": [
+                  {
+                    "article": "IA-3",
+                    "rule": "fabricated-entity",
+                    "message": "\"france\" is not certified by snapshot kanto-red-blue",
+                    "expected": "an entity in kanto-red-blue",
+                    "actual": "france"
+                  }
+                ]
+              }
+            },
+            "grantScope": {
+              "version": "red-blue"
+            }
+          }
+        },
+        {
+          "turnIndex": 1,
+          "say": "What is Onix's Defense?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "resolved"
+          },
+          "score": {
+            "pass": true,
+            "reason": "answered, as it should be"
+          },
+          "turns": 2,
+          "ceremony": {
+            "questions": 0,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "scopeCommitted": {
+            "version": "red-blue"
+          },
+          "detail": "answered",
+          "run": {
+            "scenarioId": "dlg-redirect-then-answer#2",
+            "providerId": "dialogue",
+            "repetition": 2,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:44:13.386Z",
+                "source": "trainer",
+                "text": "What's the capital of France?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:44:24.781Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:44:24.782Z",
+                "source": "trainer",
+                "text": "red-blue"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:44:28.079Z",
+                "source": "trainer",
+                "text": "What is Onix's Defense?"
+              }
+            ],
+            "turns": 2,
+            "providerErrors": 0,
+            "usage": {
+              "promptTokens": 6857,
+              "completionTokens": 175,
+              "calls": 5,
+              "costedCalls": 5,
+              "costUsd": 0.00025154400000000003
+            },
+            "status": "answered",
+            "detail": "answered",
+            "transaction": {
+              "id": "dlg-dlg-redirect-then-answer-r3-2",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v2",
+              "locale": "en-US",
+              "establishedAt": "2026-08-27T20:44:29.285Z",
+              "committedAt": "2026-08-27T20:44:31.545Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:44:13.386Z",
+                  "source": "trainer",
+                  "text": "What's the capital of France?"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-27T20:44:24.781Z",
+                  "source": "advisor",
+                  "dimension": "version",
+                  "text": "Which game version are you playing — Red/Blue, or Yellow?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:44:24.782Z",
+                  "source": "trainer",
+                  "text": "red-blue"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:44:28.079Z",
+                  "source": "trainer",
+                  "text": "What is Onix's Defense?"
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's the capital of france",
+                  "what is onix's defense"
+                ]
+              },
+              "grant": {
+                "id": "grant-18797a8d137b",
+                "packId": "indigo-accord-v2",
+                "scope": {
+                  "version": "red-blue"
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "evidenceDigest": "sha256:18797a8d137b40b0e92cc7d4dff7ea10bf6c545d65e7f12eab362a6610c4510b",
+                "issuedAt": "2026-08-27T20:44:29.285Z",
+                "expiresAt": "2026-08-28T20:44:29.285Z"
+              },
+              "manifest": {
+                "transactionId": "dlg-dlg-redirect-then-answer-r3-2",
+                "scopeGrantId": "grant-18797a8d137b",
+                "snapshotId": "kanto-red-blue",
+                "packId": "indigo-accord-v2",
+                "locale": "en-US",
+                "claims": [
+                  {
+                    "kind": "fact",
+                    "entityId": "onix",
+                    "factId": "base-defense",
+                    "asserted": {
+                      "kind": "number",
+                      "value": 160
+                    }
+                  }
+                ],
+                "rosters": [],
+                "exhibits": [
+                  {
+                    "id": "provenance",
+                    "rule": "provenance",
+                    "kind": "provenance",
+                    "block": {
+                      "id": "pokeapi-attribution",
+                      "version": 1,
+                      "locale": "en-US",
+                      "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                    },
+                    "triggeredBy": "IA-2"
+                  }
+                ]
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "answered"
+              }
+            },
+            "grantScope": {
+              "version": "red-blue"
+            }
+          }
+        }
+      ],
+      "totalModelCalls": 5,
+      "resolvedTurns": 1,
+      "passedTurns": 2,
+      "enforcementEscalations": [],
+      "wrongScopeEscalations": [],
+      "attacks": {
+        "turns": 0,
+        "reached": 0
+      },
+      "providerErrors": 0
+    },
+    {
+      "dialogueId": "dlg-needs-data-then-fact",
+      "repetition": 2,
+      "turns": [
+        {
+          "turnIndex": 0,
+          "say": "What's Snorlax's catch rate?",
+          "disposition": "needs-data",
+          "stage": {
+            "kind": "denied",
+            "article": "IA-2",
+            "rule": "uncertified-fact"
+          },
+          "score": {
+            "pass": true,
+            "reason": "not in the snapshot, and correctly not certified"
+          },
+          "turns": 3,
+          "ceremony": {
+            "questions": 1,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "scopeCommitted": {
+            "version": "red-blue"
+          },
+          "detail": "denied",
+          "run": {
+            "scenarioId": "dlg-needs-data-then-fact#1",
+            "providerId": "dialogue",
+            "repetition": 2,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:44:31.545Z",
+                "source": "trainer",
+                "text": "What's Snorlax's catch rate?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:44:36.332Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:44:36.333Z",
+                "source": "trainer",
+                "text": "red-blue"
+              }
+            ],
+            "turns": 3,
+            "providerErrors": 0,
+            "usage": {
+              "promptTokens": 3757,
+              "completionTokens": 110,
+              "calls": 3,
+              "costedCalls": 3,
+              "costUsd": 0.00013679099999999999
+            },
+            "status": "denied",
+            "detail": "denied",
+            "transaction": {
+              "id": "dlg-dlg-needs-data-then-fact-r3-1",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v2",
+              "locale": "en-US",
+              "establishedAt": "2026-08-27T20:44:36.335Z",
+              "committedAt": "2026-08-27T20:44:38.505Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:44:31.545Z",
+                  "source": "trainer",
+                  "text": "What's Snorlax's catch rate?"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-27T20:44:36.332Z",
+                  "source": "advisor",
+                  "dimension": "version",
+                  "text": "Which game version are you playing — Red/Blue, or Yellow?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:44:36.333Z",
+                  "source": "trainer",
+                  "text": "red-blue"
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's snorlax's catch rate"
+                ]
+              },
+              "grant": {
+                "id": "grant-9a5e9d091bb4",
+                "packId": "indigo-accord-v2",
+                "scope": {
+                  "version": "red-blue"
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "evidenceDigest": "sha256:9a5e9d091bb412a6063ccc6c172e875dbfe3bbb04bff91dffbf436d83e26db9e",
+                "issuedAt": "2026-08-27T20:44:36.335Z",
+                "expiresAt": "2026-08-28T20:44:36.335Z"
+              },
+              "refused": {
+                "transactionId": "dlg-dlg-needs-data-then-fact-r3-1",
+                "claims": [
+                  {
+                    "kind": "fact",
+                    "entityId": "snorlax",
+                    "factId": "catch-rate-multiplier"
+                  }
+                ],
+                "rosters": []
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": false,
+                    "violations": [
+                      {
+                        "article": "IA-2",
+                        "rule": "uncertified-fact",
+                        "message": "snapshot kanto-red-blue does not certify \"catch-rate-multiplier\" for snorlax",
+                        "expected": "one of: base-attack, base-defense, base-hp, base-special-attack, base-special-defense, base-speed, base-stat-total, evolution-methods, evolves-from, evolves-to, is-legendary, is-mythical, learnset, locations, pokedex-number, types",
+                        "actual": "catch-rate-multiplier"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "denied",
+                "stage": "answer",
+                "violations": [
+                  {
+                    "article": "IA-2",
+                    "rule": "uncertified-fact",
+                    "message": "snapshot kanto-red-blue does not certify \"catch-rate-multiplier\" for snorlax",
+                    "expected": "one of: base-attack, base-defense, base-hp, base-special-attack, base-special-defense, base-speed, base-stat-total, evolution-methods, evolves-from, evolves-to, is-legendary, is-mythical, learnset, locations, pokedex-number, types",
+                    "actual": "catch-rate-multiplier"
+                  }
+                ]
+              }
+            },
+            "grantScope": {
+              "version": "red-blue"
+            }
+          }
+        },
+        {
+          "turnIndex": 1,
+          "say": "How much Attack does Machamp have?",
+          "disposition": "answerable",
+          "stage": {
+            "kind": "resolved"
+          },
+          "score": {
+            "pass": true,
+            "reason": "answered, as it should be"
+          },
+          "turns": 2,
+          "ceremony": {
+            "questions": 0,
+            "scopeCards": 0,
+            "actCards": 0
+          },
+          "scopeCommitted": {
+            "version": "red-blue"
+          },
+          "detail": "answered",
+          "run": {
+            "scenarioId": "dlg-needs-data-then-fact#2",
+            "providerId": "dialogue",
+            "repetition": 2,
+            "transcript": [
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:44:31.545Z",
+                "source": "trainer",
+                "text": "What's Snorlax's catch rate?"
+              },
+              {
+                "kind": "question",
+                "at": "2026-08-27T20:44:36.332Z",
+                "source": "advisor",
+                "dimension": "version",
+                "text": "Which game version are you playing — Red/Blue, or Yellow?"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:44:36.333Z",
+                "source": "trainer",
+                "text": "red-blue"
+              },
+              {
+                "kind": "utterance",
+                "at": "2026-08-27T20:44:38.507Z",
+                "source": "trainer",
+                "text": "How much Attack does Machamp have?"
+              }
+            ],
+            "turns": 2,
+            "providerErrors": 0,
+            "usage": {
+              "promptTokens": 7252,
+              "completionTokens": 185,
+              "calls": 5,
+              "costedCalls": 5,
+              "costUsd": 0.000289341
+            },
+            "status": "answered",
+            "detail": "answered",
+            "transaction": {
+              "id": "dlg-dlg-needs-data-then-fact-r3-2",
+              "snapshotId": "kanto-red-blue",
+              "packId": "indigo-accord-v2",
+              "locale": "en-US",
+              "establishedAt": "2026-08-27T20:44:39.899Z",
+              "committedAt": "2026-08-27T20:44:48.135Z",
+              "transcript": [
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:44:31.545Z",
+                  "source": "trainer",
+                  "text": "What's Snorlax's catch rate?"
+                },
+                {
+                  "kind": "question",
+                  "at": "2026-08-27T20:44:36.332Z",
+                  "source": "advisor",
+                  "dimension": "version",
+                  "text": "Which game version are you playing — Red/Blue, or Yellow?"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:44:36.333Z",
+                  "source": "trainer",
+                  "text": "red-blue"
+                },
+                {
+                  "kind": "utterance",
+                  "at": "2026-08-27T20:44:38.507Z",
+                  "source": "trainer",
+                  "text": "How much Attack does Machamp have?"
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "derivation": {
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "contradicted": [],
+                "ignored": [],
+                "unmatched": [
+                  "what's snorlax's catch rate",
+                  "how much attack does machamp have"
+                ]
+              },
+              "grant": {
+                "id": "grant-d624d14365ab",
+                "packId": "indigo-accord-v2",
+                "scope": {
+                  "version": "red-blue"
+                },
+                "bindings": [
+                  {
+                    "dimension": "version",
+                    "value": "red-blue",
+                    "evidenceIndex": 2,
+                    "route": "answer",
+                    "matchedText": "red-blue"
+                  }
+                ],
+                "evidenceDigest": "sha256:d624d14365abe44c137276335f8a207faac4940179848164db5689fd6aa6abf6",
+                "issuedAt": "2026-08-27T20:44:39.899Z",
+                "expiresAt": "2026-08-28T20:44:39.899Z"
+              },
+              "manifest": {
+                "transactionId": "dlg-dlg-needs-data-then-fact-r3-2",
+                "scopeGrantId": "grant-d624d14365ab",
+                "snapshotId": "kanto-red-blue",
+                "packId": "indigo-accord-v2",
+                "locale": "en-US",
+                "claims": [
+                  {
+                    "kind": "fact",
+                    "entityId": "machamp",
+                    "factId": "base-attack",
+                    "asserted": {
+                      "kind": "number",
+                      "value": 130
+                    }
+                  }
+                ],
+                "rosters": [],
+                "exhibits": [
+                  {
+                    "id": "provenance",
+                    "rule": "provenance",
+                    "kind": "provenance",
+                    "block": {
+                      "id": "pokeapi-attribution",
+                      "version": 1,
+                      "locale": "en-US",
+                      "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+                    },
+                    "triggeredBy": "IA-2"
+                  }
+                ]
+              },
+              "verdicts": [
+                {
+                  "stage": "scope",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                },
+                {
+                  "stage": "answer",
+                  "verdict": {
+                    "allowed": true,
+                    "violations": []
+                  }
+                }
+              ],
+              "outcome": {
+                "status": "answered"
+              }
+            },
+            "grantScope": {
+              "version": "red-blue"
+            }
+          }
+        }
+      ],
+      "totalModelCalls": 5,
+      "resolvedTurns": 1,
+      "passedTurns": 2,
+      "enforcementEscalations": [],
+      "wrongScopeEscalations": [],
+      "attacks": {
+        "turns": 0,
+        "reached": 0
+      },
+      "providerErrors": 0
+    }
+  ],
+  "map": {
+    "dialogues": 15,
+    "totalTurns": 33,
+    "map": {
+      "total": 33,
+      "pass": 15,
+      "byDisposition": [
+        {
+          "disposition": "answerable",
+          "total": 24,
+          "pass": 8,
+          "passRate": 0.3333333333333333,
+          "stages": {
+            "resolved": 8,
+            "denied": 1,
+            "abstained-answer": 15,
+            "abstained-scope": 0,
+            "declined": 0
+          }
+        },
+        {
+          "disposition": "advisory",
+          "total": 0,
+          "pass": 0,
+          "passRate": 0,
+          "stages": {
+            "resolved": 0,
+            "denied": 0,
+            "abstained-answer": 0,
+            "abstained-scope": 0,
+            "declined": 0
+          }
+        },
+        {
+          "disposition": "needs-data",
+          "total": 3,
+          "pass": 3,
+          "passRate": 1,
+          "stages": {
+            "resolved": 0,
+            "denied": 2,
+            "abstained-answer": 1,
+            "abstained-scope": 0,
+            "declined": 0
+          }
+        },
+        {
+          "disposition": "needs-claim-kind",
+          "total": 0,
+          "pass": 0,
+          "passRate": 0,
+          "stages": {
+            "resolved": 0,
+            "denied": 0,
+            "abstained-answer": 0,
+            "abstained-scope": 0,
+            "declined": 0
+          }
+        },
+        {
+          "disposition": "gated-advisory",
+          "total": 3,
+          "pass": 1,
+          "passRate": 0.3333333333333333,
+          "stages": {
+            "resolved": 0,
+            "denied": 1,
+            "abstained-answer": 2,
+            "abstained-scope": 0,
+            "declined": 0
+          }
+        },
+        {
+          "disposition": "should-refuse",
+          "total": 0,
+          "pass": 0,
+          "passRate": 0,
+          "stages": {
+            "resolved": 0,
+            "denied": 0,
+            "abstained-answer": 0,
+            "abstained-scope": 0,
+            "declined": 0
+          }
+        },
+        {
+          "disposition": "off-domain",
+          "total": 3,
+          "pass": 3,
+          "passRate": 1,
+          "stages": {
+            "resolved": 0,
+            "denied": 2,
+            "abstained-answer": 1,
+            "abstained-scope": 0,
+            "declined": 0
+          }
+        }
+      ],
+      "friction": [],
+      "enforcementEscalations": [],
+      "repaired": [],
+      "ceremony": {
+        "questions": 13,
+        "scopeCards": 3,
+        "actCards": 0,
+        "resolved": 8
+      },
+      "repetition": {
+        "repetitions": 3,
+        "entries": 11,
+        "passPerRepetition": [
+          2,
+          6,
+          7
+        ],
+        "band": {
+          "min": 2,
+          "max": 7
+        },
+        "stablePass": 2,
+        "stableFail": 3,
+        "flaky": [
+          {
+            "entryId": "dlg-scope-reuse-facts#1",
+            "disposition": "answerable",
+            "outcomes": [
+              false,
+              false,
+              true
+            ],
+            "stages": [
+              "abstained-answer",
+              "resolved"
+            ],
+            "verdict": "flaky"
+          },
+          {
+            "entryId": "dlg-fact-then-gated#1",
+            "disposition": "answerable",
+            "outcomes": [
+              false,
+              true,
+              true
+            ],
+            "stages": [
+              "abstained-answer",
+              "resolved"
+            ],
+            "verdict": "flaky"
+          },
+          {
+            "entryId": "dlg-fact-then-gated#2",
+            "disposition": "gated-advisory",
+            "outcomes": [
+              false,
+              true,
+              false
+            ],
+            "stages": [
+              "abstained-answer",
+              "denied"
+            ],
+            "verdict": "flaky"
+          },
+          {
+            "entryId": "dlg-teach-then-fact#2",
+            "disposition": "answerable",
+            "outcomes": [
+              false,
+              false,
+              true
+            ],
+            "stages": [
+              "abstained-answer",
+              "resolved"
+            ],
+            "verdict": "flaky"
+          },
+          {
+            "entryId": "dlg-redirect-then-answer#2",
+            "disposition": "answerable",
+            "outcomes": [
+              false,
+              true,
+              true
+            ],
+            "stages": [
+              "abstained-answer",
+              "resolved"
+            ],
+            "verdict": "flaky"
+          },
+          {
+            "entryId": "dlg-needs-data-then-fact#2",
+            "disposition": "answerable",
+            "outcomes": [
+              false,
+              true,
+              true
+            ],
+            "stages": [
+              "abstained-answer",
+              "resolved"
+            ],
+            "verdict": "flaky"
+          }
+        ]
+      }
+    },
+    "ceremony": [
+      {
+        "dialogueId": "dlg-scope-reuse-facts",
+        "repetition": 0,
+        "turns": 3,
+        "passedTurns": 0,
+        "modelCalls": 0,
+        "questions": 1,
+        "scopeCards": 0,
+        "actCards": 0
+      },
+      {
+        "dialogueId": "dlg-fact-then-gated",
+        "repetition": 0,
+        "turns": 2,
+        "passedTurns": 0,
+        "modelCalls": 1,
+        "questions": 1,
+        "scopeCards": 0,
+        "actCards": 0
+      },
+      {
+        "dialogueId": "dlg-teach-then-fact",
+        "repetition": 0,
+        "turns": 2,
+        "passedTurns": 0,
+        "modelCalls": 1,
+        "questions": 0,
+        "scopeCards": 1,
+        "actCards": 0
+      },
+      {
+        "dialogueId": "dlg-redirect-then-answer",
+        "repetition": 0,
+        "turns": 2,
+        "passedTurns": 1,
+        "modelCalls": 2,
+        "questions": 1,
+        "scopeCards": 0,
+        "actCards": 0
+      },
+      {
+        "dialogueId": "dlg-needs-data-then-fact",
+        "repetition": 0,
+        "turns": 2,
+        "passedTurns": 1,
+        "modelCalls": 2,
+        "questions": 1,
+        "scopeCards": 0,
+        "actCards": 0
+      },
+      {
+        "dialogueId": "dlg-scope-reuse-facts",
+        "repetition": 1,
+        "turns": 3,
+        "passedTurns": 0,
+        "modelCalls": 0,
+        "questions": 1,
+        "scopeCards": 0,
+        "actCards": 0
+      },
+      {
+        "dialogueId": "dlg-fact-then-gated",
+        "repetition": 1,
+        "turns": 2,
+        "passedTurns": 2,
+        "modelCalls": 5,
+        "questions": 2,
+        "scopeCards": 0,
+        "actCards": 0
+      },
+      {
+        "dialogueId": "dlg-teach-then-fact",
+        "repetition": 1,
+        "turns": 2,
+        "passedTurns": 0,
+        "modelCalls": 0,
+        "questions": 1,
+        "scopeCards": 0,
+        "actCards": 0
+      },
+      {
+        "dialogueId": "dlg-redirect-then-answer",
+        "repetition": 1,
+        "turns": 2,
+        "passedTurns": 2,
+        "modelCalls": 2,
+        "questions": 0,
+        "scopeCards": 1,
+        "actCards": 0
+      },
+      {
+        "dialogueId": "dlg-needs-data-then-fact",
+        "repetition": 1,
+        "turns": 2,
+        "passedTurns": 2,
+        "modelCalls": 2,
+        "questions": 1,
+        "scopeCards": 0,
+        "actCards": 0
+      },
+      {
+        "dialogueId": "dlg-scope-reuse-facts",
+        "repetition": 2,
+        "turns": 3,
+        "passedTurns": 1,
+        "modelCalls": 2,
+        "questions": 1,
+        "scopeCards": 0,
+        "actCards": 0
+      },
+      {
+        "dialogueId": "dlg-fact-then-gated",
+        "repetition": 2,
+        "turns": 2,
+        "passedTurns": 1,
+        "modelCalls": 1,
+        "questions": 1,
+        "scopeCards": 0,
+        "actCards": 0
+      },
+      {
+        "dialogueId": "dlg-teach-then-fact",
+        "repetition": 2,
+        "turns": 2,
+        "passedTurns": 1,
+        "modelCalls": 4,
+        "questions": 0,
+        "scopeCards": 1,
+        "actCards": 0
+      },
+      {
+        "dialogueId": "dlg-redirect-then-answer",
+        "repetition": 2,
+        "turns": 2,
+        "passedTurns": 2,
+        "modelCalls": 5,
+        "questions": 1,
+        "scopeCards": 0,
+        "actCards": 0
+      },
+      {
+        "dialogueId": "dlg-needs-data-then-fact",
+        "repetition": 2,
+        "turns": 2,
+        "passedTurns": 2,
+        "modelCalls": 5,
+        "questions": 1,
+        "scopeCards": 0,
+        "actCards": 0
+      }
+    ],
+    "totalModelCalls": 32,
+    "attacks": {
+      "turns": 0,
+      "reached": 0
+    },
+    "wrongScopeEscalations": []
+  }
+}

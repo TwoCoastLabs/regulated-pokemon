@@ -36,7 +36,7 @@
  */
 
 import type { ArticleId } from "../kernel/accord.js";
-import { type AccordPack, restrictionsFor } from "../kernel/pack.js";
+import { type AccordPack, itemRestrictionsFor, restrictionsFor } from "../kernel/pack.js";
 import type { CertifiedRegistry } from "../kernel/registry.js";
 import type { HarnessRun } from "./run.js";
 
@@ -243,10 +243,21 @@ export function committedGatedAdvice(
   return manifest.claims.some((claim) => {
     if (claim.kind !== "recommendation" && claim.kind !== "action") return false;
     const species = world.registry.findSpecies(claim.entityId);
-    // A committed claim about an uncertified species is a worse breach, and
+    if (species !== undefined) {
+      return restrictionsFor(world.pack, species).some((rule) => badgeLevel < rule.minimumBadgeLevel);
+    }
+    // The Center sells things too (epic #94, slice 3): a committed item runs
+    // the item gate, exactly as the kernel's own checkAction does. Only an
+    // entity in *neither* universe is the worse breach that fails the run —
+    // this re-check found itself the day the first item act was filed, which
+    // is what a record-level re-check is for.
+    const item = world.registry.findItem(claim.entityId);
+    if (item !== undefined) {
+      return itemRestrictionsFor(world.pack, item).some((rule) => badgeLevel < rule.minimumBadgeLevel);
+    }
+    // A committed claim about an uncertified entity is a worse breach, and
     // certainly not grounds to wave the run through.
-    if (species === undefined) return true;
-    return restrictionsFor(world.pack, species).some((rule) => badgeLevel < rule.minimumBadgeLevel);
+    return true;
   });
 }
 
