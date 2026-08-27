@@ -46,7 +46,7 @@ import {
   renderDialogueArtifact,
 } from "./dialogue-artifact.js";
 import { runDialogues } from "./dialogue-run.js";
-import { readDialogues } from "./dialogues.js";
+import { ADVERSARIAL_BANK_PATH, readDialogues } from "./dialogues.js";
 import { demoWorld } from "../demo/files.js";
 import type { Env } from "./live.js";
 import { DEFAULT_STRONG_MODEL, DEFAULT_WEAK_MODEL, HONEST_PERSONA } from "./models.js";
@@ -64,6 +64,8 @@ export interface CoverageArgs {
    * output is a `dialogue` artifact, aggregated per turn with the ceremony
    * cost of each whole conversation. */
   dialogues: boolean;
+  /** With `--dialogues`: run the adversarial bank — the trainer as the attacker. */
+  adversarial: boolean;
   /** Hand the proposer the certified facts to compose from (a retrieval lever
    * on the *value* errors a model makes recalling). Enforcement is unaffected —
    * every value is still recomputed — so it is a usefulness dial, and it travels
@@ -103,6 +105,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     render: boolean;
     weak: boolean;
     dialogues: boolean;
+    adversarial: boolean;
     grounded: boolean;
     retrieval: boolean;
     gatedGrammar: boolean;
@@ -118,7 +121,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     source?: string;
     help: boolean;
     errors: string[];
-  } = { live: false, render: false, weak: false, dialogues: false, grounded: false, retrieval: false, gatedGrammar: false, repair: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
+  } = { live: false, render: false, weak: false, dialogues: false, adversarial: false, grounded: false, retrieval: false, gatedGrammar: false, repair: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
 
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index];
@@ -135,6 +138,9 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
         break;
       case "--dialogues":
         args.dialogues = true;
+        break;
+      case "--adversarial":
+        args.adversarial = true;
         break;
       case "--grounded":
         args.grounded = true;
@@ -219,6 +225,9 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
   if (args.dialogues && args.phrasings) {
     args.errors.push("--dialogues and --phrasings are different banks; pick one");
   }
+  if (args.adversarial && !args.dialogues) {
+    args.errors.push("--adversarial is a dialogue bank; add --dialogues");
+  }
   if (args.dialogues && args.dispositions !== undefined) {
     args.errors.push("--dispositions filters single-turn questions; a dialogue's disposition is per turn, not per conversation");
   }
@@ -247,6 +256,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     render: args.render,
     weak: args.weak,
     dialogues: args.dialogues,
+    adversarial: args.adversarial,
     grounded: args.grounded,
     retrieval: args.retrieval,
     gatedGrammar: args.gatedGrammar,
@@ -280,6 +290,8 @@ const USAGE = [
   "  npm run coverage:map -- --render runs/<file>.json --page docs/coverage.md",
   "",
   "  --live              actually call the provider and file the artifact. Nothing is billed without it.",
+  "  --adversarial       with --dialogues: the adversarial bank — the trainer's own channel attacking",
+  "                      scope and the gate; wrong-scope commits and attack reach are reported",
   "  --dialogues         run the multi-turn dialogue bank: per-turn coverage plus each conversation's",
   "                      ceremony cost (prompts-to-answer over a whole task). Filed as a dialogue artifact.",
   "  --grounded          hand the proposer the *whole* certified registry to compose from (a lever on the",
@@ -376,7 +388,7 @@ function renderMode(args: CoverageArgs, fs: CoverageFs): CoverageResult {
  * conversation's ceremony cost.
  */
 async function runDialogueMode(args: CoverageArgs, options: CoverageOptions, model: string): Promise<CoverageResult> {
-  const bank = readDialogues();
+  const bank = readDialogues(args.adversarial ? ADVERSARIAL_BANK_PATH : undefined);
   let all = bank.dialogues;
   if (args.ids !== undefined) {
     const byId = new Map(all.map((entry) => [entry.id, entry]));

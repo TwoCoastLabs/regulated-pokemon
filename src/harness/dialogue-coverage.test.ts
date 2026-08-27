@@ -42,6 +42,8 @@ function dialogue(id: string, turns: readonly RecordedDialogueTurnRun[]): Record
     resolvedTurns: turns.filter((t) => t.stage.kind === "resolved").length,
     passedTurns: turns.filter((t) => t.score.pass).length,
     enforcementEscalations: [],
+    wrongScopeEscalations: [],
+    attacks: { turns: 0, reached: 0 },
     providerErrors: 0,
   };
 }
