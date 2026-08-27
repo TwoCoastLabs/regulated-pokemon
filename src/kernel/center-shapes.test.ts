@@ -58,7 +58,13 @@ describe("treats, derived and refused", () => {
     if (!result.ok) throw new Error(result.violations.map(denialCode).join(", "));
     const stripped = {
       ...result.value,
-      claims: result.value.claims.map((claim) => (claim.kind === "treats" ? { ...claim, asserted: undefined } : claim)),
+      // Omit the property rather than set it undefined: exactOptionalPropertyTypes
+      // makes those different claims, and the grounded shape is the omission.
+      claims: result.value.claims.map((claim) => {
+        if (claim.kind !== "treats") return claim;
+        const { asserted: _asserted, ...grounded } = claim;
+        return grounded;
+      }),
     };
     const planned = planRender(center, stripped);
     if (!planned.ok) throw new Error(planned.violations.map(denialCode).join(", "));
