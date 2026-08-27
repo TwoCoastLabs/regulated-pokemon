@@ -2574,6 +2574,69 @@ dollars.
 
 ---
 
+### Iteration 34 — ceremony read from the record, and the repetition dial reaches dialogues
+
+Slice 5 of epic #94, absorbing the last two instruments owed from #87 (its
+slices 5 and 6). Both are offline; both came with the free probe over the
+filed evidence base the epic's design leans on.
+
+**Ceremony is now what the trainer endured, not what the model billed.** The
+consent gradient prices ambiguity in "model calls and clicks", but the maps
+reported only calls/turn — the model's cost. `ceremonyOf` reads the trainer's
+side from the record alone: clarifying questions on the advisor's channel,
+scope cards ruled on (a rejected card was still a card endured), and act
+consents (the confirmation the record carries; a declined act files none and
+is deliberately not counted — that would be a counter, not a record). Both
+coverage maps report it beside calls/turn; the dialogue ceremony table gains
+questions / scope cards / act consents columns per conversation.
+
+**The free probe, over the filed N=3 coverage artifacts (§17 iteration 22)
+and the filed dialogue bank (iteration 23):**
+
+| Leg | Samples | Resolved | Questions | Scope cards | Act consents | q/resolution | cards/resolution |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| qwen3-235b, 52-set ×3 | 156 | 106 | 129 | 151 | 6 | **1.22** | **1.42** |
+| mistral-nemo, 52-set ×3 | 156 | 80 | 99 | 128 | 4 | **1.24** | **1.60** |
+| qwen3-235b, dialogue bank | 5 conv / 11 turns | 9 turns | 7 | 6 | 0 | — | — |
+| mistral-nemo, dialogue bank | 5 conv / 11 turns | 8 turns | 5 | 1 | 0 | — | — |
+
+Three readings. First, **the felt friction is roughly one question and one
+and a half cards per resolved answer** on the single-turn bank — the number
+the consent gradient owed and never had; and it is nearly model-independent
+(1.22 vs 1.24 questions), because ceremony is mostly the pack's to charge,
+not the model's to cause. Second, **the weak model's cards-per-resolution is
+higher (1.60 vs 1.42) for the honest reason**: its resolutions are fewer
+while the ladder's challenges are not — friction is priced per success, so
+failing more makes each success dearer. Third, **the grant-reuse signature is
+visible per conversation**: `dlg-scope-reuse-facts` cost one question over
+three answered turns on both models — one version question serving three
+facts is the flat-cost ceremony claim of iteration 23, now stated in the
+trainer's own units. (A probe subtlety worth recording: filed dialogue turns
+carry cumulative transcripts, so the per-conversation reading is the final
+turn's transcript — summing per-turn readings would re-count each question
+once per later turn. The live path slices each turn's own events, so new
+artifacts do not have the hazard.)
+
+**`--dialogues --repetitions` exists now.** The CLI's rejection ("a dialogue
+is one scripted conversation, run once") conflated a deterministic script
+with a deterministic model — §21/§22's exact lesson. A dialogue run now
+samples every conversation N times, stamps the pass on each record (fresh
+clocks, so two samples are two transactions), and the single-turn stability
+instrument reads the samples for free: per-turn stable-pass / flaky /
+stable-fail, the band topline, enforcement over every sample with no
+majority vote — `repetitionSummary` unchanged, fed by `asBankRuns` stamping
+the conversation's pass. The cross-turn zero and the flat-cost claim
+currently rest on N=1 (iteration 23 said so in so many words); the billable
+N=3 dialogue re-run that retires that caveat is ready to fire and stays
+parked for a go-ahead, now batchable with the parked adversarial N=3.
+
+Provenance: `ceremony.test.ts`, the dialogue-run repetition tests, and both
+maps' renders in `npm test`; the probe numbers above are `ceremonyOf` over
+the filed artifacts named in the table, reproducible offline from the
+records alone. Zero model calls, zero dollars.
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's

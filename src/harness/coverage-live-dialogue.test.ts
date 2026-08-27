@@ -60,7 +60,8 @@ describe("--dialogues arg parsing", () => {
   it("rejects combinations that do not apply to a whole conversation", () => {
     expect(parseCoverageArgs(["--dialogues", "--phrasings"]).errors).toHaveLength(1);
     expect(parseCoverageArgs(["--dialogues", "--dispositions", "answerable"]).errors).toHaveLength(1);
-    expect(parseCoverageArgs(["--dialogues", "--repetitions", "2"]).errors).toHaveLength(1);
+    // Allowed since epic #94 slice 5: the cross-turn zero gets a band too.
+    expect(parseCoverageArgs(["--dialogues", "--repetitions", "2"]).errors).toHaveLength(0);
     expect(parseCoverageArgs(["--dialogues"]).errors).toHaveLength(0);
   });
 

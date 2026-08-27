@@ -52,6 +52,9 @@ export interface DialogueArtifact {
   gatedGrammar: boolean;
   /** Whether strip-assertion resubmit was enabled — recorded with the number. */
   repair: boolean;
+  /** How many passes each conversation ran (epic #94, slice 5). Optional:
+   * artifacts filed before the dial existed read unchanged as one pass. */
+  repetitions?: number;
   /** Whole conversations, never summaries. Each turn carries the wording asked
    * and the full record behind its funnel verdict. */
   runs: readonly RecordedDialogueRun[];
@@ -70,6 +73,7 @@ export interface DialogueArtifactInput {
   retrieval: boolean;
   gatedGrammar: boolean;
   repair: boolean;
+  repetitions?: number;
   runs: readonly RecordedDialogueRun[];
 }
 
@@ -92,6 +96,7 @@ export function buildDialogueArtifact(input: DialogueArtifactInput): DialogueArt
     retrieval: input.retrieval,
     gatedGrammar: input.gatedGrammar,
     repair: input.repair,
+    ...(input.repetitions === undefined || input.repetitions <= 1 ? {} : { repetitions: input.repetitions }),
     runs: input.runs,
     map: dialogueCoverage(input.runs),
   };

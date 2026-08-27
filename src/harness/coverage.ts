@@ -20,6 +20,7 @@
 
 import { type Disposition, DISPOSITIONS, type FunnelStageKind } from "./playability.js";
 import type { BankRun, IntentRobustness } from "./bank-run.js";
+import { addCeremony, NO_CEREMONY } from "./ceremony.js";
 
 const STAGE_KINDS: readonly FunnelStageKind[] = [
   "resolved",
@@ -55,6 +56,14 @@ export interface CoverageMap {
    * first-attempt ones — the accounting rule that makes the repair safe.
    * Optional: artifacts filed before the repair existed read unchanged. */
   repaired?: readonly string[];
+  /**
+   * The trainer-facing ceremony across the runs, present when the runs carry
+   * it (epic #94, slice 5): clarifying questions asked, scope cards ruled on,
+   * act cards consented — beside calls/turn, so friction is priced in what
+   * the trainer endured, not only in what the model billed. `resolved` is the
+   * denominator for a per-resolution reading.
+   */
+  ceremony?: { questions: number; scopeCards: number; actCards: number; resolved: number };
   /** The per-entry stability reading, present when the runs span more than one
    * repetition. This is the §21 noise-floor instrument: at N=1 a topline is one
    * draw from an unmeasured churn band; at N≥2 the band is measured and a delta
@@ -165,6 +174,14 @@ export function coverageMap(runs: readonly BankRun[]): CoverageMap {
   });
 
   const repetition = repetitionSummary(runs);
+  const carried = runs.filter((run) => run.ceremony !== undefined);
+  const ceremony =
+    carried.length === 0
+      ? undefined
+      : {
+          ...carried.reduce((sum, run) => addCeremony(sum, run.ceremony ?? NO_CEREMONY), NO_CEREMONY),
+          resolved: runs.filter((run) => run.stage.kind === "resolved").length,
+        };
   return {
     total: runs.length,
     pass: runs.filter((run) => run.score.pass).length,
@@ -176,6 +193,7 @@ export function coverageMap(runs: readonly BankRun[]): CoverageMap {
       .filter((run) => run.score.enforcementEscalation === true)
       .map((run) => run.entryId),
     repaired: runs.filter((run) => run.repaired === true).map((run) => run.entryId),
+    ...(ceremony === undefined ? {} : { ceremony }),
     ...(repetition === undefined ? {} : { repetition }),
   };
 }
@@ -256,6 +274,16 @@ export function renderCoverage(map: CoverageMap, heading = "Playability coverage
   const honest = refusals.reduce((sum, row) => sum + row.pass, 0);
   if (owed > 0) {
     lines.push(`**Honest-refusal rate on unanswerable questions: ${pct(rate(honest, owed))}** (${honest}/${owed}) — the trust number.`);
+  }
+  if (map.ceremony !== undefined) {
+    const c = map.ceremony;
+    const per = (value: number): string => (c.resolved === 0 ? "—" : (value / c.resolved).toFixed(2));
+    lines.push(
+      `**Ceremony, from the record:** ${c.questions} clarifying question(s), ${c.scopeCards} scope card(s), ` +
+        `${c.actCards} act consent(s) across ${map.total} sample(s) — per resolution: ` +
+        `${per(c.questions)} questions, ${per(c.scopeCards)} scope cards, ${per(c.actCards)} act consents. ` +
+        "The trainer's cost beside the model's; the consent gradient priced in clicks actually endured.",
+    );
   }
   lines.push("");
 

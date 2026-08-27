@@ -36,6 +36,7 @@ import {
   startSession,
 } from "../session/session.js";
 import { profileWord, scoreOracle } from "./bank-run.js";
+import { type Ceremony, ceremonyOfEvents } from "./ceremony.js";
 import { candidateIsTrue } from "./trainer.js";
 import type { AttackKind, DialogueEntry, DialogueTurn } from "./dialogues.js";
 import {
@@ -74,6 +75,9 @@ export interface DialogueTurnRun {
   /** True when this turn's outcome followed a strip-assertion repair
    * (docs/recovery.md, channel 2) — counted apart from first-attempt outcomes. */
   repaired?: boolean;
+  /** What the trainer endured this turn, read from the turn's own slice of
+   * the transcript and its record (epic #94, slice 5). */
+  ceremony?: Ceremony;
   /** The scope the turn's record was granted under, when it filed one. */
   scopeCommitted?: Partial<TrainerScope>;
   /** True when the record's grant disagrees with the turn's `expectScope` —
@@ -99,6 +103,8 @@ export interface RecordedDialogueTurnRun extends DialogueTurnRun {
  * thread-level instruments that only a multi-turn run can produce. */
 export interface DialogueRun {
   dialogueId: string;
+  /** Which pass this conversation came from, when the run repeated; 0 otherwise. */
+  repetition: number;
   turns: readonly DialogueTurnRun[];
   /** Prompts-to-answer over the whole task: total model calls across the
    * conversation. The ceremony-cost number §10 asks for at task scope rather
@@ -176,12 +182,12 @@ interface TurnStart {
  * answer-step abstention, not scope friction (the same `version`-established
  * heuristic the single-turn reader uses, one conversation wider).
  */
-function asTurnRun(entry: DialogueEntry, index: number, state: SessionState, world: DemoWorld, start: TurnStart): HarnessRun {
+function asTurnRun(entry: DialogueEntry, index: number, state: SessionState, world: DemoWorld, start: TurnStart, repetition: number): HarnessRun {
   const record = state.records.length > start.records ? state.records.at(-1) : undefined;
   const base = {
     scenarioId: `${entry.id}#${index + 1}`,
     providerId: "dialogue",
-    repetition: 0,
+    repetition,
     transcript: state.transcript,
     // Per-turn ceremony cost: calls this turn made, not the running total.
     turns: state.usage.calls - start.calls,
@@ -229,9 +235,15 @@ export async function runDialogue(
   retrieval = false,
   gatedGrammar = false,
   repair = false,
+  repetition = 0,
 ): Promise<RecordedDialogueRun> {
   const deps: SessionDeps = { world, provider, now, grounded, retrieval, gatedGrammar, repair };
-  let state = startSession();
+  // Ids are namespaced per conversation and per pass: two samples of one
+  // dialogue are two records, and nothing they mint may collide (the
+  // single-turn harness bakes the repetition into its ids for the same
+  // reason). The r-suffix appears even at one pass, so an id names its pass
+  // rather than implying there was only ever one.
+  let state = startSession(`dlg-${entry.id}-r${repetition + 1}`);
   const turns: RecordedDialogueTurnRun[] = [];
 
   for (let index = 0; index < entry.turns.length; index += 1) {
@@ -251,7 +263,7 @@ export async function runDialogue(
     state = await say(state, turn.say, deps);
     state = await settle(state, turn, entry, deps);
 
-    const run = asTurnRun(entry, index, state, world, start);
+    const run = asTurnRun(entry, index, state, world, start, repetition);
     const stage = funnelOf(run, wantsAct(turn));
     // Scored by the same oracle a single-turn question is — the gated flags
     // re-verified from the record, a deflection scored a vacuous miss not a
@@ -266,6 +278,7 @@ export async function runDialogue(
       stage,
       score,
       turns: run.turns,
+      ceremony: ceremonyOfEvents(state.transcript.slice(start.transcript), run.transaction),
       ...(state.repairs > start.repairs ? { repaired: true } : {}),
       ...scope,
       ...reach,
@@ -278,6 +291,7 @@ export async function runDialogue(
   const gatedEscalations = turns.filter((turn) => turn.score.enforcementEscalation === true).map((turn) => turn.turnIndex);
   return {
     dialogueId: entry.id,
+    repetition,
     turns,
     totalModelCalls: state.usage.calls,
     resolvedTurns: turns.filter((turn) => turn.stage.kind === "resolved").length,
@@ -352,10 +366,18 @@ export async function runDialogues(
   retrieval = false,
   gatedGrammar = false,
   repair = false,
+  repetitions = 1,
 ): Promise<readonly RecordedDialogueRun[]> {
+  // Same discipline as the single-turn bank (§21/§22): a deterministic script
+  // is not a deterministic model, so a conversation is sampled N times and
+  // every sample is its own record — enforcement over all of them, no
+  // majority vote, and each repetition gets a fresh strictly-increasing clock
+  // so two samples are two transactions, never one overwritten.
   const runs: RecordedDialogueRun[] = [];
-  for (const entry of entries) {
-    runs.push(await runDialogue(world, entry, provider, clock(), grounded, retrieval, gatedGrammar, repair));
+  for (let repetition = 0; repetition < repetitions; repetition += 1) {
+    for (const entry of entries) {
+      runs.push(await runDialogue(world, entry, provider, clock(), grounded, retrieval, gatedGrammar, repair, repetition));
+    }
   }
   return runs;
 }

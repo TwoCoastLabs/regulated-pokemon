@@ -36,7 +36,8 @@ function turn(
 
 function dialogue(id: string, turns: readonly RecordedDialogueTurnRun[]): RecordedDialogueRun {
   return {
-    dialogueId: id,
+    repetition: 0,
+  dialogueId: id,
     turns,
     totalModelCalls: turns.reduce((sum, t) => sum + t.turns, 0),
     resolvedTurns: turns.filter((t) => t.stage.kind === "resolved").length,

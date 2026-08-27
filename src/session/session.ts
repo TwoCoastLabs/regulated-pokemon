@@ -138,6 +138,13 @@ export interface SessionState {
   /** Ladder proposals spent on the current ask; a fresh utterance resets it. */
   ladderTurns: number;
   /**
+   * The namespace this session's transaction ids are minted under. The
+   * default "session" serves one live tab; a harness running the same
+   * conversation more than once names each pass (epic #94, slice 5), because
+   * two samples are two records and an id they share would say otherwise.
+   */
+  idPrefix?: string;
+  /**
    * Dimensions the current exchange must establish, when it needs more than
    * the default three. Set structurally, never lexically: a decoded draft
    * containing a ranking claim escalates `comparisonBasis` into the
@@ -167,8 +174,9 @@ export const MAX_LADDER_TURNS = 3;
 
 const LOCALE = "en-US";
 
-export function startSession(): SessionState {
+export function startSession(idPrefix?: string): SessionState {
   return {
+    ...(idPrefix === undefined ? {} : { idPrefix }),
     transcript: [],
     records: [],
     pages: {},
@@ -450,7 +458,7 @@ async function drive(state: SessionState, deps: SessionDeps): Promise<SessionSta
 }
 
 function nextTransactionId(state: SessionState): string {
-  return `session-${state.records.length + 1}`;
+  return `${state.idPrefix ?? "session"}-${state.records.length + 1}`;
 }
 
 /**

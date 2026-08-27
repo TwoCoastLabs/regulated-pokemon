@@ -30,6 +30,7 @@ import {
 } from "../session/session.js";
 import { candidateIsTrue } from "./trainer.js";
 import type { BankEntry, ClaimKind } from "./bank.js";
+import { type Ceremony, ceremonyOf } from "./ceremony.js";
 import {
   committedGatedAdvice,
   type Disposition,
@@ -63,6 +64,9 @@ export interface BankRun {
   score: DispositionScore;
   /** Model calls made — the friction number, per entry. */
   turns: number;
+  /** What the trainer endured, read from the record (epic #94, slice 5).
+   * Optional: artifacts filed before this existed read unchanged. */
+  ceremony?: Ceremony;
   /** True when the outcome followed a strip-assertion repair (docs/recovery.md,
    * channel 2) — a post-repair resolution, counted apart from first-attempt
    * ones so the retry can never launder the model's mis-recall rate. */
@@ -286,6 +290,7 @@ export async function runBankEntry(
     // eligibility pass is awarded only by the claims actually certified.
     score: scoreOracle(entry, run, world, stage),
     turns: run.turns,
+    ceremony: ceremonyOf(run),
     ...(state.repairs > 0 ? { repaired: true } : {}),
     detail: run.detail,
     run,

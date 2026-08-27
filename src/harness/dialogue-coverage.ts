@@ -21,16 +21,23 @@
 import type { BankRun } from "./bank-run.js";
 import { type CoverageMap, coverageMap, renderCoverage } from "./coverage.js";
 import type { RecordedDialogueRun } from "./dialogue-run.js";
+import { addCeremony, NO_CEREMONY } from "./ceremony.js";
 
 /** One conversation's ceremony cost — the prompts a whole task took. */
 export interface DialogueCeremony {
   dialogueId: string;
+  /** Which pass, when the run repeated; 0 otherwise. */
+  repetition: number;
   /** Turns in the conversation. */
   turns: number;
   /** Turns that passed their oracle. */
   passedTurns: number;
   /** Model calls over the whole conversation — prompts-to-answer at task scope. */
   modelCalls: number;
+  /** What the trainer endured over the whole conversation (epic #94, slice 5). */
+  questions: number;
+  scopeCards: number;
+  actCards: number;
 }
 
 export interface DialogueCoverageMap {
@@ -61,10 +68,13 @@ function asBankRuns(runs: readonly RecordedDialogueRun[]): BankRun[] {
       entryId: `${dialogue.dialogueId}#${turn.turnIndex + 1}`,
       disposition: turn.disposition,
       opening: turn.say,
-      repetition: 0,
+      // The conversation's pass, so the single-turn stability instrument
+      // (repetitionSummary) reads dialogue samples for free (epic #94, slice 5).
+      repetition: dialogue.repetition ?? 0,
       stage: turn.stage,
       score: turn.score,
       turns: turn.turns,
+      ...(turn.ceremony === undefined ? {} : { ceremony: turn.ceremony }),
       ...(turn.repaired === true ? { repaired: true } : {}),
       detail: turn.detail,
     })),
@@ -72,14 +82,19 @@ function asBankRuns(runs: readonly RecordedDialogueRun[]): BankRun[] {
 }
 
 export function dialogueCoverage(runs: readonly RecordedDialogueRun[]): DialogueCoverageMap {
-  const ceremony = runs.map(
-    (run): DialogueCeremony => ({
+  const ceremony = runs.map((run): DialogueCeremony => {
+    const endured = run.turns.reduce((sum, turn) => addCeremony(sum, turn.ceremony ?? NO_CEREMONY), NO_CEREMONY);
+    return {
       dialogueId: run.dialogueId,
+      repetition: run.repetition ?? 0,
       turns: run.turns.length,
       passedTurns: run.passedTurns,
       modelCalls: run.totalModelCalls,
-    }),
-  );
+      questions: endured.questions,
+      scopeCards: endured.scopeCards,
+      actCards: endured.actCards,
+    };
+  });
   return {
     dialogues: runs.length,
     totalTurns: ceremony.reduce((sum, item) => sum + item.turns, 0),
@@ -137,11 +152,15 @@ export function renderDialogueCoverage(coverage: DialogueCoverageMap, heading = 
   lines.push("what makes later turns cheap; a thread that re-establishes it every turn is");
   lines.push("the friction this column would expose.");
   lines.push("");
-  lines.push("| Conversation | turns | passed | model calls | calls/turn |");
-  lines.push("|---|---|---|---|---|");
+  const repeated = coverage.ceremony.some((item) => item.repetition > 0);
+  lines.push(`| Conversation |${repeated ? " rep |" : ""} turns | passed | model calls | calls/turn | questions | scope cards | act consents |`);
+  lines.push(`|---|${repeated ? "---|" : ""}---|---|---|---|---|---|---|`);
   for (const item of coverage.ceremony) {
     const perTurn = item.turns === 0 ? 0 : item.modelCalls / item.turns;
-    lines.push(`| \`${item.dialogueId}\` | ${item.turns} | ${item.passedTurns}/${item.turns} | ${item.modelCalls} | ${perTurn.toFixed(1)} |`);
+    lines.push(
+      `| \`${item.dialogueId}\` |${repeated ? ` ${item.repetition + 1} |` : ""} ${item.turns} | ${item.passedTurns}/${item.turns} | ` +
+        `${item.modelCalls} | ${perTurn.toFixed(1)} | ${item.questions} | ${item.scopeCards} | ${item.actCards} |`,
+    );
   }
   lines.push("");
   const average = coverage.totalTurns === 0 ? 0 : coverage.totalModelCalls / coverage.totalTurns;

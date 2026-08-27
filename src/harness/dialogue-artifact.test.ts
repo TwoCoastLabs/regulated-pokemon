@@ -22,7 +22,8 @@ const world = demoWorld();
 
 const runs: RecordedDialogueRun[] = [
   {
-    dialogueId: "d1",
+    repetition: 0,
+  dialogueId: "d1",
     turns: [
       {
         turnIndex: 0,
