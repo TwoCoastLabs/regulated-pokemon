@@ -9,6 +9,8 @@
  */
 
 import { resolve } from "node:path";
+import { loadDemoWorld } from "./script.js";
+import { readFileSync } from "node:fs";
 
 import { readPack, readRegistry } from "../kernel/files.js";
 import type { DemoWorld } from "./script.js";
@@ -20,6 +22,22 @@ export const PACK_PATH = resolve(DATA, "accord-pack/v2.json");
 let loaded: DemoWorld | undefined;
 
 /** The certified world, read once from disk. Throws named, never silently. */
+export const CENTER_SNAPSHOT_PATH = resolve(DATA, "snapshots/kanto-center.json");
+export const CENTER_PACK_PATH = resolve(DATA, "accord-pack/center-v1.json");
+
+let centerCached: DemoWorld | undefined;
+
+/** The Center world (epic #94, slice 3): kanto-center under its own pack. */
+export function centerWorld(): DemoWorld {
+  if (centerCached === undefined) {
+    centerCached = loadDemoWorld(
+      JSON.parse(readFileSync(CENTER_SNAPSHOT_PATH, "utf8")),
+      JSON.parse(readFileSync(CENTER_PACK_PATH, "utf8")),
+    );
+  }
+  return centerCached;
+}
+
 export function demoWorld(): DemoWorld {
   if (loaded === undefined) {
     const registry = readRegistry(SNAPSHOT_PATH);

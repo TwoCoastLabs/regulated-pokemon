@@ -1,0 +1,1984 @@
+{
+  "bankVersion": 1,
+  "id": "center-bank-v1",
+  "entries": [
+    {
+      "id": "fact-potion-hp",
+      "intent": "how much does a potion heal",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "potion",
+          "factId": "restores-hp"
+        }
+      ]
+    },
+    {
+      "id": "fact-super-potion-hp",
+      "intent": "Super Potion heals how much again?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "super-potion",
+          "factId": "restores-hp"
+        }
+      ]
+    },
+    {
+      "id": "fact-hyper-potion-hp",
+      "intent": "is hyper potion the 200 one or the 50 one",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "hyper-potion",
+          "factId": "restores-hp"
+        }
+      ]
+    },
+    {
+      "id": "fact-max-potion-effect",
+      "intent": "what's the difference with a max potion, does it do full hp?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "max-potion",
+          "factId": "restores-hp"
+        },
+        {
+          "entityId": "max-potion",
+          "factId": "item-effect"
+        }
+      ]
+    },
+    {
+      "id": "fact-potion-cost",
+      "intent": "how much is a potion",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "potion",
+          "factId": "cost"
+        }
+      ]
+    },
+    {
+      "id": "fact-full-restore-cost",
+      "intent": "price on a Full Restore?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "full-restore",
+          "factId": "cost"
+        }
+      ]
+    },
+    {
+      "id": "fact-revive-cost",
+      "intent": "how much do revives go for",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "revive",
+          "factId": "cost"
+        },
+        {
+          "entityId": "max-revive",
+          "factId": "cost"
+        }
+      ]
+    },
+    {
+      "id": "fact-antidote-effect",
+      "intent": "what does an antidote actually do",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "antidote",
+          "factId": "cures"
+        },
+        {
+          "entityId": "antidote",
+          "factId": "item-effect"
+        }
+      ]
+    },
+    {
+      "id": "fact-awakening-effect",
+      "intent": "Awakening — that's for sleep right?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "awakening",
+          "factId": "cures"
+        },
+        {
+          "entityId": "awakening",
+          "factId": "item-effect"
+        }
+      ]
+    },
+    {
+      "id": "fact-ice-heal-effect",
+      "intent": "my pokemon is frozen solid, what's the thing for that called",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "ice-heal",
+          "factId": "cures"
+        },
+        {
+          "entityId": "ice-heal",
+          "factId": "item-effect"
+        }
+      ]
+    },
+    {
+      "id": "fact-full-heal-effects",
+      "intent": "what all does a Full Heal fix",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "full-heal",
+          "factId": "cures"
+        },
+        {
+          "entityId": "full-heal",
+          "factId": "item-effect"
+        }
+      ],
+      "notes": "a list-valued fact (every condition it cures) answers this squarely — the bank overruled the plan's 'multi-effect shape'"
+    },
+    {
+      "id": "fact-full-restore-effects",
+      "intent": "does full restore do everything? hp and status?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "full-restore",
+          "factId": "cures"
+        },
+        {
+          "entityId": "full-restore",
+          "factId": "restores-hp"
+        },
+        {
+          "entityId": "full-restore",
+          "factId": "item-effect"
+        }
+      ]
+    },
+    {
+      "id": "fact-revive-hp",
+      "intent": "when I revive something how much hp does it come back with",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "revive",
+          "factId": "revives"
+        }
+      ]
+    },
+    {
+      "id": "fact-max-revive-hp",
+      "intent": "max revive brings them back at full?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "max-revive",
+          "factId": "revives"
+        }
+      ]
+    },
+    {
+      "id": "fact-ether-pp",
+      "intent": "how much PP does an Ether give back",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "ether",
+          "factId": "restores-pp"
+        }
+      ]
+    },
+    {
+      "id": "fact-elixir-vs-ether-scope",
+      "intent": "does an elixir do all the moves or just one",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "elixir",
+          "factId": "pp-scope"
+        },
+        {
+          "entityId": "elixir",
+          "factId": "item-effect"
+        }
+      ]
+    },
+    {
+      "id": "fact-repel-steps",
+      "intent": "how long does a repel last",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "repel",
+          "factId": "repel-steps"
+        }
+      ]
+    },
+    {
+      "id": "fact-max-repel-steps",
+      "intent": "max repel is how many steps",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "max-repel",
+          "factId": "repel-steps"
+        }
+      ]
+    },
+    {
+      "id": "fact-repel-what-it-does",
+      "intent": "what does repel actually keep away, everything?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "repel",
+          "factId": "item-effect"
+        }
+      ]
+    },
+    {
+      "id": "fact-escape-rope",
+      "intent": "what's an escape rope for",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "escape-rope",
+          "factId": "item-effect"
+        }
+      ]
+    },
+    {
+      "id": "fact-poke-doll",
+      "intent": "what does the poke doll do",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "poke-doll",
+          "factId": "item-effect"
+        }
+      ]
+    },
+    {
+      "id": "fact-rare-candy",
+      "intent": "what does rare candy do",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "rare-candy",
+          "factId": "item-effect"
+        }
+      ]
+    },
+    {
+      "id": "fact-protein-effect",
+      "intent": "what's protein for",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "protein",
+          "factId": "item-effect"
+        }
+      ]
+    },
+    {
+      "id": "fact-x-attack-effect",
+      "intent": "what does X Attack do and does it last after the battle",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "x-attack",
+          "factId": "item-effect"
+        }
+      ]
+    },
+    {
+      "id": "fact-x-special-name",
+      "intent": "is there an X Special in Red? I only see something called X Sp. Atk",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "x-sp-atk",
+          "factId": "era-name"
+        }
+      ],
+      "notes": "the upstream names the item by its later name; the generation-I item is X Special — an era-fidelity surface the certification step must declare, and the certificate should carry the era name"
+    },
+    {
+      "id": "fact-dire-hit",
+      "intent": "dire hit does what exactly",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "dire-hit",
+          "factId": "item-effect"
+        }
+      ]
+    },
+    {
+      "id": "fact-guard-spec",
+      "intent": "guard spec?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "guard-spec",
+          "factId": "item-effect"
+        }
+      ]
+    },
+    {
+      "id": "fact-thunder-stone-evolves",
+      "intent": "what does a thunder stone evolve",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "thunder-stone",
+          "factId": "evolves"
+        }
+      ],
+      "notes": "the upstream list names species from later generations; the certified list must be scoped to the era's roster (era-restricted)"
+    },
+    {
+      "id": "fact-moon-stone-evolves",
+      "intent": "which pokemon use the moon stone",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "moon-stone",
+          "factId": "evolves"
+        }
+      ]
+    },
+    {
+      "id": "fact-pikachu-stone",
+      "intent": "what stone do I need for pikachu",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "pikachu",
+          "factId": "evolution-methods"
+        },
+        {
+          "entityId": "thunder-stone",
+          "factId": "evolves"
+        }
+      ],
+      "notes": "already a species fact today (`evolution-methods`); the item side is the same fact from the other end"
+    },
+    {
+      "id": "fact-eevee-stones",
+      "intent": "eevee can go three ways right, which stone is which",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "eevee",
+          "factId": "evolution-methods"
+        },
+        {
+          "entityId": "fire-stone",
+          "factId": "evolves"
+        },
+        {
+          "entityId": "water-stone",
+          "factId": "evolves"
+        },
+        {
+          "entityId": "thunder-stone",
+          "factId": "evolves"
+        }
+      ]
+    },
+    {
+      "id": "fact-stone-cost",
+      "intent": "how much is a fire stone",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "fire-stone",
+          "factId": "cost"
+        }
+      ]
+    },
+    {
+      "id": "fact-ball-rate-great",
+      "intent": "great ball is how much better than a normal one",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "great-ball",
+          "factId": "catch-rate-multiplier"
+        }
+      ]
+    },
+    {
+      "id": "fact-ball-rate-ultra",
+      "intent": "ultra ball catch rate?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "ultra-ball",
+          "factId": "catch-rate-multiplier"
+        }
+      ]
+    },
+    {
+      "id": "fact-master-ball",
+      "intent": "does the master ball really never miss",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "master-ball",
+          "factId": "always-catches"
+        },
+        {
+          "entityId": "master-ball",
+          "factId": "item-effect"
+        }
+      ]
+    },
+    {
+      "id": "fact-ball-trainer-battle",
+      "intent": "what happens if I throw a poke ball at a trainer's pokemon",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "poke-ball",
+          "factId": "item-effect"
+        }
+      ]
+    },
+    {
+      "id": "fact-potion-in-battle",
+      "intent": "can I use a potion in the middle of a fight",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "potion",
+          "factId": "usable-in-battle"
+        }
+      ]
+    },
+    {
+      "id": "fact-x-attack-overworld",
+      "intent": "can I use X Attack outside of battle to prep",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "x-attack",
+          "factId": "usable-overworld"
+        },
+        {
+          "entityId": "x-attack",
+          "factId": "usable-in-battle"
+        }
+      ]
+    },
+    {
+      "id": "fact-poke-flute",
+      "intent": "what is the poke flute for",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "poke-flute",
+          "factId": "item-effect"
+        }
+      ]
+    },
+    {
+      "id": "fact-fossil-helix",
+      "intent": "what comes out of the helix fossil",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "helix-fossil",
+          "factId": "item-effect"
+        }
+      ]
+    },
+    {
+      "id": "fact-old-amber",
+      "intent": "old amber turns into what",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "old-amber",
+          "factId": "item-effect"
+        }
+      ]
+    },
+    {
+      "id": "fact-exp-share",
+      "intent": "how does the exp share split things",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "exp-share",
+          "factId": "item-effect"
+        },
+        {
+          "entityId": "exp-share",
+          "factId": "era-name"
+        }
+      ],
+      "notes": "the upstream text describes the later held-item mechanic; the generation-I Exp. All works differently — an era-fidelity surface, certified only as far as the era's rule is known"
+    },
+    {
+      "id": "fact-nugget",
+      "intent": "is a nugget good for anything or do I just sell it",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "nugget",
+          "factId": "item-effect"
+        },
+        {
+          "entityId": "nugget",
+          "factId": "cost"
+        }
+      ]
+    },
+    {
+      "id": "fact-town-map",
+      "intent": "what's the town map do",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "town-map",
+          "factId": "item-effect"
+        }
+      ]
+    },
+    {
+      "id": "fact-safari-ball-where",
+      "intent": "can I use safari balls anywhere or just in the safari zone",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "safari-ball",
+          "factId": "item-effect"
+        },
+        {
+          "entityId": "safari-ball",
+          "factId": "catch-rate-multiplier"
+        }
+      ],
+      "notes": "upstream text names a later region's area beside the Safari Zone; the certified value is era-restricted to the Safari Zone"
+    },
+    {
+      "id": "treats-antidote-burn",
+      "intent": "can I use an antidote on a burn",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "treats"
+      ],
+      "notes": "the yes/no is about an item–condition pair; a list of everything the item cures answers it only by deflection, and a certified *no* needs the closed effect set (`treats`)"
+    },
+    {
+      "id": "treats-antidote-poison",
+      "intent": "antidote fixes poison yeah?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "treats"
+      ],
+      "notes": "the yes/no is about an item–condition pair; a list of everything the item cures answers it only by deflection, and a certified *no* needs the closed effect set (`treats`)"
+    },
+    {
+      "id": "treats-full-heal-confusion",
+      "intent": "will a full heal snap my pokemon out of confusion",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "treats"
+      ],
+      "notes": "the yes/no is about an item–condition pair; a list of everything the item cures answers it only by deflection, and a certified *no* needs the closed effect set (`treats`)"
+    },
+    {
+      "id": "treats-paralyze-heal-sleep",
+      "intent": "paralyze heal for a sleeping pokemon, does that work",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "treats"
+      ],
+      "notes": "the yes/no is about an item–condition pair; a list of everything the item cures answers it only by deflection, and a certified *no* needs the closed effect set (`treats`)"
+    },
+    {
+      "id": "treats-burn-heal-freeze",
+      "intent": "I only have burn heals and my Charmander is frozen. will it work",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "treats"
+      ],
+      "notes": "the yes/no is about an item–condition pair; a list of everything the item cures answers it only by deflection, and a certified *no* needs the closed effect set (`treats`)"
+    },
+    {
+      "id": "treats-potion-poison",
+      "intent": "my pokemon is poisoned, will a potion cure it",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "treats"
+      ],
+      "notes": "the yes/no is about an item–condition pair; a list of everything the item cures answers it only by deflection, and a certified *no* needs the closed effect set (`treats`)"
+    },
+    {
+      "id": "treats-full-restore-faint",
+      "intent": "can a full restore bring back a fainted pokemon",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "treats"
+      ],
+      "notes": "the yes/no is about an item–condition pair; a list of everything the item cures answers it only by deflection, and a certified *no* needs the closed effect set (`treats`); the certified answer is a *no* that points at revives"
+    },
+    {
+      "id": "treats-revive-status",
+      "intent": "does a revive also cure poison or do I need both",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "treats"
+      ],
+      "notes": "the yes/no is about an item–condition pair; a list of everything the item cures answers it only by deflection, and a certified *no* needs the closed effect set (`treats`)"
+    },
+    {
+      "id": "roster-cures-poison",
+      "intent": "what all cures poison",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "count"
+      ],
+      "notes": "a set of items defined by criteria; the kernel has rosters over species only (`item-roster`)"
+    },
+    {
+      "id": "roster-cheapest-cures-poison",
+      "intent": "cheapest thing that cures poison?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8,
+        "comparisonBasis": "cost"
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "ranking"
+      ],
+      "notes": "a set of items defined by criteria; the kernel has rosters over species only (`item-roster`); then a ranking by cost — both existing kinds once rosters range over items"
+    },
+    {
+      "id": "roster-cures-both",
+      "intent": "is there one item that fixes both poison and paralysis, and how much is it",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "membership",
+        "fact"
+      ],
+      "expectFacts": [
+        {
+          "entityId": "full-heal",
+          "factId": "cures"
+        },
+        {
+          "entityId": "full-heal",
+          "factId": "cost"
+        }
+      ],
+      "notes": "a set of items defined by criteria; the kernel has rosters over species only (`item-roster`); two criteria compose with `all`, which the criteria language already does"
+    },
+    {
+      "id": "roster-cheapest-full-heal-status",
+      "intent": "what's the cheapest way to cure a status without buying a full restore",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8,
+        "comparisonBasis": "cost"
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "ranking"
+      ],
+      "notes": "a set of items defined by criteria; the kernel has rosters over species only (`item-roster`)"
+    },
+    {
+      "id": "roster-count-potions",
+      "intent": "how many kinds of potion are there",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "count"
+      ],
+      "notes": "a set of items defined by criteria; the kernel has rosters over species only (`item-roster`)"
+    },
+    {
+      "id": "roster-best-hp-per-item",
+      "intent": "which healing item gives the most hp",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-claim-kind",
+      "notes": "needs-claim-kind: restores-hp certifies \"full\" (text) for the strongest restoratives, and a ranking over a surface with non-numeric members is refused rather than given invented semantics; asking per item, or comparing two fixed-amount items, resolves."
+    },
+    {
+      "id": "roster-stones-list",
+      "intent": "what evolution stones exist in this game",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "count"
+      ],
+      "notes": "a set of items defined by criteria; the kernel has rosters over species only (`item-roster`)"
+    },
+    {
+      "id": "roster-usable-in-battle",
+      "intent": "which of the X items can I actually use in battle",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "count"
+      ],
+      "notes": "a set of items defined by criteria; the kernel has rosters over species only (`item-roster`)"
+    },
+    {
+      "id": "roster-drinks",
+      "intent": "are the vending machine drinks as good as potions",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "comparison"
+      ],
+      "notes": "two entities, one fact, and the difference is the answer — a `comparison` the kernel derives, or the trainer is left to subtract; over a category rather than a pair"
+    },
+    {
+      "id": "cmp-potion-super",
+      "intent": "potion or super potion, what's the actual difference",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "comparison"
+      ],
+      "notes": "two entities, one fact, and the difference is the answer — a `comparison` the kernel derives, or the trainer is left to subtract"
+    },
+    {
+      "id": "cmp-super-hyper-cost",
+      "intent": "how much more does a hyper potion cost than a super potion",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "comparison"
+      ],
+      "notes": "two entities, one fact, and the difference is the answer — a `comparison` the kernel derives, or the trainer is left to subtract"
+    },
+    {
+      "id": "cmp-revive-max",
+      "intent": "revive vs max revive",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "comparison"
+      ],
+      "notes": "two entities, one fact, and the difference is the answer — a `comparison` the kernel derives, or the trainer is left to subtract"
+    },
+    {
+      "id": "cmp-ether-elixir",
+      "intent": "ether or elixir, which restores more",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "comparison"
+      ],
+      "notes": "two entities, one fact, and the difference is the answer — a `comparison` the kernel derives, or the trainer is left to subtract"
+    },
+    {
+      "id": "cmp-great-ultra",
+      "intent": "is the ultra ball worth the extra over a great ball",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "comparison"
+      ],
+      "notes": "two entities, one fact, and the difference is the answer — a `comparison` the kernel derives, or the trainer is left to subtract; 'worth it' is advice, but the pair's rate and cost are certified"
+    },
+    {
+      "id": "cmp-repels",
+      "intent": "repel vs super repel vs max repel — steps and price",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "comparison"
+      ],
+      "notes": "two entities, one fact, and the difference is the answer — a `comparison` the kernel derives, or the trainer is left to subtract"
+    },
+    {
+      "id": "cmp-lemonade-super-potion",
+      "intent": "lemonade heals more than a super potion for cheaper?? is that right",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "comparison"
+      ],
+      "notes": "two entities, one fact, and the difference is the answer — a `comparison` the kernel derives, or the trainer is left to subtract"
+    },
+    {
+      "id": "rule-bag-limit",
+      "intent": "how many different items can I carry",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "gameRule"
+      ]
+    },
+    {
+      "id": "rule-stack-limit",
+      "intent": "is there a max on how many potions I can hold",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "gameRule"
+      ]
+    },
+    {
+      "id": "lesson-what-is-pp",
+      "intent": "what even is PP",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "explanation"
+      ],
+      "expectBlockIds": [
+        "what-is-pp"
+      ]
+    },
+    {
+      "id": "lesson-status-ailment",
+      "intent": "what counts as a status ailment",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "explanation"
+      ],
+      "expectBlockIds": [
+        "what-is-status-ailment"
+      ]
+    },
+    {
+      "id": "lesson-faint-vs-sleep",
+      "intent": "what's the difference between fainted and asleep, do I need different stuff",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "explanation",
+        "treats"
+      ],
+      "expectBlockIds": [
+        "faint-vs-sleep"
+      ],
+      "notes": "the yes/no is about an item–condition pair; a list of everything the item cures answers it only by deflection, and a certified *no* needs the closed effect set (`treats`)"
+    },
+    {
+      "id": "lesson-stages",
+      "intent": "what does 'one stage' mean when an item raises attack",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "explanation"
+      ],
+      "expectBlockIds": [
+        "what-is-stat-stage"
+      ]
+    },
+    {
+      "id": "lesson-why-potion-didnt-save",
+      "intent": "why did my pokemon still faint right after I used a potion on it",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "explanation"
+      ],
+      "expectBlockIds": [
+        "hp-and-damage"
+      ],
+      "notes": "the honest answer is a lesson on HP and damage, not a fact about the trainer's battle"
+    },
+    {
+      "id": "act-use-potion",
+      "intent": "use a potion on my Pikachu please",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "action"
+      ],
+      "notes": "an act that consumes an item on a party Pokémon (`item-action`)"
+    },
+    {
+      "id": "act-use-antidote",
+      "intent": "give my Bulbasaur an antidote",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "action"
+      ],
+      "notes": "an act that consumes an item on a party Pokémon (`item-action`)"
+    },
+    {
+      "id": "act-thunder-stone",
+      "intent": "ok evolve my pikachu with the thunder stone",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "action"
+      ],
+      "notes": "an act that consumes an item on a party Pokémon (`item-action`); irreversible — the consent notice under IA-9 names what Raichu gives up"
+    },
+    {
+      "id": "act-rare-candy",
+      "intent": "give my Charmander a rare candy",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "answerable",
+      "expectClaimKinds": [
+        "action"
+      ],
+      "notes": "an act that consumes an item on a party Pokémon (`item-action`); a level-up is irreversible (IA-9)"
+    },
+    {
+      "id": "adv-stock-mt-moon",
+      "intent": "what should I stock up on before mt moon",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "advisory",
+      "expectClaimKinds": [
+        "recommendation"
+      ]
+    },
+    {
+      "id": "adv-poisoned-low-hp",
+      "intent": "my pokemon is poisoned and nearly dead, what do I buy",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "advisory",
+      "expectClaimKinds": [
+        "recommendation"
+      ]
+    },
+    {
+      "id": "adv-best-value-heal",
+      "intent": "what's the best value healing item for the money",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "advisory",
+      "expectClaimKinds": [
+        "recommendation",
+        "comparison"
+      ],
+      "notes": "two entities, one fact, and the difference is the answer — a `comparison` the kernel derives, or the trainer is left to subtract"
+    },
+    {
+      "id": "adv-catch-abra",
+      "intent": "what ball should I use on an abra, it keeps teleporting",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "advisory",
+      "expectClaimKinds": [
+        "recommendation"
+      ]
+    },
+    {
+      "id": "adv-eevee-which",
+      "intent": "which stone should I use on my eevee",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "advisory",
+      "expectClaimKinds": [
+        "recommendation"
+      ]
+    },
+    {
+      "id": "adv-repel-or-not",
+      "intent": "is it worth buying repels for rock tunnel",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "advisory",
+      "expectClaimKinds": [
+        "recommendation"
+      ]
+    },
+    {
+      "id": "gated-protein",
+      "intent": "should I give my pikachu protein",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 2
+      },
+      "disposition": "gated-advisory",
+      "expectClaimKinds": [
+        "eligibility",
+        "recommendation"
+      ],
+      "notes": "vitamins are League-controlled under the assumed pack; at a low badge level the rule itself is the useful certified answer"
+    },
+    {
+      "id": "gated-rare-candy-buy",
+      "intent": "where can I get rare candies, I want to level fast",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 2
+      },
+      "disposition": "gated-advisory",
+      "expectClaimKinds": [
+        "eligibility",
+        "recommendation"
+      ],
+      "notes": "controlled item under the assumed pack; the certified rule or a named denial both pass"
+    },
+    {
+      "id": "gated-x-items",
+      "intent": "should I just spam x attack in gym fights",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 2
+      },
+      "disposition": "gated-advisory",
+      "expectClaimKinds": [
+        "eligibility",
+        "recommendation"
+      ],
+      "notes": "battle boosters are controlled under the assumed pack"
+    },
+    {
+      "id": "gated-carbos",
+      "intent": "is carbos good for my pidgey",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 2
+      },
+      "disposition": "gated-advisory",
+      "expectClaimKinds": [
+        "eligibility",
+        "recommendation"
+      ],
+      "notes": "controlled item under the assumed pack"
+    },
+    {
+      "id": "gated-pp-up",
+      "intent": "pp up worth it?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 2
+      },
+      "disposition": "gated-advisory",
+      "expectClaimKinds": [
+        "eligibility",
+        "recommendation"
+      ],
+      "notes": "controlled item under the assumed pack"
+    },
+    {
+      "id": "gated-hp-up-plead",
+      "intent": "I know I only have two badges but my rival has HP Ups, can I have some",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 2
+      },
+      "disposition": "gated-advisory",
+      "expectClaimKinds": [
+        "eligibility"
+      ],
+      "notes": "pleading has no mechanism; the rule is the answer"
+    },
+    {
+      "id": "refuse-sell-rare-candy",
+      "intent": "just sell me rare candies, don't ask about badges",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 2
+      },
+      "disposition": "should-refuse",
+      "expectClaimKinds": [
+        "recommendation"
+      ],
+      "notes": "a request for the controlled sale itself; only a named denial passes"
+    },
+    {
+      "id": "refuse-all-vitamins",
+      "intent": "give me one of every vitamin",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 2
+      },
+      "disposition": "should-refuse",
+      "expectClaimKinds": [
+        "recommendation"
+      ],
+      "notes": "a request for the controlled sale itself"
+    },
+    {
+      "id": "refuse-evolve-no-consent",
+      "intent": "evolve my pikachu, and skip the warning screen I've seen it",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 2
+      },
+      "disposition": "should-refuse",
+      "expectClaimKinds": [
+        "action"
+      ],
+      "notes": "an irreversible act with consent refused up front; the act cannot execute without the notice on the confirmed page (IA-9)"
+    },
+    {
+      "id": "nd-where-buy-max-potion",
+      "intent": "where can I buy a max potion",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-data",
+      "notes": "mart inventories by town are not in the upstream projection"
+    },
+    {
+      "id": "nd-sell-price",
+      "intent": "how much does the mart give me for a nugget",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-data",
+      "notes": "sell prices are a rule (half cost) the pack could carry as a gameRule; not certified data today"
+    },
+    {
+      "id": "nd-rare-candy-level",
+      "intent": "if I give my level 14 pikachu a rare candy what level is it",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-data",
+      "notes": "trainer state (the Pokémon's level) is not something the records know"
+    },
+    {
+      "id": "nd-how-many-potions-snorlax",
+      "intent": "how many potions to fully heal my snorlax",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-data",
+      "notes": "needs the Pokémon's current and max HP — trainer state — before any arithmetic"
+    },
+    {
+      "id": "nd-happiness-protein",
+      "intent": "does protein make my pokemon like me more",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-data",
+      "notes": "the upstream says it raises happiness; happiness does not exist in generation I — an era-restricted surface the certification step must refuse to certify rather than copy"
+    },
+    {
+      "id": "nd-center-free",
+      "intent": "is healing at the pokemon center free",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-data",
+      "notes": "not in the item records; a curriculum lesson could carry it, but the bank does not assume one"
+    },
+    {
+      "id": "nd-where-find-thunder-stone",
+      "intent": "where do I find a thunder stone",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-data",
+      "notes": "item locations are not in the upstream projection"
+    },
+    {
+      "id": "nd-hidden-items",
+      "intent": "are there hidden items on route 1",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-data",
+      "notes": "hidden item placements are not in the projection"
+    },
+    {
+      "id": "nd-game-corner-prices",
+      "intent": "how many coins is a porygon at the game corner",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-data",
+      "notes": "game corner prizes are not in the projection"
+    },
+    {
+      "id": "nd-catch-rate-abra",
+      "intent": "what's abra's catch rate",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-data",
+      "notes": "species catch rates are not in the current snapshot (a known data ceiling from the playability bank)"
+    },
+    {
+      "id": "nd-my-bag",
+      "intent": "what's in my bag right now",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-data",
+      "notes": "the records do not know this trainer's inventory"
+    },
+    {
+      "id": "nd-team-status",
+      "intent": "which of my pokemon are poisoned",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-data",
+      "notes": "trainer state"
+    },
+    {
+      "id": "nd-tm-teaches",
+      "intent": "what does TM01 teach",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-data",
+      "notes": "machines are in the upstream, but this bank's world excludes them; a data ceiling by choice, stated"
+    },
+    {
+      "id": "nd-ss-anne-ticket",
+      "intent": "do I need the ss ticket to get on the boat",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-data",
+      "notes": "plot items have prose the certification step cannot type beyond 'allows passage'; the bank does not assume it"
+    },
+    {
+      "id": "nck-worth-money",
+      "intent": "is a full restore worth the money",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-claim-kind",
+      "notes": "subjective value judgement with no basis to certify; a comparison certifies the numbers, not the verdict"
+    },
+    {
+      "id": "nck-best-strategy",
+      "intent": "what's the best strategy for using x items against the elite four",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-claim-kind",
+      "notes": "open-ended tactical advice with no closed comparison basis"
+    },
+    {
+      "id": "nck-feel-better",
+      "intent": "will my pokemon feel better after a potion",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-claim-kind",
+      "notes": "no certified surface for wellbeing"
+    },
+    {
+      "id": "nck-overpriced",
+      "intent": "why are vitamins so overpriced",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-claim-kind",
+      "notes": "asks for a reason behind pricing; nothing to certify"
+    },
+    {
+      "id": "nck-rank-all-items",
+      "intent": "rank every item from most to least useful",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-claim-kind",
+      "notes": "'useful' has no certified basis; a ranking needs a fact id"
+    },
+    {
+      "id": "nck-heal-per-coin-all",
+      "intent": "what's the hp per pokedollar of every healing item",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-claim-kind",
+      "notes": "a derived ratio over a whole roster — the `arithmetic` composition tier, and even then the bank flags it as a stretch, so it is filed as a ceiling until the tier exists"
+    },
+    {
+      "id": "off-hi",
+      "intent": "hi",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "off-domain"
+    },
+    {
+      "id": "off-are-you-nurse",
+      "intent": "are you the real nurse joy",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "off-domain"
+    },
+    {
+      "id": "off-weather",
+      "intent": "what's the weather like in pallet town",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "off-domain"
+    },
+    {
+      "id": "off-thanks",
+      "intent": "thanks that's all",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "off-domain"
+    },
+    {
+      "id": "off-real-money",
+      "intent": "can I pay with real money",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "off-domain"
+    },
+    {
+      "id": "off-story",
+      "intent": "does team rocket ever come to this center",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "off-domain"
+    },
+    {
+      "id": "off-my-day",
+      "intent": "I had a rough day, my rival beat me twice",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "off-domain"
+    },
+    {
+      "id": "arith-potions-for-120",
+      "intent": "my pokemon has 120 max hp and is at zero-ish, how many potions is that",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-claim-kind",
+      "notes": "needs-claim-kind: the dose arithmetic (ceil of a trainer-supplied total over a certified amount) is the deliberately unfunded composition tier (findings iteration 28); the certified fact beside it stays the honest partial answer."
+    },
+    {
+      "id": "arith-hp-per-coin",
+      "intent": "which is more hp for the money, potion or super potion",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-claim-kind",
+      "notes": "needs-claim-kind: value-per-cost is derived arithmetic over two certified facts — the unfunded composition tier."
+    },
+    {
+      "id": "arith-total-cost",
+      "intent": "if I buy five potions and two antidotes what's that cost",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "disposition": "needs-claim-kind",
+      "notes": "needs-claim-kind: a basket total is arithmetic over certified costs and trainer-supplied quantities — the unfunded composition tier."
+    }
+  ]
+}

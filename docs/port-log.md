@@ -42,7 +42,7 @@ decides it on the divergence and ceremony numbers, not on three questions.
 | 5 | Vocabulary widening | Roster criteria over items; item actions in the pack's action registry with consent notices for the irreversible ones | 3 | 0.15 (criteria; actions land with the pack, PR 3) | #105 |
 | 6 | Pack | Controlled-item gates (the IA-5 analog), disclosures with approved wording, copy catalogue, formatters for the new value kinds, curriculum entries the bank asked for | 4 | 0.25 | #106 |
 | 7 | Crucible | Mutations per new mechanism, plus the clean controls | 3 | | |
-| 8 | Bank migration and oracles | The inquiry bank migrated into the playability format with `expectFacts`/`expectBlockIds` validated against the new world | 2 | | |
+| 8 | Bank migration and oracles | The inquiry bank migrated into the playability format with `expectFacts`/`expectBlockIds` validated against the new world | 2 | 0.5 | #107 |
 | 9 | Coverage map | Both defaults at N=3 on the realistic bank; the disposition map rendered from the artifact | 1 (plus billable run time) | | |
 | 10 | Certified page and crucible page | Slots and formatters on the certified page for the new value kinds; the new sabotages on the crucible page | 3 | | |
 | | **Total** | | **33** | | |
@@ -85,6 +85,15 @@ claims, and the engine/instance boundary has to move.
   that a pack belongs with its world. Authoring five curriculum lessons and
   the consent wording was the reviewed-content cost, exactly where §4
   predicts it.
+
+- **Row 8 plus the propose-side wiring (#107):** ~0.5 agent-days, the
+  slowest row per estimate-hour yet, and the reason is the finding: the
+  migration itself was a script, but the propose side turned out to be **five
+  layers deep** — grammar, prompt, decoder, canonical folds, retrieval — and
+  three of them were discovered by the scripted end-to-end leg failing, not
+  by planning. A port's checklist should say "a new claim kind touches every
+  propose-side layer, and the offline end-to-end run is the thing that finds
+  the ones you forgot."
 
 ## How the actuals are recorded
 

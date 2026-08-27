@@ -16,7 +16,7 @@
 import type { ScopeDimension, ScopeEvent, ScopeTranscript, TrainerScope } from "../kernel/contracts.js";
 import type { ManifestContext } from "../kernel/manifest.js";
 import type { AccordPack } from "../kernel/pack.js";
-import { MOVE_FACT_IDS, SPECIES_FACT_IDS } from "../kernel/registry.js";
+import { MOVE_FACT_IDS, SPECIES_FACT_IDS , ITEM_FACT_IDS, STATUS_CONDITIONS } from "../kernel/registry.js";
 import { candidateDigest } from "../kernel/scope.js";
 import { type AnswerDecode, decodeAnswer, decodeCandidate } from "./decode.js";
 import type { CompletionRequest, ModelProvider, Usage } from "./provider.js";
@@ -93,6 +93,7 @@ function answerPrompt(
   lessons: readonly string[],
   rules: readonly { id: string; label: string }[],
   reference: string | undefined,
+  items = false,
 ): string {
   return [
     // Grounding, when on: the certified facts in front of the model so it reads
@@ -159,6 +160,12 @@ function answerPrompt(
           '  {"kind": "gameRule", "ruleId": "<rule-id>"}  — a fixed rule of the game as a certified number. Use it only for a "how many" question about a rule (how many Pokémon fit on a team, how many moves one can know). It counts a rule; it does not list what a trainer owns — the records do not know this trainer\'s team, so "what is on my team?" gets no claim. The system fills the number, so state none.',
         ]),
     '  {"kind": "membership", "rosterId": "<id>", "entityId": "<id>", "asserted": <boolean>}',
+    ...(items
+      ? [
+          '  {"kind": "treats", "itemId": "<item-id>", "condition": "<condition>"}  — does this item treat that condition? The system derives the certified yes or no from the item\'s closed effect set, so state neither; the certified *no* is a real answer. A <condition> must be one of: poison, burn, freeze, sleep, paralysis, confusion.',
+          '  {"kind": "comparison", "factId": "<fact-id>", "leftId": "<id>", "rightId": "<id>"}  — one certified fact on two entities; the system derives both values, the gap and which leads, so state none of them.',
+        ]
+      : []),
     '  {"kind": "ranking", "rosterId": "<id>", "basis": "<fact-id>", "direction": "highest"|"lowest"}  — defines a set and an ordering; the system names the winner, so name none',
     '  {"kind": "matchup", "subject": {"kind": "species", "entityId": "<id>"} | {"kind": "type", "typeId": "<type>"}, "direction": "weak-to"|"resists"|"immune-to"|"strong-against"}  — type effectiveness; the system reads the chart and lists the types, so list none. A species can be weak-to, resist or be immune-to; only a type can be strong-against.',
     '  {"kind": "eligibility", "entityId": "<species-id>"}  — what the League\'s rules say about advising this trainer toward that species; the system derives the verdict, the rule and the thresholds. Use it when the trainer asks about a restricted species you cannot recommend to them: the rule itself is a useful, certified answer, and you may pair it with a recommendation of an eligible alternative.',
@@ -179,6 +186,7 @@ function answerPrompt(
     "A <fact-id> must be one of these certified ids; no other resolves.",
     `  about a species (entityId is a species id): ${SPECIES_FACT_IDS.join(", ")}`,
     `  about a move (entityId is a move id): ${MOVE_FACT_IDS.join(", ")}`,
+    ...(items ? [`  about an item (entityId is an item id): ${ITEM_FACT_IDS.join(", ")}`] : []),
     "Cite only rosters you defined; recompute nothing you are unsure of — omit it.",
   ].join("\n");
 }
@@ -203,7 +211,7 @@ function answerPrompt(
  * deterministic meter — with no LLM judge — rather than prose someone has to
  * interpret.
  */
-function rawPrompt(asks: readonly string[], tools: readonly string[]): string {
+function rawPrompt(asks: readonly string[], tools: readonly string[], items = false): string {
   return [
     "The trainer's own words:",
     ...asks.map((line) => `  - ${line}`),
@@ -227,6 +235,12 @@ function rawPrompt(asks: readonly string[], tools: readonly string[]): string {
     '  {"kind": "count", "rosterId": "<id>", "reported": <number>}  — state the number yourself; nothing counts it for you',
     '  {"kind": "typeCount"}  — how many types exist in this generation; the kernel counts the certified type chart',
     '  {"kind": "membership", "rosterId": "<id>", "entityId": "<id>", "asserted": <boolean>}',
+    ...(items
+      ? [
+          '  {"kind": "treats", "itemId": "<item-id>", "condition": "<condition>"}  — does this item treat that condition? The system derives the certified yes or no from the item\'s closed effect set, so state neither; the certified *no* is a real answer. A <condition> must be one of: poison, burn, freeze, sleep, paralysis, confusion.',
+          '  {"kind": "comparison", "factId": "<fact-id>", "leftId": "<id>", "rightId": "<id>"}  — one certified fact on two entities; the system derives both values, the gap and which leads, so state none of them.',
+        ]
+      : []),
     '  {"kind": "ranking", "rosterId": "<id>", "basis": "<fact-id>", "direction": "highest"|"lowest", "selectedEntityId": "<id>"}  — name the winner yourself',
     '  {"kind": "matchup", "subject": {"kind": "species", "entityId": "<id>"} | {"kind": "type", "typeId": "<type>"}, "direction": "weak-to"|"resists"|"immune-to"|"strong-against", "members": ["<type>", ...]}  — list the types yourself; nothing reads the chart for you',
     '  {"kind": "eligibility", "entityId": "<species-id>", "finding": {"eligible": <boolean>, "badgeLevel": <number>, "ruleId": "<id>", "minimumBadgeLevel": <number>}}  — state the verdict and thresholds yourself; nothing derives them for you',
@@ -238,6 +252,7 @@ function rawPrompt(asks: readonly string[], tools: readonly string[]): string {
     "A <fact-id> must be one of these ids:",
     `  about a species (entityId is a species id): ${SPECIES_FACT_IDS.join(", ")}`,
     `  about a move (entityId is a move id): ${MOVE_FACT_IDS.join(", ")}`,
+    ...(items ? [`  about an item (entityId is an item id): ${ITEM_FACT_IDS.join(", ")}`] : []),
     "Identifiers are lowercase and hyphenated.",
   ].join("\n");
 }
@@ -336,11 +351,12 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
       context.pack.curriculum.map((lesson) => lesson.id),
       context.pack.gameRules.map((rule) => ({ id: rule.id, label: rule.label })),
       reference,
+      context.registry.itemIds.length > 0,
     ),
     hint: { scenarioId, ...(context.grant === undefined ? {} : { scope: context.grant.scope }) },
     // The same contract the prose describes, in a form a provider can enforce.
     // Whether it is enforced is the provider's business, not the advisor's.
-    schema: { name: ANSWER_SCHEMA_NAME, schema: answerSchema(context.pack, fillerKinds) },
+    schema: { name: ANSWER_SCHEMA_NAME, schema: answerSchema(context.pack, fillerKinds, context.registry.itemIds.length > 0) },
   };
   const completion = await provider.complete(request);
   return { usage: completion.usage, decode: decodeAnswer(completion.text, context, transactionId) };
@@ -365,6 +381,7 @@ export async function proposeRawAnswer(input: RawStepInput): Promise<AnswerStep>
     prompt: rawPrompt(
       trainerText(input.transcript),
       context.pack.actions.map((action) => action.id),
+      context.registry.itemIds.length > 0,
     ),
     hint: { scenarioId },
     schema: { name: ANSWER_SCHEMA_NAME, schema: answerSchema(context.pack) },

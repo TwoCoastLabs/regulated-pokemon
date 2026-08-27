@@ -31,6 +31,7 @@
 
 import type { CertifiedRegistry } from "../kernel/registry.js";
 import { STAT_NAMES } from "../kernel/snapshot-format.js";
+import { STATUS_CONDITIONS } from "../kernel/registry.js";
 
 /**
  * Which rows a reference block carries. `undefined` for either set means "all
@@ -41,6 +42,7 @@ import { STAT_NAMES } from "../kernel/snapshot-format.js";
 export interface ReferenceSelection {
   species?: ReadonlySet<string>;
   moves?: ReadonlySet<string>;
+  items?: ReadonlySet<string>;
 }
 
 /**
@@ -87,6 +89,21 @@ export function certifiedReference(registry: CertifiedRegistry, selection?: Refe
   for (const species of speciesRows) {
     const moves = [...new Set(species.learnset.map((entry) => entry.move))].sort();
     lines.push(`${species.id}: ${moves.join(",")}`);
+  }
+
+  // The Center world's items, when the snapshot carries any (epic #94,
+  // slice 3): the certified era facts beside the structured ones, so a
+  // grounded model reads the closed effect set instead of recalling a blend
+  // of eras. Facts only — which items are *controlled* is the pack's.
+  const itemRows =
+    selection?.items === undefined ? registry.items : registry.items.filter((item) => selection.items!.has(item.id));
+  if (itemRows.length > 0) {
+    lines.push("", "ITEMS  (id | category | cost | cures | restores-hp | effect):");
+    for (const item of itemRows) {
+      const cures = (item.certified.cures ?? []).join(",") || "-";
+      const restores = item.certified.restoresHp === undefined ? "-" : String(item.certified.restoresHp);
+      lines.push(`${item.id} | ${item.category} | ${item.cost} | ${cures} | ${restores} | ${item.shortEffect}`);
+    }
   }
 
   return lines.join("\n");
@@ -159,8 +176,17 @@ export function retrievalSelection(registry: CertifiedRegistry, question: string
 
   // Cap in Pokédex order (registry.species is already ordered), so a run
   // replays and a pathological match cannot balloon the prompt.
+  // Items named are pulled; a condition named pulls the items that treat it —
+  // the evidence a treats verdict or a cures roster rests on.
+  const items = new Set<string>();
+  for (const id of registry.itemIds) if (names(id)) items.add(id);
+  for (const condition of STATUS_CONDITIONS) {
+    if (!names(condition)) continue;
+    for (const item of registry.items) if ((item.certified.cures ?? []).includes(condition)) items.add(item.id);
+  }
+
   const capped = new Set(registry.species.filter((one) => species.has(one.id)).slice(0, RETRIEVAL_SPECIES_CAP).map((one) => one.id));
-  return { species: capped, moves };
+  return { species: capped, moves, items };
 }
 
 function escapeForRegExp(value: string): string {

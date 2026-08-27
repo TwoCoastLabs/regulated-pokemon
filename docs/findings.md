@@ -2791,6 +2791,59 @@ can be paid for once.
 
 ---
 
+### Iteration 38 — the Center bank runs end to end: oracles attached, the harness bilingual in worlds
+
+Slice 3 of epic #94, fourth leg (port-log row 8 and the propose-side wiring):
+the 125 realistic inquiries, migrated into the playability format with the
+oracles slice 0 deferred until a world existed to validate them against —
+and the whole propose-verify loop running over the Center world, scripted
+and key-free, in CI.
+
+- **The migration is reviewed judgment, not a format shuffle.** Every
+  fact-expecting entry gained its subject oracle (any-of certified pairs:
+  "how much does a potion heal" accepts `potion.restores-hp` and nothing
+  else); explanation entries route to the five new lessons; gated entries
+  hold their trainer at badge 2, under the gate they test; ranking entries
+  establish the basis they rank by (`cost`, in the profile the truthful
+  driver answers from). Four entries were **retagged honestly** rather than
+  migrated hopefully: the three arithmetic questions (the deliberately
+  unfunded composition tier) and the most-HP ranking, whose surface
+  certifies a non-numeric "full" the kernel refuses to invent ordering for.
+  A validation suite pins all of it against the Center registry and pack.
+- **`--center` selects a world, not just a bank.** `kanto-center` +
+  `pokemon-center-v1` + the migrated bank, through the same coverage
+  machinery; artifacts pin the Center world's own provenance.
+- **A new claim kind touches every propose-side layer — measured the hard
+  way.** The kernel learned `treats`/`comparison` in PR #105; this leg found
+  the model-facing half was five layers deep: the answer grammar (the kinds
+  offered only where items exist — a world-gated schema, like the lesson
+  enum), the prompt (the pair-naming contract and the item fact-id menu),
+  the **decoder** (a malformed treats was an abstention until it learned the
+  shape), the **canonical folds** ("Antidote" is `antidote`, "Super Potion"
+  is `super-potion` — items joined the injective fold index), and
+  **retrieval** (an item named pulls its row; a condition named pulls the
+  items that treat it, the evidence a verdict or a cures-roster rests on;
+  the grounded reference gained an ITEMS table, facts only, policy stays the
+  pack's). Three of the five were found by the scripted end-to-end leg
+  failing, not by planning — the port playbook's lesson for the row.
+- **The end-to-end leg, key-free:** a scripted model answers "can I use an
+  antidote on a burn?" with the grounded pair and the record resolves with
+  the certified negative; asked about Protein it reaches for the
+  recommendation and the Center pack denies it `IA-5/restricted-item` — the
+  full loop, in `npm test`, against the world and pack the billable map will
+  run under.
+
+What remains of slice 3 is exactly one thing: **paying for the map** — the
+N=3 two-model disposition map over this bank, bands and ceremony columns
+included, which is the product's own first deliverable and joins the two
+parked billable legs under one go.
+
+Provenance: `center-bank.test.ts` (validation + the scripted leg) in
+`npm test`; the migration script is deterministic over the committed
+inquiry bank. Zero model calls, zero dollars.
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's

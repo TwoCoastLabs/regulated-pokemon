@@ -29,6 +29,10 @@ import { type Disposition, DISPOSITIONS, type ExpectedFact } from "./playability
 /** The shipped bank on disk — the same bytes a live run reads. */
 export const BANK_PATH = resolve(import.meta.dirname, "../../data/playability/bank.v1.json");
 
+/** The Center world's bank (epic #94, slice 3): the migrated realistic
+ * inquiries, oracles attached, run under `--center`. */
+export const CENTER_BANK_PATH = resolve(import.meta.dirname, "../../data/playability/center-bank.v1.json");
+
 export const BANK_SCHEMA_VERSION = 1;
 
 /**
