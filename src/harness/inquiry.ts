@@ -74,24 +74,18 @@ export interface ShapeDefinition {
 export const SHAPES: readonly ShapeDefinition[] = [
   ...CLAIM_KINDS.map((kind): ShapeDefinition => ({ id: kind, tier: "existing", summary: `the kernel's ${kind} claim` })),
   {
+    // Landed in epic #94 slice 3 PR 2: roster criteria range over items, so
+    // entries that needed this now need only the world's data. The tier moves
+    // rather than the entry vanishing — the bank's demand history stays
+    // legible in the findings, and the pass reads today's kernel.
     id: "item-roster",
-    tier: "port",
-    summary: "a closed roster over items — criteria such as category, what it treats, a cost bound — feeding count, membership and ranking exactly as species rosters do",
+    tier: "existing",
+    summary: "a closed roster over items — criteria such as category, what it treats, a cost bound — feeding count, membership and ranking exactly as species rosters do (landed: slice 3 PR 2)",
   },
   {
     id: "item-action",
     tier: "port",
     summary: "an act that uses an item on a party Pokémon, registered in the pack like release is, with an irreversible one owing its consent notice",
-  },
-  {
-    id: "treats",
-    tier: "shape",
-    summary: "an item ↔ condition relation asserted true or false and verified against the item's closed effect set — the certified negative a contraindication question needs",
-  },
-  {
-    id: "comparison",
-    tier: "shape",
-    summary: "one fact id on two entities, with the difference and the direction derived by the kernel — never stated by the model",
   },
   {
     id: "arithmetic",

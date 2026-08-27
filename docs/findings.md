@@ -2692,6 +2692,59 @@ that landed it, which is the split §4 prescribes.
 
 ---
 
+### Iteration 36 — the shapes the bank demanded: the certified negative, the derived comparison, and rosters over items
+
+Slice 3 of epic #94, second leg (port-log rows 4–5): exactly what the
+expressibility pass named and nothing else. Two claim kinds and four roster
+criteria, each behind the gates everything else lives behind.
+
+- **`treats`** — an item–condition relation asserted true **or false** and
+  recomputed from the item's closed certified effect set. The certified
+  negative is the shape's whole point: "an Antidote does not treat a burn"
+  rests on the closed world, where a list of everything it cures answers
+  only by deflection. The verdict is derivable and optional (the model names
+  the pair; the kernel fills the yes or no); a wrong assertion is
+  `IA-2/treats-mismatch`, an unknown condition is refused against the closed
+  vocabulary, an unknown item is a fabrication.
+- **`comparison`** — one certified fact on two entities, everything
+  comparative derived: both values re-resolved, the gap and the leader
+  computed at plan time, a tie an honest no-leader rather than a refusal.
+  Only numbers compare; `item-effect` prose put beside itself is
+  `IA-2/incomparable-fact` — "which is better?" cannot quietly become an
+  opinion with a certificate.
+- **Item rosters** — criteria over the second universe (`item-category`,
+  `treats-condition`, `cost-at-most/least`), with a domain discipline the
+  builder enforces: species terms and item terms may not mix
+  (`IA-2/criteria-domain-mixed`), because "Electric-type things that cure
+  poison" is a set no universe certifies. Count and membership work over
+  item sets through the ordinary claims (membership's certified negative
+  included: Pikachu is not a member of the poison-cures, and the closed set
+  says so itself); item *rankings* are deliberately absent until the Center
+  pack widens the comparison-basis vocabulary — the ranking basis is scope
+  the trainer establishes, and today's pack knows only species stats.
+
+**Crucible phase 7** owns the new refusals against the Center world — the
+flipped negative, the invented condition, the doctored comparison value, the
+incomparable comparison, the mixed universes — plus the clean path (a
+verdict, a comparison and an item count, zero violations) and the no-op
+control. IA-2's row grows 12 → 17.
+
+**The free re-measurement, over the same 125-question bank:** expressibility
+moved from **65/98 (66%)** now / 77/98 (79%) with no new kind (iteration 28)
+to **91/98 (93%) / 95/98 (97%)**. The demand list shrinks to `item-action`
+(4 entries, landing with the pack that registers the acts) and `arithmetic`
+(3 entries, deliberately unfunded). The instrument's discipline paid off in
+both directions: the bank named exactly what to build, and re-reading it for
+free says what the build bought — 26 more entries expressible, none of them
+by loosening anything.
+
+Provenance: crucible phase 7 and `center-shapes.test.ts` (`npm test`);
+expressibility pins in `inquiry.test.ts` moved in the same change, per the
+rule that a filed number and its instrument move together. Zero model calls,
+zero dollars.
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's

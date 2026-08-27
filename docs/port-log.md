@@ -38,8 +38,8 @@ decides it on the divergence and ceremony numbers, not on three questions.
 | 1 | Snapshot projection | `snapshot:fetch` projects generation-I items by game index; per-surface fidelity declared; loader closed both ways; drift watch covers it | 4 | 0.2 | #104 |
 | 2 | Certification pipeline | Prose `effect` → typed facts, with a propose step (model, offline artifact), a human certify step, provenance per fact, and an extraction crucible (an injected fabricated extraction refused at review) | 6 | 0.2 | #104 |
 | 3 | Fact readers | Item facts (cost, restores, cures, usable-in, steps, catch multiplier, evolves) as registry readers with fidelity classes | 2 | 0.1 | #104 |
-| 4 | Claim shapes the bank demanded | `treats` (with the certified negative) and `comparison`, each with derivation, verifier, formatter, crucible mutation and coverage bucket | 5 | | |
-| 5 | Vocabulary widening | Roster criteria over items; item actions in the pack's action registry with consent notices for the irreversible ones | 3 | | |
+| 4 | Claim shapes the bank demanded | `treats` (with the certified negative) and `comparison`, each with derivation, verifier, formatter, crucible mutation and coverage bucket | 5 | 0.3 | #105 |
+| 5 | Vocabulary widening | Roster criteria over items; item actions in the pack's action registry with consent notices for the irreversible ones | 3 | 0.15 (criteria; actions land with the pack, PR 3) | #105 |
 | 6 | Pack | Controlled-item gates (the IA-5 analog), disclosures with approved wording, copy catalogue, formatters for the new value kinds, curriculum entries the bank asked for | 4 | | |
 | 7 | Crucible | Mutations per new mechanism, plus the clean controls | 3 | | |
 | 8 | Bank migration and oracles | The inquiry bank migrated into the playability format with `expectFacts`/`expectBlockIds` validated against the new world | 2 | | |
@@ -67,6 +67,14 @@ claims, and the engine/instance boundary has to move.
   The certification sheet is the honest cost center: authoring 70 reviewed
   extractions was most of row 2, and it scales with the corpus, not the
   kernel.
+
+- **Rows 4–5 (#105):** ~0.45 agent-days. The kernel additions themselves were
+  small (two claim kinds, four criteria, one crucible phase); the day went to
+  the blast radius — five exhaustive switches and five pinned test suites the
+  closed vocabularies deliberately make loud. That is the compiled-in-types
+  bet behaving as designed: widening is noisy and reviewed, never silent.
+  Item *rankings* wait on the pack's comparison-basis vocabulary (PR 3), and
+  the item-action half of row 5 lands with the pack that registers the acts.
 
 ## How the actuals are recorded
 

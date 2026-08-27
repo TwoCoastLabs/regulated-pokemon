@@ -117,6 +117,10 @@ function describeClaim(claim: Claim): string {
   switch (claim.kind) {
     case "fact":
       return `fact         ${claim.entityId}.${claim.factId} = ${claim.asserted === undefined ? "(derived by the kernel)" : formatFactValue(claim.asserted)}`;
+    case "treats":
+      return `treats       ${claim.itemId} vs ${claim.condition}: ${claim.asserted === undefined ? "(derived by the kernel)" : claim.asserted ? "treats" : "does not treat"}`;
+    case "comparison":
+      return `comparison   ${claim.leftId} vs ${claim.rightId} by ${claim.factId} (values derived by the kernel)`;
     case "count":
       return `count        ${claim.rosterId} = ${claim.reported}`;
     case "typeCount":

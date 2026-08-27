@@ -21,6 +21,7 @@ import { PHASE_3_ARTICLES, PHASE_3_CONTROLS, PHASE_3_MUTATIONS } from "./phase3.
 import { PHASE_4_ARTICLES, PHASE_4_CONTROLS, PHASE_4_MUTATIONS } from "./phase4.js";
 import { PHASE_5_ARTICLES, PHASE_5_CONTROLS, PHASE_5_MUTATIONS } from "./phase5.js";
 import { PHASE_6_ARTICLES, PHASE_6_CONTROLS, PHASE_6_MUTATIONS } from "./phase6.js";
+import { PHASE_7_ARTICLES, PHASE_7_CONTROLS, PHASE_7_MUTATIONS } from "./phase7.js";
 
 export interface CruciblePhase {
   /** Epic phase number, matching docs and the issue tracker. */
@@ -79,6 +80,13 @@ export const CRUCIBLE_PHASES: readonly CruciblePhase[] = [
     articles: PHASE_6_ARTICLES,
     mutations: PHASE_6_MUTATIONS,
     controls: PHASE_6_CONTROLS,
+  },
+  {
+    phase: 7,
+    title: "The Center world's claim shapes",
+    articles: PHASE_7_ARTICLES,
+    mutations: PHASE_7_MUTATIONS,
+    controls: PHASE_7_CONTROLS,
   },
 ];
 

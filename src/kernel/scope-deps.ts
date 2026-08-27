@@ -41,6 +41,8 @@ export const SCOPE_DEPENDENCIES: Record<Claim["kind"], readonly ScopeDimension[]
   count: ["version"],
   typeCount: ["version"],
   membership: ["version"],
+  treats: ["version"],
+  comparison: ["version"],
   matchup: ["version"],
   // A superlative is a claim about an ordering, and which ordering was asked
   // for is comparison scope (checkRankingBasis owns the value check).

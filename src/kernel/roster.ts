@@ -12,7 +12,8 @@
 
 import type { ClosedRoster, RosterCriteria, RosterCriterion, Resolution, Verdict, Violation } from "./contracts.js";
 import type { CertifiedRegistry } from "./registry.js";
-import type { SnapshotSpecies } from "./snapshot-format.js";
+import { STATUS_CONDITIONS } from "./registry.js";
+import type { SnapshotSpecies , SnapshotItem } from "./snapshot-format.js";
 import { verdictOf, violation } from "./violation.js";
 
 /**
@@ -37,7 +38,7 @@ export function buildRoster(
       id,
       snapshotId: registry.snapshot.id,
       criteria,
-      memberIds: members.map((species) => species.id),
+      memberIds: members,
       cardinality: members.length,
     },
   };
@@ -66,11 +67,15 @@ export function verifyRoster(registry: CertifiedRegistry, roster: ClosedRoster):
   // Fabrications are named first and then excluded from the set comparison,
   // so an injected MissingNo is denied as a fabrication (IA-3) rather than
   // being mislabelled as a merely surplus member (IA-4).
-  const fabricated = roster.memberIds.filter((memberId) => registry.findSpecies(memberId) === undefined);
+  const domain = rosterDomain(roster.criteria);
+  if (!domain.ok) return verdictOf(domain.violations);
+  const exists = (memberId: string): boolean =>
+    domain.value === "items" ? registry.findItem(memberId) !== undefined : registry.findSpecies(memberId) !== undefined;
+  const fabricated = roster.memberIds.filter((memberId) => !exists(memberId));
   for (const memberId of fabricated) {
     violations.push(
       violation("IA-3", "fabricated-entity", `roster ${roster.id} contains "${memberId}", which is not certified`, {
-        expected: `a species in ${registry.snapshot.id}`,
+        expected: `${domain.value === "items" ? "an item" : "a species"} in ${registry.snapshot.id}`,
         actual: memberId,
       }),
     );
@@ -86,7 +91,7 @@ export function verifyRoster(registry: CertifiedRegistry, roster: ClosedRoster):
     );
   }
 
-  const expected = selectMembers(registry, roster.criteria).map((species) => species.id);
+  const expected = selectMembers(registry, roster.criteria);
   const claimed = roster.memberIds.filter((memberId) => !fabricated.includes(memberId));
   const claimedSet = new Set(claimed);
 
@@ -140,6 +145,14 @@ function describeCriterion(criterion: RosterCriterion): string {
   switch (criterion.kind) {
     case "has-type":
       return `of type ${criterion.type}`;
+    case "item-category":
+      return `in the ${criterion.category} category`;
+    case "treats-condition":
+      return `that treat ${criterion.condition}`;
+    case "cost-at-most":
+      return `costing at most ${criterion.value}`;
+    case "cost-at-least":
+      return `costing at least ${criterion.value}`;
     case "learns-move":
       return `able to learn ${criterion.move}`;
     case "rarity":
@@ -151,8 +164,29 @@ function describeCriterion(criterion: RosterCriterion): string {
   }
 }
 
+/** Which universe a criterion selects from. The domain is a property of the
+ * criteria, never a trusted input, so replay re-derives it for free. */
+export function rosterDomain(criteria: RosterCriteria): Resolution<"species" | "items"> {
+  const itemKinds = new Set(["item-category", "treats-condition", "cost-at-most", "cost-at-least"]);
+  const domains = new Set(criteria.all.map((criterion) => (itemKinds.has(criterion.kind) ? "items" : "species")));
+  if (domains.size > 1) {
+    return {
+      ok: false,
+      violations: [
+        violation("IA-2", "criteria-domain-mixed", "the criteria mix species terms with item terms, which select from different universes", {
+          expected: "criteria over one certified universe",
+          actual: criteria.all.map((criterion) => criterion.kind).join(", "),
+        }),
+      ],
+    };
+  }
+  return { ok: true, value: domains.has("items") ? "items" : "species" };
+}
+
 function checkVocabulary(registry: CertifiedRegistry, criteria: RosterCriteria): Violation[] {
   const violations: Violation[] = [];
+  const domain = rosterDomain(criteria);
+  if (!domain.ok) violations.push(...domain.violations);
   for (const criterion of criteria.all) {
     if (criterion.kind === "has-type" && !registry.typeNames.has(criterion.type)) {
       violations.push(
@@ -169,15 +203,38 @@ function checkVocabulary(registry: CertifiedRegistry, criteria: RosterCriteria):
         }),
       );
     }
+    if (criterion.kind === "item-category" && !registry.items.some((item) => item.category === criterion.category)) {
+      violations.push(
+        violation("IA-3", "unknown-item-category", `"${criterion.category}" is not an item category certified by ${registry.snapshot.id}`, {
+          expected: [...new Set(registry.items.map((item) => item.category))].sort().join(", ") || "no items in this world",
+          actual: criterion.category,
+        }),
+      );
+    }
+    if (criterion.kind === "treats-condition" && !STATUS_CONDITIONS.includes(criterion.condition)) {
+      violations.push(
+        violation("IA-3", "unknown-condition", `"${criterion.condition}" is not a status condition the records know`, {
+          expected: STATUS_CONDITIONS.join(", "),
+          actual: criterion.condition,
+        }),
+      );
+    }
   }
   return violations;
 }
 
-/** Members in Pokédex order — the registry already stores them that way. */
-function selectMembers(registry: CertifiedRegistry, criteria: RosterCriteria): readonly SnapshotSpecies[] {
-  return registry.species.filter((species) =>
-    criteria.all.every((criterion) => satisfies(species, criterion)),
-  );
+/** Members in the registry's canonical order for their domain. */
+function selectMembers(registry: CertifiedRegistry, criteria: RosterCriteria): readonly string[] {
+  const domain = rosterDomain(criteria);
+  if (!domain.ok) return [];
+  if (domain.value === "items") {
+    return registry.items
+      .filter((item) => criteria.all.every((criterion) => itemSatisfies(item, criterion)))
+      .map((item) => item.id);
+  }
+  return registry.species
+    .filter((species) => criteria.all.every((criterion) => satisfies(species, criterion)))
+    .map((species) => species.id);
 }
 
 function satisfies(species: SnapshotSpecies, criterion: RosterCriterion): boolean {
@@ -192,5 +249,25 @@ function satisfies(species: SnapshotSpecies, criterion: RosterCriterion): boolea
       return species.stats[criterion.stat] >= criterion.value;
     case "stat-at-most":
       return species.stats[criterion.stat] <= criterion.value;
+    default:
+      // An item criterion never reaches a species: the domain check refused
+      // the blend before selection, and a single-domain item roster selects
+      // through itemSatisfies below.
+      return false;
+  }
+}
+
+function itemSatisfies(item: SnapshotItem, criterion: RosterCriterion): boolean {
+  switch (criterion.kind) {
+    case "item-category":
+      return item.category === criterion.category;
+    case "treats-condition":
+      return (item.certified.cures ?? []).includes(criterion.condition);
+    case "cost-at-most":
+      return item.cost <= criterion.value;
+    case "cost-at-least":
+      return item.cost >= criterion.value;
+    default:
+      return false;
   }
 }

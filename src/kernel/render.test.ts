@@ -496,13 +496,25 @@ describe("the approved sentence (epic #94, slice 4)", () => {
     });
   });
 
-  it("pins the template slot table to what the plan actually certifies, kind by kind", () => {
+  it("pins the template slot table to what the plan actually certifies, kind by kind", async () => {
     // TEMPLATE_SLOTS is the loader's authority for refusing a template's
     // placeholders; this pins it to unitForClaim's real slots so the two
-    // cannot drift. Every kind that takes a sentence is built and compared.
-    const roster = boomers();
-    const { plan } = sentencedPlan(
-      [
+    // cannot drift. The Center world is the superset (species, moves and
+    // items), so every kind that takes a sentence is built there and
+    // compared; a sentence itself is planned exactly where the pack carries
+    // a template for the kind.
+    const { centerContext } = await import("../testing/fixtures.js");
+    const center = centerContext();
+    // The roster must be certified against the same world the manifest is —
+    // a red-blue roster inside a center answer is IA-2/snapshot-mismatch.
+    const built = buildRoster(center.registry, "selfdestruct-learners", {
+      all: [{ kind: "learns-move", move: "self-destruct" }],
+    });
+    if (!built.ok) throw new Error("the center roster does not build");
+    const roster = built.value;
+    const compiled = compileManifest(center, {
+      transactionId: "txn-render",
+      claims: [
         SPEED,
         { kind: "count", rosterId: roster.id },
         { kind: "membership", rosterId: roster.id, entityId: "pikachu", asserted: false },
@@ -510,11 +522,16 @@ describe("the approved sentence (epic #94, slice 4)", () => {
         { kind: "matchup", subject: { kind: "species", entityId: "pikachu" }, direction: "weak-to" },
         { kind: "eligibility", entityId: "mewtwo" },
         { kind: "recommendation", entityId: "pikachu" },
+        { kind: "treats", itemId: "antidote", condition: "poison" },
+        { kind: "comparison", factId: "restores-hp", leftId: "super-potion", rightId: "potion" },
         RELEASE,
       ],
-      [roster],
-    );
-    const byKind = new Map(plan.units.map((unit) => [unit.kind, unit]));
+      rosters: [roster],
+    });
+    if (!compiled.ok) throw new Error(compiled.violations.map(denialCode).join(", "));
+    const planned = planRender(center, compiled.value);
+    if (!planned.ok) throw new Error(planned.violations.map(denialCode).join(", "));
+    const byKind = new Map(planned.value.units.map((unit) => [unit.kind, unit]));
     for (const [kind, slots] of Object.entries(TEMPLATE_SLOTS)) {
       const unit = byKind.get(kind as never);
       expect(unit, `no planned unit of kind ${kind}`).toBeDefined();
@@ -522,7 +539,12 @@ describe("the approved sentence (epic #94, slice 4)", () => {
         unit?.slots.map((slot) => slot.name).sort(),
         `TEMPLATE_SLOTS drifted for ${kind}`,
       ).toEqual([...slots].sort());
-      expect(unit?.sentence?.templateId, `no sentence planned for ${kind}`).toBeDefined();
+      const template = templateFor(center.pack, kind, center.locale);
+      if (template !== undefined) {
+        expect(unit?.sentence?.templateId, `no sentence planned for ${kind}`).toBe(template.id);
+      } else {
+        expect(unit?.sentence, `a sentence with no template for ${kind}`).toBeUndefined();
+      }
     }
   });
 

@@ -19,6 +19,8 @@ const CLAIM: Record<Claim["kind"], Claim> = {
   typeCount: { kind: "typeCount" },
   gameRule: { kind: "gameRule", ruleId: "party-size" },
   membership: { kind: "membership", rosterId: "electric-kanto", entityId: "zapdos", asserted: true },
+  treats: { kind: "treats", itemId: "antidote", condition: "poison" },
+  comparison: { kind: "comparison", factId: "restores-hp", leftId: "super-potion", rightId: "potion" },
   ranking: { kind: "ranking", rosterId: "electric-kanto", basis: "base-speed", direction: "highest" },
   matchup: { kind: "matchup", subject: { kind: "species", entityId: "gengar" }, direction: "weak-to" },
   eligibility: { kind: "eligibility", entityId: "mewtwo" },
@@ -32,7 +34,7 @@ describe("scope dependencies per claim kind", () => {
   });
 
   it("binds world facts to a version and nothing else", () => {
-    for (const kind of ["fact", "count", "membership", "matchup"] as const) {
+    for (const kind of ["fact", "count", "membership", "matchup", "treats", "comparison"] as const) {
       expect(requiredDimensionsFor([CLAIM[kind]]), kind).toEqual(["version"]);
     }
   });

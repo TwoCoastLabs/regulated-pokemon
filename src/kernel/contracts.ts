@@ -151,7 +151,14 @@ export type RosterCriterion =
   | { kind: "learns-move"; move: string }
   | { kind: "rarity"; rarity: "legendary" | "mythical" }
   | { kind: "stat-at-least"; stat: StatName; value: number }
-  | { kind: "stat-at-most"; stat: StatName; value: number };
+  | { kind: "stat-at-most"; stat: StatName; value: number }
+  // Item criteria (epic #94, slice 3). A roster's domain is implied by its
+  // criteria — species terms and item terms may not mix, and the builder
+  // refuses a blend rather than intersecting two universes into nonsense.
+  | { kind: "item-category"; category: string }
+  | { kind: "treats-condition"; condition: string }
+  | { kind: "cost-at-most"; value: number }
+  | { kind: "cost-at-least"; value: number };
 
 /** Conjunction: a species is a member exactly when it satisfies every term. */
 export interface RosterCriteria {
@@ -240,6 +247,26 @@ export type Claim =
    */
   | { kind: "gameRule"; ruleId: string; reported?: number }
   | { kind: "membership"; rosterId: string; entityId: string; asserted: boolean }
+  /**
+   * An item–condition relation, asserted true **or false** and verified
+   * against the item's closed certified effect set (epic #94, slice 3 — the
+   * shape the inquiry bank demanded most beside comparison). The certified
+   * negative is the point: "an Antidote does not treat a burn" is a claim
+   * the closed world can stand behind, where a list of everything it cures
+   * answers the question only by deflection. `asserted` is derivable and
+   * optional — the item and condition already fix it — and a wrong assertion
+   * is refused, never corrected in silence.
+   */
+  | { kind: "treats"; itemId: string; condition: string; asserted?: boolean }
+  /**
+   * One certified fact on two entities, with everything comparative derived
+   * by the kernel (epic #94, slice 3): the values, the gap, and which leads.
+   * The model names the fact and the pair and nothing else — the same
+   * ground-the-computation move as count and ranking, applied to "X or Y?".
+   * Both values must resolve to numbers; a fact that does not compare is
+   * refused rather than improvised over.
+   */
+  | { kind: "comparison"; factId: string; leftId: string; rightId: string; left?: FactValue; right?: FactValue }
   | {
       kind: "ranking";
       rosterId: string;

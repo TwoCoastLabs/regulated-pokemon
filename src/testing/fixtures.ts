@@ -116,6 +116,25 @@ export function manifestContext(badgeLevel = 8): ManifestContext {
   };
 }
 
+export const CENTER_SNAPSHOT_PATH = resolve(import.meta.dirname, "../../data/snapshots/kanto-center.json");
+
+let centerCache: CertifiedRegistry | undefined;
+
+/** The Center world's registry (epic #94, slice 3): items beside the species. */
+export function centerRegistry(): CertifiedRegistry {
+  if (centerCache === undefined) {
+    const loaded = loadRegistry(JSON.parse(readFileSync(CENTER_SNAPSHOT_PATH, "utf8")));
+    if (!loaded.ok) throw new AccordError(loaded.violations);
+    centerCache = loaded.value;
+  }
+  return centerCache;
+}
+
+/** The manifest context over the Center world — same pack, grant and clock. */
+export function centerContext(badgeLevel = 8): ManifestContext {
+  return { ...manifestContext(badgeLevel), registry: centerRegistry() };
+}
+
 /**
  * A fresh, mutable copy of the snapshot document. Mutation tests get their
  * own copy so that sabotaging one never leaks into another.
