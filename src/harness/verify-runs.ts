@@ -144,14 +144,23 @@ export function verifyArtifact(
   world: DemoWorld,
   artifact: unknown,
   packs: ReadonlyMap<string, AccordPack> = new Map([[world.pack.id, world.pack]]),
+  registries: readonly DemoWorld["registry"][] = [world.registry],
 ): ArtifactVerification {
   const pin = (artifact as { world?: ArtifactWorld }).world;
   if (pin === undefined) return { kind: "skipped", reason: "no world provenance block" };
-  const document = world.registry.document;
-  if (pin.snapshotId !== document.id || pin.snapshotDigest !== document.contentDigest) {
+  // Worlds are versioned like packs (epic #94, slice 3): a record replays
+  // under the snapshot it pinned, resolved by id *and* digest from every
+  // world the tree carries. Skipped only when no carried world matches —
+  // the no-silent-caps rule, one shelf wider again, and due the day the
+  // first Center artifact was filed.
+  const registry = registries.find(
+    (candidate) => candidate.document.id === pin.snapshotId && candidate.document.contentDigest === pin.snapshotDigest,
+  );
+  if (registry === undefined) {
+    const carried = registries.map((candidate) => `${candidate.document.id} ${candidate.document.contentDigest.slice(0, 15)}…`).join(", ");
     return {
       kind: "skipped",
-      reason: `pinned to snapshot ${pin.snapshotId} ${pin.snapshotDigest.slice(0, 15)}…, tree carries ${document.id} ${document.contentDigest.slice(0, 15)}…`,
+      reason: `pinned to snapshot ${pin.snapshotId} ${pin.snapshotDigest.slice(0, 15)}…, tree carries ${carried}`,
     };
   }
   // Policy is versioned data, and the versions are kept: a record pinned to an
@@ -165,7 +174,7 @@ export function verifyArtifact(
   if (pack === undefined) {
     return { kind: "skipped", reason: `pinned to pack ${pin.packId}, tree carries ${[...packs.keys()].join(", ")}` };
   }
-  const pinned: DemoWorld = { ...world, pack };
+  const pinned: DemoWorld = { ...world, registry, pack };
 
   // The legacy tolerance is bounded in time, not open-ended: only artifacts
   // filed before the recorder fix may carry incomplete denials.

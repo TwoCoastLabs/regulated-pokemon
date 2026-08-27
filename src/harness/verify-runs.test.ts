@@ -49,6 +49,7 @@ function carriedPacks(): ReadonlyMap<string, ReturnType<typeof world.pack extend
   return packs;
 }
 const packs = carriedPacks();
+const registries = [world.registry, centerRegistry()];
 
 /** Every filed artifact, recursively — the evidence base this repo publishes. */
 function artifactPaths(dir: string): string[] {
@@ -77,7 +78,7 @@ describe("the filed evidence base replays (epic #87, slice 2)", () => {
 
     for (const path of paths) {
       const name = relative(RUNS_DIR, path);
-      const outcome = verifyArtifact(world, readArtifact(path), packs);
+      const outcome = verifyArtifact(world, readArtifact(path), packs, registries);
       if (outcome.kind === "skipped") {
         skipped.push(`${name}: ${outcome.reason}`);
         continue;
@@ -120,7 +121,7 @@ describe("the filed evidence base replays (epic #87, slice 2)", () => {
     };
     const reproducible = paths
       .map((path) => ({ path, artifact: readArtifact(path) }))
-      .find(({ artifact }) => verifyArtifact(world, artifact, packs).kind === "verified" && locateRuns(artifact).some(hasNumericFact));
+      .find(({ artifact }) => verifyArtifact(world, artifact, packs, registries).kind === "verified" && locateRuns(artifact).some(hasNumericFact));
     if (reproducible === undefined) throw new Error("no reproducible artifact with a stated numeric fact to doctor");
 
     const doctored = JSON.parse(JSON.stringify(reproducible.artifact)) as unknown;
@@ -130,7 +131,7 @@ describe("the filed evidence base replays (epic #87, slice 2)", () => {
     const target = claims.find((claim) => claim.kind === "fact" && claim.asserted?.kind === "number")!;
     target.asserted!.value += 100;
 
-    const outcome = verifyArtifact(world, doctored, packs);
+    const outcome = verifyArtifact(world, doctored, packs, registries);
     if (outcome.kind !== "verified") throw new Error("doctored artifact unexpectedly skipped");
     expect(outcome.failures.length).toBeGreaterThan(0);
     expect(outcome.failures.some(({ where }) => where === run.where)).toBe(true);
