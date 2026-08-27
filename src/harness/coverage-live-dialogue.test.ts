@@ -161,3 +161,19 @@ describe("--render --dialogues re-reads the filed artifact", () => {
     expect(result.lines.join("\n")).toContain("no dialogue artifact");
   });
 });
+
+describe("--adversarial (epic #94, slice 1)", () => {
+  it("is a dialogue bank and says so without --dialogues", () => {
+    expect(parseCoverageArgs(["--adversarial"]).errors).toHaveLength(1);
+    expect(parseCoverageArgs(["--dialogues", "--adversarial"]).errors).toHaveLength(0);
+    expect(parseCoverageArgs(["--dialogues", "--adversarial"]).adversarial).toBe(true);
+  });
+
+  it("dry-runs the adversarial bank and bills nothing", async () => {
+    const opts = options(["--dialogues", "--adversarial"]);
+    const result = await runCoverage(opts);
+    expect(result.exitCode).toBe(0);
+    expect(result.lines.join("\n")).toContain("adversarial-dialogues-v1");
+    expect(opts.written.size).toBe(0);
+  });
+});

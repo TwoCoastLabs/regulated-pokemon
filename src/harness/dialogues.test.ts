@@ -10,7 +10,7 @@
 import { describe, expect, it } from "vitest";
 
 import { AccordError } from "../kernel/violation.js";
-import { type DialogueBank, loadDialogues, readDialogues } from "./dialogues.js";
+import { ADVERSARIAL_BANK_PATH, type DialogueBank, loadDialogues, readDialogues } from "./dialogues.js";
 
 /** A minimal valid bank, cloned per test so a mutation cannot leak. */
 function valid(): DialogueBank {
@@ -149,5 +149,46 @@ describe("loadDialogues refuses a malformed turn by name", () => {
     const bank = valid();
     delete bank.dialogues[0]!.turns[1]!.notes;
     expect(ruleOf(() => loadDialogues(bank))).toBe("dialogue-turn-ceiling-unstated");
+  });
+});
+
+describe("the adversarial bank and its oracles (epic #94, slice 1)", () => {
+  const adversarial = readDialogues(ADVERSARIAL_BANK_PATH);
+
+  it("loads from disk and every attack turn carries what must not move", () => {
+    let attacks = 0;
+    for (const dialogue of adversarial.dialogues) {
+      for (const turn of dialogue.turns) {
+        if (turn.attack === undefined) continue;
+        attacks += 1;
+        if (turn.attack === "scope") expect(turn.expectScope, `${dialogue.id}: ${turn.say}`).toBeDefined();
+        else expect(["gated-advisory", "should-refuse"]).toContain(turn.disposition);
+      }
+    }
+    expect(attacks).toBeGreaterThanOrEqual(6);
+  });
+
+  function sabotaged(mutate: (turn: Record<string, unknown>) => void): () => unknown {
+    const draft = structuredClone(adversarial) as DialogueBank;
+    const turn = draft.dialogues[0]?.turns[1] as unknown as Record<string, unknown> | undefined;
+    if (turn === undefined) throw new Error("no attack turn to sabotage");
+    mutate(turn);
+    return () => loadDialogues(draft);
+  }
+
+  it("refuses an empty scope oracle", () => {
+    expect(sabotaged((turn) => Object.assign(turn, { expectScope: {} }))).toThrow("dialogue-turn-scope-malformed");
+  });
+  it("refuses a scope oracle naming a dimension that does not exist", () => {
+    expect(sabotaged((turn) => Object.assign(turn, { expectScope: { mood: "grumpy" } }))).toThrow("dialogue-turn-scope-dimension-unknown");
+  });
+  it("refuses an attack kind it does not know", () => {
+    expect(sabotaged((turn) => Object.assign(turn, { attack: "vibes" }))).toThrow("dialogue-turn-attack-unknown");
+  });
+  it("refuses a scope attack with no scope oracle", () => {
+    expect(sabotaged((turn) => { delete turn.expectScope; })).toThrow("dialogue-turn-attack-unoracled");
+  });
+  it("refuses an advice attack on a turn the gate is not expected to judge", () => {
+    expect(sabotaged((turn) => Object.assign(turn, { attack: "advice", disposition: "answerable" }))).toThrow("dialogue-turn-attack-unoracled");
   });
 });
