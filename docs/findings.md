@@ -2097,6 +2097,107 @@ zero model calls, zero dollars.
 
 ---
 
+### Iteration 28 — the realistic inquiry bank: two thirds of a real-shaped stream is expressible today, and the bank overruled the plan
+
+Slice 0 of epic #94. The playability bank measures how often the Advisor
+answers questions a bank author who knows the grammar would write. The
+product story rests on a different number: what fraction of a *realistically
+phrased* stream — a trainer at a Pokémon Center counter, typos and all — the
+current claim vocabulary can express at all. That number was the riskiest
+unknown in the story and the cheapest to measure, so it was measured before
+anything was built: a reviewed bank of 125 questions about the generation-I
+items world (`data/playability/center-inquiries.v1.json`), each resolving
+entry naming the answer *shapes* it needs from a closed vocabulary
+(`src/harness/inquiry.ts`, `SHAPES`: the kernel's eleven claim kinds plus the
+shapes the bank demanded, each tiered by what landing it costs), and a pure
+pass comparing those shapes with what the kernel compiles today. No model,
+no snapshot, no dollars; the numbers are pinned by test and rendered from
+the data below.
+
+Bank `center-inquiries-v1`: 125 entries, 98 expected to resolve.
+
+| Disposition | Entries | existing | port | shape | composition |
+|---|---:|---:|---:|---:|---:|
+| answerable | 83 | 51 | 12 | 17 | 3 |
+| advisory | 6 | 5 | 0 | 1 | 0 |
+| needs-data | 14 | — | — | — | — |
+| needs-claim-kind | 6 | — | — | — | — |
+| gated-advisory | 6 | 6 | 0 | 0 | 0 |
+| should-refuse | 3 | 3 | 0 | 0 | 0 |
+| off-domain | 7 | — | — | — | — |
+| **resolving total** | **98** | **65** | **12** | **18** | **3** |
+
+**Expressible now** (current claim kinds, data only): **65/98 (66%)**.
+**Expressible with no new claim kind** (existing kinds widened to items): **77/98 (79%)**.
+
+Shapes the bank demanded, by entries needing them:
+
+- `comparison` (shape) — 10 entries — one fact id on two entities, with the difference and the direction derived by the kernel — never stated by the model
+- `item-roster` (port) — 9 entries — a closed roster over items — criteria such as category, what it treats, a cost bound — feeding count, membership and ranking exactly as species rosters do
+- `treats` (shape) — 9 entries — an item ↔ condition relation asserted true or false and verified against the item's closed effect set — the certified negative a contraindication question needs
+- `item-action` (port) — 4 entries — an act that uses an item on a party Pokémon, registered in the pack like release is, with an irreversible one owing its consent notice
+- `arithmetic` (composition) — 3 entries — a quantity computed over certified facts — doses to reach a total, value per unit cost — where the kernel performs the arithmetic and the model names only the operands
+
+Ceilings (no defined shape expresses these):
+
+- `nck-worth-money` — subjective value judgement with no basis to certify; a comparison certifies the numbers, not the verdict
+- `nck-best-strategy` — open-ended tactical advice with no closed comparison basis
+- `nck-feel-better` — no certified surface for wellbeing
+- `nck-overpriced` — asks for a reason behind pricing; nothing to certify
+- `nck-rank-all-items` — 'useful' has no certified basis; a ranking needs a fact id
+- `nck-heal-per-coin-all` — a derived ratio over a whole roster — the `arithmetic` composition tier, and even then the bank flags it as a stretch, so it is filed as a ceiling until the tier exists
+
+**Two thirds now, four fifths with no new claim kind.** 65 of the 98 entries
+expected to resolve need nothing but the world's data behind existing kinds;
+another 12 need only an existing kind widened to items (rosters over items,
+item actions in the pack) — the verifier and crucible for those kinds exist.
+Only 18 entries need a claim kind that does not exist, and they need exactly
+two: `treats` (an item–condition relation asserted true *or false* — the
+certified negative "no, an Antidote does not cure a burn" that a list of
+everything it cures answers only by deflection) and `comparison` (one fact on
+two entities, difference and direction derived by the kernel). Three entries
+need arithmetic the kernel would have to perform. Six are ceilings with no
+closed shape at all — value judgements, open tactics, wellbeing — and are
+named as such.
+
+**What the bank overruled in the plan.** #94 predicted a "multi-effect"
+shape (Full Restore does three things) and leaned on a composition algebra
+(H5). Neither survived contact with the questions: a list-valued fact
+answers "what all does a Full Heal fix" squarely, exactly as `types` and
+`learnset` already do; and every "both poison and paralysis" question
+composes with the roster criteria language's existing `all` — a set defined
+by two criteria plus a ranking by cost is two kinds the kernel has, over a
+domain it does not yet range over. The composition tier collapsed to three
+questions of plain arithmetic (doses to a total, cost of a basket, HP per
+coin), which the port budget (`docs/port-log.md`) deliberately does not fund
+on three questions' evidence. The slice-3 build list is therefore shorter
+and cheaper than predicted — `treats`, `comparison`, item rosters, item
+actions — and nothing else, which is the discipline the epic exists to
+enforce: nothing gets built the bank did not name.
+
+**Three authoring decisions worth recording.** (1) Oracles are *not* in this
+bank: an `expectFacts` against a world that does not exist could not be
+validated at load, and an oracle the loader cannot check is the one kind this
+project refuses; the entries migrate into the playability format with
+oracles when slice 3's snapshot exists (port budget row 8). (2) The bank
+declares the world it assumes — 70 item ids, the species it names, and five
+pack assumptions a reviewer can disagree with (which items the Center
+controls, which acts are irreversible) — so entries validate against
+*something* now, and slice 3's snapshot inherits a test that it contains
+every declared id. (3) Fidelity is already in the questions: four entries
+name upstream text that is not the era's — X Sp. Atk for X Special, an Exp.
+Share mechanic for the Exp. All, a later region beside the Safari Zone, and
+"raises happiness" in a generation with no happiness — the last filed as
+`needs-data` because the honest certification refuses to copy it.
+
+Provenance: `src/harness/inquiry.test.ts` pins every number above (`npm
+test`); the Markdown block is `renderExpressibility` over the shipped bank,
+never hand-transcribed; zero model calls, zero dollars. The port budget was
+written in the same change, before slice 3, so the stopwatch has something
+to be measured against.
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's
