@@ -2509,6 +2509,71 @@ over the artifact, never hand-transcribed. Zero model calls, zero dollars.
 
 ---
 
+### Iteration 33 — the certificate learns to speak: sentence templates, verified whole
+
+Slice 4 of epic #94 (landscape.md H6), pulled ahead of the second world on
+iteration 32's evidence: every measured chat-versus-certificate divergence
+was a *value* collision, and the fix that removes the ungoverned surface
+entirely is a certificate that reads as an answer. A certified page's claim
+cards now carry **sentences** — "The official records certify Pikachu's
+base-speed as 90." — under the same discipline as everything else on the
+page:
+
+- **The words are policy.** A sentence template is pack data
+  (`presentation.templates`, one per unit kind at most, every approved
+  locale, `{slot}` placeholders drawn from a closed per-kind table): approved
+  wording, not renderer wording. The loader refuses a template for a kind
+  that takes no sentence, a duplicate kind, a missing locale, a placeholder
+  the kind never certifies, and — the one that states the philosophy — a
+  sentence binding no certified value at all, which would be free prose
+  wearing a mark.
+- **The filling is the kernel's.** `planRender` fills the template with the
+  unit's slot strings through the closed formatter registry, joined exactly
+  as the walker reads a subtree, so verification is one equality over the
+  whole visible sentence (`data-template`): rewording, softening, truncating
+  or appending inside it is `IA-6/sentence-drift`; a sentence nobody planned
+  is `IA-6/template-unplanned`. Slots stay individually marked and checked
+  inside the sentence, so the binding holds at both granularities and
+  nothing anywhere searches.
+- **The renderer still composes nothing.** It interleaves the template's own
+  fragments with the plan's slot strings; stripped of a template it emits an
+  empty marked paragraph and the kernel says so (`reference.test`), which is
+  the same cannot-invent property the lead-in path had, one sentence wider.
+- **Two mutations, and the controls re-pass**: `reword-the-sentence` (values
+  intact, hedged words — denied whole, by name) and
+  `smuggle-a-second-sentence`. The IA-6 crucible row grows 22 → 24.
+
+**The IA-10 shape of the change is the finding worth recording.** Sentences
+change what a page must show, and yesterday's filed pages were approved
+under yesterday's presentation — re-planning them under today's would have
+failed 860 filed verdicts for lacking sentences nobody had approved yet.
+So the templates arrived as **a new pack version** (`indigo-accord-v2`),
+v1 stays frozen on the shelf, and the replay sweep now resolves packs **by
+the record's pin** from every version the tree carries — skips only when no
+carried pack bears the pinned id. Policy is versioned data; this is the
+first time the versioning was load-bearing, and the sweep still re-derives
+every filed zero (the doctored-ledger leg included) with nothing skipped
+that was verifiable before. The two fixture mutations that had used
+"indigo-accord-v2" as a stand-in for a foreign world were repointed at an id
+that never exists — a stand-in must name a world that never becomes real, or
+it silently becomes the clean path.
+
+The kernel-size decision this mechanism forced is recorded in
+architecture.md: small per mechanism, not in total; a template is a string
+with typed holes, never a template language. And the owner's companion
+hypothesis is filed as #101 — model-worded prose with kernel-bound
+placeholders as a *labeled* value-bound chat tier (values verified, wording
+charming, never the certificate), with iteration 32's 8–11% as the predicted
+gain already in hand.
+
+Provenance: `render.test.ts` (the sentence suite, and the TEMPLATE_SLOTS ↔
+plan pin), `pack.test.ts`, `dom.test.ts`, `reference.test.ts`, the crucible
+and the demo, all in `npm test`; the replay sweep re-derives the filed
+records under their pinned packs in the same run. Zero model calls, zero
+dollars.
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's

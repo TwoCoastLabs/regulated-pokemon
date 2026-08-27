@@ -22,7 +22,7 @@ let world: DemoWorld | undefined;
  * checked) and pack validated against it — once, then shared. The live
  * session runs against exactly this. */
 export function demoWorld(): DemoWorld {
-  world ??= loadDemoWorld(datum("snapshots/kanto-red-blue.json"), datum("accord-pack/v1.json"));
+  world ??= loadDemoWorld(datum("snapshots/kanto-red-blue.json"), datum("accord-pack/v2.json"));
   return world;
 }
 

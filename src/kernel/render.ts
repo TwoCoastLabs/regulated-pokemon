@@ -68,7 +68,7 @@ import {
 } from "./dom.js";
 import { formatForValue, type FormatId, formatValue } from "./format.js";
 import { type ManifestContext, verifyManifest } from "./manifest.js";
-import { approvesFormat, blockFor, copyFor, curriculumRule, type ExhibitSlotSource, gameRule } from "./pack.js";
+import { approvesFormat, blockFor, copyFor, curriculumRule, type ExhibitSlotSource, gameRule, templateFor, templatePlaceholders } from "./pack.js";
 import { describeCriteria } from "./roster.js";
 import { verdictOf, violation } from "./violation.js";
 
@@ -113,6 +113,14 @@ export interface RenderUnit {
   id: string;
   kind: RenderUnitKind;
   slots: readonly RenderSlot[];
+  /**
+   * The approved sentence this unit is presented as, when the pack carries a
+   * template for its kind (epic #94, slice 4). `expected` is the template
+   * filled with the unit's slot strings, joined exactly as the walker reads a
+   * subtree — so the visible sentence and this string can be compared by
+   * equality, and there is no wording a renderer can add, soften or reorder.
+   */
+  sentence?: { templateId: string; expected: string };
   /** Mandatory text this unit must show verbatim, for disclosure units. */
   block?: DisclosureBlockRef;
   /** The article a denial about this unit cites. */
@@ -159,7 +167,15 @@ export function planRender(context: ManifestContext, manifest: AnswerManifest): 
     claimUnits.push(built.value);
   }
 
-  const units: RenderUnit[] = claimUnits.map((entry) => entry.unit);
+  const units: RenderUnit[] = [];
+  for (const entry of claimUnits) {
+    const sentenced = withSentence(context, manifest.locale, entry.unit);
+    if (!sentenced.ok) {
+      violations.push(...sentenced.violations);
+      continue;
+    }
+    units.push(sentenced.value);
+  }
 
   for (const exhibit of manifest.exhibits) {
     const built = unitForExhibit(context, manifest, exhibit, claimUnits);
@@ -172,6 +188,50 @@ export function planRender(context: ManifestContext, manifest: AnswerManifest): 
 
   if (violations.length > 0) return { ok: false, violations };
   return { ok: true, value: { transactionId: manifest.transactionId, locale: manifest.locale, units } };
+}
+
+
+/**
+ * Fill the pack's sentence for a unit's kind, if it approves one.
+ *
+ * The expected string is assembled the way {@link walkArtifact} reads a
+ * subtree — each part normalised, empties dropped, joined with single spaces —
+ * so verification is one equality over the whole sentence. A placeholder the
+ * unit does not certify is a refusal here, before anything renders: a pack
+ * whose sentence asks for a value the kind never carries is a pack asking the
+ * renderer to invent one.
+ */
+function withSentence(context: ManifestContext, locale: string, unit: RenderUnit): Resolution<RenderUnit> {
+  const template = templateFor(context.pack, unit.kind, locale);
+  if (template === undefined) return { ok: true, value: unit };
+  const byName = new Map(unit.slots.map((slot) => [slot.name, slot.expected]));
+  const parts: string[] = [];
+  let cursor = 0;
+  const violations: Violation[] = [];
+  for (const match of template.text.matchAll(/\{([a-z]+)\}/g)) {
+    parts.push(template.text.slice(cursor, match.index));
+    const name = match[1] as string;
+    const filled = byName.get(name);
+    if (filled === undefined) {
+      violations.push(
+        violation("IA-6", "template-slot-unknown", `template "${template.id}" names "{${name}}", which "${unit.id}" does not certify`, {
+          expected: unit.slots.map((slot) => slot.name).join(", ") || "no slots",
+          actual: name,
+        }),
+      );
+      cursor = match.index + match[0].length;
+      continue;
+    }
+    parts.push(filled);
+    cursor = match.index + match[0].length;
+  }
+  parts.push(template.text.slice(cursor));
+  if (violations.length > 0) return { ok: false, violations };
+  const expected = parts
+    .map((part) => normalise(part))
+    .filter((part) => part.length > 0)
+    .join(" ");
+  return { ok: true, value: { ...unit, sentence: { templateId: template.id, expected } } };
 }
 
 /**
@@ -686,6 +746,7 @@ function checkUnits(plan: RenderPlan, walk: ArtifactWalk): Violation[] {
       continue;
     }
     violations.push(...checkSlots(unit, walk));
+    violations.push(...checkSentence(unit, walk));
     violations.push(...checkBlock(unit, walk));
     violations.push(...checkAdjacency(unit, rendered, shown));
   }
@@ -696,6 +757,79 @@ function checkUnits(plan: RenderPlan, walk: ArtifactWalk): Violation[] {
 /** Everything the artifact attributed to one origin, inside one unit. */
 function marksIn(walk: ArtifactWalk, kind: WalkedText["kind"], unitId: string | undefined): readonly WalkedText[] {
   return walk.attributed.filter((entry) => entry.kind === kind && entry.unitId === unitId);
+}
+
+
+/**
+ * The approved sentence, shown whole and unaltered.
+ *
+ * Same discipline as a slot, one span wider: the sentence element's whole
+ * visible text — the template's own fragments and every slot inside it — must
+ * equal the plan's filled string. Rewording, softening, truncating or
+ * appending inside the sentence all collapse into one named disagreement, and
+ * an element claiming a template this answer never planned is refused as the
+ * stray it is.
+ */
+function checkSentence(unit: RenderUnit, walk: ArtifactWalk): Violation[] {
+  const violations: Violation[] = [];
+  const rendered = marksIn(walk, "template", unit.id);
+  const planned = unit.sentence;
+
+  if (planned === undefined) {
+    for (const entry of rendered) {
+      violations.push(
+        violation(unit.article, "template-unplanned", `"${unit.id}" shows a "${entry.name}" sentence this answer does not plan`, {
+          actual: entry.name,
+        }),
+      );
+    }
+    return violations;
+  }
+
+  const [only, ...extra] = rendered.filter((entry) => entry.name === planned.templateId);
+  for (const stray of rendered.filter((entry) => entry.name !== planned.templateId)) {
+    violations.push(
+      violation(unit.article, "template-unplanned", `"${unit.id}" shows a "${stray.name}" sentence this answer does not plan`, {
+        expected: planned.templateId,
+        actual: stray.name,
+      }),
+    );
+  }
+  if (only === undefined) {
+    violations.push(
+      violation(unit.article, "sentence-not-rendered", `"${unit.id}" shows no "${planned.templateId}" sentence`, {
+        expected: planned.expected,
+        actual: "no sentence",
+      }),
+    );
+    return violations;
+  }
+  if (extra.length > 0) {
+    violations.push(
+      violation(unit.article, "sentence-marked-twice", `"${unit.id}" marks "${planned.templateId}" on more than one element`, {
+        actual: [only, ...extra].map((entry) => entry.text).join(" | "),
+      }),
+    );
+    return violations;
+  }
+  if (!only.visible) {
+    violations.push(
+      violation(unit.article, "sentence-not-visible", `the sentence of "${unit.id}" is in the document and not on the screen`, {
+        expected: planned.expected,
+        actual: "hidden",
+      }),
+    );
+    return violations;
+  }
+  if (normalise(only.text) !== planned.expected) {
+    violations.push(
+      violation(unit.article, "sentence-drift", `the sentence shown for "${unit.id}" is not the approved filling`, {
+        expected: planned.expected,
+        actual: normalise(only.text) || "nothing",
+      }),
+    );
+  }
+  return violations;
 }
 
 /**
@@ -902,6 +1036,13 @@ function checkClosure(context: ManifestContext, plan: RenderPlan, walk: Artifact
   for (const stray of marksIn(walk, "slot", undefined)) {
     violations.push(
       violation("IA-6", "slot-unplanned", `the artifact fills a "${stray.name}" slot outside every governed unit`, {
+        actual: `${stray.name} = "${normalise(stray.text)}"`,
+      }),
+    );
+  }
+  for (const stray of marksIn(walk, "template", undefined)) {
+    violations.push(
+      violation("IA-6", "template-unplanned", `the artifact shows a "${stray.name}" sentence outside every governed unit`, {
         actual: `${stray.name} = "${normalise(stray.text)}"`,
       }),
     );

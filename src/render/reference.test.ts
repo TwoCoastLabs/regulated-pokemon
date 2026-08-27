@@ -43,12 +43,23 @@ function plan(): RenderPlan {
 }
 
 /** Verify a page against the *real* pack, whatever pack drew it. */
-function denials(pack: AccordPack): string[] {
-  const artifact = renderAnswer(pack, plan());
-  const walked = attestRender(world, answer(), artifact, RENDERED_AT);
-  if (walked.ok) return verifyRender(world, answer(), artifact, walked.value).violations.map(denialCode);
+function denials(pack: AccordPack, kernel: ManifestContext = world): string[] {
+  const compiled = compileManifest(kernel, { transactionId: "txn-reference", claims: [SPEED], rosters: [] });
+  if (!compiled.ok) throw new Error(compiled.violations.map(denialCode).join(", "));
+  const planned = planRender(kernel, compiled.value);
+  if (!planned.ok) throw new Error(planned.violations.map(denialCode).join(", "));
+  const artifact = renderAnswer(pack, planned.value);
+  const walked = attestRender(kernel, compiled.value, artifact, RENDERED_AT);
+  if (walked.ok) return verifyRender(kernel, compiled.value, artifact, walked.value).violations.map(denialCode);
   return walked.violations.map(denialCode);
 }
+
+/** The world before sentences: templates stripped from the kernel's pack, so
+ * the plan asks for the lead-in presentation this test's sabotage targets. */
+const bareWorld: ManifestContext = {
+  ...world,
+  pack: { ...world.pack, presentation: { ...world.pack.presentation, templates: [] } },
+};
 
 describe("the reference renderer", () => {
   it("draws a page the kernel signs without a single denial", () => {
@@ -57,15 +68,26 @@ describe("the reference renderer", () => {
 
   it("cannot invent copy the catalogue does not carry", () => {
     const withoutLeadIn: AccordPack = {
-      ...world.pack,
+      ...bareWorld.pack,
       presentation: {
-        ...world.pack.presentation,
-        catalogue: world.pack.presentation.catalogue.filter((entry) => entry.id !== "lead-in.fact"),
+        ...bareWorld.pack.presentation,
+        catalogue: bareWorld.pack.presentation.catalogue.filter((entry) => entry.id !== "lead-in.fact"),
       },
     };
     // Not "the renderer falls back to something sensible" — there is nothing
     // to fall back to, so the page is short and the kernel says so.
-    expect(denials(withoutLeadIn)).toContain("IA-6/catalogue-drift");
+    expect(denials(withoutLeadIn, bareWorld)).toContain("IA-6/catalogue-drift");
+  });
+
+  it("cannot compose a sentence it has no template for", () => {
+    // The plan promises a sentence (the kernel's pack approves one); the
+    // renderer's pack lost it. The renderer emits an empty marked paragraph
+    // rather than writing the sentence itself, and the kernel says so.
+    const withoutSentence: AccordPack = {
+      ...world.pack,
+      presentation: { ...world.pack.presentation, templates: [] },
+    };
+    expect(denials(withoutSentence)).toContain("IA-6/sentence-drift");
   });
 
   it("cannot invent the words of a disclosure it has no approved text for", () => {

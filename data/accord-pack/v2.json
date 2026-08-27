@@ -1,6 +1,6 @@
 {
   "packVersion": 7,
-  "id": "indigo-accord-v1",
+  "id": "indigo-accord-v2",
   "presentation": {
     "locales": [
       "en-US",
@@ -96,7 +96,72 @@
         }
       }
     ],
-    "templates": [],
+    "templates": [
+      {
+        "id": "sentence.fact",
+        "kind": "fact",
+        "text": {
+          "en-US": "The official records certify {entity}'s {fact} as {value}.",
+          "en-GB": "The official records certify {entity}'s {fact} as {value}."
+        }
+      },
+      {
+        "id": "sentence.count",
+        "kind": "count",
+        "text": {
+          "en-US": "The official records certify {count} {set}.",
+          "en-GB": "The official records certify {count} {set}."
+        }
+      },
+      {
+        "id": "sentence.membership",
+        "kind": "membership",
+        "text": {
+          "en-US": "By the official records, {entity} {membership} {set}.",
+          "en-GB": "By the official records, {entity} {membership} {set}."
+        }
+      },
+      {
+        "id": "sentence.selection",
+        "kind": "selection",
+        "text": {
+          "en-US": "Of {set}, ranked by {basis}, the official records certify {entity}.",
+          "en-GB": "Of {set}, ranked by {basis}, the official records certify {entity}."
+        }
+      },
+      {
+        "id": "sentence.matchup",
+        "kind": "matchup",
+        "text": {
+          "en-US": "By the certified type chart, {subject} is {direction} {members}.",
+          "en-GB": "By the certified type chart, {subject} is {direction} {members}."
+        }
+      },
+      {
+        "id": "sentence.eligibility",
+        "kind": "eligibility",
+        "text": {
+          "en-US": "Under League rule {rule}, advising toward {entity} requires badge level {requires}; this trainer holds {held}, so the certified finding is {verdict}.",
+          "en-GB": "Under League rule {rule}, advising toward {entity} requires badge level {requires}; this trainer holds {held}, so the certified finding is {verdict}."
+        }
+      },
+      {
+        "id": "sentence.recommendation",
+        "kind": "recommendation",
+        "text": {
+          "en-US": "Certified as eligible for this trainer, the Advisor recommends {entity}.",
+          "en-GB": "Certified as eligible for this trainer, the Advisor recommends {entity}."
+        }
+      },
+      {
+        "id": "sentence.action",
+        "kind": "action",
+        "text": {
+          "en-US": "With your confirmation below, the Advisor will {action} {entity}.",
+          "en-GB": "With your confirmation below, the Advisor will {action} {entity}."
+        }
+      }
+    ],
     "display": {
       "minLegiblePx": 12,
       "minLegibleOpacity": 0.5,

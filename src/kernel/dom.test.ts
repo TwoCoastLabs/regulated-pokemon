@@ -192,3 +192,25 @@ describe("the artifact digest", () => {
     expect(walkArtifact(shown).digest).toBe(walkArtifact(page(unit("u", {}, text("User faints")))).digest);
   });
 });
+
+describe("the template mark (epic #94, slice 4)", () => {
+  it("attributes a sentence's fragments to its template, with slots keeping their own mark", () => {
+    const page = element("article", { "data-transaction": "t", "data-locale": "en-US" }, [
+      element("section", { "data-unit": "fact:pikachu:base-speed" }, [
+        element("p", { "data-template": "sentence.fact" }, [
+          text("The official records certify "),
+          element("span", { "data-slot": "entity" }, [text("Pikachu")]),
+          text("'s speed."),
+        ]),
+      ]),
+    ]);
+    const walk = walkArtifact(page);
+    const template = walk.attributed.find((entry) => entry.kind === "template");
+    expect(template).toMatchObject({ name: "sentence.fact", unitId: "fact:pikachu:base-speed", visible: true });
+    // The whole sentence, slots included, is the template element's text.
+    expect(template?.text).toBe("The official records certify Pikachu 's speed.");
+    const slot = walk.attributed.find((entry) => entry.kind === "slot");
+    expect(slot).toMatchObject({ name: "entity", text: "Pikachu" });
+    expect(walk.unattributed).toEqual([]);
+  });
+});

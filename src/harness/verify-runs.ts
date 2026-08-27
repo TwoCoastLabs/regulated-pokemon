@@ -21,6 +21,7 @@
 import { verifyReplay } from "../kernel/replay.js";
 import type { Transaction } from "../kernel/transaction.js";
 import type { Violation } from "../kernel/contracts.js";
+import type { AccordPack } from "../kernel/pack.js";
 import type { DemoWorld } from "../demo/script.js";
 import { committedGatedAdvice } from "./playability.js";
 import type { HarnessRun } from "./run.js";
@@ -139,7 +140,11 @@ export function locateRuns(artifact: unknown): LocatedRun[] {
  * `committedGatedAdvice` re-reads the committed claims against the pack (the
  * IA-5 zero). Neither consults the artifact's own summary numbers.
  */
-export function verifyArtifact(world: DemoWorld, artifact: unknown): ArtifactVerification {
+export function verifyArtifact(
+  world: DemoWorld,
+  artifact: unknown,
+  packs: ReadonlyMap<string, AccordPack> = new Map([[world.pack.id, world.pack]]),
+): ArtifactVerification {
   const pin = (artifact as { world?: ArtifactWorld }).world;
   if (pin === undefined) return { kind: "skipped", reason: "no world provenance block" };
   const document = world.registry.document;
@@ -149,9 +154,18 @@ export function verifyArtifact(world: DemoWorld, artifact: unknown): ArtifactVer
       reason: `pinned to snapshot ${pin.snapshotId} ${pin.snapshotDigest.slice(0, 15)}…, tree carries ${document.id} ${document.contentDigest.slice(0, 15)}…`,
     };
   }
-  if (pin.packId !== world.pack.id) {
-    return { kind: "skipped", reason: `pinned to pack ${pin.packId}, tree carries ${world.pack.id}` };
+  // Policy is versioned data, and the versions are kept: a record pinned to an
+  // earlier pack replays under *that* pack, read from the tree, not under
+  // whatever the pack has since become (epic #94, slice 4 — the sentence
+  // templates changed how a page plans, and re-planning yesterday's records
+  // under today's presentation would fail every one of them for lacking
+  // sentences nobody had approved yet). Skipped only when no carried pack
+  // bears the pinned id — the same no-silent-caps rule, one shelf wider.
+  const pack = packs.get(pin.packId);
+  if (pack === undefined) {
+    return { kind: "skipped", reason: `pinned to pack ${pin.packId}, tree carries ${[...packs.keys()].join(", ")}` };
   }
+  const pinned: DemoWorld = { ...world, pack };
 
   // The legacy tolerance is bounded in time, not open-ended: only artifacts
   // filed before the recorder fix may carry incomplete denials.
@@ -165,14 +179,14 @@ export function verifyArtifact(world: DemoWorld, artifact: unknown): ArtifactVer
   for (const { where, run } of locateRuns(artifact)) {
     if (run.transaction !== undefined) {
       transactions += 1;
-      const verdict = verifyReplay(world, run.transaction as Transaction);
+      const verdict = verifyReplay(pinned, run.transaction as Transaction);
       if (!verdict.allowed) {
         if (legacy && isIncompleteDenial(run.transaction as Transaction, verdict.violations)) incompleteDenials.push(where);
         else failures.push({ where, violations: verdict.violations });
       }
     }
     gatedRechecks += 1;
-    if (committedGatedAdvice(run, world)) {
+    if (committedGatedAdvice(run, pinned)) {
       failures.push({
         where,
         violations: [

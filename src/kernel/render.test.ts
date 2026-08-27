@@ -19,13 +19,22 @@ import { describe, expect, it } from "vitest";
 import type { AnswerManifest, Claim, ClosedRoster, RenderAffidavit } from "./contracts.js";
 import { type DomElement, type DomNode, element, text } from "./dom.js";
 import { compileManifest, type ManifestContext } from "./manifest.js";
-import { blockFor, copyFor } from "./pack.js";
+import { blockFor, copyFor, TEMPLATE_SLOTS, templateFor } from "./pack.js";
 import { attestRender, planRender, verifyRender } from "./render.js";
 import { buildRoster } from "./roster.js";
 import { denialCode } from "./violation.js";
 import { manifestContext } from "../testing/fixtures.js";
+import { renderAnswer } from "../render/reference.js";
 
 const world: ManifestContext = manifestContext();
+// The hand-built pages in this file predate sentence templates (epic #94,
+// slice 4) and exercise slot/block/copy mechanics on their own; they run
+// under a pack with no templates so the plan asks for exactly the page they
+// build. The sentence machinery has its own describe below, on the real pack.
+const bare: ManifestContext = {
+  ...world,
+  pack: { ...world.pack, presentation: { ...world.pack.presentation, templates: [] } },
+};
 const RENDERED_AT = "2026-01-01T12:00:00Z";
 const LOCALE = world.locale;
 
@@ -47,13 +56,13 @@ function boomers(): ClosedRoster {
 }
 
 function answer(claims: readonly Claim[], rosters: readonly ClosedRoster[] = []): AnswerManifest {
-  const compiled = compileManifest(world, { transactionId: "txn-render", claims, rosters });
+  const compiled = compileManifest(bare, { transactionId: "txn-render", claims, rosters });
   if (!compiled.ok) throw new Error(compiled.violations.map(denialCode).join(", "));
   return compiled.value;
 }
 
 function plan(manifest: AnswerManifest) {
-  const planned = planRender(world, manifest);
+  const planned = planRender(bare, manifest);
   if (!planned.ok) throw new Error(planned.violations.map(denialCode).join(", "));
   return planned.value;
 }
@@ -107,11 +116,11 @@ function page(fact: DomNode[] = HONEST_FACT, provenance: DomNode[] = HONEST_PROV
 function denials(artifact: DomElement, affidavit?: RenderAffidavit): string[] {
   const manifest = answer([SPEED]);
   const sworn = affidavit ?? attest(artifact);
-  return verifyRender(world, manifest, artifact, sworn).violations.map(denialCode);
+  return verifyRender(bare, manifest, artifact, sworn).violations.map(denialCode);
 }
 
 function attest(artifact: DomElement): RenderAffidavit {
-  const attested = attestRender(world, answer([SPEED]), artifact, RENDERED_AT);
+  const attested = attestRender(bare, answer([SPEED]), artifact, RENDERED_AT);
   // Deliberately permissive: several tests attest a page that will not verify,
   // and want the affidavit that honestly describes it.
   if (attested.ok) return attested.value;
@@ -219,7 +228,7 @@ describe("the plan derived from a manifest", () => {
     // The set is carried, so the pack requires the warning; no claim cites the
     // set, so nothing the trainer sees is about Selfdestruct at all.
     const manifest = answer([SPEED], [boomers()]);
-    const planned = planRender(world, manifest);
+    const planned = planRender(bare, manifest);
     expect(planned.ok).toBe(false);
     expect(planned.ok ? [] : planned.violations.map(denialCode)).toContain("IA-6/disclosure-without-anchor");
   });
@@ -430,7 +439,7 @@ describe("the affidavit", () => {
   const honest = page();
 
   it("is derived from the artifact, not from the manifest", () => {
-    const attested = attestRender(world, answer([SPEED]), honest, RENDERED_AT);
+    const attested = attestRender(bare, answer([SPEED]), honest, RENDERED_AT);
     expect(attested.ok && attested.value).toMatchObject({
       transactionId: "txn-render",
       renderedAt: RENDERED_AT,
@@ -443,7 +452,7 @@ describe("the affidavit", () => {
 
   it("is refused rather than signed when the artifact would not verify", () => {
     const attested = attestRender(
-      world,
+      bare,
       answer([SPEED]),
       page([...HONEST_FACT.slice(0, 3), slot("value", text("200"))]),
       RENDERED_AT,
@@ -467,3 +476,111 @@ describe("the affidavit", () => {
     expect(denials(honest, short)).toContain("IA-6/affidavit-visibility-mismatch");
   });
 });
+
+
+describe("the approved sentence (epic #94, slice 4)", () => {
+
+  function sentencedPlan(claims: readonly Claim[], rosters: readonly ClosedRoster[] = []) {
+    const compiled = compileManifest(world, { transactionId: "txn-render", claims, rosters });
+    if (!compiled.ok) throw new Error(compiled.violations.map(denialCode).join(", "));
+    const planned = planRender(world, compiled.value);
+    if (!planned.ok) throw new Error(planned.violations.map(denialCode).join(", "));
+    return { manifest: compiled.value, plan: planned.value };
+  }
+
+  it("fills the template with the unit's slot strings, joined as the walker reads", () => {
+    const { plan } = sentencedPlan([SPEED]);
+    expect(plan.units[0]?.sentence).toEqual({
+      templateId: "sentence.fact",
+      expected: "The official records certify Pikachu 's base-speed as 90 .",
+    });
+  });
+
+  it("pins the template slot table to what the plan actually certifies, kind by kind", () => {
+    // TEMPLATE_SLOTS is the loader's authority for refusing a template's
+    // placeholders; this pins it to unitForClaim's real slots so the two
+    // cannot drift. Every kind that takes a sentence is built and compared.
+    const roster = boomers();
+    const { plan } = sentencedPlan(
+      [
+        SPEED,
+        { kind: "count", rosterId: roster.id },
+        { kind: "membership", rosterId: roster.id, entityId: "pikachu", asserted: false },
+        { kind: "ranking", rosterId: roster.id, basis: "base-speed", direction: "highest" },
+        { kind: "matchup", subject: { kind: "species", entityId: "pikachu" }, direction: "weak-to" },
+        { kind: "eligibility", entityId: "mewtwo" },
+        { kind: "recommendation", entityId: "pikachu" },
+        RELEASE,
+      ],
+      [roster],
+    );
+    const byKind = new Map(plan.units.map((unit) => [unit.kind, unit]));
+    for (const [kind, slots] of Object.entries(TEMPLATE_SLOTS)) {
+      const unit = byKind.get(kind as never);
+      expect(unit, `no planned unit of kind ${kind}`).toBeDefined();
+      expect(
+        unit?.slots.map((slot) => slot.name).sort(),
+        `TEMPLATE_SLOTS drifted for ${kind}`,
+      ).toEqual([...slots].sort());
+      expect(unit?.sentence?.templateId, `no sentence planned for ${kind}`).toBeDefined();
+    }
+  });
+
+  it("signs the reference renderer's sentenced page without a denial", () => {
+    const { manifest, plan } = sentencedPlan([SPEED]);
+    const artifact = renderAnswer(world.pack, plan);
+    const attested = attestRender(world, manifest, artifact, RENDERED_AT);
+    expect(attested.ok, JSON.stringify(!attested.ok && attested.violations)).toBe(true);
+  });
+
+  it("refuses a pack whose sentence asks for a value the unit never certifies", () => {
+    const doctored: ManifestContext = {
+      ...world,
+      pack: {
+        ...world.pack,
+        presentation: {
+          ...world.pack.presentation,
+          templates: [{ id: "sentence.fact", kind: "fact", text: { "en-US": "Trust me, {vibes}.", "en-GB": "Trust me, {vibes}." } }],
+        },
+      },
+    };
+    const compiled = compileManifest(doctored, { transactionId: "txn-render", claims: [SPEED], rosters: [] });
+    if (!compiled.ok) throw new Error("the manifest itself should compile");
+    const planned = planRender(doctored, compiled.value);
+    expect(!planned.ok && planned.violations.map(denialCode)).toContain("IA-6/template-slot-unknown");
+  });
+
+  it("denies a reworded sentence as drift, whole and by name", () => {
+    const { manifest, plan } = sentencedPlan([SPEED]);
+    const artifact = renderAnswer(world.pack, plan);
+    const reworded = rewriteText(artifact, "The official records certify", "We believe");
+    const attested = attestRender(world, manifest, reworded, RENDERED_AT);
+    const verdict = verifyRender(world, manifest, reworded, attested.ok ? attested.value : { transactionId: "txn-render", artifactDigest: "sha256:x", renderedAt: RENDERED_AT, units: [] });
+    expect(verdict.violations.map(denialCode)).toContain("IA-6/sentence-drift");
+  });
+
+  it("denies a sentence nobody planned, inside a unit and outside all of them", () => {
+    const { manifest, plan } = sentencedPlan([SPEED]);
+    const artifact = renderAnswer(world.pack, plan);
+    const smuggled = {
+      ...artifact,
+      children: [...artifact.children, element("p", { "data-template": "sentence.of-my-own" }, [text("Also, trust me.")])],
+    };
+    const attested = attestRender(world, manifest, smuggled, RENDERED_AT);
+    const verdict = verifyRender(world, manifest, smuggled, attested.ok ? attested.value : { transactionId: "txn-render", artifactDigest: "sha256:x", renderedAt: RENDERED_AT, units: [] });
+    expect(verdict.violations.map(denialCode)).toContain("IA-6/template-unplanned");
+  });
+
+  it("keeps every locale's sentence approvable — en-GB plans and signs too", () => {
+    expect(templateFor(world.pack, "fact", "en-GB")?.id).toBe("sentence.fact");
+  });
+});
+
+/** Replace one fragment of text wherever it appears in the artifact's text nodes. */
+function rewriteText(node: DomElement, from: string, to: string): DomElement {
+  const walk = (child: DomNode): DomNode =>
+    child.kind === "text"
+      ? { ...child, text: child.text.includes(from) ? child.text.replace(from, to) : child.text }
+      : { ...child, children: child.children.map(walk) };
+  return walk(node) as DomElement;
+}

@@ -121,6 +121,26 @@ model evaluation is a separate, explicitly billable harness that measures
 - LLM access (later): OpenRouter; cheap models by design — the weak model is
   a feature, not a compromise.
 
+## The kernel-size decision (epic #94, slice 4)
+
+The kernel was pitched at ~1–2k lines and has grown past it, deliberately.
+The rule adopted when the first usefulness mechanism (sentence templates,
+IA-6) landed: **the teaching kernel stays small per mechanism, not in
+total.** Each mechanism ships alone — its own pack data, derivation,
+verifier, crucible mutation and named denials — and must be readable in one
+sitting; the sum may grow. What is *not* accepted is a general engine: a
+template is a string with typed holes filled through the closed formatter
+registry, not a template language, exactly as the formatter registry is a
+set of reviewed functions and not a transformation language. Policy stays
+data; expressiveness stays code under review; and every addition is gated on
+a bank demanding it (epic #94's discipline), never on architecture wanting
+it.
+
+Pack versions are kept, not overwritten: a record replays under the pack id
+it pinned (`data/accord-pack/v1.json` is frozen; sentences arrived in
+`v2.json`), and the replay sweep resolves packs by the record's pin — policy
+is versioned data, and IA-10 is why the versions stay on the shelf.
+
 ## Non-goals
 
 - Not a guardrails/classifier system: no probabilistic "is this toxic/false"

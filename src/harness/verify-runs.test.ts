@@ -22,10 +22,26 @@ import { demoWorld } from "../demo/files.js";
 import { REQUIRED_DIMENSIONS } from "../kernel/scope.js";
 import { runTransaction } from "../kernel/transaction.js";
 import { COMMIT_TIME, ISSUED_AT, LOCALE, trainerTranscript } from "../testing/fixtures.js";
+import { loadPack } from "../kernel/pack.js";
 import { locateRuns, verifyArtifact } from "./verify-runs.js";
 
 const RUNS_DIR = resolve(import.meta.dirname, "../../runs");
+const PACKS_DIR = resolve(import.meta.dirname, "../../data/accord-pack");
 const world = demoWorld();
+
+/** Every pack version the tree carries, by id — a record replays under the
+ * pack it was pinned to, not under whatever the pack has since become. */
+function carriedPacks(): ReadonlyMap<string, ReturnType<typeof world.pack extends infer T ? () => T : never>> {
+  const packs = new Map();
+  for (const entry of readdirSync(PACKS_DIR)) {
+    if (!entry.endsWith(".json")) continue;
+    const loaded = loadPack(JSON.parse(readFileSync(join(PACKS_DIR, entry), "utf8")), world.registry);
+    if (!loaded.ok) throw new Error(`pack ${entry} does not load`);
+    packs.set(loaded.value.id, loaded.value);
+  }
+  return packs;
+}
+const packs = carriedPacks();
 
 /** Every filed artifact, recursively — the evidence base this repo publishes. */
 function artifactPaths(dir: string): string[] {
@@ -54,7 +70,7 @@ describe("the filed evidence base replays (epic #87, slice 2)", () => {
 
     for (const path of paths) {
       const name = relative(RUNS_DIR, path);
-      const outcome = verifyArtifact(world, readArtifact(path));
+      const outcome = verifyArtifact(world, readArtifact(path), packs);
       if (outcome.kind === "skipped") {
         skipped.push(`${name}: ${outcome.reason}`);
         continue;
@@ -97,7 +113,7 @@ describe("the filed evidence base replays (epic #87, slice 2)", () => {
     };
     const reproducible = paths
       .map((path) => ({ path, artifact: readArtifact(path) }))
-      .find(({ artifact }) => verifyArtifact(world, artifact).kind === "verified" && locateRuns(artifact).some(hasNumericFact));
+      .find(({ artifact }) => verifyArtifact(world, artifact, packs).kind === "verified" && locateRuns(artifact).some(hasNumericFact));
     if (reproducible === undefined) throw new Error("no reproducible artifact with a stated numeric fact to doctor");
 
     const doctored = JSON.parse(JSON.stringify(reproducible.artifact)) as unknown;
@@ -107,7 +123,7 @@ describe("the filed evidence base replays (epic #87, slice 2)", () => {
     const target = claims.find((claim) => claim.kind === "fact" && claim.asserted?.kind === "number")!;
     target.asserted!.value += 100;
 
-    const outcome = verifyArtifact(world, doctored);
+    const outcome = verifyArtifact(world, doctored, packs);
     if (outcome.kind !== "verified") throw new Error("doctored artifact unexpectedly skipped");
     expect(outcome.failures.length).toBeGreaterThan(0);
     expect(outcome.failures.some(({ where }) => where === run.where)).toBe(true);

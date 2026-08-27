@@ -34,6 +34,7 @@ import type { AnswerManifest, RenderAffidavit, Verdict } from "../kernel/contrac
 import {
   BLOCK_ATTRIBUTE,
   COPY_ATTRIBUTE,
+  TEMPLATE_ATTRIBUTE,
   type DomElement,
   element,
   SLOT_ATTRIBUTE,
@@ -104,6 +105,44 @@ function sabotage(world: CrucibleWorld, change: (honest: Rendered) => Sabotaged)
 }
 
 export const PHASE_4_MUTATIONS: readonly Mutation[] = [
+  {
+    id: "reword-the-sentence",
+    title: "Soften the approved sentence around a certified value",
+    description:
+      "The slots are intact and every value in them is right. The words " +
+      "around them — the approved template's own — now hedge. A sentence is " +
+      "verified whole, by equality, so there is no wording to hide in.",
+    article: "IA-6",
+    rule: "sentence-drift",
+    run: (world) =>
+      sabotage(world, (honest) => ({
+        artifact: retext(
+          honest.artifact,
+          SPEED_CARD,
+          TEMPLATE_ATTRIBUTE,
+          "sentence.fact",
+          "We believe Pikachu is quite fast, roughly speaking.",
+        ),
+      })),
+  },
+  {
+    id: "smuggle-a-second-sentence",
+    title: "Add a sentence the plan never approved",
+    description:
+      "A paragraph wearing a template mark nobody planned, beside the real " +
+      "one. Marking prose as a sentence does not make it one: the plan is a " +
+      "closed list, and a template outside it is refused by name.",
+    article: "IA-6",
+    rule: "template-unplanned",
+    run: (world) =>
+      sabotage(world, (honest) => ({
+        artifact: append(
+          honest.artifact,
+          SPEED_CARD,
+          element("p", { [TEMPLATE_ATTRIBUTE]: "sentence.of-my-own" }, [text("Also, honestly, just trust us.")]),
+        ),
+      })),
+  },
   {
     id: "hide-the-section-around-it",
     title: "Leave the warning alone and hide the section it sits in",
@@ -296,18 +335,19 @@ export const PHASE_4_MUTATIONS: readonly Mutation[] = [
   },
   {
     id: "drift-the-approved-copy",
-    title: "Soften the lead-in the catalogue approved",
+    title: "Soften the label the catalogue approved",
     description:
-      "Copy asserts nothing, which is exactly why it is worth attacking: " +
-      '"From the official records:" becomes "From memory, roughly:" and ' +
-      "the number beside it is still perfectly certified. The catalogue is " +
+      "Copy asserts nothing, which is exactly why it is worth attacking: the " +
+      "provenance label's approved wording gains a hedge, and the snapshot " +
+      "id beside it is still perfectly certified. The catalogue is " +
       "versioned data for this reason — a renderer may choose which approved " +
-      "string to use and may not choose its words.",
+      "string to use and may not choose its words. (The claim cards' words " +
+      "are sentences now, guarded whole by their own mutation.)",
     article: "IA-6",
     rule: "catalogue-drift",
     run: (world) =>
       sabotage(world, (honest) => ({
-        artifact: retext(honest.artifact, SPEED_CARD, COPY_ATTRIBUTE, "lead-in.fact", "From memory, roughly:"),
+        artifact: retext(honest.artifact, PROVENANCE, COPY_ATTRIBUTE, "provenance.snapshot", "As far as we recall, from:"),
       })),
   },
   {

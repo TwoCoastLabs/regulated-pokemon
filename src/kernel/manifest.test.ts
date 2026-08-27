@@ -504,7 +504,7 @@ describe("the manifest is bound to one snapshot, pack, trainer and window", () =
   });
 
   it("denies an answer governed by another pack version", () => {
-    expect(denialsOf({ ...manifest, packId: "indigo-accord-v2" })).toEqual(["IA-5/pack-mismatch"]);
+    expect(denialsOf({ ...manifest, packId: "indigo-accord-v0-never" })).toEqual(["IA-5/pack-mismatch"]);
   });
 
   it("denies an answer citing another trainer's scope", () => {
