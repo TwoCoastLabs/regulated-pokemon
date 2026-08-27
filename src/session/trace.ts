@@ -195,6 +195,10 @@ function describeClaim(claim: Claim): string {
   switch (claim.kind) {
     case "fact":
       return `fact ${claim.entityId}.${claim.factId}`;
+    case "treats":
+      return `treats ${claim.itemId} vs ${claim.condition}`;
+    case "comparison":
+      return `comparison ${claim.leftId} vs ${claim.rightId} by ${claim.factId}`;
     case "count":
       return `count of ${claim.rosterId}`;
     case "typeCount":

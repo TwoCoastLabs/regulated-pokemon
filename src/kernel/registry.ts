@@ -601,7 +601,7 @@ function checkIntegrity(document: SnapshotDocument): Violation[] {
  * loader has no network and trusts the vendored bytes only as far as they
  * agree with themselves.)
  */
-const STATUS_CONDITIONS: readonly string[] = ["poison", "burn", "freeze", "sleep", "paralysis", "confusion"];
+export const STATUS_CONDITIONS: readonly string[] = ["poison", "burn", "freeze", "sleep", "paralysis", "confusion"];
 
 function checkItems(document: SnapshotDocument): Violation[] {
   const items = document.items;

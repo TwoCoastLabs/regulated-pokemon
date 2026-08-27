@@ -29,11 +29,12 @@ import type {
   ScopeGrant,
   Verdict,
   Violation,
+  FactValue,
 } from "./contracts.js";
 import { deriveMatchup, matchupSubjectId } from "./chart.js";
 import { deriveEligibility, describeFinding, sameFinding } from "./eligibility.js";
 import { type AccordPack, actionRule, approvesLocale, blockFor, curriculumRule, type ExhibitRule, gameRule, restrictionsFor } from "./pack.js";
-import { type CertifiedRegistry, formatFactValue, sameFactValue } from "./registry.js";
+import { type CertifiedRegistry, formatFactValue, sameFactValue, STATUS_CONDITIONS } from "./registry.js";
 import { verifyRoster } from "./roster.js";
 import { requiredDimensionsFor } from "./scope-deps.js";
 import { verdictOf, violation } from "./violation.js";
@@ -119,6 +120,17 @@ function deriveClaims(context: ManifestContext, claims: readonly Claim[], roster
       if (set === undefined) return claim;
       const outcome = rankRoster(context, set, claim.basis, claim.direction);
       return outcome.ok ? { ...claim, selectedEntityId: outcome.winner } : claim;
+    }
+    if (claim.kind === "treats" && claim.asserted === undefined) {
+      const item = context.registry.findItem(claim.itemId);
+      if (item === undefined || !STATUS_CONDITIONS.includes(claim.condition)) return claim;
+      return { ...claim, asserted: (item.certified.cures ?? []).includes(claim.condition) };
+    }
+    if (claim.kind === "comparison" && (claim.left === undefined || claim.right === undefined)) {
+      const left = context.registry.resolve(claim.leftId, claim.factId);
+      const right = context.registry.resolve(claim.rightId, claim.factId);
+      if (!left.ok || !right.ok) return claim;
+      return { ...claim, left: claim.left ?? left.value, right: claim.right ?? right.value };
     }
     if (claim.kind === "matchup" && claim.members === undefined) {
       const derived = deriveMatchup(context.registry, claim.subject, claim.direction);
@@ -388,6 +400,10 @@ function checkClaim(context: ManifestContext, manifest: AnswerManifest, claim: C
       return checkTypeCount(context, claim);
     case "gameRule":
       return checkGameRule(context, claim);
+    case "treats":
+      return checkTreats(context, claim);
+    case "comparison":
+      return checkComparison(context, claim);
     case "membership":
       return checkMembership(context, manifest, claim);
     case "ranking":
@@ -561,15 +577,95 @@ function checkEligibility(context: ManifestContext, claim: Extract<Claim, { kind
   ];
 }
 
+/**
+ * An item–condition relation, recomputed from the item's closed certified
+ * effect set. The certified negative is what makes this a claim kind rather
+ * than a fact display: "does not treat" rests on the closed world (IA-4's
+ * logic), and the denial is IA-2 because the relation is a certified fact of
+ * this world. An unknown condition is refused against the closed vocabulary
+ * before anything is derived from it.
+ */
+function checkTreats(context: ManifestContext, claim: Extract<Claim, { kind: "treats" }>): Violation[] {
+  const item = context.registry.findItem(claim.itemId);
+  if (item === undefined) {
+    return [
+      violation("IA-3", "fabricated-entity", `"${claim.itemId}" is not an item certified by ${context.registry.snapshot.id}`, {
+        expected: `an item in ${context.registry.snapshot.id}`,
+        actual: claim.itemId,
+      }),
+    ];
+  }
+  if (!STATUS_CONDITIONS.includes(claim.condition)) {
+    return [
+      violation("IA-2", "unknown-condition", `"${claim.condition}" is not a status condition the records know`, {
+        expected: STATUS_CONDITIONS.join(", "),
+        actual: claim.condition,
+      }),
+    ];
+  }
+  const certified = (item.certified.cures ?? []).includes(claim.condition);
+  if (claim.asserted === undefined || claim.asserted === certified) return [];
+  return [
+    violation("IA-2", "treats-mismatch", `the records certify that ${claim.itemId} ${certified ? "treats" : "does not treat"} ${claim.condition}, and this answer says otherwise`, {
+      expected: String(certified),
+      actual: String(claim.asserted),
+    }),
+  ];
+}
+
+/**
+ * One certified fact on two entities. Everything comparative is recomputed:
+ * both values re-resolved, and any stated value that disagrees is a
+ * different claim. Only numbers compare — a comparison over a list or a
+ * text is refused by name rather than improvised over, which keeps "which
+ * is better?" from quietly becoming an opinion with a certificate.
+ */
+function checkComparison(context: ManifestContext, claim: Extract<Claim, { kind: "comparison" }>): Violation[] {
+  const violations: Violation[] = [];
+  const sides: readonly ["left" | "right", string, FactValue | undefined][] = [
+    ["left", claim.leftId, claim.left],
+    ["right", claim.rightId, claim.right],
+  ];
+  for (const [side, entityId, stated] of sides) {
+    const resolved = context.registry.resolve(entityId, claim.factId);
+    if (!resolved.ok) {
+      violations.push(...resolved.violations);
+      continue;
+    }
+    if (resolved.value.kind !== "number") {
+      violations.push(
+        violation("IA-2", "incomparable-fact", `${entityId}'s ${claim.factId} is not a number, so nothing compares`, {
+          expected: "a numeric certified fact",
+          actual: resolved.value.kind,
+        }),
+      );
+      continue;
+    }
+    if (stated !== undefined && !sameFactValue(resolved.value, stated)) {
+      violations.push(
+        violation("IA-2", "comparison-mismatch", `the ${side} value of this comparison is not what the records certify for ${entityId}'s ${claim.factId}`, {
+          expected: formatFactValue(resolved.value),
+          actual: formatFactValue(stated),
+        }),
+      );
+    }
+  }
+  return violations;
+}
+
 function checkMembership(
   context: ManifestContext,
   manifest: AnswerManifest,
   claim: Extract<Claim, { kind: "membership" }>,
 ): Violation[] {
-  if (context.registry.findSpecies(claim.entityId) === undefined) {
+  // Any certified entity may be tested for membership — rosters range over
+  // species and, since the Center world, items (epic #94, slice 3). An entity
+  // of the wrong universe is simply not a member, which the closed set says
+  // itself; only a name no universe certifies is a fabrication.
+  if (!context.registry.knowsEntity(claim.entityId)) {
     return [
       violation("IA-3", "fabricated-entity", `"${claim.entityId}" is not certified by ${context.registry.snapshot.id}`, {
-        expected: `a species in ${context.registry.snapshot.id}`,
+        expected: `an entity in ${context.registry.snapshot.id}`,
         actual: claim.entityId,
       }),
     ];
@@ -912,6 +1008,13 @@ function entitiesMentioned(claims: readonly Claim[], rosters: readonly ClosedRos
     if (claim.kind === "matchup" && claim.subject.kind === "species") mentioned.add(claim.subject.entityId);
     // An eligibility finding is an answer about the species it rules on.
     if (claim.kind === "eligibility") mentioned.add(claim.entityId);
+    // A treats verdict is an answer about the item; a comparison about both
+    // of its sides — a disclosure triggered by any of them is owed.
+    if (claim.kind === "treats") mentioned.add(claim.itemId);
+    if (claim.kind === "comparison") {
+      mentioned.add(claim.leftId);
+      mentioned.add(claim.rightId);
+    }
   }
   // "Which Pokémon learn Selfdestruct" is an answer about Selfdestruct even
   // though no claim names it: the move is in the definition of the set.

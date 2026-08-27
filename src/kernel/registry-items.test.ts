@@ -63,6 +63,23 @@ describe("the vendored Center world", () => {
     expect(registry.resolve("x-sp-atk", "era-name")).toEqual({ ok: true, value: { kind: "text", value: "X Special" } });
     expect(registry.resolve("potion", "cost")).toEqual({ ok: true, value: { kind: "number", value: 200 } });
     expect(registry.resolve("potion", "usable-in-battle")).toEqual({ ok: true, value: { kind: "boolean", value: true } });
+    // Every optional era surface, in both directions: the value where the
+    // sheet certified one, and the certified absence where it did not.
+    expect(registry.resolve("ether", "restores-pp")).toEqual({ ok: true, value: { kind: "number", value: 10 } });
+    expect(registry.resolve("max-ether", "restores-pp")).toEqual({ ok: true, value: { kind: "text", value: "full" } });
+    expect(registry.resolve("elixir", "pp-scope")).toEqual({ ok: true, value: { kind: "text", value: "all-moves" } });
+    expect(registry.resolve("potion", "pp-scope")).toEqual({ ok: true, value: { kind: "absent" } });
+    expect(registry.resolve("max-revive", "revives")).toEqual({ ok: true, value: { kind: "text", value: "full" } });
+    expect(registry.resolve("potion", "revives")).toEqual({ ok: true, value: { kind: "absent" } });
+    expect(registry.resolve("potion", "repel-steps")).toEqual({ ok: true, value: { kind: "absent" } });
+    expect(registry.resolve("potion", "era-name")).toEqual({ ok: true, value: { kind: "absent" } });
+    expect(registry.resolve("potion", "always-catches")).toEqual({ ok: true, value: { kind: "boolean", value: false } });
+    expect(registry.resolve("helix-fossil", "evolves")).toEqual({ ok: true, value: { kind: "absent" } });
+    expect(registry.resolve("poke-doll", "cures")).toEqual({ ok: true, value: { kind: "absent" } });
+    expect(registry.resolve("antidote", "item-category")).toEqual({ ok: true, value: { kind: "text", value: "status-cures" } });
+    expect(registry.resolve("antidote", "item-effect")).toEqual({ ok: true, value: { kind: "text", value: "Cures poison." } });
+    expect(registry.resolve("potion", "usable-overworld")).toEqual({ ok: true, value: { kind: "boolean", value: true } });
+    expect(registry.resolve("potion", "consumable")).toEqual({ ok: true, value: { kind: "boolean", value: true } });
   });
 
   it("refuses an uncertified item fact and a fabricated item exactly as species facts are refused", () => {
@@ -95,6 +112,10 @@ describe("the vendored Center world", () => {
 describe("the extraction crucible, load-time half", () => {
   it("refuses a duplicated item", () => {
     expect(refusals((draft) => ((draft as unknown as { items: unknown[] }).items.push(draft.items![0]!)))).toContain("IA-2/item-duplicated");
+  });
+
+  it("refuses an unnamed item", () => {
+    expect(refusals((draft) => (((draft.items as unknown as unknown[])[0] as { id: string }).id = ""))).toContain("IA-2/item-unnamed");
   });
 
   it("refuses an item with no reviewed extraction", () => {

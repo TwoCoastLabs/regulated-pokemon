@@ -77,6 +77,8 @@ export type RenderUnitKind =
   | "fact"
   | "count"
   | "membership"
+  | "treats"
+  | "comparison"
   | "selection"
   | "matchup"
   | "eligibility"
@@ -408,6 +410,52 @@ function unitForClaim(
             kind: "selection",
             slots: resolved.value,
             mentions: [selected, ...definedBy(claim.rosterId, manifest.rosters)],
+          },
+        };
+      }
+      case "treats": {
+        const item = context.registry.findItem(claim.itemId);
+        const certified = claim.asserted ?? (item !== undefined && (item.certified.cures ?? []).includes(claim.condition));
+        const resolved = slots(
+          slot(context, locale, "item", entity(claim.itemId), "entity-name"),
+          slot(context, locale, "condition", entity(claim.condition), "plain-text"),
+          slot(context, locale, "verdict", { kind: "boolean", value: certified }, "yes-no"),
+        );
+        if (!resolved.ok) return resolved;
+        return {
+          ok: true,
+          value: {
+            id: `treats:${claim.itemId}:${claim.condition}`,
+            kind: "treats",
+            slots: resolved.value,
+            mentions: [claim.itemId],
+          },
+        };
+      }
+      case "comparison": {
+        // A rendered manifest is a verified one, so both sides are numbers
+        // and (when omitted) were derived; everything comparative on the page
+        // is computed here, never asserted by anyone.
+        const left = claim.left?.kind === "number" ? claim.left.value : undefined;
+        const right = claim.right?.kind === "number" ? claim.right.value : undefined;
+        const leader = left === undefined || right === undefined || left === right ? undefined : left > right ? claim.leftId : claim.rightId;
+        const resolved = slots(
+          slot(context, locale, "left", entity(claim.leftId), "entity-name"),
+          slot(context, locale, "right", entity(claim.rightId), "entity-name"),
+          slot(context, locale, "fact", entity(claim.factId), "plain-text"),
+          slot(context, locale, "leftvalue", claim.left ?? { kind: "absent" }),
+          slot(context, locale, "rightvalue", claim.right ?? { kind: "absent" }),
+          slot(context, locale, "gap", left === undefined || right === undefined ? { kind: "absent" } : { kind: "number", value: Math.abs(left - right) }),
+          slot(context, locale, "leader", leader === undefined ? { kind: "absent" } : entity(leader), leader === undefined ? undefined : "entity-name"),
+        );
+        if (!resolved.ok) return resolved;
+        return {
+          ok: true,
+          value: {
+            id: `comparison:${claim.factId}:${claim.leftId}:${claim.rightId}`,
+            kind: "comparison",
+            slots: resolved.value,
+            mentions: [claim.leftId, claim.rightId],
           },
         };
       }

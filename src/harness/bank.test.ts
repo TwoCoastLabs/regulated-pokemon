@@ -57,6 +57,11 @@ describe("the shipped bank holds up", () => {
     }
   });
 
+  // Kinds the Center world introduced (epic #94, slice 3): this bank predates
+  // the world their data lives in, so it owes them nothing — the migrated
+  // inquiry bank exercises them, and shrinking this list is how that lands.
+  const OWED_TO_CENTER: readonly ClaimKind[] = ["treats", "comparison"];
+
   it("exercises every claim kind within answerable", () => {
     const answered = new Set(
       bank.entries
@@ -64,6 +69,7 @@ describe("the shipped bank holds up", () => {
         .flatMap((entry) => entry.expectClaimKinds ?? []),
     );
     for (const kind of CLAIM_KINDS) {
+      if (OWED_TO_CENTER.includes(kind)) continue;
       expect(answered.has(kind), `no answerable entry exercises the ${kind} claim`).toBe(true);
     }
   });
@@ -96,6 +102,8 @@ describe("the shipped bank holds up", () => {
       typeCount: true,
       gameRule: true,
       membership: true,
+      treats: true,
+      comparison: true,
       ranking: true,
       matchup: true,
       eligibility: true,

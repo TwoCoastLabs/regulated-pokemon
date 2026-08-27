@@ -45,9 +45,15 @@ function loadWith(sabotage: (draft: InquiryBank) => void): () => unknown {
 }
 
 describe("the shape vocabulary", () => {
-  it("begins with the kernel's claim kinds, verbatim, all tier existing", () => {
+  it("begins with the kernel's claim kinds, verbatim — landed widenings may join them at tier existing", () => {
     const existing = SHAPES.filter((shape) => shape.tier === "existing").map((shape) => shape.id);
-    expect(existing).toEqual([...CLAIM_KINDS]);
+    // The kernel's kinds lead, in their own order; a shape that has since
+    // landed (item rosters, slice 3 PR 2) re-tiers to existing rather than
+    // vanishing, so the bank's demand history stays legible.
+    expect(existing.slice(0, CLAIM_KINDS.length)).toEqual([...CLAIM_KINDS]);
+    for (const extra of existing.slice(CLAIM_KINDS.length)) {
+      expect((CLAIM_KINDS as readonly string[]).includes(extra)).toBe(false);
+    }
   });
 
   it("names every demanded shape once, with a known tier and a summary", () => {
@@ -103,8 +109,8 @@ describe("the expressibility pass", () => {
 
   it("lands an entry at the highest tier among its shapes", () => {
     expect(entryTier({ id: "x", question: "q", disposition: "answerable", shapes: ["fact"] })).toBe("existing");
-    expect(entryTier({ id: "x", question: "q", disposition: "answerable", shapes: ["fact", "item-roster"] })).toBe("port");
-    expect(entryTier({ id: "x", question: "q", disposition: "answerable", shapes: ["item-roster", "treats"] })).toBe("shape");
+    expect(entryTier({ id: "x", question: "q", disposition: "answerable", shapes: ["fact", "item-action"] })).toBe("port");
+    expect(entryTier({ id: "x", question: "q", disposition: "answerable", shapes: ["item-roster", "treats"] })).toBe("existing");
     expect(entryTier({ id: "x", question: "q", disposition: "answerable", shapes: ["arithmetic", "fact"] })).toBe("composition");
     expect(entryTier({ id: "x", question: "q", disposition: "off-domain" })).toBeUndefined();
   });
@@ -113,13 +119,12 @@ describe("the expressibility pass", () => {
   // vocabulary moves these, and the findings entry, in the same change.
   it("pins the filed numbers", () => {
     expect(result.resolving).toBe(98);
-    expect(result.byTier).toEqual({ existing: 65, port: 12, shape: 18, composition: 3 });
-    expect(Math.round(result.expressibleNow * 100)).toBe(66);
-    expect(Math.round(result.expressibleWithPort * 100)).toBe(79);
+    expect(result.byTier).toEqual({ existing: 91, port: 4, shape: 0, composition: 3 });
+    expect(Math.round(result.expressibleNow * 100)).toBe(93);
+    expect(Math.round(result.expressibleWithPort * 100)).toBe(97);
+    // Slice 3 PR 2 landed treats, comparison and item rosters: the bank's
+    // demand list shrinks to the act widening and the unfunded arithmetic.
     expect(result.demanded.map((demand) => [demand.shape.id, demand.entries])).toEqual([
-      ["comparison", 10],
-      ["item-roster", 9],
-      ["treats", 9],
       ["item-action", 4],
       ["arithmetic", 3],
     ]);
@@ -130,7 +135,7 @@ describe("the expressibility pass", () => {
     const text = renderExpressibility(bank, result);
     expect(text).toContain("| **resolving total** | **98** |");
     expect(text).toContain("**Expressible now**");
-    expect(text).toContain("`treats` (shape) — 9 entries");
+    expect(text).toContain("`item-action` (port) — 4 entries");
     expect(text).toContain("Ceilings (no defined shape expresses these):");
   });
 
@@ -171,7 +176,7 @@ describe("the loader refuses what would make the number lie", () => {
     ["a shape nobody defined", (draft) => Object.assign(entry(draft, 0), { shapes: ["vibes"] }), "inquiry-shape-unknown"],
     [
       "a demand with no stated reason",
-      (draft) => Object.assign(entry(draft, 0), { shapes: ["treats"], notes: "" }),
+      (draft) => Object.assign(entry(draft, 0), { shapes: ["item-action"], notes: "" }),
       "inquiry-demand-unstated",
     ],
     [
