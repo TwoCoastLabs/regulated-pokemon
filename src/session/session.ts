@@ -33,7 +33,7 @@
  * repeats a millisecond would hand it a lie.
  */
 
-import type { Claim, ConfirmationEvent, ScopeDimension, ScopeEvent, ScopeTranscript, Violation } from "../kernel/contracts.js";
+import type { Claim, ConfirmationEvent, ScopeDimension, ScopeEvent, ScopeTranscript, UtteranceSource, Violation } from "../kernel/contracts.js";
 import { type DomElement, walkArtifact } from "../kernel/dom.js";
 import type { ManifestContext, ManifestDraft } from "../kernel/manifest.js";
 import type { AccordPack } from "../kernel/pack.js";
@@ -226,6 +226,25 @@ function file(state: SessionState, record: Transaction, page?: DomElement): Sess
 export async function say(state: SessionState, text: string, deps: SessionDeps): Promise<SessionState> {
   const utterance: ScopeEvent = { kind: "utterance", at: deps.now(), source: "trainer", text };
   return drive({ ...state, transcript: [...state.transcript, utterance], ladderTurns: 0 }, deps);
+}
+
+/**
+ * Content that reached the session on a channel the trainer does not speak on —
+ * a retrieved document, a tool result, a third party. It is *recorded* so the
+ * transcript is complete and replayable, and it drives the session exactly as
+ * a trainer utterance does, but the resolver reads only the trainer's channel
+ * (IA-8), so it can never bind scope. This is how a transport that can label
+ * its inputs (a paste handler, a retrieval step) keeps injected text inert by
+ * construction rather than by detection.
+ */
+export async function hear(
+  state: SessionState,
+  source: Exclude<UtteranceSource, "trainer" | "advisor">,
+  text: string,
+  deps: SessionDeps,
+): Promise<SessionState> {
+  const utterance: ScopeEvent = { kind: "utterance", at: deps.now(), source, text };
+  return drive({ ...state, transcript: [...state.transcript, utterance] }, deps);
 }
 
 /**

@@ -39,6 +39,8 @@ const runs: RecordedDialogueRun[] = [
     resolvedTurns: 1,
     passedTurns: 1,
     enforcementEscalations: [],
+    wrongScopeEscalations: [],
+    attacks: { turns: 0, reached: 0 },
     providerErrors: 0,
   },
 ];

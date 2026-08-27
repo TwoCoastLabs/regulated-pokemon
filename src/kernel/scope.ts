@@ -24,7 +24,10 @@
  *    manifest layer, the thing that produces grants is built on top of the
  *    thing that audits them and cannot be the more trusted of the two.
  *
- * And one corollary of asking: **the question is the context.** The bare-noun
+ * And one corollary of asking: **the question is the context** — and the
+ * answer is the trainer's last word on it, superseding what made the asking
+ * necessary (so a contradiction is a question, never a dead end).
+ * The bare-noun
  * ban demands context words because prose gives a value token nothing to be
  * about — but a recorded clarifying question already said what the reply is
  * about, so a direct answer binds that one dimension deterministically
@@ -87,7 +90,8 @@ export type BlockReason =
   | "unconfirmed"
   | "rejected"
   | "digest-mismatch"
-  | "unapproved";
+  | "unapproved"
+  | "superseded";
 
 /**
  * The article and rule each exclusion is denied under, and why in one line.
@@ -154,6 +158,11 @@ export const BLOCK_DENIALS: Record<BlockReason, { article: "IA-1" | "IA-8"; rule
     rule: "value-not-approved",
     because: "the value is not in the League-approved vocabulary",
   },
+  superseded: {
+    article: "IA-1",
+    rule: "superseded-by-answer",
+    because: "the trainer was asked about it afterwards, and their recorded answer replaced it",
+  },
 };
 
 // --- derivation -------------------------------------------------------------
@@ -195,9 +204,32 @@ export function deriveScope(pack: AccordPack, transcript: ScopeTranscript): Scop
 
   const bindings: ScopeBinding[] = [];
   const contradicted: ScopeDimension[] = [];
+  const superseded: Required<ScopeMatch>[] = [];
   for (const dimension of SCOPE_DIMENSIONS) {
     const believed = matches.filter((match) => match.blockedBy === undefined && match.dimension === dimension);
-    const values = new Set(believed.map((match) => match.value));
+
+    // The trainer's latest recorded word on this dimension — a direct answer
+    // to the question the advisor put to them, or their confirmation of a
+    // candidate they were shown — outranks everything said before it. That is
+    // what the question was *for*: the record established the dimension two
+    // ways, the trainer was asked which they meant, and they said. Without
+    // this a contradiction would be terminal — no answer could ever re-bind
+    // the dimension, and a pasted line or a slip would make scope write-once
+    // for the session (findings iteration 30). Recency alone still decides
+    // nothing: a later *direct* statement contradicting the answer is a fresh
+    // contradiction, and the trainer is asked again. What is set aside is
+    // recorded under its own name, so a grant resting on it is refused as
+    // superseded rather than as wording that never bound.
+    const witness = believed.reduce<number | undefined>(
+      (latest, match) => (match.route === "direct" ? latest : Math.max(latest ?? -1, match.evidenceIndex)),
+      undefined,
+    );
+    const live = witness === undefined ? believed : believed.filter((match) => match.evidenceIndex >= witness);
+    for (const match of believed) {
+      if (witness !== undefined && match.evidenceIndex < witness) superseded.push({ ...match, blockedBy: "superseded" });
+    }
+
+    const values = new Set(live.map((match) => match.value));
     if (values.size > 1) {
       // Fail closed rather than picking the later one. "Actually I switched to
       // Yellow" and "my rival plays Yellow" look identical from here, and only
@@ -205,14 +237,14 @@ export function deriveScope(pack: AccordPack, transcript: ScopeTranscript): Scop
       contradicted.push(dimension);
       continue;
     }
-    const first = believed[0];
+    const first = live[0];
     if (first !== undefined) bindings.push(strip(first));
   }
 
   return {
     bindings,
     contradicted,
-    ignored: matches.filter((match): match is Required<ScopeMatch> => match.blockedBy !== undefined),
+    ignored: [...matches.filter((match): match is Required<ScopeMatch> => match.blockedBy !== undefined), ...superseded],
     unmatched: unmatchedWording(pack.vocabulary, transcript, matches),
   };
 }
@@ -380,6 +412,17 @@ function answerMatches(vocabulary: ScopeVocabulary, transcript: ScopeTranscript)
       if (reply.kind === "question") break;
       if (reply.kind !== "utterance" || reply.source !== "trainer") continue;
 
+      // The window closes once the question is *answered* — the first trainer
+      // reply that binds the asked dimension is the answer, and a later
+      // utterance is not retroactively a second reply to a question already
+      // settled. Without this, a stale question keeps arming every later turn:
+      // a pasted line two exchanges on ("...players on Yellow.") would read as
+      // the trainer's answer to a version question they answered long ago
+      // (epic #94, slice 1 — the write-once follow-up). A reply that only
+      // *attempts* the dimension and is blocked (a negation, a foreign
+      // channel) does not close it, so "hmm" then "yellow" still binds and a
+      // "not yellow" does not orphan a later real answer.
+      let answered = false;
       for (const clause of clausesOf(reply.text, vocabulary)) {
         const clauseReason = foreign ? "foreign-question" : clauseBlock(clause, vocabulary);
         for (const term of rule.terms) {
@@ -389,6 +432,7 @@ function answerMatches(vocabulary: ScopeVocabulary, transcript: ScopeTranscript)
             .slice(Math.max(0, at - window), at)
             .some((token) => vocabulary.markers.negation.includes(token));
           const blockedBy = clauseReason ?? (negated ? "negated" : undefined);
+          if (blockedBy === undefined) answered = true;
           matches.push({
             dimension: rule.dimension,
             value: term.value,
@@ -399,6 +443,7 @@ function answerMatches(vocabulary: ScopeVocabulary, transcript: ScopeTranscript)
           });
         }
       }
+      if (answered) break;
     }
   });
 
