@@ -182,6 +182,44 @@ export interface SnapshotMove {
  * writing every attacking × defending cell means a missing one is a loader
  * refusal, never a silent 1×.
  */
+/**
+ * One certified item (epic #94, slice 3 — the Center world). Structured
+ * fields come from upstream as data; the era fields under `certified` come
+ * from the reviewed extraction sheet (data/certification/), never parsed out
+ * of prose at load time: a model may propose an extraction, a human
+ * certifies it, and the snapshot only ever contains certified values.
+ */
+export interface SnapshotItem {
+  /** Entity id used throughout the kernel — the upstream item slug. */
+  id: string;
+  itemId: number;
+  category: string;
+  cost: number;
+  /** Upstream attribute flags, structured at the source. */
+  consumable: boolean;
+  usableInBattle: boolean;
+  usableOverworld: boolean;
+  /** Present-day effect wording from upstream (fidelity: modern-values). */
+  shortEffect: string;
+  /** The reviewed era extractions, exactly as certified in the sheet. */
+  certified: {
+    /** The upstream sentence the extraction was reviewed against. */
+    provenance: string;
+    restoresHp?: number | "full";
+    cures?: readonly string[];
+    revives?: "half" | "full";
+    restoresPp?: number | "full";
+    ppScope?: "one-move" | "all-moves";
+    repelSteps?: number;
+    catchRateMultiplier?: number;
+    alwaysCatches?: boolean;
+    evolves?: readonly { from: string; to: string }[];
+    /** The generation-I name, when upstream uses a later one. */
+    eraName?: string;
+    notes?: string;
+  };
+}
+
 export interface SnapshotTypeChart {
   /** The generation's closed set of type ids, sorted. */
   types: readonly string[];
@@ -203,12 +241,16 @@ export interface SnapshotDocument {
   typeChart: SnapshotTypeChart;
   species: readonly SnapshotSpecies[];
   moves: readonly SnapshotMove[];
+  /** The Center world's items (epic #94, slice 3). Absent from worlds that
+   * predate them — the frozen kanto-red-blue file loads and digests
+   * unchanged, exactly as pack v1 stayed on the shelf. */
+  items?: readonly SnapshotItem[];
 }
 
 /** Fields hashed into `contentDigest` — provenance is deliberately excluded. */
 export type SnapshotContent = Pick<
   SnapshotDocument,
-  "schemaVersion" | "id" | "scope" | "typeChart" | "species" | "moves"
+  "schemaVersion" | "id" | "scope" | "typeChart" | "species" | "moves" | "items"
 >;
 
 export function snapshotContent(document: SnapshotContent): SnapshotContent {
@@ -219,6 +261,9 @@ export function snapshotContent(document: SnapshotContent): SnapshotContent {
     typeChart: document.typeChart,
     species: document.species,
     moves: document.moves,
+    // Undefined vanishes under stableStringify, so a world without items
+    // digests exactly as it always did — the frozen file's pin holds.
+    ...(document.items === undefined ? {} : { items: document.items }),
   };
 }
 

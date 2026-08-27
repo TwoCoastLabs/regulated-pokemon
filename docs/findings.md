@@ -2637,6 +2637,61 @@ records alone. Zero model calls, zero dollars.
 
 ---
 
+### Iteration 35 — the Center world exists: a second certified world, and the certification pipeline rehearsed for real
+
+Slice 3 of epic #94, first leg (port-log rows 1–3): the world the realistic
+inquiry bank was written against, vendored. `data/snapshots/kanto-center.json`
+— id `kanto-center`, the same 151-species/163-move projection from the same
+pinned upstream commit, plus the **70 generation-I non-machine items** (3,030
+upstream documents; content digest `9f7c6164…`). The frozen `kanto-red-blue`
+file is untouched byte for byte: worlds are versioned exactly as the pack is
+(iteration 33), a new world is a new file, and every filed record still pins
+the old one.
+
+**The certification pipeline is the finding.** generalization.md §4 named
+prose-fed extraction as the honest hard part and prescribed the split — a
+model may propose, a human certifies, the snapshot holds only certified
+values. It now runs: the reviewed sheet
+(`data/certification/center-items.v1.json`) certifies, per item, the typed
+era facts an effect sentence carries (restores, cures, revives, PP scope,
+repel steps, catch multipliers, stone evolutions, generation-I names), each
+with the upstream sentence it was reviewed against as provenance. The build
+joins upstream against the sheet and **refuses by name, closed in both
+directions**: a sheet entry upstream does not carry; a generation-I item the
+sheet never reviewed (a world must not quietly grow an uncertified entity);
+and a certification whose provenance no longer matches upstream — a stale
+review is nobody's review. The loader re-checks the vendored bytes against
+themselves (the extraction crucible's load-time half): a closed condition
+vocabulary; stone evolutions cross-checked against the species records' own
+`use-item` edges, so a stone cannot certify an evolution the roster does not
+carry; colliding entity ids; an empty items block.
+
+**Certified absence earned its first real case.** Generation I's Safari Zone
+used its own capture mechanics, so Safari Ball's `catch-rate-multiplier` is
+certified *absent* — the upstream's modern 1.5× is deliberately not copied —
+and resolving it returns the absence as a certification, not a gap. Era names
+landed the same way: `x-sp-atk` resolves `era-name` to "X Special",
+`exp-share` to "Exp. All". Item fidelity is declared per surface like every
+other family (structured upstream fields `modern-values`; sheet extractions
+`era-restricted`), the loader closes the declaration in both directions, and
+the frozen world neither carries the item surfaces nor owes them.
+
+The registry gained the item entity class behind the same one gate:
+`resolve` falls through species → moves → items, an unknown item fact is
+`IA-2/uncertified-fact` and a fabricated item `IA-3/fabricated-entity`,
+exactly as for species. The inquiry bank's inheritance test holds: every one
+of the 70 item ids its world declared is carried. Claim shapes, pack and
+bank migration are the next legs (port-log rows 4–8); nothing resolves
+through the seam yet — this leg is the world, its pipeline, and its facts.
+
+Provenance: `registry-items.test.ts` (`npm test`); the vendored file carries
+its own commit, digests and document count; the build is reproducible with
+`npm run snapshot:fetch -- --world center` (network). Zero model calls in
+any pipeline; the sheet was authored as a proposal and reviewed in the PR
+that landed it, which is the split §4 prescribes.
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's

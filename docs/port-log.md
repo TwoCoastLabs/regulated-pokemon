@@ -35,9 +35,9 @@ decides it on the divergence and ceremony numbers, not on three questions.
 
 | # | Seam | What lands | Estimate (days) | Actual (days) | PR |
 |---|---|---|---:|---:|---|
-| 1 | Snapshot projection | `snapshot:fetch` projects generation-I items by game index; per-surface fidelity declared; loader closed both ways; drift watch covers it | 4 | | |
-| 2 | Certification pipeline | Prose `effect` → typed facts, with a propose step (model, offline artifact), a human certify step, provenance per fact, and an extraction crucible (an injected fabricated extraction refused at review) | 6 | | |
-| 3 | Fact readers | Item facts (cost, restores, cures, usable-in, steps, catch multiplier, evolves) as registry readers with fidelity classes | 2 | | |
+| 1 | Snapshot projection | `snapshot:fetch` projects generation-I items by game index; per-surface fidelity declared; loader closed both ways; drift watch covers it | 4 | 0.2 | #104 |
+| 2 | Certification pipeline | Prose `effect` → typed facts, with a propose step (model, offline artifact), a human certify step, provenance per fact, and an extraction crucible (an injected fabricated extraction refused at review) | 6 | 0.2 | #104 |
+| 3 | Fact readers | Item facts (cost, restores, cures, usable-in, steps, catch multiplier, evolves) as registry readers with fidelity classes | 2 | 0.1 | #104 |
 | 4 | Claim shapes the bank demanded | `treats` (with the certified negative) and `comparison`, each with derivation, verifier, formatter, crucible mutation and coverage bucket | 5 | | |
 | 5 | Vocabulary widening | Roster criteria over items; item actions in the pack's action registry with consent notices for the irreversible ones | 3 | | |
 | 6 | Pack | Controlled-item gates (the IA-5 analog), disclosures with approved wording, copy catalogue, formatters for the new value kinds, curriculum entries the bank asked for | 4 | | |
@@ -55,6 +55,18 @@ question generalization.md §2 bets on — whether the days went into **data
 authoring** (rows 1, 2, 6, 8) or **kernel edits** (rows 3, 4, 5, 7). If most
 went into kernel edits, the compiled-in-types stance is costing more than it
 claims, and the engine/instance boundary has to move.
+
+### Notes on recorded actuals
+
+- **Rows 1–3 (#104):** ~0.5 working days total, agent-executed with the
+  repo's author reviewing the PR. The estimates priced human days; the
+  ~20× gap is the agent discount **plus** the two stated discounts
+  (pipeline reuse, an author who knows the kernel), and the playbook must
+  not read it as "a port takes half a day" — it reads as "this seam's
+  *irreducible* work is small once the pipeline and the discipline exist."
+  The certification sheet is the honest cost center: authoring 70 reviewed
+  extractions was most of row 2, and it scales with the corpus, not the
+  kernel.
 
 ## How the actuals are recorded
 

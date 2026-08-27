@@ -27,6 +27,7 @@ import {
   STAT_NAMES,
   snapshotContent,
   stableStringify,
+  type SnapshotItem,
 } from "./snapshot-format.js";
 import { AccordError, violation } from "./violation.js";
 
@@ -109,14 +110,53 @@ const MOVE_FACTS: Record<string, (move: SnapshotMove) => FactValue> = {
   "move-effect": (move) => text(move.shortEffect),
 };
 
+/**
+ * Item facts (epic #94, slice 3). Structured fields read straight from the
+ * document; era fields read from the reviewed `certified` block and nowhere
+ * else — a fact the sheet did not certify is unprovable here, not defaulted.
+ * An "absent" is itself certified: "Safari Ball's catch multiplier" resolves
+ * to no value on purpose, because generation I's Safari Zone had its own
+ * mechanics and the modern number would be the wrong era's.
+ */
+const ITEM_FACTS: Record<string, (item: SnapshotItem) => FactValue> = {
+  "item-category": (item) => text(item.category),
+  cost: (item) => number(item.cost),
+  consumable: (item) => boolean(item.consumable),
+  "usable-in-battle": (item) => boolean(item.usableInBattle),
+  "usable-overworld": (item) => boolean(item.usableOverworld),
+  "item-effect": (item) => text(item.shortEffect),
+  "restores-hp": (item) =>
+    item.certified.restoresHp === undefined
+      ? { kind: "absent" }
+      : item.certified.restoresHp === "full"
+        ? text("full")
+        : number(item.certified.restoresHp),
+  cures: (item) => listOrNone([...(item.certified.cures ?? [])]),
+  revives: (item) => (item.certified.revives === undefined ? { kind: "absent" } : text(item.certified.revives)),
+  "restores-pp": (item) =>
+    item.certified.restoresPp === undefined
+      ? { kind: "absent" }
+      : item.certified.restoresPp === "full"
+        ? text("full")
+        : number(item.certified.restoresPp),
+  "pp-scope": (item) => (item.certified.ppScope === undefined ? { kind: "absent" } : text(item.certified.ppScope)),
+  "repel-steps": (item) => optionalNumber(item.certified.repelSteps ?? null),
+  "catch-rate-multiplier": (item) => optionalNumber(item.certified.catchRateMultiplier ?? null),
+  "always-catches": (item) => boolean(item.certified.alwaysCatches === true),
+  evolves: (item) => listOrNone((item.certified.evolves ?? []).map((pair) => `${pair.from} into ${pair.to}`)),
+  "era-name": (item) => (item.certified.eraName === undefined ? { kind: "absent" } : text(item.certified.eraName)),
+};
+
 export const SPECIES_FACT_IDS: readonly string[] = Object.keys(SPECIES_FACTS).sort();
 export const MOVE_FACT_IDS: readonly string[] = Object.keys(MOVE_FACTS).sort();
+export const ITEM_FACT_IDS: readonly string[] = Object.keys(ITEM_FACTS).sort();
 
 export class CertifiedRegistry {
   readonly document: SnapshotDocument;
   readonly snapshot: CertifiedSnapshot;
   private readonly speciesById: ReadonlyMap<string, SnapshotSpecies>;
   private readonly moveById: ReadonlyMap<string, SnapshotMove>;
+  private readonly itemById: ReadonlyMap<string, SnapshotItem>;
   readonly typeNames: ReadonlySet<string>;
 
   /**
@@ -132,6 +172,7 @@ export class CertifiedRegistry {
     };
     this.speciesById = new Map(document.species.map((species) => [species.id, species]));
     this.moveById = new Map(document.moves.map((move) => [move.id, move]));
+    this.itemById = new Map((document.items ?? []).map((item) => [item.id, item]));
     this.typeNames = new Set(document.species.flatMap((species) => species.types));
   }
 
@@ -146,6 +187,19 @@ export class CertifiedRegistry {
 
   get moveIds(): readonly string[] {
     return this.document.moves.map((move) => move.id);
+  }
+
+  /** Every certified item, in upstream id order; empty for item-less worlds. */
+  get items(): readonly SnapshotItem[] {
+    return this.document.items ?? [];
+  }
+
+  get itemIds(): readonly string[] {
+    return (this.document.items ?? []).map((item) => item.id);
+  }
+
+  findItem(itemId: string): SnapshotItem | undefined {
+    return this.itemById.get(itemId);
   }
 
   /** The generation's closed damage chart. Validated complete at load. */
@@ -171,7 +225,7 @@ export class CertifiedRegistry {
   }
 
   knowsEntity(entityId: string): boolean {
-    return this.speciesById.has(entityId) || this.moveById.has(entityId);
+    return this.speciesById.has(entityId) || this.moveById.has(entityId) || this.itemById.has(entityId);
   }
 
   /**
@@ -185,6 +239,9 @@ export class CertifiedRegistry {
 
     const move = this.moveById.get(entityId);
     if (move !== undefined) return apply(MOVE_FACTS, factId, move, entityId, this.snapshot.id);
+
+    const item = this.itemById.get(entityId);
+    if (item !== undefined) return apply(ITEM_FACTS, factId, item, entityId, this.snapshot.id);
 
     return refuse(
       violation(
@@ -235,6 +292,7 @@ export function loadRegistry(input: unknown): Resolution<CertifiedRegistry> {
   const violations = [
     ...checkIntegrity(document),
     ...checkChart(document),
+    ...checkItems(document),
     ...checkFidelity(document),
     ...checkDigest(document),
   ];
@@ -245,8 +303,9 @@ export function loadRegistry(input: unknown): Resolution<CertifiedRegistry> {
 
 /** Every surface the fidelity declaration must cover: each fact id this
  * registry can certify, plus the matchup matrix. */
-export function fidelitySurfaces(): readonly string[] {
-  return [...SPECIES_FACT_IDS, ...MOVE_FACT_IDS, "type-chart"].sort();
+export function fidelitySurfaces(document?: { items?: readonly unknown[] }): readonly string[] {
+  const itemSurfaces = document?.items === undefined ? [] : ITEM_FACT_IDS;
+  return [...SPECIES_FACT_IDS, ...MOVE_FACT_IDS, ...itemSurfaces, "type-chart"].sort();
 }
 
 /**
@@ -269,7 +328,7 @@ function checkFidelity(document: SnapshotDocument): Violation[] {
   }
 
   const violations: Violation[] = [];
-  const surfaces = new Set(fidelitySurfaces());
+  const surfaces = new Set(fidelitySurfaces(document));
   for (const surface of surfaces) {
     if (declared[surface] === undefined) {
       violations.push(
@@ -530,6 +589,76 @@ function checkIntegrity(document: SnapshotDocument): Violation[] {
 }
 
 /** The digest is what makes tampering with the vendored bytes detectable. */
+/**
+ * The items block, validated before it is trusted (epic #94, slice 3).
+ *
+ * The extraction crucible's load-time half: a fabricated or drifted
+ * certification is refused by name here, against the rest of the snapshot.
+ * Cures come from the sheet's closed condition vocabulary; an evolution pair
+ * must exist in the species' own certified evolution edges *with this stone*,
+ * so a stone cannot certify an evolution the world's roster does not carry.
+ * (Provenance-versus-upstream equality is the fetch script's check — the
+ * loader has no network and trusts the vendored bytes only as far as they
+ * agree with themselves.)
+ */
+const STATUS_CONDITIONS: readonly string[] = ["poison", "burn", "freeze", "sleep", "paralysis", "confusion"];
+
+function checkItems(document: SnapshotDocument): Violation[] {
+  const items = document.items;
+  if (items === undefined) return [];
+  const violations: Violation[] = [];
+  if (items.length === 0) {
+    violations.push(violation("IA-2", "items-empty", "the snapshot declares an items block with nothing in it"));
+  }
+  const seen = new Set<string>();
+  const species = new Map(document.species.map((one) => [one.id, one]));
+  for (const item of items) {
+    if (typeof item.id !== "string" || item.id.length === 0) {
+      violations.push(violation("IA-2", "item-unnamed", "an item has no id"));
+      continue;
+    }
+    if (seen.has(item.id)) {
+      violations.push(violation("IA-2", "item-duplicated", `item "${item.id}" appears more than once`, { actual: item.id }));
+    }
+    seen.add(item.id);
+    if (species.has(item.id) || document.moves.some((move) => move.id === item.id)) {
+      violations.push(violation("IA-2", "item-id-collides", `item "${item.id}" collides with another certified entity`, { actual: item.id }));
+    }
+    if (item.certified === null || typeof item.certified !== "object" || typeof item.certified.provenance !== "string" || item.certified.provenance.length === 0) {
+      violations.push(
+        violation("IA-2", "item-uncertified", `item "${item.id}" carries no reviewed extraction provenance`, {
+          expected: "a certified block naming the upstream sentence it was reviewed against",
+          actual: "missing",
+        }),
+      );
+      continue;
+    }
+    for (const cure of item.certified.cures ?? []) {
+      if (!STATUS_CONDITIONS.includes(cure)) {
+        violations.push(
+          violation("IA-2", "item-cure-unknown", `item "${item.id}" certifies curing "${String(cure)}", which is not a status condition`, {
+            expected: STATUS_CONDITIONS.join(", "),
+            actual: String(cure),
+          }),
+        );
+      }
+    }
+    for (const pair of item.certified.evolves ?? []) {
+      const from = species.get(pair.from);
+      const edge = from?.evolvesTo.find((entry) => entry.to === pair.to);
+      if (from === undefined || edge === undefined || edge.trigger !== "use-item" || edge.item !== item.id) {
+        violations.push(
+          violation("IA-2", "item-evolution-unsupported", `item "${item.id}" certifies evolving ${pair.from} into ${pair.to}, which the species records do not support with this item`, {
+            expected: `a use-item edge ${pair.from} -> ${pair.to} via ${item.id}`,
+            actual: from === undefined ? `no species "${pair.from}"` : edge === undefined ? "no such edge" : `${edge.trigger}${edge.item === null ? "" : ` via ${edge.item}`}`,
+          }),
+        );
+      }
+    }
+  }
+  return violations;
+}
+
 function checkDigest(document: SnapshotDocument): Violation[] {
   const recomputed = `sha256:${sha256Hex(stableStringify(snapshotContent(document)))}`;
   if (recomputed === document.contentDigest) return [];
