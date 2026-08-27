@@ -33,6 +33,7 @@ import {
   type SnapshotEncounter,
   type SnapshotEvolution,
   type SnapshotLearnedMove,
+  type SnapshotItem,
   type SnapshotMove,
   type SnapshotSpecies,
   type SnapshotStats,
@@ -51,6 +52,17 @@ const LICENSE_FILE = "data/LICENSE.pokeapi";
 const SNAPSHOT_ID = "kanto-red-blue";
 const POKEDEX_ID = 2;
 const VERSION_GROUP = "red-blue";
+
+/**
+ * The Center world (epic #94, slice 3): the same projection plus the
+ * generation-I items, joined against the reviewed extraction sheet. A second
+ * *file* with its own id, never an edit to the frozen one — records pin
+ * their snapshot by digest, and kanto-red-blue stays on the shelf exactly
+ * as pack v1 did.
+ */
+const CENTER_SNAPSHOT_ID = "kanto-center";
+const CERTIFICATION_SHEET = "../data/certification/center-items.v1.json";
+const GENERATION_I = "generation-i";
 
 const NOTICE =
   "Data derived from the PokeAPI project (BSD-3-Clause). PokeAPI is " +
@@ -99,6 +111,31 @@ const CAVEATS = [
  * certified surface cannot land without declaring how faithfully it tracks
  * the era this snapshot names.
  */
+/**
+ * Item surfaces (center world only). Structured upstream fields are
+ * present-day data certified as this snapshot's content; the sheet's era
+ * extractions are restricted to what generation I supports, reviewed field
+ * by field — era-restricted in both senses the class carries.
+ */
+const ITEM_FIDELITY = {
+  "item-category": "modern-values",
+  cost: "modern-values",
+  consumable: "modern-values",
+  "usable-in-battle": "modern-values",
+  "usable-overworld": "modern-values",
+  "item-effect": "modern-values",
+  "restores-hp": "era-restricted",
+  cures: "era-restricted",
+  revives: "era-restricted",
+  "restores-pp": "era-restricted",
+  "pp-scope": "era-restricted",
+  "repel-steps": "era-restricted",
+  "catch-rate-multiplier": "era-restricted",
+  "always-catches": "era-restricted",
+  evolves: "era-restricted",
+  "era-name": "era-restricted",
+} as const;
+
 const FIDELITY = {
   "pokedex-number": "era-true",
   types: "era-true",
@@ -513,9 +550,113 @@ function encountersOf(document: EncounterDocument): SnapshotEncounter[] {
     .map(([area, versions]) => ({ area, versions: [...versions].sort() }));
 }
 
+// --- the Center world's items ----------------------------------------------
+
+interface SheetEntry {
+  id: string;
+  provenance: string;
+  restoresHp?: number | "full";
+  cures?: readonly string[];
+  revives?: "half" | "full";
+  restoresPp?: number | "full";
+  ppScope?: "one-move" | "all-moves";
+  repelSteps?: number;
+  catchRateMultiplier?: number;
+  alwaysCatches?: boolean;
+  evolves?: readonly { from: string; to: string }[];
+  eraName?: string;
+  notes?: string;
+}
+
+interface CertificationSheet {
+  sheetVersion: number;
+  id: string;
+  note: string;
+  statusConditions: readonly string[];
+  items: readonly SheetEntry[];
+}
+
+interface ItemDocument {
+  id: number;
+  name: string;
+  cost: number;
+  category: { name: string };
+  attributes: readonly { name: string }[];
+  effect_entries: readonly { language: { name: string }; short_effect: string }[];
+  game_indices: readonly { generation: { name: string } }[];
+}
+
+/**
+ * Fetch the generation-I items and join the reviewed extraction sheet.
+ *
+ * The extraction crucible's build-time half, closed in both directions: an
+ * item the sheet certifies that upstream does not carry in this generation
+ * is refused; a generation-I non-machine item the sheet never reviewed is
+ * refused (a world must not quietly grow an uncertified entity); and a
+ * sheet whose provenance sentence no longer matches upstream's is refused
+ * as stale — the certification was reviewed against words that have since
+ * changed, so it is nobody's certification now.
+ */
+async function buildItems(registry: PinnedRegistry): Promise<SnapshotItem[]> {
+  const sheetPath = resolve(dirname(fileURLToPath(import.meta.url)), CERTIFICATION_SHEET);
+  const sheet = JSON.parse(await readFile(sheetPath, "utf8")) as CertificationSheet;
+  const bySheet = new Map(sheet.items.map((entry) => [entry.id, entry]));
+
+  const index = await registry.read<ListDocument>("item");
+  const documents = await mapPooled(index.results, (entry) =>
+    registry.read<ItemDocument>(`item/${idFromUrl(entry.url, "item")}`).catch(() => undefined),
+  );
+  const eraItems = documents
+    .filter((doc): doc is ItemDocument => doc !== undefined)
+    .filter((doc) => doc.game_indices.some((entry) => entry.generation.name === GENERATION_I))
+    .filter((doc) => doc.category.name !== "all-machines")
+    .sort((a, b) => a.id - b.id);
+
+  const upstreamIds = new Set(eraItems.map((doc) => doc.name));
+  for (const entry of sheet.items) {
+    if (!upstreamIds.has(entry.id)) {
+      throw new Error(`certification sheet reviews "${entry.id}", which upstream does not carry as a generation-i non-machine item`);
+    }
+  }
+
+  const items: SnapshotItem[] = [];
+  for (const doc of eraItems) {
+    const certified = bySheet.get(doc.name);
+    if (certified === undefined) {
+      throw new Error(`generation-i item "${doc.name}" has no reviewed extraction in the certification sheet — a world must not grow an uncertified entity`);
+    }
+    const shortEffect = doc.effect_entries.find((entry) => entry.language.name === "en")?.short_effect ?? "";
+    if (certified.provenance !== shortEffect) {
+      throw new Error(
+        `stale certification for "${doc.name}": the sheet was reviewed against "${certified.provenance}", upstream now says "${shortEffect}" — re-review before re-vendoring`,
+      );
+    }
+    for (const cure of certified.cures ?? []) {
+      if (!sheet.statusConditions.includes(cure)) {
+        throw new Error(`certification for "${doc.name}" cures "${cure}", which is not in the sheet's condition vocabulary`);
+      }
+    }
+    const attributes = new Set(doc.attributes.map((entry) => entry.name));
+    const { id: _sheetId, ...certifiedFields } = certified;
+    items.push({
+      id: doc.name,
+      itemId: doc.id,
+      category: doc.category.name,
+      cost: doc.cost,
+      consumable: attributes.has("consumable"),
+      usableInBattle: attributes.has("usable-in-battle"),
+      usableOverworld: attributes.has("usable-overworld"),
+      shortEffect,
+      certified: certifiedFields,
+    });
+  }
+  console.error(`items: ${items.length} generation-i items joined against ${sheet.id}`);
+  return items;
+}
+
 // --- build ------------------------------------------------------------------
 
-async function build(commit: string): Promise<SnapshotDocument> {
+async function build(commit: string, world: "red-blue" | "center" = "red-blue"): Promise<SnapshotDocument> {
   const registry = new PinnedRegistry(commit);
 
   const generations = await registry.read<ListDocument>("generation");
@@ -612,9 +753,11 @@ async function build(commit: string): Promise<SnapshotDocument> {
     return { ...base, machine: machine.item.name };
   });
 
+  const items = world === "center" ? await buildItems(registry) : undefined;
+
   const content = {
     schemaVersion: SNAPSHOT_SCHEMA_VERSION,
-    id: SNAPSHOT_ID,
+    id: world === "center" ? CENTER_SNAPSHOT_ID : SNAPSHOT_ID,
     scope: {
       pokedex: "kanto",
       pokedexId: POKEDEX_ID,
@@ -625,6 +768,7 @@ async function build(commit: string): Promise<SnapshotDocument> {
     typeChart,
     species,
     moves,
+    ...(items === undefined ? {} : { items }),
   } as const;
 
   return {
@@ -639,7 +783,7 @@ async function build(commit: string): Promise<SnapshotDocument> {
       documentCount: registry.documentCount,
       documentsDigest: registry.documentsDigest,
       caveats: CAVEATS,
-      fidelity: FIDELITY,
+      fidelity: world === "center" ? { ...FIDELITY, ...ITEM_FIDELITY } : FIDELITY,
     },
   };
 }
@@ -738,16 +882,23 @@ async function main(): Promise<void> {
     throw new Error("--head and --commit name different things to build from");
   }
 
+  const worldFlag = flagValue(argv, "--world") ?? "red-blue";
+  if (worldFlag !== "red-blue" && worldFlag !== "center") {
+    throw new Error(`--world must be red-blue or center, got ${worldFlag}`);
+  }
+  const world = worldFlag as "red-blue" | "center";
+  const snapshotId = world === "center" ? CENTER_SNAPSHOT_ID : SNAPSHOT_ID;
+
   const commit = againstHead ? await resolveHead() : (flagValue(argv, "--commit") ?? DEFAULT_COMMIT);
   if (!/^[0-9a-f]{40}$/.test(commit)) throw new Error(`--commit must be a 40-character sha: ${commit}`);
 
   const outputPath = resolve(
     dirname(fileURLToPath(import.meta.url)),
-    `../data/snapshots/${SNAPSHOT_ID}.json`,
+    `../data/snapshots/${snapshotId}.json`,
   );
 
-  console.error(`building ${SNAPSHOT_ID} from ${REPOSITORY} @ ${commit}`);
-  const snapshot = await build(commit);
+  console.error(`building ${snapshotId} from ${REPOSITORY} @ ${commit}`);
+  const snapshot = await build(commit, world);
   const serialized = `${JSON.stringify(snapshot, null, 2)}\n`;
   console.error(
     `${snapshot.species.length} species, ${snapshot.moves.length} moves, ` +

@@ -1,5 +1,29 @@
 # Vendored data
 
+Two certified worlds, both narrow checksummed projections of
+[PokeAPI/api-data](https://github.com/PokeAPI/api-data) at the same pinned
+commit. Worlds are versioned like the Accord pack: a filed record pins its
+snapshot by digest, so an existing world is never edited — a new one is a
+new file, and the old stays on the shelf for replay (IA-10).
+
+- **`snapshots/kanto-red-blue.json`** — the original world: species, moves,
+  the type chart. Frozen; the filed evidence base pins it.
+- **`snapshots/kanto-center.json`** — the Center world (epic #94, slice 3):
+  the same species/move projection plus the 70 generation-I non-machine
+  items, joined at build time against the reviewed extraction sheet in
+  `certification/center-items.v1.json`. Structured fields (category, cost,
+  usability flags, effect text) come from upstream as data; era facts (what
+  an item restores, cures, revives; repel steps; catch multipliers;
+  stone evolutions; generation-I names) enter **only** from the sheet — a
+  model may propose an extraction, a human certifies it in review, and the
+  snapshot only ever contains certified values (generalization.md §4). The
+  build refuses, by name: a sheet entry upstream does not carry, a
+  generation-I item the sheet never reviewed, and a certification whose
+  provenance sentence no longer matches upstream (stale review). The loader
+  re-checks the vendored bytes against themselves: closed condition
+  vocabulary, stone evolutions cross-checked against the species records'
+  own edges, ids that collide with other entities.
+
 `snapshots/kanto-red-blue.json` is the certified registry the kernel reasons
 over (IA-2). It is a narrow, checksummed projection of
 [PokeAPI/api-data](https://github.com/PokeAPI/api-data), pinned to one commit
@@ -11,6 +35,7 @@ here as the NOTICE promises.
 
 ```
 npm run snapshot:fetch                       # rebuild from the pinned commit
+npm run snapshot:fetch -- --world center     # rebuild the Center world (items)
 npm run snapshot:fetch -- --check            # verify the vendored file, write nothing
 npm run snapshot:fetch -- --commit <40-sha>  # re-pin to a different commit
 ```

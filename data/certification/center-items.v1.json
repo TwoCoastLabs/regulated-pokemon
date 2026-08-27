@@ -1,0 +1,431 @@
+{
+  "sheetVersion": 1,
+  "id": "center-items-v1",
+  "note": "Certified extractions from upstream item effect prose (generalization.md section 4: a model may propose an extraction, a human certifies it, the snapshot only ever contains certified values). Reviewed field by field in the PR that landed each entry; provenance is the upstream short_effect the extraction was read from, and the fetch script refuses a stale one.",
+  "statusConditions": [
+    "poison",
+    "burn",
+    "freeze",
+    "sleep",
+    "paralysis",
+    "confusion"
+  ],
+  "items": [
+    {
+      "id": "master-ball",
+      "provenance": "Catches a wild Pokémon every time.",
+      "alwaysCatches": true,
+      "notes": "catches without fail in generation I as in the text"
+    },
+    {
+      "id": "ultra-ball",
+      "provenance": "Tries to catch a wild Pokémon.  Success rate is 2×.",
+      "catchRateMultiplier": 2
+    },
+    {
+      "id": "great-ball",
+      "provenance": "Tries to catch a wild Pokémon.  Success rate is 1.5×.",
+      "catchRateMultiplier": 1.5
+    },
+    {
+      "id": "poke-ball",
+      "provenance": "Tries to catch a wild Pokémon.",
+      "catchRateMultiplier": 1
+    },
+    {
+      "id": "safari-ball",
+      "provenance": "Tries to catch a wild Pokémon in the Great Marsh or Safari Zone.  Success rate is 1.5×.",
+      "notes": "generation I Safari Zone uses its own capture mechanics; the modern 1.5x in the upstream text is not certified for this era"
+    },
+    {
+      "id": "potion",
+      "provenance": "Restores 20 HP.",
+      "restoresHp": 20
+    },
+    {
+      "id": "super-potion",
+      "provenance": "Restores 50 HP.",
+      "restoresHp": 50
+    },
+    {
+      "id": "hyper-potion",
+      "provenance": "Restores 200 HP.",
+      "restoresHp": 200
+    },
+    {
+      "id": "max-potion",
+      "provenance": "Restores HP to full.",
+      "restoresHp": "full"
+    },
+    {
+      "id": "full-restore",
+      "provenance": "Restores HP to full and cures any status ailment and confusion.",
+      "restoresHp": "full",
+      "cures": [
+        "poison",
+        "burn",
+        "freeze",
+        "sleep",
+        "paralysis",
+        "confusion"
+      ]
+    },
+    {
+      "id": "fresh-water",
+      "provenance": "Restores 50 HP.",
+      "restoresHp": 50
+    },
+    {
+      "id": "soda-pop",
+      "provenance": "Restores 60 HP.",
+      "restoresHp": 60
+    },
+    {
+      "id": "lemonade",
+      "provenance": "Restores 80 HP.",
+      "restoresHp": 80
+    },
+    {
+      "id": "antidote",
+      "provenance": "Cures poison.",
+      "cures": [
+        "poison"
+      ]
+    },
+    {
+      "id": "burn-heal",
+      "provenance": "Cures a burn.",
+      "cures": [
+        "burn"
+      ]
+    },
+    {
+      "id": "ice-heal",
+      "provenance": "Cures freezing.",
+      "cures": [
+        "freeze"
+      ]
+    },
+    {
+      "id": "awakening",
+      "provenance": "Cures sleep.",
+      "cures": [
+        "sleep"
+      ]
+    },
+    {
+      "id": "paralyze-heal",
+      "provenance": "Cures paralysis.",
+      "cures": [
+        "paralysis"
+      ]
+    },
+    {
+      "id": "full-heal",
+      "provenance": "Cures any status ailment and confusion.",
+      "cures": [
+        "poison",
+        "burn",
+        "freeze",
+        "sleep",
+        "paralysis",
+        "confusion"
+      ]
+    },
+    {
+      "id": "revive",
+      "provenance": "Revives with half HP.",
+      "revives": "half"
+    },
+    {
+      "id": "max-revive",
+      "provenance": "Revives with full HP.",
+      "revives": "full"
+    },
+    {
+      "id": "ether",
+      "provenance": "Restores 10 PP for one move.",
+      "restoresPp": 10,
+      "ppScope": "one-move"
+    },
+    {
+      "id": "max-ether",
+      "provenance": "Restores PP to full for one move.",
+      "restoresPp": "full",
+      "ppScope": "one-move"
+    },
+    {
+      "id": "elixir",
+      "provenance": "Restores 10 PP for each move.",
+      "restoresPp": 10,
+      "ppScope": "all-moves"
+    },
+    {
+      "id": "max-elixir",
+      "provenance": "Restores PP to full for each move.",
+      "restoresPp": "full",
+      "ppScope": "all-moves"
+    },
+    {
+      "id": "repel",
+      "provenance": "For 100 steps, prevents wild encounters of level lower than your party’s lead Pokémon.",
+      "repelSteps": 100
+    },
+    {
+      "id": "super-repel",
+      "provenance": "For 200 steps, prevents wild encounters of level lower than your party’s lead Pokémon.",
+      "repelSteps": 200
+    },
+    {
+      "id": "max-repel",
+      "provenance": "For 250 steps, prevents wild encounters of level lower than your party’s lead Pokémon.",
+      "repelSteps": 250
+    },
+    {
+      "id": "moon-stone",
+      "provenance": "Evolves a Clefairy into Clefable, a Jigglypuff into Wigglytuff, a Munna into Musharna, a Nidorina into Nidoqueen, a Nidorino into Nidoking, or a Skitty into Delcatty.",
+      "evolves": [
+        {
+          "from": "clefairy",
+          "to": "clefable"
+        },
+        {
+          "from": "jigglypuff",
+          "to": "wigglytuff"
+        },
+        {
+          "from": "nidorina",
+          "to": "nidoqueen"
+        },
+        {
+          "from": "nidorino",
+          "to": "nidoking"
+        }
+      ]
+    },
+    {
+      "id": "fire-stone",
+      "provenance": "Evolves an Eevee into Flareon, a Growlithe into Arcanine, a Pansear into Simisear, or a Vulpix into Ninetales.",
+      "evolves": [
+        {
+          "from": "eevee",
+          "to": "flareon"
+        },
+        {
+          "from": "growlithe",
+          "to": "arcanine"
+        },
+        {
+          "from": "vulpix",
+          "to": "ninetales"
+        }
+      ]
+    },
+    {
+      "id": "thunder-stone",
+      "provenance": "Evolves an Eelektrik into Eelektross, an Eevee into Jolteon, or a Pikachu into Raichu.",
+      "evolves": [
+        {
+          "from": "eevee",
+          "to": "jolteon"
+        },
+        {
+          "from": "pikachu",
+          "to": "raichu"
+        }
+      ]
+    },
+    {
+      "id": "water-stone",
+      "provenance": "Evolves an Eevee into Vaporeon, a Lombre into Ludicolo, a Panpour into Simipour, a Poliwhirl into Poliwrath, a Shellder into Cloyster, or a Staryu into Starmie.",
+      "evolves": [
+        {
+          "from": "eevee",
+          "to": "vaporeon"
+        },
+        {
+          "from": "poliwhirl",
+          "to": "poliwrath"
+        },
+        {
+          "from": "shellder",
+          "to": "cloyster"
+        },
+        {
+          "from": "staryu",
+          "to": "starmie"
+        }
+      ]
+    },
+    {
+      "id": "leaf-stone",
+      "provenance": "Evolves an Exeggcute into Exeggutor, a Gloom into Vileplume, a Nuzleaf into Shiftry, a Pansage into Simisage, or a Weepinbell into Victreebel.",
+      "evolves": [
+        {
+          "from": "exeggcute",
+          "to": "exeggutor"
+        },
+        {
+          "from": "gloom",
+          "to": "vileplume"
+        },
+        {
+          "from": "weepinbell",
+          "to": "victreebel"
+        }
+      ]
+    },
+    {
+      "id": "x-sp-atk",
+      "provenance": "Raises Special Attack by one stage in battle.  Raises happiness.",
+      "eraName": "X Special"
+    },
+    {
+      "id": "exp-share",
+      "provenance": "Held: Half the experience from a battle is split between Pokémon holding this item.",
+      "eraName": "Exp. All",
+      "notes": "the upstream text describes the later held-item mechanic; generation I's Exp. All splits experience across the whole party from the bag"
+    },
+    {
+      "id": "dowsing-machine",
+      "provenance": "Use to find hidden items on the field. AKA Itemfinder.",
+      "eraName": "Item Finder"
+    },
+    {
+      "id": "hp-up",
+      "provenance": "Raises HP effort and happiness."
+    },
+    {
+      "id": "protein",
+      "provenance": "Raises Attack effort and happiness."
+    },
+    {
+      "id": "iron",
+      "provenance": "Raises Defense effort and happiness."
+    },
+    {
+      "id": "carbos",
+      "provenance": "Raises Speed effort and happiness."
+    },
+    {
+      "id": "calcium",
+      "provenance": "Raises Special Attack effort and happiness."
+    },
+    {
+      "id": "rare-candy",
+      "provenance": "Causes a level-up and raises happiness."
+    },
+    {
+      "id": "pp-up",
+      "provenance": "Raises a move’s max PP by 20%."
+    },
+    {
+      "id": "guard-spec",
+      "provenance": "Prevents stat changes in battle for five turns in battle.  Raises happiness."
+    },
+    {
+      "id": "dire-hit",
+      "provenance": "Increases the chance of a critical hit in battle.  Raises happiness."
+    },
+    {
+      "id": "x-attack",
+      "provenance": "Raises Attack by one stage in battle.  Raises happiness."
+    },
+    {
+      "id": "x-defense",
+      "provenance": "Raises Defense by one stage in battle.  Raises happiness."
+    },
+    {
+      "id": "x-speed",
+      "provenance": "Raises Speed by one stage in battle.  Raises happiness."
+    },
+    {
+      "id": "x-accuracy",
+      "provenance": "Raises accuracy by one stage in battle.  Raises happiness."
+    },
+    {
+      "id": "poke-doll",
+      "provenance": "Ends a wild battle."
+    },
+    {
+      "id": "escape-rope",
+      "provenance": "Transports user to the outside entrance of a cave."
+    },
+    {
+      "id": "nugget",
+      "provenance": "Sell for 5000 Pokédollars, or to Ore Collector for 10000 Pokédollars."
+    },
+    {
+      "id": "helix-fossil",
+      "provenance": "Can be revived into an Omanyte."
+    },
+    {
+      "id": "dome-fossil",
+      "provenance": "Can be revived into a Kabuto."
+    },
+    {
+      "id": "old-amber",
+      "provenance": "Can be revived into an Aerodactyl."
+    },
+    {
+      "id": "town-map",
+      "provenance": "Use to see the overworld map."
+    },
+    {
+      "id": "coin-case",
+      "provenance": "Holds coins for the Game Corner."
+    },
+    {
+      "id": "old-rod",
+      "provenance": "Used to catch Pokémon in bodies of water."
+    },
+    {
+      "id": "good-rod",
+      "provenance": "Used to catch Pokémon in bodies of water."
+    },
+    {
+      "id": "super-rod",
+      "provenance": "Used to catch Pokémon in bodies of water."
+    },
+    {
+      "id": "bicycle",
+      "provenance": "Use for fast transit."
+    },
+    {
+      "id": "ss-ticket",
+      "provenance": "Ticket for a ship. (RSE: S.S. Tidal LF: S.S. Anne HG: S.S. Aqua)"
+    },
+    {
+      "id": "parcel",
+      "provenance": "Given to the trainer’s rival in Jubilife City. Contains Town Maps."
+    },
+    {
+      "id": "secret-key",
+      "provenance": "Gen IV: The key to Rotom’s appliance room. Gen III: The key to Cinnabar Gym."
+    },
+    {
+      "id": "card-key",
+      "provenance": "HS: Opens doors in the Radio Tower. Gen III: Unlocks Silph Co Doors."
+    },
+    {
+      "id": "poke-flute",
+      "provenance": "Use to awaken sleeping Pokémon, including Snorlax on roads."
+    },
+    {
+      "id": "bike-voucher",
+      "provenance": "Trade in Cerulean bike shop for a Bicycle."
+    },
+    {
+      "id": "gold-teeth",
+      "provenance": "The Safari Zone Warden’s dentures. Trade for HM04 (Strength)."
+    },
+    {
+      "id": "lift-key",
+      "provenance": "Operates the elevator in Team Rocket’s Celadon Hideout."
+    },
+    {
+      "id": "silph-scope",
+      "provenance": "Used to identify the true forms of ghosts in Pokémon Tower."
+    }
+  ]
+}
