@@ -50,8 +50,14 @@ export const SCOPE_DIMENSIONS: readonly ScopeDimension[] = [
 export interface RestrictionRule {
   id: string;
   article: ArticleId;
-  rarity: "legendary" | "mythical";
-  /** Minimum badge level a trainer must hold to be recommended one. */
+  /**
+   * What the rule gates: a species rarity, or — since the Center world
+   * (epic #94, slice 3) — an item category. Exactly one, validated at load:
+   * a rule about both would gate two universes with one sentence, and a rule
+   * about neither gates nothing while looking like policy.
+   */
+  rarity?: "legendary" | "mythical";
+  itemCategory?: string;
   minimumBadgeLevel: number;
 }
 
@@ -120,16 +126,17 @@ export interface DisclosureBlockRule {
  * Anything richer would be the transformation engine this design exists to
  * avoid.
  */
-export type ExhibitSlotSource = "snapshot-id" | "action-entity" | "action-entity-learnset";
+export type ExhibitSlotSource = "snapshot-id" | "action-entity" | "action-entity-learnset" | "action-entity-effect";
 
 export const EXHIBIT_SLOT_SOURCES: readonly ExhibitSlotSource[] = [
   "snapshot-id",
   "action-entity",
   "action-entity-learnset",
+  "action-entity-effect",
 ];
 
 /** Sources that only mean anything for a disclosure attached to an act. */
-const ACTION_SLOT_SOURCES: readonly ExhibitSlotSource[] = ["action-entity", "action-entity-learnset"];
+const ACTION_SLOT_SOURCES: readonly ExhibitSlotSource[] = ["action-entity", "action-entity-learnset", "action-entity-effect"];
 
 export interface ExhibitSlotRule {
   /** Unique within the exhibit; the mark the renderer places. */
@@ -576,6 +583,25 @@ function checkRules(pack: AccordPack, registry: CertifiedRegistry): Violation[] 
   }
 
   for (const rule of pack.restrictions) {
+    const gates = [rule.rarity !== undefined, rule.itemCategory !== undefined].filter(Boolean).length;
+    if (gates !== 1) {
+      violations.push(
+        violation("IA-5", "pack-restriction-ungated", `restriction "${rule.id}" must gate exactly one of a rarity or an item category`, {
+          expected: "rarity xor itemCategory",
+          actual: `rarity=${String(rule.rarity)}, itemCategory=${String(rule.itemCategory)}`,
+        }),
+      );
+    }
+    if (rule.itemCategory !== undefined && !registry.items.some((item) => item.category === rule.itemCategory)) {
+      // A gate on a category no item carries can never fire — policy that
+      // measures nothing, refused exactly as an empty display floor is.
+      violations.push(
+        violation("IA-5", "pack-restriction-category-unknown", `restriction "${rule.id}" gates "${rule.itemCategory}", which no certified item carries`, {
+          expected: [...new Set(registry.items.map((item) => item.category))].sort().join(", ") || "a world with items",
+          actual: rule.itemCategory,
+        }),
+      );
+    }
     if (
       !Number.isInteger(rule.minimumBadgeLevel) ||
       rule.minimumBadgeLevel < 0 ||
@@ -1076,6 +1102,11 @@ export function restrictionsFor(
   species: { isLegendary: boolean; isMythical: boolean },
 ): readonly RestrictionRule[] {
   return pack.restrictions.filter((rule) =>
-    rule.rarity === "legendary" ? species.isLegendary : species.isMythical,
+    rule.rarity === undefined ? false : rule.rarity === "legendary" ? species.isLegendary : species.isMythical,
   );
+}
+
+/** The rules gating an item, by its certified category (epic #94, slice 3). */
+export function itemRestrictionsFor(pack: AccordPack, item: { category: string }): readonly RestrictionRule[] {
+  return pack.restrictions.filter((rule) => rule.itemCategory !== undefined && rule.itemCategory === item.category);
 }

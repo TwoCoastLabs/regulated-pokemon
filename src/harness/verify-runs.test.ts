@@ -19,6 +19,7 @@ import { join, relative, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { demoWorld } from "../demo/files.js";
+import { centerRegistry } from "../testing/fixtures.js";
 import { REQUIRED_DIMENSIONS } from "../kernel/scope.js";
 import { runTransaction } from "../kernel/transaction.js";
 import { COMMIT_TIME, ISSUED_AT, LOCALE, trainerTranscript } from "../testing/fixtures.js";
@@ -33,10 +34,16 @@ const world = demoWorld();
  * pack it was pinned to, not under whatever the pack has since become. */
 function carriedPacks(): ReadonlyMap<string, ReturnType<typeof world.pack extends infer T ? () => T : never>> {
   const packs = new Map();
+  // A pack belongs with its world: the Center pack gates item categories the
+  // red-blue registry does not carry, so each pack file is validated against
+  // the first carried registry that accepts it. A pack no registry accepts is
+  // a real load failure, thrown loudly.
+  const registries = [world.registry, centerRegistry()];
   for (const entry of readdirSync(PACKS_DIR)) {
     if (!entry.endsWith(".json")) continue;
-    const loaded = loadPack(JSON.parse(readFileSync(join(PACKS_DIR, entry), "utf8")), world.registry);
-    if (!loaded.ok) throw new Error(`pack ${entry} does not load`);
+    const parsed = JSON.parse(readFileSync(join(PACKS_DIR, entry), "utf8"));
+    const loaded = registries.map((registry) => loadPack(parsed, registry)).find((attempt) => attempt.ok);
+    if (loaded === undefined || !loaded.ok) throw new Error(`pack ${entry} does not load against any carried world`);
     packs.set(loaded.value.id, loaded.value);
   }
   return packs;

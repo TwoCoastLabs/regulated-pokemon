@@ -9,7 +9,7 @@ import { resolve } from "node:path";
 import type { ScopeGrant, ScopeTranscript } from "../kernel/contracts.js";
 import type { ManifestContext } from "../kernel/manifest.js";
 import { readPack } from "../kernel/files.js";
-import { type AccordPack } from "../kernel/pack.js";
+import { type AccordPack, loadPack } from "../kernel/pack.js";
 import { CertifiedRegistry, loadRegistry } from "../kernel/registry.js";
 import { candidateDigest, establishScope } from "../kernel/scope.js";
 import type { SnapshotDocument } from "../kernel/snapshot-format.js";
@@ -130,9 +130,25 @@ export function centerRegistry(): CertifiedRegistry {
   return centerCache;
 }
 
-/** The manifest context over the Center world — same pack, grant and clock. */
+export const CENTER_PACK_PATH = resolve(import.meta.dirname, "../../data/accord-pack/center-v1.json");
+
+let centerPackCache: AccordPack | undefined;
+
+/** The Center's own Accord pack (epic #94, slice 3, PR 3): the same articles,
+ * plus controlled-item gates, item acts with their consent notice, the
+ * Center curriculum, and a comparison basis that knows about money. */
+export function centerPack(): AccordPack {
+  if (centerPackCache === undefined) {
+    const loaded = loadPack(JSON.parse(readFileSync(CENTER_PACK_PATH, "utf8")), centerRegistry());
+    if (!loaded.ok) throw new AccordError(loaded.violations);
+    centerPackCache = loaded.value;
+  }
+  return centerPackCache;
+}
+
+/** The manifest context over the Center world — its own pack, same grant and clock. */
 export function centerContext(badgeLevel = 8): ManifestContext {
-  return { ...manifestContext(badgeLevel), registry: centerRegistry() };
+  return { ...manifestContext(badgeLevel), registry: centerRegistry(), pack: centerPack() };
 }
 
 /**

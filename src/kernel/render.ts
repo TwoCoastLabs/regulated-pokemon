@@ -666,6 +666,9 @@ function exhibitSlotValue(
     };
   }
   if (source === "action-entity") return { ok: true, value: { kind: "text", value: entityId } };
+  // What the acted-on item does, in the certified world's own words — the
+  // consent notice's substance when the act consumes something permanent.
+  if (source === "action-entity-effect") return context.registry.resolve(entityId, "item-effect");
   return context.registry.resolve(entityId, "learnset");
 }
 

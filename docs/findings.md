@@ -2745,6 +2745,52 @@ zero dollars.
 
 ---
 
+### Iteration 37 — the Center's own pack: controlled items, consented item acts, and a comparison basis that knows about money
+
+Slice 3 of epic #94, third leg (port-log row 6 plus row 5's remainder):
+`data/accord-pack/center-v1.json`, id `pokemon-center-v1` — the Center world's
+own rulebook, a fourth pack on the shelf beside the three the filed records
+pin.
+
+- **Controlled items are the IA-5 analog made literal.** Restriction rules
+  gained a second discriminator — a rarity *or* an item category, exactly one,
+  validated at load (a rule about both would gate two universes with one
+  sentence; a rule about neither is policy that measures nothing, refused like
+  an empty display floor). Vitamins gate at badge 4, battle boosters at 3;
+  `checkRecommendation`/`checkAction` fall through species → item and a
+  two-badge trainer recommended Protein is denied `IA-5/restricted-item` —
+  crucible phase 7's new mutation, IA-5's row 3 → 4.
+- **Item acts, with consent where it is owed.** `use-item` (reversible) and
+  `use-permanent-item` (irreversible) join the action registry; the
+  irreversible one triggers a consent exhibit whose substance is drawn from
+  the certified world itself — a new exhibit slot source,
+  `action-entity-effect`, reads the acted-on item's certified effect text, so
+  the notice names the item *and what the records say it does*, never what a
+  renderer felt like saying.
+- **Five curriculum lessons** the bank asked for (PP, status ailments, stat
+  stages, faint-versus-sleep, HP-and-damage), digest-pinned like every
+  reviewed text; **sentence templates** for `treats` and `comparison`, so the
+  Center's certified pages speak its new claims; and the **comparison basis
+  learns `cost`** — the vocabulary widening that makes item rankings
+  establishable scope, which PR 2 deliberately waited for.
+- **A pack belongs with its world.** The replay sweep's pack shelf now
+  validates each pack against the first carried registry that accepts it: the
+  Center pack's category gates cannot validate against a world with no items,
+  and forcing them to would have been the wrong world's veto.
+
+The digests are self-verified at authoring: the generator recomputes an
+existing block's digest and refuses to write if the recipe disagrees with
+what the loader accepts. Zero model calls; the pack loads against
+`kanto-center` in CI (`centerPack()` in the fixtures, now the pack behind
+`centerContext`).
+
+Remaining in slice 3: the bank migration with its oracles and the harness
+wiring (world selection, the answer grammar and prompt learning the new
+kinds, retrieval over items) — the next leg, after which the disposition map
+can be paid for once.
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's
