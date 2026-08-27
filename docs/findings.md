@@ -2448,6 +2448,67 @@ billable N=3 leg is still deferred to a go-ahead.
 
 ---
 
+### Iteration 32 — chat-versus-certificate divergence, measured: 8–11% on shared ground, and every named collision is an era-fidelity collision
+
+Slice 2 of epic #94 (absorbing #87 slice 4), free and offline. The
+sales-call/prospectus split is deliberate: the certificate is verified and is
+the product; the ungoverned reply beside it may charm and carries none. The
+visitor reads both, and no number existed for how often the two contradict.
+Now one does (`src/harness/divergence.ts`): a pure pass over a filed
+artifact that pairs each raw-arm answer with the governed certificate of the
+*same model on the same exchange*, folds names canonically (a spelling is
+not a divergence), and compares every asserted fact about an entity the
+certificate is about — claim subjects plus the visible roster members —
+against the certified value.
+
+| Artifact | Exchanges with both legs | Comparable asserted facts | Diverge |
+|---|---:|---:|---:|
+| N=1 two-scenario (`2026-08-12T09-22…`) | 15 | 19 | **2 (11%)** |
+| N=3 seven-scenario (`2026-08-12T09-31…`) | 44 | 53 | **4 (8%)** |
+
+Both numbers are **recall-gated floors**: only a raw `fact` claim with an
+asserted value on shared ground is comparable; prose is not in the record,
+and stated counts/rankings are metered elsewhere.
+
+**Every named divergence is the same phenomenon: the eras colliding.** The
+strong model's three (all three repetitions — a *stable* recall, not
+sampling noise) say Electrode's Speed is **140**: the generation-I value,
+where the snapshot's base stats are declared `modern-values` (iteration 27)
+and certify 150. The weak model's one says Thunderbolt's power is **90**:
+the modern value, where the snapshot is era-true (`past_values`) and
+certifies 95. Neither model invented a number — each recited a true value
+*of the other era*. The divergence risk and the fidelity declaration are one
+subject: the chat pane speaks from the training set's blend of eras, the
+certificate from one pinned world, and where the eras differ the two *will*
+disagree on the page at a measurable rate. That is exactly the "approved
+product master as of Q3 beside today's prices" hazard generalization.md §4
+names, observed in the wild.
+
+Two structural notes from the pass. The adversarial arm contributes nothing
+by construction — its governed leg released no certificate, so there is
+nothing on the page to diverge from; an arm that is all denials has no
+divergence surface. And zero raw assertions fell outside the certificate's
+entity set on these artifacts (`rawOnly: 0`): on this corpus the ungoverned
+model talks about the same things the certificate shows, which makes the
+shared-ground rate the whole story rather than a corner of it.
+
+**The reading for slice 4 (H6, certified surface realisation).** An 8–11%
+contradiction rate on shared ground, stable across repetitions for one
+value, is not noise — a visitor who reads both surfaces will meet a
+contradiction roughly once per dozen asserted facts. For this demo the split
+plus this filed number is an honest posture: the essay can now *quantify*
+the caveat instead of hand-waving it. For a vertical where every visible
+surface must be governed, this is the number that makes ungoverned prose
+beside a certificate unshippable — the H6 decision input the epic asked slice
+2 to produce, and the era-fidelity link sharpens it: H6 would not just make
+the prose safe, it would make the *era* consistent across the page.
+
+Provenance: `divergence.test.ts` pins every cell and point above over the
+two committed artifacts (`npm test`); the Markdown is `renderDivergence`
+over the artifact, never hand-transcribed. Zero model calls, zero dollars.
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's
