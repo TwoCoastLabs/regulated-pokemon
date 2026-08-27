@@ -118,8 +118,26 @@ export const RETRIEVAL_SPECIES_CAP = 40;
  * assumed to be none.
  */
 export function retrieveReference(registry: CertifiedRegistry, question: string): string {
+  return certifiedReference(registry, retrievalSelection(registry, question));
+}
+
+/**
+ * The rows retrieval would pull for a question — the selection behind
+ * {@link retrieveReference}, exposed so the activation instrument (epic #94,
+ * slice 1) can ask *whether the front door engaged* without rendering a
+ * reference. Same lexical rule, same cap, same order; the two cannot drift
+ * because one is defined by the other.
+ */
+export function retrievalSelection(registry: CertifiedRegistry, question: string): Required<ReferenceSelection> {
   const haystack = ` ${question.toLowerCase()} `;
-  const names = (token: string): boolean => new RegExp(`\\b${escapeForRegExp(token.toLowerCase())}\\b`).test(haystack);
+  // A canonical id is hyphenated ("fire-blast", "self-destruct"); a trainer
+  // writes "Fire Blast" or "Selfdestruct". Each hyphen may be a space, a
+  // hyphen, or nothing at all in the question — the same fold the decoder
+  // applies to a model's spelling of a name (docs/recovery.md, channel 1),
+  // applied here to the trainer's. Found by the activation instrument (epic
+  // #94, slice 1): every canonical miss was a multi-word move.
+  const names = (token: string): boolean =>
+    new RegExp(`\\b${token.toLowerCase().split("-").map(escapeForRegExp).join("[\\s-]?")}\\b`).test(haystack);
 
   const species = new Set<string>();
   for (const id of registry.speciesIds) if (names(id)) species.add(id);
@@ -142,7 +160,7 @@ export function retrieveReference(registry: CertifiedRegistry, question: string)
   // Cap in Pokédex order (registry.species is already ordered), so a run
   // replays and a pathological match cannot balloon the prompt.
   const capped = new Set(registry.species.filter((one) => species.has(one.id)).slice(0, RETRIEVAL_SPECIES_CAP).map((one) => one.id));
-  return certifiedReference(registry, { species: capped, moves });
+  return { species: capped, moves };
 }
 
 function escapeForRegExp(value: string): string {
