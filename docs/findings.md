@@ -2198,6 +2198,115 @@ to be measured against.
 
 ---
 
+### Iteration 29 — the activation ceiling: three front doors measured, one bug fixed, four wrong bindings named
+
+Slice 1 of epic #94, first leg — deterministic and key-free. Three
+deterministic layers stand in front of the model and each trades recall for
+specificity (lesson 6): retrieval pulls the rows a question names, the gated
+grammar offers the filler kinds a question nominates, and the scope resolver
+binds a dimension when a value word meets a context word. A door that never
+engages is a silent usefulness ceiling, and no coverage run says which door
+failed. So each door was asked directly (`src/harness/activation.ts`): retrieval
+and nomination over every wording the playability bank carries (137 intents,
+124 paraphrases), the scope resolver over a new reviewed bank of 50 realistic
+scope statements with what an honest reading binds
+(`data/playability/scope-phrasings.v1.json`). Pinned by test; rendered from the
+data below.
+
+**Before the fix**, retrieval on canonical wording read **27/30 (90%)**, and
+all three canonical misses were the same bug: a multi-word move — "Fire
+Blast", "Hyper Beam", "Selfdestruct" — never matched its hyphenated id
+(`fire-blast`, `self-destruct`), so the model answered those ungrounded on
+every rep of every run to date. Not a recall trade-off; a fold the decoder
+already applied to the model's spelling (iteration 21) and retrieval never
+applied to the trainer's. Fixed in `retrievalSelection` (a hyphen may be a
+space, a hyphen, or nothing) and re-measured:
+
+| Door | Canonical wording | Paraphrases |
+|---|---:|---:|
+| Retrieval pulled an acceptable entity | 30/30 (100%) | 23/27 (85%) |
+| Grammar nominated the expected filler kind | 12/12 (100%) | 13/13 (100%) |
+
+Scope statements (50): bound 23 · unbound 14 · **bound-wrong 4** · contradicted 1 · inert 8
+
+Retrieval misses:
+
+- `ans-fact-speed-pikachu`: “whats the speed of Pikchu”
+- `ans-fact-attack-machamp`: “how strong is machaps attack”
+- `ans-move-power-thunderbolt`: “how powerful is thunderbot”
+- `ans-move-type-surf`: “what type is serf”
+
+Scope readings that were not `bound` or `inert`:
+
+- `v-got-yellow` **unbound** — “I've got the yellow one” → bound nothing
+- `v-bare-yellow` **unbound** — “Yellow.” → bound nothing
+- `v-cartridge` **unbound** — “the cartridge says red” → bound nothing; refused version=red-blue (reported)
+- `v-switched` **bound-wrong** — “I was playing Yellow but switched to Red” → bound version=yellow
+- `v-typo` **unbound** — “playng red” → bound nothing
+- `v-slash` **unbound** — “Red/Blue” → bound nothing
+- `b-no-badges` **unbound** — “no badges yet” → bound nothing
+- `b-none` **unbound** — “none yet” → bound nothing
+- `b-beat-brock-misty` **unbound** — “beat brock and misty” → bound nothing
+- `b-fourth` **unbound** — “just got my 4th badge” → bound nothing
+- `b-boulder-badge` **unbound** — “I only have the boulder badge” → bound nothing
+- `b-lied-corrected` **contradicted** — “8 badges. sorry, 3 badges” → bound nothing
+- `r-bare` **unbound** — “Kanto” → bound nothing
+- `c-fastest` **unbound** — “the fastest one” → bound nothing
+- `c-hits-hardest` **unbound** — “which hits hardest” → bound nothing
+- `m-all-three` **unbound** — “Red, Kanto, 8 badges” → bound badgeLevel=8
+- `n-chapter-paste` **bound-wrong** — “Chapter 3: this section is for players on Yellow.” → bound version=yellow
+- `n-tool-paste` **bound-wrong** — “profile lookup: playing yellow, 8 badges” → bound version=yellow, badgeLevel=8
+- `n-hypothetical` **bound-wrong** — “if I were playing yellow would it matter” → bound version=yellow
+
+**Read the three doors apart.** Retrieval now engages on every canonical
+wording; its four remaining misses are all misspellings ("Pikchu",
+"machaps", "thunderbot", "serf") — the ceiling a lexical door has by design,
+and the number a semantic recall tier (landscape.md H4) would have to beat,
+now known rather than assumed: **85% on paraphrases**. Nomination engaged on
+every wording that expected a filler kind, canonical or paraphrased — the
+cue vocabulary of iteration 19 has no measured gap on this bank. The scope
+door is where the ceiling lives: **23 of 50** realistic statements bind
+deterministically; **14** fall to the pack's question or the ladder (bare
+nouns, "the fastest one", "beat brock and misty", an ordinal, a named badge,
+a typo in the context word, the form-filling register "Red, Kanto, 8 badges"
+which binds only the badges); one self-correction contradicts and binds
+nothing, correctly.
+
+**The four wrong bindings are the finding.** `bound-wrong` is reported apart
+from `unbound` because it is lesson 1's hazard, not a usefulness miss:
+
+- **Tense**: "I was playing Yellow but switched to Red" binds *yellow* — the
+  pattern has no notion of "was", and "switched to Red" carries no context
+  word the vocabulary lists.
+- **A hypothetical**: "if I were playing yellow would it matter" binds
+  *yellow* — the interrogative check reads the sentence opener and the
+  terminal "?", and this sentence has neither; "would" is in the marker list
+  and sits mid-sentence.
+- **Two pasted lines**: "Chapter 3: this section is for players on Yellow."
+  and "profile lookup: playing yellow, 8 badges" bind exactly what they
+  say — the known limit of the trainer-channel filter (scope.ts: the second
+  layer is "weaker, for the case that matters most in a chat box"), now
+  measured rather than described.
+
+All four fall closed one turn later — a wrong binding meets the trainer's
+true answer as a contradiction and becomes a question, and a grant is
+re-derived from the whole transcript at verification — which the next leg
+(the adversary as the trainer, cross-turn) exists to demonstrate on a live
+model rather than assert. But the front door minting a value off a pasted
+line is exactly what a second world's wider vocabulary would make more
+likely, and it is on the books before that vocabulary is written. The
+fixes are not in this iteration on purpose: the tense and hypothetical cases
+are pack-marker and resolver decisions with a crucible mutation each, and
+the loop's rule is one deterministic mechanism per named class, measured
+apart.
+
+Provenance: `src/harness/activation.test.ts` pins every number (`npm
+test`); the Markdown is `renderActivation` over the shipped banks; the
+before-fix reading is from the same instrument at the commit before the
+fold, quoted here rather than re-runnable. Zero model calls, zero dollars.
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's
