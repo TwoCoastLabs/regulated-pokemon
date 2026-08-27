@@ -381,3 +381,57 @@ describe("the adversary as the trainer (epic #94, slice 1)", () => {
     });
   });
 });
+
+describe("the repetition discipline reaches dialogues (epic #94, slice 5)", () => {
+  it("samples every conversation N times, stamps the pass, and the band instrument reads it", async () => {
+    const entry: DialogueEntry = {
+      id: "rep-facts",
+      profile: { version: "red-blue", region: "kanto", badgeLevel: 8 },
+      turns: [
+        { say: "What's Pikachu's Speed stat?", disposition: "answerable", expectClaimKinds: ["fact"] },
+        { say: "What is Onix's Defense?", disposition: "answerable", expectClaimKinds: ["fact"] },
+      ],
+    };
+    const provider = perTurn([
+      ["Pikachu", fact("pikachu", "base-speed")],
+      ["Onix", fact("onix", "base-defense")],
+    ]);
+    const runs = await runDialogues(world, [entry], provider, clock, false, false, false, false, 3);
+    expect(runs.map((run) => run.repetition)).toEqual([0, 1, 2]);
+    // Two samples are two records: fresh clocks mean distinct transaction ids.
+    const ids = runs.flatMap((run) => run.turns.map((turn) => turn.run.transaction?.id).filter(Boolean));
+    expect(new Set(ids).size).toBe(ids.length);
+
+    const { dialogueCoverage } = await import("./dialogue-coverage.js");
+    const coverage = dialogueCoverage(runs);
+    // The single-turn stability instrument reads the dialogue samples for free.
+    expect(coverage.map.repetition?.repetitions).toBe(3);
+    expect(coverage.map.repetition?.entries).toBe(2);
+    // The ceremony table carries one row per conversation per pass.
+    expect(coverage.ceremony.map((item) => [item.dialogueId, item.repetition])).toEqual([
+      ["rep-facts", 0],
+      ["rep-facts", 1],
+      ["rep-facts", 2],
+    ]);
+  });
+
+  it("reads the trainer's ceremony from each turn's own slice of the record", async () => {
+    const entry: DialogueEntry = {
+      id: "ceremony-read",
+      profile: { version: "red-blue", region: "kanto", badgeLevel: 8 },
+      turns: [
+        // Turn one pays the version question; turn two reuses the grant.
+        { say: "What's Pikachu's Speed stat?", disposition: "answerable", expectClaimKinds: ["fact"] },
+        { say: "What is Onix's Defense?", disposition: "answerable", expectClaimKinds: ["fact"] },
+      ],
+    };
+    const provider = perTurn([
+      ["Pikachu", fact("pikachu", "base-speed")],
+      ["Onix", fact("onix", "base-defense")],
+    ]);
+    const run = await runDialogue(world, entry, provider, clock());
+    expect(run.turns[0]!.ceremony?.questions).toBeGreaterThanOrEqual(1);
+    expect(run.turns[1]!.ceremony?.questions).toBe(0); // the reused grant is what makes turn two cheap
+    expect(run.turns[1]!.ceremony?.actCards).toBe(0);
+  });
+});

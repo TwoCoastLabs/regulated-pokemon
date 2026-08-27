@@ -231,9 +231,9 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
   if (args.dialogues && args.dispositions !== undefined) {
     args.errors.push("--dispositions filters single-turn questions; a dialogue's disposition is per turn, not per conversation");
   }
-  if (args.dialogues && args.repetitions > 1) {
-    args.errors.push("--repetitions is a single-turn dial; a dialogue is one scripted conversation, run once");
-  }
+  // --dialogues --repetitions is allowed since epic #94 slice 5: a
+  // deterministic script is not a deterministic model (§21/§22), and the
+  // cross-turn zero deserves the same band the single-turn one has.
   if (args.grounded && args.phrasings) {
     args.errors.push("--grounded is not threaded through the robustness pass; run it on the coverage or dialogue banks");
   }
@@ -402,7 +402,8 @@ async function runDialogueMode(args: CoverageArgs, options: CoverageOptions, mod
       lines: [
         "Playability dialogue coverage — DRY RUN (nothing billed).",
         `  bank:          ${bank.id} (${bank.dialogues.length} conversations)`,
-        `  running:       ${entries.length} conversation(s), ${turns} turn(s) in total`,
+        `  running:       ${entries.length} conversation(s), ${turns} turn(s) in total` +
+          (args.repetitions > 1 ? `, x${args.repetitions} repetitions` : ""),
         `  grounding:     ${args.retrieval ? "retrieval — only the facts each question needs" : args.grounded ? "full — the whole certified registry" : "none — the model answers from its own knowledge"}`,
         `  gated grammar: ${args.gatedGrammar ? "yes — the answer schema narrows to the kinds each question nominates" : "no — every claim kind is offered"}`,
         `  repair:        ${args.repair ? "yes — an all-fact-mismatch denial is stripped and re-verified once" : "no — a mis-recalled value stays a denial"}`,
@@ -428,7 +429,7 @@ async function runDialogueMode(args: CoverageArgs, options: CoverageOptions, mod
   const provider = makeProvider({ model, apiKey });
   const world = demoWorld();
 
-  const runs = await runDialogues(world, entries, provider, options.clock, args.grounded, args.retrieval, args.gatedGrammar, args.repair);
+  const runs = await runDialogues(world, entries, provider, options.clock, args.grounded, args.retrieval, args.gatedGrammar, args.repair, args.repetitions);
   const artifact = buildDialogueArtifact({
     startedAt: options.now,
     world,
@@ -441,6 +442,7 @@ async function runDialogueMode(args: CoverageArgs, options: CoverageOptions, mod
     retrieval: args.retrieval,
     gatedGrammar: args.gatedGrammar,
     repair: args.repair,
+    repetitions: args.repetitions,
     runs,
   });
   const artifactPath = fileArtifact(artifact, resolve(args.out), options.write);
