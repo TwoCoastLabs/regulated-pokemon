@@ -32,7 +32,7 @@
  * widens this schema in the same commit, or a test fails.
  */
 
-import { ITEM_FACT_IDS, MOVE_FACT_IDS, SPECIES_FACT_IDS, STATUS_CONDITIONS } from "../kernel/registry.js";
+import { COMPARABLE_FACT_IDS, ITEM_FACT_IDS, MOVE_FACT_IDS, SPECIES_FACT_IDS, STATUS_CONDITIONS } from "../kernel/registry.js";
 import { STAT_NAMES } from "../kernel/snapshot-format.js";
 import type { FillerKind } from "./grammar-gate.js";
 
@@ -87,20 +87,39 @@ const FACT_VALUE: JsonSchema = {
   ],
 };
 
-const CRITERION: JsonSchema = {
-  anyOf: [
-    variant("has-type", { type: STRING }),
-    variant("learns-move", { move: STRING }),
-    variant("rarity", { rarity: { type: "string", enum: ["legendary", "mythical"] } }),
-    variant("stat-at-least", { stat: { type: "string", enum: [...STAT_NAMES] }, value: NUMBER }),
-    variant("stat-at-most", { stat: { type: "string", enum: [...STAT_NAMES] }, value: NUMBER }),
-  ],
-};
+function criterionSchema(items: boolean): JsonSchema {
+  return {
+    anyOf: [
+      variant("has-type", { type: STRING }),
+      variant("learns-move", { move: STRING }),
+      variant("rarity", { rarity: { type: "string", enum: ["legendary", "mythical"] } }),
+      variant("stat-at-least", { stat: { type: "string", enum: [...STAT_NAMES] }, value: NUMBER }),
+      variant("stat-at-most", { stat: { type: "string", enum: [...STAT_NAMES] }, value: NUMBER }),
+      // The item universe's criteria (epic #94, Center loop 1): the kernel has
+      // built item rosters since slice 3, but the grammar never offered them —
+      // so a model asked "what all cures poison" could not express the set and
+      // improvised treats enumerations instead. Offered only in a world that
+      // certifies items, like the Center claim kinds; the category is a free
+      // string because the vocabulary is the snapshot's, and the kernel names
+      // an unknown one (IA-3/unknown-item-category) at build.
+      ...(items
+        ? [
+            variant("item-category", { category: STRING }),
+            variant("treats-condition", { condition: { type: "string", enum: [...STATUS_CONDITIONS] } }),
+            variant("cost-at-most", { value: NUMBER }),
+            variant("cost-at-least", { value: NUMBER }),
+          ]
+        : []),
+    ],
+  };
+}
 
-const ROSTER: JsonSchema = object({
-  id: STRING,
-  criteria: object({ all: { type: "array", items: CRITERION } }),
-});
+function rosterSchema(items: boolean): JsonSchema {
+  return object({
+    id: STRING,
+    criteria: object({ all: { type: "array", items: criterionSchema(items) } }),
+  });
+}
 
 function claimSchema(lessonIds: readonly string[], ruleIds: readonly string[], fillerKinds?: ReadonlySet<FillerKind>, items = false): JsonSchema {
   // Retrieval-gated grammar (grammar-gate.ts): the three aggregate/constant
@@ -141,7 +160,13 @@ function claimSchema(lessonIds: readonly string[], ruleIds: readonly string[], f
     ...(items
       ? [
           variant("treats", { itemId: STRING, condition: { type: "string", enum: [...STATUS_CONDITIONS] } }),
-          variant("comparison", { factId: FACT_ID, leftId: STRING, rightId: STRING }),
+          // Only fact ids that can be numeric: the first paid Center run
+          // showed the model comparing prose with prose (cures, item-effect)
+          // 80+ times under the full enum, every one a named denial the
+          // grammar can simply stop admitting. The kernel's runtime check
+          // stays load-bearing for the cases the enum cannot see (a "full"
+          // where a number usually lives, a degenerate self-pair).
+          variant("comparison", { factId: { type: "string", enum: [...COMPARABLE_FACT_IDS] }, leftId: STRING, rightId: STRING }),
         ]
       : []),
     // No `selectedEntityId`: the model declares the set, the basis and the
@@ -200,7 +225,7 @@ export function answerSchema(
   items = false,
 ): JsonSchema {
   return object({
-    rosters: { type: "array", items: ROSTER },
+    rosters: { type: "array", items: rosterSchema(items) },
     claims: {
       type: "array",
       items: claimSchema(

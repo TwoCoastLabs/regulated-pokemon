@@ -174,7 +174,11 @@ export function scoreOracle(oracle: DispositionOracle, run: HarnessRun, world: D
 function answeredThroughOtherKind(run: HarnessRun, expected: readonly ClaimKind[] | undefined): boolean {
   const manifest = run.transaction?.manifest;
   if (manifest === undefined || expected === undefined) return false;
-  return manifest.claims.some((claim) => claim.kind !== "fact" && expected.includes(claim.kind));
+  // `treats` is excluded: it now has its own subject oracle inside
+  // resolvedOnFact (the itemId must match an accepted entity), so letting it
+  // ride the escape hatch would waive exactly the discipline it just gained —
+  // a verdict about the wrong item would pass on shape alone.
+  return manifest.claims.some((claim) => claim.kind !== "fact" && claim.kind !== "treats" && expected.includes(claim.kind));
 }
 
 /** Drive the session to a settled state, answering as the trainer would. The

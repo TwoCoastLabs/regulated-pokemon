@@ -148,7 +148,18 @@ function answerPrompt(
     '  {"kind": "rarity", "rarity": "legendary" | "mythical"}',
     '  {"kind": "stat-at-least", "stat": "<stat-id>", "value": <number>}',
     '  {"kind": "stat-at-most", "stat": "<stat-id>", "value": <number>}',
-    "A species is a member exactly when it satisfies every criterion.",
+    ...(items
+      ? [
+          '  {"kind": "item-category", "category": "<category-id>"}  — items in a category the records certify',
+          '  {"kind": "treats-condition", "condition": "<condition>"}  — items that treat that status condition',
+          '  {"kind": "cost-at-most", "value": <number>}',
+          '  {"kind": "cost-at-least", "value": <number>}',
+        ]
+      : []),
+    "A member is exactly what satisfies every criterion. Species criteria define a set of species" +
+      (items
+        ? "; item criteria a set of items — the two never mix in one roster. A \"what all…\" or \"cheapest…\" over items (everything that cures a condition, everything under a price) is an item roster plus a count or a ranking: the system then derives the certified set, the number or the winner, which answers it more strongly than naming examples one by one."
+        : "."),
     "",
     "Each claim is one of:",
     '  {"kind": "fact", "entityId": "<id>", "factId": "<fact-id>"}  — the system reads the certified value; you may add "asserted" only when you are certain of the exact certified form, and a wrong one refuses the whole answer',
@@ -163,7 +174,7 @@ function answerPrompt(
     ...(items
       ? [
           '  {"kind": "treats", "itemId": "<item-id>", "condition": "<condition>"}  — does this item treat that condition? The system derives the certified yes or no from the item\'s closed effect set, so state neither; the certified *no* is a real answer. A <condition> must be one of: poison, burn, freeze, sleep, paralysis, confusion.',
-          '  {"kind": "comparison", "factId": "<fact-id>", "leftId": "<id>", "rightId": "<id>"}  — one certified fact on two entities; the system derives both values, the gap and which leads, so state none of them.',
+          '  {"kind": "comparison", "factId": "<numeric-fact-id>", "leftId": "<id>", "rightId": "<id>"}  — one certified numeric fact on two DIFFERENT entities; the system derives both values, the gap and which leads, so state none of them. Only numeric facts compare — cost, restores-hp, restores-pp, a base stat, move-power — never prose or lists (what an item does is a fact claim, not a comparison). Never compare a thing with itself: one entity\'s value is a fact claim.',
         ]
       : []),
     '  {"kind": "ranking", "rosterId": "<id>", "basis": "<fact-id>", "direction": "highest"|"lowest"}  — defines a set and an ordering; the system names the winner, so name none',
@@ -229,6 +240,14 @@ function rawPrompt(asks: readonly string[], tools: readonly string[], items = fa
     '  {"kind": "rarity", "rarity": "legendary" | "mythical"}',
     '  {"kind": "stat-at-least", "stat": "<stat-id>", "value": <number>}',
     '  {"kind": "stat-at-most", "stat": "<stat-id>", "value": <number>}',
+    ...(items
+      ? [
+          '  {"kind": "item-category", "category": "<category-id>"}',
+          '  {"kind": "treats-condition", "condition": "<condition>"}  — items that treat that status condition',
+          '  {"kind": "cost-at-most", "value": <number>}',
+          '  {"kind": "cost-at-least", "value": <number>}',
+        ]
+      : []),
     "",
     "Each claim is one of:",
     '  {"kind": "fact", "entityId": "<id>", "factId": "<fact-id>", "asserted": {"kind": "number"|"boolean"|"text"|"list"|"absent", "value": ...}}',
@@ -238,7 +257,7 @@ function rawPrompt(asks: readonly string[], tools: readonly string[], items = fa
     ...(items
       ? [
           '  {"kind": "treats", "itemId": "<item-id>", "condition": "<condition>"}  — does this item treat that condition? The system derives the certified yes or no from the item\'s closed effect set, so state neither; the certified *no* is a real answer. A <condition> must be one of: poison, burn, freeze, sleep, paralysis, confusion.',
-          '  {"kind": "comparison", "factId": "<fact-id>", "leftId": "<id>", "rightId": "<id>"}  — one certified fact on two entities; the system derives both values, the gap and which leads, so state none of them.',
+          '  {"kind": "comparison", "factId": "<numeric-fact-id>", "leftId": "<id>", "rightId": "<id>"}  — one certified numeric fact on two DIFFERENT entities; the system derives both values, the gap and which leads, so state none of them. Only numeric facts compare — cost, restores-hp, restores-pp, a base stat, move-power — never prose or lists (what an item does is a fact claim, not a comparison). Never compare a thing with itself: one entity\'s value is a fact claim.',
         ]
       : []),
     '  {"kind": "ranking", "rosterId": "<id>", "basis": "<fact-id>", "direction": "highest"|"lowest", "selectedEntityId": "<id>"}  — name the winner yourself',

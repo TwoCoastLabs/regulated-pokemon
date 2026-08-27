@@ -333,6 +333,17 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
   for (const entry of parsed.claims) {
     const claim = asClaim(entry);
     if (claim === null) return { ok: false, reason: "a claim is malformed" };
+    // A comparison of a thing with itself compares nothing — the same shape
+    // judgement as the empty answer below, made here because JSON Schema
+    // cannot express leftId ≠ rightId. It is refused at the propose boundary
+    // rather than in the kernel on purpose: the pair is *true* (both sides
+    // verify), so refusing it is grammar, not factuality — and a kernel rule
+    // would re-judge filed records that committed the degenerate shape
+    // before the grammar learned to refuse it, which IA-10 forbids. The
+    // first paid Center run committed 13 of these (findings iteration 40).
+    if (claim.kind === "comparison" && claim.leftId === claim.rightId) {
+      return { ok: false, reason: `a comparison of ${claim.leftId} with itself compares nothing — one entity's value is a fact claim` };
+    }
     claims.push(claim);
   }
   const canonical = canonicalizeClaims(context.registry, claims);

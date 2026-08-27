@@ -4,6 +4,7 @@ import type { ManifestContext } from "../kernel/manifest.js";
 import { harnessWorld } from "./corpus.js";
 import { decodeAnswer } from "./decode.js";
 import type { FillerKind } from "./grammar-gate.js";
+import { COMPARABLE_FACT_IDS } from "../kernel/registry.js";
 import { answerSchema, FACT_IDS } from "./schema.js";
 
 const world = harnessWorld();
@@ -103,10 +104,36 @@ describe("the answer grammar tracks the kernel, not a copy of it", () => {
     expect(claimKinds).toContain("action");
   });
 
-  it("offers every roster criterion the kernel can build", () => {
+  it("offers every roster criterion the kernel can build — species criteria here, item criteria only in a world with items", () => {
     expect(new Set(criterionKinds)).toEqual(
       new Set(["has-type", "learns-move", "rarity", "stat-at-least", "stat-at-most"]),
     );
+    // The Center loop's first lesson: the kernel had item rosters for a full
+    // paid run before the grammar offered them, and the model improvised
+    // treats enumerations where "the set of items that cure poison" was the
+    // answer. The pin runs both ways so that gap cannot reopen silently.
+    const withItems = answerSchema(world.pack, undefined, true) as { properties: Record<string, { items: unknown }> };
+    const itemCriteria = kindsOf(
+      ((withItems.properties.rosters?.items as { properties?: { criteria?: { properties?: { all?: { items?: unknown } } } } })
+        ?.properties?.criteria?.properties?.all?.items),
+    );
+    expect(new Set(itemCriteria)).toEqual(
+      new Set(["has-type", "learns-move", "rarity", "stat-at-least", "stat-at-most", "item-category", "treats-condition", "cost-at-most", "cost-at-least"]),
+    );
+  });
+
+  it("offers comparisons only over fact ids that can be numeric", () => {
+    // The first paid Center run: 80+ named denials for comparing prose with
+    // prose (cures, item-effect, evolves) — every one preventable at the
+    // grammar, none of them a loss (nothing numeric was there to compare).
+    const withItems = answerSchema(world.pack, undefined, true) as { properties: Record<string, { items: unknown }> };
+    const comparison = (withItems.properties.claims?.items as { anyOf: { properties: Record<string, { enum?: string[] }> }[] })
+      .anyOf.find((entry) => entry.properties.kind?.enum?.[0] === "comparison");
+    expect(comparison?.properties.factId?.enum).toEqual([...COMPARABLE_FACT_IDS]);
+    // …and the runtime gate stays reachable: "can be numeric" is not "always
+    // is" (restores-hp is the text "full" for a Full Restore), so the enum
+    // does not make IA-2/incomparable-fact vacuous.
+    expect(COMPARABLE_FACT_IDS).toContain("restores-hp");
   });
 });
 

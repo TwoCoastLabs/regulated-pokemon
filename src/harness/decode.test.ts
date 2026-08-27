@@ -240,3 +240,28 @@ describe("eligibility claims decode strictly", () => {
     expect(decodeAnswer(text, context, "txn-e").ok).toBe(false);
   });
 });
+
+describe("the degenerate comparison is refused at the propose boundary (Center loop 1)", () => {
+  it("refuses a comparison of a thing with itself, with the reason named", () => {
+    // True but empty — both sides would verify, which is exactly why it is a
+    // grammar refusal here and not a kernel denial: a kernel rule would
+    // re-judge the filed records that committed this shape before the
+    // grammar learned to refuse it (13 in the first paid Center run).
+    const decoded = decodeAnswer(
+      JSON.stringify({ rosters: [], claims: [{ kind: "comparison", factId: "move-power", leftId: "surf", rightId: "surf" }] }),
+      context,
+      "txn-degenerate",
+    );
+    expect(decoded.ok).toBe(false);
+    if (!decoded.ok) expect(decoded.reason).toContain("compares nothing");
+  });
+
+  it("keeps a genuine pair decodable — the refusal is the degenerate shape, not the kind", () => {
+    const decoded = decodeAnswer(
+      JSON.stringify({ rosters: [], claims: [{ kind: "comparison", factId: "move-power", leftId: "surf", rightId: "thunderbolt" }] }),
+      context,
+      "txn-pair",
+    );
+    expect(decoded.ok).toBe(true);
+  });
+});
