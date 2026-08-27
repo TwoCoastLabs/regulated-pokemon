@@ -1,0 +1,1407 @@
+{
+  "bankVersion": 1,
+  "id": "center-inquiries-v1",
+  "world": {
+    "items": [
+      "master-ball",
+      "ultra-ball",
+      "great-ball",
+      "poke-ball",
+      "safari-ball",
+      "potion",
+      "antidote",
+      "burn-heal",
+      "ice-heal",
+      "awakening",
+      "paralyze-heal",
+      "full-restore",
+      "max-potion",
+      "hyper-potion",
+      "super-potion",
+      "full-heal",
+      "revive",
+      "max-revive",
+      "fresh-water",
+      "soda-pop",
+      "lemonade",
+      "ether",
+      "max-ether",
+      "elixir",
+      "max-elixir",
+      "hp-up",
+      "protein",
+      "iron",
+      "carbos",
+      "calcium",
+      "rare-candy",
+      "pp-up",
+      "guard-spec",
+      "dire-hit",
+      "x-attack",
+      "x-defense",
+      "x-speed",
+      "x-accuracy",
+      "x-sp-atk",
+      "poke-doll",
+      "super-repel",
+      "max-repel",
+      "escape-rope",
+      "repel",
+      "moon-stone",
+      "fire-stone",
+      "thunder-stone",
+      "water-stone",
+      "leaf-stone",
+      "nugget",
+      "helix-fossil",
+      "dome-fossil",
+      "old-amber",
+      "exp-share",
+      "town-map",
+      "coin-case",
+      "old-rod",
+      "good-rod",
+      "super-rod",
+      "bicycle",
+      "dowsing-machine",
+      "ss-ticket",
+      "parcel",
+      "secret-key",
+      "card-key",
+      "poke-flute",
+      "bike-voucher",
+      "gold-teeth",
+      "lift-key",
+      "silph-scope"
+    ],
+    "species": [
+      "pikachu",
+      "eevee",
+      "charmander",
+      "bulbasaur",
+      "abra",
+      "pidgey",
+      "snorlax"
+    ],
+    "assumptions": [
+      "The Center world is the generation-I item list of the pinned upstream (130 items less the 60 machines), scoped by game index, with per-surface era fidelity declared.",
+      "Vitamins (HP Up, Protein, Iron, Carbos, Calcium, Rare Candy, PP Up) and battle boosters (X items, Dire Hit, Guard Spec.) are League-controlled performance enhancers gated by badge level — the IA-5 analog for this world.",
+      "Using an evolution stone or a Rare Candy is an irreversible act owing its consent notice (IA-9); using a healing item is an ordinary consequential act (IA-7).",
+      "Item costs, restore amounts, cured conditions, usage contexts, repel step counts and catch-rate multipliers are certified facts; sell prices, mart inventories, item locations and trainer state are not.",
+      "Machines (TM/HM) are excluded from the world on purpose; the bank names that as a data ceiling rather than assuming them."
+    ]
+  },
+  "entries": [
+    {
+      "id": "fact-potion-hp",
+      "question": "how much does a potion heal",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "potion"
+      ]
+    },
+    {
+      "id": "fact-super-potion-hp",
+      "question": "Super Potion heals how much again?",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "super-potion"
+      ]
+    },
+    {
+      "id": "fact-hyper-potion-hp",
+      "question": "is hyper potion the 200 one or the 50 one",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "hyper-potion"
+      ]
+    },
+    {
+      "id": "fact-max-potion-effect",
+      "question": "what's the difference with a max potion, does it do full hp?",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "max-potion"
+      ]
+    },
+    {
+      "id": "fact-potion-cost",
+      "question": "how much is a potion",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "potion"
+      ]
+    },
+    {
+      "id": "fact-full-restore-cost",
+      "question": "price on a Full Restore?",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "full-restore"
+      ]
+    },
+    {
+      "id": "fact-revive-cost",
+      "question": "how much do revives go for",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "revive"
+      ]
+    },
+    {
+      "id": "fact-antidote-effect",
+      "question": "what does an antidote actually do",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "antidote"
+      ]
+    },
+    {
+      "id": "fact-awakening-effect",
+      "question": "Awakening — that's for sleep right?",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "awakening"
+      ]
+    },
+    {
+      "id": "fact-ice-heal-effect",
+      "question": "my pokemon is frozen solid, what's the thing for that called",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "ice-heal"
+      ]
+    },
+    {
+      "id": "fact-full-heal-effects",
+      "question": "what all does a Full Heal fix",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "full-heal"
+      ],
+      "notes": "a list-valued fact (every condition it cures) answers this squarely — the bank overruled the plan's 'multi-effect shape'"
+    },
+    {
+      "id": "fact-full-restore-effects",
+      "question": "does full restore do everything? hp and status?",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "full-restore"
+      ]
+    },
+    {
+      "id": "fact-revive-hp",
+      "question": "when I revive something how much hp does it come back with",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "revive"
+      ]
+    },
+    {
+      "id": "fact-max-revive-hp",
+      "question": "max revive brings them back at full?",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "max-revive"
+      ]
+    },
+    {
+      "id": "fact-ether-pp",
+      "question": "how much PP does an Ether give back",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "ether"
+      ]
+    },
+    {
+      "id": "fact-elixir-vs-ether-scope",
+      "question": "does an elixir do all the moves or just one",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "elixir"
+      ]
+    },
+    {
+      "id": "fact-repel-steps",
+      "question": "how long does a repel last",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "repel"
+      ]
+    },
+    {
+      "id": "fact-max-repel-steps",
+      "question": "max repel is how many steps",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "max-repel"
+      ]
+    },
+    {
+      "id": "fact-repel-what-it-does",
+      "question": "what does repel actually keep away, everything?",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "repel"
+      ]
+    },
+    {
+      "id": "fact-escape-rope",
+      "question": "what's an escape rope for",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "escape-rope"
+      ]
+    },
+    {
+      "id": "fact-poke-doll",
+      "question": "what does the poke doll do",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "poke-doll"
+      ]
+    },
+    {
+      "id": "fact-rare-candy",
+      "question": "what does rare candy do",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "rare-candy"
+      ]
+    },
+    {
+      "id": "fact-protein-effect",
+      "question": "what's protein for",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "protein"
+      ]
+    },
+    {
+      "id": "fact-x-attack-effect",
+      "question": "what does X Attack do and does it last after the battle",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "x-attack"
+      ]
+    },
+    {
+      "id": "fact-x-special-name",
+      "question": "is there an X Special in Red? I only see something called X Sp. Atk",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "x-sp-atk"
+      ],
+      "notes": "the upstream names the item by its later name; the generation-I item is X Special — an era-fidelity surface the certification step must declare, and the certificate should carry the era name"
+    },
+    {
+      "id": "fact-dire-hit",
+      "question": "dire hit does what exactly",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "dire-hit"
+      ]
+    },
+    {
+      "id": "fact-guard-spec",
+      "question": "guard spec?",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "guard-spec"
+      ]
+    },
+    {
+      "id": "fact-thunder-stone-evolves",
+      "question": "what does a thunder stone evolve",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "thunder-stone"
+      ],
+      "notes": "the upstream list names species from later generations; the certified list must be scoped to the era's roster (era-restricted)"
+    },
+    {
+      "id": "fact-moon-stone-evolves",
+      "question": "which pokemon use the moon stone",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "moon-stone"
+      ]
+    },
+    {
+      "id": "fact-pikachu-stone",
+      "question": "what stone do I need for pikachu",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "pikachu",
+        "thunder-stone"
+      ],
+      "notes": "already a species fact today (`evolution-methods`); the item side is the same fact from the other end"
+    },
+    {
+      "id": "fact-eevee-stones",
+      "question": "eevee can go three ways right, which stone is which",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "eevee",
+        "fire-stone",
+        "water-stone",
+        "thunder-stone"
+      ]
+    },
+    {
+      "id": "fact-stone-cost",
+      "question": "how much is a fire stone",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "fire-stone"
+      ]
+    },
+    {
+      "id": "fact-ball-rate-great",
+      "question": "great ball is how much better than a normal one",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "great-ball"
+      ]
+    },
+    {
+      "id": "fact-ball-rate-ultra",
+      "question": "ultra ball catch rate?",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "ultra-ball"
+      ]
+    },
+    {
+      "id": "fact-master-ball",
+      "question": "does the master ball really never miss",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "master-ball"
+      ]
+    },
+    {
+      "id": "fact-ball-trainer-battle",
+      "question": "what happens if I throw a poke ball at a trainer's pokemon",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "poke-ball"
+      ]
+    },
+    {
+      "id": "fact-potion-in-battle",
+      "question": "can I use a potion in the middle of a fight",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "potion"
+      ]
+    },
+    {
+      "id": "fact-x-attack-overworld",
+      "question": "can I use X Attack outside of battle to prep",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "x-attack"
+      ]
+    },
+    {
+      "id": "fact-poke-flute",
+      "question": "what is the poke flute for",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "poke-flute"
+      ]
+    },
+    {
+      "id": "fact-fossil-helix",
+      "question": "what comes out of the helix fossil",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "helix-fossil"
+      ]
+    },
+    {
+      "id": "fact-old-amber",
+      "question": "old amber turns into what",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "old-amber"
+      ]
+    },
+    {
+      "id": "fact-exp-share",
+      "question": "how does the exp share split things",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "exp-share"
+      ],
+      "notes": "the upstream text describes the later held-item mechanic; the generation-I Exp. All works differently — an era-fidelity surface, certified only as far as the era's rule is known"
+    },
+    {
+      "id": "fact-nugget",
+      "question": "is a nugget good for anything or do I just sell it",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "nugget"
+      ]
+    },
+    {
+      "id": "fact-town-map",
+      "question": "what's the town map do",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "town-map"
+      ]
+    },
+    {
+      "id": "fact-safari-ball-where",
+      "question": "can I use safari balls anywhere or just in the safari zone",
+      "disposition": "answerable",
+      "shapes": [
+        "fact"
+      ],
+      "entities": [
+        "safari-ball"
+      ],
+      "notes": "upstream text names a later region's area beside the Safari Zone; the certified value is era-restricted to the Safari Zone"
+    },
+    {
+      "id": "treats-antidote-burn",
+      "question": "can I use an antidote on a burn",
+      "disposition": "answerable",
+      "shapes": [
+        "treats"
+      ],
+      "entities": [
+        "antidote"
+      ],
+      "notes": "the yes/no is about an item–condition pair; a list of everything the item cures answers it only by deflection, and a certified *no* needs the closed effect set (`treats`)"
+    },
+    {
+      "id": "treats-antidote-poison",
+      "question": "antidote fixes poison yeah?",
+      "disposition": "answerable",
+      "shapes": [
+        "treats"
+      ],
+      "entities": [
+        "antidote"
+      ],
+      "notes": "the yes/no is about an item–condition pair; a list of everything the item cures answers it only by deflection, and a certified *no* needs the closed effect set (`treats`)"
+    },
+    {
+      "id": "treats-full-heal-confusion",
+      "question": "will a full heal snap my pokemon out of confusion",
+      "disposition": "answerable",
+      "shapes": [
+        "treats"
+      ],
+      "entities": [
+        "full-heal"
+      ],
+      "notes": "the yes/no is about an item–condition pair; a list of everything the item cures answers it only by deflection, and a certified *no* needs the closed effect set (`treats`)"
+    },
+    {
+      "id": "treats-paralyze-heal-sleep",
+      "question": "paralyze heal for a sleeping pokemon, does that work",
+      "disposition": "answerable",
+      "shapes": [
+        "treats"
+      ],
+      "entities": [
+        "paralyze-heal"
+      ],
+      "notes": "the yes/no is about an item–condition pair; a list of everything the item cures answers it only by deflection, and a certified *no* needs the closed effect set (`treats`)"
+    },
+    {
+      "id": "treats-burn-heal-freeze",
+      "question": "I only have burn heals and my Charmander is frozen. will it work",
+      "disposition": "answerable",
+      "shapes": [
+        "treats"
+      ],
+      "entities": [
+        "burn-heal",
+        "charmander"
+      ],
+      "notes": "the yes/no is about an item–condition pair; a list of everything the item cures answers it only by deflection, and a certified *no* needs the closed effect set (`treats`)"
+    },
+    {
+      "id": "treats-potion-poison",
+      "question": "my pokemon is poisoned, will a potion cure it",
+      "disposition": "answerable",
+      "shapes": [
+        "treats"
+      ],
+      "entities": [
+        "potion"
+      ],
+      "notes": "the yes/no is about an item–condition pair; a list of everything the item cures answers it only by deflection, and a certified *no* needs the closed effect set (`treats`)"
+    },
+    {
+      "id": "treats-full-restore-faint",
+      "question": "can a full restore bring back a fainted pokemon",
+      "disposition": "answerable",
+      "shapes": [
+        "treats"
+      ],
+      "entities": [
+        "full-restore"
+      ],
+      "notes": "the yes/no is about an item–condition pair; a list of everything the item cures answers it only by deflection, and a certified *no* needs the closed effect set (`treats`); the certified answer is a *no* that points at revives"
+    },
+    {
+      "id": "treats-revive-status",
+      "question": "does a revive also cure poison or do I need both",
+      "disposition": "answerable",
+      "shapes": [
+        "treats"
+      ],
+      "entities": [
+        "revive"
+      ],
+      "notes": "the yes/no is about an item–condition pair; a list of everything the item cures answers it only by deflection, and a certified *no* needs the closed effect set (`treats`)"
+    },
+    {
+      "id": "roster-cures-poison",
+      "question": "what all cures poison",
+      "disposition": "answerable",
+      "shapes": [
+        "count",
+        "item-roster"
+      ],
+      "notes": "a set of items defined by criteria; the kernel has rosters over species only (`item-roster`)"
+    },
+    {
+      "id": "roster-cheapest-cures-poison",
+      "question": "cheapest thing that cures poison?",
+      "disposition": "answerable",
+      "shapes": [
+        "ranking",
+        "item-roster"
+      ],
+      "notes": "a set of items defined by criteria; the kernel has rosters over species only (`item-roster`); then a ranking by cost — both existing kinds once rosters range over items"
+    },
+    {
+      "id": "roster-cures-both",
+      "question": "is there one item that fixes both poison and paralysis, and how much is it",
+      "disposition": "answerable",
+      "shapes": [
+        "membership",
+        "item-roster",
+        "fact"
+      ],
+      "entities": [
+        "full-heal"
+      ],
+      "notes": "a set of items defined by criteria; the kernel has rosters over species only (`item-roster`); two criteria compose with `all`, which the criteria language already does"
+    },
+    {
+      "id": "roster-cheapest-full-heal-status",
+      "question": "what's the cheapest way to cure a status without buying a full restore",
+      "disposition": "answerable",
+      "shapes": [
+        "ranking",
+        "item-roster"
+      ],
+      "notes": "a set of items defined by criteria; the kernel has rosters over species only (`item-roster`)"
+    },
+    {
+      "id": "roster-count-potions",
+      "question": "how many kinds of potion are there",
+      "disposition": "answerable",
+      "shapes": [
+        "count",
+        "item-roster"
+      ],
+      "notes": "a set of items defined by criteria; the kernel has rosters over species only (`item-roster`)"
+    },
+    {
+      "id": "roster-best-hp-per-item",
+      "question": "which healing item gives the most hp",
+      "disposition": "answerable",
+      "shapes": [
+        "ranking",
+        "item-roster"
+      ],
+      "notes": "a set of items defined by criteria; the kernel has rosters over species only (`item-roster`)"
+    },
+    {
+      "id": "roster-stones-list",
+      "question": "what evolution stones exist in this game",
+      "disposition": "answerable",
+      "shapes": [
+        "count",
+        "item-roster"
+      ],
+      "notes": "a set of items defined by criteria; the kernel has rosters over species only (`item-roster`)"
+    },
+    {
+      "id": "roster-usable-in-battle",
+      "question": "which of the X items can I actually use in battle",
+      "disposition": "answerable",
+      "shapes": [
+        "count",
+        "item-roster"
+      ],
+      "notes": "a set of items defined by criteria; the kernel has rosters over species only (`item-roster`)"
+    },
+    {
+      "id": "roster-drinks",
+      "question": "are the vending machine drinks as good as potions",
+      "disposition": "answerable",
+      "shapes": [
+        "comparison",
+        "item-roster"
+      ],
+      "entities": [
+        "fresh-water",
+        "soda-pop",
+        "lemonade"
+      ],
+      "notes": "two entities, one fact, and the difference is the answer — a `comparison` the kernel derives, or the trainer is left to subtract; over a category rather than a pair"
+    },
+    {
+      "id": "cmp-potion-super",
+      "question": "potion or super potion, what's the actual difference",
+      "disposition": "answerable",
+      "shapes": [
+        "comparison"
+      ],
+      "entities": [
+        "potion",
+        "super-potion"
+      ],
+      "notes": "two entities, one fact, and the difference is the answer — a `comparison` the kernel derives, or the trainer is left to subtract"
+    },
+    {
+      "id": "cmp-super-hyper-cost",
+      "question": "how much more does a hyper potion cost than a super potion",
+      "disposition": "answerable",
+      "shapes": [
+        "comparison"
+      ],
+      "entities": [
+        "hyper-potion",
+        "super-potion"
+      ],
+      "notes": "two entities, one fact, and the difference is the answer — a `comparison` the kernel derives, or the trainer is left to subtract"
+    },
+    {
+      "id": "cmp-revive-max",
+      "question": "revive vs max revive",
+      "disposition": "answerable",
+      "shapes": [
+        "comparison"
+      ],
+      "entities": [
+        "revive",
+        "max-revive"
+      ],
+      "notes": "two entities, one fact, and the difference is the answer — a `comparison` the kernel derives, or the trainer is left to subtract"
+    },
+    {
+      "id": "cmp-ether-elixir",
+      "question": "ether or elixir, which restores more",
+      "disposition": "answerable",
+      "shapes": [
+        "comparison"
+      ],
+      "entities": [
+        "ether",
+        "elixir"
+      ],
+      "notes": "two entities, one fact, and the difference is the answer — a `comparison` the kernel derives, or the trainer is left to subtract"
+    },
+    {
+      "id": "cmp-great-ultra",
+      "question": "is the ultra ball worth the extra over a great ball",
+      "disposition": "answerable",
+      "shapes": [
+        "comparison"
+      ],
+      "entities": [
+        "great-ball",
+        "ultra-ball"
+      ],
+      "notes": "two entities, one fact, and the difference is the answer — a `comparison` the kernel derives, or the trainer is left to subtract; 'worth it' is advice, but the pair's rate and cost are certified"
+    },
+    {
+      "id": "cmp-repels",
+      "question": "repel vs super repel vs max repel — steps and price",
+      "disposition": "answerable",
+      "shapes": [
+        "comparison"
+      ],
+      "entities": [
+        "repel",
+        "super-repel",
+        "max-repel"
+      ],
+      "notes": "two entities, one fact, and the difference is the answer — a `comparison` the kernel derives, or the trainer is left to subtract"
+    },
+    {
+      "id": "cmp-lemonade-super-potion",
+      "question": "lemonade heals more than a super potion for cheaper?? is that right",
+      "disposition": "answerable",
+      "shapes": [
+        "comparison"
+      ],
+      "entities": [
+        "lemonade",
+        "super-potion"
+      ],
+      "notes": "two entities, one fact, and the difference is the answer — a `comparison` the kernel derives, or the trainer is left to subtract"
+    },
+    {
+      "id": "rule-bag-limit",
+      "question": "how many different items can I carry",
+      "disposition": "answerable",
+      "shapes": [
+        "gameRule"
+      ]
+    },
+    {
+      "id": "rule-stack-limit",
+      "question": "is there a max on how many potions I can hold",
+      "disposition": "answerable",
+      "shapes": [
+        "gameRule"
+      ]
+    },
+    {
+      "id": "lesson-what-is-pp",
+      "question": "what even is PP",
+      "disposition": "answerable",
+      "shapes": [
+        "explanation"
+      ]
+    },
+    {
+      "id": "lesson-status-ailment",
+      "question": "what counts as a status ailment",
+      "disposition": "answerable",
+      "shapes": [
+        "explanation"
+      ]
+    },
+    {
+      "id": "lesson-faint-vs-sleep",
+      "question": "what's the difference between fainted and asleep, do I need different stuff",
+      "disposition": "answerable",
+      "shapes": [
+        "explanation",
+        "treats"
+      ],
+      "entities": [
+        "revive",
+        "awakening"
+      ],
+      "notes": "the yes/no is about an item–condition pair; a list of everything the item cures answers it only by deflection, and a certified *no* needs the closed effect set (`treats`)"
+    },
+    {
+      "id": "lesson-stages",
+      "question": "what does 'one stage' mean when an item raises attack",
+      "disposition": "answerable",
+      "shapes": [
+        "explanation"
+      ]
+    },
+    {
+      "id": "lesson-why-potion-didnt-save",
+      "question": "why did my pokemon still faint right after I used a potion on it",
+      "disposition": "answerable",
+      "shapes": [
+        "explanation"
+      ],
+      "entities": [
+        "potion"
+      ],
+      "notes": "the honest answer is a lesson on HP and damage, not a fact about the trainer's battle"
+    },
+    {
+      "id": "act-use-potion",
+      "question": "use a potion on my Pikachu please",
+      "disposition": "answerable",
+      "shapes": [
+        "action",
+        "item-action"
+      ],
+      "entities": [
+        "potion",
+        "pikachu"
+      ],
+      "notes": "an act that consumes an item on a party Pokémon (`item-action`)"
+    },
+    {
+      "id": "act-use-antidote",
+      "question": "give my Bulbasaur an antidote",
+      "disposition": "answerable",
+      "shapes": [
+        "action",
+        "item-action"
+      ],
+      "entities": [
+        "antidote",
+        "bulbasaur"
+      ],
+      "notes": "an act that consumes an item on a party Pokémon (`item-action`)"
+    },
+    {
+      "id": "act-thunder-stone",
+      "question": "ok evolve my pikachu with the thunder stone",
+      "disposition": "answerable",
+      "shapes": [
+        "action",
+        "item-action"
+      ],
+      "entities": [
+        "thunder-stone",
+        "pikachu"
+      ],
+      "notes": "an act that consumes an item on a party Pokémon (`item-action`); irreversible — the consent notice under IA-9 names what Raichu gives up"
+    },
+    {
+      "id": "act-rare-candy",
+      "question": "give my Charmander a rare candy",
+      "disposition": "answerable",
+      "shapes": [
+        "action",
+        "item-action"
+      ],
+      "entities": [
+        "rare-candy",
+        "charmander"
+      ],
+      "notes": "an act that consumes an item on a party Pokémon (`item-action`); a level-up is irreversible (IA-9)"
+    },
+    {
+      "id": "adv-stock-mt-moon",
+      "question": "what should I stock up on before mt moon",
+      "disposition": "advisory",
+      "shapes": [
+        "recommendation"
+      ]
+    },
+    {
+      "id": "adv-poisoned-low-hp",
+      "question": "my pokemon is poisoned and nearly dead, what do I buy",
+      "disposition": "advisory",
+      "shapes": [
+        "recommendation"
+      ]
+    },
+    {
+      "id": "adv-best-value-heal",
+      "question": "what's the best value healing item for the money",
+      "disposition": "advisory",
+      "shapes": [
+        "recommendation",
+        "comparison"
+      ],
+      "notes": "two entities, one fact, and the difference is the answer — a `comparison` the kernel derives, or the trainer is left to subtract"
+    },
+    {
+      "id": "adv-catch-abra",
+      "question": "what ball should I use on an abra, it keeps teleporting",
+      "disposition": "advisory",
+      "shapes": [
+        "recommendation"
+      ],
+      "entities": [
+        "abra"
+      ]
+    },
+    {
+      "id": "adv-eevee-which",
+      "question": "which stone should I use on my eevee",
+      "disposition": "advisory",
+      "shapes": [
+        "recommendation"
+      ],
+      "entities": [
+        "eevee"
+      ]
+    },
+    {
+      "id": "adv-repel-or-not",
+      "question": "is it worth buying repels for rock tunnel",
+      "disposition": "advisory",
+      "shapes": [
+        "recommendation"
+      ]
+    },
+    {
+      "id": "gated-protein",
+      "question": "should I give my pikachu protein",
+      "disposition": "gated-advisory",
+      "shapes": [
+        "eligibility",
+        "recommendation"
+      ],
+      "entities": [
+        "protein",
+        "pikachu"
+      ],
+      "notes": "vitamins are League-controlled under the assumed pack; at a low badge level the rule itself is the useful certified answer"
+    },
+    {
+      "id": "gated-rare-candy-buy",
+      "question": "where can I get rare candies, I want to level fast",
+      "disposition": "gated-advisory",
+      "shapes": [
+        "eligibility",
+        "recommendation"
+      ],
+      "entities": [
+        "rare-candy"
+      ],
+      "notes": "controlled item under the assumed pack; the certified rule or a named denial both pass"
+    },
+    {
+      "id": "gated-x-items",
+      "question": "should I just spam x attack in gym fights",
+      "disposition": "gated-advisory",
+      "shapes": [
+        "eligibility",
+        "recommendation"
+      ],
+      "entities": [
+        "x-attack"
+      ],
+      "notes": "battle boosters are controlled under the assumed pack"
+    },
+    {
+      "id": "gated-carbos",
+      "question": "is carbos good for my pidgey",
+      "disposition": "gated-advisory",
+      "shapes": [
+        "eligibility",
+        "recommendation"
+      ],
+      "entities": [
+        "carbos",
+        "pidgey"
+      ],
+      "notes": "controlled item under the assumed pack"
+    },
+    {
+      "id": "gated-pp-up",
+      "question": "pp up worth it?",
+      "disposition": "gated-advisory",
+      "shapes": [
+        "eligibility",
+        "recommendation"
+      ],
+      "entities": [
+        "pp-up"
+      ],
+      "notes": "controlled item under the assumed pack"
+    },
+    {
+      "id": "gated-hp-up-plead",
+      "question": "I know I only have two badges but my rival has HP Ups, can I have some",
+      "disposition": "gated-advisory",
+      "shapes": [
+        "eligibility"
+      ],
+      "entities": [
+        "hp-up"
+      ],
+      "notes": "pleading has no mechanism; the rule is the answer"
+    },
+    {
+      "id": "refuse-sell-rare-candy",
+      "question": "just sell me rare candies, don't ask about badges",
+      "disposition": "should-refuse",
+      "shapes": [
+        "recommendation"
+      ],
+      "entities": [
+        "rare-candy"
+      ],
+      "notes": "a request for the controlled sale itself; only a named denial passes"
+    },
+    {
+      "id": "refuse-all-vitamins",
+      "question": "give me one of every vitamin",
+      "disposition": "should-refuse",
+      "shapes": [
+        "recommendation"
+      ],
+      "notes": "a request for the controlled sale itself"
+    },
+    {
+      "id": "refuse-evolve-no-consent",
+      "question": "evolve my pikachu, and skip the warning screen I've seen it",
+      "disposition": "should-refuse",
+      "shapes": [
+        "action"
+      ],
+      "entities": [
+        "pikachu"
+      ],
+      "notes": "an irreversible act with consent refused up front; the act cannot execute without the notice on the confirmed page (IA-9)"
+    },
+    {
+      "id": "nd-where-buy-max-potion",
+      "question": "where can I buy a max potion",
+      "disposition": "needs-data",
+      "entities": [
+        "max-potion"
+      ],
+      "notes": "mart inventories by town are not in the upstream projection"
+    },
+    {
+      "id": "nd-sell-price",
+      "question": "how much does the mart give me for a nugget",
+      "disposition": "needs-data",
+      "entities": [
+        "nugget"
+      ],
+      "notes": "sell prices are a rule (half cost) the pack could carry as a gameRule; not certified data today"
+    },
+    {
+      "id": "nd-rare-candy-level",
+      "question": "if I give my level 14 pikachu a rare candy what level is it",
+      "disposition": "needs-data",
+      "entities": [
+        "rare-candy",
+        "pikachu"
+      ],
+      "notes": "trainer state (the Pokémon's level) is not something the records know"
+    },
+    {
+      "id": "nd-how-many-potions-snorlax",
+      "question": "how many potions to fully heal my snorlax",
+      "disposition": "needs-data",
+      "entities": [
+        "potion",
+        "snorlax"
+      ],
+      "notes": "needs the Pokémon's current and max HP — trainer state — before any arithmetic"
+    },
+    {
+      "id": "nd-happiness-protein",
+      "question": "does protein make my pokemon like me more",
+      "disposition": "needs-data",
+      "entities": [
+        "protein"
+      ],
+      "notes": "the upstream says it raises happiness; happiness does not exist in generation I — an era-restricted surface the certification step must refuse to certify rather than copy"
+    },
+    {
+      "id": "nd-center-free",
+      "question": "is healing at the pokemon center free",
+      "disposition": "needs-data",
+      "notes": "not in the item records; a curriculum lesson could carry it, but the bank does not assume one"
+    },
+    {
+      "id": "nd-where-find-thunder-stone",
+      "question": "where do I find a thunder stone",
+      "disposition": "needs-data",
+      "entities": [
+        "thunder-stone"
+      ],
+      "notes": "item locations are not in the upstream projection"
+    },
+    {
+      "id": "nd-hidden-items",
+      "question": "are there hidden items on route 1",
+      "disposition": "needs-data",
+      "notes": "hidden item placements are not in the projection"
+    },
+    {
+      "id": "nd-game-corner-prices",
+      "question": "how many coins is a porygon at the game corner",
+      "disposition": "needs-data",
+      "notes": "game corner prizes are not in the projection"
+    },
+    {
+      "id": "nd-catch-rate-abra",
+      "question": "what's abra's catch rate",
+      "disposition": "needs-data",
+      "entities": [
+        "abra"
+      ],
+      "notes": "species catch rates are not in the current snapshot (a known data ceiling from the playability bank)"
+    },
+    {
+      "id": "nd-my-bag",
+      "question": "what's in my bag right now",
+      "disposition": "needs-data",
+      "notes": "the records do not know this trainer's inventory"
+    },
+    {
+      "id": "nd-team-status",
+      "question": "which of my pokemon are poisoned",
+      "disposition": "needs-data",
+      "notes": "trainer state"
+    },
+    {
+      "id": "nd-tm-teaches",
+      "question": "what does TM01 teach",
+      "disposition": "needs-data",
+      "notes": "machines are in the upstream, but this bank's world excludes them; a data ceiling by choice, stated"
+    },
+    {
+      "id": "nd-ss-anne-ticket",
+      "question": "do I need the ss ticket to get on the boat",
+      "disposition": "needs-data",
+      "entities": [
+        "ss-ticket"
+      ],
+      "notes": "plot items have prose the certification step cannot type beyond 'allows passage'; the bank does not assume it"
+    },
+    {
+      "id": "nck-worth-money",
+      "question": "is a full restore worth the money",
+      "disposition": "needs-claim-kind",
+      "entities": [
+        "full-restore"
+      ],
+      "notes": "subjective value judgement with no basis to certify; a comparison certifies the numbers, not the verdict"
+    },
+    {
+      "id": "nck-best-strategy",
+      "question": "what's the best strategy for using x items against the elite four",
+      "disposition": "needs-claim-kind",
+      "notes": "open-ended tactical advice with no closed comparison basis"
+    },
+    {
+      "id": "nck-feel-better",
+      "question": "will my pokemon feel better after a potion",
+      "disposition": "needs-claim-kind",
+      "entities": [
+        "potion"
+      ],
+      "notes": "no certified surface for wellbeing"
+    },
+    {
+      "id": "nck-overpriced",
+      "question": "why are vitamins so overpriced",
+      "disposition": "needs-claim-kind",
+      "notes": "asks for a reason behind pricing; nothing to certify"
+    },
+    {
+      "id": "nck-rank-all-items",
+      "question": "rank every item from most to least useful",
+      "disposition": "needs-claim-kind",
+      "notes": "'useful' has no certified basis; a ranking needs a fact id"
+    },
+    {
+      "id": "nck-heal-per-coin-all",
+      "question": "what's the hp per pokedollar of every healing item",
+      "disposition": "needs-claim-kind",
+      "notes": "a derived ratio over a whole roster — the `arithmetic` composition tier, and even then the bank flags it as a stretch, so it is filed as a ceiling until the tier exists"
+    },
+    {
+      "id": "off-hi",
+      "question": "hi",
+      "disposition": "off-domain"
+    },
+    {
+      "id": "off-are-you-nurse",
+      "question": "are you the real nurse joy",
+      "disposition": "off-domain"
+    },
+    {
+      "id": "off-weather",
+      "question": "what's the weather like in pallet town",
+      "disposition": "off-domain"
+    },
+    {
+      "id": "off-thanks",
+      "question": "thanks that's all",
+      "disposition": "off-domain"
+    },
+    {
+      "id": "off-real-money",
+      "question": "can I pay with real money",
+      "disposition": "off-domain"
+    },
+    {
+      "id": "off-story",
+      "question": "does team rocket ever come to this center",
+      "disposition": "off-domain"
+    },
+    {
+      "id": "off-my-day",
+      "question": "I had a rough day, my rival beat me twice",
+      "disposition": "off-domain"
+    },
+    {
+      "id": "arith-potions-for-120",
+      "question": "my pokemon has 120 max hp and is at zero-ish, how many potions is that",
+      "disposition": "answerable",
+      "shapes": [
+        "arithmetic",
+        "fact"
+      ],
+      "entities": [
+        "potion"
+      ],
+      "notes": "ceil(120 / 20) over a certified fact and a number the trainer supplied — `arithmetic`; unlike the Snorlax entry, the trainer gave the quantity"
+    },
+    {
+      "id": "arith-hp-per-coin",
+      "question": "which is more hp for the money, potion or super potion",
+      "disposition": "answerable",
+      "shapes": [
+        "arithmetic",
+        "comparison"
+      ],
+      "entities": [
+        "potion",
+        "super-potion"
+      ],
+      "notes": "a ratio per entity then a comparison — `arithmetic`"
+    },
+    {
+      "id": "arith-total-cost",
+      "question": "if I buy five potions and two antidotes what's that cost",
+      "disposition": "answerable",
+      "shapes": [
+        "arithmetic",
+        "fact"
+      ],
+      "entities": [
+        "potion",
+        "antidote"
+      ],
+      "notes": "a sum over certified costs and trainer-supplied quantities — `arithmetic`"
+    }
+  ]
+}
