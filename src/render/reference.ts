@@ -19,6 +19,7 @@
 
 import {
   BLOCK_ATTRIBUTE,
+  TEMPLATE_ATTRIBUTE,
   COPY_ATTRIBUTE,
   type DomElement,
   type DomNode,
@@ -29,7 +30,7 @@ import {
   TRANSACTION_ATTRIBUTE,
   UNIT_ATTRIBUTE,
 } from "../kernel/dom.js";
-import { type AccordPack, blockFor, copyFor } from "../kernel/pack.js";
+import { type AccordPack, blockFor, copyFor, templateFor } from "../kernel/pack.js";
 import type { RenderPlan, RenderUnit, RenderUnitKind } from "../kernel/render.js";
 
 /**
@@ -89,13 +90,19 @@ function card(pack: AccordPack, plan: RenderPlan, unit: RenderUnit, disclosures:
   const tag = unit.kind === "provenance" ? "footer" : "section";
   return element(tag, { [UNIT_ATTRIBUTE]: unit.id }, [
     ...block(pack, plan, unit),
-    ...(unit.slots.length === 0 ? [] : [element("p", {}, [...leadIn(pack, plan, unit), ...slots(unit)])]),
+    ...(unit.sentence !== undefined
+      ? [sentence(pack, plan, unit)]
+      : unit.slots.length === 0
+        ? []
+        : [element("p", {}, [...leadIn(pack, plan, unit), ...slots(unit)])]),
     ...disclosures.map((disclosure) =>
       element("aside", { [UNIT_ATTRIBUTE]: disclosure.id }, [
         ...block(pack, plan, disclosure),
-        ...(disclosure.slots.length === 0
-          ? []
-          : [element("p", {}, [...leadIn(pack, plan, disclosure), ...slots(disclosure)])]),
+        ...(disclosure.sentence !== undefined
+          ? [sentence(pack, plan, disclosure)]
+          : disclosure.slots.length === 0
+            ? []
+            : [element("p", {}, [...leadIn(pack, plan, disclosure), ...slots(disclosure)])]),
       ]),
     ),
   ]);
@@ -133,6 +140,35 @@ function leadIn(pack: AccordPack, plan: RenderPlan, unit: RenderUnit): DomNode[]
  */
 function slots(unit: RenderUnit): DomNode[] {
   return unit.slots.map((slot) => element("span", { [SLOT_ATTRIBUTE]: slot.name }, [text(slot.expected)]));
+}
+
+
+/**
+ * The approved sentence, assembled and never written.
+ *
+ * The fragments are the template's own words, read from the pack; the values
+ * are the plan's slot strings, each in its marked span exactly as in the
+ * labelled presentation. This function chooses nothing: a template the pack
+ * does not carry renders nothing (and the plan's sentence check denies the
+ * page), and a placeholder with no slot behind it was refused at plan time.
+ */
+function sentence(pack: AccordPack, plan: RenderPlan, unit: RenderUnit): DomElement {
+  const planned = unit.sentence;
+  const template = templateFor(pack, unit.kind, plan.locale);
+  if (planned === undefined || template === undefined) return element("p", { [TEMPLATE_ATTRIBUTE]: planned?.templateId ?? "" }, []);
+  const byName = new Map(unit.slots.map((slot) => [slot.name, slot]));
+  const children: DomNode[] = [];
+  let cursor = 0;
+  for (const match of template.text.matchAll(/\{([a-z]+)\}/g)) {
+    const fragment = template.text.slice(cursor, match.index);
+    if (fragment.length > 0) children.push(text(fragment));
+    const slot = byName.get(match[1] as string);
+    if (slot !== undefined) children.push(element("span", { [SLOT_ATTRIBUTE]: slot.name }, [text(slot.expected)]));
+    cursor = match.index + match[0].length;
+  }
+  const tail = template.text.slice(cursor);
+  if (tail.length > 0) children.push(text(tail));
+  return element("p", { [TEMPLATE_ATTRIBUTE]: planned.templateId }, children);
 }
 
 /** One catalogued string, marked with the entry it came from. */

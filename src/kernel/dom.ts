@@ -37,6 +37,11 @@ export const SLOT_ATTRIBUTE = "data-slot";
 export const BLOCK_ATTRIBUTE = "data-block";
 /** Renderer copy, named by its entry in the pack's catalogue. */
 export const COPY_ATTRIBUTE = "data-copy";
+/** Marks a sentence composed from an approved template: its fragments are the
+ * template's own words and every value inside it sits in a marked slot. The
+ * whole visible sentence is compared to the kernel-derived filling by
+ * equality, so there is no wording a renderer can add or soften. */
+export const TEMPLATE_ATTRIBUTE = "data-template";
 
 /**
  * The three things visible text on a certified artifact may be.
@@ -47,12 +52,13 @@ export const COPY_ATTRIBUTE = "data-copy";
  * way a content security policy is default-deny for script — the model picks
  * components and fills slots, and cannot write onto the artifact at all.
  */
-export type AttributionKind = "slot" | "block" | "copy";
+export type AttributionKind = "slot" | "block" | "copy" | "template";
 
 const ATTRIBUTION_ATTRIBUTES: ReadonlyArray<readonly [AttributionKind, string]> = [
   ["slot", SLOT_ATTRIBUTE],
   ["block", BLOCK_ATTRIBUTE],
   ["copy", COPY_ATTRIBUTE],
+  ["template", TEMPLATE_ATTRIBUTE],
 ];
 
 export interface DomText {

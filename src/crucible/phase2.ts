@@ -303,7 +303,10 @@ export const PHASE_2_MUTATIONS: readonly Mutation[] = [
       "record, not a detail of the runtime.",
     article: "IA-5",
     rule: "pack-mismatch",
-    run: (world) => sabotageAnswer(world, (manifest) => ({ ...manifest, packId: "indigo-accord-v2" })),
+    // "indigo-accord-v2" stopped being a safe stand-in the day it became a real
+    // pack this tree carries (epic #94, slice 4) — a mutation must name a
+    // world that never exists, or it silently becomes the clean path.
+    run: (world) => sabotageAnswer(world, (manifest) => ({ ...manifest, packId: "indigo-accord-v0-never" })),
   },
   {
     id: "drop-the-warning",

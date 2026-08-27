@@ -457,3 +457,46 @@ describe("the explanation catalogue is policy, and the loader treats it as such"
     expect(registry.typeChart.types).toHaveLength(15);
   });
 });
+
+describe("sentence templates are policy, and the loader treats them as such (epic #94, slice 4)", () => {
+  it("refuses a template for a kind that takes no sentence", () => {
+    expect(
+      denials(loadWith((draft) => ((draft.presentation as unknown as { templates: unknown[] }).templates = [{ id: "t", kind: "vibes", text: { "en-US": "x {entity}", "en-GB": "x {entity}" } }]))),
+    ).toContain("IA-6/pack-template-kind-unknown");
+  });
+
+  it("refuses two sentences for one kind — wording is not the renderer's to choose between", () => {
+    expect(
+      denials(
+        loadWith((draft) => ((draft.presentation as unknown as { templates: unknown[] }).templates = [
+          { id: "a", kind: "fact", text: { "en-US": "{value}", "en-GB": "{value}" } },
+          { id: "b", kind: "fact", text: { "en-US": "{value}!", "en-GB": "{value}!" } },
+        ])),
+      ),
+    ).toContain("IA-6/pack-template-kind-duplicated");
+  });
+
+  it("refuses a template missing an approved locale", () => {
+    expect(
+      denials(loadWith((draft) => ((draft.presentation as unknown as { templates: unknown[] }).templates = [{ id: "t", kind: "fact", text: { "en-US": "{value}" } }]))),
+    ).toContain("IA-6/pack-template-locale-missing");
+  });
+
+  it("refuses a sentence that binds no certified value — free prose wearing a mark", () => {
+    expect(
+      denials(loadWith((draft) => ((draft.presentation as unknown as { templates: unknown[] }).templates = [{ id: "t", kind: "fact", text: { "en-US": "Trust the League.", "en-GB": "Trust the League." } }]))),
+    ).toContain("IA-6/pack-template-unbound");
+  });
+
+  it("refuses a placeholder the kind never certifies", () => {
+    expect(
+      denials(loadWith((draft) => ((draft.presentation as unknown as { templates: unknown[] }).templates = [{ id: "t", kind: "fact", text: { "en-US": "{vibes}", "en-GB": "{vibes}" } }]))),
+    ).toContain("IA-6/pack-template-slot-unknown");
+  });
+
+  it("refuses a template with no id", () => {
+    expect(
+      denials(loadWith((draft) => ((draft.presentation as unknown as { templates: unknown[] }).templates = [{ id: "", kind: "fact", text: { "en-US": "{value}", "en-GB": "{value}" } }]))),
+    ).toContain("IA-6/pack-template-unnamed");
+  });
+});

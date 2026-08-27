@@ -242,7 +242,50 @@ export interface Presentation {
   locales: readonly string[];
   formats: readonly FormatId[];
   catalogue: readonly CopyEntry[];
+  /**
+   * Approved sentence templates (epic #94, slice 4 — certified surface
+   * realisation). One per unit kind at most: the reviewed sentence a claim of
+   * that kind is presented as, with `{slot}` placeholders for the unit's
+   * certified values. The words between the placeholders are approved copy;
+   * the placeholders are filled by the kernel through the closed formatter
+   * registry; and the whole rendered sentence is verified by equality, so a
+   * certified page can read as prose without the renderer being able to
+   * compose any. A kind with no template falls back to the labelled-slot
+   * presentation.
+   */
+  templates: readonly SentenceTemplate[];
   display: DisplayPolicy;
+}
+
+/** One approved sentence, for one unit kind, in every approved locale. */
+export interface SentenceTemplate {
+  id: string;
+  /** The unit kind this sentence presents. At most one template per kind. */
+  kind: string;
+  /** One rendering per approved locale, with `{slot}` placeholders. */
+  text: Readonly<Record<string, string>>;
+}
+
+/**
+ * The slots each unit kind certifies — the closed vocabulary a template's
+ * placeholders may draw on. Kernel truth, stated here so the loader can
+ * refuse a template naming a slot its kind will never carry; render.ts pins
+ * its own unit construction to this table by test, so the two cannot drift.
+ */
+export const TEMPLATE_SLOTS: Readonly<Record<string, readonly string[]>> = {
+  fact: ["entity", "fact", "value"],
+  count: ["count", "set"],
+  membership: ["entity", "membership", "set"],
+  selection: ["entity", "set", "basis"],
+  matchup: ["subject", "direction", "members"],
+  eligibility: ["entity", "verdict", "rule", "requires", "held"],
+  recommendation: ["entity"],
+  action: ["action", "entity"],
+};
+
+/** The placeholders a template's text actually uses, in order of appearance. */
+export function templatePlaceholders(text: string): readonly string[] {
+  return [...text.matchAll(/\{([a-z]+)\}/g)].map((match) => match[1] as string);
 }
 
 /**
@@ -357,6 +400,13 @@ export function gameRule(pack: AccordPack, id: string): GameRule | undefined {
   return pack.gameRules.find((rule) => rule.id === id);
 }
 
+/** The approved sentence for a unit kind in one locale, or nothing. */
+export function templateFor(pack: AccordPack, kind: string, locale: string): { id: string; text: string } | undefined {
+  const template = pack.presentation.templates.find((entry) => entry.kind === kind);
+  const text = template?.text[locale];
+  return template === undefined || text === undefined ? undefined : { id: template.id, text };
+}
+
 /** One catalogued string in one locale, or nothing. */
 export function copyFor(pack: AccordPack, id: string, locale: string): string | undefined {
   return pack.presentation.catalogue.find((entry) => entry.id === id)?.text[locale];
@@ -445,7 +495,8 @@ export function loadPack(input: unknown, registry: CertifiedRegistry): Resolutio
     typeof document.presentation !== "object" ||
     !Array.isArray(document.presentation.locales) ||
     !Array.isArray(document.presentation.formats) ||
-    !Array.isArray(document.presentation.catalogue)
+    !Array.isArray(document.presentation.catalogue) ||
+    !Array.isArray(document.presentation.templates)
   ) {
     return {
       ok: false,
@@ -700,6 +751,66 @@ function checkPresentation(presentation: Presentation): Violation[] {
   }
 
   violations.push(...checkDisplay(presentation.display));
+
+  const templateKinds = new Set<string>();
+  for (const template of presentation.templates) {
+    if (typeof template.id !== "string" || template.id.length === 0) {
+      violations.push(violation("IA-6", "pack-template-unnamed", "a sentence template has no id"));
+      continue;
+    }
+    const kindSlots = TEMPLATE_SLOTS[template.kind];
+    if (kindSlots === undefined) {
+      violations.push(
+        violation("IA-6", "pack-template-kind-unknown", `template "${template.id}" presents "${String(template.kind)}", which is not a unit kind that takes a sentence`, {
+          expected: Object.keys(TEMPLATE_SLOTS).join(", "),
+          actual: String(template.kind),
+        }),
+      );
+      continue;
+    }
+    if (templateKinds.has(template.kind)) {
+      // Two approved sentences for one kind would leave the renderer choosing
+      // wording, which is exactly the discretion templates exist to remove.
+      violations.push(
+        violation("IA-6", "pack-template-kind-duplicated", `unit kind "${template.kind}" carries more than one sentence template`, {
+          actual: template.kind,
+        }),
+      );
+    }
+    templateKinds.add(template.kind);
+    for (const locale of presentation.locales) {
+      const text = template.text?.[locale];
+      if (typeof text !== "string" || text.trim().length === 0) {
+        violations.push(
+          violation("IA-6", "pack-template-locale-missing", `template "${template.id}" has no sentence for ${locale}`, {
+            expected: presentation.locales.join(", "),
+            actual: locale,
+          }),
+        );
+        continue;
+      }
+      const placeholders = templatePlaceholders(text);
+      if (placeholders.length === 0) {
+        // A sentence with no bound value is free prose wearing a mark.
+        violations.push(
+          violation("IA-6", "pack-template-unbound", `template "${template.id}" (${locale}) binds no certified value`, {
+            expected: `a placeholder from: ${kindSlots.join(", ")}`,
+            actual: text,
+          }),
+        );
+      }
+      for (const name of placeholders) {
+        if (!kindSlots.includes(name)) {
+          violations.push(
+            violation("IA-6", "pack-template-slot-unknown", `template "${template.id}" (${locale}) names "{${name}}", which a ${template.kind} unit never certifies`, {
+              expected: kindSlots.join(", "),
+              actual: name,
+            }),
+          );
+        }
+      }
+    }
+  }
 
   return violations;
 }
