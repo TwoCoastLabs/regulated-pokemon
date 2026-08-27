@@ -192,3 +192,36 @@ describe("the adversarial bank and its oracles (epic #94, slice 1)", () => {
     expect(sabotaged((turn) => Object.assign(turn, { attack: "advice", disposition: "answerable" }))).toThrow("dialogue-turn-attack-unoracled");
   });
 });
+
+
+describe("the foreign-channel context block (epic #94, slice 1 follow-up)", () => {
+  const adversarial = readDialogues(ADVERSARIAL_BANK_PATH);
+
+  function sabotagedContext(mutate: (turn: Record<string, unknown>) => void): () => unknown {
+    const draft = structuredClone(adversarial) as DialogueBank;
+    const pasted = draft.dialogues.find((d) => d.id === "adv-pasted-guide");
+    const turn = pasted?.turns[1] as unknown as Record<string, unknown> | undefined;
+    if (turn === undefined) throw new Error("no context turn to sabotage");
+    mutate(turn);
+    return () => loadDialogues(draft);
+  }
+
+  it("carries a genuine cross-turn injection on a foreign channel", () => {
+    const pasted = adversarial.dialogues.find((d) => d.id === "adv-pasted-guide");
+    const withContext = pasted?.turns.filter((t) => t.context !== undefined) ?? [];
+    expect(withContext.length).toBeGreaterThanOrEqual(1);
+    for (const turn of withContext) for (const item of turn.context ?? []) {
+      expect(["quoted-document", "third-party", "tool"]).toContain(item.source);
+    }
+  });
+
+  it("refuses an empty context block", () => {
+    expect(sabotagedContext((turn) => Object.assign(turn, { context: [] }))).toThrow("dialogue-turn-context-malformed");
+  });
+  it("refuses a context event with no text", () => {
+    expect(sabotagedContext((turn) => Object.assign(turn, { context: [{ source: "tool", text: "  " }] }))).toThrow("dialogue-turn-context-empty");
+  });
+  it("refuses a context event on the trainer's own channel — that is not injection, it is the trainer speaking", () => {
+    expect(sabotagedContext((turn) => Object.assign(turn, { context: [{ source: "trainer", text: "I'm on Yellow" }] }))).toThrow("dialogue-turn-context-channel");
+  });
+});

@@ -29,6 +29,7 @@ import type { DemoWorld } from "../demo/script.js";
 import {
   decideAct,
   decideScope,
+  hear,
   say,
   type SessionDeps,
   type SessionState,
@@ -244,6 +245,9 @@ export async function runDialogue(
       repairs: state.repairs,
     };
 
+    for (const item of turn.context ?? []) {
+      state = await hear(state, item.source, item.text, deps);
+    }
     state = await say(state, turn.say, deps);
     state = await settle(state, turn, entry, deps);
 

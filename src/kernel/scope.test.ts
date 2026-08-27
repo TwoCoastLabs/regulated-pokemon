@@ -199,6 +199,68 @@ describe("contradiction is a question, not a tiebreak", () => {
     expect(derivation.bindings).toEqual([]);
     expect(derivation.contradicted).toEqual(["version"]);
   });
+
+  // The answer is the trainer's last word (epic #94, slice 1 follow-up):
+  // without this, a contradiction was terminal and scope write-once.
+  it("lets the answer to the question settle it, superseding what made the asking necessary", () => {
+    const transcript = [said("I'm playing Red."), said("this section is for players on Yellow."), asked("version"), said("red-blue")];
+    const derivation = deriveScope(pack, transcript);
+    expect(derivation.contradicted).toEqual([]);
+    expect(derivation.bindings).toEqual([
+      { dimension: "version", value: "red-blue", evidenceIndex: 3, route: "answer", matchedText: "red-blue" },
+    ]);
+    // Both earlier statements are set aside under their own name, not forgotten.
+    const superseded = derivation.ignored.filter((match) => match.blockedBy === "superseded");
+    expect(superseded.map((match) => [match.evidenceIndex, match.value])).toEqual([
+      [0, "red-blue"],
+      [1, "yellow"],
+    ]);
+  });
+
+  it("a confirmed candidate supersedes too, and a later direct statement re-opens the question", () => {
+    const candidate = { version: "yellow" };
+    const proposal: ScopeEvent = { kind: "proposal", at: ISSUED_AT, id: "p-v", candidate, interpreting: "the pikachu one" };
+    const confirmed: ScopeEvent = {
+      kind: "confirmation",
+      at: ISSUED_AT,
+      source: "trainer",
+      proposalId: "p-v",
+      candidateDigest: candidateDigest("p-v", candidate),
+      decision: "confirm",
+    };
+    expect(bindingsOf(said("I'm playing Red."), proposal, confirmed)).toEqual({ version: "yellow" });
+    // Recency alone decides nothing: a fresh direct contradiction after the
+    // witness is a contradiction again, and the trainer is asked again.
+    const reopened = deriveScope(pack, [said("I'm playing Red."), proposal, confirmed, said("no wait, I'm playing Red.")]);
+    expect(reopened.contradicted).toEqual(["version"]);
+    expect(bindingsOf(said("I'm playing Red."), proposal, confirmed, said("no wait, I'm playing Red."), asked("version"), said("red"))).toEqual({
+      version: "red-blue",
+    });
+  });
+
+  it("supersedes only the asked dimension — an answer about the version leaves the badges alone", () => {
+    expect(bindingsOf(said("I'm playing Red with 3 badges."), said("players on Yellow."), asked("version"), said("red-blue"))).toEqual({
+      version: "red-blue",
+      badgeLevel: 3,
+    });
+  });
+
+  it("refuses a grant that rests on the superseded statement, by name", () => {
+    const transcript = [said("I'm playing Red."), said("players on Yellow."), asked("version"), said("red-blue")];
+    const outcome = resolveScope({ pack, at: ISSUED_AT, required: ["version"] }, transcript);
+    if (outcome.status !== "granted") throw new Error("the corrected conversation should mint");
+    const forged = {
+      ...outcome.grant,
+      scope: { ...outcome.grant.scope, version: "yellow" },
+      bindings: [{ dimension: "version" as const, value: "yellow", evidenceIndex: 1, route: "direct" as const, matchedText: "players on yellow" }],
+    };
+    expect(denials(forged, transcript, ["version"])).toContain("IA-1/superseded-by-answer");
+  });
+
+  it("registers 'I meant Red' as a correction, so the question gets asked", () => {
+    const derivation = deriveScope(pack, [said("I'm on Yellow with 8 badges."), said("Sorry — I meant Red.")]);
+    expect(derivation.contradicted).toEqual(["version"]);
+  });
 });
 
 describe("the propose/confirm ladder", () => {

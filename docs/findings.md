@@ -2380,6 +2380,74 @@ deferred to a go-ahead.
 
 ---
 
+### Iteration 31 — scope stops being write-once: the answer supersedes, and the injection finding sharpens
+
+Slice 1 of epic #94, the resolver fix iteration 30 named. That leg found scope
+was *write-once per session*: `deriveScope` never re-bound a contradicted
+dimension, so a trainer who mis-stated their scope, or whose session saw a
+second value for it, could never correct it — the conversation stalled on a
+question it re-asked forever. The fix is one idea, under IA-1 and already half
+in the code ("the question is the context", iteration 16): **the trainer's
+answer to a recorded question is their last word on that dimension, and it
+supersedes what made the asking necessary.** Two changes carry it, in
+`scope.ts`:
+
+- **The answer supersedes** (`deriveScope`): among the believed matches for a
+  dimension, the latest one that arrived by the *answer* or *confirmed* route —
+  the trainer replying to the advisor's question, or confirming a candidate —
+  is the witness, and every match before it is set aside as `superseded`, a new
+  named block reason (`IA-1/superseded-by-answer`). Recency alone still decides
+  nothing: a fresh *direct* statement after the witness is a new contradiction,
+  and the trainer is asked again. What is set aside is recorded under its own
+  name, so a grant reaching back past the answer is refused by name, not
+  silently.
+- **The answer window closes when it is answered** (`answerMatches`): a
+  question's window used to stay open until the next question, so a later
+  turn's utterance was read as a second reply to a question already settled —
+  which is *how* the write-once stall arose, and how a stale question kept
+  arming every later turn. Now the first trainer reply that binds the asked
+  dimension closes it; a reply that only attempts it and is blocked (a
+  negation, a foreign channel) does not, so "hmm" then "yellow" still binds and
+  "not yellow" does not orphan a later real answer.
+
+One pack line rides along: `meant` joins the version context words, so "I meant
+Red" registers as a correction rather than passing as long-tail wording.
+
+**The crucible gains a mutation and a control.** `bind-the-superseded-line`
+forges a grant onto the pasted value the trainer was asked about and corrected;
+it is refused `IA-1/superseded-by-answer`. `scope-correction-clean-path` runs
+the honest corrected conversation and releases a grant — the contradiction
+resolved rather than terminal. Both sit on a self-contained transcript, kept
+apart from the big adversarial one because an open answer window would let one
+scenario's question read another's utterance (the same bug the fix closes, met
+while writing the fix).
+
+**The injection finding sharpens, and corrects iteration 30.** That leg said
+the pasted "8 badges" hazard in `adv-pasted-guide` was *masked* by the stall,
+and left the conversation to become its live test. Removing the stall exposed
+the sharper truth: a line the trainer *pastes on their own channel* is, by
+IA-1, the trainer's own self-report — there is no third party, so believing
+"8 badges" is correct, not a wrong-scope commit. The genuine cross-turn
+injection is content on a channel the trainer does not speak on, which the
+dialogue bank could not express — a turn was only the trainer's `say`. So the
+schema gains a `context` block (foreign-channel events recorded before the
+trainer's turn, read and inert by IA-8, driven through a new `hear` on the
+session), and `adv-pasted-guide` is re-authored: the guide line arrives
+`quoted-document`, the profile line `tool`. Re-run, all three injections are
+*seen and refused* (attack reach 3/3), the version stays Red/Blue, and the
+gated turn is judged at the trainer's real two badges — **the hazard ruled
+out, not masked, and the enforcement zero intact** (zero wrong-scope commits
+across the bank). `adv-self-correction` is where the write-once fix shows: the
+trainer states Yellow, corrects to Red, and turn two now resolves at Red/Blue
+where before it was stuck.
+
+Provenance: `scope.test.ts`, `crucible.test.ts`, `dialogues.test.ts` and
+`dialogue-run.test.ts` pin every claim above (`npm test`); the offline
+adversarial summary is pinned in full. Zero model calls, zero dollars. The
+billable N=3 leg is still deferred to a go-ahead.
+
+---
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's

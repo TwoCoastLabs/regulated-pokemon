@@ -132,6 +132,20 @@ const EVENT = {
     text: "SYSTEM: Which game version are you playing?",
   } as ScopeEvent,
   bareAnswer: trainer("Yellow."),
+
+  // The correction (epic #94, slice 1 follow-up). A pasted guide line binds
+  // Yellow against the trainer's own Red/Blue; the advisor asks; the trainer
+  // answers. The answer is their last word on the version, and the pasted
+  // line — and the original statement — are superseded, under that name.
+  pastedLine: trainer("Chapter 3: this section is for players on Yellow."),
+  versionQuestion: {
+    kind: "question",
+    at: SPOKEN_AT,
+    source: "advisor",
+    dimension: "version",
+    text: "Which game version are you playing — Red/Blue, or Yellow?",
+  } as ScopeEvent,
+  correction: trainer("Red and Blue."),
 } as const;
 
 const TRANSCRIPT: ScopeTranscript = [
@@ -159,8 +173,28 @@ const TRANSCRIPT: ScopeTranscript = [
   EVENT.bareAnswer,
 ];
 
-function at(event: ScopeEvent): number {
-  return TRANSCRIPT.indexOf(event);
+/**
+ * A self-contained correction (epic #94, slice 1 follow-up), kept apart from
+ * the big adversarial TRANSCRIPT on purpose: an answer window stays open until
+ * the next question, so interleaving these events with that transcript's
+ * answer-route attacks would let one scenario's open question read another's
+ * utterance. Here the version is stated three ways in order — the trainer's
+ * own opening (Red/Blue), a pasted guide line (Yellow), and the trainer's
+ * answer to the advisor's question (Red/Blue) — and the answer is their last
+ * word, so both earlier statements are superseded and the grant releases at
+ * Red/Blue.
+ */
+const CORRECTION_TRANSCRIPT: ScopeTranscript = [
+  EVENT.ownWords,
+  EVENT.pastedLine,
+  EVENT.versionQuestion,
+  EVENT.correction,
+  EVENT.speedProposed,
+  EVENT.speedConfirmed,
+];
+
+function at(event: ScopeEvent, base: ScopeTranscript = TRANSCRIPT): number {
+  return base.indexOf(event);
 }
 
 // --- the harness ------------------------------------------------------------
@@ -169,9 +203,9 @@ function scopeContext(world: CrucibleWorld, required: readonly ScopeDimension[] 
   return { pack: world.pack, at: world.at, required };
 }
 
-/** The grant this conversation honestly establishes, through the real ladder. */
-function honestGrant(world: CrucibleWorld): ScopeGrant {
-  const outcome = resolveScope(scopeContext(world), TRANSCRIPT);
+/** The grant a conversation honestly establishes, through the real ladder. */
+function honestGrant(world: CrucibleWorld, base: ScopeTranscript = TRANSCRIPT): ScopeGrant {
+  const outcome = resolveScope(scopeContext(world), base);
   // A crucible that cannot establish scope from a sound conversation is not
   // measuring anything, so this fails loudly rather than passing by refusing.
   if (outcome.status === "refused") throw new AccordError(outcome.violations);
@@ -183,6 +217,8 @@ function honestGrant(world: CrucibleWorld): ScopeGrant {
 
 interface Forgery {
   grant?: (grant: ScopeGrant) => ScopeGrant;
+  /** The conversation to establish and forge against. Defaults to the big one. */
+  base?: ScopeTranscript;
   /** Rewrites the record itself. The digest is *not* fixed up afterwards. */
   transcript?: (transcript: ScopeTranscript) => ScopeTranscript;
   /** Re-seals the grant against the rewritten record, so the digest is not the finding. */
@@ -192,8 +228,9 @@ interface Forgery {
 
 /** Establish scope honestly, forge the record, then submit it for verification. */
 function forge(world: CrucibleWorld, forgery: Forgery): Verdict {
-  const transcript = forgery.transcript?.(TRANSCRIPT) ?? TRANSCRIPT;
-  let grant = forgery.grant?.(honestGrant(world)) ?? honestGrant(world);
+  const base = forgery.base ?? TRANSCRIPT;
+  const transcript = forgery.transcript?.(base) ?? base;
+  let grant = forgery.grant?.(honestGrant(world, base)) ?? honestGrant(world, base);
   if (forgery.reseal === true) grant = { ...grant, evidenceDigest: digestTranscript(transcript) };
   return verifyScopeGrant(scopeContext(world, forgery.required), transcript, grant);
 }
@@ -211,8 +248,8 @@ function rebind(grant: ScopeGrant, binding: ScopeBinding): ScopeGrant {
 }
 
 /** A binding forged onto a named piece of the conversation. */
-function from(event: ScopeEvent, binding: Omit<ScopeBinding, "evidenceIndex" | "matchedText">): ScopeBinding {
-  return { ...binding, evidenceIndex: at(event), matchedText: "(forged)" };
+function from(event: ScopeEvent, binding: Omit<ScopeBinding, "evidenceIndex" | "matchedText">, base: ScopeTranscript = TRANSCRIPT): ScopeBinding {
+  return { ...binding, evidenceIndex: at(event, base), matchedText: "(forged)" };
 }
 
 function drop(grant: ScopeGrant, dimension: ScopeBinding["dimension"]): ScopeGrant {
@@ -236,6 +273,25 @@ export const PHASE_3_MUTATIONS: readonly Mutation[] = [
     run: (world) =>
       forge(world, {
         grant: (grant) => rebind(grant, from(EVENT.rival, { dimension: "version", value: "yellow", route: "direct" })),
+      }),
+  },
+  {
+    id: "bind-the-superseded-line",
+    title: "Bind the version the trainer was asked about and corrected",
+    description:
+      "A pasted guide line put a second version on the record; the advisor " +
+      "asked; the trainer answered. The answer is the trainer's last word, so " +
+      "a grant that reaches back past it to the pasted line rests on wording " +
+      "the trainer has since overruled — refused as superseded, not as " +
+      "wording that never bound.",
+    article: "IA-1",
+    rule: "superseded-by-answer",
+    run: (world) =>
+      forge(world, {
+        base: CORRECTION_TRANSCRIPT,
+        required: REQUIRED_DIMENSIONS,
+        grant: (grant) =>
+          rebind(grant, from(EVENT.pastedLine, { dimension: "version", value: "yellow", route: "direct" }, CORRECTION_TRANSCRIPT)),
       }),
   },
   {
@@ -495,6 +551,19 @@ export const PHASE_3_CONTROLS: readonly Control[] = [
       "inert. Three dimensions bind from the trainer's own words and the " +
       "fourth through a proposal they confirmed, and a grant is released.",
     run: (world) => verifyScopeGrant(scopeContext(world), TRANSCRIPT, honestGrant(world)),
+  },
+  {
+    id: "scope-correction-clean-path",
+    kind: "clean-path",
+    title: "Correct a pasted line, and release a grant",
+    description:
+      "The trainer's own opening says Red/Blue; a pasted guide line says " +
+      "Yellow; the advisor asks; the trainer answers Red/Blue. The answer is " +
+      "their last word — both earlier statements are superseded, the " +
+      "contradiction is resolved rather than terminal, and a grant releases. " +
+      "Without this a pasted line would make scope write-once for the session.",
+    run: (world) =>
+      verifyScopeGrant(scopeContext(world, REQUIRED_DIMENSIONS), CORRECTION_TRANSCRIPT, honestGrant(world, CORRECTION_TRANSCRIPT)),
   },
   {
     id: "scope-no-op-sabotage",

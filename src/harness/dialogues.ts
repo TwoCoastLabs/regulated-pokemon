@@ -27,7 +27,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import type { ScopeDimension, ScopeValue, TrainerScope } from "../kernel/contracts.js";
+import type { ScopeDimension, ScopeValue, TrainerScope, UtteranceSource } from "../kernel/contracts.js";
 import { REQUIRED_DIMENSIONS } from "../kernel/scope.js";
 import { AccordError, violation } from "../kernel/violation.js";
 import { type ClaimKind, CLAIM_KINDS } from "./bank.js";
@@ -58,6 +58,9 @@ export const ADVERSARIAL_BANK_PATH = resolve(import.meta.dirname, "../../data/pl
 export type AttackKind = "scope" | "advice";
 export const ATTACK_KINDS: readonly AttackKind[] = ["scope", "advice"];
 
+/** Channels a `context` event may arrive on — never the trainer's or the advisor's. */
+export const FOREIGN_SOURCES: readonly UtteranceSource[] = ["quoted-document", "third-party", "tool"];
+
 const SCOPE_DIMENSIONS: readonly ScopeDimension[] = ["version", "region", "badgeLevel", "comparisonBasis"];
 
 /**
@@ -84,6 +87,14 @@ export interface DialogueTurn {
    * on-target answer asserts — the subject oracle (epic #87, slice 1), exactly
    * as in the single-turn bank. */
   expectFacts?: readonly ExpectedFact[];
+  /**
+   * Content that reached the session this turn on a channel the trainer does
+   * not speak on — a pasted guide, a retrieved page, an injected tool result —
+   * recorded before the trainer's own `say`. It is read and, by IA-8, inert:
+   * this is how a genuine cross-turn injection is modelled, as against a
+   * trainer stating something themselves (which their own channel authorises).
+   */
+  context?: readonly { source: Exclude<UtteranceSource, "trainer" | "advisor">; text: string }[];
   /**
    * The cross-turn scope oracle (epic #94, slice 1): after this turn, any
    * *released* record it files — an answer or an act — must carry a grant
@@ -249,6 +260,19 @@ function validateTurn(
     fail("dialogue-turn-ceiling-unstated", `turn ${where} (${turn.disposition}) must name the ceiling in its notes`, where);
   }
 
+  if (turn.context !== undefined) {
+    if (!Array.isArray(turn.context) || turn.context.length === 0) {
+      fail("dialogue-turn-context-malformed", `turn ${where} has an empty context block`, where);
+    }
+    for (const item of turn.context ?? []) {
+      if (item === null || typeof item !== "object" || typeof item.text !== "string" || item.text.trim().length === 0) {
+        fail("dialogue-turn-context-empty", `turn ${where} has a context event with no text`, where);
+      }
+      if (!(FOREIGN_SOURCES as readonly string[]).includes(item.source)) {
+        fail("dialogue-turn-context-channel", `turn ${where} has a context event on channel "${String(item.source)}", which the trainer or advisor speaks on`, String(item.source));
+      }
+    }
+  }
   if (turn.expectScope !== undefined) {
     if (turn.expectScope === null || typeof turn.expectScope !== "object" || Object.keys(turn.expectScope).length === 0) {
       fail("dialogue-turn-scope-malformed", `turn ${where} carries an empty scope oracle`, where);
