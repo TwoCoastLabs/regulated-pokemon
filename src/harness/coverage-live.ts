@@ -31,7 +31,7 @@ import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { fileArtifact, type WriteFile } from "./artifact.js";
-import { readBank } from "./bank.js";
+import { CENTER_BANK_PATH, readBank } from "./bank.js";
 import { phrasingsOf, runBank, runIntentRobustness, type IntentRobustness, type RecordedBankRun } from "./bank-run.js";
 import {
   buildCoverageArtifact,
@@ -47,7 +47,7 @@ import {
 } from "./dialogue-artifact.js";
 import { runDialogues } from "./dialogue-run.js";
 import { ADVERSARIAL_BANK_PATH, readDialogues } from "./dialogues.js";
-import { demoWorld } from "../demo/files.js";
+import { centerWorld, demoWorld } from "../demo/files.js";
 import type { Env } from "./live.js";
 import { DEFAULT_STRONG_MODEL, DEFAULT_WEAK_MODEL, HONEST_PERSONA } from "./models.js";
 import { OpenRouterProvider } from "./openrouter.js";
@@ -66,6 +66,8 @@ export interface CoverageArgs {
   dialogues: boolean;
   /** With `--dialogues`: run the adversarial bank — the trainer as the attacker. */
   adversarial: boolean;
+  /** Run the Center world: kanto-center, its own pack, the migrated bank. */
+  center: boolean;
   /** Hand the proposer the certified facts to compose from (a retrieval lever
    * on the *value* errors a model makes recalling). Enforcement is unaffected —
    * every value is still recomputed — so it is a usefulness dial, and it travels
@@ -106,6 +108,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     weak: boolean;
     dialogues: boolean;
     adversarial: boolean;
+    center: boolean;
     grounded: boolean;
     retrieval: boolean;
     gatedGrammar: boolean;
@@ -121,7 +124,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     source?: string;
     help: boolean;
     errors: string[];
-  } = { live: false, render: false, weak: false, dialogues: false, adversarial: false, grounded: false, retrieval: false, gatedGrammar: false, repair: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
+  } = { live: false, render: false, weak: false, dialogues: false, adversarial: false, center: false, grounded: false, retrieval: false, gatedGrammar: false, repair: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
 
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index];
@@ -141,6 +144,9 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
         break;
       case "--adversarial":
         args.adversarial = true;
+        break;
+      case "--center":
+        args.center = true;
         break;
       case "--grounded":
         args.grounded = true;
@@ -228,6 +234,9 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
   if (args.adversarial && !args.dialogues) {
     args.errors.push("--adversarial is a dialogue bank; add --dialogues");
   }
+  if (args.center && (args.dialogues || args.phrasings)) {
+    args.errors.push("--center runs the single-turn Center bank; the dialogue and robustness banks are the red-blue world's");
+  }
   if (args.dialogues && args.dispositions !== undefined) {
     args.errors.push("--dispositions filters single-turn questions; a dialogue's disposition is per turn, not per conversation");
   }
@@ -257,6 +266,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     weak: args.weak,
     dialogues: args.dialogues,
     adversarial: args.adversarial,
+    center: args.center,
     grounded: args.grounded,
     retrieval: args.retrieval,
     gatedGrammar: args.gatedGrammar,
@@ -290,6 +300,7 @@ const USAGE = [
   "  npm run coverage:map -- --render runs/<file>.json --page docs/coverage.md",
   "",
   "  --live              actually call the provider and file the artifact. Nothing is billed without it.",
+  "  --center            the Center world: kanto-center + pokemon-center-v1 + the migrated realistic bank",
   "  --adversarial       with --dialogues: the adversarial bank — the trainer's own channel attacking",
   "                      scope and the gate; wrong-scope commits and attack reach are reported",
   "  --dialogues         run the multi-turn dialogue bank: per-turn coverage plus each conversation's",
@@ -427,7 +438,7 @@ async function runDialogueMode(args: CoverageArgs, options: CoverageOptions, mod
     (({ model: slug, apiKey: key }: { model: string; apiKey: string }): ModelProvider =>
       new OpenRouterProvider({ id: `dialogue:${slug}`, model: slug, apiKey: key, system: HONEST_PERSONA, structured: true }));
   const provider = makeProvider({ model, apiKey });
-  const world = demoWorld();
+  const world = args.center ? centerWorld() : demoWorld();
 
   const runs = await runDialogues(world, entries, provider, options.clock, args.grounded, args.retrieval, args.gatedGrammar, args.repair, args.repetitions);
   const artifact = buildDialogueArtifact({
@@ -466,7 +477,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
   const model = args.model ?? (args.weak ? DEFAULT_WEAK_MODEL : DEFAULT_STRONG_MODEL);
   if (args.dialogues) return runDialogueMode(args, options, model);
 
-  const bank = readBank();
+  const bank = args.center ? readBank(CENTER_BANK_PATH) : readBank();
 
   let all = args.phrasings ? bank.entries.filter((entry) => phrasingsOf(entry).length > 1) : bank.entries;
   if (args.dispositions !== undefined) {
@@ -513,7 +524,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
     (({ model: slug, apiKey: key }: { model: string; apiKey: string }): ModelProvider =>
       new OpenRouterProvider({ id: `coverage:${slug}`, model: slug, apiKey: key, system: HONEST_PERSONA, structured: true }));
   const provider = makeProvider({ model, apiKey });
-  const world = demoWorld();
+  const world = args.center ? centerWorld() : demoWorld();
 
   let runs: RecordedBankRun[] = [];
   let reports: IntentRobustness[] | undefined;

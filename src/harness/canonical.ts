@@ -59,7 +59,11 @@ function fold(name: string): string {
 function canonicalIndex(registry: CertifiedRegistry): ReadonlyMap<string, string> {
   const index = new Map<string, string>();
   const ambiguous = new Set<string>();
-  for (const id of [...registry.speciesIds, ...registry.moveIds]) {
+  // Items joined the fold when the Center world did (epic #94, slice 3):
+  // "Antidote" is `antidote` and "Super Potion" is `super-potion`, the same
+  // name in a different surface form — and the same injectivity rule guards
+  // a key two universes would share.
+  for (const id of [...registry.speciesIds, ...registry.moveIds, ...registry.itemIds]) {
     const key = fold(id);
     if (index.has(key) && index.get(key) !== id) ambiguous.add(key);
     index.set(key, id);
@@ -100,6 +104,12 @@ export function canonicalizeClaims(registry: CertifiedRegistry, claims: readonly
         return { ...claim, entityId: entity(claim.entityId) };
       case "action":
         return { ...claim, entityId: entity(claim.entityId) };
+      case "treats":
+        // "Antidote" is `antidote`; the condition vocabulary is already
+        // canonical and folds nowhere.
+        return { ...claim, itemId: entity(claim.itemId) };
+      case "comparison":
+        return { ...claim, leftId: entity(claim.leftId), rightId: entity(claim.rightId) };
       case "matchup": {
         if (claim.subject.kind === "species") {
           const named = entity(claim.subject.entityId);

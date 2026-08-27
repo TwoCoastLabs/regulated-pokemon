@@ -187,6 +187,26 @@ function asClaim(value: unknown): Claim | null {
     case "membership":
       if (!isString(value.rosterId) || !isString(value.entityId) || !isBoolean(value.asserted)) return null;
       return { kind: "membership", rosterId: value.rosterId, entityId: value.entityId, asserted: value.asserted };
+    case "treats":
+      // The verdict is the kernel's to derive from the closed effect set; a
+      // present `asserted` is allowed (and verified), a malformed one is
+      // malformed, and the pair alone is the intended, grounded shape.
+      if (
+        !isString(value.itemId) ||
+        !isString(value.condition) ||
+        (value.asserted !== undefined && !isBoolean(value.asserted))
+      ) {
+        return null;
+      }
+      return value.asserted === undefined
+        ? { kind: "treats", itemId: value.itemId, condition: value.condition }
+        : { kind: "treats", itemId: value.itemId, condition: value.condition, asserted: value.asserted };
+    case "comparison":
+      // No values: the model names the fact and the pair, and the kernel
+      // derives both sides, the gap and the leader — a wrong value is not a
+      // reachable output under enforced decoding.
+      if (!isString(value.factId) || !isString(value.leftId) || !isString(value.rightId)) return null;
+      return { kind: "comparison", factId: value.factId, leftId: value.leftId, rightId: value.rightId };
     case "ranking": {
       // `selectedEntityId` is optional: the model declares the set and the
       // ordering, and the kernel names the winner. A present-but-non-string one

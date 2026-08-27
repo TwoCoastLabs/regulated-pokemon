@@ -32,13 +32,13 @@
  * widens this schema in the same commit, or a test fails.
  */
 
-import { MOVE_FACT_IDS, SPECIES_FACT_IDS } from "../kernel/registry.js";
+import { ITEM_FACT_IDS, MOVE_FACT_IDS, SPECIES_FACT_IDS, STATUS_CONDITIONS } from "../kernel/registry.js";
 import { STAT_NAMES } from "../kernel/snapshot-format.js";
 import type { FillerKind } from "./grammar-gate.js";
 
 /** Every certified fact id, species and move alike: a fact claim's `entityId`
  * may name either, and the registry resolves each against its own vocabulary. */
-export const FACT_IDS: readonly string[] = [...SPECIES_FACT_IDS, ...MOVE_FACT_IDS];
+export const FACT_IDS: readonly string[] = [...SPECIES_FACT_IDS, ...MOVE_FACT_IDS, ...ITEM_FACT_IDS];
 
 /** A JSON Schema document, as far as this module needs to describe one. */
 export type JsonSchema = Record<string, unknown>;
@@ -102,7 +102,7 @@ const ROSTER: JsonSchema = object({
   criteria: object({ all: { type: "array", items: CRITERION } }),
 });
 
-function claimSchema(lessonIds: readonly string[], ruleIds: readonly string[], fillerKinds?: ReadonlySet<FillerKind>): JsonSchema {
+function claimSchema(lessonIds: readonly string[], ruleIds: readonly string[], fillerKinds?: ReadonlySet<FillerKind>, items = false): JsonSchema {
   // Retrieval-gated grammar (grammar-gate.ts): the three aggregate/constant
   // kinds are offered only when a question nominates them; `undefined` means no
   // gate and all three are offered (the default, and every non-retrieval path).
@@ -133,6 +133,17 @@ function claimSchema(lessonIds: readonly string[], ruleIds: readonly string[], f
     // declares no rules (an empty enum some providers reject).
     ...(ruleIds.length === 0 || !filler("gameRule") ? [] : [variant("gameRule", { ruleId: { type: "string", enum: [...ruleIds] } })]),
     variant("membership", { rosterId: STRING, entityId: STRING, asserted: BOOLEAN }),
+    // The Center kinds (epic #94, slice 3) are offered only in a world that
+    // certifies items: in any other, nothing they name could resolve and the
+    // grammar would be advertising dead shapes. The verdict and the values
+    // are the kernel's to derive, so neither is representable here — the
+    // model names the pair, never the answer.
+    ...(items
+      ? [
+          variant("treats", { itemId: STRING, condition: { type: "string", enum: [...STATUS_CONDITIONS] } }),
+          variant("comparison", { factId: FACT_ID, leftId: STRING, rightId: STRING }),
+        ]
+      : []),
     // No `selectedEntityId`: the model declares the set, the basis and the
     // direction, and the kernel picks the extreme. Like the count, a wrong
     // winner is not a reachable output under enforced decoding.
@@ -185,6 +196,8 @@ export function answerSchema(
    * nominated; the schema offers only those three. Absent means no gate — all
    * three are offered, the default for every path that has not opted in. */
   fillerKinds?: ReadonlySet<FillerKind>,
+  /** Whether the world certifies items — offers the Center claim kinds. */
+  items = false,
 ): JsonSchema {
   return object({
     rosters: { type: "array", items: ROSTER },
@@ -194,6 +207,7 @@ export function answerSchema(
         pack.curriculum.map((entry) => entry.id),
         pack.gameRules.map((entry) => entry.id),
         fillerKinds,
+        items,
       ),
     },
   });
