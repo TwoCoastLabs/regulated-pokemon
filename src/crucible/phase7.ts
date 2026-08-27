@@ -115,6 +115,27 @@ export const PHASE_7_MUTATIONS: readonly Mutation[] = [
         })),
       })),
   },
+  {
+    id: "recommend-a-controlled-item",
+    title: "Recommend Protein to a two-badge trainer",
+    description:
+      "Vitamins are controlled performance enhancers under the Center's own " +
+      "pack. The gate is the species gate one universe over: same article, " +
+      "same badge scale, its own named rule — and pleading has no mechanism " +
+      "here either.",
+    article: "IA-5",
+    rule: "restricted-item",
+    run: () => {
+      const context = { ...centerContext(2) };
+      const compiled = compileManifest(context, {
+        transactionId: "txn-center-gate",
+        claims: [{ kind: "recommendation", entityId: "protein" }],
+        rosters: [],
+      });
+      if (compiled.ok) return verifyManifest(context, compiled.value);
+      return { allowed: false, violations: compiled.violations };
+    },
+  },
 ];
 
 export const PHASE_7_CONTROLS: readonly Control[] = [
@@ -142,4 +163,4 @@ export const PHASE_7_CONTROLS: readonly Control[] = [
 ];
 
 /** Articles the phase-7 crucible exercises. Pinned by test, both ways. */
-export const PHASE_7_ARTICLES: readonly ArticleId[] = ["IA-2"];
+export const PHASE_7_ARTICLES: readonly ArticleId[] = ["IA-2", "IA-5"];

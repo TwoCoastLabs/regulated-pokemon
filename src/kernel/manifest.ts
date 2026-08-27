@@ -33,7 +33,7 @@ import type {
 } from "./contracts.js";
 import { deriveMatchup, matchupSubjectId } from "./chart.js";
 import { deriveEligibility, describeFinding, sameFinding } from "./eligibility.js";
-import { type AccordPack, actionRule, approvesLocale, blockFor, curriculumRule, type ExhibitRule, gameRule, restrictionsFor } from "./pack.js";
+import { type AccordPack, actionRule, approvesLocale, blockFor, curriculumRule, type ExhibitRule, gameRule, itemRestrictionsFor, restrictionsFor } from "./pack.js";
 import { type CertifiedRegistry, formatFactValue, sameFactValue, STATUS_CONDITIONS } from "./registry.js";
 import { verifyRoster } from "./roster.js";
 import { requiredDimensionsFor } from "./scope-deps.js";
@@ -688,8 +688,13 @@ function checkRecommendation(
   claim: Extract<Claim, { kind: "recommendation" }>,
 ): Violation[] {
   const species = context.registry.findSpecies(claim.entityId);
-  if (species === undefined) return [fabricated(context, claim.entityId)];
-  return checkAccreditation(context, claim.entityId, species);
+  if (species !== undefined) return checkAccreditation(context, claim.entityId, species);
+  // The Center sells things too (epic #94, slice 3): an item may be
+  // recommended, and a controlled item is gated exactly as a restricted
+  // species is — same article, same badge scale, its own named rule.
+  const item = context.registry.findItem(claim.entityId);
+  if (item !== undefined) return checkItemAccreditation(context, claim.entityId, item);
+  return [fabricated(context, claim.entityId)];
 }
 
 /**
@@ -702,7 +707,8 @@ function checkRecommendation(
  */
 function checkAction(context: ManifestContext, claim: Extract<Claim, { kind: "action" }>): Violation[] {
   const species = context.registry.findSpecies(claim.entityId);
-  if (species === undefined) return [fabricated(context, claim.entityId)];
+  const item = species === undefined ? context.registry.findItem(claim.entityId) : undefined;
+  if (species === undefined && item === undefined) return [fabricated(context, claim.entityId)];
 
   const rule = actionRule(context.pack, claim.tool);
   if (rule === undefined) {
@@ -721,15 +727,35 @@ function checkAction(context: ManifestContext, claim: Extract<Claim, { kind: "ac
   // species is gated, so an act that hands one over is gated identically — and
   // where the direction of the transfer makes that read oddly (a trainer being
   // refused permission to release what they already hold), the refusal is on
-  // the safe side of the error.
-  return checkAccreditation(context, claim.entityId, species);
+  // the safe side of the error. An act on an item runs the item's gate.
+  if (species !== undefined) return checkAccreditation(context, claim.entityId, species);
+  return checkItemAccreditation(context, claim.entityId, item as NonNullable<typeof item>);
 }
 
 function fabricated(context: ManifestContext, entityId: string): Violation {
   return violation("IA-3", "fabricated-entity", `"${entityId}" is not certified by ${context.registry.snapshot.id}`, {
-    expected: `a species in ${context.registry.snapshot.id}`,
+    expected: `an entity in ${context.registry.snapshot.id}`,
     actual: entityId,
   });
+}
+
+/** Whether this trainer may be advised toward, or handed, a controlled item. */
+function checkItemAccreditation(
+  context: ManifestContext,
+  entityId: string,
+  item: { category: string },
+): Violation[] {
+  const badgeLevel = context.grant!.scope.badgeLevel;
+  return itemRestrictionsFor(context.pack, item)
+    .filter((rule) => badgeLevel < rule.minimumBadgeLevel)
+    .map((rule) =>
+      violation(
+        rule.article,
+        "restricted-item",
+        `${entityId} is a controlled item under "${rule.id}" and this trainer is not accredited for it`,
+        { expected: `badge level ${rule.minimumBadgeLevel}`, actual: `badge level ${badgeLevel}` },
+      ),
+    );
 }
 
 /** Whether this trainer is accredited to be advised of, or handed, a species. */

@@ -40,7 +40,7 @@ decides it on the divergence and ceremony numbers, not on three questions.
 | 3 | Fact readers | Item facts (cost, restores, cures, usable-in, steps, catch multiplier, evolves) as registry readers with fidelity classes | 2 | 0.1 | #104 |
 | 4 | Claim shapes the bank demanded | `treats` (with the certified negative) and `comparison`, each with derivation, verifier, formatter, crucible mutation and coverage bucket | 5 | 0.3 | #105 |
 | 5 | Vocabulary widening | Roster criteria over items; item actions in the pack's action registry with consent notices for the irreversible ones | 3 | 0.15 (criteria; actions land with the pack, PR 3) | #105 |
-| 6 | Pack | Controlled-item gates (the IA-5 analog), disclosures with approved wording, copy catalogue, formatters for the new value kinds, curriculum entries the bank asked for | 4 | | |
+| 6 | Pack | Controlled-item gates (the IA-5 analog), disclosures with approved wording, copy catalogue, formatters for the new value kinds, curriculum entries the bank asked for | 4 | 0.25 | #106 |
 | 7 | Crucible | Mutations per new mechanism, plus the clean controls | 3 | | |
 | 8 | Bank migration and oracles | The inquiry bank migrated into the playability format with `expectFacts`/`expectBlockIds` validated against the new world | 2 | | |
 | 9 | Coverage map | Both defaults at N=3 on the realistic bank; the disposition map rendered from the artifact | 1 (plus billable run time) | | |
@@ -75,6 +75,16 @@ claims, and the engine/instance boundary has to move.
   bet behaving as designed: widening is noisy and reviewed, never silent.
   Item *rankings* wait on the pack's comparison-basis vocabulary (PR 3), and
   the item-action half of row 5 lands with the pack that registers the acts.
+
+- **Row 6 and row 5's remainder (#106):** ~0.25 agent-days. The pack itself
+  was cheap — it is data, which is the design's whole bet — and the spend was
+  again the widening around it: restriction rules learning a second
+  discriminator (rarity xor item category, validated at load), the
+  recommendation/action gates learning the second universe, one new exhibit
+  slot source for the consent notice's substance, and the sweep learning
+  that a pack belongs with its world. Authoring five curriculum lessons and
+  the consent wording was the reviewed-content cost, exactly where §4
+  predicts it.
 
 ## How the actuals are recorded
 
