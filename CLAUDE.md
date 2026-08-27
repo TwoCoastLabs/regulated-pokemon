@@ -9,8 +9,9 @@ from architecture, not model capability. The canon is
 design into real high-stakes domains (and operating a knowledge base under
 it) is [docs/generalization.md](docs/generalization.md); the note placing the
 design against the academic and industrial field, with forward directions as
-hypotheses, is [docs/landscape.md](docs/landscape.md); the build plan is
-**epic #1** — work from the epic, keep its checkboxes honest.
+hypotheses, is [docs/landscape.md](docs/landscape.md); the build epic (#1) is
+complete and closed; the current plan is **epic #94** (realistic inquiries) —
+work from the epic, keep its checkboxes honest.
 
 ## Publication posture (read first)
 

@@ -281,6 +281,13 @@ complementary and not repeated here.
 
 ### H1. The kernel is a free verifiable reward — spend it at training time
 
+*Deferred (2026-08-26): out of scope for epic #94. Two reasons, both
+operational rather than technical — the project has no fine-tuning operations
+capability, and no deployment or customer whose real inquiries would supply the
+data worth training on. The hypothesis stands; it waits for a real deployment
+to supply both. Every usefulness lever in the current epic is deterministic or
+prompt-side.*
+
 The single largest lever. The 2024–25 results on reinforcement learning from
 verifiable rewards (Tulu 3's RLVR, DeepSeek-R1) and the earlier
 rejection-sampling fine-tuning line (STaR) work wherever a checker exists.
