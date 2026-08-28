@@ -135,6 +135,11 @@ export interface SessionState {
    * followed a repair is a post-repair resolution, and the accounting rule is
    * that first-attempt and post-repair are never blended. */
   repairs: number;
+  /** Degenerate-comparison folds performed at decode (recovery channel 2,
+   * Center loop 2) — a self-pair folded to the fact it means. Counted for the
+   * same reason repairs are: a folded resolution is never blended with a
+   * first-shape one. */
+  folds: number;
   /** Ladder proposals spent on the current ask; a fresh utterance resets it. */
   ladderTurns: number;
   /**
@@ -186,6 +191,7 @@ export function startSession(idPrefix?: string): SessionState {
     phase: { kind: "gathering" },
     askStart: 0,
     repairs: 0,
+    folds: 0,
     ladderTurns: 0,
   };
 }
@@ -580,14 +586,15 @@ async function teachOrDiscover(
     return { state: spent, result: step.decode.reason === NO_CLAIMS_REASON ? "off-domain" : "unusable", claims: [] };
   }
   const draft = step.decode.draft;
+  const spentFolded = { ...spent, folds: spent.folds + step.decode.folds };
   // Commit grantless when nothing in the draft depends on scope — a lesson, a
   // game-rule constant, the same answer for every trainer (epic #64). Derived
   // from the one dependency table, so this never drifts from what the kernel's
   // own scope gate will allow grantless.
   if (requiredDimensionsFor(draft.claims).length === 0) {
-    return { state: commit(spent, deps, { transactionId, establishedAt, draft }), result: "taught", claims: draft.claims };
+    return { state: commit(spentFolded, deps, { transactionId, establishedAt, draft }), result: "taught", claims: draft.claims };
   }
-  return { state: spent, result: "needs-scope", claims: draft.claims };
+  return { state: spentFolded, result: "needs-scope", claims: draft.claims };
 }
 
 async function answer(state: SessionState, deps: SessionDeps): Promise<SessionState> {
@@ -638,7 +645,11 @@ async function answer(state: SessionState, deps: SessionDeps): Promise<SessionSt
     );
   }
 
-  const withUsage = { ...state, usage: addUsage(state.usage, step.usage) };
+  const withUsage = {
+    ...state,
+    usage: addUsage(state.usage, step.usage),
+    folds: state.folds + (step.decode.ok ? step.decode.folds : 0),
+  };
 
   // The ask, as the trainer worded it — what the deterministic route reads.
   const ask = state.transcript

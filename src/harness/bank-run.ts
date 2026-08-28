@@ -71,6 +71,10 @@ export interface BankRun {
    * channel 2) — a post-repair resolution, counted apart from first-attempt
    * ones so the retry can never launder the model's mis-recall rate. */
   repaired?: boolean;
+  /** True when the outcome followed a degenerate-comparison fold at decode
+   * (Center loop 2) — the self-pair folded to the fact it means, counted for
+   * the same never-blend reason `repaired` is. */
+  folded?: boolean;
   /** One human line on how it ended, for the report's detail column. */
   detail: string;
 }
@@ -296,6 +300,7 @@ export async function runBankEntry(
     turns: run.turns,
     ceremony: ceremonyOf(run),
     ...(state.repairs > 0 ? { repaired: true } : {}),
+    ...(state.folds > 0 ? { folded: true } : {}),
     detail: run.detail,
     run,
   };

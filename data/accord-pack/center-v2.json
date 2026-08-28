@@ -1,0 +1,1318 @@
+{
+  "packVersion": 7,
+  "id": "pokemon-center-v2",
+  "presentation": {
+    "locales": [
+      "en-US",
+      "en-GB"
+    ],
+    "formats": [
+      "entity-name",
+      "eligibility-verdict",
+      "integer",
+      "list-oxford",
+      "member-of",
+      "matchup-direction",
+      "no-value",
+      "plain-text",
+      "yes-no"
+    ],
+    "catalogue": [
+      {
+        "id": "page.title",
+        "text": {
+          "en-US": "Your certified answer",
+          "en-GB": "Your certified answer"
+        }
+      },
+      {
+        "id": "page.lead",
+        "text": {
+          "en-US": "Every value below was checked by the League against the official records before this page could be shown.",
+          "en-GB": "Every value below was checked by the League against the official records before this page could be shown."
+        }
+      },
+      {
+        "id": "lead-in.fact",
+        "text": {
+          "en-US": "From the official records:",
+          "en-GB": "From the official records:"
+        }
+      },
+      {
+        "id": "lead-in.count",
+        "text": {
+          "en-US": "Counted by the League itself:",
+          "en-GB": "Counted by the League itself:"
+        }
+      },
+      {
+        "id": "lead-in.membership",
+        "text": {
+          "en-US": "Membership in this set:",
+          "en-GB": "Membership in this set:"
+        }
+      },
+      {
+        "id": "lead-in.matchup",
+        "text": {
+          "en-US": "How the types line up, straight from the chart:",
+          "en-GB": "How the types line up, straight from the chart:"
+        }
+      },
+      {
+        "id": "lead-in.eligibility",
+        "text": {
+          "en-US": "What the League's own rules say about this pick:",
+          "en-GB": "What the League's own rules say about this pick:"
+        }
+      },
+      {
+        "id": "lead-in.selection",
+        "text": {
+          "en-US": "The one that comes out on top:",
+          "en-GB": "The one that comes out on top:"
+        }
+      },
+      {
+        "id": "lead-in.recommendation",
+        "text": {
+          "en-US": "What I would go for, given your badges:",
+          "en-GB": "What I would go for, given your badges:"
+        }
+      },
+      {
+        "id": "lead-in.action",
+        "text": {
+          "en-US": "What I will do, once you confirm:",
+          "en-GB": "What I will do, once you confirm:"
+        }
+      },
+      {
+        "id": "provenance.snapshot",
+        "text": {
+          "en-US": "Certified snapshot:",
+          "en-GB": "Certified snapshot:"
+        }
+      }
+    ],
+    "templates": [
+      {
+        "id": "sentence.fact",
+        "kind": "fact",
+        "text": {
+          "en-US": "The official records certify {entity}'s {fact} as {value}.",
+          "en-GB": "The official records certify {entity}'s {fact} as {value}."
+        }
+      },
+      {
+        "id": "sentence.count",
+        "kind": "count",
+        "text": {
+          "en-US": "The official records certify {count} {set}.",
+          "en-GB": "The official records certify {count} {set}."
+        }
+      },
+      {
+        "id": "sentence.membership",
+        "kind": "membership",
+        "text": {
+          "en-US": "By the official records, {entity} {membership} {set}.",
+          "en-GB": "By the official records, {entity} {membership} {set}."
+        }
+      },
+      {
+        "id": "sentence.selection",
+        "kind": "selection",
+        "text": {
+          "en-US": "Of {set}, ranked by {basis}, the official records certify {entity}.",
+          "en-GB": "Of {set}, ranked by {basis}, the official records certify {entity}."
+        }
+      },
+      {
+        "id": "sentence.matchup",
+        "kind": "matchup",
+        "text": {
+          "en-US": "By the certified type chart, {subject} is {direction} {members}.",
+          "en-GB": "By the certified type chart, {subject} is {direction} {members}."
+        }
+      },
+      {
+        "id": "sentence.eligibility",
+        "kind": "eligibility",
+        "text": {
+          "en-US": "Under League rule {rule}, advising toward {entity} requires badge level {requires}; this trainer holds {held}, so the certified finding is {verdict}.",
+          "en-GB": "Under League rule {rule}, advising toward {entity} requires badge level {requires}; this trainer holds {held}, so the certified finding is {verdict}."
+        }
+      },
+      {
+        "id": "sentence.recommendation",
+        "kind": "recommendation",
+        "text": {
+          "en-US": "Certified as eligible for this trainer, the Advisor recommends {entity}.",
+          "en-GB": "Certified as eligible for this trainer, the Advisor recommends {entity}."
+        }
+      },
+      {
+        "id": "sentence.action",
+        "kind": "action",
+        "text": {
+          "en-US": "With your confirmation below, the Advisor will {action} {entity}.",
+          "en-GB": "With your confirmation below, the Advisor will {action} {entity}."
+        }
+      },
+      {
+        "id": "sentence.treats",
+        "kind": "treats",
+        "text": {
+          "en-US": "Does {item} treat {condition}? The official records certify: {verdict}.",
+          "en-GB": "Does {item} treat {condition}? The official records certify: {verdict}."
+        }
+      },
+      {
+        "id": "sentence.comparison",
+        "kind": "comparison",
+        "text": {
+          "en-US": "By certified {fact}, {left} shows {leftvalue} and {right} shows {rightvalue} — a gap of {gap}, led by {leader}.",
+          "en-GB": "By certified {fact}, {left} shows {leftvalue} and {right} shows {rightvalue} — a gap of {gap}, led by {leader}."
+        }
+      }
+    ],
+    "display": {
+      "minLegiblePx": 12,
+      "minLegibleOpacity": 0.5,
+      "maxProximityPx": 320
+    }
+  },
+  "restrictions": [
+    {
+      "id": "legendary-acquisition",
+      "article": "IA-5",
+      "rarity": "legendary",
+      "minimumBadgeLevel": 6
+    },
+    {
+      "id": "mythical-acquisition",
+      "article": "IA-5",
+      "rarity": "mythical",
+      "minimumBadgeLevel": 8
+    },
+    {
+      "id": "controlled-vitamins",
+      "article": "IA-5",
+      "itemCategory": "vitamins",
+      "minimumBadgeLevel": 4
+    },
+    {
+      "id": "controlled-battle-boosters",
+      "article": "IA-5",
+      "itemCategory": "stat-boosts",
+      "minimumBadgeLevel": 3
+    }
+  ],
+  "actions": [
+    {
+      "id": "add-to-team",
+      "irreversible": false
+    },
+    {
+      "id": "release",
+      "irreversible": true
+    },
+    {
+      "id": "use-item",
+      "irreversible": false
+    },
+    {
+      "id": "use-permanent-item",
+      "irreversible": true
+    }
+  ],
+  "exhibits": [
+    {
+      "id": "release-irreversibility",
+      "article": "IA-9",
+      "kind": "warning",
+      "when": {
+        "kind": "action-claimed",
+        "tool": "release"
+      },
+      "block": {
+        "id": "release-permanence",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Mandatory consent notice: releasing a Pokémon is permanent. The League cannot recover a released Pokémon, and every move it has learned goes with it. Named below is the Pokémon this release gives up, and everything it knows.",
+            "digest": "sha256:2324a1a4925c1936a1048d869f898c22a1a19dde27ade9a9ac06bfb62de7e37f"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Mandatory consent notice: releasing a Pokémon is permanent. The League cannot recover a released Pokémon, and every move it has learnt goes with it. Named below is the Pokémon this release gives up, and everything it knows.",
+            "digest": "sha256:3d5cdb54bb334cb95ad48691b6684e89f39275638797afe941c8bef110e935b3"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "name": "released",
+          "source": "action-entity",
+          "format": "entity-name"
+        },
+        {
+          "name": "giving-up",
+          "source": "action-entity-learnset",
+          "format": "list-oxford"
+        }
+      ]
+    },
+    {
+      "id": "selfdestruct-warning",
+      "article": "IA-6",
+      "kind": "warning",
+      "when": {
+        "kind": "entity-claimed",
+        "entityId": "self-destruct"
+      },
+      "block": {
+        "id": "selfdestruct-handling",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Mandatory handling notice: Selfdestruct makes the user faint. Before traveling with a Pokémon that knows it, be sure you can afford to lose that Pokémon for the rest of the battle.",
+            "digest": "sha256:42ee625dd83e391cb7fd0013e2d301cf3394adcd0725e06503d2d13f7fbe4a65"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Mandatory handling notice: Selfdestruct makes the user faint. Before travelling with a Pokémon that knows it, be sure you can afford to lose that Pokémon for the rest of the battle.",
+            "digest": "sha256:aa5c294429c2bf599bd66a1bce7b13f02d36a62fe57cf9367b448e1206202ae1"
+          }
+        ]
+      }
+    },
+    {
+      "id": "explosion-warning",
+      "article": "IA-6",
+      "kind": "warning",
+      "when": {
+        "kind": "entity-claimed",
+        "entityId": "explosion"
+      },
+      "block": {
+        "id": "explosion-handling",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Mandatory handling notice: Explosion makes the user faint. Before traveling with a Pokémon that knows it, be sure you can afford to lose that Pokémon for the rest of the battle.",
+            "digest": "sha256:9bd55d4327e2f88dee0d7c3e76a5fc891c906c0a0dd0e83befeb93b096ff3f23"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Mandatory handling notice: Explosion makes the user faint. Before travelling with a Pokémon that knows it, be sure you can afford to lose that Pokémon for the rest of the battle.",
+            "digest": "sha256:7ef791aa12d7798dfd5d2d39d513f6203c9b915f2cabfde3197ea02884063a2b"
+          }
+        ]
+      }
+    },
+    {
+      "id": "provenance",
+      "article": "IA-2",
+      "kind": "provenance",
+      "when": {
+        "kind": "always"
+      },
+      "block": {
+        "id": "pokeapi-attribution",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Certified from PokéAPI data, used under the BSD-3-Clause license. Nothing on this page was recalled from memory.",
+            "digest": "sha256:c702dafbdb3af985477788fe12e511bccf8386cd28e0dc57bf896ef82b26248b"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Certified from PokéAPI data, used under the BSD-3-Clause licence. Nothing on this page was recalled from memory.",
+            "digest": "sha256:79a969e7fbd190f9d2b0209a1d6fb0e32226836ff4a529333d29189ae8710571"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "name": "snapshot",
+          "source": "snapshot-id",
+          "format": "plain-text"
+        }
+      ]
+    },
+    {
+      "id": "permanent-item-consent",
+      "article": "IA-9",
+      "kind": "warning",
+      "when": {
+        "kind": "action-claimed",
+        "tool": "use-permanent-item"
+      },
+      "block": {
+        "id": "permanent-item-consent",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Mandatory consent notice: using this item is permanent. What it changes cannot be undone by the League, and the item itself is consumed. Named below is the item this act uses, and what the official records certify it does.",
+            "digest": "sha256:bd27b38a5379f03943e84ae3ad47f78e02c1e79016f76158e0a04f6f1739ebf7"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Mandatory consent notice: using this item is permanent. What it changes cannot be undone by the League, and the item itself is consumed. Named below is the item this act uses, and what the official records certify it does.",
+            "digest": "sha256:bd27b38a5379f03943e84ae3ad47f78e02c1e79016f76158e0a04f6f1739ebf7"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "name": "item",
+          "source": "action-entity",
+          "format": "entity-name"
+        },
+        {
+          "name": "what-it-does",
+          "source": "action-entity-effect",
+          "format": "plain-text"
+        }
+      ]
+    }
+  ],
+  "vocabulary": {
+    "contextWindow": 3,
+    "validitySeconds": 86400,
+    "markers": {
+      "negation": [
+        "not",
+        "no",
+        "never",
+        "isn't",
+        "aren't",
+        "wasn't",
+        "don't",
+        "doesn't",
+        "didn't",
+        "won't",
+        "stopped",
+        "quit",
+        "without",
+        "instead"
+      ],
+      "reported": [
+        "says",
+        "say",
+        "said",
+        "told",
+        "tells",
+        "wants",
+        "wanted",
+        "asked",
+        "asks",
+        "insists",
+        "recommends",
+        "recommended",
+        "suggests",
+        "suggested",
+        "according",
+        "rival",
+        "friend",
+        "guide",
+        "walkthrough",
+        "forum",
+        "streamer",
+        "someone",
+        "everyone"
+      ],
+      "instruction": [
+        "ignore",
+        "disregard",
+        "override",
+        "overrule",
+        "pretend",
+        "assume",
+        "system",
+        "assistant",
+        "advisor",
+        "prompt",
+        "instructions"
+      ],
+      "interrogative": [
+        "what",
+        "which",
+        "who",
+        "whom",
+        "whose",
+        "where",
+        "when",
+        "why",
+        "how",
+        "list",
+        "tell",
+        "show",
+        "is",
+        "are",
+        "does",
+        "do",
+        "did",
+        "can",
+        "could",
+        "should",
+        "would"
+      ],
+      "conjunction": [
+        "and",
+        "but",
+        "although",
+        "though",
+        "while",
+        "because",
+        "so",
+        "however",
+        "whereas"
+      ]
+    },
+    "dimensions": [
+      {
+        "dimension": "version",
+        "valueType": "text",
+        "question": "Which game version are you playing — Red/Blue, or Yellow?",
+        "terms": [
+          {
+            "value": "red-blue",
+            "tokens": [
+              "red",
+              "blue",
+              "red-blue"
+            ],
+            "context": [
+              "playing",
+              "play",
+              "playthrough",
+              "replaying",
+              "version",
+              "game",
+              "games",
+              "copy",
+              "cartridge",
+              "save",
+              "run",
+              "my",
+              "on",
+              "meant"
+            ]
+          },
+          {
+            "value": "yellow",
+            "tokens": [
+              "yellow"
+            ],
+            "context": [
+              "playing",
+              "play",
+              "playthrough",
+              "replaying",
+              "version",
+              "game",
+              "games",
+              "copy",
+              "cartridge",
+              "save",
+              "run",
+              "my",
+              "on",
+              "meant"
+            ]
+          }
+        ]
+      },
+      {
+        "dimension": "region",
+        "valueType": "text",
+        "question": "Which region are you playing through?",
+        "terms": [
+          {
+            "value": "kanto",
+            "tokens": [
+              "kanto"
+            ],
+            "context": [
+              "region",
+              "playing",
+              "play",
+              "through",
+              "across",
+              "around",
+              "in",
+              "my",
+              "travelling",
+              "traveling"
+            ]
+          }
+        ]
+      },
+      {
+        "dimension": "badgeLevel",
+        "valueType": "number",
+        "question": "How many gym badges do you hold?",
+        "terms": [
+          {
+            "value": 0,
+            "tokens": [
+              "0",
+              "zero"
+            ],
+            "context": [
+              "badge",
+              "badges"
+            ]
+          },
+          {
+            "value": 1,
+            "tokens": [
+              "1",
+              "one"
+            ],
+            "context": [
+              "badge",
+              "badges"
+            ]
+          },
+          {
+            "value": 2,
+            "tokens": [
+              "2",
+              "two"
+            ],
+            "context": [
+              "badge",
+              "badges"
+            ]
+          },
+          {
+            "value": 3,
+            "tokens": [
+              "3",
+              "three"
+            ],
+            "context": [
+              "badge",
+              "badges"
+            ]
+          },
+          {
+            "value": 4,
+            "tokens": [
+              "4",
+              "four"
+            ],
+            "context": [
+              "badge",
+              "badges"
+            ]
+          },
+          {
+            "value": 5,
+            "tokens": [
+              "5",
+              "five"
+            ],
+            "context": [
+              "badge",
+              "badges"
+            ]
+          },
+          {
+            "value": 6,
+            "tokens": [
+              "6",
+              "six"
+            ],
+            "context": [
+              "badge",
+              "badges"
+            ]
+          },
+          {
+            "value": 7,
+            "tokens": [
+              "7",
+              "seven"
+            ],
+            "context": [
+              "badge",
+              "badges"
+            ]
+          },
+          {
+            "value": 8,
+            "tokens": [
+              "8",
+              "eight"
+            ],
+            "context": [
+              "badge",
+              "badges"
+            ]
+          }
+        ]
+      },
+      {
+        "dimension": "comparisonBasis",
+        "valueType": "text",
+        "question": "What should the comparison be based on — speed, attack, defense, HP, base stat total, or cost?",
+        "terms": [
+          {
+            "value": "base-speed",
+            "tokens": [
+              "speed"
+            ],
+            "context": [
+              "by",
+              "base",
+              "rank",
+              "ranked",
+              "ranking",
+              "order",
+              "ordered",
+              "compare",
+              "compared",
+              "comparison",
+              "basis",
+              "highest",
+              "lowest"
+            ]
+          },
+          {
+            "value": "base-attack",
+            "tokens": [
+              "attack"
+            ],
+            "context": [
+              "by",
+              "base",
+              "rank",
+              "ranked",
+              "ranking",
+              "order",
+              "ordered",
+              "compare",
+              "compared",
+              "comparison",
+              "basis",
+              "highest",
+              "lowest"
+            ]
+          },
+          {
+            "value": "base-defense",
+            "tokens": [
+              "defense",
+              "defence"
+            ],
+            "context": [
+              "by",
+              "base",
+              "rank",
+              "ranked",
+              "ranking",
+              "order",
+              "ordered",
+              "compare",
+              "compared",
+              "comparison",
+              "basis",
+              "highest",
+              "lowest"
+            ]
+          },
+          {
+            "value": "base-hp",
+            "tokens": [
+              "hp",
+              "hitpoints"
+            ],
+            "context": [
+              "by",
+              "base",
+              "rank",
+              "ranked",
+              "ranking",
+              "order",
+              "ordered",
+              "compare",
+              "compared",
+              "comparison",
+              "basis",
+              "highest",
+              "lowest"
+            ]
+          },
+          {
+            "value": "base-stat-total",
+            "tokens": [
+              "total",
+              "bst"
+            ],
+            "context": [
+              "by",
+              "base",
+              "stat",
+              "stats",
+              "rank",
+              "ranked",
+              "ranking",
+              "order",
+              "ordered",
+              "compare",
+              "compared",
+              "comparison",
+              "basis",
+              "highest",
+              "lowest"
+            ]
+          },
+          {
+            "value": "cost",
+            "tokens": [
+              "cost",
+              "price",
+              "cheapest",
+              "cheaper",
+              "priciest",
+              "expensive"
+            ],
+            "context": [
+              "by",
+              "base",
+              "rank",
+              "ranked",
+              "ranking",
+              "order",
+              "ordered",
+              "compare",
+              "compared",
+              "comparison",
+              "basis",
+              "highest",
+              "lowest",
+              "value",
+              "money",
+              "buy"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "curriculum": [
+    {
+      "id": "what-is-game",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-game",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Pokémon Red and Blue are the first Kanto journeys. You travel the region town by town, catch wild Pokémon, train a team of up to six, and challenge the eight Gym Leaders on the way to the Pokémon League. The Advisor answers from the official Red and Blue records — what a Pokémon is, where it appears, what it learns, how types interact — and says so when a question falls outside those records.",
+            "digest": "sha256:e98a2dc4ae5366db04aece95edd74294a7bb005d8fcb54638a47163689b8c79f"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Pokémon Red and Blue are the first Kanto journeys. You travel the region town by town, catch wild Pokémon, train a team of up to six, and challenge the eight Gym Leaders on the way to the Pokémon League. The Advisor answers from the official Red and Blue records — what a Pokémon is, where it appears, what it learns, how types interact — and says so when a question falls outside those records.",
+            "digest": "sha256:e98a2dc4ae5366db04aece95edd74294a7bb005d8fcb54638a47163689b8c79f"
+          }
+        ]
+      }
+    },
+    {
+      "id": "how-to-play",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-how-to-play",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Play moves between exploring and battling. Walk the routes and tall grass to meet wild Pokémon; battle them to train your team, or throw a Poké Ball to catch them. Trainers on the road will challenge you as you pass. Keep your team healthy at any Pokémon Center — healing there is free — and stock up on Balls and Potions at the Poké Marts. Your team holds six Pokémon; the rest wait safely in the PC storage system.",
+            "digest": "sha256:fa245c8f93f29accf7dc530d0d846490f775598c8706d47aacb05b46f189056a"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Play moves between exploring and battling. Walk the routes and tall grass to meet wild Pokémon; battle them to train your team, or throw a Poké Ball to catch them. Trainers on the road will challenge you as you pass. Keep your team healthy at any Pokémon Center — healing there is free — and stock up on Balls and Potions at the Poké Marts. Your team holds six Pokémon; the rest wait safely in the PC storage system.",
+            "digest": "sha256:fa245c8f93f29accf7dc530d0d846490f775598c8706d47aacb05b46f189056a"
+          }
+        ]
+      }
+    },
+    {
+      "id": "objective",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-objective",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "The journey has two goals, and you set the pace for both. The League path: defeat the eight Gym Leaders of Kanto for their badges, then cross Victory Road and take on the Elite Four. The collector's path: complete the Pokédex by catching or trading for every species the records certify. Nothing stops you pursuing both.",
+            "digest": "sha256:2c75d52d08171c68b98cb64da6bb12d4123f1874fd42a0131ef563cc0abaed6e"
+          },
+          {
+            "locale": "en-GB",
+            "text": "The journey has two goals, and you set the pace for both. The League path: defeat the eight Gym Leaders of Kanto for their badges, then cross Victory Road and take on the Elite Four. The collector's path: complete the Pokédex by catching or trading for every species the records certify. Nothing stops you pursuing both.",
+            "digest": "sha256:2c75d52d08171c68b98cb64da6bb12d4123f1874fd42a0131ef563cc0abaed6e"
+          }
+        ]
+      }
+    },
+    {
+      "id": "what-is-badge",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-badge",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "A Gym Badge is the League's proof that you defeated one of Kanto's eight Gym Leaders. Badges are accreditation, not trophies: they persuade traded Pokémon of higher levels to obey you, they license moves like Fly and Surf outside battle — and under the Indigo Accord they set which recommendations the Advisor may give you. When the Advisor checks your accreditation, the number of badges you hold is what it is checking.",
+            "digest": "sha256:6ff477e16761eec72ac774f3dcfd6c1b61362eaa7d0572f666b357b185e7fe50"
+          },
+          {
+            "locale": "en-GB",
+            "text": "A Gym Badge is the League's proof that you defeated one of Kanto's eight Gym Leaders. Badges are accreditation, not trophies: they persuade traded Pokémon of higher levels to obey you, they license moves like Fly and Surf outside battle — and under the Indigo Accord they set which recommendations the Advisor may give you. When the Advisor checks your accreditation, the number of badges you hold is what it is checking.",
+            "digest": "sha256:6ff477e16761eec72ac774f3dcfd6c1b61362eaa7d0572f666b357b185e7fe50"
+          }
+        ]
+      }
+    },
+    {
+      "id": "what-is-type",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-type",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Every Pokémon and every move has a type, and battles turn on how those types meet. Red and Blue know exactly fifteen: Normal, Fighting, Flying, Poison, Ground, Rock, Bug, Ghost, Fire, Water, Grass, Electric, Psychic, Ice, and Dragon. An attack can be super effective, not very effective, or useless against a defender, exactly as the official type chart says — ask the Advisor about any Pokémon's weaknesses or resistances and it derives the answer from that chart, never from memory.",
+            "digest": "sha256:4f9892ade81e6c27562a7461d5683e89c9603602df027cba733add6c540a839d"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Every Pokémon and every move has a type, and battles turn on how those types meet. Red and Blue know exactly fifteen: Normal, Fighting, Flying, Poison, Ground, Rock, Bug, Ghost, Fire, Water, Grass, Electric, Psychic, Ice, and Dragon. An attack can be super effective, not very effective, or useless against a defender, exactly as the official type chart says — ask the Advisor about any Pokémon's weaknesses or resistances and it derives the answer from that chart, never from memory.",
+            "digest": "sha256:4f9892ade81e6c27562a7461d5683e89c9603602df027cba733add6c540a839d"
+          }
+        ]
+      }
+    },
+    {
+      "id": "how-catch",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-how-catch",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Catching starts with weakening: lower a wild Pokémon's HP in battle and it becomes easier to hold. Sleep or paralysis helps further. Then throw a Ball — a Great Ball or Ultra Ball holds better than a plain Poké Ball, and each failed throw costs the Ball. Some Pokémon are simply harder to keep in a Ball than others; legendary Pokémon most of all.",
+            "digest": "sha256:3cbb037d1fb8ec8e573249913f7817e4202935c9f03d0414509769a667498770"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Catching starts with weakening: lower a wild Pokémon's HP in battle and it becomes easier to hold. Sleep or paralysis helps further. Then throw a Ball — a Great Ball or Ultra Ball holds better than a plain Poké Ball, and each failed throw costs the Ball. Some Pokémon are simply harder to keep in a Ball than others; legendary Pokémon most of all.",
+            "digest": "sha256:3cbb037d1fb8ec8e573249913f7817e4202935c9f03d0414509769a667498770"
+          }
+        ]
+      }
+    },
+    {
+      "id": "first-steps",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-first-steps",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Every journey opens the same way: Professor Oak in Pallet Town offers you one starter — Bulbasaur, Charmander, or Squirtle. Head north through Route 1 to Viridian City, stock up, and continue through Viridian Forest to Pewter City, where Brock waits with the first badge. Catch a few Pokémon on the way; a team is easier to build early than to rebuild late.",
+            "digest": "sha256:547a4bd72e73a99ae9648a83636237f55bdaa550caff740b839c3cc5a6683520"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Every journey opens the same way: Professor Oak in Pallet Town offers you one starter — Bulbasaur, Charmander, or Squirtle. Head north through Route 1 to Viridian City, stock up, and continue through Viridian Forest to Pewter City, where Brock waits with the first badge. Catch a few Pokémon on the way; a team is easier to build early than to rebuild late.",
+            "digest": "sha256:547a4bd72e73a99ae9648a83636237f55bdaa550caff740b839c3cc5a6683520"
+          }
+        ]
+      }
+    },
+    {
+      "id": "leveling",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-leveling",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Pokémon grow by battling: every win pays experience, experience raises levels, and levels raise stats. New moves arrive at set levels — a Pokémon remembers only four, so choosing what to forget matters. Many species also evolve: some at a level, some by an evolution stone, some only when traded. Ask the Advisor for any certified species' evolution method and it reads the records.",
+            "digest": "sha256:058b6f395855c33f8ed942204016aef120f2f59855cc6e51ca47920227d157a0"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Pokémon grow by battling: every win pays experience, experience raises levels, and levels raise stats. New moves arrive at set levels — a Pokémon remembers only four, so choosing what to forget matters. Many species also evolve: some at a level, some by an evolution stone, some only when traded. Ask the Advisor for any certified species' evolution method and it reads the records.",
+            "digest": "sha256:058b6f395855c33f8ed942204016aef120f2f59855cc6e51ca47920227d157a0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "red-vs-blue",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-red-vs-blue",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Red and Blue are the same journey through the same Kanto — the difference is who lives in the grass. A few species appear only in one version: Ekans and Growlithe in Red, while Sandshrew and Vulpix answer only to Blue. Completing the Pokédex therefore takes trading with the other version. The records mark exactly which version certifies each encounter, so tell the Advisor which cartridge you are playing.",
+            "digest": "sha256:cc8f45c544694b3c68faa885d881315db684fb018cc6bbe72b5e36d41ee20c53"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Red and Blue are the same journey through the same Kanto — the difference is who lives in the grass. A few species appear only in one version: Ekans and Growlithe in Red, while Sandshrew and Vulpix answer only to Blue. Completing the Pokédex therefore takes trading with the other version. The records mark exactly which version certifies each encounter, so tell the Advisor which cartridge you are playing.",
+            "digest": "sha256:cc8f45c544694b3c68faa885d881315db684fb018cc6bbe72b5e36d41ee20c53"
+          }
+        ]
+      }
+    },
+    {
+      "id": "is-it-hard",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-is-it-hard",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Friendly to start, honest about depth. The early Gyms forgive a lot if your starter is healthy and a few levels ahead. The lasting lesson is that type matchups beat raw levels: a well-chosen Pokémon at a lower level often does what an over-trained one cannot. When you are stuck, ask about your opponent's type — the weakness the chart certifies is usually the door.",
+            "digest": "sha256:c3742cac08a89c7b267953be295f5699559d527a143c04ee192512a0a4e60ead"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Friendly to start, honest about depth. The early Gyms forgive a lot if your starter is healthy and a few levels ahead. The lasting lesson is that type matchups beat raw levels: a well-chosen Pokémon at a lower level often does what an over-trained one cannot. When you are stuck, ask about your opponent's type — the weakness the chart certifies is usually the door.",
+            "digest": "sha256:c3742cac08a89c7b267953be295f5699559d527a143c04ee192512a0a4e60ead"
+          }
+        ]
+      }
+    },
+    {
+      "id": "what-is-pokemon",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-pokemon",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "A Pokémon is a creature you catch in the wild and keep on your team to battle with. Each one has a species — Pikachu, Charmander, Snorlax — and one or two types, like Fire or Water, that decide what it resists and what it is weak to. You raise a Pokémon by battling: it grows stronger, learns new moves, and some evolve into a new form along the way. Ask the Advisor about any specific Pokémon and it answers from the official Red and Blue records — its stats, its types, where it appears, and what it can learn.",
+            "digest": "sha256:45ac815ec5da9050cb804c2f9d7556358d0c463d121ed913d9be85d0a24bb90a"
+          },
+          {
+            "locale": "en-GB",
+            "text": "A Pokémon is a creature you catch in the wild and keep on your team to battle with. Each one has a species — Pikachu, Charmander, Snorlax — and one or two types, like Fire or Water, that decide what it resists and what it is weak to. You raise a Pokémon by battling: it grows stronger, learns new moves, and some evolve into a new form along the way. Ask the Advisor about any specific Pokémon and it answers from the official Red and Blue records — its stats, its types, where it appears, and what it can learn.",
+            "digest": "sha256:45ac815ec5da9050cb804c2f9d7556358d0c463d121ed913d9be85d0a24bb90a"
+          }
+        ]
+      }
+    },
+    {
+      "id": "what-is-move",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-move",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "A move is an action a Pokémon uses in battle — Tackle, Thunderbolt, Surf. Every move has a type, just like the Pokémon that use it, and most deal damage while some raise or lower a battler's stats. A Pokémon can know up to four moves at once, and each move has limited PP — the number of times it can be used before resting at a Pokémon Center. Ask the Advisor which moves a specific Pokémon can learn, and it answers from the official Red and Blue records.",
+            "digest": "sha256:c6c4f97d3f407416df6c2c1f9f4c0e8d058a9ccb033844e964691bc0b2bb6eff"
+          },
+          {
+            "locale": "en-GB",
+            "text": "A move is an action a Pokémon uses in battle — Tackle, Thunderbolt, Surf. Every move has a type, just like the Pokémon that use it, and most deal damage while some raise or lower a battler's stats. A Pokémon can know up to four moves at once, and each move has limited PP — the number of times it can be used before resting at a Pokémon Center. Ask the Advisor which moves a specific Pokémon can learn, and it answers from the official Red and Blue records.",
+            "digest": "sha256:c6c4f97d3f407416df6c2c1f9f4c0e8d058a9ccb033844e964691bc0b2bb6eff"
+          }
+        ]
+      }
+    },
+    {
+      "id": "what-is-evolution",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-evolution",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Evolution is a Pokémon changing into a new, usually stronger form. Most evolve by reaching a certain level through battling; some evolve when given a special stone; and a few only after being traded to another player. An evolved Pokémon keeps the moves it knew and its species changes — Charmander becomes Charmeleon, then Charizard. Ask the Advisor how a specific Pokémon evolves, and it answers from the official Red and Blue records.",
+            "digest": "sha256:a95e6c07f6ecdd7c43772ec67b9097e9dd42737ad67f4fc508e64a06b7113d9e"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Evolution is a Pokémon changing into a new, usually stronger form. Most evolve by reaching a certain level through battling; some evolve when given a special stone; and a few only after being traded to another player. An evolved Pokémon keeps the moves it knew and its species changes — Charmander becomes Charmeleon, then Charizard. Ask the Advisor how a specific Pokémon evolves, and it answers from the official Red and Blue records.",
+            "digest": "sha256:a95e6c07f6ecdd7c43772ec67b9097e9dd42737ad67f4fc508e64a06b7113d9e"
+          }
+        ]
+      }
+    },
+    {
+      "id": "what-is-gym-leader",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-gym-leader",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "A Gym Leader is the trainer in charge of one of Kanto's eight Gyms, and each one specialises in a single type — the first Gym, Brock's in Pewter City, is all Rock. Defeating a Gym Leader earns their Badge, and the eight Badges are what let you enter the Pokémon League. The Gyms are meant to be taken roughly in order, each tougher than the last. The Advisor certifies facts about Pokémon and the rules; a Leader's own team is not part of the pinned records.",
+            "digest": "sha256:983b4a1d03366d83a4a8d5900e4603566c5f19632e72e86bb3e62d4c3da17471"
+          },
+          {
+            "locale": "en-GB",
+            "text": "A Gym Leader is the trainer in charge of one of Kanto's eight Gyms, and each one specialises in a single type — the first Gym, Brock's in Pewter City, is all Rock. Defeating a Gym Leader earns their Badge, and the eight Badges are what let you enter the Pokémon League. The Gyms are meant to be taken roughly in order, each tougher than the last. The Advisor certifies facts about Pokémon and the rules; a Leader's own team is not part of the pinned records.",
+            "digest": "sha256:983b4a1d03366d83a4a8d5900e4603566c5f19632e72e86bb3e62d4c3da17471"
+          }
+        ]
+      }
+    },
+    {
+      "id": "what-is-league",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-league",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "The Pokémon League is the final challenge, and the reason you collect all eight Badges. It is guarded by the Elite Four — four expert trainers battled one after another, with no chance to heal in between — and then the Champion, the strongest trainer of all. Beating them completes the main journey and makes you the new Champion. The Advisor certifies facts about Pokémon and the rules; the League trainers' own teams are not part of the pinned records.",
+            "digest": "sha256:12c3bbf85c916225b5917fe9e9ed6024d0ca27fb75dc245c75d1d949ba2d1770"
+          },
+          {
+            "locale": "en-GB",
+            "text": "The Pokémon League is the final challenge, and the reason you collect all eight Badges. It is guarded by the Elite Four — four expert trainers battled one after another, with no chance to heal in between — and then the Champion, the strongest trainer of all. Beating them completes the main journey and makes you the new Champion. The Advisor certifies facts about Pokémon and the rules; the League trainers' own teams are not part of the pinned records.",
+            "digest": "sha256:12c3bbf85c916225b5917fe9e9ed6024d0ca27fb75dc245c75d1d949ba2d1770"
+          }
+        ]
+      }
+    },
+    {
+      "id": "what-are-stats",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-are-stats",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Stats are the numbers that decide how a Pokémon performs in battle. Red and Blue give each Pokémon five: HP, how much damage it can take before fainting; Attack and Defense, for physical moves; Speed, which decides who strikes first; and Special, which covers both special attack and defense. Levelling up raises every stat, and each species leans a different way — a Snorlax toward HP, an Alakazam toward Speed and Special. Ask the Advisor for any Pokémon's stats, and it answers from the official Red and Blue records.",
+            "digest": "sha256:44fa18daf543e2db8d3fc1970f4690d9392d9977d6c276db2316a3d3f63750bb"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Stats are the numbers that decide how a Pokémon performs in battle. Red and Blue give each Pokémon five: HP, how much damage it can take before fainting; Attack and Defense, for physical moves; Speed, which decides who strikes first; and Special, which covers both special attack and defense. Levelling up raises every stat, and each species leans a different way — a Snorlax toward HP, an Alakazam toward Speed and Special. Ask the Advisor for any Pokémon's stats, and it answers from the official Red and Blue records.",
+            "digest": "sha256:44fa18daf543e2db8d3fc1970f4690d9392d9977d6c276db2316a3d3f63750bb"
+          }
+        ]
+      }
+    },
+    {
+      "id": "what-is-poke-ball",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-poke-ball",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "A Poké Ball is the device you throw to catch a wild Pokémon. Weaken it first — lower its HP, or put it to sleep or paralyse it — and a thrown ball is far more likely to hold. Stronger balls hold better: a Great Ball beats a standard Poké Ball, and an Ultra Ball beats both. Balls work only on wild Pokémon, never on another trainer's, and you buy them at any Poké Mart.",
+            "digest": "sha256:cdaf082c86d849b017380fa3821032e4c69b090232a219d6ba23dc6a94471098"
+          },
+          {
+            "locale": "en-GB",
+            "text": "A Poké Ball is the device you throw to catch a wild Pokémon. Weaken it first — lower its HP, or put it to sleep or paralyse it — and a thrown ball is far more likely to hold. Stronger balls hold better: a Great Ball beats a standard Poké Ball, and an Ultra Ball beats both. Balls work only on wild Pokémon, never on another trainer's, and you buy them at any Poké Mart.",
+            "digest": "sha256:cdaf082c86d849b017380fa3821032e4c69b090232a219d6ba23dc6a94471098"
+          }
+        ]
+      }
+    },
+    {
+      "id": "what-is-tm-hm",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-tm-hm",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "A TM or HM is a machine that teaches a Pokémon a move. A TM — Technical Machine — is used up once it teaches its move; an HM — Hidden Machine — can be used again and again, and its moves also work outside battle, like Surf across water or Cut through a small tree. No Pokémon can learn every machine. Ask the Advisor whether a specific Pokémon can learn a given move, and it answers from the official Red and Blue records.",
+            "digest": "sha256:96c274e70b49087e58368fc269e9653d2f616db5a3eef5e8640f657d4769930b"
+          },
+          {
+            "locale": "en-GB",
+            "text": "A TM or HM is a machine that teaches a Pokémon a move. A TM — Technical Machine — is used up once it teaches its move; an HM — Hidden Machine — can be used again and again, and its moves also work outside battle, like Surf across water or Cut through a small tree. No Pokémon can learn every machine. Ask the Advisor whether a specific Pokémon can learn a given move, and it answers from the official Red and Blue records.",
+            "digest": "sha256:96c274e70b49087e58368fc269e9653d2f616db5a3eef5e8640f657d4769930b"
+          }
+        ]
+      }
+    },
+    {
+      "id": "what-is-pp",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-pp",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "PP, or Power Points, is how many times a move can be used before it must be restored. Every move carries its own PP. When a move's PP reaches zero it cannot be chosen, and items like Ether restore it — a set amount for one move, or more with the stronger restoratives.",
+            "digest": "sha256:d104073282fcbabd99f6974753b795ae18da9a3a4450f10d5847673b4bc4d43e"
+          },
+          {
+            "locale": "en-GB",
+            "text": "PP, or Power Points, is how many times a move can be used before it must be restored. Every move carries its own PP. When a move's PP reaches zero it cannot be chosen, and items like Ether restore it — a set amount for one move, or more with the stronger restoratives.",
+            "digest": "sha256:d104073282fcbabd99f6974753b795ae18da9a3a4450f10d5847673b4bc4d43e"
+          }
+        ]
+      }
+    },
+    {
+      "id": "what-is-status-ailment",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-status-ailment",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "A status ailment is a lasting condition on a Pokémon: poison, burn, freeze, sleep or paralysis, with confusion as a battle-only companion. Each has its own cure item, and Full Heal or Full Restore clear any of them. An ailment persists after battle until treated, except confusion, which ends when the battle does.",
+            "digest": "sha256:97618424c1a86c58b433eec8e4ae406dac4f47f5f8939e4a3a42059076ccbf7b"
+          },
+          {
+            "locale": "en-GB",
+            "text": "A status ailment is a lasting condition on a Pokémon: poison, burn, freeze, sleep or paralysis, with confusion as a battle-only companion. Each has its own cure item, and Full Heal or Full Restore clear any of them. An ailment persists after battle until treated, except confusion, which ends when the battle does.",
+            "digest": "sha256:97618424c1a86c58b433eec8e4ae406dac4f47f5f8939e4a3a42059076ccbf7b"
+          }
+        ]
+      }
+    },
+    {
+      "id": "what-is-stat-stage",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-is-stat-stage",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "In battle, items like X Attack raise a stat by one stage. A stage is a temporary step on a fixed ladder, not a permanent point: the boost lasts until the Pokémon leaves the field or the battle ends, and stages from repeated use stack up the ladder.",
+            "digest": "sha256:550b41d596ef1fe566731f3202e55f472e69f6ec4adec3ec745a7cdde3785013"
+          },
+          {
+            "locale": "en-GB",
+            "text": "In battle, items like X Attack raise a stat by one stage. A stage is a temporary step on a fixed ladder, not a permanent point: the boost lasts until the Pokémon leaves the field or the battle ends, and stages from repeated use stack up the ladder.",
+            "digest": "sha256:550b41d596ef1fe566731f3202e55f472e69f6ec4adec3ec745a7cdde3785013"
+          }
+        ]
+      }
+    },
+    {
+      "id": "faint-vs-sleep",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-faint-vs-sleep",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "A fainted Pokémon and a sleeping Pokémon need different help. Sleep is a status ailment: the Pokémon is still standing and an Awakening clears it. Fainting means its HP reached zero: only a Revive or Max Revive brings it back, and no status cure will.",
+            "digest": "sha256:985e743d40db7c64bc8b05b76d08b0cc4995d18c288c903bf727290a1dfa2bdf"
+          },
+          {
+            "locale": "en-GB",
+            "text": "A fainted Pokémon and a sleeping Pokémon need different help. Sleep is a status ailment: the Pokémon is still standing and an Awakening clears it. Fainting means its HP reached zero: only a Revive or Max Revive brings it back, and no status cure will.",
+            "digest": "sha256:985e743d40db7c64bc8b05b76d08b0cc4995d18c288c903bf727290a1dfa2bdf"
+          }
+        ]
+      }
+    },
+    {
+      "id": "hp-and-damage",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-hp-and-damage",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "HP is a Pokémon's health. Damage subtracts from it and healing items add back to it, but healing during battle does not undo the situation that caused the damage — a Pokémon restored by a Potion can faint to the very next hit if the opponent's attacks are stronger than the healing.",
+            "digest": "sha256:173b4f3c70e480114bd509db2fa349a59929cd94e9a4743d3a24feb253d64fe0"
+          },
+          {
+            "locale": "en-GB",
+            "text": "HP is a Pokémon's health. Damage subtracts from it and healing items add back to it, but healing during battle does not undo the situation that caused the damage — a Pokémon restored by a Potion can faint to the very next hit if the opponent's attacks are stronger than the healing.",
+            "digest": "sha256:173b4f3c70e480114bd509db2fa349a59929cd94e9a4743d3a24feb253d64fe0"
+          }
+        ]
+      }
+    }
+  ],
+  "gameRules": [
+    {
+      "id": "party-size",
+      "value": 6,
+      "label": "Pokémon on your team at once"
+    },
+    {
+      "id": "moves-per-pokemon",
+      "value": 4,
+      "label": "moves a Pokémon can know at once"
+    },
+    {
+      "id": "badge-count",
+      "value": 8,
+      "label": "Gym Badges to earn in Kanto"
+    },
+    {
+      "id": "starter-count",
+      "value": 3,
+      "label": "starter Pokémon to choose from"
+    },
+    {
+      "id": "pc-box-count",
+      "value": 12,
+      "label": "storage boxes in the PC"
+    },
+    {
+      "id": "pc-box-capacity",
+      "value": 20,
+      "label": "Pokémon each PC box holds"
+    },
+    {
+      "id": "bag-slots",
+      "value": 20,
+      "label": "different items the bag holds at once"
+    },
+    {
+      "id": "item-stack",
+      "value": 99,
+      "label": "of one item a single bag slot stacks"
+    }
+  ]
+}

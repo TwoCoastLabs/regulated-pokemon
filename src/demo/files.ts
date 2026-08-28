@@ -23,7 +23,9 @@ let loaded: DemoWorld | undefined;
 
 /** The certified world, read once from disk. Throws named, never silently. */
 export const CENTER_SNAPSHOT_PATH = resolve(DATA, "snapshots/kanto-center.json");
-export const CENTER_PACK_PATH = resolve(DATA, "accord-pack/center-v1.json");
+// v1 stays on the shelf: the filed Center records pin pokemon-center-v1 and
+// the replay sweep resolves by that pin. New runs speak v2 (the bag rules).
+export const CENTER_PACK_PATH = resolve(DATA, "accord-pack/center-v2.json");
 
 let centerCached: DemoWorld | undefined;
 

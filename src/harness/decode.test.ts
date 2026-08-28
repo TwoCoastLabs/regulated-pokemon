@@ -241,26 +241,42 @@ describe("eligibility claims decode strictly", () => {
   });
 });
 
-describe("the degenerate comparison is refused at the propose boundary (Center loop 1)", () => {
-  it("refuses a comparison of a thing with itself, with the reason named", () => {
-    // True but empty — both sides would verify, which is exactly why it is a
-    // grammar refusal here and not a kernel denial: a kernel rule would
-    // re-judge the filed records that committed this shape before the
-    // grammar learned to refuse it (13 in the first paid Center run).
+describe("the degenerate comparison folds to the fact it means (Center loop 2)", () => {
+  it("folds a self-pair into the fact claim, and counts the fold", () => {
+    // Loop 1 refused these and the refusal killed whole answers — 23 of the
+    // re-run's abstentions were exactly this. The fold is recovery channel 2:
+    // deterministic (the pair's only content IS the single value), enacted at
+    // the propose boundary, verified downstream like any named fact.
     const decoded = decodeAnswer(
       JSON.stringify({ rosters: [], claims: [{ kind: "comparison", factId: "move-power", leftId: "surf", rightId: "surf" }] }),
       context,
       "txn-degenerate",
     );
-    expect(decoded.ok).toBe(false);
-    if (!decoded.ok) expect(decoded.reason).toContain("compares nothing");
+    expect(decoded.ok).toBe(true);
+    if (decoded.ok) {
+      expect(decoded.folds).toBe(1);
+      expect(decoded.draft.claims).toEqual([{ kind: "fact", entityId: "surf", factId: "move-power" }]);
+    }
   });
 
-  it("keeps a genuine pair decodable — the refusal is the degenerate shape, not the kind", () => {
+  it("leaves a genuine pair alone, and counts nothing", () => {
     const decoded = decodeAnswer(
       JSON.stringify({ rosters: [], claims: [{ kind: "comparison", factId: "move-power", leftId: "surf", rightId: "thunderbolt" }] }),
       context,
       "txn-pair",
+    );
+    expect(decoded.ok).toBe(true);
+    if (decoded.ok) {
+      expect(decoded.folds).toBe(0);
+      expect(decoded.draft.claims[0]?.kind).toBe("comparison");
+    }
+  });
+
+  it("an answer that is only a folded self-pair still counts as an answer, not an abstention", () => {
+    const decoded = decodeAnswer(
+      JSON.stringify({ rosters: [], claims: [{ kind: "comparison", factId: "move-pp", leftId: "surf", rightId: "surf" }] }),
+      context,
+      "txn-only-fold",
     );
     expect(decoded.ok).toBe(true);
   });

@@ -130,7 +130,7 @@ export function centerRegistry(): CertifiedRegistry {
   return centerCache;
 }
 
-export const CENTER_PACK_PATH = resolve(import.meta.dirname, "../../data/accord-pack/center-v1.json");
+export const CENTER_PACK_PATH = resolve(import.meta.dirname, "../../data/accord-pack/center-v2.json");
 
 let centerPackCache: AccordPack | undefined;
 

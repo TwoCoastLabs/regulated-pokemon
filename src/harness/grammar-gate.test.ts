@@ -35,6 +35,10 @@ describe("nominateFillerKinds offers a filler kind when the question wants it", 
       "how many attacks can a Pokémon have?",
       "How many Gym Badges are there in Kanto?",
       "How many starter Pokémon can I choose from?",
+      // The Center's bag rules (loop 2): the bank's own wordings must nominate.
+      "how many different items can I carry",
+      "is there a max on how many items I can hold",
+      "is there a max on how many potions I can hold",
     ]) {
       expect(nominateFillerKinds(q).has("gameRule")).toBe(true);
     }

@@ -111,15 +111,39 @@ describe("the answer grammar tracks the kernel, not a copy of it", () => {
     // The Center loop's first lesson: the kernel had item rosters for a full
     // paid run before the grammar offered them, and the model improvised
     // treats enumerations where "the set of items that cure poison" was the
-    // answer. The pin runs both ways so that gap cannot reopen silently.
+    // answer. Loop 2 split the roster into two domain variants — a species
+    // roster and an item roster, each with only its own criteria — so
+    // criteria-domain-mixed is unrepresentable at decode (5 of the re-run's
+    // abstentions were mixed rosters refused whole). The pins run both ways.
     const withItems = answerSchema(world.pack, undefined, true) as { properties: Record<string, { items: unknown }> };
-    const itemCriteria = kindsOf(
-      ((withItems.properties.rosters?.items as { properties?: { criteria?: { properties?: { all?: { items?: unknown } } } } })
-        ?.properties?.criteria?.properties?.all?.items),
+    const rosterVariants = (withItems.properties.rosters?.items as { anyOf?: unknown[] })?.anyOf ?? [];
+    expect(rosterVariants).toHaveLength(2);
+    const criteriaOf = (node: unknown): string[] =>
+      kindsOf(
+        (node as { properties?: { criteria?: { properties?: { all?: { items?: unknown } } } } })?.properties?.criteria
+          ?.properties?.all?.items,
+      );
+    expect(new Set(criteriaOf(rosterVariants[0]))).toEqual(
+      new Set(["has-type", "learns-move", "rarity", "stat-at-least", "stat-at-most"]),
     );
-    expect(new Set(itemCriteria)).toEqual(
-      new Set(["has-type", "learns-move", "rarity", "stat-at-least", "stat-at-most", "item-category", "treats-condition", "cost-at-most", "cost-at-least"]),
+    expect(new Set(criteriaOf(rosterVariants[1]))).toEqual(
+      new Set(["item-category", "treats-condition", "cost-at-most", "cost-at-least"]),
     );
+  });
+
+  it("closes the world vocabularies when a registry supplies them — an invented type or category is unrepresentable", () => {
+    const closed = answerSchema(world.pack, undefined, true, {
+      types: ["electric", "water"],
+      itemCategories: ["status-cures", "vitamins"],
+    }) as { properties: Record<string, { items: unknown }> };
+    const variants = (closed.properties.rosters?.items as { anyOf: unknown[] }).anyOf;
+    const enumOf = (node: unknown, kind: string, field: string): unknown => {
+      const all = (node as { properties?: { criteria?: { properties?: { all?: { items?: { anyOf?: { properties?: Record<string, { enum?: string[] }> }[] } } } } } })
+        ?.properties?.criteria?.properties?.all?.items?.anyOf ?? [];
+      return all.find((v) => v.properties?.kind?.enum?.[0] === kind)?.properties?.[field]?.enum;
+    };
+    expect(enumOf(variants[0], "has-type", "type")).toEqual(["electric", "water"]);
+    expect(enumOf(variants[1], "item-category", "category")).toEqual(["status-cures", "vitamins"]);
   });
 
   it("offers comparisons only over fact ids that can be numeric", () => {

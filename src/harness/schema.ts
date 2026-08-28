@@ -87,38 +87,59 @@ const FACT_VALUE: JsonSchema = {
   ],
 };
 
-function criterionSchema(items: boolean): JsonSchema {
-  return {
-    anyOf: [
-      variant("has-type", { type: STRING }),
-      variant("learns-move", { move: STRING }),
-      variant("rarity", { rarity: { type: "string", enum: ["legendary", "mythical"] } }),
-      variant("stat-at-least", { stat: { type: "string", enum: [...STAT_NAMES] }, value: NUMBER }),
-      variant("stat-at-most", { stat: { type: "string", enum: [...STAT_NAMES] }, value: NUMBER }),
-      // The item universe's criteria (epic #94, Center loop 1): the kernel has
-      // built item rosters since slice 3, but the grammar never offered them —
-      // so a model asked "what all cures poison" could not express the set and
-      // improvised treats enumerations instead. Offered only in a world that
-      // certifies items, like the Center claim kinds; the category is a free
-      // string because the vocabulary is the snapshot's, and the kernel names
-      // an unknown one (IA-3/unknown-item-category) at build.
-      ...(items
-        ? [
-            variant("item-category", { category: STRING }),
-            variant("treats-condition", { condition: { type: "string", enum: [...STATUS_CONDITIONS] } }),
-            variant("cost-at-most", { value: NUMBER }),
-            variant("cost-at-least", { value: NUMBER }),
-          ]
-        : []),
-    ],
-  };
+/** The vocabularies a world can close beyond the compiled-in ones — the type
+ * names and item categories are the snapshot's, so the caller passes them and
+ * the grammar makes an invented one unrepresentable (loop 2: the re-run spent
+ * 12 abstentions on IA-3/unknown-type and unknown-item-category rosters).
+ * Absent, the field stays a free string and the kernel's IA-3 names it. */
+export interface WorldVocabulary {
+  types?: readonly string[];
+  itemCategories?: readonly string[];
 }
 
-function rosterSchema(items: boolean): JsonSchema {
-  return object({
+function speciesCriterionSchema(vocabulary?: WorldVocabulary): JsonSchema[] {
+  const type = vocabulary?.types === undefined ? STRING : { type: "string", enum: [...vocabulary.types] };
+  return [
+    variant("has-type", { type }),
+    variant("learns-move", { move: STRING }),
+    variant("rarity", { rarity: { type: "string", enum: ["legendary", "mythical"] } }),
+    variant("stat-at-least", { stat: { type: "string", enum: [...STAT_NAMES] }, value: NUMBER }),
+    variant("stat-at-most", { stat: { type: "string", enum: [...STAT_NAMES] }, value: NUMBER }),
+  ];
+}
+
+/** The item universe's criteria (epic #94, Center loop 1): the kernel has
+ * built item rosters since slice 3, but the grammar never offered them — so a
+ * model asked "what all cures poison" could not express the set and improvised
+ * treats enumerations instead. Offered only in a world that certifies items. */
+function itemCriterionSchema(vocabulary?: WorldVocabulary): JsonSchema[] {
+  const category =
+    vocabulary?.itemCategories === undefined ? STRING : { type: "string", enum: [...vocabulary.itemCategories] };
+  return [
+    variant("item-category", { category }),
+    variant("treats-condition", { condition: { type: "string", enum: [...STATUS_CONDITIONS] } }),
+    variant("cost-at-most", { value: NUMBER }),
+    variant("cost-at-least", { value: NUMBER }),
+  ];
+}
+
+function rosterSchema(items: boolean, vocabulary?: WorldVocabulary): JsonSchema {
+  const species = object({
     id: STRING,
-    criteria: object({ all: { type: "array", items: criterionSchema(items) } }),
+    criteria: object({ all: { type: "array", items: { anyOf: speciesCriterionSchema(vocabulary) } } }),
   });
+  if (!items) return species;
+  // Two roster shapes, not one criterion soup: a roster is EITHER a set of
+  // species OR a set of items, and the split makes criteria-domain-mixed
+  // unrepresentable at decode — the same anyOf trick as the comparison's
+  // numeric enum, with the kernel's rosterDomain gate staying load-bearing
+  // for anything the grammar cannot see (loop 2: 5 of the re-run's
+  // abstentions were mixed-domain rosters refused whole).
+  const item = object({
+    id: STRING,
+    criteria: object({ all: { type: "array", items: { anyOf: itemCriterionSchema(vocabulary) } } }),
+  });
+  return { anyOf: [species, item] };
 }
 
 function claimSchema(lessonIds: readonly string[], ruleIds: readonly string[], fillerKinds?: ReadonlySet<FillerKind>, items = false): JsonSchema {
@@ -223,9 +244,12 @@ export function answerSchema(
   fillerKinds?: ReadonlySet<FillerKind>,
   /** Whether the world certifies items — offers the Center claim kinds. */
   items = false,
+  /** The world's own closed vocabularies (type names, item categories), when
+   * the caller has a registry to read them from. */
+  vocabulary?: WorldVocabulary,
 ): JsonSchema {
   return object({
-    rosters: { type: "array", items: rosterSchema(items) },
+    rosters: { type: "array", items: rosterSchema(items, vocabulary) },
     claims: {
       type: "array",
       items: claimSchema(

@@ -117,7 +117,7 @@ export function decodeCandidate(text: string, pack: AccordPack): DecodedCandidat
 // --- answers ----------------------------------------------------------------
 
 export type AnswerDecode =
-  | { ok: true; draft: ManifestDraft }
+  | { ok: true; draft: ManifestDraft; folds: number }
   | { ok: false; reason: string };
 
 /**
@@ -329,20 +329,26 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
     rosters.push(built.value);
   }
 
-  const claims = [];
+  const claims: Claim[] = [];
+  let folds = 0;
   for (const entry of parsed.claims) {
     const claim = asClaim(entry);
     if (claim === null) return { ok: false, reason: "a claim is malformed" };
-    // A comparison of a thing with itself compares nothing — the same shape
-    // judgement as the empty answer below, made here because JSON Schema
-    // cannot express leftId ≠ rightId. It is refused at the propose boundary
-    // rather than in the kernel on purpose: the pair is *true* (both sides
-    // verify), so refusing it is grammar, not factuality — and a kernel rule
-    // would re-judge filed records that committed the degenerate shape
-    // before the grammar learned to refuse it, which IA-10 forbids. The
-    // first paid Center run committed 13 of these (findings iteration 40).
+    // A comparison of a thing with itself compares nothing — it is one
+    // entity's value wearing the comparison's clothes, so it is *folded to
+    // the grounded shape it means*: the fact claim, which the kernel then
+    // derives and verifies exactly as if the model had named it (recovery
+    // channel 2 — deterministic, no guess about intent; the fold enacts the
+    // prompt's own sentence). Loop 1 refused these outright and the refusal
+    // killed whole answers: 23 abstentions in the re-run were exactly this
+    // (findings iteration 40/41). The shape judgement stays propose-side —
+    // a kernel rule would re-judge filed records, which IA-10 forbids —
+    // and the fold is counted, so a folded resolution is never mistaken
+    // for a first-shape one.
     if (claim.kind === "comparison" && claim.leftId === claim.rightId) {
-      return { ok: false, reason: `a comparison of ${claim.leftId} with itself compares nothing — one entity's value is a fact claim` };
+      folds += 1;
+      claims.push({ kind: "fact", entityId: claim.leftId, factId: claim.factId });
+      continue;
     }
     claims.push(claim);
   }
@@ -357,5 +363,5 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
     return { ok: false, reason: NO_CLAIMS_REASON };
   }
 
-  return { ok: true, draft: { transactionId, claims: canonical, rosters } };
+  return { ok: true, draft: { transactionId, claims: canonical, rosters }, folds };
 }

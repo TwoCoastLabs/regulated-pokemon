@@ -300,7 +300,7 @@ const USAGE = [
   "  npm run coverage:map -- --render runs/<file>.json --page docs/coverage.md",
   "",
   "  --live              actually call the provider and file the artifact. Nothing is billed without it.",
-  "  --center            the Center world: kanto-center + pokemon-center-v1 + the migrated realistic bank",
+  "  --center            the Center world: kanto-center + its pack + the migrated realistic bank",
   "  --adversarial       with --dialogues: the adversarial bank — the trainer's own channel attacking",
   "                      scope and the gate; wrong-scope commits and attack reach are reported",
   "  --dialogues         run the multi-turn dialogue bank: per-turn coverage plus each conversation's",

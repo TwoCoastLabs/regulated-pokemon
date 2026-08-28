@@ -93,7 +93,7 @@ function answerPrompt(
   lessons: readonly string[],
   rules: readonly { id: string; label: string }[],
   reference: string | undefined,
-  items = false,
+  items = false, itemCategories: readonly string[] = [],
 ): string {
   return [
     // Grounding, when on: the certified facts in front of the model so it reads
@@ -150,15 +150,17 @@ function answerPrompt(
     '  {"kind": "stat-at-most", "stat": "<stat-id>", "value": <number>}',
     ...(items
       ? [
-          '  {"kind": "item-category", "category": "<category-id>"}  — items in a category the records certify',
+          "…or an ITEM roster, whose criteria are ONLY these (never mixed with the species criteria above):",
+          '  {"kind": "item-category", "category": "<category-id>"}  — items in a certified category',
           '  {"kind": "treats-condition", "condition": "<condition>"}  — items that treat that status condition',
           '  {"kind": "cost-at-most", "value": <number>}',
           '  {"kind": "cost-at-least", "value": <number>}',
+          `A <category-id> must be one of: ${itemCategories.join(", ")}. No other category exists.`,
         ]
       : []),
     "A member is exactly what satisfies every criterion. Species criteria define a set of species" +
       (items
-        ? "; item criteria a set of items — the two never mix in one roster. A \"what all…\" or \"cheapest…\" over items (everything that cures a condition, everything under a price) is an item roster plus a count or a ranking: the system then derives the certified set, the number or the winner, which answers it more strongly than naming examples one by one."
+        ? "; item criteria a set of items — one roster is one universe, never both. A \"what all…\" or \"cheapest…\" over items (everything that cures a condition, everything under a price) is an item roster plus a count or a ranking: the system then derives the certified set, the number or the winner, which answers it more strongly than naming examples one by one."
         : "."),
     "",
     "Each claim is one of:",
@@ -222,7 +224,7 @@ function answerPrompt(
  * deterministic meter — with no LLM judge — rather than prose someone has to
  * interpret.
  */
-function rawPrompt(asks: readonly string[], tools: readonly string[], items = false): string {
+function rawPrompt(asks: readonly string[], tools: readonly string[], items = false, itemCategories: readonly string[] = []): string {
   return [
     "The trainer's own words:",
     ...asks.map((line) => `  - ${line}`),
@@ -242,10 +244,12 @@ function rawPrompt(asks: readonly string[], tools: readonly string[], items = fa
     '  {"kind": "stat-at-most", "stat": "<stat-id>", "value": <number>}',
     ...(items
       ? [
+          "…or an ITEM roster, whose criteria are ONLY these (never mixed with the species criteria above):",
           '  {"kind": "item-category", "category": "<category-id>"}',
           '  {"kind": "treats-condition", "condition": "<condition>"}  — items that treat that status condition',
           '  {"kind": "cost-at-most", "value": <number>}',
           '  {"kind": "cost-at-least", "value": <number>}',
+          `A <category-id> must be one of: ${itemCategories.join(", ")}. No other category exists.`,
         ]
       : []),
     "",
@@ -371,11 +375,18 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
       context.pack.gameRules.map((rule) => ({ id: rule.id, label: rule.label })),
       reference,
       context.registry.itemIds.length > 0,
+      [...new Set(context.registry.items.map((item) => item.category))].sort(),
     ),
     hint: { scenarioId, ...(context.grant === undefined ? {} : { scope: context.grant.scope }) },
     // The same contract the prose describes, in a form a provider can enforce.
     // Whether it is enforced is the provider's business, not the advisor's.
-    schema: { name: ANSWER_SCHEMA_NAME, schema: answerSchema(context.pack, fillerKinds, context.registry.itemIds.length > 0) },
+    schema: {
+      name: ANSWER_SCHEMA_NAME,
+      schema: answerSchema(context.pack, fillerKinds, context.registry.itemIds.length > 0, {
+        types: [...context.registry.typeNames].sort(),
+        itemCategories: [...new Set(context.registry.items.map((item) => item.category))].sort(),
+      }),
+    },
   };
   const completion = await provider.complete(request);
   return { usage: completion.usage, decode: decodeAnswer(completion.text, context, transactionId) };
@@ -401,6 +412,7 @@ export async function proposeRawAnswer(input: RawStepInput): Promise<AnswerStep>
       trainerText(input.transcript),
       context.pack.actions.map((action) => action.id),
       context.registry.itemIds.length > 0,
+      [...new Set(context.registry.items.map((item) => item.category))].sort(),
     ),
     hint: { scenarioId },
     schema: { name: ANSWER_SCHEMA_NAME, schema: answerSchema(context.pack) },

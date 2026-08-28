@@ -98,11 +98,25 @@ export function certifiedReference(registry: CertifiedRegistry, selection?: Refe
   const itemRows =
     selection?.items === undefined ? registry.items : registry.items.filter((item) => selection.items!.has(item.id));
   if (itemRows.length > 0) {
-    lines.push("", "ITEMS  (id | category | cost | cures | restores-hp | effect):");
+    // Every certified column, not a convenient subset: the loop-1 re-run
+    // abstained on questions whose answer was certified but absent from this
+    // table (usable-in-battle, restores-pp, repel-steps, evolves…) — the
+    // model read the row, found no answer in it, and honestly said nothing.
+    // A reference that shows half the facts is a usefulness ceiling wearing
+    // grounding's clothes (Center loop 2).
+    lines.push(
+      "",
+      "ITEMS  (id | category | cost | battle | overworld | cures | restores-hp | restores-pp | revives | repel-steps | catch | evolves | era-name | effect):",
+    );
     for (const item of itemRows) {
+      const dash = (value: string | number | undefined): string => (value === undefined ? "-" : String(value));
       const cures = (item.certified.cures ?? []).join(",") || "-";
-      const restores = item.certified.restoresHp === undefined ? "-" : String(item.certified.restoresHp);
-      lines.push(`${item.id} | ${item.category} | ${item.cost} | ${cures} | ${restores} | ${item.shortEffect}`);
+      const pp = item.certified.restoresPp === undefined ? "-" : `${item.certified.restoresPp}${item.certified.ppScope === undefined ? "" : ` (${item.certified.ppScope})`}`;
+      const catchColumn = item.certified.alwaysCatches === true ? "always" : dash(item.certified.catchRateMultiplier);
+      const evolves = (item.certified.evolves ?? []).map((pair) => `${pair.from}->${pair.to}`).join(",") || "-";
+      lines.push(
+        `${item.id} | ${item.category} | ${item.cost} | ${item.usableInBattle ? "yes" : "no"} | ${item.usableOverworld ? "yes" : "no"} | ${cures} | ${dash(item.certified.restoresHp)} | ${pp} | ${dash(item.certified.revives)} | ${dash(item.certified.repelSteps)} | ${catchColumn} | ${evolves} | ${dash(item.certified.eraName)} | ${item.shortEffect}`,
+      );
     }
   }
 
@@ -180,14 +194,64 @@ export function retrievalSelection(registry: CertifiedRegistry, question: string
   // the evidence a treats verdict or a cures roster rests on.
   const items = new Set<string>();
   for (const id of registry.itemIds) if (names(id)) items.add(id);
+  // A trainer says "poisoned", not "poison": each condition carries its
+  // everyday inflections, closed and reviewed like the conditions themselves.
+  // Loop 2's linking instrument found the un-stemmed forms retrieving zero
+  // rows for exactly the advice questions retrieval exists to ground.
+  const conditionCues: Record<string, readonly string[]> = {
+    poison: ["poisoned"],
+    burn: ["burned", "burnt", "burning"],
+    freeze: ["frozen", "froze"],
+    sleep: ["asleep", "sleeping"],
+    paralysis: ["paralyzed", "paralysed"],
+    confusion: ["confused"],
+  };
   for (const condition of STATUS_CONDITIONS) {
-    if (!names(condition)) continue;
+    const cued = names(condition) || (conditionCues[condition] ?? []).some((cue) => names(cue));
+    if (!cued) continue;
     for (const item of registry.items) if ((item.certified.cures ?? []).includes(condition)) items.add(item.id);
+  }
+  // The reviewed lexicon: phrases a trainer uses for a *set* of items no
+  // single id names ("the vending machine drinks", "the X items"). Each entry
+  // is explicit data pinned by test — every id must exist in the world that
+  // uses it — and self-gating: in a world without items, nothing matches.
+  const pluralTolerant = (phrase: string): boolean =>
+    names(phrase) || names(`${phrase}s`) || (phrase.endsWith("s") && names(phrase.slice(0, -1)));
+  for (const entry of RETRIEVAL_LEXICON) {
+    if (!pluralTolerant(entry.phrase)) continue;
+    for (const id of entry.items) if (registry.findItem(id) !== undefined) items.add(id);
+  }
+  // A category named is a set named: "the vitamins", "evolution stones".
+  const categoryCues = new Set(registry.items.map((item) => item.category));
+  for (const category of categoryCues) {
+    // The id's own words, singular or plural ("vitamins" matches "vitamin").
+    const words = category.split("-");
+    const matched = names(category) || words.some((word) => word.length > 3 && (names(word) || names(`${word}s`) || (word.endsWith("s") && names(word.slice(0, -1)))));
+    if (!matched) continue;
+    for (const item of registry.items) if (item.category === category) items.add(item.id);
   }
 
   const capped = new Set(registry.species.filter((one) => species.has(one.id)).slice(0, RETRIEVAL_SPECIES_CAP).map((one) => one.id));
   return { species: capped, moves, items };
 }
+
+/**
+ * Phrases that name a set of items no single id or category word reaches —
+ * reviewed data, kept in code beside the matcher that reads it (this is
+ * propose-side lexicon, not policy; a wrong entry can only mis-ground a
+ * proposal the kernel still verifies). Every id is pinned by test against the
+ * Center registry, and entries self-gate: a world without these items simply
+ * never matches them.
+ */
+export const RETRIEVAL_LEXICON: readonly { phrase: string; items: readonly string[] }[] = [
+  { phrase: "vending machine", items: ["fresh-water", "soda-pop", "lemonade"] },
+  { phrase: "drinks", items: ["fresh-water", "soda-pop", "lemonade"] },
+  { phrase: "x items", items: ["x-attack", "x-defense", "x-speed", "x-accuracy", "guard-spec", "dire-hit"] },
+  { phrase: "stones", items: ["moon-stone", "fire-stone", "thunder-stone", "water-stone", "leaf-stone"] },
+  { phrase: "potions", items: ["potion", "super-potion", "hyper-potion", "max-potion"] },
+  { phrase: "balls", items: ["poke-ball", "great-ball", "ultra-ball", "master-ball", "safari-ball"] },
+  { phrase: "repels", items: ["repel", "super-repel", "max-repel"] },
+];
 
 function escapeForRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

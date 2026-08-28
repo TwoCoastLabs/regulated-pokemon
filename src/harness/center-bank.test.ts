@@ -106,7 +106,7 @@ describe("--center runs the real machinery, scripted and key-free", () => {
       world?: { packId?: string; snapshotId?: string };
       runs?: { entryId: string; stage: { kind: string }; score: { pass: boolean }; run: { detail: string } }[];
     };
-    expect(artifact.world?.packId).toBe("pokemon-center-v1");
+    expect(artifact.world?.packId).toBe("pokemon-center-v2");
     expect(artifact.world?.snapshotId).toBe("kanto-center");
     const byId = new Map((artifact.runs ?? []).map((run) => [run.entryId, run]));
     expect(byId.get("treats-antidote-burn")?.stage.kind).toBe("resolved");
@@ -149,8 +149,10 @@ describe("the Center kinds through the propose-side layers, arm by arm", () => {
     expect(byCondition.items.has("antidote")).toBe(true);
     expect(byCondition.items.has("full-heal")).toBe(true);
     const grounded = certifiedReference(world.registry);
-    expect(grounded).toContain("ITEMS  (id | category | cost | cures | restores-hp | effect):");
-    expect(grounded).toContain("antidote | status-cures | 200 | poison");
+    expect(grounded).toContain(
+      "ITEMS  (id | category | cost | battle | overworld | cures | restores-hp | restores-pp | revives | repel-steps | catch | evolves | era-name | effect):",
+    );
+    expect(grounded).toContain("antidote | status-cures | 200 | yes | yes | poison");
     expect(retrieveReference(world.registry, "can I use an antidote on a burn")).toContain("antidote |");
     // The frozen world grounds exactly as before: no items, no items table.
     const { demoWorld } = await import("../demo/files.js");
