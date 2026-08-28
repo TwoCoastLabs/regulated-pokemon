@@ -24,10 +24,11 @@ import type { CoverageArtifact } from "./coverage-artifact.js";
 import { degenerateComparisons, missBreakdown, rescoreMap, rescoreRuns } from "./rescore.js";
 
 const ARTIFACT = "2026-08-27T12-33-45-700Z-coverage.json";
+const LOOP_1_ARTIFACT = "2026-08-27T22-15-59-495Z-coverage.json";
 
-function artifact(): CoverageArtifact {
+function artifact(name: string = ARTIFACT): CoverageArtifact {
   return JSON.parse(
-    readFileSync(resolve(import.meta.dirname, "../../runs/coverage", ARTIFACT), "utf8"),
+    readFileSync(resolve(import.meta.dirname, "../../runs/coverage", name), "utf8"),
   ) as CoverageArtifact;
 }
 
@@ -106,5 +107,66 @@ describe("the filed strong Center map, re-read under the loop-1 oracles", () => 
     });
     // Enforcement is not an oracle question: rescoring may never move it.
     expect(map.enforcementEscalations).toEqual([]);
+  });
+});
+
+describe("the loop-1 re-run, same dials, treatments in: the paid leg's effect, pinned", () => {
+  // Baseline and re-run share every dial (--retrieval --gated-grammar
+  // --repair, N=3, same model, same world) so the delta is the treatments'.
+  const rerun = artifact(LOOP_1_ARTIFACT);
+  const runs = rerun.runs as readonly RecordedBankRun[];
+
+  it("ran the same configuration as the baseline", () => {
+    const filed = artifact();
+    expect(rerun.model.slug).toBe(filed.model.slug);
+    expect(rerun.world).toEqual(filed.world);
+    expect({
+      retrieval: rerun.retrieval,
+      gatedGrammar: rerun.gatedGrammar,
+      repair: rerun.repair,
+      repetitions: rerun.repetitions,
+    }).toEqual({ retrieval: true, gatedGrammar: true, repair: true, repetitions: 3 });
+  });
+
+  it("answerable 111/237 pooled — from 71 as filed and 75 rescored; band 62-74 against the baseline's 47-55", () => {
+    const answerable = rerun.map.byDisposition[0]!;
+    expect(answerable.pass).toBe(111);
+    expect(answerable.total).toBe(237);
+    expect(rerun.map.pass).toBe(199);
+    expect(rerun.map.repetition?.passPerRepetition).toEqual([74, 63, 62]);
+    expect(rerun.map.repetition?.stablePass).toBe(46);
+    expect(rerun.map.repetition?.stableFail).toBe(35);
+  });
+
+  it("the treated classes moved, each toward its treatment", () => {
+    const breakdown = missBreakdown(rerun.runs);
+    expect(breakdown.misses).toBe(126);
+    // Treatment B (numeric-only comparison enum): 86 -> 12. The remaining 12
+    // are the enum's blind spot — numeric-capable facts absent on one side
+    // (a repel-steps against a potion) — which is the runtime gate's job, and
+    // proof the narrowing did not make it vacuous.
+    expect(breakdown.deniedByRule).toEqual({
+      "IA-2/incomparable-fact": 12,
+      "IA-2/uncertified-fact": 7,
+      "IA-3/fabricated-entity": 2,
+      "IA-2/fact-mismatch": 1,
+      "IA-4/membership-mismatch": 1,
+      "IA-4/ranking-over-empty-roster": 1,
+    });
+    // Treatment C (item criteria offered): off-shape resolutions 39 -> 25.
+    expect(breakdown.resolvedOffShape).toBe(25);
+    // The new dominant miss class: honest abstention (10 -> 55). The grammar
+    // took the improvisation vehicles away and the model abstains where it
+    // used to improvise — loop 2's named target, not this loop's claim.
+    expect(breakdown.abstainedAnswer).toBe(55);
+    expect(breakdown.abstainedScope).toBe(14);
+  });
+
+  it("treatment A: the self-comparison pathology is gone from the record — none committed, none even drafted", () => {
+    expect(degenerateComparisons(runs)).toEqual({ committed: 0, refusedDrafts: 0 });
+  });
+
+  it("enforcement is untouched by the loop, as it must be", () => {
+    expect(rerun.map.enforcementEscalations).toEqual([]);
   });
 });

@@ -2911,6 +2911,93 @@ and per-leg exit codes are recorded in the PR.
 
 ---
 
+### Iteration 40 — the Center loop, once around: 30% → 47% by naming which layer owed each miss
+
+The first paid Center map (iteration 39) said the new world was hard: 71/237
+answerable (30%), 57 stable fails. The §11 loop's first turn asked *which
+layer* owed each of the 166 misses — read from the record by a new offline
+instrument (`src/harness/rescore.ts`, every number below pinned in
+`rescore.test.ts`) — and the answer changed the story from "knowledge cliff"
+to "one mechanism plus my own wiring":
+
+| Miss class (baseline, 166 total) | Count | Layer that owes it |
+|---|---:|---|
+| `IA-2/incomparable-fact` denials | 86 | **the grammar** — the comparison enum offered every fact id, so the model compared prose with prose (cures, item-effect, evolves) |
+| Self-comparisons (potion vs potion): 13 committed + 48 refused drafts | 61 | **the grammar** — JSON Schema cannot say leftId ≠ rightId, and nothing else did |
+| Off-shape resolutions | 39 | **the grammar** — dominated by treats enumerations where an item roster was the asked set; the kernel has built item rosters since PR #105, but the schema and prompt never offered the criteria |
+| Other denials (uncertified-fact 9, fabricated-entity 5) | 14 | the model — caught and named, the gate working |
+| Oracle strictness (on-target treats failed as off-shape/subject) | 4 | **the instrument** |
+| Abstentions (10 answer + 9 scope), off-subject 1, other 6, declined 1 | 27 | mixed |
+
+Four treatments, each tied to its class. **(A)** The degenerate pair is
+refused at the propose boundary — in `decodeAnswer`, beside "an answer that
+asserts nothing is not an answer" — *not* in the kernel: the kernel-side
+version was tried first and the IA-10 replay sweep failed immediately,
+because a new kernel rule re-judges filed records that committed the shape
+before the grammar learned to refuse it. The sweep catching that within
+minutes of the edit is the versioning discipline doing its job, and the
+lesson generalizes: **a judgement about which true claims are worth
+committing is grammar, and lives propose-side; the kernel judges truth, and
+its rules are effectively append-only once records exist.** **(B)** The
+comparison's fact-id enum narrows to `COMPARABLE_FACT_IDS` — the
+numeric-capable vocabulary, exported by the registry and pinned in both
+directions against every entity of both bundled worlds. Membership means
+*can* be numeric, not always is, so `IA-2/incomparable-fact` keeps real
+work (a Full Restore's restores-hp is the text "full"). **(C)** The item
+roster criteria (`item-category`, `treats-condition`, `cost-at-most`,
+`cost-at-least`) are offered in the schema and both prompts, world-gated —
+plus the prompt discipline: only numeric facts compare, never a thing with
+itself, and a "what all…" over items is a roster the kernel counts.
+**(D)** A kernel-derived treats verdict is the `cures` fact projected onto
+one condition, so `resolvedOnFact` accepts it subject-checked (the itemId
+must match), and four bank entries accept `treats`; the `roster-*` entries
+stay deliberately strict — the certified closed set is the answer there,
+not examples named one by one.
+
+**The free leg first** — the instrument-side treatment re-measured on the
+already-paid records, zero spend: 71 → **75/237**, stable fails 57 → 53.
+The instrument owned exactly **4 of 166 misses** (2.4%); the rest was the
+proposer's. Then the paid leg: same model, same world, same dials
+(retrieval + gated grammar + repair), N=3, **1,022 calls, $0.25,
+6 provider errors counted apart**:
+
+| | Baseline (iter. 39) | Rescored (free) | Loop 1 re-run |
+|---|---:|---:|---:|
+| Answerable, pooled | 71/237 (30%) | 75/237 (32%) | **111/237 (47%)** |
+| Band (passes/repetition) | 47–55 | 47–57 | **62–74** |
+| Stable core | 36/125 | 36/125 | **46/125** |
+| Stable fails | 57 | 53 | **35** |
+| `IA-2/incomparable-fact` | 86 | 86 | **12** |
+| Self-comparisons (committed + drafts) | 13 + 48 | 13 + 48 | **0 + 0** |
+| Off-shape resolutions | 39 | 36 | **25** |
+
+The bands do not overlap — 62–74 against 47–55 — so the delta clears the
+§21 noise floor as a result, not a draw. Each treated class moved toward
+its treatment: the 12 surviving incomparable-fact denials are the enum's
+blind spot (a numeric-capable fact absent on one side — repel-steps against
+a potion), which is the runtime gate's job and proof the narrowing did not
+make it vacuous; the self-comparison pathology is gone from the record
+entirely, not even drafted. **Enforcement moved by nothing**: zero
+escalations, every zero intact — every layer touched was propose-side or
+scoring, which is the architecture's claim demonstrated as a diff.
+
+The new dominant miss class is named for loop 2: **honest abstention, 10 →
+55 of the misses.** With the improvisation vehicles gone, the model abstains
+where it used to emit junk that died as denials or off-shape resolutions —
+a better failure (nothing wrong was ever certified either way) and now the
+single biggest usefulness lever. Scope-friction abstentions also ticked up
+(9 → 14, several dying at one turn), worth watching before treating.
+
+One port-playbook lesson to carry: **a new claim kind has a burn-in cost.**
+The model over-reaches for the newest shape until the grammar disciplines
+it — and the five propose-side layers (iteration 38) must land *together*:
+shipping the kernel's item rosters without the schema's criteria produced a
+full paid run in which the asked-for set was inexpressible. Provenance:
+baseline `runs/coverage/2026-08-27T12-33-45-700Z-coverage.json`, re-run
+`runs/coverage/2026-08-27T22-15-59-495Z-coverage.json`; both readings
+pinned in `src/harness/rescore.test.ts`; the replay sweep re-derives both
+artifacts in CI.
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's
