@@ -25,6 +25,7 @@ import { degenerateComparisons, missBreakdown, rescoreMap, rescoreRuns } from ".
 
 const ARTIFACT = "2026-08-27T12-33-45-700Z-coverage.json";
 const LOOP_1_ARTIFACT = "2026-08-27T22-15-59-495Z-coverage.json";
+const LOOP_2_ARTIFACT = "2026-08-28T05-15-33-954Z-coverage.json";
 
 function artifact(name: string = ARTIFACT): CoverageArtifact {
   return JSON.parse(
@@ -163,6 +164,62 @@ describe("the loop-1 re-run, same dials, treatments in: the paid leg's effect, p
   });
 
   it("treatment A: the self-comparison pathology is gone from the record — none committed, none even drafted", () => {
+    expect(degenerateComparisons(runs)).toEqual({ committed: 0, refusedDrafts: 0 });
+  });
+
+  it("enforcement is untouched by the loop, as it must be", () => {
+    expect(rerun.map.enforcementEscalations).toEqual([]);
+  });
+});
+
+describe("the loop-2 re-run: the abstention class dissolves into its named causes", () => {
+  const rerun = artifact(LOOP_2_ARTIFACT);
+  const runs = rerun.runs as readonly RecordedBankRun[];
+
+  it("ran the same dials, under the v2 pack (v1 stays on the shelf for the filed pins)", () => {
+    expect(rerun.world.packId).toBe("pokemon-center-v2");
+    expect({ retrieval: rerun.retrieval, gatedGrammar: rerun.gatedGrammar, repair: rerun.repair, repetitions: rerun.repetitions }).toEqual(
+      { retrieval: true, gatedGrammar: true, repair: true, repetitions: 3 },
+    );
+  });
+
+  it("answerable 146/237 pooled — band 74-79 against loop 1's 62-74, disjoint again", () => {
+    const answerable = rerun.map.byDisposition[0]!;
+    expect(answerable.pass).toBe(146);
+    expect(answerable.total).toBe(237);
+    expect(rerun.map.pass).toBe(229);
+    expect(rerun.map.repetition?.passPerRepetition).toEqual([79, 74, 76]);
+    expect(rerun.map.repetition?.stablePass).toBe(51);
+    expect(rerun.map.repetition?.stableFail).toBe(24);
+  });
+
+  it("each loop-2 treatment moved its class; the residue is named for loop 3", () => {
+    const breakdown = missBreakdown(rerun.runs);
+    expect(breakdown.misses).toBe(91);
+    // The abstention class, 55 -> 13: the fold ended the self-comparison
+    // abstentions, the closed roster vocabularies ended the refused-roster
+    // ones, the completed reference table and retrieval recall halved the
+    // genuinely-empty ones. Scope friction went to zero — the linking fixes
+    // reached the discovery call too.
+    expect(breakdown.abstainedAnswer).toBe(13);
+    expect(breakdown.abstainedScope).toBe(0);
+    // The new dominant class: off-shape resolutions (25 -> 41). The model now
+    // ANSWERS where it used to abstain — not always in the asked shape. That
+    // is the trade the treatments bought, named here rather than blended.
+    expect(breakdown.resolvedOffShape).toBe(41);
+    expect(breakdown.resolvedOffSubject).toBe(8);
+    expect(breakdown.deniedByRule).toEqual({
+      "IA-2/incomparable-fact": 12,
+      "IA-2/uncertified-fact": 5,
+      "IA-3/fabricated-entity": 5,
+      "IA-4/ranking-tie": 3,
+      "IA-4/membership-mismatch": 1,
+      "IA-1/ranking-basis-not-established": 1,
+    });
+  });
+
+  it("the fold is counted, never hidden: 39 folded runs filed, and no degenerate pair anywhere", () => {
+    expect(runs.filter((run) => run.folded === true)).toHaveLength(39);
     expect(degenerateComparisons(runs)).toEqual({ committed: 0, refusedDrafts: 0 });
   });
 
