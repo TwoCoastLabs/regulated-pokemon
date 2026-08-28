@@ -151,6 +151,33 @@ export const SPECIES_FACT_IDS: readonly string[] = Object.keys(SPECIES_FACTS).so
 export const MOVE_FACT_IDS: readonly string[] = Object.keys(MOVE_FACTS).sort();
 export const ITEM_FACT_IDS: readonly string[] = Object.keys(ITEM_FACTS).sort();
 
+/**
+ * The fact ids that can resolve to a number — the only ones a comparison can
+ * range over (IA-2/incomparable-fact is the kernel's runtime word on it; this
+ * list is the same judgement made legible to the propose side, so the answer
+ * grammar can stop offering comparisons over prose). Curated, not derived: a
+ * fact's value kind is a property of its resolver function, which nothing can
+ * enumerate statically — so the list is pinned by test against every entity of
+ * both bundled snapshots, in both directions. Membership means "can be a
+ * number", not "always is": restores-hp resolves to the text "full" for a Full
+ * Restore and move-power to absent for Splash, and the kernel still refuses
+ * those pairs at verification — the runtime gate stays load-bearing (and
+ * reachable, which keeps its crucible mutation honest).
+ */
+export const COMPARABLE_FACT_IDS: readonly string[] = [
+  "pokedex-number",
+  ...STAT_NAMES.map((stat) => `base-${stat}`),
+  "base-stat-total",
+  "move-power",
+  "move-accuracy",
+  "move-pp",
+  "cost",
+  "restores-hp",
+  "restores-pp",
+  "repel-steps",
+  "catch-rate-multiplier",
+].sort();
+
 export class CertifiedRegistry {
   readonly document: SnapshotDocument;
   readonly snapshot: CertifiedSnapshot;

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { kantoRegistry, readSnapshot, SNAPSHOT_PATH } from "../testing/fixtures.js";
+import { centerRegistry, kantoRegistry, readSnapshot, SNAPSHOT_PATH } from "../testing/fixtures.js";
 import { readRegistry } from "./files.js";
-import { fidelitySurfaces, loadRegistry, sameFactValue } from "./registry.js";
+import { COMPARABLE_FACT_IDS, fidelitySurfaces, ITEM_FACT_IDS, loadRegistry, MOVE_FACT_IDS, sameFactValue, SPECIES_FACT_IDS } from "./registry.js";
 import { denialCode } from "./violation.js";
 
 describe("the vendored snapshot loads as a certified registry", () => {
@@ -256,5 +256,38 @@ describe("the grown world (schema v3): evolutions, encounters, machines", () => 
     expect(registry.resolve("surf", "machine")).toEqual({ ok: true, value: { kind: "text", value: "hm03" } });
     expect(registry.resolve("thunderbolt", "machine")).toEqual({ ok: true, value: { kind: "text", value: "tm24" } });
     expect(registry.resolve("tackle", "machine")).toEqual({ ok: true, value: { kind: "absent" } });
+  });
+});
+
+describe("COMPARABLE_FACT_IDS is exactly the numeric-capable vocabulary", () => {
+  // The curated list a comparison may range over, pinned in both directions
+  // against every entity of both bundled worlds: every listed id resolves to
+  // a number for at least one entity somewhere, and no unlisted id ever does.
+  // If a fact's resolver changes kind, this fails until the list moves in the
+  // same commit — the same discipline FACT_IDS keeps with the registry.
+  const worlds = [kantoRegistry(), centerRegistry()];
+  const allFactIds = [...SPECIES_FACT_IDS, ...MOVE_FACT_IDS, ...ITEM_FACT_IDS];
+
+  function resolvesNumericSomewhere(factId: string): boolean {
+    return worlds.some((registry) =>
+      [...registry.speciesIds, ...registry.moveIds, ...registry.items.map((item) => item.id)].some((entityId) => {
+        const resolved = registry.resolve(entityId, factId);
+        return resolved.ok && resolved.value.kind === "number";
+      }),
+    );
+  }
+
+  it("every listed id can be a number, and every id that can be a number is listed", () => {
+    const numeric = allFactIds.filter(resolvesNumericSomewhere).sort();
+    expect([...COMPARABLE_FACT_IDS]).toEqual(numeric);
+  });
+
+  it("membership means can-be, not always-is — the runtime incomparable gate stays reachable", () => {
+    const center = centerRegistry();
+    // A Full Restore's restores-hp is the text "full": listed id, non-numeric
+    // value, so IA-2/incomparable-fact still has real work.
+    const resolved = center.resolve("full-restore", "restores-hp");
+    expect(resolved.ok && resolved.value.kind).toBe("text");
+    expect(COMPARABLE_FACT_IDS).toContain("restores-hp");
   });
 });

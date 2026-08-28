@@ -20,6 +20,7 @@ import {
   type FunnelStage,
   type FunnelStageKind,
   funnelOf,
+  resolvedOnFact,
   resolvedOnShape,
   routedLesson,
   scoreDisposition,
@@ -75,6 +76,29 @@ describe("resolvedOnShape — a resolution has to be the shape that was asked", 
 
   it("fails when nothing resolved — there is no shape to read", () => {
     expect(resolvedOnShape(run("unresolved"), ["count"])).toBe(false);
+  });
+});
+
+describe("resolvedOnFact accepts a treats verdict as the cures fact projected (Center loop 1)", () => {
+  const resolvedWithClaims = (claims: object[]): HarnessRun =>
+    run("answered", {
+      transaction: {
+        outcome: { status: "answered" },
+        manifest: { claims },
+      } as unknown as NonNullable<HarnessRun["transaction"]>,
+    });
+
+  it("a treats verdict about the accepted item satisfies a cures (or unpinned) expectation", () => {
+    const treats = resolvedWithClaims([{ kind: "treats", itemId: "antidote", condition: "poison" }]);
+    expect(resolvedOnFact(treats, [{ entityId: "antidote", factId: "cures" }])).toBe(true);
+    expect(resolvedOnFact(treats, [{ entityId: "antidote" }])).toBe(true);
+  });
+
+  it("keeps subject discipline: the wrong item, or a non-cures pin, satisfies nothing", () => {
+    const treats = resolvedWithClaims([{ kind: "treats", itemId: "potion", condition: "poison" }]);
+    expect(resolvedOnFact(treats, [{ entityId: "antidote", factId: "cures" }])).toBe(false);
+    const pinnedElsewhere = resolvedWithClaims([{ kind: "treats", itemId: "antidote", condition: "poison" }]);
+    expect(resolvedOnFact(pinnedElsewhere, [{ entityId: "antidote", factId: "cost" }])).toBe(false);
   });
 });
 

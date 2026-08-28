@@ -153,7 +153,8 @@
       },
       "disposition": "answerable",
       "expectClaimKinds": [
-        "fact"
+        "fact",
+        "treats"
       ],
       "expectFacts": [
         {
@@ -164,7 +165,8 @@
           "entityId": "antidote",
           "factId": "item-effect"
         }
-      ]
+      ],
+      "notes": "Center loop 1 (iteration 40): a kernel-derived treats verdict about this item answers the question squarely; the first paid run failed such answers on oracle strictness alone, so the oracle accepts `treats` (subject-checked against expectFacts via the cures projection)."
     },
     {
       "id": "fact-awakening-effect",
@@ -199,7 +201,8 @@
       },
       "disposition": "answerable",
       "expectClaimKinds": [
-        "fact"
+        "fact",
+        "treats"
       ],
       "expectFacts": [
         {
@@ -210,7 +213,8 @@
           "entityId": "ice-heal",
           "factId": "item-effect"
         }
-      ]
+      ],
+      "notes": "Center loop 1 (iteration 40): a kernel-derived treats verdict about this item answers the question squarely; the first paid run failed such answers on oracle strictness alone, so the oracle accepts `treats` (subject-checked against expectFacts via the cures projection)."
     },
     {
       "id": "fact-full-heal-effects",
@@ -222,7 +226,8 @@
       },
       "disposition": "answerable",
       "expectClaimKinds": [
-        "fact"
+        "fact",
+        "treats"
       ],
       "expectFacts": [
         {
@@ -234,7 +239,7 @@
           "factId": "item-effect"
         }
       ],
-      "notes": "a list-valued fact (every condition it cures) answers this squarely — the bank overruled the plan's 'multi-effect shape'"
+      "notes": "a list-valued fact (every condition it cures) answers this squarely — the bank overruled the plan's 'multi-effect shape' — Center loop 1 (iteration 40): the run answered with one verified treats verdict per condition — the same closed effect set the cures list reads, per-condition; the oracle accepts `treats` (subject-checked). A single-pair answer is partial and the oracle cannot count — accepted looseness, recorded here."
     },
     {
       "id": "fact-full-restore-effects",
@@ -1087,7 +1092,8 @@
       "disposition": "answerable",
       "expectClaimKinds": [
         "membership",
-        "fact"
+        "fact",
+        "treats"
       ],
       "expectFacts": [
         {
@@ -1097,9 +1103,17 @@
         {
           "entityId": "full-heal",
           "factId": "cost"
+        },
+        {
+          "entityId": "full-restore",
+          "factId": "cures"
+        },
+        {
+          "entityId": "full-restore",
+          "factId": "cost"
         }
       ],
-      "notes": "a set of items defined by criteria; the kernel has rosters over species only (`item-roster`); two criteria compose with `all`, which the criteria language already does"
+      "notes": "a set of items defined by criteria; the kernel has rosters over species only (`item-roster`); two criteria compose with `all`, which the criteria language already does — Center loop 1 (iteration 40): two items fix both (Full Heal and Full Restore); the bank had pinned only full-heal, failing a correct full-restore answer as off-subject — both accepted now, and `treats` accepted subject-checked."
     },
     {
       "id": "roster-cheapest-full-heal-status",

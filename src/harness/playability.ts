@@ -204,11 +204,21 @@ export function resolvedOnFact(run: HarnessRun, accepted: readonly ExpectedFact[
   if (transaction === undefined) return false;
   const { outcome, manifest } = transaction;
   if ((outcome.status !== "answered" && outcome.status !== "acted") || manifest === undefined) return false;
-  return manifest.claims.some(
-    (claim) =>
-      claim.kind === "fact" &&
-      accepted.some((want) => want.entityId === claim.entityId && (want.factId === undefined || want.factId === claim.factId)),
-  );
+  return manifest.claims.some((claim) => {
+    if (claim.kind === "fact") {
+      return accepted.some((want) => want.entityId === claim.entityId && (want.factId === undefined || want.factId === claim.factId));
+    }
+    // A treats verdict is the `cures` fact projected onto one condition — the
+    // kernel derives it from the same closed effect set — so it satisfies an
+    // expected fact about that item when the oracle accepts `cures` (or pins
+    // no fact). Subject discipline is kept: the itemId must match; a verdict
+    // about some other item answers nothing this oracle accepts. (Center loop
+    // 1: the first paid run failed on-target treats answers as off-subject.)
+    if (claim.kind === "treats") {
+      return accepted.some((want) => want.entityId === claim.itemId && (want.factId === undefined || want.factId === "cures"));
+    }
+    return false;
+  });
 }
 
 /**
