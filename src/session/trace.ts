@@ -62,6 +62,10 @@ export interface TraceArgs {
    * player gets the certified value instead of a denial; docs/recovery.md,
    * channel 2); `--no-repair` files the first-attempt denial instead. */
   repair: boolean;
+  /** Converse with the Center world — kanto-center under its own pack, the
+   * realistic-inquiry setting the coverage maps measure. Off by default: the
+   * frozen red-blue world stays the tracer's baseline. */
+  center: boolean;
 }
 
 export function parseTraceArgs(argv: readonly string[]): TraceArgs {
@@ -76,6 +80,7 @@ export function parseTraceArgs(argv: readonly string[]): TraceArgs {
     grounding,
     gatedGrammar: !argv.includes("--loose-grammar"),
     repair: !argv.includes("--no-repair"),
+    center: argv.includes("--center"),
   };
 }
 

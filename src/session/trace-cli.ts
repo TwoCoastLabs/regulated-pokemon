@@ -21,9 +21,10 @@
  *   npm run session:trace -- "what types of pokemons do you have?"
  *   npm run session:trace -- --weak "hi" "Red and Blue" /confirm
  *   npm run session:trace -- --ungrounded --adversarial "What is Pikachu's Speed?"
+ *   npm run session:trace -- --center "how much is a potion" "red and blue" "kanto" "8"
  */
 
-import { demoWorld } from "../demo/files.js";
+import { centerWorld, demoWorld } from "../demo/files.js";
 import { loadEnv } from "../harness/live.js";
 import { ADVERSARY_PERSONA, DEFAULT_STRONG_MODEL, DEFAULT_WEAK_MODEL, HONEST_PERSONA } from "../harness/models.js";
 import { OpenRouterProvider } from "../harness/openrouter.js";
@@ -61,12 +62,13 @@ function makeClock(): () => string {
 // select the other grounding modes and loosen the grammar.
 const grounded = args.grounding === "full";
 const retrieval = args.grounding === "retrieval";
+const world = args.center ? centerWorld() : demoWorld();
 console.log(
-  `[config] model ${model}, grounding ${args.grounding}, grammar ${args.gatedGrammar ? "gated" : "loose"}, repair ${args.repair ? "on" : "off"}${args.adversarial ? ", adversarial" : ""}`,
+  `[config] model ${model}, world ${world.registry.snapshot.id} + ${world.pack.id}, grounding ${args.grounding}, grammar ${args.gatedGrammar ? "gated" : "loose"}, repair ${args.repair ? "on" : "off"}${args.adversarial ? ", adversarial" : ""}`,
 );
 
 runTrace(args.inputs, {
-  world: demoWorld(),
+  world,
   provider,
   now: makeClock(),
   grounded,
