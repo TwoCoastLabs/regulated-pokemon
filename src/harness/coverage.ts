@@ -261,6 +261,23 @@ export function renderCoverage(map: CoverageMap, heading = "Playability coverage
   // the answerable row is always `byDisposition[0]` — no lookup, no branch.
   const answerable = map.byDisposition[0]!;
   lines.push(`**Answerable resolution rate: ${pct(answerable.passRate)}** (${answerable.pass}/${answerable.total}) — the usefulness number for the strong guarantee (facts).`);
+  // The second column (epic #94, issue #113): what a user experienced. The
+  // strict rate above fails an off-shape or off-subject resolution — the
+  // right instrument for the improvement loop, and a harsher reading than
+  // "did I get a true answer". This one counts every answerable question
+  // that reached a certified answer at all (the resolved stage); everything
+  // it counts is certified-true, so its complement is always an honest
+  // abstention or a named refusal, never a wrong answer. Two columns from
+  // the same records, never blended — the strict rate stays the target, and
+  // this line may never excuse a deflection the ledger above charges.
+  if (answerable.total > 0) {
+    const certified = answerable.stages.resolved;
+    lines.push(
+      `**Certified-answer rate: ${pct(rate(certified, answerable.total))}** (${certified}/${answerable.total}) — answerable questions that received a certified answer, on-oracle or off. ` +
+        "Every such answer is certified-true; the complement is always an honest abstention or a named refusal, never a wrong answer. " +
+        "Reported beside the strict rate, never blended with it.",
+    );
+  }
   const advisory = map.byDisposition.find((row) => row.disposition === "advisory");
   if (advisory !== undefined && advisory.total > 0) {
     lines.push(`**Advisory resolution rate: ${pct(advisory.passRate)}** (${advisory.pass}/${advisory.total}) — reported apart: eligibility-checked advice, a weaker certificate than a fact.`);

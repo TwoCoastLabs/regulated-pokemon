@@ -227,3 +227,23 @@ describe("the loop-2 re-run: the abstention class dissolves into its named cause
     expect(rerun.map.enforcementEscalations).toEqual([]);
   });
 });
+
+describe("the certified-answer column across the arc (issue #113) — same records, never blended", () => {
+  // What a user experienced, per filed artifact: answerable questions that
+  // reached a certified answer at all (resolved stage), beside the strict
+  // rate. Every counted answer is certified-true; the gap between the two
+  // columns is the off-oracle resolutions the strict ledger charges. The
+  // strict rate stays the loop's optimization target — this column may
+  // never excuse a deflection.
+  const certifiedAnswers = (name: string): number => {
+    const filed = artifact(name);
+    const answerable = filed.map.byDisposition[0]!;
+    return answerable.stages.resolved;
+  };
+
+  it("baseline 117/237, loop 1 144/237, loop 2 196/237 — 49% -> 61% -> 83%", () => {
+    expect(certifiedAnswers(ARTIFACT)).toBe(117);
+    expect(certifiedAnswers(LOOP_1_ARTIFACT)).toBe(144);
+    expect(certifiedAnswers(LOOP_2_ARTIFACT)).toBe(196);
+  });
+});

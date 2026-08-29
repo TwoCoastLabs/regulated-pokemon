@@ -3053,6 +3053,34 @@ in silence.
 Provenance: `runs/coverage/2026-08-28T05-15-33-954Z-coverage.json`, beside
 loop 1's; both readings pinned in `src/harness/rescore.test.ts`.
 
+### Iteration 42 — the second column: what the user got, beside what the oracle demanded
+
+The map's answerable headline is deliberately the harshest reading — a
+resolution fails it for being off-shape or off-subject even when every
+value on the certificate is true. Right instrument for the improvement
+loop; misleading proxy for user experience. The map now reports both
+columns, computed from the same records at filing time and never blended
+(issue #113):
+
+| | Oracle-strict | **Certified-answer** (resolved stage) |
+|---|---:|---:|
+| Center baseline | 71/237 (30%) | 117/237 (49%) |
+| Loop 1 | 111/237 (47%) | 144/237 (61%) |
+| Loop 2 | 146/237 (62%) | **196/237 (83%)** |
+
+Everything the second column counts is certified-true — its complement is
+always an honest abstention or a named refusal, never a wrong answer —
+which is the profile the product argument rests on (issue #111's
+benchmarks: 83% sits above best-in-class automated containment and at
+human "world-class" FCR, with a zero-wrong-answer guarantee neither band
+offers). Two guards keep the column honest: the strict rate remains the
+loop's optimization target, and the certified-answer line may never excuse
+a deflection the strict ledger charges — an off-shape resolution is still
+a miss where it has always been counted. Pinned over all three filed
+Center artifacts in `src/harness/rescore.test.ts`; older artifacts render
+the new line for free, because the render is a pure function of the filed
+map and the resolved-stage counts were always in it.
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's

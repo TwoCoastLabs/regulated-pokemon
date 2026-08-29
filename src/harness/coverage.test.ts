@@ -74,6 +74,9 @@ describe("renderCoverage is a faithful, pure Markdown view", () => {
     expect(md).toContain("5/7 passed");
     expect(md).toContain("Enforcement holds");
     expect(md).toContain("Answerable resolution rate: 33%");
+    // 1 of 3 reached a certified answer; here the two columns agree — they
+    // diverge exactly when resolutions are off-oracle (see rescore.test).
+    expect(md).toContain("Certified-answer rate: 33%");
     expect(md).toContain("Honest-refusal rate on unanswerable questions: 100%");
     expect(md).toContain("`ans-3` — 9 turns");
   });
@@ -82,6 +85,24 @@ describe("renderCoverage is a faithful, pure Markdown view", () => {
     const md = renderCoverage(coverageMap([run("ans-1", "answerable", { kind: "resolved" }, true)]));
     expect(md).toContain("Answerable resolution rate: 100%");
     expect(md).not.toContain("Honest-refusal rate");
+  });
+
+  it("splits the two columns when a resolution is off-oracle — strict fails it, certified-answer counts it", () => {
+    const md = renderCoverage(
+      coverageMap([
+        run("ans-1", "answerable", { kind: "resolved" }, true),
+        run("ans-2", "answerable", { kind: "resolved" }, false, {
+          score: { pass: false, reason: "off-shape", shapeDeflection: true },
+        }),
+      ]),
+    );
+    expect(md).toContain("Answerable resolution rate: 50%");
+    expect(md).toContain("Certified-answer rate: 100%");
+  });
+
+  it("omits the certified-answer line when nothing answerable was asked", () => {
+    const md = renderCoverage(coverageMap([run("off-1", "off-domain", { kind: "abstained-answer" }, true)]));
+    expect(md).not.toContain("Certified-answer rate");
   });
 
   it("shouts an enforcement escalation instead of burying it in a rate", () => {
