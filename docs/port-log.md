@@ -41,10 +41,10 @@ decides it on the divergence and ceremony numbers, not on three questions.
 | 4 | Claim shapes the bank demanded | `treats` (with the certified negative) and `comparison`, each with derivation, verifier, formatter, crucible mutation and coverage bucket | 5 | 0.3 | #105 |
 | 5 | Vocabulary widening | Roster criteria over items; item actions in the pack's action registry with consent notices for the irreversible ones | 3 | 0.15 (criteria; actions land with the pack, PR 3) | #105 |
 | 6 | Pack | Controlled-item gates (the IA-5 analog), disclosures with approved wording, copy catalogue, formatters for the new value kinds, curriculum entries the bank asked for | 4 | 0.25 | #106 |
-| 7 | Crucible | Mutations per new mechanism, plus the clean controls | 3 | | |
+| 7 | Crucible | Mutations per new mechanism, plus the clean controls | 3 | 0.15 | #105, #106 |
 | 8 | Bank migration and oracles | The inquiry bank migrated into the playability format with `expectFacts`/`expectBlockIds` validated against the new world | 2 | 0.5 | #107 |
-| 9 | Coverage map | Both defaults at N=3 on the realistic bank; the disposition map rendered from the artifact | 1 (plus billable run time) | | |
-| 10 | Certified page and crucible page | Slots and formatters on the certified page for the new value kinds; the new sabotages on the crucible page | 3 | | |
+| 9 | Coverage map | Both defaults at N=3 on the realistic bank; the disposition map rendered from the artifact | 1 (plus billable run time) | 0.1 (plus run time) | #107, #108 |
+| 10 | Certified page and crucible page | Slots and formatters on the certified page for the new value kinds; the new sabotages on the crucible page | 3 | 0.05 (partial — see note) | #105 |
 | | **Total** | | **33** | | |
 
 The total is the honest prior, not a number tuned to the target. It sits
@@ -94,6 +94,42 @@ claims, and the engine/instance boundary has to move.
   by planning. A port's checklist should say "a new claim kind touches every
   propose-side layer, and the offline end-to-end run is the thing that finds
   the ones you forgot."
+
+- **Row 7 (#105, #106):** ~0.15 agent-days, landed inside the claim-shape
+  and pack PRs rather than as its own — which is itself the lesson: under
+  the article-coverage gate a mechanism *cannot* land without its mutation,
+  so the crucible row is not separable work, it is the definition of done
+  for rows 4–6. A playbook should not budget it apart.
+
+- **Row 9 (#107, #108):** ~0.1 agent-days of code (the `--center` world
+  selection; the map machinery was reused whole) plus the billable batch.
+  The real spend was measured in dollars, not days: $0.38 for the
+  three-leg batch.
+
+- **Row 10 (#105, partial):** the answer viewmodel learned to describe the
+  new claim kinds as a by-product (~0.05 days), and the run-ledger renders
+  Center artifacts because it renders records generically. The
+  Center-*specific* page work — its sabotages on the crucible menu, the
+  second world selectable in the tab — did not land in the port and moves
+  to slice 7's publish scope, where the two-world presentation is decided
+  as one piece. The estimate assumed page work per world; the rehearsal
+  says most of it amortizes.
+
+### The seam the budget missed: the burn-in loop
+
+The pre-registered table ends at "coverage map", as if a port were done when
+the first number is filed. It is not, and the rehearsal measured why: the
+first paid Center map read **30% answerable oracle-strict**, and reaching
+**62% strict / 83% certified-answer** took two improvement-loop iterations
+(PRs #109, #110; findings iterations 40–41) — roughly **one further
+agent-day and $0.58 of paid legs**, treating grammar over-reach on the new
+claim kinds, half-wired propose layers, and instrument gaps the first real
+run exposed. The lesson for any port budget: **a new claim kind has a
+burn-in cost** (the model over-reaches for the newest shape until the
+grammar disciplines it), and the loop that pays it down is not overrun —
+it is a scheduled seam, roughly one loop iteration per new claim kind,
+each iteration decomposable from the record before any re-spend. The
+playbook (docs/port-playbook.md) carries this as a named budget row.
 
 ## How the actuals are recorded
 
