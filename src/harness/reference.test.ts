@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { harnessWorld } from "./corpus.js";
-import { certifiedReference, RETRIEVAL_SPECIES_CAP, retrieveReference } from "./reference.js";
+import { certifiedReference, RETRIEVAL_LEXICON, RETRIEVAL_SPECIES_CAP, retrievalSelection, retrieveReference } from "./reference.js";
+import { centerRegistry, kantoRegistry } from "../testing/fixtures.js";
 
 const world = harnessWorld();
 const reference = certifiedReference(world.registry);
@@ -94,5 +95,49 @@ describe("retrieveReference — only the facts a question needs", () => {
     for (const policy of ["minimumBadgeLevel", "acquisition", "disclosure", "IA-"]) {
       expect(block).not.toContain(policy);
     }
+  });
+});
+
+describe("retrieval recall for set and advice questions (Center loop 2)", () => {
+  // The loop-2 linking instrument's finding, pinned as its fix: these bank
+  // wordings retrieved ZERO rows in the loop-1 build — "poisoned" did not stem
+  // to poison, "vending machine drinks" names no id, "potions" no category —
+  // and the grounded model, handed nothing, honestly abstained. Wordings are
+  // read from the shipped bank so the pin tracks the questions actually asked.
+  const registry = centerRegistry();
+  const rows = (question: string) => {
+    const selection = retrievalSelection(registry, question);
+    return new Set([...selection.species, ...selection.moves, ...selection.items]);
+  };
+
+  it("pins every lexicon id to the world that uses it", () => {
+    for (const entry of RETRIEVAL_LEXICON) {
+      for (const id of entry.items) {
+        expect(registry.findItem(id), `${entry.phrase} names unknown item ${id}`).toBeDefined();
+      }
+    }
+  });
+
+  it("links the formerly zero-row wordings", () => {
+    expect(rows("are the vending machine drinks as good as potions").has("lemonade")).toBe(true);
+    expect(rows("which of the X items can I actually use in battle").has("x-attack")).toBe(true);
+    expect(rows("what evolution stones exist in this game").has("thunder-stone")).toBe(true);
+    expect(rows("how many kinds of potion are there").has("hyper-potion")).toBe(true);
+    expect(rows("my pokemon is poisoned and nearly dead, what do I buy").has("antidote")).toBe(true);
+    expect(rows("what ball should I use on an abra, it keeps teleporting").has("great-ball")).toBe(true);
+  });
+
+  it("stems every condition inflection to its curing items", () => {
+    expect(rows("my pikachu got burned, help").has("burn-heal")).toBe(true);
+    expect(rows("charmander is frozen solid").has("ice-heal")).toBe(true);
+    expect(rows("my pokemon is paralyzed").has("paralyze-heal")).toBe(true);
+    expect(rows("it fell asleep in battle").has("awakening")).toBe(true);
+    expect(rows("snorlax seems confused").has("full-heal")).toBe(true);
+  });
+
+  it("keeps the frozen world unmoved — no lexicon id exists there, so nothing matches", () => {
+    const kanto = kantoRegistry();
+    const selection = retrievalSelection(kanto, "are the vending machine drinks as good as potions");
+    expect(selection.items.size).toBe(0);
   });
 });

@@ -47,7 +47,7 @@ const COUNT_CUE = /\b(how many|number of|count(?:ing|ed)?)\b/i;
  * beside the cue rather than derived from the labels, and pinned to the pack's
  * rule set by {@link grammar-gate.test}, so a new rule updates both together.
  */
-const RULE_NOUN = /\b(party|team|moves?|attacks?|badges?|starters?|box(?:es)?|pc|storage|slots?)\b/i;
+const RULE_NOUN = /\b(party|team|moves?|attacks?|badges?|starters?|box(?:es)?|pc|storage|slots?|items?|bag|stack)\b/i;
 
 /** Wording that asks for a rule's *limit* even without a count cue — "max team
  * size", "how many moves at once", "can I carry". */
@@ -66,6 +66,15 @@ export function nominateFillerKinds(question: string): ReadonlySet<FillerKind> {
   const countCue = COUNT_CUE.test(question);
   if (countCue) nominated.add("count");
   if (countCue && /\btypes?\b/i.test(question)) nominated.add("typeCount");
-  if (RULE_NOUN.test(question) && (countCue || RULE_LIMIT_CUE.test(question))) nominated.add("gameRule");
+  // A rule noun with either cue — or both cues with no recognizable noun at
+  // all ("is there a max on how many potions I can hold": the noun is an
+  // item, which no closed noun list can enumerate; the count+limit pairing is
+  // the rule-ness). Loop 2: the bag-rule questions died ungated on this.
+  if (
+    (RULE_NOUN.test(question) && (countCue || RULE_LIMIT_CUE.test(question))) ||
+    (countCue && RULE_LIMIT_CUE.test(question))
+  ) {
+    nominated.add("gameRule");
+  }
   return nominated;
 }

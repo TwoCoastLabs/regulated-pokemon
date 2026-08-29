@@ -2998,6 +2998,61 @@ baseline `runs/coverage/2026-08-27T12-33-45-700Z-coverage.json`, re-run
 pinned in `src/harness/rescore.test.ts`; the replay sweep re-derives both
 artifacts in CI.
 
+### Iteration 41 — the Center loop, twice around: 47% → 62%, and the abstention class dissolves into its named causes
+
+Loop 1 moved the misses; loop 2 read where they went. The re-run's dominant
+miss class was honest abstention — 55 of 126 — and each abstention's
+*recorded refusal reason* split it four ways, every one with a deterministic
+treatment (no prompt-tuning, no model change):
+
+| Abstention cause (loop 1) | Count | Treatment (loop 2) | After |
+|---|---:|---|---:|
+| Self-comparison refused at decode | 23 | **Fold, don't refuse**: `comparison X-vs-X` folds to the `fact` it means (recovery channel 2 — deterministic, the pair's only content *is* the value), verified downstream, and **counted** (`folds`/`folded`) so a folded resolution never blends with a first-shape one | **0** |
+| Rosters refused whole (invented category 6, invented type 6, mixed universes 5) | 17 | **Close the vocabularies**: `has-type` and `item-category` become registry-fed enums; the roster splits into two domain variants (species criteria XOR item criteria), so `criteria-domain-mixed` is unrepresentable at decode | **0** |
+| Genuinely empty | 19 | **Two instrument gaps of mine**: the reference items table rendered 3 certified columns of 14 — "can I use a potion in a fight" had its answer certified but absent from the row in front of the model (all 14 render now); and retrieval recall — "poisoned" did not stem to `poison`, "vending machine drinks" names no id — closed by condition inflections, a reviewed `RETRIEVAL_LEXICON` (ids pinned; the frozen world matches nothing, by test) and category word-matching | **9** |
+| Provider failures | 4 | counted apart, as ever | 4 |
+
+Plus `pokemon-center-v2` — bag-slots 20 and item-stack 99, the two
+answerable rule questions the pack could not ground (v1 stays on the shelf:
+the filed records pin it, and the sweep resolves by the pin) — and the
+grammar gate learning that count+limit wording is rule-ness even when the
+noun is an item ("how many potions can I hold").
+
+The paid leg, same dials, $0.33, 1,135 calls, 8 provider errors apart:
+
+| | Loop 1 | Loop 2 |
+|---|---:|---:|
+| Answerable, pooled | 111/237 (47%) | **146/237 (62%)** |
+| Band | 62–74 | **74–79** (disjoint again) |
+| Stable core / stable fails | 46 / 35 | **51 / 24** |
+| Answerable misses | 126 | **91** |
+| Abstained (answer / scope) | 55 / 14 | **13 / 0** |
+| `rule-bag-limit`, `rule-stack-limit` | stable fail | **stable pass** |
+
+Scope friction went to **zero** — the recall fixes reached the discovery
+call too ("are the vending machine drinks as good as potions" now retrieves
+its three rows and resolves instead of earning the off-domain redirect).
+39 folded runs are filed and flagged; no degenerate pair exists anywhere in
+the record, committed or drafted. **Enforcement moved by nothing**, third
+artifact in a row; the replay sweep re-derives all of them, the loop-1
+records under v1 from the shelf.
+
+Two iterations of the loop now read as one method demonstrated twice:
+decompose from the record, treat the layer that owes each class, re-measure
+under the same dials — 30% → 47% → **62%**, bands disjoint at every step,
+against the red-blue bank's 83% ceiling. And each round's residue names the
+next: the new dominant class is **off-shape resolutions (25 → 41)** — the
+model now *answers* where it used to abstain, not always in the asked shape
+("what all cures poison" still answered with treats enumerations rather
+than the certified set, all three repetitions). Whether that class is worth
+a third turn before publish is a judgement call the numbers now make
+legible. One new denial also surfaced by honest growth: `IA-4/ranking-tie`
+(3) — rankings whose basis ties at the top, refused rather than tie-broken
+in silence.
+
+Provenance: `runs/coverage/2026-08-28T05-15-33-954Z-coverage.json`, beside
+loop 1's; both readings pinned in `src/harness/rescore.test.ts`.
+
 ## 18. The coverage map, paid for: the model can dodge, it cannot fabricate
 
 *(This is the number epic #45's wave 4 promised as "finding §17"; the doc's
