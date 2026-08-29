@@ -15,7 +15,7 @@
  */
 
 import { expectedDenial, type Mutation } from "../crucible/harness.js";
-import { ALL_CONTROLS, ALL_MUTATIONS } from "../crucible/phases.js";
+import { ALL_CONTROLS, ALL_MUTATIONS, worldOf } from "../crucible/phases.js";
 import { ACCORD_ARTICLES, article, type ArticleId } from "../kernel/accord.js";
 import type { ManifestContext } from "../kernel/manifest.js";
 import { violationView, type ViolationView } from "./viewmodel.js";
@@ -68,6 +68,12 @@ export interface SabotageOutcome {
 function mutationNamed(id: string): Mutation {
   const found = ALL_MUTATIONS.find((entry) => entry.id === id);
   if (found === undefined) throw new Error(`the sabotage menu names "${id}", which the crucible does not carry`);
+  // The page hands every button the standard sabotage world; a menu entry
+  // whose phase declared another world would run against the wrong registry
+  // and deny for the wrong reason. Refused here, not discovered on stage.
+  if (worldOf(found) !== "standard") {
+    throw new Error(`the sabotage menu lists "${id}", whose phase runs in the ${worldOf(found)} world, not the standard one the page supplies`);
+  }
   return found;
 }
 

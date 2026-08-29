@@ -18,7 +18,7 @@ import { verifyManifest } from "../kernel/manifest.js";
 import { verifyScopeGrant } from "../kernel/scope.js";
 import { runTransaction } from "../kernel/transaction.js";
 import { denialCode } from "../kernel/violation.js";
-import { play, playAndCheck, playSabotage, runDemo, sabotageWorld } from "./demo.js";
+import { play, playAndCheck, playSabotage, runDemo, sabotageWorldFor } from "./demo.js";
 import { demoWorld } from "./files.js";
 import {
   COMMITTED_AT,
@@ -223,7 +223,7 @@ describe("the demo's own self-check can fail", () => {
 
 describe("every denial explains itself to a reader", () => {
   it.each(everyMutation)("%s", (_id, mutation) => {
-    const verdict = mutation.run(sabotageWorld());
+    const verdict = mutation.run(sabotageWorldFor(mutation));
     expect(verdict.allowed, `${mutation.id} was allowed through`).toBe(false);
 
     for (const item of verdict.violations) {

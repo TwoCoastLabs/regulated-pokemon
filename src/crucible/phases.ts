@@ -14,7 +14,7 @@
  */
 
 import type { ArticleId } from "../kernel/accord.js";
-import type { Control, Mutation } from "./harness.js";
+import type { Control, CrucibleWorldId, Mutation } from "./harness.js";
 import { PHASE_1_ARTICLES, PHASE_1_CONTROLS, PHASE_1_MUTATIONS } from "./phase1.js";
 import { PHASE_2_ARTICLES, PHASE_2_CONTROLS, PHASE_2_MUTATIONS } from "./phase2.js";
 import { PHASE_3_ARTICLES, PHASE_3_CONTROLS, PHASE_3_MUTATIONS } from "./phase3.js";
@@ -36,6 +36,14 @@ export interface CruciblePhase {
   articles: readonly ArticleId[];
   mutations: readonly Mutation[];
   controls: readonly Control[];
+  /**
+   * The certified world this phase's mutations and controls run against.
+   * Declared here rather than constructed inside a phase: a phase that read
+   * its own world from disk would drag `node:fs` into the browser bundle and
+   * blank the sabotage page — the runner supplies the world, the phase names
+   * which one it needs.
+   */
+  world: CrucibleWorldId;
 }
 
 export const CRUCIBLE_PHASES: readonly CruciblePhase[] = [
@@ -45,6 +53,7 @@ export const CRUCIBLE_PHASES: readonly CruciblePhase[] = [
     articles: PHASE_1_ARTICLES,
     mutations: PHASE_1_MUTATIONS,
     controls: PHASE_1_CONTROLS,
+    world: "standard",
   },
   {
     phase: 2,
@@ -52,6 +61,7 @@ export const CRUCIBLE_PHASES: readonly CruciblePhase[] = [
     articles: PHASE_2_ARTICLES,
     mutations: PHASE_2_MUTATIONS,
     controls: PHASE_2_CONTROLS,
+    world: "standard",
   },
   {
     phase: 3,
@@ -59,6 +69,7 @@ export const CRUCIBLE_PHASES: readonly CruciblePhase[] = [
     articles: PHASE_3_ARTICLES,
     mutations: PHASE_3_MUTATIONS,
     controls: PHASE_3_CONTROLS,
+    world: "standard",
   },
   {
     phase: 4,
@@ -66,6 +77,7 @@ export const CRUCIBLE_PHASES: readonly CruciblePhase[] = [
     articles: PHASE_4_ARTICLES,
     mutations: PHASE_4_MUTATIONS,
     controls: PHASE_4_CONTROLS,
+    world: "standard",
   },
   {
     phase: 5,
@@ -73,6 +85,7 @@ export const CRUCIBLE_PHASES: readonly CruciblePhase[] = [
     articles: PHASE_5_ARTICLES,
     mutations: PHASE_5_MUTATIONS,
     controls: PHASE_5_CONTROLS,
+    world: "standard",
   },
   {
     phase: 6,
@@ -80,6 +93,7 @@ export const CRUCIBLE_PHASES: readonly CruciblePhase[] = [
     articles: PHASE_6_ARTICLES,
     mutations: PHASE_6_MUTATIONS,
     controls: PHASE_6_CONTROLS,
+    world: "standard",
   },
   {
     phase: 7,
@@ -87,6 +101,7 @@ export const CRUCIBLE_PHASES: readonly CruciblePhase[] = [
     articles: PHASE_7_ARTICLES,
     mutations: PHASE_7_MUTATIONS,
     controls: PHASE_7_CONTROLS,
+    world: "center",
   },
 ];
 
@@ -112,4 +127,17 @@ export const ALL_CONTROLS: readonly Control[] = CRUCIBLE_PHASES.flatMap((entry) 
 /** Articles denied by name by at least one mutation. */
 export function coveredArticles(): ReadonlySet<ArticleId> {
   return new Set(ALL_MUTATIONS.map((mutation) => mutation.article));
+}
+
+const WORLD_BY_ID: ReadonlyMap<string, CrucibleWorldId> = new Map(
+  CRUCIBLE_PHASES.flatMap((entry) => [...entry.mutations, ...entry.controls].map((owned) => [owned.id, entry.world])),
+);
+
+/** The world the owning phase declared for a mutation or control. Refuses an
+ * entry no phase owns — a runner guessing a world would be a quiet back door
+ * around the declaration. */
+export function worldOf(entry: Mutation | Control): CrucibleWorldId {
+  const world = WORLD_BY_ID.get(entry.id);
+  if (world === undefined) throw new Error(`no crucible phase owns "${entry.id}", so no world is declared for it`);
+  return world;
 }

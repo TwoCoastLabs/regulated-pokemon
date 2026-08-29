@@ -12,12 +12,12 @@
  * controls: a run that always looks fine is not evidence of anything.
  */
 
-import { ALL_MUTATIONS } from "../crucible/phases.js";
+import { ALL_MUTATIONS, worldOf } from "../crucible/phases.js";
 import { expectedDenial, type Mutation } from "../crucible/harness.js";
 import type { ManifestContext } from "../kernel/manifest.js";
 import type { Transaction } from "../kernel/transaction.js";
 import { denialCode } from "../kernel/violation.js";
-import { demoWorld } from "./files.js";
+import { centerWorld, demoWorld } from "./files.js";
 import {
   CONVERSATIONS,
   type Conversation,
@@ -70,6 +70,18 @@ export function sabotageWorld(): ManifestContext {
   return establishSabotageWorld(demoWorld());
 }
 
+/** The same clean-conversation grant, established in the world the mutation's
+ * phase declared — the Center's mutations attack shapes only kanto-center
+ * certifies, and handing them the standard world would deny for the wrong
+ * reason and fail the self-check. A mutation the crucible does not carry
+ * (the self-check exercises synthetic ones) runs in the standard world;
+ * `worldOf` refuses it, and the demo is presentation, not enforcement. */
+export function sabotageWorldFor(mutation: Mutation): ManifestContext {
+  const carried = ALL_MUTATIONS.some((entry) => entry.id === mutation.id);
+  if (carried && worldOf(mutation) === "center") return establishSabotageWorld(centerWorld());
+  return sabotageWorld();
+}
+
 /**
  * Run one crucible mutation and show what the kernel said.
  *
@@ -80,7 +92,7 @@ export function sabotageWorld(): ManifestContext {
  * kernel's real verdict on this trainer's scope, not a scripted denial.
  */
 export function playSabotage(mutation: Mutation): DemoResult {
-  const verdict = mutation.run(sabotageWorld());
+  const verdict = mutation.run(sabotageWorldFor(mutation));
   const lines = [
     RULE,
     `sabotage: ${mutation.id} — ${mutation.title}`,

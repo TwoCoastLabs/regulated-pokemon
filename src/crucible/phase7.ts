@@ -2,8 +2,12 @@
  * Phase 7 of the crucible in epic #94's numbering: the Center world's claim
  * shapes (slice 3, PR 2). The mutations run against the second certified
  * world — kanto-center, the one with items — because the shapes they attack
- * only exist there; the standard world parameter is accepted and unused, the
- * way a transport's argument can be.
+ * only exist there.
+ *
+ * The phase declares `world: "center"` in the crucible's assembly and runs
+ * against whatever Center context the runner supplies — it builds no world of
+ * its own, because a phase that read one from disk would drag `node:fs` into
+ * the browser bundle and blank the sabotage page.
  *
  * What this phase owns is small and specific: the certified *negative* (a
  * treats verdict flipped against the closed effect set), the derived
@@ -19,8 +23,7 @@ import type { AnswerManifest, Claim, Verdict } from "../kernel/contracts.js";
 import { compileManifest, type ManifestContext, verifyManifest } from "../kernel/manifest.js";
 import { buildRoster } from "../kernel/roster.js";
 import { AccordError } from "../kernel/violation.js";
-import { centerContext } from "../testing/fixtures.js";
-import type { Control, Mutation } from "./harness.js";
+import type { Control, CrucibleWorld, Mutation } from "./harness.js";
 
 const TREATS: Claim = { kind: "treats", itemId: "antidote", condition: "poison" };
 const COMPARISON: Claim = { kind: "comparison", factId: "restores-hp", leftId: "super-potion", rightId: "potion" };
@@ -40,9 +43,8 @@ function honestCenterAnswer(context: ManifestContext): AnswerManifest {
   return compiled.value;
 }
 
-function sabotageCenter(mutate: (manifest: AnswerManifest) => AnswerManifest): Verdict {
-  const context = centerContext();
-  return verifyManifest(context, mutate(honestCenterAnswer(context)));
+function sabotageCenter(world: CrucibleWorld, mutate: (manifest: AnswerManifest) => AnswerManifest): Verdict {
+  return verifyManifest(world, mutate(honestCenterAnswer(world)));
 }
 
 function swapClaim(manifest: AnswerManifest, kind: Claim["kind"], replacement: Claim): AnswerManifest {
@@ -59,7 +61,7 @@ export const PHASE_7_MUTATIONS: readonly Mutation[] = [
       "asserting it treats a burn is refused against that set, not debated.",
     article: "IA-2",
     rule: "treats-mismatch",
-    run: () => sabotageCenter((manifest) => swapClaim(manifest, "treats", { kind: "treats", itemId: "antidote", condition: "burn", asserted: true })),
+    run: (world) => sabotageCenter(world, (manifest) => swapClaim(manifest, "treats", { kind: "treats", itemId: "antidote", condition: "burn", asserted: true })),
   },
   {
     id: "invent-a-condition",
@@ -70,7 +72,7 @@ export const PHASE_7_MUTATIONS: readonly Mutation[] = [
       "about an unknown condition would be a certificate over nothing.",
     article: "IA-2",
     rule: "unknown-condition",
-    run: () => sabotageCenter((manifest) => swapClaim(manifest, "treats", { kind: "treats", itemId: "full-heal", condition: "sadness", asserted: true })),
+    run: (world) => sabotageCenter(world, (manifest) => swapClaim(manifest, "treats", { kind: "treats", itemId: "full-heal", condition: "sadness", asserted: true })),
   },
   {
     id: "doctor-the-comparison",
@@ -81,8 +83,8 @@ export const PHASE_7_MUTATIONS: readonly Mutation[] = [
       "different claim wearing the comparison's clothes.",
     article: "IA-2",
     rule: "comparison-mismatch",
-    run: () =>
-      sabotageCenter((manifest) =>
+    run: (world) =>
+      sabotageCenter(world, (manifest) =>
         swapClaim(manifest, "comparison", { ...COMPARISON, left: { kind: "number", value: 500 }, right: { kind: "number", value: 20 } }),
       ),
   },
@@ -95,7 +97,7 @@ export const PHASE_7_MUTATIONS: readonly Mutation[] = [
       "certificate.",
     article: "IA-2",
     rule: "incomparable-fact",
-    run: () => sabotageCenter((manifest) => swapClaim(manifest, "comparison", { kind: "comparison", factId: "item-effect", leftId: "potion", rightId: "antidote" })),
+    run: (world) => sabotageCenter(world, (manifest) => swapClaim(manifest, "comparison", { kind: "comparison", factId: "item-effect", leftId: "potion", rightId: "antidote" })),
   },
   {
     id: "mix-the-universes",
@@ -106,8 +108,8 @@ export const PHASE_7_MUTATIONS: readonly Mutation[] = [
       "refused rather than intersected into nonsense.",
     article: "IA-2",
     rule: "criteria-domain-mixed",
-    run: () =>
-      sabotageCenter((manifest) => ({
+    run: (world) =>
+      sabotageCenter(world, (manifest) => ({
         ...manifest,
         rosters: manifest.rosters.map((roster) => ({
           ...roster,
@@ -125,8 +127,11 @@ export const PHASE_7_MUTATIONS: readonly Mutation[] = [
       "here either.",
     article: "IA-5",
     rule: "restricted-item",
-    run: () => {
-      const context = { ...centerContext(2) };
+    run: (world) => {
+      // The runner's Center world is always granted at full accreditation;
+      // the gate needs a two-badge trainer, so the scope is narrowed the way
+      // phase 2 narrows it — on the world the phase declared, never a private one.
+      const context = { ...world, grant: { ...world.grant!, scope: { ...world.grant!.scope, badgeLevel: 2 } } };
       const compiled = compileManifest(context, {
         transactionId: "txn-center-gate",
         claims: [{ kind: "recommendation", entityId: "protein" }],
@@ -148,17 +153,14 @@ export const PHASE_7_CONTROLS: readonly Control[] = [
       "Super Potion beside the Potion with both values derived, and a count " +
       "over the items that cure poison. Zero violations, through the same " +
       "gates every answer faces.",
-    run: () => {
-      const context = centerContext();
-      return verifyManifest(context, honestCenterAnswer(context));
-    },
+    run: (world) => verifyManifest(world, honestCenterAnswer(world)),
   },
   {
     id: "center-shapes-no-op-sabotage",
     kind: "no-op-sabotage",
     title: "Mutate nothing, through the identical harness",
     description: "The same compile-then-verify harness every mutation above uses, with the manifest left exactly as compiled.",
-    run: () => sabotageCenter((manifest) => manifest),
+    run: (world) => sabotageCenter(world, (manifest) => manifest),
   },
 ];
 
