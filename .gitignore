@@ -14,3 +14,7 @@ app/dist/
 # The template is the one .env file that is meant to be public: it carries the
 # variable names and not one value.
 !.env.example
+# The dev-trace sink's output: the live page's dogfooding stream (model calls,
+# prompts, latencies), appended by the vite dev server for an agent to tail.
+# A debugging convenience, never a filed artifact — those live in runs/.
+/.dev-trace.jsonl

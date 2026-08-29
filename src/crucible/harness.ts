@@ -22,6 +22,15 @@ import type { ManifestContext } from "../kernel/manifest.js";
  */
 export type CrucibleWorld = ManifestContext;
 
+/**
+ * Which certified world a phase's mutations run against. A phase declares it;
+ * the runner supplies it. This is what keeps every phase module pure — a
+ * mutation that built its own world would need a filesystem, and a `node:fs`
+ * import anywhere under `src/crucible/` breaks the property the sabotage page
+ * depends on: the browser runs the same values CI runs.
+ */
+export type CrucibleWorldId = "standard" | "center";
+
 export interface Mutation {
   /** Stable slug, used by tests and by the sabotage buttons. */
   id: string;

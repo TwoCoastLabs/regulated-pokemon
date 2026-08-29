@@ -23,7 +23,7 @@
  * anywhere else. Either way it is the same driver, the same session module,
  * the same kernel — the modes differ in one URL and who pays.
  */
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import { proposalDigest } from "../../src/harness/advisor.js";
 import {
@@ -47,6 +47,7 @@ import {
   type SessionState,
   startSession,
 } from "../../src/session/session.js";
+import { agentReport, createDevTrace, type DevTrace, type DevTraceMeta, type ModelCallTrace } from "../../src/session/devtrace.js";
 import { adaptArtifact } from "../../src/ui/artifact-dom.js";
 import { plainCandidate, plainStage, plainViolation } from "../../src/ui/plain.js";
 import { violationView } from "../../src/ui/viewmodel.js";
@@ -74,6 +75,10 @@ interface LiveSetup {
   model: string;
   persona: Persona;
   mode: KeyMode;
+  /** The tap on the provider seam — always recording, in tab memory only.
+   * The dev view decides whether it is *shown* (and mirrored), never whether
+   * it exists, so a bug found late is still a bug with a trace. */
+  trace: DevTrace;
 }
 
 /** What the relay's health door said, once asked. `null` while asking. */
@@ -344,6 +349,16 @@ export function Live() {
   const [inFlight, setInFlight] = useState<string | null>(null);
   const [trouble, setTrouble] = useState<string | null>(null);
   const [console_, setConsole] = useState(false);
+  // The dev view: the tap on the model seam, rendered. ?dev=1 opens it from
+  // the URL; the button toggles it live. While it is on, every model call and
+  // every settled step is mirrored to the dev server's trace sink (a no-op
+  // that swallows silently anywhere else), so a debugging agent can tail the
+  // session without anything being copied by hand.
+  const [dev, setDev] = useState(() => new URLSearchParams(window.location.search).get("dev") !== null);
+  const devRef = useRef(dev);
+  useEffect(() => {
+    devRef.current = dev;
+  }, [dev]);
   const clock = useMemo(makeClock, []);
 
   useEffect(() => {
@@ -358,8 +373,20 @@ export function Live() {
 
   const deps = useMemo<SessionDeps | null>(() => {
     if (setup === null) return null;
-    return { world: demoWorld(), provider: setup.provider, now: clock };
+    return { world: demoWorld(), provider: setup.trace.tap(setup.provider), now: clock };
   }, [setup, clock]);
+
+  const meta = useMemo<DevTraceMeta | null>(() => {
+    if (setup === null) return null;
+    const world = demoWorld();
+    return {
+      model: setup.model,
+      mode: setup.mode,
+      persona: setup.persona,
+      snapshotId: world.registry.snapshot.id,
+      packId: world.pack.id,
+    };
+  }, [setup]);
 
   const begin = () => {
     if (mode === null) return;
@@ -375,7 +402,14 @@ export function Live() {
         system: persona === "honest" ? HONEST_PERSONA : ADVERSARY_PERSONA,
         structured: true,
       });
-      setSetup({ provider, model, persona, mode });
+      const trace = createDevTrace({
+        now: clock,
+        elapsedMs: () => performance.now(),
+        onCall: (call) => {
+          if (devRef.current) mirrorToDevSink({ type: "model-call", ...call });
+        },
+      });
+      setSetup({ provider, model, persona, mode, trace });
       setTrouble(null);
     } catch (error) {
       setTrouble(error instanceof Error ? error.message : String(error));
@@ -386,7 +420,12 @@ export function Live() {
     if (deps === null || busy) return;
     setBusy(true);
     void Promise.resolve(step(state))
-      .then((next) => setState(next))
+      .then((next) => {
+        setState(next);
+        if (devRef.current && setup !== null && meta !== null) {
+          mirrorToDevSink({ type: "report", ...(agentReport(meta, next, setup.trace.calls) as object) });
+        }
+      })
       .catch((error: unknown) => setTrouble(error instanceof Error ? error.message : String(error)))
       .finally(() => {
         setBusy(false);
@@ -545,7 +584,18 @@ export function Live() {
         >
           {console_ ? "Hide the machinery" : "Show the machinery"}
         </button>
+        <button
+          type="button"
+          class={`console-toggle${dev ? " current" : ""}`}
+          aria-pressed={dev}
+          title="model calls, prompts, latency — the debugging view (?dev=1 opens it)"
+          onClick={() => setDev(!dev)}
+        >
+          {dev ? "Hide dev view" : "Dev view"}
+        </button>
       </div>
+
+      {dev && meta !== null && <DevPanel meta={meta} state={state} calls={setup.trace.calls} />}
 
       <div class={`live-panes${console_ ? " with-console" : ""}`}>
         <div class="live-chat">
@@ -708,6 +758,109 @@ export function Live() {
         </button>
       </form>
     </div>
+  );
+}
+
+// --- the dev view -----------------------------------------------------------
+
+/**
+ * Mirror one trace event to the dev server's sink (`/__dev/trace`, a vite
+ * middleware that appends JSONL to a gitignored file an agent can tail).
+ * Fire-and-forget on purpose: anywhere without the sink — the production
+ * relay, a static deployment — this is a swallowed 404 and nothing else.
+ */
+function mirrorToDevSink(event: object): void {
+  try {
+    void fetch("/__dev/trace", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ at: new Date().toISOString(), ...event }),
+    }).catch(() => {});
+  } catch {
+    // fetch itself can throw in exotic embeddings; the trace is a convenience.
+  }
+}
+
+function DevCall(props: { call: ModelCallTrace }) {
+  const { call } = props;
+  const usage = call.usage;
+  return (
+    <details class="dev-call">
+      <summary class="mono">
+        #{call.seq} {call.purpose}
+        {call.schema !== undefined ? ` (${call.schema})` : ""} · {Math.round(call.latencyMs)}ms
+        {usage !== undefined ? ` · ${usage.promptTokens}→${usage.completionTokens} tok · $${usage.costUsd.toFixed(4)}` : ""}
+        {call.error !== undefined ? " · FAILED" : ""}
+      </summary>
+      <p class="dev-label">prompt</p>
+      <pre class="dev-text">{call.prompt}</pre>
+      {call.response !== undefined && (
+        <>
+          <p class="dev-label">response</p>
+          <pre class="dev-text">{call.response}</pre>
+        </>
+      )}
+      {call.error !== undefined && (
+        <>
+          <p class="dev-label">error</p>
+          <pre class="dev-text">{call.error}</pre>
+        </>
+      )}
+    </details>
+  );
+}
+
+/**
+ * The dev view: every model call the tap recorded, and the whole session as
+ * one copyable report. The report is `agentReport` — self-describing JSON
+ * built to be pasted into a conversation with a debugging agent whole.
+ */
+function DevPanel(props: { meta: DevTraceMeta; state: SessionState; calls: readonly ModelCallTrace[] }) {
+  const [copied, setCopied] = useState<string | null>(null);
+  const report = () => JSON.stringify(agentReport(props.meta, props.state, props.calls), null, 2);
+
+  const copy = () => {
+    void navigator.clipboard
+      .writeText(report())
+      .then(() => setCopied("copied — paste it to your debugging agent"))
+      .catch(() => setCopied("clipboard refused — use Download instead"));
+  };
+  const download = () => {
+    const blob = new Blob([report()], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "live-session-dev-trace.json";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <section class="dev-panel" aria-label="Dev view: model calls and trace export">
+      <div class="dev-head">
+        <span class="mono">
+          dev view · {props.calls.length} model call{props.calls.length === 1 ? "" : "s"} · phase {props.state.phase.kind}
+          {props.state.providerErrors > 0 ? ` · ${props.state.providerErrors} provider error(s)` : ""}
+        </span>
+        <button type="button" class="quiet" disabled={props.calls.length === 0} onClick={copy}>
+          Copy trace for the agent
+        </button>
+        <button type="button" class="quiet" disabled={props.calls.length === 0} onClick={download}>
+          Download trace
+        </button>
+        {copied !== null && <span class="fine">{copied}</span>}
+      </div>
+      {props.calls.length === 0 ? (
+        <p class="fine">No model calls yet — say something to the Advisor and each call lands here with its prompt, response and latency.</p>
+      ) : (
+        props.calls.map((call) => <DevCall call={call} />)
+      )}
+      <p class="fine">
+        While this view is open, every call and every settled exchange is also streamed to the dev server's trace file
+        (<span class="mono">.dev-trace.jsonl</span>) — on the dev server an agent reads it live; anywhere else the
+        stream is a silent no-op.
+      </p>
+    </section>
   );
 }
 

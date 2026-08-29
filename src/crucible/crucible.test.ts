@@ -16,19 +16,21 @@ import { describe, expect, it } from "vitest";
 
 import { type AccordArticle, ACCORD_ARTICLES, type ArticleId } from "../kernel/accord.js";
 import { denialCode } from "../kernel/violation.js";
-import { manifestContext } from "../testing/fixtures.js";
-import { expectedDenial } from "./harness.js";
+import { centerContext, manifestContext } from "../testing/fixtures.js";
+import { type CrucibleWorld, type CrucibleWorldId, expectedDenial } from "./harness.js";
 import {
   ALL_CONTROLS,
   ALL_MUTATIONS,
   CRUCIBLE_PHASES,
   coveredArticles,
   NOT_YET_COVERED,
+  worldOf,
 } from "./phases.js";
 
 // Mutations run against the same world a real answer is judged in: registry,
-// Accord pack, trainer scope and commit time — no private back door.
-const world = manifestContext();
+// Accord pack, trainer scope and commit time — no private back door. Each
+// phase declares which certified world it needs; the runner supplies it.
+const worlds: Record<CrucibleWorldId, CrucibleWorld> = { standard: manifestContext(), center: centerContext() };
 const KNOWN_ARTICLES = new Set<string>(ACCORD_ARTICLES.map((entry) => entry.id));
 
 const everyMutation = ALL_MUTATIONS.map((mutation) => [mutation.id, mutation] as const);
@@ -37,7 +39,7 @@ const everyPhase = CRUCIBLE_PHASES.map((phase) => [`phase ${phase.phase}`, phase
 
 describe("every mutation is denied under the exact denial it declares", () => {
   it.each(everyMutation)("%s", (_id, mutation) => {
-    const verdict = mutation.run(world);
+    const verdict = mutation.run(worlds[worldOf(mutation)]);
 
     expect(verdict.allowed, `${mutation.id} was allowed through`).toBe(false);
     // The declared denial, not merely *a* denial: a mutation refused for an
@@ -61,7 +63,7 @@ describe("every mutation is denied under the exact denial it declares", () => {
 
 describe("every control is allowed, with nothing denied at all", () => {
   it.each(everyControl)("%s", (_id, control) => {
-    expect(control.run(world)).toEqual({ allowed: true, violations: [] });
+    expect(control.run(worlds[worldOf(control)])).toEqual({ allowed: true, violations: [] });
   });
 
   it.each(everyPhase)("%s carries both kinds of control", (_label, phase) => {
