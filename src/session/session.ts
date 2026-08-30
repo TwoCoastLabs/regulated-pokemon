@@ -533,6 +533,48 @@ export function eligibilityClaims(
 }
 
 /**
+ * The profile a specific-entity ask earns when the model deflects it to a
+ * curriculum lesson.
+ *
+ * Observed live (2026-08-30, gemini-3.5-flash-lite): "tell me about Pikachu"
+ * decoded to `explanation:what-is-pokemon` — the generic lesson, committed
+ * grantless as taught, and the retry deflected identically. The discovery
+ * prompt already forbids "a lesson that is merely adjacent"; a small model
+ * ignores the sentence, so the driver reads the ask deterministically
+ * instead: when the trainer named exactly one certified species and the
+ * whole draft is lessons, the ask was about the entity, and the entity's
+ * certified profile — types, the six base stats, the dex number — is the
+ * on-target answer. Facts only, kernel-derived and kernel-verified; the
+ * route composes a shape, never a value. One entity exactly: zero named
+ * means the lesson may well be the ask ("what is a Pokémon?"), two means
+ * the ask is a comparison the profile cannot speak for.
+ *
+ * Word-bounded with the hyphen fold ("Mr. Mime" finds mr-mime), the same
+ * discipline as {@link eligibilityClaims} and the retrieval front door —
+ * deterministic, so its misses are measurable (lesson 6), and it can only
+ * *widen* what the kernel certifies, never bind scope or assert a value.
+ */
+export function deflectedProfileClaims(world: SessionWorld, ask: string, proposed: readonly Claim[]): readonly Claim[] {
+  if (proposed.length === 0 || !proposed.every((claim) => claim.kind === "explanation")) return [];
+  const haystack = ` ${ask.toLowerCase()} `;
+  const names = (id: string): boolean =>
+    new RegExp(`\\b${id.split("-").join("[\\s-]?")}\\b`).test(haystack);
+  const named = world.registry.speciesIds.filter((id) => names(id));
+  if (named.length !== 1) return [];
+  const entityId = named[0]!;
+  return [
+    { kind: "fact", entityId, factId: "types" },
+    { kind: "fact", entityId, factId: "pokedex-number" },
+    { kind: "fact", entityId, factId: "base-hp" },
+    { kind: "fact", entityId, factId: "base-attack" },
+    { kind: "fact", entityId, factId: "base-defense" },
+    { kind: "fact", entityId, factId: "base-speed" },
+    { kind: "fact", entityId, factId: "base-special-attack" },
+    { kind: "fact", entityId, factId: "base-special-defense" },
+  ];
+}
+
+/**
  * The redirect an off-domain opener earns instead of an interrogation.
  *
  * When the discovery call proposes no claims at all, nothing certified is even
@@ -613,6 +655,17 @@ async function teachOrDiscover(
   }
   const draft = step.decode.draft;
   const spentFolded = { ...spent, folds: spent.folds + step.decode.folds };
+  // A lesson-only draft for an ask that named one specific species is the
+  // deflection this route exists for: the profile replaces the lesson and
+  // goes through scope like any personalized answer would have.
+  const ask = state.transcript
+    .slice(state.askStart)
+    .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
+    .join(" ");
+  const profile = deflectedProfileClaims(world, ask, draft.claims);
+  if (profile.length > 0) {
+    return { state: spentFolded, result: "needs-scope", claims: profile, rosters: [] };
+  }
   // Commit grantless when nothing in the draft depends on scope — a lesson, a
   // game-rule constant, the same answer for every trainer (epic #64). Derived
   // from the one dependency table, so this never drifts from what the kernel's
@@ -722,7 +775,16 @@ async function answer(
     // including by proposing the gated advice the kernel will deny — is left
     // alone, so the route never softens a denial the gate has earned.
     const routed = eligibilityClaims(world, ask, decoded.claims);
-    draft = routed.length === 0 ? decoded : { ...decoded, claims: [...decoded.claims, ...routed] };
+    // The lesson deflection has the same backstop here as at discovery: a
+    // scoped answer that is all lessons for an ask naming one species gets
+    // the entity's profile instead — the model can deflect at either hop.
+    const profile = deflectedProfileClaims(world, ask, decoded.claims);
+    draft =
+      profile.length > 0
+        ? { ...decoded, claims: profile, rosters: [] }
+        : routed.length === 0
+          ? decoded
+          : { ...decoded, claims: [...decoded.claims, ...routed] };
   }
 
   // The scope escalation, generalized (epic #64, slice 2). The proposed answer

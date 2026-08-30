@@ -522,6 +522,52 @@ describe("eligibilityClaims — the recall gate's own edges", () => {
   });
 });
 
+describe("the deflected profile: a lesson cannot answer for a named species (epic #118 dogfooding)", () => {
+  const deflection = JSON.stringify({
+    rosters: [],
+    claims: [{ kind: "explanation", blockId: "what-is-pokemon" }],
+  });
+
+  it("certifies the species profile instead of the adjacent lesson, one model call", async () => {
+    // Observed live: "tell me about Pikachu" decoded to the generic
+    // what-is-pokemon lesson on the fast model, and the retry deflected the
+    // same way. The route reads the ask deterministically: one named
+    // species + an all-lesson draft = the entity's certified profile,
+    // through scope like any personalized answer.
+    let answerCalls = 0;
+    const provider = scripted("deflector", (purpose) => {
+      if (purpose !== "answer") return "decline";
+      answerCalls += 1;
+      return deflection;
+    });
+    let state = await say(startSession(), "I'm playing Red and Blue in Kanto. Tell me about Pikachu!", deps(provider));
+
+    expect(state.records).toHaveLength(1);
+    const record = state.records[0]!;
+    expect(record.outcome.status).toBe("answered");
+    const kinds = record.manifest?.claims.map((claim) => claim.kind) ?? [];
+    expect(kinds).not.toContain("explanation");
+    expect(record.manifest?.claims.every((claim) => claim.kind === "fact" && claim.entityId === "pikachu")).toBe(true);
+    expect(record.manifest?.claims.map((claim) => (claim.kind === "fact" ? claim.factId : ""))).toContain("base-speed");
+    // The discovery call is the only model call: the profile rode the
+    // needs-scope -> granted hop and was certified without a re-ask.
+    expect(answerCalls).toBe(1);
+    expect(verifyReplay(world, record).allowed).toBe(true);
+  });
+
+  it("leaves a genuine lesson ask alone — no species named, the lesson is the answer", async () => {
+    const provider = scripted("teacher", (purpose) => (purpose === "answer" ? deflection : "decline"));
+    const state = await say(startSession(), "What is a Pokemon, actually?", deps(provider));
+    expect(state.records[0]?.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-pokemon" }]);
+  });
+
+  it("stands down when two species are named — a profile cannot speak for a comparison", async () => {
+    const provider = scripted("teacher", (purpose) => (purpose === "answer" ? deflection : "decline"));
+    const state = await say(startSession(), "Tell me about Pikachu and Raichu.", deps(provider));
+    expect(state.records[0]?.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-pokemon" }]);
+  });
+});
+
 describe("teach before interrogating — the lazy half of IA-1", () => {
   const lessonAnswer = JSON.stringify({
     rosters: [],
