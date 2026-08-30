@@ -715,17 +715,17 @@
       "article": "IA-6",
       "block": {
         "id": "curriculum-what-is-game",
-        "version": 1,
+        "version": 2,
         "content": [
           {
             "locale": "en-US",
-            "text": "Pok\u00e9mon Red and Blue are the first Kanto journeys. You travel the region town by town, catch wild Pok\u00e9mon, train a team of up to six, and challenge the eight Gym Leaders on the way to the Pok\u00e9mon League. The Advisor answers from the official Red and Blue records \u2014 what a Pok\u00e9mon is, where it appears, what it learns, how types interact \u2014 and says so when a question falls outside those records.",
-            "digest": "sha256:e98a2dc4ae5366db04aece95edd74294a7bb005d8fcb54638a47163689b8c79f"
+            "text": "The League\u2019s records cover Pok\u00e9mon Red and Blue \u2014 the first Kanto journeys. You travel the region town by town, catch wild Pok\u00e9mon, train a team of up to six, and challenge the eight Gym Leaders on the way to the Pok\u00e9mon League. The Advisor answers only from those official Red and Blue records \u2014 what a Pok\u00e9mon is, where it appears, what it learns, how types interact \u2014 and says so when a question falls outside them.",
+            "digest": "sha256:2875416b49da8928bc72a53954211b7478ad9687487b0c789d3fdb4c8eee85a3"
           },
           {
             "locale": "en-GB",
-            "text": "Pok\u00e9mon Red and Blue are the first Kanto journeys. You travel the region town by town, catch wild Pok\u00e9mon, train a team of up to six, and challenge the eight Gym Leaders on the way to the Pok\u00e9mon League. The Advisor answers from the official Red and Blue records \u2014 what a Pok\u00e9mon is, where it appears, what it learns, how types interact \u2014 and says so when a question falls outside those records.",
-            "digest": "sha256:e98a2dc4ae5366db04aece95edd74294a7bb005d8fcb54638a47163689b8c79f"
+            "text": "The League\u2019s records cover Pok\u00e9mon Red and Blue \u2014 the first Kanto journeys. You travel the region town by town, catch wild Pok\u00e9mon, train a team of up to six, and challenge the eight Gym Leaders on the way to the Pok\u00e9mon League. The Advisor answers only from those official Red and Blue records \u2014 what a Pok\u00e9mon is, where it appears, what it learns, how types interact \u2014 and says so when a question falls outside them.",
+            "digest": "sha256:2875416b49da8928bc72a53954211b7478ad9687487b0c789d3fdb4c8eee85a3"
           }
         ]
       }
@@ -886,6 +886,26 @@
             "locale": "en-GB",
             "text": "Red and Blue are the same journey through the same Kanto \u2014 the difference is who lives in the grass. A few species appear only in one version: Ekans and Growlithe in Red, while Sandshrew and Vulpix answer only to Blue. Completing the Pok\u00e9dex therefore takes trading with the other version. The records mark exactly which version certifies each encounter, so tell the Advisor which cartridge you are playing.",
             "digest": "sha256:cc8f45c544694b3c68faa885d881315db684fb018cc6bbe72b5e36d41ee20c53"
+          }
+        ]
+      }
+    },
+    {
+      "id": "red-blue-vs-yellow",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-red-blue-vs-yellow",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Yellow is a different Kanto journey with its own records, and the Advisor\u2019s records certify Red and Blue only. What is certified here: in Red and Blue you choose one of three starters, and a few species live in one version\u2019s grass and not the other\u2019s. What Yellow changes is outside these records \u2014 the Advisor will not guess at it. If you are playing Yellow, say so: the Advisor will tell you plainly which questions its Red and Blue records can and cannot answer for your game.",
+            "digest": "sha256:32e0e8744766a70e25528339646d1bd181da6bcd2f2dfb641d282fb69b3771f6"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Yellow is a different Kanto journey with its own records, and the Advisor\u2019s records certify Red and Blue only. What is certified here: in Red and Blue you choose one of three starters, and a few species live in one version\u2019s grass and not the other\u2019s. What Yellow changes is outside these records \u2014 the Advisor will not guess at it. If you are playing Yellow, say so: the Advisor will tell you plainly which questions its Red and Blue records can and cannot answer for your game.",
+            "digest": "sha256:32e0e8744766a70e25528339646d1bd181da6bcd2f2dfb641d282fb69b3771f6"
           }
         ]
       }

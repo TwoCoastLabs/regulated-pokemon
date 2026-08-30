@@ -555,6 +555,62 @@ describe("the deflected profile: a lesson cannot answer for a named species (epi
     expect(verifyReplay(world, record).allowed).toBe(true);
   });
 
+  it("asks the pack's own question when the routed profile needs scope — the ladder is never consulted", async () => {
+    // Observed live: with no version established, the ladder read "tell me
+    // about Pikachu" and proposed version=yellow from nothing; the confirmed
+    // card died at the gate (IA-2/scope-version-mismatch). A routed draft's
+    // ask was about an entity, not scope — there is no vague wording to
+    // interpret, so the deterministic question outranks the model (hard-won
+    // lesson 1). The scope purpose must never be consulted on this path.
+    let scopeCalls = 0;
+    const provider = scripted("deflector", (purpose) => {
+      if (purpose === "scope") {
+        scopeCalls += 1;
+        return JSON.stringify({ candidate: { version: "yellow" }, interpreting: "tell me about Pikachu" });
+      }
+      return deflection;
+    });
+    const d = deps(provider);
+
+    let state = await say(startSession(), "Tell me about Pikachu!", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+    expect(scopeCalls).toBe(0);
+
+    // The direct answer to the recorded question binds deterministically;
+    // the answer-hop backstop routes the second deflection to the profile.
+    state = await say(state, "Red and Blue", d);
+    expect(state.records).toHaveLength(1);
+    expect(state.records[0]!.outcome.status).toBe("answered");
+    expect(state.records[0]!.manifest?.claims.every((claim) => claim.kind === "fact" && claim.entityId === "pikachu")).toBe(true);
+    expect(scopeCalls).toBe(0);
+  });
+
+  it("asks the pack's question when a fact draft names the entity — answer-subject wording never feeds the ladder", async () => {
+    // The same trap through the other door: the model proposed pikachu facts
+    // (no deflection), the draft needed a version, and the old gate handed
+    // "tell me about Pikachu" to the ladder as interpretable wording — which
+    // free-associated version=yellow from the mascot. An entity-naming clause
+    // is about the answer; scope falls to the deterministic question.
+    let scopeCalls = 0;
+    const provider = scripted("facts", (purpose) => {
+      if (purpose === "scope") {
+        scopeCalls += 1;
+        return JSON.stringify({ candidate: { version: "yellow" }, interpreting: "tell me about Pikachu" });
+      }
+      return JSON.stringify({ rosters: [], claims: [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }] });
+    });
+    const d = deps(provider);
+
+    let state = await say(startSession(), "tell me about Pikachu", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+    expect(scopeCalls).toBe(0);
+
+    state = await say(state, "Red and Blue", d);
+    expect(state.records[0]!.outcome.status).toBe("answered");
+    expect(state.records[0]!.grant?.scope.version).toBe("red-blue");
+    expect(scopeCalls).toBe(0);
+  });
+
   it("leaves a genuine lesson ask alone — no species named, the lesson is the answer", async () => {
     const provider = scripted("teacher", (purpose) => (purpose === "answer" ? deflection : "decline"));
     const state = await say(startSession(), "What is a Pokemon, actually?", deps(provider));

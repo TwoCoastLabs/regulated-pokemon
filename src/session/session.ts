@@ -357,8 +357,14 @@ async function drive(
    * forwarded so the answer step can certify it instead of re-asking the
    * model. Only the immediate needs-scope → granted hop carries one: the
    * moment a question or a card intervenes, the words may change, and a
-   * stale draft must not answer them. */
-  reuse?: Pick<ManifestDraft, "claims" | "rosters">,
+   * stale draft must not answer them. `routed` marks a draft a deterministic
+   * route composed (the deflected profile): its ask was about an entity, not
+   * scope, so there is no vague wording for the ladder to interpret — the
+   * pack's own question outranks the model (hard-won lesson 1; observed
+   * live 2026-08-30: the ladder read "tell me about Pikachu" and proposed
+   * version=yellow from nothing, and the confirmed card died at the gate as
+   * IA-2/scope-version-mismatch). */
+  reuse?: Pick<ManifestDraft, "claims" | "rosters"> & { routed?: boolean },
 ): Promise<SessionState> {
   const { world, provider } = deps;
 
@@ -437,12 +443,26 @@ async function drive(
     return drive(
       { ...state, required: nextRequired },
       deps,
-      attempt.result === "needs-scope" ? { claims: attempt.claims, rosters: attempt.rosters } : undefined,
+      attempt.result === "needs-scope"
+        ? { claims: attempt.claims, rosters: attempt.rosters, ...(attempt.routed === true ? { routed: true } : {}) }
+        : undefined,
     );
   }
 
-  const freshLongTail = lastSaid !== undefined && unmatchedClauses(world.pack, lastSaid.text).length > 0;
-  if (!freshLongTail || state.ladderTurns >= MAX_LADDER_TURNS) {
+  // The ladder's inbox, minus answer-subject wording. A clause that names a
+  // certified entity is about the *answer* ("tell me about Pikachu"), and a
+  // ladder handed it will free-associate scope out of it — observed live
+  // (2026-08-30): version=yellow proposed from the mascot, confirmed, and
+  // denied at the gate as IA-2/scope-version-mismatch. Scope wording the
+  // vocabulary cannot read ("the yellow one") names no entity and still
+  // reaches the ladder; an entity-naming clause falls to the pack's own
+  // question, which is free, deterministic and armed (hard-won lesson 1).
+  const scopeishClauses =
+    lastSaid === undefined
+      ? []
+      : unmatchedClauses(world.pack, lastSaid.text).filter((clause) => !namesCertifiedEntity(world.registry, clause));
+  const freshLongTail = scopeishClauses.length > 0;
+  if (reuse?.routed === true || !freshLongTail || state.ladderTurns >= MAX_LADDER_TURNS) {
     return ask(state, deps.now(), outcome.asking, outcome.question);
   }
 
@@ -574,6 +594,16 @@ export function deflectedProfileClaims(world: SessionWorld, ask: string, propose
   ];
 }
 
+/** Whether a clause names any certified species — the same word-bounded,
+ * hyphen-folded reading as {@link deflectedProfileClaims}, shared so the two
+ * doors cannot drift. */
+function namesCertifiedEntity(registry: CertifiedRegistry, clause: string): boolean {
+  const haystack = ` ${clause.toLowerCase()} `;
+  return registry.speciesIds.some((id) =>
+    new RegExp(`\\b${id.split("-").join("[\\s-]?")}\\b`).test(haystack),
+  );
+}
+
 /**
  * The redirect an off-domain opener earns instead of an interrogation.
  *
@@ -614,6 +644,9 @@ async function teachOrDiscover(
   /** The decoded rosters beside the claims, so a needs-scope draft can be
    * reused whole once the scope it named turns out to be already granted. */
   rosters: Pick<ManifestDraft, "rosters">["rosters"];
+  /** True when a deterministic route composed the claims (the deflected
+   * profile) — the ladder is then skipped for the scope they require. */
+  routed?: boolean;
 }> {
   const { world, provider } = deps;
   const transactionId = nextTransactionId(state);
@@ -664,7 +697,7 @@ async function teachOrDiscover(
     .join(" ");
   const profile = deflectedProfileClaims(world, ask, draft.claims);
   if (profile.length > 0) {
-    return { state: spentFolded, result: "needs-scope", claims: profile, rosters: [] };
+    return { state: spentFolded, result: "needs-scope", claims: profile, rosters: [], routed: true };
   }
   // Commit grantless when nothing in the draft depends on scope — a lesson, a
   // game-rule constant, the same answer for every trainer (epic #64). Derived
