@@ -530,6 +530,46 @@ describe("the manifest is bound to one snapshot, pack, trainer and window", () =
     expect(denialsOf(manifest, elsewhere)).toContain("IA-2/scope-version-mismatch");
   });
 
+  it("still teaches across a version boundary — a lesson-only manifest reads nothing from this snapshot", () => {
+    // The same property that lets a lesson commit grantless: reviewed text is
+    // the same for every trainer, so a trainer who honestly plays Yellow may
+    // be taught what these records do and do not cover — while anything
+    // derived from the snapshot still refuses by name (the cases above and
+    // below). Found live: the boundary lesson written for exactly this
+    // situation was itself denied.
+    const elsewhere: ManifestContext = {
+      ...context,
+      grant: { ...trainerGrant(), scope: { ...trainerGrant().scope, version: "yellow" } },
+    };
+    const lesson = compileManifest(elsewhere, {
+      transactionId: "txn-boundary",
+      claims: [{ kind: "explanation", blockId: "red-blue-vs-yellow" }],
+      rosters: [],
+    });
+    expect(lesson.ok).toBe(true);
+    if (lesson.ok) expect(verifyManifest(elsewhere, lesson.value)).toEqual({ allowed: true, violations: [] });
+  });
+
+  it("denies a game rule across the version boundary — pack numbers are certified for this world only", () => {
+    const elsewhere: ManifestContext = {
+      ...context,
+      grant: { ...trainerGrant(), scope: { ...trainerGrant().scope, version: "yellow" } },
+    };
+    // Compiled under the home context (compilation itself may read scope),
+    // verified under the foreign grant — the same shape as the fact case.
+    const rule = compileManifest(context, {
+      transactionId: "txn-foreign-rule",
+      claims: [{ kind: "gameRule", ruleId: "party-size" }],
+      rosters: [],
+    });
+    expect(rule.ok).toBe(true);
+    if (rule.ok) {
+      const verdict = verifyManifest(elsewhere, rule.value);
+      expect(verdict.allowed).toBe(false);
+      expect(verdict.violations.map((v) => `${v.article}/${v.rule}`)).toContain("IA-2/scope-version-mismatch");
+    }
+  });
+
   it("checks the validity window at commit time, not at issue time", () => {
     const grant = trainerGrant();
     const late: ManifestContext = { ...context, at: "2026-02-01T00:00:00Z" };

@@ -262,9 +262,17 @@ function checkBinding(context: ManifestContext, manifest: AnswerManifest): Viola
 
   // Facts are only facts within the version that certifies them, so a grant
   // establishing scope over a different version group cannot authorise an
-  // answer drawn from this one.
+  // answer drawn from this one. Scoped to what actually reads the registry:
+  // a manifest of reviewed lessons alone carries the same text for every
+  // trainer — the property that already lets a lesson commit grantless — and
+  // a trainer who honestly named another version may still be *taught*
+  // (found live, 2026-08-30: "yellow" answered to the version question dead-
+  // ended every exchange, including the boundary lesson written to explain
+  // exactly that situation). Anything derived from this snapshot — a fact, a
+  // count, a game rule, any roster — still refuses by name.
   const versionGroup = context.registry.document.scope.versionGroup;
-  if (grant.scope.version !== versionGroup) {
+  const readsRegistry = manifest.claims.some((claim) => claim.kind !== "explanation") || manifest.rosters.length > 0;
+  if (readsRegistry && grant.scope.version !== versionGroup) {
     violations.push(
       violation("IA-2", "scope-version-mismatch", "scope was established over a different version group", {
         expected: versionGroup,

@@ -395,6 +395,17 @@ async function drive(
   }
 
   if (outcome.status === "granted") {
+    // A grant honestly established over a version these records do not
+    // certify. The kernel would refuse every registry-derived answer by name
+    // (IA-2/scope-version-mismatch) — correct, and a dead end for a trainer
+    // who did exactly what the boundary lesson asked ("if you are playing
+    // Yellow, say so"). Lessons still teach across the boundary (reviewed
+    // text is the same for every trainer); everything else gets the boundary
+    // lesson itself, deterministically — the promised plain telling, filed
+    // as a record like any answer.
+    if (outcome.grant.scope.version !== world.registry.document.scope.versionGroup) {
+      return foreignVersion(state, deps);
+    }
     return answer(state, deps, reuse);
   }
 
@@ -637,6 +648,10 @@ function redirect(state: SessionState, deps: SessionDeps): SessionState {
 async function teachOrDiscover(
   state: SessionState,
   deps: SessionDeps,
+  /** Only reviewed lessons may commit — the foreign-version path: any draft
+   * that reads the registry falls out as needs-scope for the caller to
+   * answer with the boundary lesson instead of a denial. */
+  lessonsOnly = false,
 ): Promise<{
   state: SessionState;
   result: "taught" | "off-domain" | "needs-scope" | "unusable";
@@ -699,6 +714,12 @@ async function teachOrDiscover(
   if (profile.length > 0) {
     return { state: spentFolded, result: "needs-scope", claims: profile, rosters: [], routed: true };
   }
+  // Under lessonsOnly, anything that reads the registry — a fact, a game
+  // rule, any roster — is the caller's to answer, not this path's to commit:
+  // the kernel would refuse it across the version boundary by name.
+  if (lessonsOnly && (draft.claims.some((claim) => claim.kind !== "explanation") || draft.rosters.length > 0)) {
+    return { state: spentFolded, result: "needs-scope", claims: draft.claims, rosters: draft.rosters };
+  }
   // Commit grantless when nothing in the draft depends on scope — a lesson, a
   // game-rule constant, the same answer for every trainer (epic #64). Derived
   // from the one dependency table, so this never drifts from what the kernel's
@@ -707,6 +728,46 @@ async function teachOrDiscover(
     return { state: commit(spentFolded, deps, { transactionId, establishedAt, draft }), result: "taught", claims: draft.claims, rosters: draft.rosters };
   }
   return { state: spentFolded, result: "needs-scope", claims: draft.claims, rosters: draft.rosters };
+}
+
+/** The reviewed block that owns the version boundary, when the pack carries
+ * one. Named here, not in the kernel: which lesson explains the boundary is
+ * curriculum, not enforcement. */
+const BOUNDARY_LESSON = "red-blue-vs-yellow";
+
+/**
+ * The session for a trainer whose honest version these records do not
+ * certify. Lessons still teach (reviewed text is the same for every trainer
+ * — the kernel's own scoping of the version check); everything that reads
+ * the registry gets the boundary lesson, deterministically, as a filed
+ * record — the "plain telling" that lesson promises, instead of a denial
+ * the trainer cannot act on. Off-domain words still earn the redirect.
+ */
+async function foreignVersion(state: SessionState, deps: SessionDeps): Promise<SessionState> {
+  const attempt = await teachOrDiscover(state, deps, true);
+  if (attempt.result === "taught") return attempt.state;
+  if (attempt.result === "off-domain") return redirect(attempt.state, deps);
+  return teachBoundary(attempt.state, deps);
+}
+
+function teachBoundary(state: SessionState, deps: SessionDeps): SessionState {
+  if (!deps.world.pack.curriculum.some((lesson) => lesson.id === BOUNDARY_LESSON)) {
+    // A pack without the boundary block falls to the honest note — never a
+    // fabricated lesson, and never the bare denial this path exists to spare.
+    return note(
+      { ...state, phase: { kind: "gathering" } },
+      deps.now(),
+      "these records certify Red and Blue only — questions about your version's own facts are outside them, though the catalogue lessons still apply",
+      "abstention",
+    );
+  }
+  const transactionId = nextTransactionId(state);
+  const establishedAt = deps.now();
+  return commit(state, deps, {
+    transactionId,
+    establishedAt,
+    draft: { transactionId, claims: [{ kind: "explanation", blockId: BOUNDARY_LESSON }], rosters: [] },
+  });
 }
 
 async function answer(
