@@ -357,8 +357,14 @@ async function drive(
    * forwarded so the answer step can certify it instead of re-asking the
    * model. Only the immediate needs-scope → granted hop carries one: the
    * moment a question or a card intervenes, the words may change, and a
-   * stale draft must not answer them. */
-  reuse?: Pick<ManifestDraft, "claims" | "rosters">,
+   * stale draft must not answer them. `routed` marks a draft a deterministic
+   * route composed (the deflected profile): its ask was about an entity, not
+   * scope, so there is no vague wording for the ladder to interpret — the
+   * pack's own question outranks the model (hard-won lesson 1; observed
+   * live 2026-08-30: the ladder read "tell me about Pikachu" and proposed
+   * version=yellow from nothing, and the confirmed card died at the gate as
+   * IA-2/scope-version-mismatch). */
+  reuse?: Pick<ManifestDraft, "claims" | "rosters"> & { routed?: boolean },
 ): Promise<SessionState> {
   const { world, provider } = deps;
 
@@ -437,12 +443,26 @@ async function drive(
     return drive(
       { ...state, required: nextRequired },
       deps,
-      attempt.result === "needs-scope" ? { claims: attempt.claims, rosters: attempt.rosters } : undefined,
+      attempt.result === "needs-scope"
+        ? { claims: attempt.claims, rosters: attempt.rosters, ...(attempt.routed === true ? { routed: true } : {}) }
+        : undefined,
     );
   }
 
-  const freshLongTail = lastSaid !== undefined && unmatchedClauses(world.pack, lastSaid.text).length > 0;
-  if (!freshLongTail || state.ladderTurns >= MAX_LADDER_TURNS) {
+  // The ladder's inbox, minus answer-subject wording. A clause that names a
+  // certified entity is about the *answer* ("tell me about Pikachu"), and a
+  // ladder handed it will free-associate scope out of it — observed live
+  // (2026-08-30): version=yellow proposed from the mascot, confirmed, and
+  // denied at the gate as IA-2/scope-version-mismatch. Scope wording the
+  // vocabulary cannot read ("the yellow one") names no entity and still
+  // reaches the ladder; an entity-naming clause falls to the pack's own
+  // question, which is free, deterministic and armed (hard-won lesson 1).
+  const scopeishClauses =
+    lastSaid === undefined
+      ? []
+      : unmatchedClauses(world.pack, lastSaid.text).filter((clause) => !namesCertifiedEntity(world.registry, clause));
+  const freshLongTail = scopeishClauses.length > 0;
+  if (reuse?.routed === true || !freshLongTail || state.ladderTurns >= MAX_LADDER_TURNS) {
     return ask(state, deps.now(), outcome.asking, outcome.question);
   }
 
@@ -533,6 +553,58 @@ export function eligibilityClaims(
 }
 
 /**
+ * The profile a specific-entity ask earns when the model deflects it to a
+ * curriculum lesson.
+ *
+ * Observed live (2026-08-30, gemini-3.5-flash-lite): "tell me about Pikachu"
+ * decoded to `explanation:what-is-pokemon` — the generic lesson, committed
+ * grantless as taught, and the retry deflected identically. The discovery
+ * prompt already forbids "a lesson that is merely adjacent"; a small model
+ * ignores the sentence, so the driver reads the ask deterministically
+ * instead: when the trainer named exactly one certified species and the
+ * whole draft is lessons, the ask was about the entity, and the entity's
+ * certified profile — types, the six base stats, the dex number — is the
+ * on-target answer. Facts only, kernel-derived and kernel-verified; the
+ * route composes a shape, never a value. One entity exactly: zero named
+ * means the lesson may well be the ask ("what is a Pokémon?"), two means
+ * the ask is a comparison the profile cannot speak for.
+ *
+ * Word-bounded with the hyphen fold ("Mr. Mime" finds mr-mime), the same
+ * discipline as {@link eligibilityClaims} and the retrieval front door —
+ * deterministic, so its misses are measurable (lesson 6), and it can only
+ * *widen* what the kernel certifies, never bind scope or assert a value.
+ */
+export function deflectedProfileClaims(world: SessionWorld, ask: string, proposed: readonly Claim[]): readonly Claim[] {
+  if (proposed.length === 0 || !proposed.every((claim) => claim.kind === "explanation")) return [];
+  const haystack = ` ${ask.toLowerCase()} `;
+  const names = (id: string): boolean =>
+    new RegExp(`\\b${id.split("-").join("[\\s-]?")}\\b`).test(haystack);
+  const named = world.registry.speciesIds.filter((id) => names(id));
+  if (named.length !== 1) return [];
+  const entityId = named[0]!;
+  return [
+    { kind: "fact", entityId, factId: "types" },
+    { kind: "fact", entityId, factId: "pokedex-number" },
+    { kind: "fact", entityId, factId: "base-hp" },
+    { kind: "fact", entityId, factId: "base-attack" },
+    { kind: "fact", entityId, factId: "base-defense" },
+    { kind: "fact", entityId, factId: "base-speed" },
+    { kind: "fact", entityId, factId: "base-special-attack" },
+    { kind: "fact", entityId, factId: "base-special-defense" },
+  ];
+}
+
+/** Whether a clause names any certified species — the same word-bounded,
+ * hyphen-folded reading as {@link deflectedProfileClaims}, shared so the two
+ * doors cannot drift. */
+function namesCertifiedEntity(registry: CertifiedRegistry, clause: string): boolean {
+  const haystack = ` ${clause.toLowerCase()} `;
+  return registry.speciesIds.some((id) =>
+    new RegExp(`\\b${id.split("-").join("[\\s-]?")}\\b`).test(haystack),
+  );
+}
+
+/**
  * The redirect an off-domain opener earns instead of an interrogation.
  *
  * When the discovery call proposes no claims at all, nothing certified is even
@@ -572,6 +644,9 @@ async function teachOrDiscover(
   /** The decoded rosters beside the claims, so a needs-scope draft can be
    * reused whole once the scope it named turns out to be already granted. */
   rosters: Pick<ManifestDraft, "rosters">["rosters"];
+  /** True when a deterministic route composed the claims (the deflected
+   * profile) — the ladder is then skipped for the scope they require. */
+  routed?: boolean;
 }> {
   const { world, provider } = deps;
   const transactionId = nextTransactionId(state);
@@ -613,6 +688,17 @@ async function teachOrDiscover(
   }
   const draft = step.decode.draft;
   const spentFolded = { ...spent, folds: spent.folds + step.decode.folds };
+  // A lesson-only draft for an ask that named one specific species is the
+  // deflection this route exists for: the profile replaces the lesson and
+  // goes through scope like any personalized answer would have.
+  const ask = state.transcript
+    .slice(state.askStart)
+    .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
+    .join(" ");
+  const profile = deflectedProfileClaims(world, ask, draft.claims);
+  if (profile.length > 0) {
+    return { state: spentFolded, result: "needs-scope", claims: profile, rosters: [], routed: true };
+  }
   // Commit grantless when nothing in the draft depends on scope — a lesson, a
   // game-rule constant, the same answer for every trainer (epic #64). Derived
   // from the one dependency table, so this never drifts from what the kernel's
@@ -722,7 +808,16 @@ async function answer(
     // including by proposing the gated advice the kernel will deny — is left
     // alone, so the route never softens a denial the gate has earned.
     const routed = eligibilityClaims(world, ask, decoded.claims);
-    draft = routed.length === 0 ? decoded : { ...decoded, claims: [...decoded.claims, ...routed] };
+    // The lesson deflection has the same backstop here as at discovery: a
+    // scoped answer that is all lessons for an ask naming one species gets
+    // the entity's profile instead — the model can deflect at either hop.
+    const profile = deflectedProfileClaims(world, ask, decoded.claims);
+    draft =
+      profile.length > 0
+        ? { ...decoded, claims: profile, rosters: [] }
+        : routed.length === 0
+          ? decoded
+          : { ...decoded, claims: [...decoded.claims, ...routed] };
   }
 
   // The scope escalation, generalized (epic #64, slice 2). The proposed answer
