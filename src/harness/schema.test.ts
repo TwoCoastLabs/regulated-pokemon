@@ -226,18 +226,32 @@ describe("anything the grammar admits, the decoder reads", () => {
   });
 
   it("decodes a roster built from every criterion kind", () => {
+    // One roster carrying every criterion kind at once, so the fixture stays
+    // inside the roster budget (MAX_ANSWER_ROSTERS) without giving up
+    // per-kind coverage — criteria compose with "all", and each kind must
+    // decode inside the composition.
     const rosters = [
-      { id: "everything", criteria: { all: [{ kind: "has-type", type: "electric" }] } },
-      { id: "boomers", criteria: { all: [{ kind: "learns-move", move: "self-destruct" }] } },
-      { id: "rare", criteria: { all: [{ kind: "rarity", rarity: "legendary" }] } },
-      { id: "brisk", criteria: { all: [{ kind: "stat-at-least", stat: "speed", value: 100 }] } },
-      { id: "sluggish", criteria: { all: [{ kind: "stat-at-most", stat: "speed", value: 30 }] } },
+      {
+        id: "everything",
+        criteria: {
+          all: [
+            { kind: "has-type", type: "electric" },
+            { kind: "learns-move", move: "self-destruct" },
+            { kind: "rarity", rarity: "legendary" },
+            { kind: "stat-at-least", stat: "speed", value: 100 },
+            { kind: "stat-at-most", stat: "speed", value: 130 },
+          ],
+        },
+      },
     ];
     // One claim rides along: an answer with no claims is refused as an
     // abstention, and this test is about the roster criteria.
     const claims = [{ kind: "count", rosterId: "everything" }];
     const decoded = decodeAnswer(JSON.stringify({ rosters, claims }), context, "txn-rosters");
     expect(decoded.ok).toBe(true);
-    if (decoded.ok) expect(decoded.draft.rosters).toHaveLength(rosters.length);
+    if (decoded.ok) {
+      expect(decoded.draft.rosters).toHaveLength(1);
+      expect(decoded.draft.rosters[0]?.criteria.all).toHaveLength(5);
+    }
   });
 });

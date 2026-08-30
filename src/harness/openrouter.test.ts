@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import {
+import { foldSchemaFor,
   type FetchLike,
   type HttpResponse,
   OpenRouterProvider,
@@ -236,5 +236,27 @@ describe("the key never escapes", () => {
 
   it("redact leaves text alone when there is no secret to find", () => {
     expect(redact("plain", "")).toBe("plain");
+  });
+});
+
+describe("foldSchemaFor: the grammar folded to what an upstream accepts", () => {
+  const schema = {
+    type: "object",
+    properties: {
+      claims: { type: "array", maxItems: 12, items: { type: "object", properties: { tags: { type: "array", maxItems: 3 } } } },
+    },
+  };
+
+  it("strips maxItems for the google family, at every depth", () => {
+    const folded = JSON.stringify(foldSchemaFor("google/gemini-3.5-flash-lite", schema));
+    expect(folded).not.toContain("maxItems");
+    // Only constraint keywords go; the shape survives.
+    expect(folded).toContain('"claims"');
+    expect(folded).toContain('"tags"');
+  });
+
+  it("hands every other family the grammar untouched", () => {
+    expect(foldSchemaFor("qwen/qwen3-235b-a22b-2507", schema)).toBe(schema);
+    expect(foldSchemaFor("mistralai/mistral-nemo", schema)).toBe(schema);
   });
 });

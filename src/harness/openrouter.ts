@@ -37,6 +37,7 @@ import {
   tokenEstimate,
   type Usage,
 } from "./provider.js";
+import type { JsonSchema } from "./schema.js";
 
 export const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
@@ -116,6 +117,43 @@ export function redact(text: string, secret: string): string {
 function snippet(body: string, apiKey: string): string {
   const flat = redact(body, apiKey).replace(/\s+/g, " ").trim();
   return flat.length <= 200 ? flat : `${flat.slice(0, 200)}…`;
+}
+
+/**
+ * JSON-schema keywords a model's upstream rejects outright, by model prefix.
+ *
+ * The advisor states one grammar; what each endpoint can enforce of it is the
+ * provider's business (the schema is offered, never imposed). Google's schema
+ * parser returns INVALID_ARGUMENT for `maxItems` (observed live, 2026-08-30:
+ * every gemini answer call 400ed the moment S1's bound landed), so the fold
+ * strips it for that family — the bound itself still holds everywhere,
+ * because the decoder enforces the same budget deterministically
+ * (decode.ts). A fold only ever *removes* constraint keywords: a folded
+ * schema accepts a superset, so nothing that would have decoded stops
+ * decoding, and nothing downstream trusts shape anyway.
+ */
+const SCHEMA_KEYWORD_HOLES: readonly { prefix: string; strip: readonly string[] }[] = [
+  { prefix: "google/", strip: ["maxItems"] },
+];
+
+function stripKeys(node: unknown, keys: ReadonlySet<string>): unknown {
+  if (Array.isArray(node)) return node.map((entry) => stripKeys(entry, keys));
+  if (node !== null && typeof node === "object") {
+    return Object.fromEntries(
+      Object.entries(node as Record<string, unknown>)
+        .filter(([key]) => !keys.has(key))
+        .map(([key, value]) => [key, stripKeys(value, keys)]),
+    );
+  }
+  return node;
+}
+
+/** The grammar, folded to what this model's upstream accepts. Exported for the
+ * test that pins the fold to the families that need it and no others. */
+export function foldSchemaFor(model: string, schema: JsonSchema): JsonSchema {
+  const hole = SCHEMA_KEYWORD_HOLES.find((entry) => model.startsWith(entry.prefix));
+  if (hole === undefined) return schema;
+  return stripKeys(schema, new Set(hole.strip)) as JsonSchema;
 }
 
 /** Transient: worth another attempt. Anything else is our bug or our key, and
@@ -210,7 +248,7 @@ export class OpenRouterProvider implements ModelProvider {
         ? {
             response_format: {
               type: "json_schema",
-              json_schema: { name: request.schema.name, strict: true, schema: request.schema.schema },
+              json_schema: { name: request.schema.name, strict: true, schema: foldSchemaFor(model, request.schema.schema) },
             },
           }
         : {};

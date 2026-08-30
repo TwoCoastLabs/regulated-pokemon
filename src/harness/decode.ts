@@ -31,6 +31,7 @@ import { buildRoster } from "../kernel/roster.js";
 import type { AccordPack } from "../kernel/pack.js";
 import { denialCode } from "../kernel/violation.js";
 import { canonicalizeClaims } from "./canonical.js";
+import { MAX_ANSWER_CLAIMS, MAX_ANSWER_ROSTERS } from "./schema.js";
 
 // --- tiny typed predicates --------------------------------------------------
 
@@ -318,7 +319,7 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
   }
 
   const rosters = [];
-  for (const entry of parsed.rosters) {
+  for (const entry of parsed.rosters.slice(0, MAX_ANSWER_ROSTERS)) {
     if (!isObject(entry) || !isString(entry.id) || !isObject(entry.criteria) || !Array.isArray(entry.criteria.all)) {
       return { ok: false, reason: "a roster is malformed" };
     }
@@ -360,12 +361,18 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
   // every survivor exactly as before. Canonical form first, so "Pikachu" and
   // "pikachu" are the same statement here too.
   const seen = new Set<string>();
-  const distinct = canonical.filter((claim) => {
+  const deduped = canonical.filter((claim) => {
     const key = JSON.stringify(claim);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
+  // The grammar's budget, enforced here as well as in the schema: an endpoint
+  // that cannot accept `maxItems` (Google's rejects the keyword — the
+  // provider folds it out, openrouter.ts) still ends at the same bound,
+  // truncated exactly where a constrained decoder would have stopped:
+  // first MAX kept, in order, after duplicates fold.
+  const distinct = deduped.slice(0, MAX_ANSWER_CLAIMS);
 
   // An answer that asserts nothing is not an answer. Compiled, it would mint
   // a certified page whose only content is the standing provenance footer —
