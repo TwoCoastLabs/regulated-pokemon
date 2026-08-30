@@ -441,7 +441,14 @@ export function Live() {
           });
         }
       })
-      .catch((error: unknown) => setTrouble(error instanceof Error ? error.message : String(error)))
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : String(error);
+        setTrouble(message);
+        // The failing step still reaches the trace: without this, an error
+        // that escapes to the banner leaves the sink with the model call but
+        // no step context, and a debugger reading the file sees a cliff.
+        if (devRef.current) mirrorToDevSink({ type: "step-error", message });
+      })
       .finally(() => {
         setBusy(false);
         setInFlight(null);
@@ -591,6 +598,7 @@ export function Live() {
         <span>
           {cost.calls} model call{cost.calls === 1 ? "" : "s"} · ${cost.costUsd.toFixed(4)} so far
         </span>
+        <ModelLatency calls={setup.trace.calls} />
         <button
           type="button"
           class={`console-toggle${console_ ? " current" : ""}`}
@@ -783,6 +791,26 @@ export function Live() {
         </button>
       </form>
     </div>
+  );
+}
+
+/**
+ * The provider's speed, made visible where the visitor already looks: the
+ * last model call's wall time and its decode throughput. Split on purpose —
+ * a 55-second call at 5.8 tok/s is the provider having a moment, not this
+ * page having a bug, and only the pair says which (hard-won lesson 5:
+ * providers are nondeterministic, latency included).
+ */
+function ModelLatency(props: { calls: readonly ModelCallTrace[] }) {
+  const last = props.calls[props.calls.length - 1];
+  if (last === undefined) return null;
+  const seconds = last.latencyMs / 1000;
+  const completion = last.usage?.completionTokens ?? 0;
+  const rate = seconds > 0 && completion > 0 ? ` · ${(completion / seconds).toFixed(1)} tok/s` : "";
+  return (
+    <span class="mono" title="the last model call's wall time and decode throughput — slow calls at normal tok/s are the provider routing, not this page">
+      last call {seconds.toFixed(1)}s{rate}
+    </span>
   );
 }
 

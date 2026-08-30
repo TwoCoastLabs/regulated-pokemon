@@ -3186,6 +3186,45 @@ a prompt-shaping candidate ("name the refusal, don't change the subject").
 And the data ceiling's 28 declines name the vendoring shortlist: TM
 compatibility, type effectiveness, evolutions, locations.
 
+## 19. Dogfooding the live session: the unbounded grammar and the double ask
+
+Two latency findings from driving the live session page by hand
+(2026-08-29/30, qwen/qwen3-235b-a22b-2507 through the relay, dev-trace
+recorded per call), each with the fix it forced. Provenance is weak by the
+project's standards — single live sessions, N=1, no repetitions — so the
+numbers are reported as observations that motivated deterministic changes,
+not as measured rates; the changes themselves are pinned by offline tests.
+
+**The unbounded grammar (epic #118, S1).** "tell me about this game"
+looped the model over the same six `gameRule` claims until `max_tokens`
+(2048) cut the JSON mid-string: 42.9s of generation, then the driver's
+abstention — the trainer paid the maximum possible latency for no answer.
+The grammar was the gap: an unbounded `claims` array keeps a repetition
+loop legal to the cap. After `maxItems` (12/4), the truncation named in
+the decode reason, and value-identical claims folded at decode: the same
+question, same model, settled **answered** in 6.3s with 5 distinct claims
+committed (43s → abstention became 6.3s → answer). The cap held on stage:
+the model still tried the loop and the constrained decoder stopped it at
+exactly 12.
+
+**The double ask (this section's second fix).** A follow-up ask under an
+already-established grant ran *two* sequential answer-grammar generations:
+the grantless discovery call (by design — propose first, gather only what
+the answer needs), then a fresh scoped re-ask whose draft replaced the
+discovery draft. Observed on "tell me more about Pikachu": discovery 54.9s
+(319 tok, ~5.8 tok/s — the provider's slow moment, not the page's; normal
+runs sit at 9–12 tok/s) produced on-target Pikachu `fact` claims;
+the 17.3s re-ask returned off-target game-rule boilerplate, and the
+re-ask's draft is what got certified. Fix: the needs-scope → granted hop
+now carries the discovery draft, and the answer step certifies it instead
+of re-asking — one model call per follow-up ask, and the draft that was
+responsive to the words is the one judged. The kernel compiles and
+verifies the reused draft exactly as a fresh one; enforcement is
+untouched. Pinned offline: a follow-up exchange costs exactly one answer
+call (session.test.ts). Note for anyone reading ceremony metrics: this
+changes calls-per-resolution, so live numbers filed before 2026-08-30 sit
+on the two-call shape.
+
 ## Appendix — how to reproduce
 
 ```sh
