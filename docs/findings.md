@@ -3225,6 +3225,37 @@ call (session.test.ts). Note for anyone reading ceremony metrics: this
 changes calls-per-resolution, so live numbers filed before 2026-08-30 sit
 on the two-call shape.
 
+### The tire-kicking round (2026-08-30, gemini-3.5-flash-lite via session:trace)
+
+A systematic pass over the questions a novice actually opens with, run on
+the weak default model with the tracer's defaults (retrieval, gated
+grammar, repair). Greetings, openers, catch/difficulty lessons, the entity
+profile, evolution and locations all resolved in one call each. Three
+front-porch questions did not, and each exposed a distinct gap:
+
+- **"How many Pokémon are there?"** — the most famous number in the
+  franchise was unrepresentable: no pokedex-count game rule, and the
+  grammar gate's rule nouns did not include "Pokémon/Pokédex/species", so
+  the gated grammar withheld gameRule regardless. Fixed as pack data plus
+  two gate nouns; the rule's value is pinned by test to the registry's own
+  species count. Now answers grantless in one call.
+- **"What is the strongest Pokémon?"** — a catalogue-wide ranking needs
+  the all-species roster, which the kernel already accepts as an empty
+  criteria list ({"all": []}); the filed coverage runs show the strong
+  model discovering that form on its own, and the weak model never did —
+  it abstained instead. Fixed with one prompt sentence stating the empty
+  list's meaning. Now: basis proposal (base-stat-total), version question,
+  certified all-pokemon ranking.
+- **"Which starter should I pick?"** — no on-target block existed and the
+  model (correctly, per the prompt's own discipline) refused to freelance
+  advice. A reviewed choosing-a-starter lesson now covers it: no "best",
+  the certified types beside the first two Gyms, and an invitation to
+  compare by name.
+
+The pattern across all three: the weak model is the instrument (model
+doctrine) — every gap it exposed was an expressibility or curriculum gap
+the strong model had been papering over with cleverness.
+
 ## Appendix — how to reproduce
 
 ```sh

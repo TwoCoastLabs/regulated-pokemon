@@ -144,6 +144,11 @@ function answerPrompt(
     "",
     "A roster is a declarative set you name and then cite by id:",
     '  {"id": "<your-id>", "criteria": {"all": [<criterion>, ...]}}',
+    // Vacuous satisfaction is a logician's reading; the catalogue-wide set
+    // must be stated or a small model abstains on "the strongest Pokémon"
+    // (tire-kicking, 2026-08-30 — the filed coverage runs show the strong
+    // model discovering {"all": []} on its own; the weak one never did).
+    'An EMPTY criteria list means every certified member: {"criteria": {"all": []}} is the whole certified set — use it when a question ranges over all Pokémon rather than a named group, e.g. as the set a catalogue-wide ranking runs over.',
     "where each criterion is one of:",
     '  {"kind": "has-type", "type": "<type-id>"}',
     '  {"kind": "learns-move", "move": "<move-id>"}',
@@ -238,6 +243,11 @@ function rawPrompt(asks: readonly string[], tools: readonly string[], items = fa
     "",
     "A roster is a declarative set you name and then cite by id:",
     '  {"id": "<your-id>", "criteria": {"all": [<criterion>, ...]}}',
+    // Vacuous satisfaction is a logician's reading; the catalogue-wide set
+    // must be stated or a small model abstains on "the strongest Pokémon"
+    // (tire-kicking, 2026-08-30 — the filed coverage runs show the strong
+    // model discovering {"all": []} on its own; the weak one never did).
+    'An EMPTY criteria list means every certified member: {"criteria": {"all": []}} is the whole certified set — use it when a question ranges over all Pokémon rather than a named group, e.g. as the set a catalogue-wide ranking runs over.',
     "where each criterion is one of:",
     '  {"kind": "has-type", "type": "<type-id>"}',
     '  {"kind": "learns-move", "move": "<move-id>"}',

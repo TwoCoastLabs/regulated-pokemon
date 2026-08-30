@@ -953,6 +953,26 @@
       }
     },
     {
+      "id": "choosing-a-starter",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-choosing-a-starter",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "There is no wrong starter — Bulbasaur, Charmander and Squirtle are all fit for the whole journey, and the records certify each one’s types and stats so you can compare them yourself. What the records say: Bulbasaur is Grass/Poison and Squirtle is Water, and the first two Gyms are Rock and Water — both starters the type chart favors early. Charmander is Fire, which those same Gyms resist, so its road starts steeper. Ask about any of the three by name and the Advisor will lay out its certified numbers.",
+            "digest": "sha256:a2bca764647751a5186e3788f533ed9b7ecd941bd40ebb7e7a81011c79ba632c"
+          },
+          {
+            "locale": "en-GB",
+            "text": "There is no wrong starter — Bulbasaur, Charmander and Squirtle are all fit for the whole journey, and the records certify each one’s types and stats so you can compare them yourself. What the records say: Bulbasaur is Grass/Poison and Squirtle is Water, and the first two Gyms are Rock and Water — both starters the type chart favors early. Charmander is Fire, which those same Gyms resist, so its road starts steeper. Ask about any of the three by name and the Advisor will lay out its certified numbers.",
+            "digest": "sha256:a2bca764647751a5186e3788f533ed9b7ecd941bd40ebb7e7a81011c79ba632c"
+          }
+        ]
+      }
+    },
+    {
       "id": "leveling",
       "article": "IA-6",
       "block": {
@@ -1333,6 +1353,11 @@
       "id": "item-stack",
       "value": 99,
       "label": "of one item a single bag slot stacks"
+    },
+    {
+      "id": "pokedex-count",
+      "value": 151,
+      "label": "Pokémon in the Kanto Pokédex"
     }
   ]
 }

@@ -46,6 +46,13 @@ const PIKACHU_SPEED: Claim = {
   asserted: { kind: "number", value: 90 },
 };
 
+describe("pokedex-count stays the registry's own number", () => {
+  it("matches the certified species count, so the reviewed value cannot drift from the snapshot", () => {
+    const rule = context.pack.gameRules.find((entry) => entry.id === "pokedex-count");
+    expect(rule?.value).toBe(context.registry.speciesIds.length);
+  });
+});
+
 describe("a manifest is compiled only if it would survive verification", () => {
   it("compiles an answer that makes every kind of claim", () => {
     const manifest = compiled(
