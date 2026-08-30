@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ScopeGrant } from "../kernel/contracts.js";
 import type { ManifestContext } from "../kernel/manifest.js";
+import { MAX_ANSWER_CLAIMS } from "./schema.js";
 import { decodeAnswer, decodeCandidate } from "./decode.js";
 import { harnessWorld } from "./corpus.js";
 
@@ -95,6 +96,22 @@ describe("decodeAnswer folds repeated claims (docs/scale.md, S1)", () => {
     }
   });
 
+  it("truncates past the claim budget exactly where a constrained decoder would stop", () => {
+    // An endpoint that cannot accept maxItems (the provider folds it out for
+    // Google's) must still end at the same bound: first MAX kept, in order,
+    // after duplicates fold.
+    const stats = ["base-hp", "base-attack", "base-defense", "base-speed", "base-special-attack", "base-special-defense"];
+    const species = ["pikachu", "raichu", "voltorb"];
+    const many = species.flatMap((entityId) => stats.map((factId) => ({ kind: "fact", entityId, factId })));
+    const decoded = decodeAnswer(JSON.stringify({ rosters: [], claims: many }), context, "txn-budget");
+    expect(decoded.ok).toBe(true);
+    if (decoded.ok) {
+      expect(many.length).toBeGreaterThan(MAX_ANSWER_CLAIMS);
+      expect(decoded.draft.claims).toHaveLength(MAX_ANSWER_CLAIMS);
+      expect(decoded.draft.claims[0]).toEqual(many[0]);
+    }
+  });
+
   it("treats two spellings of the same certified name as the same statement", () => {
     const text = JSON.stringify({
       rosters: [],
@@ -111,9 +128,11 @@ describe("decodeAnswer folds repeated claims (docs/scale.md, S1)", () => {
 
 describe("decodeAnswer", () => {
   it("decodes every claim kind and fact-value shape, carried verbatim", () => {
-    const text = JSON.stringify({
-      rosters: [{ id: "r", criteria: { all: [{ kind: "has-type", type: "electric" }] } }],
-      claims: [
+    // Split across two answers because one answer is budgeted
+    // (MAX_ANSWER_CLAIMS); the guarantee is per-kind decodability, not that
+    // every kind fits one reply.
+    const fixtures: readonly unknown[][] = [
+      [
         { kind: "fact", entityId: "e", factId: "f", asserted: { kind: "number", value: 1 } },
         { kind: "fact", entityId: "e", factId: "f", asserted: { kind: "boolean", value: true } },
         { kind: "fact", entityId: "e", factId: "f", asserted: { kind: "text", value: "t" } },
@@ -122,6 +141,8 @@ describe("decodeAnswer", () => {
         { kind: "count", rosterId: "r", reported: 3 },
         { kind: "typeCount" },
         { kind: "gameRule", ruleId: "party-size" },
+      ],
+      [
         { kind: "gameRule", ruleId: "party-size", reported: 6 },
         { kind: "membership", rosterId: "r", entityId: "e", asserted: false },
         { kind: "ranking", rosterId: "r", basis: "base-speed", direction: "lowest", selectedEntityId: "e" },
@@ -130,13 +151,20 @@ describe("decodeAnswer", () => {
         { kind: "matchup", subject: { kind: "species", entityId: "gengar" }, direction: "weak-to" },
         { kind: "matchup", subject: { kind: "type", typeId: "electric" }, direction: "strong-against", members: ["water"] },
       ],
-    });
-    const decoded = decodeAnswer(text, context, "txn-1");
-    expect(decoded.ok).toBe(true);
-    if (decoded.ok) {
-      expect(decoded.draft.transactionId).toBe("txn-1");
-      expect(decoded.draft.claims).toHaveLength(15);
-      expect(decoded.draft.rosters).toHaveLength(1);
+    ];
+    for (const claims of fixtures) {
+      expect(claims.length).toBeLessThanOrEqual(MAX_ANSWER_CLAIMS);
+      const text = JSON.stringify({
+        rosters: [{ id: "r", criteria: { all: [{ kind: "has-type", type: "electric" }] } }],
+        claims,
+      });
+      const decoded = decodeAnswer(text, context, "txn-1");
+      expect(decoded.ok).toBe(true);
+      if (decoded.ok) {
+        expect(decoded.draft.transactionId).toBe("txn-1");
+        expect(decoded.draft.claims).toHaveLength(claims.length);
+        expect(decoded.draft.rosters).toHaveLength(1);
+      }
     }
   });
 
