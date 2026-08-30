@@ -47,7 +47,13 @@ const COUNT_CUE = /\b(how many|number of|count(?:ing|ed)?)\b/i;
  * beside the cue rather than derived from the labels, and pinned to the pack's
  * rule set by {@link grammar-gate.test}, so a new rule updates both together.
  */
-const RULE_NOUN = /\b(party|team|moves?|attacks?|badges?|starters?|box(?:es)?|pc|storage|slots?|items?|bag|stack)\b/i;
+const RULE_NOUN =
+  // "Pokémon are there", "species exist", "in the Pokédex" — the catalogue's
+  // own size is a fixed rule of the game (pokedex-count), and the most-asked
+  // novice question of all was unrepresentable under the gate without these
+  // nouns (tire-kicking, 2026-08-30: "how many pokemon are there?" fell to
+  // an abstention after the version question).
+  /\b(party|team|moves?|attacks?|badges?|starters?|box(?:es)?|pc|storage|slots?|items?|bag|stack|pok[eé]mon|pok[eé]dex|species)\b/i;
 
 /** Wording that asks for a rule's *limit* even without a count cue — "max team
  * size", "how many moves at once", "can I carry". */

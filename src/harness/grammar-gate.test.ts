@@ -62,3 +62,22 @@ describe("nominateFillerKinds withholds every filler kind from a shape-vulnerabl
     }
   });
 });
+
+describe("the catalogue's own size reaches the gameRule door (tire-kicking, 2026-08-30)", () => {
+  it.each([
+    "how many pokemon are there?",
+    "how many Pokémon exist?",
+    "how many species are in the pokedex?",
+  ])("%s nominates gameRule", (question) => {
+    expect(nominateFillerKinds(question)).toContain("gameRule");
+  });
+
+  it("a question about a specific set still nominates count beside it", () => {
+    // The looseness is one-directional: the gate only narrows, and offering
+    // gameRule beside count cannot turn a ranking into a count (§19's actual
+    // concern). The mis-route risk (a set question answered with the
+    // catalogue size) is the mis-teach oracle's business, not the gate's.
+    const kinds = nominateFillerKinds("how many pokemon know surf?");
+    expect(kinds).toContain("count");
+  });
+});
