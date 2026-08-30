@@ -441,7 +441,14 @@ export function Live() {
           });
         }
       })
-      .catch((error: unknown) => setTrouble(error instanceof Error ? error.message : String(error)))
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : String(error);
+        setTrouble(message);
+        // The failing step still reaches the trace: without this, an error
+        // that escapes to the banner leaves the sink with the model call but
+        // no step context, and a debugger reading the file sees a cliff.
+        if (devRef.current) mirrorToDevSink({ type: "step-error", message });
+      })
       .finally(() => {
         setBusy(false);
         setInFlight(null);
