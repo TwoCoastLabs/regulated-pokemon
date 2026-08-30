@@ -233,6 +233,25 @@ function claimSchema(lessonIds: readonly string[], ruleIds: readonly string[], f
  * (versioned data). The schema a provider enforces is always the one the
  * governing pack defines.
  */
+/**
+ * The most claims one answer may carry, enforced in the grammar itself.
+ *
+ * Without a bound, a model in a repetition loop is grammatically legal all
+ * the way to the token cap — observed live (2026-08-29): a broad ask looped
+ * the same gameRule claims for 43 seconds, hit max_tokens mid-string, and
+ * the truncated JSON cost the trainer an abstention. A structured-output
+ * provider enforces maxItems at decode, so the loop becomes unrepresentable
+ * rather than discouraged. The budget is a usefulness dial, not policy: an
+ * honest answer here runs one to eight claims, so twelve binds only on
+ * pathology — and per "no silent caps", a completion that still hits the
+ * token cap is named as truncated where it is decoded (docs/scale.md, S1).
+ */
+export const MAX_ANSWER_CLAIMS = 12;
+
+/** Rosters name sets the claims cite; no honest answer has needed more than
+ * two. Bounded for the same reason as {@link MAX_ANSWER_CLAIMS}. */
+export const MAX_ANSWER_ROSTERS = 4;
+
 export function answerSchema(
   pack: {
     curriculum: ReadonlyArray<{ id: string }>;
@@ -249,9 +268,10 @@ export function answerSchema(
   vocabulary?: WorldVocabulary,
 ): JsonSchema {
   return object({
-    rosters: { type: "array", items: rosterSchema(items, vocabulary) },
+    rosters: { type: "array", maxItems: MAX_ANSWER_ROSTERS, items: rosterSchema(items, vocabulary) },
     claims: {
       type: "array",
+      maxItems: MAX_ANSWER_CLAIMS,
       items: claimSchema(
         pack.curriculum.map((entry) => entry.id),
         pack.gameRules.map((entry) => entry.id),

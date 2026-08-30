@@ -355,6 +355,11 @@ export function Live() {
   // that swallows silently anywhere else), so a debugging agent can tail the
   // session without anything being copied by hand.
   const [dev, setDev] = useState(() => new URLSearchParams(window.location.search).get("dev") !== null);
+  // The two recall doors, dogfoodable per session (docs/scale.md, S1): both
+  // change only what the model is asked, never what may commit, so flipping
+  // them mid-session is safe — the next exchange simply walks the other door.
+  const [retrievalOn, setRetrievalOn] = useState(false);
+  const [gatedOn, setGatedOn] = useState(false);
   const devRef = useRef(dev);
   useEffect(() => {
     devRef.current = dev;
@@ -373,8 +378,14 @@ export function Live() {
 
   const deps = useMemo<SessionDeps | null>(() => {
     if (setup === null) return null;
-    return { world: demoWorld(), provider: setup.trace.tap(setup.provider), now: clock };
-  }, [setup, clock]);
+    return {
+      world: demoWorld(),
+      provider: setup.trace.tap(setup.provider),
+      now: clock,
+      ...(retrievalOn ? { retrieval: true } : {}),
+      ...(gatedOn ? { gatedGrammar: true } : {}),
+    };
+  }, [setup, clock, retrievalOn, gatedOn]);
 
   const meta = useMemo<DevTraceMeta | null>(() => {
     if (setup === null) return null;
@@ -423,7 +434,11 @@ export function Live() {
       .then((next) => {
         setState(next);
         if (devRef.current && setup !== null && meta !== null) {
-          mirrorToDevSink({ type: "report", ...(agentReport(meta, next, setup.trace.calls) as object) });
+          mirrorToDevSink({
+            type: "report",
+            doors: { retrieval: retrievalOn, gatedGrammar: gatedOn },
+            ...(agentReport(meta, next, setup.trace.calls) as object),
+          });
         }
       })
       .catch((error: unknown) => setTrouble(error instanceof Error ? error.message : String(error)))
@@ -595,7 +610,17 @@ export function Live() {
         </button>
       </div>
 
-      {dev && meta !== null && <DevPanel meta={meta} state={state} calls={setup.trace.calls} />}
+      {dev && meta !== null && (
+        <DevPanel
+          meta={meta}
+          state={state}
+          calls={setup.trace.calls}
+          retrieval={retrievalOn}
+          gated={gatedOn}
+          onRetrieval={setRetrievalOn}
+          onGated={setGatedOn}
+        />
+      )}
 
       <div class={`live-panes${console_ ? " with-console" : ""}`}>
         <div class="live-chat">
@@ -815,7 +840,15 @@ function DevCall(props: { call: ModelCallTrace }) {
  * one copyable report. The report is `agentReport` — self-describing JSON
  * built to be pasted into a conversation with a debugging agent whole.
  */
-function DevPanel(props: { meta: DevTraceMeta; state: SessionState; calls: readonly ModelCallTrace[] }) {
+function DevPanel(props: {
+  meta: DevTraceMeta;
+  state: SessionState;
+  calls: readonly ModelCallTrace[];
+  retrieval: boolean;
+  gated: boolean;
+  onRetrieval: (on: boolean) => void;
+  onGated: (on: boolean) => void;
+}) {
   const [copied, setCopied] = useState<string | null>(null);
   const report = () => JSON.stringify(agentReport(props.meta, props.state, props.calls), null, 2);
 
@@ -849,6 +882,12 @@ function DevPanel(props: { meta: DevTraceMeta; state: SessionState; calls: reado
           Download trace
         </button>
         {copied !== null && <span class="fine">{copied}</span>}
+        <label class="fine" title="ground each answer with only the certified rows the question names (lexical, deterministic)">
+          <input type="checkbox" checked={props.retrieval} onChange={(event) => props.onRetrieval(event.currentTarget.checked)} /> retrieval
+        </label>
+        <label class="fine" title="offer the aggregate claim kinds (count/typeCount/gameRule) only when the question nominates them">
+          <input type="checkbox" checked={props.gated} onChange={(event) => props.onGated(event.currentTarget.checked)} /> gated grammar
+        </label>
       </div>
       {props.calls.length === 0 ? (
         <p class="fine">No model calls yet — say something to the Advisor and each call lands here with its prompt, response and latency.</p>

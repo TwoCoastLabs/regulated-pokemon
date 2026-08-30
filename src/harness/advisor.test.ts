@@ -69,6 +69,39 @@ describe("proposeAnswer", () => {
     expect(step.decode.ok).toBe(false);
   });
 
+  it("names the token cap when an unusable completion was truncated", async () => {
+    // The 43-second lesson (docs/scale.md, S1): a completion the provider cut
+    // at max_tokens is a different failure from a malformed one, and the
+    // wording is fixed so the class is countable from notes and artifacts.
+    const truncating = {
+      id: "m",
+      complete: () =>
+        Promise.resolve({
+          text: '{"rosters": [], "claims": [{"kind": "typeCount"}, {"kind": "typeC',
+          usage: { promptTokens: 1, completionTokens: 2048, calls: 1, costedCalls: 1, costUsd: 0 },
+          finishReason: "length",
+        }),
+    };
+    const step = await proposeAnswer({ provider: truncating, context, scenarioId: "s", transactionId: "txn-1", transcript: [] });
+    expect(step.decode.ok).toBe(false);
+    if (!step.decode.ok) expect(step.decode.reason).toContain("hit the token cap (truncated)");
+  });
+
+  it("does not blame the token cap for a malformed completion that finished normally", async () => {
+    const finished = {
+      id: "m",
+      complete: () =>
+        Promise.resolve({
+          text: "not json",
+          usage: { promptTokens: 1, completionTokens: 3, calls: 1, costedCalls: 1, costUsd: 0 },
+          finishReason: "stop",
+        }),
+    };
+    const step = await proposeAnswer({ provider: finished, context, scenarioId: "s", transactionId: "txn-1", transcript: [] });
+    expect(step.decode.ok).toBe(false);
+    if (!step.decode.ok) expect(step.decode.reason).not.toContain("token cap");
+  });
+
   it("shows the model the trainer's question, and only the trainer's words", async () => {
     // The answer step was composing from the profile alone; a claim it was not
     // asked for is one more thing that can be wrong. It must see the ask — and,

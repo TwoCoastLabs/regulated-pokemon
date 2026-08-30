@@ -353,6 +353,19 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
     claims.push(claim);
   }
   const canonical = canonicalizeClaims(context.registry, claims);
+  // A claim stated twice proves nothing twice — it is the repetition loop's
+  // residue inside the grammar's budget (docs/scale.md, S1), and rendered it
+  // reads as a stutter. Value-identical claims fold to their first statement:
+  // deterministic, order-preserving, propose-side — the kernel still verifies
+  // every survivor exactly as before. Canonical form first, so "Pikachu" and
+  // "pikachu" are the same statement here too.
+  const seen = new Set<string>();
+  const distinct = canonical.filter((claim) => {
+    const key = JSON.stringify(claim);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 
   // An answer that asserts nothing is not an answer. Compiled, it would mint
   // a certified page whose only content is the standing provenance footer —
@@ -363,5 +376,5 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
     return { ok: false, reason: NO_CLAIMS_REASON };
   }
 
-  return { ok: true, draft: { transactionId, claims: canonical, rosters }, folds };
+  return { ok: true, draft: { transactionId, claims: distinct, rosters }, folds };
 }
