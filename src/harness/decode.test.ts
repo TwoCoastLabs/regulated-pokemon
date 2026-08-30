@@ -72,6 +72,43 @@ describe("markdown fences — packaging, not a claim", () => {
   });
 });
 
+describe("decodeAnswer folds repeated claims (docs/scale.md, S1)", () => {
+  it("keeps the first statement of a value-identical claim and drops the rest", () => {
+    const text = JSON.stringify({
+      rosters: [],
+      claims: [
+        { kind: "gameRule", ruleId: "party-size" },
+        { kind: "typeCount" },
+        { kind: "gameRule", ruleId: "party-size" },
+        { kind: "gameRule", ruleId: "badge-count" },
+        { kind: "typeCount" },
+      ],
+    });
+    const decoded = decodeAnswer(text, context, "txn-dedupe");
+    expect(decoded.ok).toBe(true);
+    if (decoded.ok) {
+      expect(decoded.draft.claims).toEqual([
+        { kind: "gameRule", ruleId: "party-size" },
+        { kind: "typeCount" },
+        { kind: "gameRule", ruleId: "badge-count" },
+      ]);
+    }
+  });
+
+  it("treats two spellings of the same certified name as the same statement", () => {
+    const text = JSON.stringify({
+      rosters: [],
+      claims: [
+        { kind: "fact", entityId: "Pikachu", factId: "base-speed" },
+        { kind: "fact", entityId: "pikachu", factId: "base-speed" },
+      ],
+    });
+    const decoded = decodeAnswer(text, context, "txn-dedupe-canon");
+    expect(decoded.ok).toBe(true);
+    if (decoded.ok) expect(decoded.draft.claims).toHaveLength(1);
+  });
+});
+
 describe("decodeAnswer", () => {
   it("decodes every claim kind and fact-value shape, carried verbatim", () => {
     const text = JSON.stringify({

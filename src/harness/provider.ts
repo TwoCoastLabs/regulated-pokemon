@@ -101,6 +101,14 @@ export function addUsage(a: Usage, b: Usage): Usage {
 export interface Completion {
   text: string;
   usage: Usage;
+  /**
+   * The provider's own stop reason, verbatim, when it reported one —
+   * "length" is the one that matters: a completion cut at the token cap is
+   * a different failure from a malformed one, and a decode error that does
+   * not say so sends the debugger hunting the wrong bug (docs/scale.md, S1).
+   * Absent for scripted providers; nothing downstream may require it.
+   */
+  finishReason?: string;
 }
 
 /**

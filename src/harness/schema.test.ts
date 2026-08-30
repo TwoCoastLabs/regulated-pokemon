@@ -5,7 +5,7 @@ import { harnessWorld } from "./corpus.js";
 import { decodeAnswer } from "./decode.js";
 import type { FillerKind } from "./grammar-gate.js";
 import { COMPARABLE_FACT_IDS } from "../kernel/registry.js";
-import { answerSchema, FACT_IDS } from "./schema.js";
+import { answerSchema, FACT_IDS, MAX_ANSWER_CLAIMS, MAX_ANSWER_ROSTERS } from "./schema.js";
 
 const world = harnessWorld();
 const context = {
@@ -40,6 +40,20 @@ const criterionKinds = kindsOf(
 
 const claimKindsWith = (filler?: ReadonlySet<FillerKind>) =>
   kindsOf((answerSchema(world.pack, filler) as { properties: { claims: { items: unknown } } }).properties.claims.items);
+
+describe("the answer grammar is bounded (docs/scale.md, S1)", () => {
+  it("caps claims and rosters so a repetition loop is unrepresentable, not merely discouraged", () => {
+    const arrays = (ANSWER_SCHEMA as { properties: Record<string, { maxItems?: number }> }).properties;
+    expect(arrays.claims?.maxItems).toBe(MAX_ANSWER_CLAIMS);
+    expect(arrays.rosters?.maxItems).toBe(MAX_ANSWER_ROSTERS);
+    // The budget is a usefulness dial, but it must stay a budget: wide enough
+    // for the broadest honest answer observed (~8 distinct claims), finite
+    // always. A raise is fine; a removal re-opens the 43-second loop.
+    expect(MAX_ANSWER_CLAIMS).toBeGreaterThanOrEqual(8);
+    expect(Number.isFinite(MAX_ANSWER_CLAIMS)).toBe(true);
+    expect(MAX_ANSWER_ROSTERS).toBeGreaterThanOrEqual(2);
+  });
+});
 
 describe("retrieval-gated grammar narrows only the filler kinds (§19)", () => {
   it("offers all three filler kinds when ungated — the default and every non-retrieval path", () => {

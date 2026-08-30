@@ -132,7 +132,9 @@ function answerPrompt(
     "",
     "Answer what they asked, and assert nothing they did not: an unrequested",
     "claim is one more thing that can be wrong, and one wrong claim refuses the",
-    "whole answer. Omit anything you cannot support rather than guess.",
+    "whole answer. Omit anything you cannot support rather than guess. At most",
+    "twelve claims and four rosters fit one answer — choose the ones the",
+    "question calls for, and never state the same claim twice.",
     "",
     "Prefer the most specific claim the question calls for: a \"how many\" is a",
     "count, a stat question a fact, a weakness question a matchup. Reach for a",
@@ -389,7 +391,14 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
     },
   };
   const completion = await provider.complete(request);
-  return { usage: completion.usage, decode: decodeAnswer(completion.text, context, transactionId) };
+  const decode = decodeAnswer(completion.text, context, transactionId);
+  // A completion the provider cut at the token cap is a different failure
+  // from a malformed one; name it, in fixed wording, so the class is
+  // countable from notes and artifacts (no silent caps — docs/scale.md, S1).
+  if (!decode.ok && completion.finishReason === "length") {
+    return { usage: completion.usage, decode: { ok: false, reason: `${decode.reason} — the completion hit the token cap (truncated)` } };
+  }
+  return { usage: completion.usage, decode };
 }
 
 export interface RawStepInput {
@@ -418,7 +427,14 @@ export async function proposeRawAnswer(input: RawStepInput): Promise<AnswerStep>
     schema: { name: ANSWER_SCHEMA_NAME, schema: answerSchema(context.pack) },
   };
   const completion = await provider.complete(request);
-  return { usage: completion.usage, decode: decodeAnswer(completion.text, context, transactionId) };
+  const decode = decodeAnswer(completion.text, context, transactionId);
+  // A completion the provider cut at the token cap is a different failure
+  // from a malformed one; name it, in fixed wording, so the class is
+  // countable from notes and artifacts (no silent caps — docs/scale.md, S1).
+  if (!decode.ok && completion.finishReason === "length") {
+    return { usage: completion.usage, decode: { ok: false, reason: `${decode.reason} — the completion hit the token cap (truncated)` } };
+  }
+  return { usage: completion.usage, decode };
 }
 
 /** The digest a truthful trainer names when confirming a proposal it agrees

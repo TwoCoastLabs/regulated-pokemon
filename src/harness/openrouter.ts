@@ -280,6 +280,11 @@ export class OpenRouterProvider implements ModelProvider {
       throw new ProviderError(`${this.id}: response carried no message content`, attempt);
     }
 
-    return { text: content, usage: readUsage(payload, request, content) };
+    const finishReason = payload.choices?.[0]?.finish_reason;
+    return {
+      text: content,
+      usage: readUsage(payload, request, content),
+      ...(typeof finishReason === "string" ? { finishReason } : {}),
+    };
   }
 }
