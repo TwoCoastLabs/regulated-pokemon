@@ -350,7 +350,16 @@ export async function retry(state: SessionState, deps: SessionDeps): Promise<Ses
  * answer once scope is granted, and stop at whichever pause — a question, a
  * proposal, a page awaiting consent — needs a person next.
  */
-async function drive(state: SessionState, deps: SessionDeps): Promise<SessionState> {
+async function drive(
+  state: SessionState,
+  deps: SessionDeps,
+  /** A discovery draft whose named scope turned out to be already granted —
+   * forwarded so the answer step can certify it instead of re-asking the
+   * model. Only the immediate needs-scope → granted hop carries one: the
+   * moment a question or a card intervenes, the words may change, and a
+   * stale draft must not answer them. */
+  reuse?: Pick<ManifestDraft, "claims" | "rosters">,
+): Promise<SessionState> {
   const { world, provider } = deps;
 
   const scopeContext: ScopeContext = {
@@ -380,7 +389,7 @@ async function drive(state: SessionState, deps: SessionDeps): Promise<SessionSta
   }
 
   if (outcome.status === "granted") {
-    return answer(state, deps);
+    return answer(state, deps, reuse);
   }
 
   // Clarify — and the pack's own question outranks the model. A question is
@@ -419,7 +428,17 @@ async function drive(state: SessionState, deps: SessionDeps): Promise<SessionSta
     // answer turns out to need — never the fixed triple, never `region`.
     const nextRequired =
       attempt.result === "needs-scope" ? requiredDimensionsFor(attempt.claims) : (["version"] as const);
-    return drive({ ...state, required: nextRequired }, deps);
+    // Hand the discovery draft along. If the narrowed requirement is already
+    // granted by the transcript, the answer step certifies *this* draft — the
+    // one that was responsive to the ask — instead of paying a second model
+    // call for a fresh guess. Observed live (2026-08-30, findings): the
+    // re-ask cost 17-55s and answered the wrong question beside a discovery
+    // draft that had answered the right one.
+    return drive(
+      { ...state, required: nextRequired },
+      deps,
+      attempt.result === "needs-scope" ? { claims: attempt.claims, rosters: attempt.rosters } : undefined,
+    );
   }
 
   const freshLongTail = lastSaid !== undefined && unmatchedClauses(world.pack, lastSaid.text).length > 0;
@@ -546,7 +565,14 @@ function redirect(state: SessionState, deps: SessionDeps): SessionState {
 async function teachOrDiscover(
   state: SessionState,
   deps: SessionDeps,
-): Promise<{ state: SessionState; result: "taught" | "off-domain" | "needs-scope" | "unusable"; claims: readonly Claim[] }> {
+): Promise<{
+  state: SessionState;
+  result: "taught" | "off-domain" | "needs-scope" | "unusable";
+  claims: readonly Claim[];
+  /** The decoded rosters beside the claims, so a needs-scope draft can be
+   * reused whole once the scope it named turns out to be already granted. */
+  rosters: Pick<ManifestDraft, "rosters">["rosters"];
+}> {
   const { world, provider } = deps;
   const transactionId = nextTransactionId(state);
   const establishedAt = deps.now();
@@ -573,7 +599,7 @@ async function teachOrDiscover(
     // The question is still free: a failed discovery falls to the floor rather
     // than surfacing an error for a call the visitor never asked for. The
     // counter still moves — provider failures are never hidden in outcomes.
-    return { state: { ...state, providerErrors: state.providerErrors + 1 }, result: "unusable", claims: [] };
+    return { state: { ...state, providerErrors: state.providerErrors + 1 }, result: "unusable", claims: [], rosters: [] };
   }
 
   const spent = { ...state, usage: addUsage(state.usage, step.usage) };
@@ -583,7 +609,7 @@ async function teachOrDiscover(
     // other decode failure is unreadable, not off-domain: it falls to the floor
     // and gathers scope, so a real question the model merely fumbled is not
     // waved away.
-    return { state: spent, result: step.decode.reason === NO_CLAIMS_REASON ? "off-domain" : "unusable", claims: [] };
+    return { state: spent, result: step.decode.reason === NO_CLAIMS_REASON ? "off-domain" : "unusable", claims: [], rosters: [] };
   }
   const draft = step.decode.draft;
   const spentFolded = { ...spent, folds: spent.folds + step.decode.folds };
@@ -592,12 +618,16 @@ async function teachOrDiscover(
   // from the one dependency table, so this never drifts from what the kernel's
   // own scope gate will allow grantless.
   if (requiredDimensionsFor(draft.claims).length === 0) {
-    return { state: commit(spentFolded, deps, { transactionId, establishedAt, draft }), result: "taught", claims: draft.claims };
+    return { state: commit(spentFolded, deps, { transactionId, establishedAt, draft }), result: "taught", claims: draft.claims, rosters: draft.rosters };
   }
-  return { state: spentFolded, result: "needs-scope", claims: draft.claims };
+  return { state: spentFolded, result: "needs-scope", claims: draft.claims, rosters: draft.rosters };
 }
 
-async function answer(state: SessionState, deps: SessionDeps): Promise<SessionState> {
+async function answer(
+  state: SessionState,
+  deps: SessionDeps,
+  reuse?: Pick<ManifestDraft, "claims" | "rosters">,
+): Promise<SessionState> {
   const { world, provider } = deps;
   const transactionId = nextTransactionId(state);
   const establishedAt = deps.now();
@@ -623,26 +653,40 @@ async function answer(state: SessionState, deps: SessionDeps): Promise<SessionSt
   };
 
   let step;
-  try {
-    step = await proposeAnswer({
-      provider,
-      context,
-      scenarioId: "session",
-      transactionId,
-      // The ask being answered, not the whole session: scope reads the full
-      // transcript, but the answer should be responsive to the current words.
-      transcript: state.transcript.slice(state.askStart),
-      ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
-      ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
-      ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
-    });
-  } catch (cause) {
-    return note(
-      { ...state, providerErrors: state.providerErrors + 1, phase: { kind: "gathering" } },
-      deps.now(),
-      `the provider failed producing the answer (${cause instanceof Error ? cause.message : String(cause)})`,
-      "error",
-    );
+  if (reuse !== undefined) {
+    // The discovery call already proposed this draft for these exact words,
+    // and the scope it named was already granted — re-asking the model would
+    // only pay a second generation for a fresh guess at the same question
+    // (observed live: slower and sometimes less responsive than the draft it
+    // replaced). The kernel compiles and verifies the reused draft exactly
+    // as it would a fresh one; nothing about what may commit changes. Folds
+    // and usage were already counted when the draft was decoded.
+    step = {
+      usage: emptyUsage(),
+      decode: { ok: true as const, draft: { transactionId, claims: reuse.claims, rosters: reuse.rosters }, folds: 0 },
+    };
+  } else {
+    try {
+      step = await proposeAnswer({
+        provider,
+        context,
+        scenarioId: "session",
+        transactionId,
+        // The ask being answered, not the whole session: scope reads the full
+        // transcript, but the answer should be responsive to the current words.
+        transcript: state.transcript.slice(state.askStart),
+        ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
+        ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
+        ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
+      });
+    } catch (cause) {
+      return note(
+        { ...state, providerErrors: state.providerErrors + 1, phase: { kind: "gathering" } },
+        deps.now(),
+        `the provider failed producing the answer (${cause instanceof Error ? cause.message : String(cause)})`,
+        "error",
+      );
+    }
   }
 
   const withUsage = {

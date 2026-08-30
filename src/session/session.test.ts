@@ -294,6 +294,39 @@ describe("propose-first: minimal scope and the off-domain redirect (epic #64, sl
   });
 });
 
+describe("the discovery draft is reused when its scope is already granted (epic #118, latency)", () => {
+  it("certifies the discovery draft on a follow-up ask instead of re-asking the model", async () => {
+    // Observed live (2026-08-30): a follow-up ask under an established grant
+    // paid a second full generation — 17-55s — and the re-ask sometimes
+    // answered the wrong question beside a discovery draft that had answered
+    // the right one. The hop from needs-scope to granted must carry the
+    // draft, so the second exchange costs exactly one answer call.
+    let answerCalls = 0;
+    const provider = scripted("scripted:reuse", (purpose) => {
+      if (purpose !== "answer") return "no JSON";
+      answerCalls += 1;
+      return thunderboltAnswer();
+    });
+    const d = deps(provider);
+
+    // Exchange 1: discovery, a version question, the scoped answer — two
+    // answer calls, because a question intervened and the words moved on.
+    let state = await say(startSession(), "What is Thunderbolt's power?", d);
+    state = await say(state, "Red and Blue", d);
+    expect(state.records).toHaveLength(1);
+    expect(answerCalls).toBe(2);
+
+    // Exchange 2: the discovery draft names version, version is already
+    // granted — the draft itself is certified. One call, not two.
+    state = await say(state, "And tell me that power again?", d);
+    expect(state.records).toHaveLength(2);
+    expect(state.records[1]!.outcome.status).toBe("answered");
+    expect(answerCalls).toBe(3);
+    // The certified claims are the discovery draft's own, verified as ever.
+    expect(state.records[1]!.manifest?.claims.some((claim) => claim.kind === "fact" && claim.entityId === "thunderbolt")).toBe(true);
+  });
+});
+
 describe("consent on the exact page", () => {
   const provider = scripted("scripted:release", () => releaseAnswer());
   const open = () => say(startSession(), `${PROFILE} Please release my Raticate.`, deps(provider));
