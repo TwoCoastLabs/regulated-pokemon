@@ -931,6 +931,26 @@
       }
     },
     {
+      "id": "how-to-trade",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-how-to-trade",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Trading needs two Game Boys, two cartridges and a Link Cable: visit the Cable Club upstairs in any Pok\u00e9mon Center, connect, and each side picks a Pok\u00e9mon to send. Trades are how you complete the Pok\u00e9dex \u2014 some Pok\u00e9mon live only in Red or only in Blue \u2014 and a few, like Kadabra, Machoke, Graveler and Haunter, evolve the moment they are traded. A traded Pok\u00e9mon remembers its Trainer: it grows faster, but it may ignore you if your badges are too few for its level.",
+            "digest": "sha256:67ffc5867de3c1dd6785a5002046f6af356ea1872786265a9c4f15814a281432"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Trading needs two Game Boys, two cartridges and a Link Cable: visit the Cable Club upstairs in any Pok\u00e9mon Center, connect, and each side picks a Pok\u00e9mon to send. Trades are how you complete the Pok\u00e9dex \u2014 some Pok\u00e9mon live only in Red or only in Blue \u2014 and a few, like Kadabra, Machoke, Graveler and Haunter, evolve the moment they are traded. A traded Pok\u00e9mon remembers its Trainer: it grows faster, but it may ignore you if your badges are too few for its level.",
+            "digest": "sha256:67ffc5867de3c1dd6785a5002046f6af356ea1872786265a9c4f15814a281432"
+          }
+        ]
+      }
+    },
+    {
       "id": "red-blue-vs-yellow",
       "article": "IA-6",
       "block": {

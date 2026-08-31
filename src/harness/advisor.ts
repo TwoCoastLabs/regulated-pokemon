@@ -206,6 +206,7 @@ function answerPrompt(
       : []),
     '  {"kind": "ranking", "rosterId": "<id>", "basis": "<fact-id>", "direction": "highest"|"lowest"}  — defines a set and an ordering; the system names the winner, so name none',
     '  {"kind": "matchup", "subject": {"kind": "species", "entityId": "<id>"} | {"kind": "type", "typeId": "<type>"}, "direction": "weak-to"|"resists"|"immune-to"|"strong-against"}  — type effectiveness; the system reads the chart and lists the types, so list none. A species can be weak-to, resist or be immune-to; only a type can be strong-against.',
+    'Matchup direction follows the QUESTION, not the subject: "what beats X" / "what is good against X" / "how do I counter X" asks what X is weak-to; "what does X beat" / "what is X good against" asks what X is strong-against. Getting this backwards certifies a true chart for the wrong question.',
     '  {"kind": "eligibility", "entityId": "<species-id>"}  — what the League\'s rules say about advising this trainer toward that species; the system derives the verdict, the rule and the thresholds. Use it when the trainer asks about a restricted species you cannot recommend to them: the rule itself is a useful, certified answer, and you may pair it with a recommendation of an eligible alternative.',
     ...(lessons.length === 0
       ? []
