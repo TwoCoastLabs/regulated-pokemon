@@ -3290,6 +3290,51 @@ certified answer would be worse than the abstention it replaces (lesson
 so the mis-teach question now routes as the listing it is. The replayed
 conversation settles all three turns on one model call.
 
+### The route nomination: recognition offered where composition kept failing (2026-08-31)
+
+Every dead end this week ended the same way: a deterministic route already
+had the answer, and a hand-written cue regex was the only way to reach it —
+a recall ceiling that grows one regex at a time (lesson 6). The grammar now
+offers the doors themselves: the discovery reply may carry one nomination
+claim ({"kind": "route", ...}) naming a registered route and its arguments,
+so the weak model is asked only for the 1-of-k recognition it measurably
+holds (generalization.md §9), never the composition it kept failing. A
+nomination is untrusted — the driver validates id and arguments against
+its own catalogue, an unknown or refused one falls through to exactly the
+nomination-free flow, and what a route composes still faces the kernel
+whole. Nominations travel inside recorded completions, so replay reads
+them for free (the S3 discipline, arrived early).
+
+Live on the weak model: "enumerate the species for me please" (no cue
+matches it) and "gimme the full rundown on Snorlax" both nominated their
+doors and certified in one call each. "tell me about the species" still
+draws the lesson — the model reads that wording as a definition ask, which
+is defensible; the cue regexes stay as the free fast path, and the next
+instrument is the activation counter that decides which of them retire.
+
+### The way back across the boundary (2026-09-01)
+
+Once "yellow" bound as a direct answer, the version was write-once in
+practice: "let's go back to Red/blue" carried the tokens but no context
+word, so per the context discipline it bound nothing — and nothing ever
+re-asked, while the model's adjacent red-vs-blue lesson made the failure
+read like an acknowledgment. The fix is question-shaped, never a binding
+loosening (adding "back/go/switch" to the context list would let "go catch
+them in Red" bind — the exact lesson-1 trap): when the transcript's version
+binds to a foreign group and the trainer's latest words carry a
+home-version token, the driver re-arms the pack's own version question,
+narrowed to that one dimension so the switch-back is one question, not a
+fresh intake. The direct answer supersedes with full authority; answering
+"yellow" again just keeps teaching. Two placement lessons the offline
+tests alone would have hidden: the check must sit ahead of discovery in
+the clarify path (the fully-granted branch is unreachable for a fresh ask
+under the default required set — the scripted probe only passed because a
+decode failure happened to fall to the version floor), and the re-ask must
+narrow `required`, or the default set turns one question into an
+interrogation. Verified live on the weak model: trap, mention, question,
+answer — and the originally-asked profile certifies under red-blue in the
+same exchange.
+
 ## Appendix — how to reproduce
 
 ```sh

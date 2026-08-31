@@ -266,20 +266,47 @@ export function answerSchema(
   /** The world's own closed vocabularies (type names, item categories), when
    * the caller has a registry to read them from. */
   vocabulary?: WorldVocabulary,
+  /** Deterministic routes the caller lets the model nominate — recognition
+   * offered where composition keeps failing (epic #118). Absent for every
+   * path that has not opted in, so the harness banks measure an unchanged
+   * grammar. */
+  routes?: readonly NominableRoute[],
 ): JsonSchema {
   return object({
     rosters: { type: "array", maxItems: MAX_ANSWER_ROSTERS, items: rosterSchema(items, vocabulary) },
     claims: {
       type: "array",
       maxItems: MAX_ANSWER_CLAIMS,
-      items: claimSchema(
-        pack.curriculum.map((entry) => entry.id),
-        pack.gameRules.map((entry) => entry.id),
-        fillerKinds,
-        items,
-      ),
+      items: {
+        anyOf: [
+          ...(claimSchema(
+            pack.curriculum.map((entry) => entry.id),
+            pack.gameRules.map((entry) => entry.id),
+            fillerKinds,
+            items,
+          ) as { anyOf: JsonSchema[] }).anyOf,
+          ...(routes ?? []).map((route) =>
+            variant("route", { routeId: { type: "string", enum: [route.id] }, ...route.args }),
+          ),
+        ],
+      },
     },
   });
+}
+
+/**
+ * A deterministic driver route the model may nominate instead of composing
+ * an answer — the door, described for a 1-of-k choice, never the work. The
+ * grammar offers each as one more claim variant ({"kind": "route", ...});
+ * whether a nomination is honored, and what it composes, is the driver's
+ * business, and everything a route composes still faces the kernel whole.
+ */
+export interface NominableRoute {
+  id: string;
+  /** One line, written for the model: when this door is the ask. */
+  description: string;
+  /** The route's argument properties, all required (strict decoding). */
+  args: Record<string, JsonSchema>;
 }
 
 /** Named for the provider's schema slot; part of the recorded request. */
