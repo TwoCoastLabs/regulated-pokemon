@@ -1017,17 +1017,17 @@
       "article": "IA-6",
       "block": {
         "id": "curriculum-red-blue-vs-yellow",
-        "version": 1,
+        "version": 2,
         "content": [
           {
             "locale": "en-US",
-            "text": "Yellow is a different Kanto journey with its own records, and the Advisor’s records certify Red and Blue only. What is certified here: in Red and Blue you choose one of three starters, and a few species live in one version’s grass and not the other’s. What Yellow changes is outside these records — the Advisor will not guess at it. If you are playing Yellow, say so: the Advisor will tell you plainly which questions its Red and Blue records can and cannot answer for your game.",
-            "digest": "sha256:32e0e8744766a70e25528339646d1bd181da6bcd2f2dfb641d282fb69b3771f6"
+            "text": "Yellow is a different Kanto journey with its own records, and the Advisor’s records certify Red and Blue only. What is certified here: in Red and Blue you choose one of three starters, and a few species live in one version’s grass and not the other’s. What Yellow changes is outside these records — the Advisor will not guess at it. If you are playing Yellow, say so: the Advisor will tell you plainly which questions its Red and Blue records can and cannot answer for your game. And if you move to a Red or Blue save later, say that too — the Advisor will ask which version you are on and follow you back.",
+            "digest": "sha256:48ee32f20cd22db8a4e241742d3403adbeabd34b8b50258451964c140ed3d59d"
           },
           {
             "locale": "en-GB",
-            "text": "Yellow is a different Kanto journey with its own records, and the Advisor’s records certify Red and Blue only. What is certified here: in Red and Blue you choose one of three starters, and a few species live in one version’s grass and not the other’s. What Yellow changes is outside these records — the Advisor will not guess at it. If you are playing Yellow, say so: the Advisor will tell you plainly which questions its Red and Blue records can and cannot answer for your game.",
-            "digest": "sha256:32e0e8744766a70e25528339646d1bd181da6bcd2f2dfb641d282fb69b3771f6"
+            "text": "Yellow is a different Kanto journey with its own records, and the Advisor’s records certify Red and Blue only. What is certified here: in Red and Blue you choose one of three starters, and a few species live in one version’s grass and not the other’s. What Yellow changes is outside these records — the Advisor will not guess at it. If you are playing Yellow, say so: the Advisor will tell you plainly which questions its Red and Blue records can and cannot answer for your game. And if you move to a Red or Blue save later, say that too — the Advisor will ask which version you are on and follow you back.",
+            "digest": "sha256:48ee32f20cd22db8a4e241742d3403adbeabd34b8b50258451964c140ed3d59d"
           }
         ]
       }

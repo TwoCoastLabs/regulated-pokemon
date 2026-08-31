@@ -443,6 +443,26 @@ async function drive(
   const askedAlready = state.transcript
     .slice(state.askStart)
     .some((event) => event.kind === "question");
+  // The switch-back signal outranks discovery: when the transcript's version
+  // binds to a group these records do not certify and the trainer's latest
+  // words carry a home-version token, the pack's question is the answer —
+  // deterministic, before any model reads the ask (found live, 2026-09-01:
+  // the check lived only behind the fully-granted branch, which a fresh ask
+  // under the default required set never reaches, so the trapped trainer's
+  // "let's go back to Red/blue" fell to the model and earned a redirect).
+  if (lastSaid !== undefined && !askedAlready) {
+    const versionOnly = resolveScope({ ...scopeContext, required: ["version"] }, state.transcript);
+    if (
+      versionOnly.status === "granted" &&
+      versionOnly.grant.scope.version !== world.registry.document.scope.versionGroup
+    ) {
+      const question = homeVersionMentioned(world, state);
+      // Narrowed to the one dimension being re-asked: the switch-back is not
+      // a fresh intake, and the default required set would turn one question
+      // into an interrogation (region next, badges after).
+      if (question !== undefined) return ask({ ...state, required: ["version"] }, deps.now(), "version", question);
+    }
+  }
   // A listing follow-up short-circuits discovery entirely: the shape is not
   // the model's to learn — the set is the previous exchange's certified
   // roster, and the route composes the draft from the record. `routed` skips
@@ -954,10 +974,41 @@ const BOUNDARY_LESSON = "red-blue-vs-yellow";
  * the trainer cannot act on. Off-domain words still earn the redirect.
  */
 async function foreignVersion(state: SessionState, deps: SessionDeps): Promise<SessionState> {
+  // The way back across the boundary (found live, 2026-09-01: "let's go back
+  // to Red/blue" carried the tokens but none of the context words, so per
+  // the context discipline it bound nothing — and nothing ever re-asked, so
+  // Yellow was write-once and the trainer was trapped behind a lesson that
+  // read like an acknowledgment). A home-version token in the trainer's
+  // latest words re-arms the pack's own question: one deterministic ask,
+  // whose direct answer already binds with full authority and supersedes
+  // the earlier one. Ambiguity ("my rival went back to Red") costs one
+  // question, never a wrong bind.
+  const switchback = homeVersionMentioned(deps.world, state);
+  if (switchback !== undefined) {
+    return ask(state, deps.now(), "version", switchback);
+  }
   const attempt = await teachOrDiscover(state, deps, true);
   if (attempt.result === "taught") return attempt.state;
   if (attempt.result === "off-domain") return redirect(attempt.state, deps);
   return teachBoundary(attempt.state, deps);
+}
+
+/** The pack's version question, when the trainer's latest words carry a
+ * token of the home version group — the switch-back signal. Tokens without
+ * context deliberately do not bind (lesson 1); here they earn the question
+ * instead, which is free, deterministic and armed. */
+function homeVersionMentioned(world: SessionWorld, state: SessionState): string | undefined {
+  const last = [...state.transcript].reverse().find((event) => event.kind === "utterance" && event.source === "trainer");
+  if (last?.kind !== "utterance") return undefined;
+  const rule = world.pack.vocabulary.dimensions.find((entry) => entry.dimension === "version");
+  const home = world.registry.document.scope.versionGroup;
+  const term = rule?.terms.find((entry) => entry.value === home);
+  if (rule === undefined || term === undefined) return undefined;
+  const haystack = ` ${last.text.toLowerCase()} `;
+  const mentioned = term.tokens.some((token) =>
+    new RegExp(`\\b${token.split("-").join("[\\s-]?")}\\b`).test(haystack),
+  );
+  return mentioned ? rule.question : undefined;
 }
 
 function teachBoundary(state: SessionState, deps: SessionDeps): SessionState {

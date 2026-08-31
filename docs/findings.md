@@ -3312,6 +3312,29 @@ draws the lesson — the model reads that wording as a definition ask, which
 is defensible; the cue regexes stay as the free fast path, and the next
 instrument is the activation counter that decides which of them retire.
 
+### The way back across the boundary (2026-09-01)
+
+Once "yellow" bound as a direct answer, the version was write-once in
+practice: "let's go back to Red/blue" carried the tokens but no context
+word, so per the context discipline it bound nothing — and nothing ever
+re-asked, while the model's adjacent red-vs-blue lesson made the failure
+read like an acknowledgment. The fix is question-shaped, never a binding
+loosening (adding "back/go/switch" to the context list would let "go catch
+them in Red" bind — the exact lesson-1 trap): when the transcript's version
+binds to a foreign group and the trainer's latest words carry a
+home-version token, the driver re-arms the pack's own version question,
+narrowed to that one dimension so the switch-back is one question, not a
+fresh intake. The direct answer supersedes with full authority; answering
+"yellow" again just keeps teaching. Two placement lessons the offline
+tests alone would have hidden: the check must sit ahead of discovery in
+the clarify path (the fully-granted branch is unreachable for a fresh ask
+under the default required set — the scripted probe only passed because a
+decode failure happened to fall to the version floor), and the re-ask must
+narrow `required`, or the default set turns one question into an
+interrogation. Verified live on the weak model: trap, mention, question,
+answer — and the originally-asked profile certifies under red-blue in the
+same exchange.
+
 ## Appendix — how to reproduce
 
 ```sh
