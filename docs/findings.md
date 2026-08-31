@@ -3405,6 +3405,26 @@ direct answer already does. Held for a decision because it widens what
 binds without a card click — the leniency is auditable (the proposal is
 in the transcript) but it is a rigor dial, not a bug fix.
 
+### The ceremony dial: friction versus rigor as pack policy (2026-09-01)
+
+The pile-up fix, built the way the product story wants to tell it: the
+tradeoff between confirmation friction and binding rigor is now a dial in
+the Accord pack — `ceremony.proposalDirectAnswers` — not a code path or a
+runtime flag. When a pack turns it on, a trainer's reply that directly
+names a term of a pending card's dimension binds without the click
+("speed" against a basis card — even correcting the proposed value), with
+the negation window, blocked clauses and first-answer-closes semantics
+mirrored from the recorded-question leniency; the card is itself recorded
+ceremony, so the binding is auditable in the transcript where the proposal
+sits. Absent or false, only the explicit confirmation binds — the strict
+default a regulated pack keeps, and the loader refuses an unreadable dial
+by name (IA-1/pack-ceremony-malformed). Because policy is versioned data,
+every filed record pins the pack that governed it: replay proves which
+dial setting each answer was certified under. The demo packs turn the dial
+on; the pitch to a regulated deployment is the opposite pack and the same
+kernel. Live on the weak model, round G's five-interaction, zero-record
+pile-up settles in three interactions to a certified ranking.
+
 ## Appendix — how to reproduce
 
 ```sh
