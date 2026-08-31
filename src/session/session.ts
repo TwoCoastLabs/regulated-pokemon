@@ -109,12 +109,22 @@ export type SessionPhase =
   | { kind: "confirming-scope"; proposal: ScopeProposal }
   | { kind: "confirming-act"; artifact: DomElement };
 
-/** A line the driver owes the visitor that no record carries: abstentions and
- * infrastructure failures, counted apart from everything the kernel says. */
+/**
+ * A line the driver owes the visitor that no record carries: abstentions and
+ * infrastructure failures, counted apart from everything the kernel says.
+ *
+ * Two registers on purpose (found live, 2026-08-31: the page flattened every
+ * note to one system-voiced sentence, and a novice read a decline with no
+ * decline in it). `text` is what the Advisor says — first person, plain,
+ * actionable. `detail` is the diagnostic line — fixed, countable wording
+ * (the S1 discipline) for the trace, the machinery view and the counters —
+ * never the thing a novice has to parse.
+ */
 export interface SessionNote {
   at: string;
   text: string;
   tone: "abstention" | "error";
+  detail?: string;
 }
 
 export interface SessionState {
@@ -196,8 +206,8 @@ export function startSession(idPrefix?: string): SessionState {
   };
 }
 
-function note(state: SessionState, at: string, text: string, tone: SessionNote["tone"]): SessionState {
-  return { ...state, notes: [...state.notes, { at, text, tone }] };
+function note(state: SessionState, at: string, text: string, tone: SessionNote["tone"], detail?: string): SessionState {
+  return { ...state, notes: [...state.notes, { at, text, tone, ...(detail === undefined ? {} : { detail }) }] };
 }
 
 /**
@@ -493,8 +503,9 @@ async function drive(
     const failed = note(
       { ...state, providerErrors: state.providerErrors + 1 },
       deps.now(),
-      `the provider failed during scope resolution (${cause instanceof Error ? cause.message : String(cause)})`,
+      "I couldn't reach the model just now, so let me simply ask:",
       "error",
+      `the provider failed during scope resolution (${cause instanceof Error ? cause.message : String(cause)})`,
     );
     return ask(failed, deps.now(), outcome.asking, outcome.question);
   }
@@ -830,8 +841,9 @@ async function answer(
       return note(
         { ...state, providerErrors: state.providerErrors + 1, phase: { kind: "gathering" } },
         deps.now(),
-        `the provider failed producing the answer (${cause instanceof Error ? cause.message : String(cause)})`,
+        "I couldn't reach the model just now — nothing was lost on your side. Try that again in a moment.",
         "error",
+        `the provider failed producing the answer (${cause instanceof Error ? cause.message : String(cause)})`,
       );
     }
   }
@@ -857,8 +869,10 @@ async function answer(
       return note(
         { ...withUsage, phase: { kind: "gathering" } },
         deps.now(),
-        `the model produced no usable answer (${step.decode.reason}) — nothing was committed`,
+        "I don't have a certified answer for that one, so I'd rather pass than guess. " +
+          "A specific Pokémon, a move, or a how-the-game-works question usually lands.",
         "abstention",
+        `the model produced no usable answer (${step.decode.reason}) — nothing was committed`,
       );
     }
     draft = { transactionId, claims: routed, rosters: [] };

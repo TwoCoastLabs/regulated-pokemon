@@ -396,6 +396,19 @@ describe("the gate, live in the loop", () => {
   });
 });
 
+describe("a decline speaks in the Advisor's voice, with the diagnosis kept beside it", () => {
+  it("an unusable answer notes a plain first-person pass and carries the countable line as detail", async () => {
+    const provider = scripted("mute", (purpose) => (purpose === "answer" ? "not json" : "decline"));
+    const state = await say(startSession(), "I'm playing Red and Blue in Kanto with 8 badges. What's Pikachu's Speed?", deps(provider));
+
+    const abstention = state.notes.find((entry) => entry.tone === "abstention");
+    expect(abstention?.text).toContain("I don't have a certified answer");
+    // The S1 discipline: the diagnostic wording stays fixed and countable —
+    // in the detail register, never as the message a novice must parse.
+    expect(abstention?.detail).toContain("the model produced no usable answer");
+  });
+});
+
 describe("failures counted apart, never blended", () => {
   it("a provider outage is an infrastructure note and no record — and retry recovers the same ask", async () => {
     const d = deps(new FailingProvider("scripted:down"));
@@ -436,7 +449,9 @@ describe("failures counted apart, never blended", () => {
     expect(state.providerErrors).toBe(0);
     expect(state.notes).toHaveLength(1);
     expect(state.notes[0]!.tone).toBe("abstention");
-    expect(state.notes[0]!.text).toContain("no usable answer");
+    // The countable wording moved to the detail register (2026-08-31): the
+    // Advisor's own words carry the decline, the diagnosis rides beside it.
+    expect(state.notes[0]!.detail).toContain("no usable answer");
   });
 });
 

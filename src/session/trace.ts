@@ -156,6 +156,7 @@ function narrate(before: SessionState, after: SessionState): string[] {
   }
   for (const note of after.notes.slice(before.notes.length)) {
     lines.push(`  [note · ${note.tone}] ${note.text}`);
+    if (note.detail !== undefined) lines.push(`    [detail] ${note.detail}`);
   }
   for (const record of after.records.slice(before.records.length)) {
     lines.push(...describeRecord(record).map((line) => `  ${line}`));
