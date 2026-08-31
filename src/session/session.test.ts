@@ -663,6 +663,92 @@ describe("the version boundary is a teaching, not a dead end", () => {
   });
 });
 
+describe("an anaphoric follow-up carries its antecedent (found live, 2026-08-31)", () => {
+  it("shows the model the prior ask when the current words name nothing, and the listing certifies", async () => {
+    // "can you list at least 10 for me?" reached the model bare and could
+    // only abstain — ten of what? The gate: only an ask naming no species
+    // and no type gets the earlier words appended, so every subject-naming
+    // ask keeps its clean single-ask prompt.
+    const seenPrompts: string[] = [];
+    const countAnswer = JSON.stringify({
+      rosters: [{ id: "all-species", criteria: { all: [] } }],
+      claims: [{ kind: "count", rosterId: "all-species" }],
+    });
+    let answerCalls = 0;
+    const provider = new ScriptedProvider("scripted:anaphora", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      answerCalls += 1;
+      seenPrompts.push(request.prompt);
+      return countAnswer;
+    });
+    const d = deps(provider);
+
+    let state = await say(startSession(), "I'm playing Red and Blue in Kanto. how many species are out there?", d);
+    expect(state.records).toHaveLength(1);
+    state = await say(state, "can you list at least 10 for me?", d);
+
+    // The listing is composed from the record — the previous exchange's
+    // certified roster — with no model call at all: the weak model, handed
+    // the antecedent live, still passed, and the set was never in its head.
+    expect(answerCalls).toBe(1);
+    expect(state.records).toHaveLength(2);
+    const record = state.records[1]!;
+    expect(record.outcome.status).toBe("answered");
+    const members = record.manifest?.claims.filter((claim) => claim.kind === "membership") ?? [];
+    expect(members).toHaveLength(10);
+    expect(record.manifest?.claims.some((claim) => claim.kind === "count")).toBe(true);
+
+    // A non-listing anaphoric follow-up still carries its antecedent to the
+    // model ("repeat the total" names nothing; the earlier words say what).
+    state = await say(state, "can you repeat the total for me?", d);
+    expect(seenPrompts[seenPrompts.length - 1]).toContain("how many species are out there?");
+  });
+
+  it("a listing follow-up missing scope falls to the pack's question, never the ladder or a loop", async () => {
+    const countAnswer = JSON.stringify({
+      rosters: [{ id: "all-species", criteria: { all: [] } }],
+      claims: [{ kind: "count", rosterId: "all-species" }],
+    });
+    let scopeCalls = 0;
+    const provider = new ScriptedProvider("scripted:cold-list", (request) => {
+      if (request.purpose === "scope") { scopeCalls += 1; return "decline"; }
+      return countAnswer;
+    });
+    const d = deps(provider);
+
+    // The count commits... no wait: with no scope words the count needs a
+    // version first — the question is asked, answered, then the count files.
+    let state = await say(startSession(), "how many species are out there?", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+    state = await say(state, "Red and Blue", d);
+    expect(state.records).toHaveLength(1);
+
+    // The routed listing consults no ladder: it certifies straight off the
+    // record. (Exchange one's ladder call, on genuinely vague wording, is
+    // that path's own business.)
+    const scopeCallsBefore = scopeCalls;
+    state = await say(state, "can you list a few for me?", d);
+    expect(state.records).toHaveLength(2);
+    expect(state.records[1]!.manifest?.claims.filter((claim) => claim.kind === "membership").length).toBeGreaterThan(0);
+    expect(scopeCalls).toBe(scopeCallsBefore);
+  });
+
+  it("keeps the single-ask prompt when the ask names its own subject", async () => {
+    const seenPrompts: string[] = [];
+    const provider = new ScriptedProvider("scripted:named", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      seenPrompts.push(request.prompt);
+      return JSON.stringify({ rosters: [], claims: [{ kind: "fact", entityId: "onix", factId: "base-defense" }] });
+    });
+    const d = deps(provider);
+
+    let state = await say(startSession(), "I'm playing Red and Blue in Kanto. What's Pikachu's Speed?", d);
+    state = await say(state, "What is Onix's Defense?", d);
+
+    expect(seenPrompts[seenPrompts.length - 1]).not.toContain("Pikachu");
+  });
+});
+
 describe("teach before interrogating — the lazy half of IA-1", () => {
   const lessonAnswer = JSON.stringify({
     rosters: [],

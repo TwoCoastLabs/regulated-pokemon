@@ -3256,6 +3256,25 @@ The pattern across all three: the weak model is the instrument (model
 doctrine) — every gap it exposed was an expressibility or curriculum gap
 the strong model had been papering over with cleverness.
 
+### The listing follow-up: the antecedent lives in the record (2026-08-31)
+
+"How many species are out there?" resolved (the all-species count), and
+"can you list at least 10 for me?" died in an abstention — twice over.
+First the answer step received the follow-up bare (it is shown only the
+current ask), so no model could know ten of what; the driver now attaches
+the trainer's earlier words when the current ask names no species and no
+type — the anaphoric case, deterministically gated. Second, the weak model
+*handed the antecedent live* still returned zero claims: the two-step
+composition (resolve the reference, then build roster + memberships) is
+beyond it. The fix follows the project's own doctrine one step further:
+the antecedent's set is not in the model's head — it is the previous
+exchange's certified roster, filed in the session's records. A listing
+route composes the draft from that roster (first N members as membership
+claims, each re-verified by the kernel, the count kept beside the sample),
+outranking any model draft, skipping discovery and the ladder entirely.
+The follow-up now settles with zero model calls. The proper `listing`
+claim kind, with sworn partiality, remains S5's (docs/scale.md).
+
 ## Appendix — how to reproduce
 
 ```sh

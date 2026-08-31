@@ -89,6 +89,7 @@ function scopePrompt(pack: AccordPack, missing: readonly ScopeDimension[], said:
 function answerPrompt(
   scope: TrainerScope | undefined,
   asks: readonly string[],
+  previously: readonly string[] | undefined,
   tools: readonly string[],
   lessons: readonly string[],
   rules: readonly { id: string; label: string }[],
@@ -127,6 +128,9 @@ function answerPrompt(
             (scope.comparisonBasis === undefined ? "" : ` basis=${scope.comparisonBasis}`),
         ]),
     "",
+    ...(previously === undefined || previously.length === 0
+      ? []
+      : ["Earlier in this conversation the trainer said (context for the ask below, not itself the ask):", ...previously.map((line) => `  - ${line}`), ""]),
     "The trainer's own words:",
     ...asks.map((line) => `  - ${line}`),
     "",
@@ -180,6 +184,7 @@ function answerPrompt(
           '  {"kind": "gameRule", "ruleId": "<rule-id>"}  — a fixed rule of the game as a certified number. Use it only for a "how many" question about a rule (how many Pokémon fit on a team, how many moves one can know). It counts a rule; it does not list what a trainer owns — the records do not know this trainer\'s team, so "what is on my team?" gets no claim. The system fills the number, so state none.',
         ]),
     '  {"kind": "membership", "rosterId": "<id>", "entityId": "<id>", "asserted": <boolean>}',
+    'To LIST some members of a set ("name a few", "list 10"): name one roster, then one membership claim per member you list, "asserted": true — each is checked against the certified set. Add a count claim beside them so the total stands next to the sample.',
     ...(items
       ? [
           '  {"kind": "treats", "itemId": "<item-id>", "condition": "<condition>"}  — does this item treat that condition? The system derives the certified yes or no from the item\'s closed effect set, so state neither; the certified *no* is a real answer. A <condition> must be one of: poison, burn, freeze, sleep, paralysis, confusion.',
@@ -270,6 +275,7 @@ function rawPrompt(asks: readonly string[], tools: readonly string[], items = fa
     '  {"kind": "count", "rosterId": "<id>", "reported": <number>}  — state the number yourself; nothing counts it for you',
     '  {"kind": "typeCount"}  — how many types exist in this generation; the kernel counts the certified type chart',
     '  {"kind": "membership", "rosterId": "<id>", "entityId": "<id>", "asserted": <boolean>}',
+    'To LIST some members of a set ("name a few", "list 10"): name one roster, then one membership claim per member you list, "asserted": true — each is checked against the certified set. Add a count claim beside them so the total stands next to the sample.',
     ...(items
       ? [
           '  {"kind": "treats", "itemId": "<item-id>", "condition": "<condition>"}  — does this item treat that condition? The system derives the certified yes or no from the item\'s closed effect set, so state neither; the certified *no* is a real answer. A <condition> must be one of: poison, burn, freeze, sleep, paralysis, confusion.',
@@ -348,6 +354,15 @@ export interface AnswerStepInput {
    *  model, so the answer can be responsive to what was actually asked rather
    *  than improvised from the profile alone (IA-8: only the trainer speaks). */
   transcript: ScopeTranscript;
+  /**
+   * The trainer's own words from *earlier* exchanges, when the current ask
+   * needs them to mean anything — "can you list at least 10 for me?" names
+   * nothing, and without its antecedent no model can know ten of what
+   * (found live, 2026-08-31). Supplied by the driver only for such asks, so
+   * an ask that names its own subject keeps its clean single-ask prompt.
+   * Trainer channel only, like everything the answer step reads (IA-8).
+   */
+  previously?: readonly string[];
   /** Hand the model the certified registry to compose from, instead of asking
    *  it to recall. Facts only, never policy — see {@link certifiedReference}. */
   grounded?: boolean;
@@ -382,6 +397,7 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
     prompt: answerPrompt(
       context.grant?.scope,
       trainerLines,
+      input.previously,
       context.pack.actions.map((action) => action.id),
       context.pack.curriculum.map((lesson) => lesson.id),
       context.pack.gameRules.map((rule) => ({ id: rule.id, label: rule.label })),

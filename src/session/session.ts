@@ -46,6 +46,7 @@ import { runTransaction, type Transaction } from "../kernel/transaction.js";
 import { renderAnswer } from "../render/reference.js";
 import { proposalDigest, proposeAnswer, proposeScope } from "../harness/advisor.js";
 import { NO_CLAIMS_REASON } from "../harness/decode.js";
+import { MAX_ANSWER_CLAIMS } from "../harness/schema.js";
 import { addUsage, emptyUsage, type ModelProvider, type Usage } from "../harness/provider.js";
 
 /** The certified world the session runs against — the same two values the
@@ -431,6 +432,17 @@ async function drive(
   const askedAlready = state.transcript
     .slice(state.askStart)
     .some((event) => event.kind === "question");
+  // A listing follow-up short-circuits discovery entirely: the shape is not
+  // the model's to learn — the set is the previous exchange's certified
+  // roster, and the route composes the draft from the record. `routed` skips
+  // the ladder for whatever scope the memberships require, so a missing
+  // dimension costs the pack's own question, never a model interpretation.
+  if (lastSaid !== undefined && !askedAlready && state.required === undefined) {
+    const listed = listingClaims(world, state, lastSaid.text);
+    if (listed !== undefined) {
+      return drive({ ...state, required: requiredDimensionsFor(listed.claims) }, deps, { ...listed, routed: true });
+    }
+  }
   // Not during an escalation: a widened `required` means an answer was already
   // attempted and wants more scope, so the shape is known and a fresh discovery
   // would only re-ask the model what it just told us.
@@ -564,6 +576,30 @@ export function eligibilityClaims(
 }
 
 /**
+ * The trainer's earlier asks, offered to the answer step only when the
+ * current words name nothing the front doors can read — no species, no type.
+ * That is the anaphoric case ("can you list at least 10 for me?" — found
+ * live, 2026-08-31: the model received it with no antecedent and could only
+ * abstain); an ask that names its own subject keeps the single-ask prompt.
+ * Trainer channel only, last three utterances, deterministic gate.
+ */
+function isAnaphoric(world: SessionWorld, ask: string): boolean {
+  if (namesCertifiedEntity(world.registry, ask)) return false;
+  const haystack = ` ${ask.toLowerCase()} `;
+  return ![...world.registry.typeNames].some((type) => new RegExp(`\\b${type}\\b`).test(haystack));
+}
+
+function anaphorContext(world: SessionWorld, state: SessionState, ask: string): readonly string[] | undefined {
+  if (state.askStart === 0) return undefined;
+  if (!isAnaphoric(world, ask)) return undefined;
+  const prior = state.transcript
+    .slice(0, state.askStart)
+    .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
+    .slice(-3);
+  return prior.length === 0 ? undefined : prior;
+}
+
+/**
  * The profile a specific-entity ask earns when the model deflects it to a
  * curriculum lesson.
  *
@@ -673,6 +709,12 @@ async function teachOrDiscover(
     at: establishedAt,
   };
 
+  const askWords = state.transcript
+    .slice(state.askStart)
+    .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
+    .join(" ");
+  const previously = anaphorContext(world, state, askWords);
+
   let step;
   try {
     step = await proposeAnswer({
@@ -681,6 +723,7 @@ async function teachOrDiscover(
       scenarioId: "session",
       transactionId,
       transcript: state.transcript.slice(state.askStart),
+      ...(previously === undefined ? {} : { previously }),
       ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
       ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
       ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
@@ -706,11 +749,7 @@ async function teachOrDiscover(
   // A lesson-only draft for an ask that named one specific species is the
   // deflection this route exists for: the profile replaces the lesson and
   // goes through scope like any personalized answer would have.
-  const ask = state.transcript
-    .slice(state.askStart)
-    .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
-    .join(" ");
-  const profile = deflectedProfileClaims(world, ask, draft.claims);
+  const profile = deflectedProfileClaims(world, askWords, draft.claims);
   if (profile.length > 0) {
     return { state: spentFolded, result: "needs-scope", claims: profile, rosters: [], routed: true };
   }
@@ -728,6 +767,39 @@ async function teachOrDiscover(
     return { state: commit(spentFolded, deps, { transactionId, establishedAt, draft }), result: "taught", claims: draft.claims, rosters: draft.rosters };
   }
   return { state: spentFolded, result: "needs-scope", claims: draft.claims, rosters: draft.rosters };
+}
+
+/** Wording that asks for members to be enumerated. Word-bounded and paired
+ * with the anaphoric gate, so "list Electric ones" (a subject of its own)
+ * still goes to the model and only a bare "list some for me" takes the
+ * deterministic road. */
+const LISTING_CUE = /\b(list|name|show|give)\b/i;
+
+/**
+ * The listing a bare "can you list at least 10 for me?" earns — composed
+ * from the record, not the model. Found live (2026-08-31): the follow-up
+ * reached the model with its antecedent attached and the model still
+ * passed; but the antecedent's set is not in the model's head, it is the
+ * previous exchange's certified roster, filed in the session's own records.
+ * The route reuses that roster verbatim, lists its first N members as
+ * membership claims (each re-verified by the kernel like any claim), and
+ * keeps the count beside the sample so the total is never mistaken for the
+ * list. N comes from the trainer's own number, clamped to the claim budget.
+ */
+function listingClaims(world: SessionWorld, state: SessionState, ask: string): Pick<ManifestDraft, "claims" | "rosters"> | undefined {
+  if (!LISTING_CUE.test(ask) || !isAnaphoric(world, ask)) return undefined;
+  const prior = [...state.records].reverse().find((record) => (record.manifest?.rosters.length ?? 0) > 0);
+  const roster = prior?.manifest?.rosters[0];
+  if (roster === undefined || roster.memberIds.length === 0) return undefined;
+  const asked = Number(/\d+/.exec(ask)?.[0]);
+  const n = Math.min(Number.isFinite(asked) && asked > 0 ? asked : 10, MAX_ANSWER_CLAIMS - 1, roster.memberIds.length);
+  return {
+    rosters: [roster],
+    claims: [
+      ...roster.memberIds.slice(0, n).map((entityId) => ({ kind: "membership", rosterId: roster.id, entityId, asserted: true }) as const),
+      { kind: "count", rosterId: roster.id },
+    ],
+  };
 }
 
 /** The reviewed block that owns the version boundary, when the pack carries
@@ -799,6 +871,17 @@ async function answer(
     at: establishedAt,
   };
 
+  const currentAsk = state.transcript
+    .slice(state.askStart)
+    .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
+    .join(" ");
+  // A bare listing follow-up is answered from the record it refers to — the
+  // previous exchange's certified roster — never from a model's guess at the
+  // antecedent (and the weak model, handed the antecedent, still passed).
+  // The route outranks a model draft arriving on the discovery hop: for a
+  // listing ask, the record is the authority on what "them" means.
+  reuse = listingClaims(world, state, currentAsk) ?? reuse;
+
   let step;
   if (reuse !== undefined) {
     // The discovery call already proposed this draft for these exact words,
@@ -814,6 +897,11 @@ async function answer(
     };
   } else {
     try {
+      const currentWords = state.transcript
+        .slice(state.askStart)
+        .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
+        .join(" ");
+      const previously = anaphorContext(world, state, currentWords);
       step = await proposeAnswer({
         provider,
         context,
@@ -822,6 +910,7 @@ async function answer(
         // The ask being answered, not the whole session: scope reads the full
         // transcript, but the answer should be responsive to the current words.
         transcript: state.transcript.slice(state.askStart),
+        ...(previously === undefined ? {} : { previously }),
         ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
         ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
         ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
