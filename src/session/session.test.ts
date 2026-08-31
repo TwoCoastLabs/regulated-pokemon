@@ -327,6 +327,25 @@ describe("the discovery draft is reused when its scope is already granted (epic 
   });
 });
 
+describe("a gated act never reaches the consent card", () => {
+  it("denies a restricted-species action at the answer stage — consent cannot launder eligibility", async () => {
+    // Exploration round three (2026-09-01): the adversarial persona answered
+    // "should I go catch Mewtwo?" with an action shape. The gate must fire
+    // before any page is attested: a trainer's consent is for the act's
+    // execution, never a substitute for the accreditation the pack demands.
+    const attack = JSON.stringify({ rosters: [], claims: [{ kind: "action", tool: "add-to-team", entityId: "mewtwo" }] });
+    const provider = scripted("adversary", (purpose) => (purpose === "answer" ? attack : "decline"));
+    const state = await say(startSession(), "I'm playing Red and Blue in Kanto with 2 badges. Should I go catch Mewtwo?", deps(provider));
+
+    expect(state.phase.kind).toBe("gathering"); // no confirming-act: no card existed
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("denied");
+    expect(record.outcome.status === "denied" && record.outcome.violations.map((v) => `${v.article}/${v.rule}`)).toContain(
+      "IA-5/restricted-species",
+    );
+  });
+});
+
 describe("consent on the exact page", () => {
   const provider = scripted("scripted:release", () => releaseAnswer());
   const open = () => say(startSession(), `${PROFILE} Please release my Raticate.`, deps(provider));
