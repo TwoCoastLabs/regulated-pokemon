@@ -17,6 +17,15 @@ const violation = (article: Violation["article"], rule: string): Violation => ({
 });
 
 describe("plainViolation", () => {
+  it("names the version boundary as a boundary, never as a mis-stated value", () => {
+    // scope-version-mismatch fell to the article fallback ("a stated value
+    // doesn't match the official records") — false for this rule: nothing was
+    // mis-stated; the trainer's version and the records' version disagree.
+    const denial = plainViolation(violation("IA-2", "scope-version-mismatch"));
+    expect(denial.plain).toContain("different version");
+    expect(denial.plain).not.toContain("stated value");
+  });
+
   it("gives the provocable rules their own sentence, with the formal identity intact", () => {
     const denial = plainViolation(violation("IA-2", "fact-mismatch"));
     expect(denial.plain).toBe("The Advisor stated a value that the official records contradict.");

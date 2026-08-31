@@ -50,6 +50,8 @@ const BY_RULE: Readonly<Record<string, string>> = {
   "unknown-action": "The Advisor claimed it could do something no approved tool actually does.",
   "unattributed-content": "The page carried words nobody certified, so it was never shown.",
   "scope-contradicted": "You've said two different things about your game, and the League won't pick one for you.",
+  "scope-version-mismatch":
+    "Your game is a different version from the one these records certify — the League won't certify one version's facts to a trainer playing another.",
   "scope-expired-at-action": "Too much time passed — your confirmed details expired before the act could run.",
   "confirmation-digest-mismatch": "The page changed after you read it, so your confirmation no longer counts.",
   "action-never-shown": "The act was never shown to you on the page, so it could not be confirmed.",

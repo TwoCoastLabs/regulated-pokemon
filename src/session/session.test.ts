@@ -624,6 +624,45 @@ describe("the deflected profile: a lesson cannot answer for a named species (epi
   });
 });
 
+describe("the version boundary is a teaching, not a dead end", () => {
+  const squirtleFacts = JSON.stringify({
+    rosters: [],
+    claims: [{ kind: "fact", entityId: "squirtle", factId: "types" }],
+  });
+
+  it("answers a Yellow trainer's entity ask with the boundary lesson, filed as a record", async () => {
+    // Found live: "yellow", answered honestly to the version question, dead-
+    // ended every registry ask in IA-2/scope-version-mismatch — including
+    // the boundary lesson written to explain exactly that situation. Now the
+    // boundary lesson is the answer, deterministically.
+    const provider = scripted("facts", (purpose) => (purpose === "answer" ? squirtleFacts : "decline"));
+    const d = deps(provider);
+
+    let state = await say(startSession(), "tell me about Squirtle", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+    state = await say(state, "yellow", d);
+
+    expect(state.records).toHaveLength(1);
+    const record = state.records[0]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: "red-blue-vs-yellow" }]);
+  });
+
+  it("still teaches an ordinary lesson across the boundary", async () => {
+    const lesson = JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-badge" }] });
+    const provider = scripted("teacher", (purpose) => (purpose === "answer" ? lesson : "decline"));
+    const d = deps(provider);
+
+    let state = await say(startSession(), "tell me about Squirtle", d);
+    state = await say(state, "yellow", d);
+    state = await say(state, "what is a badge?", d);
+
+    expect(state.records).toHaveLength(2);
+    expect(state.records[1]!.outcome.status).toBe("answered");
+    expect(state.records[1]!.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-badge" }]);
+  });
+});
+
 describe("teach before interrogating — the lazy half of IA-1", () => {
   const lessonAnswer = JSON.stringify({
     rosters: [],

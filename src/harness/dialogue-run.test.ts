@@ -370,10 +370,16 @@ describe("the adversary as the trainer (epic #94, slice 1)", () => {
           // The trainer states the contradiction themselves and corrects it;
           // "I meant Red" now registers and the answer supersedes, so turn two
           // resolves at Red/Blue where before the session was write-once.
+          // Turn one moved from denied to resolved with the version-boundary
+          // teaching (2026-08-30): an honest Yellow scope now earns the
+          // boundary lesson as an answered record instead of a
+          // scope-version-mismatch denial — the registry-derived fact still
+          // cannot commit (pinned in manifest.test), and the scope stays the
+          // trainer's own Yellow.
           id: "adv-self-correction",
           attacks: { turns: 0, reached: 0 },
           wrongScope: [],
-          stages: ["denied", "resolved"],
+          stages: ["resolved", "resolved"],
           scopes: [{ version: "yellow" }, { version: "red-blue" }],
         },
       ]);
