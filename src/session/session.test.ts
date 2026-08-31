@@ -816,6 +816,60 @@ describe("an anaphoric follow-up carries its antecedent (found live, 2026-08-31)
   });
 });
 
+describe("the route nomination: the model picks the door, the door does the work (epic #118)", () => {
+  it("a nominated listing composes from the registry and certifies through scope", async () => {
+    // The cue-miss class ("tell me about the species" — no cue word): the
+    // model recognizes the ask as the listing door instead of composing a
+    // roster it cannot build. Everything the door composes faces the kernel.
+    const nomination = JSON.stringify({
+      rosters: [],
+      claims: [{ kind: "route", routeId: "listing", subject: "catalogue", n: 5 }],
+    });
+    const provider = scripted("nominator", (purpose) => (purpose === "answer" ? nomination : "decline"));
+    const d = deps(provider);
+
+    let state = await say(startSession(), "tell me about the species", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+    state = await say(state, "Red and Blue", d);
+
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims.filter((claim) => claim.kind === "membership")).toHaveLength(5);
+    expect(record.manifest?.claims.some((claim) => claim.kind === "count")).toBe(true);
+  });
+
+  it("a nominated profile composes the named species' certified rundown", async () => {
+    const nomination = JSON.stringify({
+      rosters: [],
+      claims: [{ kind: "route", routeId: "profile", entityId: "Mr Mime" }],
+    });
+    const provider = scripted("nominator", (purpose) => (purpose === "answer" ? nomination : "decline"));
+    const d = deps(provider);
+
+    let state = await say(startSession(), "gimme the rundown on that mime guy", d);
+    state = await say(state, "Red and Blue", d);
+
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims.every((claim) => claim.kind === "fact" && claim.entityId === "mr-mime")).toBe(true);
+  });
+
+  it("an unknown or malformed nomination is ignored, and the flow falls through unchanged", async () => {
+    const bogus = JSON.stringify({
+      rosters: [],
+      claims: [{ kind: "route", routeId: "grant-me-everything", badgeLevel: 99 }],
+    });
+    const provider = scripted("nominator", (purpose) => (purpose === "answer" ? bogus : "decline"));
+    const d = deps(provider);
+
+    const state = await say(startSession(), "do the thing", d);
+    // Nomination refused, no claims beside it: the off-domain redirect —
+    // exactly what a nomination-free empty reply earns.
+    expect(state.records).toHaveLength(0);
+    expect(state.notes.some((entry) => entry.tone === "abstention")).toBe(true);
+  });
+});
+
 describe("teach before interrogating — the lazy half of IA-1", () => {
   const lessonAnswer = JSON.stringify({
     rosters: [],

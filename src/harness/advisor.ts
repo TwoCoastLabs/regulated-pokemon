@@ -23,6 +23,7 @@ import type { CompletionRequest, ModelProvider, Usage } from "./provider.js";
 import { certifiedReference, retrieveReference } from "./reference.js";
 import { ANSWER_SCHEMA_NAME, answerSchema } from "./schema.js";
 import { nominateFillerKinds } from "./grammar-gate.js";
+import type { NominableRoute } from "./schema.js";
 
 /** Only the trainer's own words are evidence (IA-8); the model interprets those. */
 function trainerText(transcript: ScopeTranscript): string[] {
@@ -90,6 +91,7 @@ function answerPrompt(
   scope: TrainerScope | undefined,
   asks: readonly string[],
   previously: readonly string[] | undefined,
+  routes: readonly NominableRoute[] | undefined,
   tools: readonly string[],
   lessons: readonly string[],
   rules: readonly { id: string; label: string }[],
@@ -117,7 +119,9 @@ function answerPrompt(
           '"hi", "are you working?", "thanks" — are off-topic: reply with no',
           "claims at all. Do not reach for a lesson that is merely adjacent; a",
           "lesson is for a real question about what something is or how the game",
-          "works, not a way to avoid saying nothing. A question about a specific",
+          "works, not a way to avoid saying nothing. When a built-in door fits",
+          "the ask better than a lesson — see the nominations below, if any are",
+          "offered — nominate the door instead. A question about a specific",
           "character or how the story unfolds, or anything no lesson squarely",
           "covers, also gets no claims — the records certify Pokémon and rules,",
           "not people or plot, and an honest pass beats teaching the nearest thing.",
@@ -174,6 +178,15 @@ function answerPrompt(
         ? "; item criteria a set of items — one roster is one universe, never both. A \"what all…\" or \"cheapest…\" over items (everything that cures a condition, everything under a price) is an item roster plus a count or a ranking: the system then derives the certified set, the number or the winner, which answers it more strongly than naming examples one by one."
         : "."),
     "",
+    ...(routes === undefined || routes.length === 0
+      ? []
+      : [
+          "Some asks are better served by a built-in door than by composing claims. When one of these",
+          "descriptions fits the ask, reply with ONE nomination claim and nothing else —",
+          '  {"kind": "route", "routeId": "<id>", ...its arguments} — and the system does the rest:',
+          ...routes.map((route) => `  - ${route.id}: ${route.description}`),
+          "",
+        ]),
     "Each claim is one of:",
     '  {"kind": "fact", "entityId": "<id>", "factId": "<fact-id>"}  — the system reads the certified value; you may add "asserted" only when you are certain of the exact certified form, and a wrong one refuses the whole answer',
     '  {"kind": "count", "rosterId": "<id>"}  — defines a set to be counted; the system counts it, so state no number',
@@ -374,6 +387,11 @@ export interface AnswerStepInput {
    *  ({@link nominateFillerKinds}) — the shape-deflection fix (§19). Independent
    *  of grounding; only the three aggregate kinds are ever gated. */
   gatedGrammar?: boolean;
+  /** Deterministic routes the model may nominate instead of composing — the
+   *  door, not the work (epic #118: recognition is the 1-of-k choice a small
+   *  model holds; composition is what kept failing). The caller owns the
+   *  catalogue and validates every nomination. */
+  routes?: readonly NominableRoute[];
 }
 
 /** Ask the model for the certified answer and decode it into a draft. Whether
@@ -398,6 +416,7 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
       context.grant?.scope,
       trainerLines,
       input.previously,
+      input.routes,
       context.pack.actions.map((action) => action.id),
       context.pack.curriculum.map((lesson) => lesson.id),
       context.pack.gameRules.map((rule) => ({ id: rule.id, label: rule.label })),
@@ -410,10 +429,16 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
     // Whether it is enforced is the provider's business, not the advisor's.
     schema: {
       name: ANSWER_SCHEMA_NAME,
-      schema: answerSchema(context.pack, fillerKinds, context.registry.itemIds.length > 0, {
-        types: [...context.registry.typeNames].sort(),
-        itemCategories: [...new Set(context.registry.items.map((item) => item.category))].sort(),
-      }),
+      schema: answerSchema(
+        context.pack,
+        fillerKinds,
+        context.registry.itemIds.length > 0,
+        {
+          types: [...context.registry.typeNames].sort(),
+          itemCategories: [...new Set(context.registry.items.map((item) => item.category))].sort(),
+        },
+        input.routes,
+      ),
     },
   };
   const completion = await provider.complete(request);

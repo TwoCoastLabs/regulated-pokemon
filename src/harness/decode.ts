@@ -118,8 +118,19 @@ export function decodeCandidate(text: string, pack: AccordPack): DecodedCandidat
 // --- answers ----------------------------------------------------------------
 
 export type AnswerDecode =
-  | { ok: true; draft: ManifestDraft; folds: number }
+  | { ok: true; draft: ManifestDraft; folds: number; route?: RouteNomination }
   | { ok: false; reason: string };
+
+/**
+ * A route the model nominated instead of (or beside) composing — decoded,
+ * never trusted: the driver validates the id and every argument against its
+ * own catalogue, and an unknown or malformed nomination is simply ignored.
+ * Carried raw so the catalogue's argument shapes stay the driver's business.
+ */
+export interface RouteNomination {
+  routeId: string;
+  [arg: string]: unknown;
+}
 
 /**
  * The reason a well-formed reply carrying zero claims is refused. Exported
@@ -332,7 +343,15 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
 
   const claims: Claim[] = [];
   let folds = 0;
+  let route: RouteNomination | undefined;
   for (const entry of parsed.claims) {
+    // A nomination travels in the claims array (one more grammar variant)
+    // but is not a claim: it names a deterministic door, and it never
+    // reaches compilation. First one wins; the rest are noise.
+    if (isObject(entry) && entry.kind === "route" && isString(entry.routeId)) {
+      route ??= entry as unknown as RouteNomination;
+      continue;
+    }
     const claim = asClaim(entry);
     if (claim === null) return { ok: false, reason: "a claim is malformed" };
     // A comparison of a thing with itself compares nothing — it is one
@@ -379,9 +398,9 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
   // technically true, useless, and read by a visitor as "answered". The
   // honest reading of an empty claims list is that the model had nothing to
   // say, which is an abstention, and abstentions are counted, not certified.
-  if (claims.length === 0) {
+  if (claims.length === 0 && route === undefined) {
     return { ok: false, reason: NO_CLAIMS_REASON };
   }
 
-  return { ok: true, draft: { transactionId, claims: distinct, rosters }, folds };
+  return { ok: true, draft: { transactionId, claims: distinct, rosters }, folds, ...(route === undefined ? {} : { route }) };
 }

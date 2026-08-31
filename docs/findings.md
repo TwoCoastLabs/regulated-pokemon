@@ -3290,6 +3290,28 @@ certified answer would be worse than the abstention it replaces (lesson
 so the mis-teach question now routes as the listing it is. The replayed
 conversation settles all three turns on one model call.
 
+### The route nomination: recognition offered where composition kept failing (2026-08-31)
+
+Every dead end this week ended the same way: a deterministic route already
+had the answer, and a hand-written cue regex was the only way to reach it —
+a recall ceiling that grows one regex at a time (lesson 6). The grammar now
+offers the doors themselves: the discovery reply may carry one nomination
+claim ({"kind": "route", ...}) naming a registered route and its arguments,
+so the weak model is asked only for the 1-of-k recognition it measurably
+holds (generalization.md §9), never the composition it kept failing. A
+nomination is untrusted — the driver validates id and arguments against
+its own catalogue, an unknown or refused one falls through to exactly the
+nomination-free flow, and what a route composes still faces the kernel
+whole. Nominations travel inside recorded completions, so replay reads
+them for free (the S3 discipline, arrived early).
+
+Live on the weak model: "enumerate the species for me please" (no cue
+matches it) and "gimme the full rundown on Snorlax" both nominated their
+doors and certified in one call each. "tell me about the species" still
+draws the lesson — the model reads that wording as a definition ask, which
+is defensible; the cue regexes stay as the free fast path, and the next
+instrument is the activation counter that decides which of them retire.
+
 ## Appendix — how to reproduce
 
 ```sh

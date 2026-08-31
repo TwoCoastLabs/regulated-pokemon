@@ -47,7 +47,7 @@ import { runTransaction, type Transaction } from "../kernel/transaction.js";
 import { renderAnswer } from "../render/reference.js";
 import { proposalDigest, proposeAnswer, proposeScope } from "../harness/advisor.js";
 import { NO_CLAIMS_REASON } from "../harness/decode.js";
-import { MAX_ANSWER_CLAIMS } from "../harness/schema.js";
+import { MAX_ANSWER_CLAIMS, type NominableRoute } from "../harness/schema.js";
 import { addUsage, emptyUsage, type ModelProvider, type Usage } from "../harness/provider.js";
 
 /** The certified world the session runs against — the same two values the
@@ -640,7 +640,12 @@ export function deflectedProfileClaims(world: SessionWorld, ask: string, propose
     new RegExp(`\\b${id.split("-").join("[\\s-]?")}\\b`).test(haystack);
   const named = world.registry.speciesIds.filter((id) => names(id));
   if (named.length !== 1) return [];
-  const entityId = named[0]!;
+  return profileClaims(named[0]!);
+}
+
+/** One species' certified profile — the shape both the deflection door and a
+ * nominated profile route compose. */
+function profileClaims(entityId: string): readonly Claim[] {
   return [
     { kind: "fact", entityId, factId: "types" },
     { kind: "fact", entityId, factId: "pokedex-number" },
@@ -736,6 +741,7 @@ async function teachOrDiscover(
       transactionId,
       transcript: state.transcript.slice(state.askStart),
       ...(previously === undefined ? {} : { previously }),
+      routes: SESSION_ROUTES,
       ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
       ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
       ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
@@ -758,6 +764,20 @@ async function teachOrDiscover(
   }
   const draft = step.decode.draft;
   const spentFolded = { ...spent, folds: spent.folds + step.decode.folds };
+  // A nomination outranks whatever else the reply carried: the model chose a
+  // door, the door composes, the kernel judges. Invalid ones fall through to
+  // exactly the flow a nomination-free reply takes.
+  if (step.decode.route !== undefined) {
+    const composed = executeRoute(world, state, step.decode.route);
+    if (composed !== undefined) {
+      return { state: spentFolded, result: "needs-scope", claims: composed.claims, rosters: composed.rosters, routed: true };
+    }
+    // A refused nomination with nothing beside it is the empty reply it
+    // always was — off-domain, never an empty record.
+    if (draft.claims.length === 0) {
+      return { state: spentFolded, result: "off-domain", claims: [], rosters: [] };
+    }
+  }
   // A lesson-only draft for an ask that named one specific species is the
   // deflection this route exists for: the profile replaces the lesson and
   // goes through scope like any personalized answer would have.
@@ -800,15 +820,30 @@ const LISTING_CUE = /\b(list|name|show|give)\b|\bwhat (?:are|r)\b/i;
  */
 function listingClaims(world: SessionWorld, state: SessionState, ask: string): Pick<ManifestDraft, "claims" | "rosters"> | undefined {
   if (!LISTING_CUE.test(ask) || !isAnaphoric(world, ask)) return undefined;
-  const prior = [...state.records].reverse().find((record) => (record.manifest?.rosters.length ?? 0) > 0);
-  const roster = prior?.manifest?.rosters[0] ?? catalogueRoster(world, ask);
-  if (roster === undefined || roster.memberIds.length === 0) return undefined;
+  const prior = priorRoster(state);
+  const roster = prior ?? catalogueRoster(world, ask);
   const asked = Number(/\d+/.exec(ask)?.[0]);
-  const n = Math.min(Number.isFinite(asked) && asked > 0 ? asked : 10, MAX_ANSWER_CLAIMS - 1, roster.memberIds.length);
+  return composeListing(roster, Number.isFinite(asked) && asked > 0 ? asked : 10);
+}
+
+/** The most recent certified roster on file, when one exists. */
+function priorRoster(state: SessionState) {
+  const prior = [...state.records].reverse().find((record) => (record.manifest?.rosters.length ?? 0) > 0);
+  return prior?.manifest?.rosters[0];
+}
+
+/** First N members of a roster as membership claims, the count kept beside
+ * the sample — the composer both the cue door and a nomination share. */
+function composeListing(
+  roster: ReturnType<typeof priorRoster>,
+  n: number,
+): Pick<ManifestDraft, "claims" | "rosters"> | undefined {
+  if (roster === undefined || roster.memberIds.length === 0) return undefined;
+  const take = Math.min(Math.max(1, Math.floor(n)), MAX_ANSWER_CLAIMS - 1, roster.memberIds.length);
   return {
     rosters: [roster],
     claims: [
-      ...roster.memberIds.slice(0, n).map((entityId) => ({ kind: "membership", rosterId: roster.id, entityId, asserted: true }) as const),
+      ...roster.memberIds.slice(0, take).map((entityId) => ({ kind: "membership", rosterId: roster.id, entityId, asserted: true }) as const),
       { kind: "count", rosterId: roster.id },
     ],
   };
@@ -841,8 +876,68 @@ function catalogueRoster(world: SessionWorld, ask: string) {
     .trim();
   if (leftovers !== "") return undefined;
   if (!/\bpok[eé]mons?\b|\bspecies\b/i.test(ask)) return undefined;
+  return mintCatalogue(world);
+}
+
+/** The whole certified species set as a roster — the kernel's own spelling
+ * of "every member". */
+function mintCatalogue(world: SessionWorld) {
   const built = buildRoster(world.registry, "all-species", { all: [] });
   return built.ok ? built.value : undefined;
+}
+
+/**
+ * The doors the model may nominate instead of composing (epic #118, the
+ * route-nomination step). Recognition, not composition: the weak model kept
+ * failing the two-step build (resolve the subject, then compose roster and
+ * memberships) while the 1-of-k choice is the thing it measurably holds. A
+ * nomination is untrusted — {@link executeRoute} validates the id and every
+ * argument, an unknown or malformed one is ignored, and what a route
+ * composes still faces the kernel whole. Descriptions are written for the
+ * model and deliberately name no particular species.
+ */
+export const SESSION_ROUTES: readonly NominableRoute[] = [
+  {
+    id: "listing",
+    description:
+      "the trainer wants members of a set enumerated — some of the species, a sample of a group " +
+      "they were just told about, or the certified catalogue itself",
+    args: {
+      subject: { type: "string", enum: ["catalogue", "prior-roster"] },
+      n: { type: "integer" },
+    },
+  },
+  {
+    id: "profile",
+    description:
+      "the trainer wants the rundown of ONE named creature — its types, dex number and base stats; " +
+      "put the certified id of that creature in entityId",
+    args: { entityId: { type: "string" } },
+  },
+];
+
+/**
+ * A nomination, validated and executed — or refused into undefined, which
+ * sends the flow down exactly the path it would have taken with no
+ * nomination at all. The model chose a door; every value still comes from
+ * the registry or the record, and the kernel verifies the composition.
+ */
+function executeRoute(
+  world: SessionWorld,
+  state: SessionState,
+  route: { routeId: string; [arg: string]: unknown },
+): Pick<ManifestDraft, "claims" | "rosters"> | undefined {
+  if (route.routeId === "listing") {
+    const roster = route.subject === "prior-roster" ? priorRoster(state) : mintCatalogue(world);
+    const n = typeof route.n === "number" && Number.isFinite(route.n) && route.n > 0 ? route.n : 10;
+    return composeListing(roster ?? mintCatalogue(world), n);
+  }
+  if (route.routeId === "profile") {
+    const raw = typeof route.entityId === "string" ? route.entityId.toLowerCase().trim().replace(/\s+/g, "-") : "";
+    if (!world.registry.speciesIds.includes(raw)) return undefined;
+    return { claims: profileClaims(raw), rosters: [] };
+  }
+  return undefined;
 }
 
 /** The reviewed block that owns the version boundary, when the pack carries
@@ -959,6 +1054,7 @@ async function answer(
         // transcript, but the answer should be responsive to the current words.
         transcript: state.transcript.slice(state.askStart),
         ...(previously === undefined ? {} : { previously }),
+        routes: SESSION_ROUTES,
         ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
         ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
         ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
@@ -1002,8 +1098,26 @@ async function answer(
       );
     }
     draft = { transactionId, claims: routed, rosters: [] };
+  } else if (
+    step.decode.route !== undefined &&
+    executeRoute(world, state, step.decode.route) === undefined &&
+    step.decode.draft.claims.length === 0
+  ) {
+    // A refused nomination with nothing beside it: the same honest pass an
+    // empty reply earns, with the countable line in the detail register.
+    return note(
+      { ...withUsage, phase: { kind: "gathering" } },
+      deps.now(),
+      "I don't have a certified answer for that one, so I'd rather pass than guess. " +
+        "A specific Pokémon, a move, or a how-the-game-works question usually lands.",
+      "abstention",
+      "the model nominated a route the driver refused, and the reply carried nothing else — nothing was committed",
+    );
   } else {
-    const decoded = step.decode.draft;
+    // A nomination at the scoped hop composes here too — same door, same
+    // validation, same kernel downstream; an invalid one is simply ignored.
+    const nominated = step.decode.route !== undefined ? executeRoute(world, state, step.decode.route) : undefined;
+    const decoded = nominated !== undefined ? { ...step.decode.draft, claims: nominated.claims, rosters: nominated.rosters } : step.decode.draft;
     // A model that deflected a gated advisory ask into adjacent facts gets the
     // on-target answer appended; one that addressed the species advice-wise —
     // including by proposing the gated advice the kernel will deny — is left
