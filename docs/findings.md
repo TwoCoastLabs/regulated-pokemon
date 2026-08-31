@@ -3275,6 +3275,21 @@ outranking any model draft, skipping discovery and the ladder entirely.
 The follow-up now settles with zero model calls. The proper `listing`
 claim kind, with sworn partiality, remains S5's (docs/scale.md).
 
+### The catalogue listing, minted (2026-08-31, second dead end)
+
+Lesson, lesson, "give me a list of those species" — abstention, twice.
+The listing route had nothing to reuse: no roster was ever filed, because
+"what are the Pokémon species?" had itself mis-taught (the what-is-pokemon
+lesson — adjacent, not the enumeration asked for). The route now mints the
+catalogue roster (the kernel's own empty criteria list) for a *bare*
+species/Pokémon listing ask, under a strict bareness gate: after cue words
+and stop-words, nothing substantive may remain — "the legendary species"
+leaves "legendary" and stands down to the model, because a wrong-subject
+certified answer would be worse than the abstention it replaces (lesson
+6's trade, taken deliberately). "What are the …" joined the listing cue,
+so the mis-teach question now routes as the listing it is. The replayed
+conversation settles all three turns on one model call.
+
 ## Appendix — how to reproduce
 
 ```sh
