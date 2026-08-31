@@ -53,7 +53,7 @@ const RULE_NOUN =
   // novice question of all was unrepresentable under the gate without these
   // nouns (tire-kicking, 2026-08-30: "how many pokemon are there?" fell to
   // an abstention after the version question).
-  /\b(party|team|moves?|attacks?|badges?|starters?|box(?:es)?|pc|storage|slots?|items?|bag|stack|pok[eé]mon|pok[eé]dex|species)\b/i;
+  /\b(party|team|moves?|attacks?|badges?|starters?|box(?:es)?|pc|storage|slots?|items?|bag|stack|pok[eé]mon|pok[eé]dex|species|levels?)\b/i;
 
 /** Wording that asks for a rule's *limit* even without a count cue — "max team
  * size", "how many moves at once", "can I carry". */

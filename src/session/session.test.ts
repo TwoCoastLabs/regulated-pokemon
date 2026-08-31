@@ -896,6 +896,9 @@ describe("the route nomination: the model picks the door, the door does the work
     const record = state.records[state.records.length - 1]!;
     expect(record.outcome.status).toBe("answered");
     expect(record.manifest?.claims.every((claim) => claim.kind === "fact" && claim.entityId === "mr-mime")).toBe(true);
+    // The rundown carries the evolution beside the stats — "how do I evolve
+    // X" answered with a profile now contains the fact that answers it.
+    expect(record.manifest?.claims.some((claim) => claim.kind === "fact" && claim.factId === "evolves-to")).toBe(true);
   });
 
   it("an unknown or malformed nomination is ignored, and the flow falls through unchanged", async () => {

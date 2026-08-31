@@ -81,3 +81,16 @@ describe("the catalogue's own size reaches the gameRule door (tire-kicking, 2026
     expect(kinds).toContain("count");
   });
 });
+
+describe("the level cap reaches the gameRule door (exploration round, 2026-09-01)", () => {
+  it.each(["what is the max level?", "is there a level limit?"])("%s nominates gameRule", (question) => {
+    expect(nominateFillerKinds(question)).toContain("gameRule");
+  });
+
+  it("does not hand a ranking phrasing the gameRule door", () => {
+    // "highest" is ranking wording; offering gameRule beside it would open
+    // the §19 deflection avenue the gate exists to close. That phrasing
+    // reaches the answer through the model or a nomination instead.
+    expect(nominateFillerKinds("which pokemon has the highest attack?")).not.toContain("gameRule");
+  });
+});

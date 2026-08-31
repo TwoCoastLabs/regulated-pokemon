@@ -3335,6 +3335,28 @@ interrogation. Verified live on the weak model: trap, mention, question,
 answer — and the originally-asked profile certifies under red-blue in the
 same exchange.
 
+### Exploration round two: agent-driven tire-kicking (2026-09-01)
+
+Four scripted novice arcs on the weak model (starters and the first Gym,
+learnsets, matchups and Gym advice, mechanics), run by the assistant
+rather than a person. Most flows held — choosing-a-starter caught "which
+starter is best against the first gym", learnset and evolution-methods
+certify, the eligibility escalation walks "can I catch Mewtwo?" from the
+version question to the badge question to a ruling at badgeLevel 2. Three
+mis-teaches earned fixes: "what is the max level?" (a famous fixed number
+with no rule — level-cap added, gate noun "level" beside it, but not
+"highest", which is ranking wording and would reopen the §19 deflection
+avenue); "my pokemon fainted, what do I do?" (no lesson owned fainting —
+fainting-and-healing authored); and the profile now carries evolves-to so
+an evolution ask answered with a rundown contains the fact that answers
+it. Filed without fixes: the pronoun with no recoverable antecedent
+("where do I find him?" — an honest abstention that could someday be a
+clarifying question); "at what level does it learn Thunderbolt?" (learn
+levels are not certified — a snapshot question, not a driver one); Gym
+lineups as curriculum candidates; and one nondeterminism sample where a
+gemini reply shape slipped the eligibility merge that reruns walk
+correctly (lesson 5 — sample-bounded, not a gate).
+
 ## Appendix — how to reproduce
 
 ```sh

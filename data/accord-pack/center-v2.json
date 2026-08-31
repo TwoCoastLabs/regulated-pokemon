@@ -993,6 +993,26 @@
       }
     },
     {
+      "id": "fainting-and-healing",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-fainting-and-healing",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "A fainted Pokémon is not gone — it just cannot battle until it is revived. Rest your team at any Pokémon Center: the nurse restores every Pokémon to full health, free, as many times as you need. Fainting costs you nothing permanent, though losing your whole team sends you back to the last Center with lighter pockets. Build the habit early: heal after tough battles, before Gyms, and before long cave stretches.",
+            "digest": "sha256:76c0705a7618ce784f2fa2b429d9e421306758f0ef448a8dae1a45ddb7799432"
+          },
+          {
+            "locale": "en-GB",
+            "text": "A fainted Pokémon is not gone — it just cannot battle until it is revived. Rest your team at any Pokémon Center: the nurse restores every Pokémon to full health, free, as many times as you need. Fainting costs you nothing permanent, though losing your whole team sends you back to the last Center with lighter pockets. Build the habit early: heal after tough battles, before Gyms, and before long cave stretches.",
+            "digest": "sha256:76c0705a7618ce784f2fa2b429d9e421306758f0ef448a8dae1a45ddb7799432"
+          }
+        ]
+      }
+    },
+    {
       "id": "red-vs-blue",
       "article": "IA-6",
       "block": {
@@ -1358,6 +1378,11 @@
       "id": "pokedex-count",
       "value": 151,
       "label": "Pokémon in the Kanto Pokédex"
+    },
+    {
+      "id": "level-cap",
+      "value": 100,
+      "label": "the highest level a Pokémon can reach"
     }
   ]
 }

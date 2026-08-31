@@ -668,6 +668,7 @@ export function deflectedProfileClaims(world: SessionWorld, ask: string, propose
 function profileClaims(entityId: string): readonly Claim[] {
   return [
     { kind: "fact", entityId, factId: "types" },
+    { kind: "fact", entityId, factId: "evolves-to" },
     { kind: "fact", entityId, factId: "pokedex-number" },
     { kind: "fact", entityId, factId: "base-hp" },
     { kind: "fact", entityId, factId: "base-attack" },
@@ -930,7 +931,7 @@ export const SESSION_ROUTES: readonly NominableRoute[] = [
   {
     id: "profile",
     description:
-      "the trainer wants the rundown of ONE named creature — its types, dex number and base stats; " +
+      "the trainer wants the rundown of ONE named creature — its types, dex number, base stats and what it evolves into; " +
       "put the certified id of that creature in entityId",
     args: { entityId: { type: "string" } },
   },
