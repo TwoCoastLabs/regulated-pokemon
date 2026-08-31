@@ -3379,6 +3379,32 @@ lost), and the adversary can shape a *legal* act into a consent card for
 an advisory ask — attested, explicit, free to decline, but odd; the
 deflection metric owns it.
 
+### Porch round four: the wrong-direction matchup, and the ceremony pile-up (2026-09-01)
+
+Two novice arcs on the weak model. The sharpest find of the whole porch
+program: **"what beats water types?" certified the matchup in the wrong
+direction** — `water strong-against` (what water beats) for an ask about
+what beats water. Every value true, the question wrong: a certified
+off-target answer misleads harder than any abstention. One prompt sentence
+stating the direction rule ("the direction follows the QUESTION, not the
+subject") fixed it — 3/3 live samples flipped to `weak-to`. Two smaller
+fixes beside it: a `how-to-trade` lesson (trading is core mechanics and
+drew the redirect), and padded lessons are now trimmed when a draft mixes
+a generic lesson with on-target claims for an ask that named its subject
+— the certified page opens with the answer, not a brochure; an ask that
+named nothing keeps its lessons.
+
+Filed without a fix, for a design decision: **the ceremony pile-up**. An
+impatient trainer who types through pending cards compounds ceremony —
+one arc spent five interactions across two abandoned cards and two
+questions with zero records filed. The candidate fix is lesson 1 extended
+one step: a proposal card is itself recorded ceremony, so a reply naming
+a direct term of the card's dimension ("speed" against a basis card)
+could bind without the confirm click, the way a recorded question's
+direct answer already does. Held for a decision because it widens what
+binds without a card click — the leniency is auditable (the proposal is
+in the transcript) but it is a rigor dial, not a bug fix.
+
 ## Appendix — how to reproduce
 
 ```sh

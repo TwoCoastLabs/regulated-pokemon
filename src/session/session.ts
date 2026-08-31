@@ -663,6 +663,25 @@ export function deflectedProfileClaims(world: SessionWorld, ask: string, propose
   return profileClaims(named[0]!);
 }
 
+/**
+ * Lessons that rode in as padding, trimmed (porch round four, 2026-09-01:
+ * "what beats water types?" answered the matchup with the red-vs-blue lesson
+ * stapled on; "tell me more about Caterpie" opened with the what-is-pokemon
+ * lesson before the facts). When a draft carries non-lesson claims AND the
+ * ask names a certified species or type, the entity was the subject and a
+ * generic lesson beside it is deflection residue — the certified page should
+ * open with the answer, not a brochure. An ask that names nothing keeps its
+ * lessons: they may be exactly what was wanted.
+ */
+function trimPaddedLessons(world: SessionWorld, ask: string, claims: readonly Claim[]): readonly Claim[] {
+  const lessons = claims.filter((claim) => claim.kind === "explanation");
+  if (lessons.length === 0 || lessons.length === claims.length) return claims;
+  const haystack = ` ${ask.toLowerCase()} `;
+  const namesType = [...world.registry.typeNames].some((type) => new RegExp(`\\b${type}\\b`).test(haystack));
+  if (!namesType && !namesCertifiedEntity(world.registry, ask)) return claims;
+  return claims.filter((claim) => claim.kind !== "explanation");
+}
+
 /** One species' certified profile — the shape both the deflection door and a
  * nominated profile route compose. */
 function profileClaims(entityId: string): readonly Claim[] {
@@ -1178,13 +1197,14 @@ async function answer(
     // The lesson deflection has the same backstop here as at discovery: a
     // scoped answer that is all lessons for an ask naming one species gets
     // the entity's profile instead — the model can deflect at either hop.
-    const profile = deflectedProfileClaims(world, ask, decoded.claims);
+    const groomed = { ...decoded, claims: trimPaddedLessons(world, ask, decoded.claims) };
+    const profile = deflectedProfileClaims(world, ask, groomed.claims);
     draft =
       profile.length > 0
-        ? { ...decoded, claims: profile, rosters: [] }
+        ? { ...groomed, claims: profile, rosters: [] }
         : routed.length === 0
-          ? decoded
-          : { ...decoded, claims: [...decoded.claims, ...routed] };
+          ? groomed
+          : { ...groomed, claims: [...groomed.claims, ...routed] };
   }
 
   // The scope escalation, generalized (epic #64, slice 2). The proposed answer

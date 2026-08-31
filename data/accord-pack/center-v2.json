@@ -1033,6 +1033,26 @@
       }
     },
     {
+      "id": "how-to-trade",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-how-to-trade",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Trading needs two Game Boys, two cartridges and a Link Cable: visit the Cable Club upstairs in any Pokémon Center, connect, and each side picks a Pokémon to send. Trades are how you complete the Pokédex — some Pokémon live only in Red or only in Blue — and a few, like Kadabra, Machoke, Graveler and Haunter, evolve the moment they are traded. A traded Pokémon remembers its Trainer: it grows faster, but it may ignore you if your badges are too few for its level.",
+            "digest": "sha256:67ffc5867de3c1dd6785a5002046f6af356ea1872786265a9c4f15814a281432"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Trading needs two Game Boys, two cartridges and a Link Cable: visit the Cable Club upstairs in any Pokémon Center, connect, and each side picks a Pokémon to send. Trades are how you complete the Pokédex — some Pokémon live only in Red or only in Blue — and a few, like Kadabra, Machoke, Graveler and Haunter, evolve the moment they are traded. A traded Pokémon remembers its Trainer: it grows faster, but it may ignore you if your badges are too few for its level.",
+            "digest": "sha256:67ffc5867de3c1dd6785a5002046f6af356ea1872786265a9c4f15814a281432"
+          }
+        ]
+      }
+    },
+    {
       "id": "red-blue-vs-yellow",
       "article": "IA-6",
       "block": {

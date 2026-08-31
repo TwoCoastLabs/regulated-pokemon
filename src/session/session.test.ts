@@ -936,6 +936,40 @@ describe("the route nomination: the model picks the door, the door does the work
   });
 });
 
+describe("padded lessons are trimmed when the ask named its subject (porch round four)", () => {
+  it("drops the generic lesson riding beside on-target facts", async () => {
+    const padded = JSON.stringify({
+      rosters: [],
+      claims: [
+        { kind: "explanation", blockId: "what-is-pokemon" },
+        { kind: "fact", entityId: "caterpie", factId: "types" },
+      ],
+    });
+    const provider = scripted("padder", (purpose) => (purpose === "answer" ? padded : "decline"));
+    const d = deps(provider);
+    let state = await say(startSession(), "I'm playing Red and Blue in Kanto. Tell me more about Caterpie", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims.some((claim) => claim.kind === "explanation")).toBe(false);
+    expect(record.manifest?.claims.some((claim) => claim.kind === "fact" && claim.entityId === "caterpie")).toBe(true);
+  });
+
+  it("keeps the lessons when the ask named nothing — they may be the answer", async () => {
+    const mixed = JSON.stringify({
+      rosters: [],
+      claims: [
+        { kind: "explanation", blockId: "what-is-badge" },
+        { kind: "gameRule", ruleId: "badge-count" },
+      ],
+    });
+    const provider = scripted("teacher", (purpose) => (purpose === "answer" ? mixed : "decline"));
+    const d = deps(provider);
+    const state = await say(startSession(), "how do badges work and how many are there?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.manifest?.claims.some((claim) => claim.kind === "explanation")).toBe(true);
+  });
+});
+
 describe("teach before interrogating — the lazy half of IA-1", () => {
   const lessonAnswer = JSON.stringify({
     rosters: [],
