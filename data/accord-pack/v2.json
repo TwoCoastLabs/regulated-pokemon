@@ -891,6 +891,26 @@
       }
     },
     {
+      "id": "fainting-and-healing",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-fainting-and-healing",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "A fainted Pok\u00e9mon is not gone \u2014 it just cannot battle until it is revived. Rest your team at any Pok\u00e9mon Center: the nurse restores every Pok\u00e9mon to full health, free, as many times as you need. Fainting costs you nothing permanent, though losing your whole team sends you back to the last Center with lighter pockets. Build the habit early: heal after tough battles, before Gyms, and before long cave stretches.",
+            "digest": "sha256:76c0705a7618ce784f2fa2b429d9e421306758f0ef448a8dae1a45ddb7799432"
+          },
+          {
+            "locale": "en-GB",
+            "text": "A fainted Pok\u00e9mon is not gone \u2014 it just cannot battle until it is revived. Rest your team at any Pok\u00e9mon Center: the nurse restores every Pok\u00e9mon to full health, free, as many times as you need. Fainting costs you nothing permanent, though losing your whole team sends you back to the last Center with lighter pockets. Build the habit early: heal after tough battles, before Gyms, and before long cave stretches.",
+            "digest": "sha256:76c0705a7618ce784f2fa2b429d9e421306758f0ef448a8dae1a45ddb7799432"
+          }
+        ]
+      }
+    },
+    {
       "id": "red-vs-blue",
       "article": "IA-6",
       "block": {
@@ -1146,6 +1166,11 @@
       "id": "pokedex-count",
       "value": 151,
       "label": "Pok\u00e9mon in the Kanto Pok\u00e9dex"
+    },
+    {
+      "id": "level-cap",
+      "value": 100,
+      "label": "the highest level a Pok\u00e9mon can reach"
     }
   ]
 }
