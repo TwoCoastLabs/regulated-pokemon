@@ -663,6 +663,50 @@ describe("the version boundary is a teaching, not a dead end", () => {
     expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: "red-blue-vs-yellow" }]);
   });
 
+  it("a home-version mention re-arms the question, and the direct answer supersedes Yellow", async () => {
+    // Found live: "let's go back to Red/blue" carried tokens but no context
+    // word, bound nothing, and the trainer was trapped in Yellow behind a
+    // lesson that read like an acknowledgment. The mention now earns the
+    // pack's question; the direct answer binds and supersedes.
+    const squirtleFacts = JSON.stringify({
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "squirtle", factId: "types" }],
+    });
+    const provider = scripted("facts", (purpose) => (purpose === "answer" ? squirtleFacts : "decline"));
+    const d = deps(provider);
+
+    let state = await say(startSession(), "tell me about Squirtle", d);
+    state = await say(state, "yellow", d);
+    expect(state.records[0]!.manifest?.claims).toEqual([{ kind: "explanation", blockId: "red-blue-vs-yellow" }]);
+
+    state = await say(state, "ok, let's go back to Red/blue", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+
+    state = await say(state, "Red and Blue", d);
+    // The trap is open: a fresh ask now certifies under the home version.
+    state = await say(state, "tell me about Squirtle", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.grant?.scope.version).toBe("red-blue");
+    expect(record.manifest?.claims.every((claim) => claim.kind === "fact" && claim.entityId === "squirtle")).toBe(true);
+  });
+
+  it("answering the re-armed question with Yellow again keeps teaching — no loop, no wrong bind", async () => {
+    const provider = scripted("mute", () => "decline");
+    const d = deps(provider);
+
+    let state = await say(startSession(), "tell me about Squirtle", d);
+    state = await say(state, "yellow", d);
+    state = await say(state, "what about red though?", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+    state = await say(state, "no, still yellow", d);
+
+    // Yellow re-affirmed: back to the boundary teaching, not a question loop.
+    expect(state.phase.kind).toBe("gathering");
+    const record = state.records[state.records.length - 1]!;
+    expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: "red-blue-vs-yellow" }]);
+  });
+
   it("still teaches an ordinary lesson across the boundary", async () => {
     const lesson = JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-badge" }] });
     const provider = scripted("teacher", (purpose) => (purpose === "answer" ? lesson : "decline"));
