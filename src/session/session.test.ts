@@ -748,6 +748,58 @@ describe("an anaphoric follow-up carries its antecedent (found live, 2026-08-31)
     expect(scopeCalls).toBe(scopeCallsBefore);
   });
 
+  it("mints the catalogue roster for a bare species-listing ask, even with no roster on file", async () => {
+    // Found live: lesson, lesson, "give me a list of those species" — no
+    // roster in the record, route stood down, model abstained twice. A bare
+    // listing ask about species/Pokémon wants the catalogue itself, which
+    // the kernel already spells as the empty criteria list.
+    const lesson = JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-pokemon" }] });
+    let answerCalls = 0;
+    const provider = new ScriptedProvider("scripted:lessons", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      answerCalls += 1;
+      return lesson;
+    });
+    const d = deps(provider);
+
+    let state = await say(startSession(), "tell me about this game", d);
+    const callsBefore = answerCalls;
+    state = await say(state, "give me a list of those species", d);
+    // Membership reads the registry, so the listing rightly costs a version
+    // question first — the pack's own, never the ladder.
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+    state = await say(state, "Red and Blue", d);
+
+    expect(answerCalls).toBe(callsBefore); // composed from the registry, no model call
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims.filter((claim) => claim.kind === "membership")).toHaveLength(10);
+    expect(record.manifest?.claims.some((claim) => claim.kind === "count")).toBe(true);
+  });
+
+  it("answers 'what are the Pokemon species?' as the listing it is, not an adjacent lesson", async () => {
+    const provider = scripted("mute", () => "decline");
+    const d = deps(provider);
+    let state = await say(startSession(), "ok. what are the Pokemon species?", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+    state = await say(state, "Red and Blue", d);
+    const record = state.records[0]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims.some((claim) => claim.kind === "membership")).toBe(true);
+  });
+
+  it("stands down when the set is qualified — a wrong-subject certificate would be worse than a pass", async () => {
+    const lesson = JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-pokemon" }] });
+    const provider = scripted("teacher", (purpose) => (purpose === "answer" ? lesson : "decline"));
+    const d = deps(provider);
+    const state = await say(startSession(), "give me a list of the legendary species", d);
+    // The route declined to mint the catalogue (leftover: "legendary"); the
+    // model path answered however it answered — the pin is only that no
+    // all-species listing was certified for a qualified ask.
+    const record = state.records[0];
+    expect(record?.manifest?.claims.some((claim) => claim.kind === "membership") ?? false).toBe(false);
+  });
+
   it("keeps the single-ask prompt when the ask names its own subject", async () => {
     const seenPrompts: string[] = [];
     const provider = new ScriptedProvider("scripted:named", (request) => {

@@ -42,6 +42,7 @@ import type { CertifiedRegistry } from "../kernel/registry.js";
 import { restrictionsFor } from "../kernel/pack.js";
 import { resolveScope, type ScopeContext, unmatchedClauses } from "../kernel/scope.js";
 import { requiredDimensionsFor } from "../kernel/scope-deps.js";
+import { buildRoster } from "../kernel/roster.js";
 import { runTransaction, type Transaction } from "../kernel/transaction.js";
 import { renderAnswer } from "../render/reference.js";
 import { proposalDigest, proposeAnswer, proposeScope } from "../harness/advisor.js";
@@ -784,7 +785,7 @@ async function teachOrDiscover(
  * with the anaphoric gate, so "list Electric ones" (a subject of its own)
  * still goes to the model and only a bare "list some for me" takes the
  * deterministic road. */
-const LISTING_CUE = /\b(list|name|show|give)\b/i;
+const LISTING_CUE = /\b(list|name|show|give)\b|\bwhat (?:are|r)\b/i;
 
 /**
  * The listing a bare "can you list at least 10 for me?" earns — composed
@@ -800,7 +801,7 @@ const LISTING_CUE = /\b(list|name|show|give)\b/i;
 function listingClaims(world: SessionWorld, state: SessionState, ask: string): Pick<ManifestDraft, "claims" | "rosters"> | undefined {
   if (!LISTING_CUE.test(ask) || !isAnaphoric(world, ask)) return undefined;
   const prior = [...state.records].reverse().find((record) => (record.manifest?.rosters.length ?? 0) > 0);
-  const roster = prior?.manifest?.rosters[0];
+  const roster = prior?.manifest?.rosters[0] ?? catalogueRoster(world, ask);
   if (roster === undefined || roster.memberIds.length === 0) return undefined;
   const asked = Number(/\d+/.exec(ask)?.[0]);
   const n = Math.min(Number.isFinite(asked) && asked > 0 ? asked : 10, MAX_ANSWER_CLAIMS - 1, roster.memberIds.length);
@@ -811,6 +812,37 @@ function listingClaims(world: SessionWorld, state: SessionState, ask: string): P
       { kind: "count", rosterId: roster.id },
     ],
   };
+}
+
+/**
+ * Everything but the subject and the asking, removed. What survives is the
+ * test of bareness: an ask whose leftovers are empty wants the catalogue
+ * itself; any surviving word ("legendary", "fastest", "water") qualifies the
+ * set, and a qualified set is the model's to compose — a wrong-subject
+ * *certified* answer would be worse than the abstention it replaces, so this
+ * gate trades recall for specificity on purpose (lesson 6) and its misses
+ * cost only a model call.
+ */
+const LISTING_STOPWORDS =
+  /\b(give|show|name|list|what|are|is|me|us|a|an|of|the|those|these|them|all|some|few|at|least|please|can|could|you|ok|okay|so|and|for|out|there|many|more)\b|[^a-z\s]/g;
+
+/**
+ * The catalogue itself as a roster, for a bare listing ask with no filed
+ * roster to reuse — "what are the Pokémon species?" asked before any count
+ * has ever been certified (found live, 2026-08-31: two lessons, no roster,
+ * and the follow-up fell to a redirect twice). The empty criteria list is
+ * the kernel's own spelling of "every certified member".
+ */
+function catalogueRoster(world: SessionWorld, ask: string) {
+  const leftovers = ask
+    .toLowerCase()
+    .replace(/\bpok[eé]mons?\b|\bspecies\b/g, " ")
+    .replace(LISTING_STOPWORDS, " ")
+    .trim();
+  if (leftovers !== "") return undefined;
+  if (!/\bpok[eé]mons?\b|\bspecies\b/i.test(ask)) return undefined;
+  const built = buildRoster(world.registry, "all-species", { all: [] });
+  return built.ok ? built.value : undefined;
 }
 
 /** The reviewed block that owns the version boundary, when the pack carries
@@ -890,8 +922,13 @@ async function answer(
   // previous exchange's certified roster — never from a model's guess at the
   // antecedent (and the weak model, handed the antecedent, still passed).
   // The route outranks a model draft arriving on the discovery hop: for a
-  // listing ask, the record is the authority on what "them" means.
-  reuse = listingClaims(world, state, currentAsk) ?? reuse;
+  // listing ask, the record is the authority on what "them" means. Keyed on
+  // the exchange's FIRST utterance — the ask — because later utterances are
+  // answers to the pack's questions ("Red and Blue") and would unbare it.
+  const openingAsk = state.transcript
+    .slice(state.askStart)
+    .find((event) => event.kind === "utterance" && event.source === "trainer");
+  reuse = listingClaims(world, state, openingAsk?.kind === "utterance" ? openingAsk.text : currentAsk) ?? reuse;
 
   let step;
   if (reuse !== undefined) {
