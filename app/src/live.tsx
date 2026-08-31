@@ -710,16 +710,25 @@ export function Live() {
                 return (
                   <div class="live-item advisor">
                     <Role who="advisor" />
-                    <p class={`live-note ${item.note.tone}`} title={item.note.text}>
-                      {item.note.tone === "error"
-                        ? "The connection to the model failed — nothing was lost."
-                        : "Nothing certified answers that, so the Advisor committed nothing — an honest pass, not a malfunction. A specific Pokémon, move, or how-the-game-works question usually lands."}
-                      {latest && !busy && (
-                        <button type="button" class="live-retry" onClick={() => run((s) => retry(s, deps))}>
-                          try again
-                        </button>
-                      )}
-                    </p>
+                    <div class={`live-note ${item.note.tone}`}>
+                      {/* The Advisor's own words lead — first person, plain,
+                          per note; the fixed reassurance and the countable
+                          diagnostic line are fine print beneath, not the
+                          message a novice has to parse. */}
+                      <p class="live-note-say">
+                        {item.note.text}
+                        {latest && !busy && (
+                          <button type="button" class="live-retry" onClick={() => run((s) => retry(s, deps))}>
+                            try again
+                          </button>
+                        )}
+                      </p>
+                      <p class="fine" title={item.note.detail ?? item.note.text}>
+                        {item.note.tone === "error"
+                          ? "A connection problem, not a refusal — nothing was lost."
+                          : "An honest pass, not a malfunction — nothing uncertified was shown."}
+                      </p>
+                    </div>
                   </div>
                 );
               case "record":
