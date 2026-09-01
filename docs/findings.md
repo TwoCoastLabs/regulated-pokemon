@@ -3539,6 +3539,41 @@ re-failed on them — a terminal note now closes the exchange. Lesson 6,
 compounded: the gauge's first service was not measuring the dial but
 lighting the room around it.
 
+### Porch round nine: drift over an armed question (2026-09-01)
+
+Three novice arcs on the weak model (yes/no asks, misspellings,
+multi-part questions, evolution follow-ups; $0.019 for the whole round).
+The good news held: "is charizard a dragon type?" served the types fact
+straight; "what type is pikachu and what is it weak against?" answered
+both parts in one record; the misspelled "electrik" still reached the
+basis question; and the negated "which starter is not a fire type?"
+deflected honestly to the starter lesson. The round's find was a single
+seam with two faces — what happens when the trainer *doesn't answer* an
+armed question. Face one, the silent swallow: "does pikachu evolve?"
+over the armed basis question produced zero model calls, zero notes, and
+no phase change — the entity-naming clause was filtered from the
+ladder's inbox by design, and the repeat re-ask records nothing, so the
+trainer's new question vanished without a word (a hard dead end at $0
+cost, the cheapest failure yet). Face two, the leaky stale guard: "what
+does it evolve into?" over the armed version question drew a card
+interpreting the trainer's own settled question ("what game should i
+start with?") as a version choice — the interpretation-overlap guard
+passed it on the shared token "what". Three fixes, one seam: the guard
+now ignores question furniture (function words prove nothing about which
+ask an interpretation is reading, and an all-furniture interpretation is
+held stale); a fresh ask-shaped, entity-naming utterance over an armed
+question is a topic change — noted aloud, exchange reopened and keyed at
+the new ask; and an unanswering reply that leaves the question armed
+earns it restated in a note, never a silent turn. Verified live: the
+drift ask now answers immediately when scope is already granted (full
+Pikachu profile, no re-interrogation), and the pronoun follow-up earns
+the restatement then the full profile on "red". Residual, filed not
+fixed: a basis word offered *after* the aside ("speed") answers as a
+fresh bare ask and mints the all-Pokémon ranking rather than resuming
+the set-aside electric ask — honest about its set on the record, but a
+resumption door is a candidate; and a narrow follow-up re-serves the
+full nine-claim profile where one fact would do.
+
 ## Appendix — how to reproduce
 
 ```sh
