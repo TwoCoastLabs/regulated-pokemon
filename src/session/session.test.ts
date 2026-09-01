@@ -970,6 +970,28 @@ describe("padded lessons are trimmed when the ask named its subject (porch round
   });
 });
 
+describe("the ceremony dial, end to end: a card answered in words settles without the click", () => {
+  it("binds the trainer's own basis over the proposed one and certifies the ranking", async () => {
+    const ranking = JSON.stringify({
+      rosters: [{ id: "all-pokemon", criteria: { all: [] } }],
+      claims: [{ kind: "ranking", rosterId: "all-pokemon", basis: "base-speed", direction: "highest" }],
+    });
+    const basisProposal = JSON.stringify({ candidate: { comparisonBasis: "base-stat-total" }, interpreting: "which is best?" });
+    const provider = scripted("ladder", (purpose) => (purpose === "scope" ? basisProposal : ranking));
+    const d = deps(provider);
+
+    let state = await say(startSession(), "I'm playing Red and Blue in Kanto. which pokemon is best?", d);
+    expect(state.phase.kind).toBe("confirming-scope");
+    // The impatient trainer answers the card in words instead of clicking —
+    // and corrects the interpretation while they're at it.
+    state = await say(state, "speed", d);
+
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.grant?.scope.comparisonBasis).toBe("base-speed");
+  });
+});
+
 describe("teach before interrogating — the lazy half of IA-1", () => {
   const lessonAnswer = JSON.stringify({
     rosters: [],

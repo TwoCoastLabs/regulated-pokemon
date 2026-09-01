@@ -55,6 +55,56 @@ function denials(grant: ScopeGrant, transcript: ScopeTranscript, required = WITH
   return verifyScopeGrant({ pack, at: ISSUED_AT, required }, transcript, grant).violations.map(denialCode);
 }
 
+describe("the ceremony dial (pack policy): a proposal arms its dimension only when the pack says so", () => {
+  const proposal = {
+    kind: "proposal",
+    at: "2026-01-01T00:00:10Z",
+    id: "prop-1",
+    candidate: { comparisonBasis: "base-stat-total" },
+    interpreting: "which is better?",
+  } as const;
+  const reply = { kind: "utterance", at: "2026-01-01T00:00:11Z", source: "trainer", text: "speed" } as const;
+
+  it("strict pack (no ceremony section): the bare term after a card binds nothing", () => {
+    const strict = { ...kantoPack() };
+    delete (strict as { ceremony?: unknown }).ceremony;
+    const derivation = deriveScope(strict, [proposal, reply]);
+    expect(derivation.bindings.some((binding) => binding.dimension === "comparisonBasis")).toBe(false);
+  });
+
+  it("dial on: the direct term binds the card's dimension — even correcting the proposed value", () => {
+    const derivation = deriveScope(kantoPack(), [proposal, reply]);
+    const bound = derivation.bindings.find((binding) => binding.dimension === "comparisonBasis");
+    expect(bound?.value).toBe("base-speed");
+    expect(bound?.route).toBe("answer");
+  });
+
+  it("dial on: a negated term does not bind, and a term for an unarmed dimension does not bind", () => {
+    const negated = { ...reply, text: "not speed, hmm" } as const;
+    expect(
+      deriveScope(kantoPack(), [proposal, negated]).bindings.some((b) => b.dimension === "comparisonBasis"),
+    ).toBe(false);
+    const offDimension = { ...reply, text: "yellow" } as const;
+    expect(deriveScope(kantoPack(), [proposal, offDimension]).bindings.some((b) => b.dimension === "version")).toBe(false);
+  });
+
+  it("the window closes at the card's own confirmation and at the next question", () => {
+    const confirmed = {
+      kind: "confirmation",
+      at: "2026-01-01T00:00:11Z",
+      source: "trainer",
+      proposalId: "prop-1",
+      candidateDigest: candidateDigest("prop-1", { comparisonBasis: "base-stat-total" }),
+      decision: "confirm",
+    } as const;
+    const late = { ...reply, at: "2026-01-01T00:00:12Z" } as const;
+    const derivation = deriveScope(kantoPack(), [proposal, confirmed, late]);
+    // The confirmation bound the proposed value; the late "speed" armed nothing.
+    const bound = derivation.bindings.find((binding) => binding.dimension === "comparisonBasis");
+    expect(bound?.value).toBe("base-stat-total");
+  });
+});
+
 describe("the trainer's own words, matched against approved vocabulary", () => {
   it("binds typed values from a plain statement of scope", () => {
     expect(bindingsOf(said("I'm playing Yellow through the Kanto region with 3 badges."))).toEqual({

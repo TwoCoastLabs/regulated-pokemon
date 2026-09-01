@@ -199,6 +199,10 @@ export function deriveScope(pack: AccordPack, transcript: ScopeTranscript): Scop
   const matches = [
     ...directMatches(pack.vocabulary, transcript),
     ...answerMatches(pack.vocabulary, transcript),
+    // The ceremony dial (pack policy, not code): a pending proposal arms its
+    // dimension the way a recorded question does, when — and only when — the
+    // pack says so. Strict packs never reach this line's second half.
+    ...(pack.ceremony?.proposalDirectAnswers === true ? proposalAnswerMatches(pack.vocabulary, transcript) : []),
     ...confirmedMatches(pack.vocabulary, transcript),
   ];
 
@@ -396,6 +400,63 @@ function clauseBlock(clause: Clause, vocabulary: ScopeVocabulary): BlockReason |
  * re-derives both sides. A question arriving on any other channel arms
  * nothing — it is read, and born blocked, exactly as foreign utterances are.
  */
+/**
+ * The ceremony dial's matcher: a proposal card arms its dimensions the way a
+ * recorded question does (see {@link answerMatches}, whose subtleties this
+ * mirrors — negation window, blocked clauses, first-answer-closes). Only the
+ * dimensions the proposal actually put on the card are armed, the window
+ * closes at the next question, proposal, or the card's own confirmation, and
+ * the route is recorded as "answer" — because that is what it is: the reply
+ * to ceremony the trainer was shown, auditable in the transcript where the
+ * proposal sits. Reached only when the pack's ceremony policy opts in.
+ */
+function proposalAnswerMatches(vocabulary: ScopeVocabulary, transcript: ScopeTranscript): ScopeMatch[] {
+  const matches: ScopeMatch[] = [];
+  const window = vocabulary.contextWindow;
+
+  transcript.forEach((event, proposalIndex) => {
+    if (event.kind !== "proposal") return;
+    const dimensions = Object.keys(event.candidate) as ScopeDimension[];
+
+    for (let index = proposalIndex + 1; index < transcript.length; index += 1) {
+      const reply = transcript[index]!;
+      // A new question or proposal changes the subject; the card's own
+      // confirmation settles it — either way this card stops arming.
+      if (reply.kind === "question" || reply.kind === "proposal") break;
+      if (reply.kind === "confirmation" && reply.proposalId === event.id) break;
+      if (reply.kind !== "utterance" || reply.source !== "trainer") continue;
+
+      let answered = false;
+      for (const dimension of dimensions) {
+        const rule = vocabulary.dimensions.find((entry) => entry.dimension === dimension);
+        if (rule === undefined) continue;
+        for (const clause of clausesOf(reply.text, vocabulary)) {
+          const clauseReason = clauseBlock(clause, vocabulary);
+          for (const term of rule.terms) {
+            const at = clause.tokens.findIndex((token) => term.tokens.includes(token));
+            if (at < 0) continue;
+            const negated = clause.tokens
+              .slice(Math.max(0, at - window), at)
+              .some((token) => vocabulary.markers.negation.includes(token));
+            const blockedBy = clauseReason ?? (negated ? "negated" : undefined);
+            if (blockedBy === undefined) answered = true;
+            matches.push({
+              dimension: rule.dimension,
+              value: term.value,
+              evidenceIndex: index,
+              route: "answer",
+              matchedText: clause.text,
+              ...(blockedBy === undefined ? {} : { blockedBy }),
+            });
+          }
+        }
+      }
+      if (answered) break;
+    }
+  });
+  return matches;
+}
+
 function answerMatches(vocabulary: ScopeVocabulary, transcript: ScopeTranscript): ScopeMatch[] {
   const matches: ScopeMatch[] = [];
   const window = vocabulary.contextWindow;

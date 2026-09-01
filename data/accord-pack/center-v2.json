@@ -1,6 +1,9 @@
 {
   "packVersion": 7,
   "id": "pokemon-center-v2",
+  "ceremony": {
+    "proposalDirectAnswers": true
+  },
   "presentation": {
     "locales": [
       "en-US",

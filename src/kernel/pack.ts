@@ -376,10 +376,31 @@ export interface GameRule {
   label: string;
 }
 
+/**
+ * The ceremony dial: how much explicit confirmation the pack demands before
+ * an interpretation binds. Policy, not code — a deployment's compliance
+ * owner sets it in the reviewed pack, every filed record pins the pack that
+ * governed it, and replay proves which dial setting each answer was
+ * certified under. The friction/rigor tradeoff as a versioned artifact.
+ */
+export interface CeremonyPolicy {
+  /**
+   * When true, a trainer's reply that directly names a term of a *pending
+   * proposal's* dimension binds without the confirmation click — the card is
+   * itself recorded ceremony, so the leniency is auditable in the transcript
+   * (hard-won lesson 1, extended one step: a recorded proposal is context).
+   * Absent or false, only the explicit confirmation binds a proposal — the
+   * strict default a regulated pack keeps.
+   */
+  proposalDirectAnswers: boolean;
+}
+
 export interface AccordPack {
   packVersion: typeof PACK_SCHEMA_VERSION;
   /** Stable, versioned id recorded in every manifest this pack governed. */
   id: string;
+  /** Absent means strict: every proposal needs its confirmation. */
+  ceremony?: CeremonyPolicy;
   presentation: Presentation;
   restrictions: readonly RestrictionRule[];
   actions: readonly ActionRule[];
@@ -513,6 +534,24 @@ export function loadPack(input: unknown, registry: CertifiedRegistry): Resolutio
         violation("IA-6", "pack-presentation-missing", "Accord pack says nothing about how an answer may be presented"),
       ],
     };
+  }
+
+  if (document.ceremony !== undefined) {
+    const ceremony = document.ceremony as unknown as Record<string, unknown>;
+    const keys = Object.keys(ceremony);
+    if (
+      typeof document.ceremony !== "object" ||
+      document.ceremony === null ||
+      keys.some((key) => key !== "proposalDirectAnswers") ||
+      typeof ceremony.proposalDirectAnswers !== "boolean"
+    ) {
+      // Closed in both directions, like every policy section: an unreadable
+      // dial is a pack that never decided how much ceremony it demands.
+      return {
+        ok: false,
+        violations: [violation("IA-1", "pack-ceremony-malformed", "Accord pack's ceremony section is not readable")],
+      };
+    }
   }
 
   const pack = document as AccordPack;
