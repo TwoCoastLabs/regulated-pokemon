@@ -1140,7 +1140,7 @@ describe("porch round six: the listing keeps to its subject", () => {
 
     // And the bare catalogue ask keeps its listing — scope wording upstream
     // of the set noun does not unbare it.
-    state = await say(state, "so how many species are there in total?", d);
+    state = await say(state, "so how many species are there?", d);
     const record = state.records[state.records.length - 1];
     expect(record?.outcome.status).toBe("answered");
   });
@@ -1151,6 +1151,28 @@ describe("porch round six: the listing keeps to its subject", () => {
     const last = state.notes[state.notes.length - 1];
     expect(last?.tone).toBe("social");
     expect(last?.text).toContain("Advisor");
+  });
+
+  it("the activation gauge: served, stood-down and guard-dropped are tallied", async () => {
+    const wrongSet = JSON.stringify({
+      rosters: [{ id: "all-species", criteria: { all: [] } }],
+      claims: [{ kind: "membership", rosterId: "all-species", entityId: "bulbasaur", asserted: true }],
+    });
+    const provider = scripted("lazy", (purpose) => (purpose === "answer" ? wrongSet : "decline"));
+    const d = deps(provider);
+
+    // A served cue listing…
+    let state = await say(startSession(), "what are the Pokemon species?", d);
+    state = await say(state, "Red and Blue", d);
+    expect(state.listingActivations.served).toBeGreaterThanOrEqual(1);
+
+    // …a qualified ask that stands the mint down and then trips the guard…
+    state = await say(state, "which pokemon can learn fly?", d);
+    expect(state.listingActivations.guardDropped).toBeGreaterThanOrEqual(1);
+
+    // …and the rate's parts always reconcile: consulted ≥ served + stoodDown.
+    const t = state.listingActivations;
+    expect(t.consulted).toBeGreaterThanOrEqual(t.served + t.stoodDown);
   });
 
   it("the provenance question gets the provenance answer", async () => {

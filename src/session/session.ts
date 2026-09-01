@@ -152,6 +152,19 @@ export interface SessionState {
    * same reason repairs are: a folded resolution is never blended with a
    * first-shape one. */
   folds: number;
+  /**
+   * The listing doors' activation gauge (lesson 6: a deterministic front
+   * door that never engages is a silent usefulness ceiling — and one that
+   * stands down too often is a silently mistuned bareness dial). One tally
+   * per outcome, so the stand-down rate is computable from the record:
+   * `consulted` counts every time a listing door was reached (cue matched,
+   * or a listing nomination arrived); `served` the deterministic answers it
+   * gave; `stoodDown` the consultations the mint refused (not bare, a
+   * qualified set, no prior roster); `guardDropped` the model-composed
+   * catalogue claims the wrong-set guard removed. Findings read these when
+   * a bareness word is next proposed: the dial gets tuned on data.
+   */
+  listingActivations: { consulted: number; served: number; stoodDown: number; guardDropped: number };
   /** Matchup directions corrected at the groom step (porch round five) — a
    * type-subject matchup whose decoded direction contradicts the ask's own
    * word order is flipped, deterministically, and counted here for the same
@@ -211,6 +224,7 @@ export function startSession(idPrefix?: string): SessionState {
     repairs: 0,
     folds: 0,
     flips: 0,
+    listingActivations: { consulted: 0, served: 0, stoodDown: 0, guardDropped: 0 },
     ladderTurns: 0,
   };
 }
@@ -525,9 +539,11 @@ async function drive(
   // dimension costs the pack's own question, never a model interpretation.
   if (lastSaid !== undefined && !askedAlready && state.required === undefined) {
     const listed = listingClaims(world, state, lastSaid.text);
-    if (listed !== undefined) {
-      return drive({ ...state, required: requiredDimensionsFor(listed.claims) }, deps, { ...listed, routed: true });
+    if (listed.kind === "served") {
+      const tallied = tallyListing(state, "served");
+      return drive({ ...tallied, required: requiredDimensionsFor(listed.draft.claims) }, deps, { ...listed.draft, routed: true });
     }
+    if (listed.kind === "stood-down") state = tallyListing(state, "stoodDown");
   }
   // Not during an escalation: a widened `required` means an answer was already
   // attempted and wants more scope, so the shape is known and a fresh discovery
@@ -822,7 +838,7 @@ function namesCertifiedEntity(registry: CertifiedRegistry, clause: string): bool
  */
 function redirect(state: SessionState, deps: SessionDeps): SessionState {
   return note(
-    { ...state, phase: { kind: "gathering" } },
+    { ...state, phase: { kind: "gathering" }, askStart: state.transcript.length },
     deps.now(),
     "I couldn't line that up with anything I can certify. I answer questions about specific " +
       "Pokémon, their moves and matchups, League eligibility, and how the game works — try one of those.",
@@ -907,15 +923,18 @@ async function teachOrDiscover(
     return { state: spent, result: step.decode.reason === NO_CLAIMS_REASON ? "off-domain" : "unusable", claims: [], rosters: [] };
   }
   const draft = step.decode.draft;
-  const spentFolded = { ...spent, folds: spent.folds + step.decode.folds };
+  let spentFolded = { ...spent, folds: spent.folds + step.decode.folds };
   // A nomination outranks whatever else the reply carried: the model chose a
   // door, the door composes, the kernel judges. Invalid ones fall through to
   // exactly the flow a nomination-free reply takes.
   if (step.decode.route !== undefined) {
     const composed = executeRoute(world, state, step.decode.route);
+    const isListing = step.decode.route.routeId === "listing";
     if (composed !== undefined) {
-      return { state: spentFolded, result: "needs-scope", claims: composed.claims, rosters: composed.rosters, routed: true };
+      const tallied = isListing ? tallyListing(spentFolded, "served") : spentFolded;
+      return { state: tallied, result: "needs-scope", claims: composed.claims, rosters: composed.rosters, routed: true };
     }
+    if (isListing) spentFolded = tallyListing(spentFolded, "stoodDown");
     // A refused nomination with nothing beside it is the empty reply it
     // always was — off-domain, never an empty record.
     if (draft.claims.length === 0) {
@@ -969,19 +988,41 @@ const listingCue = (ask: string): boolean => LISTING_VERB.test(ask) || (LISTING_
  * keeps the count beside the sample so the total is never mistaken for the
  * list. N comes from the trainer's own number, clamped to the claim budget.
  */
-function listingClaims(world: SessionWorld, state: SessionState, ask: string): Pick<ManifestDraft, "claims" | "rosters"> | undefined {
-  if (!listingCue(ask)) return undefined;
+function tallyListing(state: SessionState, outcome: "served" | "stoodDown" | "guardDropped"): SessionState {
+  const t = state.listingActivations;
+  return {
+    ...state,
+    listingActivations: {
+      ...t,
+      consulted: outcome === "guardDropped" ? t.consulted : t.consulted + 1,
+      [outcome]: t[outcome] + 1,
+    },
+  };
+}
+
+function listingClaims(
+  world: SessionWorld,
+  state: SessionState,
+  ask: string,
+): { kind: "served"; draft: Pick<ManifestDraft, "claims" | "rosters"> } | { kind: "stood-down" } | { kind: "no-cue" } {
+  if (!listingCue(ask)) return { kind: "no-cue" };
   // One named type is a qualifier the mint understands, so it passes the
   // gate that species names still fail (a species ask is a profile, not a
   // listing). Everything else keeps the anaphoric discipline.
   const haystack = ` ${ask.toLowerCase()} `;
   const typesNamed = [...world.registry.typeNames].filter((type) => new RegExp(`\\b${type}\\b`).test(haystack));
-  if (typesNamed.length !== 1 && !isAnaphoric(world, ask)) return undefined;
-  if (namesCertifiedEntity(world.registry, ask)) return undefined;
-  const prior = typesNamed.length === 1 ? undefined : priorRoster(state);
+  if (typesNamed.length !== 1 && !isAnaphoric(world, ask)) return { kind: "stood-down" };
+  if (namesCertifiedEntity(world.registry, ask)) return { kind: "stood-down" };
+  // The prior roster answers only the bare follow-up ("list 10 of those") —
+  // an ask with substantive leftovers ("which pokemon can learn fly?") names
+  // its own subject, and the last exchange's set must not stand in for it
+  // (found by the activation gauge, 2026-09-01: the stale all-species roster
+  // served a learns-move ask and the guard then certified an empty record).
+  const prior = typesNamed.length === 1 || !bareCatalogueAsk(world, ask) ? undefined : priorRoster(state);
   const roster = prior ?? catalogueRoster(world, ask);
   const asked = Number(/\d+/.exec(ask)?.[0]);
-  return composeListing(roster, Number.isFinite(asked) && asked > 0 ? asked : 10);
+  const draft = composeListing(roster, Number.isFinite(asked) && asked > 0 ? asked : 10);
+  return draft === undefined ? { kind: "stood-down" } : { kind: "served", draft };
 }
 
 /** The most recent certified roster on file, when one exists. */
@@ -1259,7 +1300,7 @@ function teachBoundary(state: SessionState, deps: SessionDeps): SessionState {
     // A pack without the boundary block falls to the honest note — never a
     // fabricated lesson, and never the bare denial this path exists to spare.
     return note(
-      { ...state, phase: { kind: "gathering" } },
+      { ...state, phase: { kind: "gathering" }, askStart: state.transcript.length },
       deps.now(),
       "these records certify Red and Blue only — questions about your version's own facts are outside them, though the catalogue lessons still apply",
       "abstention",
@@ -1277,7 +1318,7 @@ function teachBoundary(state: SessionState, deps: SessionDeps): SessionState {
 async function answer(
   state: SessionState,
   deps: SessionDeps,
-  reuse?: Pick<ManifestDraft, "claims" | "rosters">,
+  reuse?: Pick<ManifestDraft, "claims" | "rosters"> & { routed?: boolean },
 ): Promise<SessionState> {
   const { world, provider } = deps;
   const transactionId = nextTransactionId(state);
@@ -1317,7 +1358,18 @@ async function answer(
   const openingAsk = state.transcript
     .slice(state.askStart)
     .find((event) => event.kind === "utterance" && event.source === "trainer");
-  reuse = listingClaims(world, state, openingAsk?.kind === "utterance" ? openingAsk.text : currentAsk) ?? reuse;
+  // Only when nothing route-composed already rode in: a routed draft was
+  // consulted and tallied at the dispatch hop, and re-checking here would
+  // double-count the gauge.
+  if (reuse?.routed !== true) {
+    const cueListing = listingClaims(world, state, openingAsk?.kind === "utterance" ? openingAsk.text : currentAsk);
+    if (cueListing.kind === "served") {
+      state = tallyListing(state, "served");
+      reuse = cueListing.draft;
+    } else if (cueListing.kind === "stood-down") {
+      state = tallyListing(state, "stoodDown");
+    }
+  }
 
   let step;
   if (reuse !== undefined) {
@@ -1355,7 +1407,7 @@ async function answer(
       });
     } catch (cause) {
       return note(
-        { ...state, providerErrors: state.providerErrors + 1, phase: { kind: "gathering" } },
+        { ...state, providerErrors: state.providerErrors + 1, phase: { kind: "gathering" }, askStart: state.transcript.length },
         deps.now(),
         "I couldn't reach the model just now — nothing was lost on your side. Try that again in a moment.",
         "error",
@@ -1383,7 +1435,7 @@ async function answer(
     const routed = eligibilityClaims(world, ask, []);
     if (routed.length === 0) {
       return note(
-        { ...withUsage, phase: { kind: "gathering" } },
+        { ...withUsage, phase: { kind: "gathering" }, askStart: withUsage.transcript.length },
         deps.now(),
         "I don't have a certified answer for that one, so I'd rather pass than guess. " +
           "A specific Pokémon, a move, or a how-the-game-works question usually lands.",
@@ -1400,7 +1452,7 @@ async function answer(
     // A refused nomination with nothing beside it: the same honest pass an
     // empty reply earns, with the countable line in the detail register.
     return note(
-      { ...withUsage, phase: { kind: "gathering" } },
+      { ...withUsage, phase: { kind: "gathering" }, askStart: withUsage.transcript.length },
       deps.now(),
       "I don't have a certified answer for that one, so I'd rather pass than guess. " +
         "A specific Pokémon, a move, or a how-the-game-works question usually lands.",
@@ -1411,6 +1463,9 @@ async function answer(
     // A nomination at the scoped hop composes here too — same door, same
     // validation, same kernel downstream; an invalid one is simply ignored.
     const nominated = step.decode.route !== undefined ? executeRoute(world, state, step.decode.route) : undefined;
+    if (step.decode.route?.routeId === "listing") {
+      withUsage = tallyListing(withUsage, nominated !== undefined ? "served" : "stoodDown");
+    }
     const decoded = nominated !== undefined ? { ...step.decode.draft, claims: nominated.claims, rosters: nominated.rosters } : step.decode.draft;
     // A model that deflected a gated advisory ask into adjacent facts gets the
     // on-target answer appended; one that addressed the species advice-wise —
@@ -1425,6 +1480,19 @@ async function answer(
     // pack's questions ("Red and Blue") and would unbare a bare listing.
     const openingWords = openingAsk?.kind === "utterance" ? openingAsk.text : ask;
     const rightSet = dropWrongSetClaims(world, openingWords, { claims: directed.claims, rosters: decoded.rosters });
+    if (rightSet.claims.length < directed.claims.length) withUsage = tallyListing(withUsage, "guardDropped");
+    if (rightSet.claims.length === 0 && directed.claims.length > 0) {
+      // The guard emptied the draft: everything it carried was the wrong
+      // set. An honest pass, never an empty certificate.
+      return note(
+        { ...withUsage, phase: { kind: "gathering" }, askStart: withUsage.transcript.length },
+        deps.now(),
+        "I don't have a certified answer for that one, so I'd rather pass than guess. " +
+          "A specific Pokémon, a move, or a how-the-game-works question usually lands.",
+        "abstention",
+        "the wrong-set guard removed every claim the draft carried — nothing was committed",
+      );
+    }
     const groomed = { ...decoded, rosters: rightSet.rosters, claims: trimPaddedLessons(world, ask, rightSet.claims) };
     if (directed.flips > 0) withUsage = { ...withUsage, flips: withUsage.flips + directed.flips };
     const profile = deflectedProfileClaims(world, ask, groomed.claims);

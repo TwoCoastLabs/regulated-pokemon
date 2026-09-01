@@ -266,6 +266,9 @@ function summary(state: SessionState): string {
   return (
     `— ${state.records.length} record(s), ${asked} question(s) asked, ` +
     `${state.notes.length} note(s), ${state.providerErrors} provider error(s), ` +
+    `listing doors ${state.listingActivations.served}/${state.listingActivations.consulted} served` +
+    (state.listingActivations.guardDropped > 0 ? ` (+${state.listingActivations.guardDropped} guard-dropped)` : "") +
+    ", " +
     `${usage.calls} model call(s), $${usage.costUsd.toFixed(4)}${floor}`
   );
 }
