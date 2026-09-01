@@ -3497,6 +3497,27 @@ comparative wording ("more attack") is a vocabulary-context candidate for
 a later data pass; and "top 5 fastest" remains unexpressible (ranking
 names one winner) — S5's windowed roster owns it.
 
+### Porch round eight: the clean round (2026-09-01)
+
+Two stranger-flavored arcs on the weak model, and for the first time the
+round found no wrong answer and no dead end. "list 3 water types pls"
+survived the noise word and certified three water memberships; "does
+thunder ever miss?" surfaced that move-accuracy is certified; "whats
+super effective against ghost?" took the correct direction; "compare the
+speed of jolteon and electrode" bound the basis straight from the words
+with no question; the chatty team ask drew the starter lesson. The one
+soft spot — greetings drew the redirect — earned a warm greeting in the
+social register. The reflection the round was run for: after eight
+rounds, findings have moved from dead ends (rounds 1–3) through
+wrong-certified answers (4–7) to tone (8); every wrong-certified case
+traced to a set or direction the words picked but no layer was checking,
+and the guards now cover subject, direction, and set. The cue-list
+question, answered honestly: recognition cues fail safe and are
+backstopped by nominations; the bareness blocklist is the watched dial —
+its failures are honest passes, its growth is chatty noise, and its
+retirement is S5's grammar-representable listing plus the activation
+counter that would put a gauge on the stand-down rate.
+
 ## Appendix — how to reproduce
 
 ```sh
