@@ -3518,6 +3518,27 @@ its failures are honest passes, its growth is chatty noise, and its
 retirement is S5's grammar-representable listing plus the activation
 counter that would put a gauge on the stand-down rate.
 
+### The activation gauge, and the three bugs it caught being born (2026-09-01)
+
+The stand-down counter promised in round eight, built: SessionState
+carries listingActivations — consulted, served, stoodDown, guardDropped —
+tallied at every listing door (cue dispatch, answer hop, nomination
+executor, the wrong-set guard), reported in the tracer's summary line and
+the dev-trace agent report, so the bareness dial finally has a gauge and
+the next stopword proposal argues against a number. Calibrating it caught
+three live bugs the same afternoon: the answer hop double-counted routed
+drafts (fixed by gating on routed reuse); the prior-roster door was
+subject-blind — "which pokemon can learn fly?" was served the previous
+exchange's all-species roster because the anaphoric gate knows species
+and types but not moves, after which the wrong-set guard emptied the
+draft and an empty manifest certified as answered (the prior door now
+demands the bare ask, and a guard-emptied draft is an honest pass, never
+an empty certificate); and terminal abstention notes left askStart
+pinned, so the next ask inherited the failed exchange's opening words and
+re-failed on them — a terminal note now closes the exchange. Lesson 6,
+compounded: the gauge's first service was not measuring the dial but
+lighting the room around it.
+
 ## Appendix — how to reproduce
 
 ```sh
