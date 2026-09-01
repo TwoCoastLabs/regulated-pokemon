@@ -285,6 +285,14 @@ function socialReply(text: string): string | undefined {
   if (/^(thanks|thank you|thankyou|ty|thx|cool|nice|great|awesome|ok|okay|got it|perfect)[!. ]*$/.test(bare)) {
     return "You're welcome! Ask away whenever you're ready — a Pokémon, a matchup, or how the game works.";
   }
+  if (/^(what data (do|are) you (use|using)|whats? your (data|source)s?|where (do|does) (your|the) (data|answers?|information) come from|how do you know( that| this)?)[?!. ]*$/.test(bare)) {
+    return (
+      "Everything comes from one certified snapshot of the official Pok\u00e9dex records (built from PokeAPI data, " +
+      "used under its license), pinned and checked at load. Every answer is derived from that snapshot at the " +
+      "moment of answering and verified before it reaches you — the provenance line under each answer names the " +
+      "exact snapshot."
+    );
+  }
   if (/^(are you sure|you sure|really|is that right|for real)[?!. ]*$/.test(bare)) {
     return (
       "As sure as the records: every value on that page was read from the certified snapshot at the moment of " +
@@ -935,7 +943,14 @@ async function teachOrDiscover(
  * with the anaphoric gate, so "list Electric ones" (a subject of its own)
  * still goes to the model and only a bare "list some for me" takes the
  * deterministic road. */
-const LISTING_CUE = /\b(list|name|show|give)\b|\bwhat(?: are|s| is|'s)?\b|\bwhich\b/i;
+// Two tiers: the strong verbs stand alone ("list a few for me" — the prior
+// roster is the subject); "what/which" only counts beside a set noun, or
+// bare "what can you do?" becomes a listing and replays the last roster
+// (porch round six, live).
+const LISTING_VERB = /\b(list|name|show|give|enumerate)\b/i;
+const LISTING_WH = /\bwhat(?:s| is|'s| are| r)?\b|\bwhich\b/i;
+const LISTING_NOUN = /\b(pok[eé]mons?|species|types?|legendar(?:y|ies)|mythicals?|rarest)\b/i;
+const listingCue = (ask: string): boolean => LISTING_VERB.test(ask) || (LISTING_WH.test(ask) && LISTING_NOUN.test(ask));
 
 /**
  * The listing a bare "can you list at least 10 for me?" earns — composed
@@ -949,8 +964,15 @@ const LISTING_CUE = /\b(list|name|show|give)\b|\bwhat(?: are|s| is|'s)?\b|\bwhic
  * list. N comes from the trainer's own number, clamped to the claim budget.
  */
 function listingClaims(world: SessionWorld, state: SessionState, ask: string): Pick<ManifestDraft, "claims" | "rosters"> | undefined {
-  if (!LISTING_CUE.test(ask) || !isAnaphoric(world, ask)) return undefined;
-  const prior = priorRoster(state);
+  if (!listingCue(ask)) return undefined;
+  // One named type is a qualifier the mint understands, so it passes the
+  // gate that species names still fail (a species ask is a profile, not a
+  // listing). Everything else keeps the anaphoric discipline.
+  const haystack = ` ${ask.toLowerCase()} `;
+  const typesNamed = [...world.registry.typeNames].filter((type) => new RegExp(`\\b${type}\\b`).test(haystack));
+  if (typesNamed.length !== 1 && !isAnaphoric(world, ask)) return undefined;
+  if (namesCertifiedEntity(world.registry, ask)) return undefined;
+  const prior = typesNamed.length === 1 ? undefined : priorRoster(state);
   const roster = prior ?? catalogueRoster(world, ask);
   const asked = Number(/\d+/.exec(ask)?.[0]);
   return composeListing(roster, Number.isFinite(asked) && asked > 0 ? asked : 10);
@@ -998,21 +1020,59 @@ const LISTING_STOPWORDS =
  * and the follow-up fell to a redirect twice). The empty criteria list is
  * the kernel's own spelling of "every certified member".
  */
+/** The set an ask's own qualifiers pick: one named type, a rarity word, or
+ * the whole catalogue. Shared by the cue door and the nominated listing so a
+ * nomination can never mint a broader set than the words asked for (porch
+ * round six, 2026-09-01: "show me all the fire types" drew the all-species
+ * listing through a catalogue-subject nomination — certified members, wrong
+ * set). */
+function qualifiedSet(world: SessionWorld, ask: string) {
+  const haystack = ` ${ask.toLowerCase()} `;
+  const typesNamed = [...world.registry.typeNames].filter((type) => new RegExp(`\\b${type}\\b`).test(haystack));
+  if (typesNamed.length === 1) {
+    const built = buildRoster(world.registry, `${typesNamed[0]}-pokemon`, { all: [{ kind: "has-type", type: typesNamed[0]! }] });
+    return built.ok ? built.value : undefined;
+  }
+  if (typesNamed.length > 1) return undefined;
+  const oneType = (() => {
+    const hay = ` ${ask.toLowerCase()} `;
+    const named = [...world.registry.typeNames].filter((type) => new RegExp(`\\b${type}\\b`).test(hay));
+    return named.length === 1 ? named[0] : undefined;
+  })();
+  const rarity = /\brarest\b|\blegendar(?:y|ies)\b/i.test(ask) ? "legendary" : /\bmythicals?\b/i.test(ask) ? "mythical" : undefined;
+  if (rarity !== undefined) {
+    const built = buildRoster(world.registry, `${rarity}-pokemon`, { all: [{ kind: "rarity", rarity }] });
+    return built.ok ? built.value : undefined;
+  }
+  return mintCatalogue(world);
+}
+
 function catalogueRoster(world: SessionWorld, ask: string) {
   // Rarity is the one qualifier the mint understands (porch round five:
   // "whats the rarest pokemon?" drew a stale basis card — rarity is not a
   // numeric basis, and the honest answer is the legendaries themselves,
   // expressible today as a rarity roster). Any other surviving word still
   // stands the mint down: a qualified set is the model's to compose.
+  const oneType = (() => {
+    const hay = ` ${ask.toLowerCase()} `;
+    const named = [...world.registry.typeNames].filter((type) => new RegExp(`\\b${type}\\b`).test(hay));
+    return named.length === 1 ? named[0] : undefined;
+  })();
   const rarity = /\brarest\b|\blegendar(?:y|ies)\b/i.test(ask) ? "legendary" : /\bmythicals?\b/i.test(ask) ? "mythical" : undefined;
+  const typeStripper = new RegExp(`\\b(${[...world.registry.typeNames].join("|")})\\b`, "g");
   const leftovers = ask
     .toLowerCase()
-    .replace(/\bpok[eé]mons?\b|\bspecies\b/g, " ")
+    .replace(/\bpok[eé]mons?\b|\bspecies\b|\btypes?\b/g, " ")
     .replace(/\brarest\b|\blegendar(?:y|ies)\b|\bmythicals?\b|\bwhich\b|\bwhats?\b/g, " ")
+    .replace(typeStripper, " ")
     .replace(LISTING_STOPWORDS, " ")
     .trim();
   if (leftovers !== "") return undefined;
-  if (rarity === undefined && !/\bpok[eé]mons?\b|\bspecies\b/i.test(ask)) return undefined;
+  if (oneType !== undefined) {
+    const built = buildRoster(world.registry, `${oneType}-pokemon`, { all: [{ kind: "has-type", type: oneType }] });
+    return built.ok ? built.value : undefined;
+  }
+  if (rarity === undefined && !/\bpok[eé]mons?\b|\bspecies\b|\btypes?\b/i.test(ask)) return undefined;
   if (rarity !== undefined) {
     const built = buildRoster(world.registry, `${rarity}-pokemon`, { all: [{ kind: "rarity", rarity }] });
     return built.ok ? built.value : undefined;
@@ -1069,9 +1129,16 @@ function executeRoute(
   route: { routeId: string; [arg: string]: unknown },
 ): Pick<ManifestDraft, "claims" | "rosters"> | undefined {
   if (route.routeId === "listing") {
-    const roster = route.subject === "prior-roster" ? priorRoster(state) : mintCatalogue(world);
+    const currentAsk = state.transcript
+      .slice(state.askStart)
+      .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
+      .join(" ");
+    // Subject-correct by construction: the set comes from the ask's own
+    // qualifiers, never from the nomination's say-so — a catalogue-subject
+    // nomination for "show me all the fire types" mints the fire roster.
+    const roster = route.subject === "prior-roster" ? (priorRoster(state) ?? qualifiedSet(world, currentAsk)) : qualifiedSet(world, currentAsk);
     const n = typeof route.n === "number" && Number.isFinite(route.n) && route.n > 0 ? route.n : 10;
-    return composeListing(roster ?? mintCatalogue(world), n);
+    return composeListing(roster, n);
   }
   if (route.routeId === "profile") {
     const raw = typeof route.entityId === "string" ? route.entityId.toLowerCase().trim().replace(/\s+/g, "-") : "";

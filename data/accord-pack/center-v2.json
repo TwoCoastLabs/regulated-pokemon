@@ -836,6 +836,26 @@
       }
     },
     {
+      "id": "what-can-you-ask",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-can-you-ask",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "Ask about the certified world and the Advisor answers with verified records: any Pokémon’s profile, stats and evolutions; where it appears; which moves it learns; how types fare against each other; counts, lists and rankings over the whole Pokédex; the fixed rules of the game; and — with your badges established — whether the League’s rules allow a recommendation. What it will not do is guess: a question outside the records gets an honest pass, and every answer shows the snapshot it was verified against.",
+            "digest": "sha256:077c506dc91b3c111639878ba9c2f75494d5315bd878b6ea19e98fae04a53551"
+          },
+          {
+            "locale": "en-GB",
+            "text": "Ask about the certified world and the Advisor answers with verified records: any Pokémon’s profile, stats and evolutions; where it appears; which moves it learns; how types fare against each other; counts, lists and rankings over the whole Pokédex; the fixed rules of the game; and — with your badges established — whether the League’s rules allow a recommendation. What it will not do is guess: a question outside the records gets an honest pass, and every answer shows the snapshot it was verified against.",
+            "digest": "sha256:077c506dc91b3c111639878ba9c2f75494d5315bd878b6ea19e98fae04a53551"
+          }
+        ]
+      }
+    },
+    {
       "id": "how-to-play",
       "article": "IA-6",
       "block": {

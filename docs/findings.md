@@ -3453,6 +3453,26 @@ live-verified in one replayed conversation:
   counted (SessionState.flips) so a corrected resolution is never blended
   with a first-shape one.
 
+### Porch round six: the listing keeps to its subject (2026-09-01)
+
+Two arcs on the weak model. The compound roster shone — "whats the fastest
+water pokemon that learns surf?" certified a ranking over a
+has-type-plus-learns-move roster the model composed itself. The round's
+bug was its mirror: **"show me all the fire types" certified the
+all-species listing** — the first eleven of the dex, for a fire ask — via
+a catalogue-subject nomination no gate was checking. The listing set now
+comes from the ask's own qualifiers, never the nomination's say-so: one
+named type mints that type's roster (through the cue door and the
+nomination door alike), two named types stand the mint down, and the
+widened "what/which" cue only counts beside a set noun — its first draft
+made bare "what" a listing verb and "what can you do?" replayed the fire
+roster (caught live, pinned). Beside it: a what-can-you-ask capabilities
+lesson (the empty-state question was landing on adjacent lessons), the
+provenance question ("what data do you use?") joined the social-meta
+register with the certified-snapshot answer, and height/weight joined
+learn-levels on the uncertified-facts backlog — the abstention is the
+honest ceiling until the snapshot certifies them.
+
 ## Appendix — how to reproduce
 
 ```sh
