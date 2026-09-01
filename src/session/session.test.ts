@@ -1121,6 +1121,30 @@ describe("porch round six: the listing keeps to its subject", () => {
     expect(record.manifest?.claims.some((claim) => claim.kind === "membership")).toBe(false);
   });
 
+  it("a qualified ask never keeps a catalogue-set membership or count (the wrong-set guard)", async () => {
+    // Porch round seven: with the doors already subject-correct, the model
+    // composed the wrong set itself — all-species memberships for a
+    // learns-move ask. Certified-true members, wrong set; the guard drops
+    // them and an honest pass beats the wrong certificate.
+    const wrongSet = JSON.stringify({
+      rosters: [{ id: "all-species", criteria: { all: [] } }],
+      claims: [
+        { kind: "membership", rosterId: "all-species", entityId: "bulbasaur", asserted: true },
+        { kind: "count", rosterId: "all-species" },
+      ],
+    });
+    const provider = scripted("lazy", (purpose) => (purpose === "answer" ? wrongSet : "decline"));
+    const d = deps(provider);
+    let state = await say(startSession(), "I'm playing Red and Blue in Kanto. which pokemon can learn fly?", d);
+    expect(state.records.every((record) => (record.manifest?.claims.filter((c) => c.kind === "membership").length ?? 0) === 0)).toBe(true);
+
+    // And the bare catalogue ask keeps its listing — scope wording upstream
+    // of the set noun does not unbare it.
+    state = await say(state, "so how many species are there in total?", d);
+    const record = state.records[state.records.length - 1];
+    expect(record?.outcome.status).toBe("answered");
+  });
+
   it("the provenance question gets the provenance answer", async () => {
     const provider = scripted("mute", () => "decline");
     const state = await say(startSession(), "what data do you use?", deps(provider));

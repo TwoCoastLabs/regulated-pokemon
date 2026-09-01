@@ -3473,6 +3473,30 @@ register with the certified-snapshot answer, and height/weight joined
 learn-levels on the uncertified-facts backlog — the abstention is the
 honest ceiling until the snapshot certifies them.
 
+### Porch round seven: the wrong set through the third door (2026-09-01)
+
+The deterministic doors were already subject-correct, and the wrong-set
+class returned anyway: for "which pokemon can learn fly?" the weak model
+composed the whole-catalogue roster with memberships and a count itself —
+the empty-criteria form the prompt teaches, applied to an ask the words
+had qualified. Fixed in layers: the wrong-set guard drops membership and
+count claims that cite an empty-criteria roster when the exchange's
+opening ask is not the bare catalogue ask (an honest pass beats a
+certified wrong set); bareness is measured over the scope-unmatched
+wording only, so a profile preamble ("I'm playing Red and Blue in
+Kanto...") cannot unbare the count that follows it; both the nomination
+executor and the guard key on the opening utterance, because later
+utterances answer the pack's questions and would requalify the ask; and
+the listing route's description now tells the model qualified sets are
+its own to compose — after which it did, 2/2 live samples certifying the
+true fly-learners roster (the pidgey line, spearow and kin,
+kernel-verified). The ask travelled certified-wrong-set to honest-pass to
+certified-right-set inside one round. Also landed: "who has more attack,
+machamp or machoke?" still costs the deterministic basis question — the
+comparative wording ("more attack") is a vocabulary-context candidate for
+a later data pass; and "top 5 fastest" remains unexpressible (ranking
+names one winner) — S5's windowed roster owns it.
+
 ## Appendix — how to reproduce
 
 ```sh
