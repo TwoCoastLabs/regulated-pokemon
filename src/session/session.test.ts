@@ -1169,6 +1169,57 @@ describe("porch round ten: the comparative ask binds its own basis", () => {
   });
 });
 
+describe("porch round eleven: cards do not eat questions", () => {
+  it("'i got red' binds the version — the acquisition verb is context", async () => {
+    // The live thread that found this round's seam never needed its card:
+    // "i got red he got blue" is a scope statement, and the bank's own
+    // v-got-yellow note predicted the miss.
+    const provider = scripted("mute", () => "decline");
+    const state = await say(startSession(), "i got red he got blue. is squirtle any good long term?", deps(provider));
+    expect(state.transcript.filter((event) => event.kind === "question")).toHaveLength(0);
+    expect(state.phase.kind).not.toBe("confirming-scope");
+  });
+
+  it("a fresh ask naming a certified move drifts past a pending card to its answer", async () => {
+    // A vague opener leaves a version card pending; the move ask names no
+    // species, but moves are certified subjects too — the drift door reads
+    // the whole registry, not just its species shelf.
+    const versionCard = JSON.stringify({ candidate: { version: "red-blue" }, interpreting: "the crimson cartridge" });
+    const provider = new ScriptedProvider("porch", (request) =>
+      request.purpose === "scope" ? versionCard : request.prompt.includes("thunderbolt") ? thunderboltAnswer() : "decline",
+    );
+    const d = deps(provider);
+    let state = await say(startSession(), "we just started with the crimson cartridge. is squirtle any good long term?", d);
+    state = await say(state, "asdfgh jkl", d);
+    expect(state.phase.kind).toBe("confirming-scope");
+
+    state = await say(state, "what is thunderbolt's power?", d);
+    expect(state.notes.some((n) => n.detail?.includes("topic change"))).toBe(true);
+    state = await say(state, "red", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims[0]).toMatchObject({ kind: "fact", entityId: "thunderbolt" });
+  });
+
+  it("an identical re-proposal restates the pending card instead of duplicating it", async () => {
+    const versionCard = JSON.stringify({ candidate: { version: "red-blue" }, interpreting: "the crimson cartridge" });
+    const provider = scripted("echo", (purpose) => (purpose === "scope" ? versionCard : "decline"));
+    const d = deps(provider);
+    let state = await say(startSession(), "we just started with the crimson cartridge. is squirtle any good long term?", d);
+    state = await say(state, "asdfgh jkl", d);
+    expect(state.phase.kind).toBe("confirming-scope");
+    const cards = state.transcript.filter((event) => event.kind === "proposal").length;
+    const pending = state.phase.kind === "confirming-scope" ? state.phase.proposal.id : undefined;
+
+    state = await say(state, "qwerty uiop", d);
+    // No second card: the pending one keeps its identity, and the trainer is
+    // pointed back at it rather than left in silence.
+    expect(state.transcript.filter((event) => event.kind === "proposal")).toHaveLength(cards);
+    expect(state.phase.kind === "confirming-scope" && state.phase.proposal.id).toBe(pending);
+    expect(state.notes.some((n) => n.detail?.includes("card restated"))).toBe(true);
+  });
+});
+
 describe("porch round six: the listing keeps to its subject", () => {
   it("'show me all the fire types' mints the fire roster, never the catalogue", async () => {
     const provider = scripted("mute", () => "decline");

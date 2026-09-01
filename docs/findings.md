@@ -3611,6 +3611,39 @@ was built to: scope phrasing c-fastest moved from the ladder's column
 to the deterministic one, bound 23 → 24 of 50, and the pin in
 `activation.test.ts` now carries the date and the reason.
 
+### Porch round eleven: cards do not eat questions (2026-09-01)
+
+Three arcs on the weak model ($0.014). Two were clean sweeps: "actually
+i meant blastoise" re-answered for the right species, "who beats
+mewtwo?" took the correct matchup direction on a restricted species,
+"how many types are there?" served a certified count claim, and the
+team-building ask deflected honestly to the League lesson. The third —
+a rambling two-brothers opener, a keyboard mash, then "what does a
+potion do?" — found the card-shaped cousin of round nine's seam. The
+opener's "i got red he got blue" bound nothing ("got" was not a
+context word — the scope bank's own v-got-yellow note had predicted
+exactly this miss), so the version question fired; the mash drew a
+legitimate card from the exchange's own words; and then the potion ask
+was swallowed — "potion" names no *species*, so the drift door stood
+down, and the ladder re-proposed the identical card, burning a turn on
+a duplicate. Three fixes. "Got" is now version context in both packs —
+the activation instrument recorded it (bound 24 → 25), and with it the
+whole live thread dissolves: the opener binds at turn one and all
+three turns answer with zero questions and zero cards ($0.0056).
+The drift door now reads the whole registry — species, moves, items —
+through `namesCertifiedSubject` (the profile door keeps its
+species-only check; only species have profiles), and its gate is the
+phase, not a question event: a ladder-first exchange arms a card
+without ever asking, and the door also demands the trainer's utterance
+be the transcript's last word, so a /confirm or /reject is never read
+as drift. And an identical re-proposal now restates the pending card
+in a note — same id, no duplicate, never silence — completing the
+round-nine invariant: whether the exchange is blocked on a question or
+a card, an unanswering turn always says something and never spends one.
+Recurring, filed not fixed: the nine-claim profile re-serve where one
+fact would do, now observed in three rounds ("what type is charizard"
+→ "actually i meant blastoise" earned the full profile).
+
 ## Appendix — how to reproduce
 
 ```sh
