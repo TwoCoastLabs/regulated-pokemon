@@ -320,6 +320,16 @@ export interface DimensionRule {
   valueType: "text" | "number";
   /** Asked verbatim when this dimension is the one thing still missing. */
   question: string;
+  /**
+   * Declares this dimension a parameter of the ask rather than a fact about
+   * the trainer's world — so its terms may bind inside the trainer's own
+   * interrogative clauses. "Who's faster?" is where a comparison basis
+   * *lives*; no trainer states one as a fact. World dimensions must never
+   * declare this: asking "is it Yellow?" is not playing Yellow, and the
+   * crucible pins that refusal (IA-1/question-is-not-assertion). Every other
+   * block — quoted, reported, instruction, foreign channel — still applies.
+   */
+  askParameter?: boolean;
   terms: readonly VocabularyTerm[];
 }
 
@@ -1103,6 +1113,15 @@ function checkVocabulary(vocabulary: ScopeVocabulary): Violation[] {
       violations.push(
         violation("IA-1", "pack-dimension-unaskable", `"${rule.dimension}" has no terms to match or no question to ask`, {
           actual: `${rule.terms.length} terms`,
+        }),
+      );
+    }
+
+    if (rule.askParameter !== undefined && typeof rule.askParameter !== "boolean") {
+      violations.push(
+        violation("IA-1", "pack-ask-parameter-malformed", `"${rule.dimension}" declares askParameter as something other than a boolean`, {
+          expected: "boolean",
+          actual: typeof rule.askParameter,
         }),
       );
     }

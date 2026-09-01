@@ -524,7 +524,14 @@ function directMatches(vocabulary: ScopeVocabulary, transcript: ScopeTranscript)
     for (const clause of clausesOf(event.text, vocabulary)) {
       const clauseReason = foreign ? "foreign-channel" : clauseBlock(clause, vocabulary);
       for (const { rule, value, negated } of termsIn(clause, vocabulary)) {
-        const blockedBy = clauseReason ?? (negated ? "negated" : undefined);
+        // An ask-parameter dimension binds inside the trainer's own question
+        // — "who's faster?" is where a comparison basis lives (the pack
+        // declares which dimensions are the ask's, never this code). Only
+        // the question block lifts: clauseBlock orders quoted, instruction
+        // and reported above it, so a "question" reason here means none of
+        // those applied, and the foreign channel was decided before any.
+        const lifted = clauseReason === "question" && rule.askParameter === true ? undefined : clauseReason;
+        const blockedBy = lifted ?? (negated ? "negated" : undefined);
         matches.push({
           dimension: rule.dimension,
           value,

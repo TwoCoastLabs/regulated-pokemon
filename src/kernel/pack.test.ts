@@ -137,6 +137,17 @@ describe("a pack that cannot be trusted is refused by name", () => {
     );
   });
 
+  it("refuses an askParameter that is not a boolean", () => {
+    expect(
+      denials(
+        loadWith((draft) => {
+          const rule = draft.vocabulary.dimensions.find((entry) => entry.dimension === "comparisonBasis")!;
+          (rule as { askParameter: unknown }).askParameter = "yes";
+        }),
+      ),
+    ).toContain("IA-1/pack-ask-parameter-malformed");
+  });
+
   it("refuses two rules sharing one id", () => {
     expect(
       denials(loadWith((draft) => (draft.restrictions as unknown[]).push({ ...draft.restrictions[0] }))),

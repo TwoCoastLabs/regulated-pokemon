@@ -106,7 +106,11 @@ describe("the activation ceiling, pinned", () => {
   it("pins the filed numbers", () => {
     expect(report.retrieval).toEqual({ canonical: { engaged: 30, total: 30 }, paraphrase: { engaged: 23, total: 27 } });
     expect(report.nomination).toEqual({ canonical: { engaged: 12, total: 12 }, paraphrase: { engaged: 13, total: 13 } });
-    expect(report.scope).toEqual({ bound: 23, unbound: 14, "bound-wrong": 4, contradicted: 1, inert: 8 });
+    // bound rose 23 → 24 on 2026-09-01: the comparative term ("faster",
+    // "fastest" with a frame word) moved c-fastest from the ladder's column
+    // to the deterministic one — the gate's recall improving is exactly what
+    // this instrument exists to record.
+    expect(report.scope).toEqual({ bound: 24, unbound: 13, "bound-wrong": 4, contradicted: 1, inert: 8 });
   });
 
   it("renders as Markdown from the data", () => {

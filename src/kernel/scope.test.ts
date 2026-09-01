@@ -147,6 +147,29 @@ describe("a bare noun carries no authority", () => {
   });
 });
 
+describe("an ask parameter binds inside the trainer's own question", () => {
+  // comparisonBasis declares askParameter in the pack: it is a parameter of
+  // the ask, not a fact about the trainer's world — "who's faster?" is where
+  // a basis lives, and no trainer states one as a fact.
+  it("binds the comparison basis from the comparative ask itself", () => {
+    expect(bindingsOf(said("whos faster, pikachu or raichu?"))).toEqual({ comparisonBasis: "base-speed" });
+    expect(bindingsOf(said("which pokemon is the fastest?"))).toEqual({ comparisonBasis: "base-speed" });
+  });
+
+  it("never lifts the question block for a world dimension", () => {
+    expect(bindingsOf(said("Which of these games is the Yellow version?"))).toEqual({});
+  });
+
+  it("keeps every other block: quoted and reported comparatives bind nothing", () => {
+    expect(bindingsOf(said('The guide says "which one is faster?"'))).toEqual({});
+    expect(bindingsOf(said("my rival asked whos faster"))).toEqual({});
+  });
+
+  it("still demands a frame word — a comparative loose in prose binds nothing", () => {
+    expect(bindingsOf(said("how do i level up faster"))).toEqual({});
+  });
+});
+
 describe("the question is the context", () => {
   it("binds a bare answer to the recorded question, on the answer route", () => {
     const derivation = deriveScope(pack, [asked("version"), said("yellow")]);

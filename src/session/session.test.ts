@@ -1148,6 +1148,27 @@ describe("porch round nine: drift over an armed question is never a silent turn"
   });
 });
 
+describe("porch round ten: the comparative ask binds its own basis", () => {
+  it("'which pokemon is the fastest?' costs no card and no basis question", async () => {
+    const ranking = JSON.stringify({
+      rosters: [{ id: "all-pokemon", criteria: { all: [] } }],
+      claims: [{ kind: "ranking", rosterId: "all-pokemon", basis: "base-speed", direction: "highest" }],
+    });
+    const provider = scripted("ranker", (purpose) => (purpose === "scope" ? "decline" : ranking));
+    const d = deps(provider);
+    const state = await say(startSession(), `${PROFILE} which pokemon is the fastest?`, d);
+
+    // Before the comparative term and the ask-parameter lift, this ask cost
+    // the deterministic basis question (findings §19); now the ask carries
+    // its basis the way it carries its subject.
+    expect(state.transcript.filter((event) => event.kind === "question")).toHaveLength(0);
+    expect(state.phase.kind).toBe("gathering");
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.grant?.scope.comparisonBasis).toBe("base-speed");
+  });
+});
+
 describe("porch round six: the listing keeps to its subject", () => {
   it("'show me all the fire types' mints the fire roster, never the catalogue", async () => {
     const provider = scripted("mute", () => "decline");
