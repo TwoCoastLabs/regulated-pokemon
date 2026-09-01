@@ -597,6 +597,7 @@
         "dimension": "comparisonBasis",
         "valueType": "text",
         "question": "What should the comparison be based on \u2014 speed, attack, defense, HP, or base stat total?",
+        "askParameter": true,
         "terms": [
           {
             "value": "base-speed",
@@ -617,6 +618,25 @@
               "basis",
               "highest",
               "lowest"
+            ]
+          },
+          {
+            "value": "base-speed",
+            "tokens": [
+              "faster",
+              "fastest",
+              "speedier",
+              "speediest"
+            ],
+            "context": [
+              "who",
+              "whos",
+              "who's",
+              "which",
+              "than",
+              "pokemon",
+              "one",
+              "ones"
             ]
           },
           {

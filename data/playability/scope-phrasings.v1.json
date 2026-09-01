@@ -239,7 +239,7 @@
       "expect": {
         "comparisonBasis": "base-speed"
       },
-      "notes": "'fastest' is not a vocabulary token; the ladder's job"
+      "notes": "'fastest' with a frame word binds deterministically since the comparative term (2026-09-01); 'quickest' remains the long-tail exemplar"
     },
     {
       "id": "c-hits-hardest",

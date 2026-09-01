@@ -3574,6 +3574,43 @@ the set-aside electric ask — honest about its set on the record, but a
 resumption door is a candidate; and a narrow follow-up re-serves the
 full nine-claim profile where one fact would do.
 
+### Porch round ten: the ask carries its own basis (2026-09-01)
+
+Two novice arcs on the weak model ($0.014 for the round). One came back
+spotless — the misspelled "picachu" resolved through the propose/verify
+seam, "where do i find pikachu?" and "what moves can it learn?" served
+the certified locations and learnset facts, and "it" carried across all
+three turns. The other exposed the oldest friction in the findings log
+finally at its root: "whos faster, pikachu or raichu?" cost a
+confirmation card for the one basis the words could mean, and the
+elliptical follow-ups over that card let the whole comparison thread
+evaporate into a bulbasaur profile. Two causes, both structural. First,
+the vocabulary had no comparative forms — fixed with a new base-speed
+term ("faster", "fastest", "speedier", "speediest") whose context words
+are the comparison frame itself ("who", "which", "than", "pokemon",
+"one"), so "how do i level up faster" still binds nothing. Second and
+deeper: the kernel blanket-blocked interrogative clauses from binding
+any dimension — right for world dimensions (asking "is it Yellow?" is
+not playing Yellow; the crucible pins that), wrong for comparisonBasis,
+whose natural habitat *is* the question — no trainer states a basis as
+a fact. The distinction is now policy, not code: a pack dimension may
+declare `askParameter: true`, and only the question block lifts for it
+— quoted, reported, instruction and foreign-channel blocks all still
+apply, and a malformed declaration refuses by name
+(IA-1/pack-ask-parameter-malformed). Live after the change: the same
+ask answers in one model call with scope
+`comparisonBasis=base-speed`, zero questions, zero cards ($0.0021), and
+the follow-up serves beside it. One deliberate line held: "quickest"
+stays out of the vocabulary as the documented long-tail exemplar — the
+demo's ladder scenes, the crucible's long-tail fixtures and the
+scenario bank all exercise the propose/confirm path through it, some
+word must always play that role, and S4's shortlist grammar is the
+mechanism that retires the gap class wholesale rather than word by
+word. The activation instrument recorded the recall gain the way it
+was built to: scope phrasing c-fastest moved from the ladder's column
+to the deterministic one, bound 23 → 24 of 50, and the pin in
+`activation.test.ts` now carries the date and the reason.
+
 ## Appendix — how to reproduce
 
 ```sh

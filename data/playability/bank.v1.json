@@ -637,7 +637,7 @@
       "expectClaimKinds": [
         "ranking"
       ],
-      "notes": "ranking by base-speed; 'fastest' is long-tail and confirmed via the ladder",
+      "notes": "ranking by base-speed; 'fastest' binds deterministically since the comparative term (2026-09-01)",
       "phrasings": [
         "Fastest Electric Pokemon?",
         "Which Electric-type has the highest Speed?",
