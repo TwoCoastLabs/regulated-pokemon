@@ -723,11 +723,13 @@ export function Live() {
                           </button>
                         )}
                       </p>
-                      <p class="fine" title={item.note.detail ?? item.note.text}>
-                        {item.note.tone === "error"
-                          ? "A connection problem, not a refusal — nothing was lost."
-                          : "An honest pass, not a malfunction — nothing uncertified was shown."}
-                      </p>
+                      {item.note.tone !== "social" && (
+                        <p class="fine" title={item.note.detail ?? item.note.text}>
+                          {item.note.tone === "error"
+                            ? "A connection problem, not a refusal — nothing was lost."
+                            : "An honest pass, not a malfunction — nothing uncertified was shown."}
+                        </p>
+                      )}
                     </div>
                   </div>
                 );

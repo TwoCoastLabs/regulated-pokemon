@@ -992,6 +992,88 @@ describe("the ceremony dial, end to end: a card answered in words settles withou
   });
 });
 
+describe("porch round five: stale cards, social closes, rarity, direction", () => {
+  it("rejects a ladder proposal that interprets another exchange's words", async () => {
+    const staleProposal = JSON.stringify({ candidate: { comparisonBasis: "base-hp" }, interpreting: "how much HP does snorlax have?" });
+    const ranking = JSON.stringify({
+      rosters: [{ id: "all-pokemon", criteria: { all: [] } }],
+      claims: [{ kind: "ranking", rosterId: "all-pokemon", basis: "base-stat-total", direction: "highest" }],
+    });
+    const snorlaxFact = JSON.stringify({ rosters: [], claims: [{ kind: "fact", entityId: "snorlax", factId: "base-hp" }] });
+    const provider = new ScriptedProvider("stale", (request) => {
+      if (request.purpose === "scope") return staleProposal;
+      return request.prompt.includes("snorlax") ? snorlaxFact : ranking;
+    });
+    const d = deps(provider);
+
+    let state = await say(startSession(), "I'm playing Red and Blue in Kanto. how much HP does snorlax have?", d);
+    expect(state.records).toHaveLength(1); // settled — its words are spent
+    state = await say(state, "whats the best pokemon overall?", d);
+    // The stale card is refused; the deterministic question stands instead.
+    expect(state.phase.kind).not.toBe("confirming-scope");
+  });
+
+  it("a pure pleasantry earns a social note — no model, no record, no question", async () => {
+    let calls = 0;
+    const provider = scripted("mute", () => { calls += 1; return "decline"; });
+    const d = deps(provider);
+    let state = await say(startSession(), "What is a badge?", d);
+    const callsBefore = calls;
+    const recordsBefore = state.records.length;
+    state = await say(state, "thanks!", d);
+    expect(calls).toBe(callsBefore);
+    expect(state.records.length).toBe(recordsBefore);
+    expect(state.notes[state.notes.length - 1]?.tone).toBe("social");
+    // But a pleasantry with a payload still drives the machinery.
+    state = await say(state, "thanks, and what is a badge?", d);
+    expect(calls).toBeGreaterThan(callsBefore);
+  });
+
+  it("the confidence question gets the provenance answer", async () => {
+    const provider = scripted("mute", () => "decline");
+    const state = await say(await say(startSession(), "What is a badge?", deps(provider)), "are you sure?", deps(provider));
+    const last = state.notes[state.notes.length - 1];
+    expect(last?.tone).toBe("social");
+    expect(last?.text).toContain("certified snapshot");
+  });
+
+  it("'whats the rarest pokemon?' mints the legendary roster and lists it", async () => {
+    const provider = scripted("mute", () => "decline");
+    const d = deps(provider);
+    let state = await say(startSession(), "whats the rarest pokemon?", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+    state = await say(state, "Red and Blue", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    const members = record.manifest?.claims.filter((claim) => claim.kind === "membership") ?? [];
+    expect(members.length).toBeGreaterThan(0);
+    expect(members.every((claim) => claim.kind === "membership" && ["articuno", "zapdos", "moltres", "mewtwo"].includes(claim.entityId))).toBe(true);
+  });
+
+  it("flips a matchup whose direction contradicts the ask's word order, and counts it", async () => {
+    const wrongWay = JSON.stringify({
+      rosters: [],
+      claims: [{ kind: "matchup", subject: { kind: "type", typeId: "rock" }, direction: "strong-against" }],
+    });
+    const provider = scripted("dyslexic", (purpose) => (purpose === "answer" ? wrongWay : "decline"));
+    const d = deps(provider);
+    let state = await say(startSession(), "I'm playing Red and Blue in Kanto. what is good against rock?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    const matchup = record.manifest?.claims.find((claim) => claim.kind === "matchup");
+    expect(matchup?.kind === "matchup" && matchup.direction).toBe("weak-to");
+    expect(state.flips).toBe(1);
+
+    // The other order stays untouched: "what is rock good against" reads
+    // strong-against, and the decoded direction already says so.
+    state = await say(state, "and what is rock good against?", d);
+    const second = state.records[state.records.length - 1]!;
+    const kept = second.manifest?.claims.find((claim) => claim.kind === "matchup");
+    expect(kept?.kind === "matchup" && kept.direction).toBe("strong-against");
+    expect(state.flips).toBe(1);
+  });
+});
+
 describe("teach before interrogating — the lazy half of IA-1", () => {
   const lessonAnswer = JSON.stringify({
     rosters: [],

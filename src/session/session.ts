@@ -125,7 +125,7 @@ export type SessionPhase =
 export interface SessionNote {
   at: string;
   text: string;
-  tone: "abstention" | "error";
+  tone: "abstention" | "error" | "social";
   detail?: string;
 }
 
@@ -152,6 +152,12 @@ export interface SessionState {
    * same reason repairs are: a folded resolution is never blended with a
    * first-shape one. */
   folds: number;
+  /** Matchup directions corrected at the groom step (porch round five) — a
+   * type-subject matchup whose decoded direction contradicts the ask's own
+   * word order is flipped, deterministically, and counted here for the same
+   * reason repairs and folds are: a corrected resolution is never blended
+   * with a first-shape one. */
+  flips: number;
   /** Ladder proposals spent on the current ask; a fresh utterance resets it. */
   ladderTurns: number;
   /**
@@ -204,6 +210,7 @@ export function startSession(idPrefix?: string): SessionState {
     askStart: 0,
     repairs: 0,
     folds: 0,
+    flips: 0,
     ladderTurns: 0,
   };
 }
@@ -251,7 +258,41 @@ function file(state: SessionState, record: Transaction, page?: DomElement): Sess
  * the transport (this driver) is what assigns it — and the exchange advances. */
 export async function say(state: SessionState, text: string, deps: SessionDeps): Promise<SessionState> {
   const utterance: ScopeEvent = { kind: "utterance", at: deps.now(), source: "trainer", text };
-  return drive({ ...state, transcript: [...state.transcript, utterance], ladderTurns: 0 }, deps);
+  const next = { ...state, transcript: [...state.transcript, utterance], ladderTurns: 0 };
+  // Social closes and the confidence question get their own words, before any
+  // machinery runs (porch round five, 2026-09-01: "thanks!" and "are you
+  // sure?" each re-ran the ladder and drew a stale card). Recorded like every
+  // utterance — the transcript stays whole — but no model, no record, no
+  // question: a pleasantry is not an ask. Never while an act awaits consent:
+  // words beside a pending act are the act flow's business.
+  if (state.phase.kind !== "confirming-act") {
+    const social = socialReply(text);
+    if (social !== undefined) {
+      return note({ ...next, phase: state.phase.kind === "asking" || state.phase.kind === "confirming-scope" ? state.phase : { kind: "gathering" } }, deps.now(), social, "social");
+    }
+  }
+  return drive(next, deps);
+}
+
+/**
+ * The reply a pure pleasantry or the confidence question earns — driver copy
+ * in the notes register, never a record (nothing was asked that the records
+ * answer). The gate is deliberately narrow: the whole utterance must be the
+ * pleasantry, so "thanks, and what about Onix?" still drives the machinery.
+ */
+function socialReply(text: string): string | undefined {
+  const bare = text.trim().toLowerCase();
+  if (/^(thanks|thank you|thankyou|ty|thx|cool|nice|great|awesome|ok|okay|got it|perfect)[!. ]*$/.test(bare)) {
+    return "You're welcome! Ask away whenever you're ready — a Pokémon, a matchup, or how the game works.";
+  }
+  if (/^(are you sure|you sure|really|is that right|for real)[?!. ]*$/.test(bare)) {
+    return (
+      "As sure as the records: every value on that page was read from the certified snapshot at the moment of " +
+      "answering — nothing was recalled from memory, and the League refuses any answer it cannot verify. " +
+      "The \u201cShow the machinery\u201d view has the full ruling."
+    );
+  }
+  return undefined;
 }
 
 /**
@@ -544,9 +585,27 @@ async function drive(
   }
 
   const spent = { ...state, usage: addUsage(state.usage, step.usage), ladderTurns: state.ladderTurns + 1 };
-  if (step.event === null) {
-    // Nothing usable to propose: fall to the deterministic question rather
-    // than burning the remaining budget on the same words.
+  // A proposal must interpret *this* exchange's words. Found live (porch
+  // round five, 2026-09-01): "whats the rarest pokemon?" drew a card
+  // interpreting the previous, settled ask ("how much HP does snorlax
+  // have?"), and every social close after it re-drew the same stale card —
+  // three misattributed cards in a row. The model labels what it interpreted;
+  // the driver holds it to the label.
+  const freshWords = state.transcript
+    .slice(state.askStart)
+    .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text.toLowerCase()] : []))
+    .join(" ");
+  // Overlap by content token, not verbatim: an interpretation may compress
+  // the wording, but one that shares not a single substantive word with this
+  // exchange is reading some other exchange.
+  const interpretingTokens =
+    step.event === null ? [] : step.event.interpreting.toLowerCase().split(/[^a-z0-9]+/).filter((token) => token.length >= 3);
+  const staleInterpretation =
+    step.event !== null && interpretingTokens.length > 0 && !interpretingTokens.some((token) => freshWords.includes(token));
+  if (step.event === null || staleInterpretation) {
+    // Nothing usable to propose (or a proposal about words already settled):
+    // fall to the deterministic question rather than burning the remaining
+    // budget on the same words.
     return ask(spent, deps.now(), outcome.asking, outcome.question);
   }
 
@@ -680,6 +739,37 @@ function trimPaddedLessons(world: SessionWorld, ask: string, claims: readonly Cl
   const namesType = [...world.registry.typeNames].some((type) => new RegExp(`\\b${type}\\b`).test(haystack));
   if (!namesType && !namesCertifiedEntity(world.registry, ask)) return claims;
   return claims.filter((claim) => claim.kind !== "explanation");
+}
+
+/**
+ * The matchup direction, checked against the ask's own word order (porch
+ * round five, 2026-09-01: "wat pokmon is gud agenst rock types?" certified
+ * rock strong-against — what rock beats, for an ask about beating rock; the
+ * prompt's direction rule held for clean wording and typos slipped it).
+ * Deterministic and conservative: only when BOTH a direction cue and the
+ * subject type are found does word order rule — cue before the type reads
+ * "what is good against X" (X weak-to); type before the cue reads "what is X
+ * good against" (X strong-against) — and only the weak-to/strong-against
+ * pair ever flips. Counted like the other recovery channels: the kernel
+ * still verifies whatever direction leaves here.
+ */
+const DIRECTION_CUE = /\b(good|gud|great|best|effective|strong|use|works?|beats?|counters?)\b/i;
+
+function correctMatchupDirections(world: SessionWorld, ask: string, claims: readonly Claim[]): { claims: readonly Claim[]; flips: number } {
+  let flips = 0;
+  const lowered = ` ${ask.toLowerCase()} `;
+  const corrected = claims.map((claim) => {
+    if (claim.kind !== "matchup" || claim.subject.kind !== "type") return claim;
+    if (claim.direction !== "weak-to" && claim.direction !== "strong-against") return claim;
+    const typeMatch = new RegExp(`\\b${claim.subject.typeId}\\b`).exec(lowered);
+    const cueMatch = DIRECTION_CUE.exec(lowered);
+    if (typeMatch === null || cueMatch === null) return claim;
+    const expected = cueMatch.index < typeMatch.index ? "weak-to" : "strong-against";
+    if (claim.direction === expected) return claim;
+    flips += 1;
+    return { ...claim, direction: expected } as Claim;
+  });
+  return { claims: corrected, flips };
 }
 
 /** One species' certified profile — the shape both the deflection door and a
@@ -845,7 +935,7 @@ async function teachOrDiscover(
  * with the anaphoric gate, so "list Electric ones" (a subject of its own)
  * still goes to the model and only a bare "list some for me" takes the
  * deterministic road. */
-const LISTING_CUE = /\b(list|name|show|give)\b|\bwhat (?:are|r)\b/i;
+const LISTING_CUE = /\b(list|name|show|give)\b|\bwhat(?: are|s| is|'s)?\b|\bwhich\b/i;
 
 /**
  * The listing a bare "can you list at least 10 for me?" earns — composed
@@ -909,13 +999,24 @@ const LISTING_STOPWORDS =
  * the kernel's own spelling of "every certified member".
  */
 function catalogueRoster(world: SessionWorld, ask: string) {
+  // Rarity is the one qualifier the mint understands (porch round five:
+  // "whats the rarest pokemon?" drew a stale basis card — rarity is not a
+  // numeric basis, and the honest answer is the legendaries themselves,
+  // expressible today as a rarity roster). Any other surviving word still
+  // stands the mint down: a qualified set is the model's to compose.
+  const rarity = /\brarest\b|\blegendar(?:y|ies)\b/i.test(ask) ? "legendary" : /\bmythicals?\b/i.test(ask) ? "mythical" : undefined;
   const leftovers = ask
     .toLowerCase()
     .replace(/\bpok[eé]mons?\b|\bspecies\b/g, " ")
+    .replace(/\brarest\b|\blegendar(?:y|ies)\b|\bmythicals?\b|\bwhich\b|\bwhats?\b/g, " ")
     .replace(LISTING_STOPWORDS, " ")
     .trim();
   if (leftovers !== "") return undefined;
-  if (!/\bpok[eé]mons?\b|\bspecies\b/i.test(ask)) return undefined;
+  if (rarity === undefined && !/\bpok[eé]mons?\b|\bspecies\b/i.test(ask)) return undefined;
+  if (rarity !== undefined) {
+    const built = buildRoster(world.registry, `${rarity}-pokemon`, { all: [{ kind: "rarity", rarity }] });
+    return built.ok ? built.value : undefined;
+  }
   return mintCatalogue(world);
 }
 
@@ -1141,7 +1242,7 @@ async function answer(
     }
   }
 
-  const withUsage = {
+  let withUsage = {
     ...state,
     usage: addUsage(state.usage, step.usage),
     folds: state.folds + (step.decode.ok ? step.decode.folds : 0),
@@ -1197,7 +1298,9 @@ async function answer(
     // The lesson deflection has the same backstop here as at discovery: a
     // scoped answer that is all lessons for an ask naming one species gets
     // the entity's profile instead — the model can deflect at either hop.
-    const groomed = { ...decoded, claims: trimPaddedLessons(world, ask, decoded.claims) };
+    const directed = correctMatchupDirections(world, ask, decoded.claims);
+    const groomed = { ...decoded, claims: trimPaddedLessons(world, ask, directed.claims) };
+    if (directed.flips > 0) withUsage = { ...withUsage, flips: withUsage.flips + directed.flips };
     const profile = deflectedProfileClaims(world, ask, groomed.claims);
     draft =
       profile.length > 0

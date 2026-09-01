@@ -3425,6 +3425,34 @@ on; the pitch to a regulated deployment is the opposite pack and the same
 kernel. Live on the weak model, round G's five-interaction, zero-record
 pile-up settles in three interactions to a certified ranking.
 
+### Porch round five: stale cards, social closes, rarity, and the direction backstop (2026-09-01)
+
+Two arcs on the weak model found four porch failures, all fixed and
+live-verified in one replayed conversation:
+
+- **The stale card**: "whats the rarest pokemon?" drew a ladder card
+  interpreting the previous, settled ask — and "are you sure?" and
+  "thanks!" each re-drew it. The driver now holds the ladder to its own
+  label: a proposal whose `interpreting` shares no content token with this
+  exchange's words is refused, and the deterministic question stands.
+- **Social closes**: a pure pleasantry earns a warm social note — no
+  model, no record, no question — and "are you sure?" earns the
+  provenance answer (every value read from the certified snapshot at the
+  moment of answering). Both recorded in the transcript; a pleasantry
+  with a payload still drives the machinery.
+- **The rarity mint**: "whats the rarest pokemon?" now composes the
+  legendary roster deterministically — four memberships and the count,
+  zero model calls. Rarity is the one qualifier the catalogue mint
+  understands; any other surviving word still stands it down.
+- **The direction backstop**: the prompt's matchup-direction rule held
+  for clean wording and typos slipped it ("wat pokmon is gud agenst rock
+  types?" certified strong-against again). Word order now rules,
+  deterministically and conservatively: when both a direction cue and the
+  subject type appear, cue-before-type reads weak-to and type-before-cue
+  reads strong-against; only that pair ever flips, and each flip is
+  counted (SessionState.flips) so a corrected resolution is never blended
+  with a first-shape one.
+
 ## Appendix — how to reproduce
 
 ```sh
