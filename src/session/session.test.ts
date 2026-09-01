@@ -1074,6 +1074,62 @@ describe("porch round five: stale cards, social closes, rarity, direction", () =
   });
 });
 
+describe("porch round six: the listing keeps to its subject", () => {
+  it("'show me all the fire types' mints the fire roster, never the catalogue", async () => {
+    const provider = scripted("mute", () => "decline");
+    const d = deps(provider);
+    let state = await say(startSession(), "show me all the fire types", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+    state = await say(state, "Red and Blue", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    const members = record.manifest?.claims.filter((claim) => claim.kind === "membership") ?? [];
+    expect(members.length).toBeGreaterThan(0);
+    expect(members.every((claim) => claim.kind === "membership" && claim.rosterId === "fire-pokemon")).toBe(true);
+    expect(record.manifest?.rosters[0]?.memberIds).toContain("charmander");
+    expect(record.manifest?.rosters[0]?.memberIds).not.toContain("squirtle");
+  });
+
+  it("a catalogue-subject nomination is held to the ask's own qualifiers", async () => {
+    const nomination = JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "listing", subject: "catalogue", n: 10 }] });
+    const provider = scripted("nominator", (purpose) => (purpose === "answer" ? nomination : "decline"));
+    const d = deps(provider);
+    let state = await say(startSession(), "list every water pokemon you certify", d);
+    state = await say(state, "Red and Blue", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.manifest?.rosters[0]?.id).toBe("water-pokemon");
+    expect(record.manifest?.rosters[0]?.memberIds).not.toContain("charmander");
+  });
+
+  it("two types named stands the mint down — a blend is not a set the words picked", async () => {
+    const provider = scripted("mute", () => "decline");
+    const state = await say(startSession(), "show me the fire and water types", deps(provider));
+    // The mint refused; the model path (mute) abstained — never a wrong set.
+    expect(state.records.every((record) => (record.manifest?.claims.filter((c) => c.kind === "membership").length ?? 0) === 0)).toBe(true);
+  });
+
+  it("'what can you do?' never replays the previous listing", async () => {
+    // The widened cue briefly made bare "what" a listing verb, and the meta
+    // question reused the fire roster from the exchange before it.
+    const lesson = JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-can-you-ask" }] });
+    const provider = scripted("teacher", (purpose) => (purpose === "answer" ? lesson : "decline"));
+    const d = deps(provider);
+    let state = await say(startSession(), "show me all the fire types", d);
+    state = await say(state, "Red and Blue", d);
+    state = await say(state, "what can you do?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.manifest?.claims.some((claim) => claim.kind === "membership")).toBe(false);
+  });
+
+  it("the provenance question gets the provenance answer", async () => {
+    const provider = scripted("mute", () => "decline");
+    const state = await say(startSession(), "what data do you use?", deps(provider));
+    const last = state.notes[state.notes.length - 1];
+    expect(last?.tone).toBe("social");
+    expect(last?.text).toContain("certified snapshot");
+  });
+});
+
 describe("teach before interrogating — the lazy half of IA-1", () => {
   const lessonAnswer = JSON.stringify({
     rosters: [],
