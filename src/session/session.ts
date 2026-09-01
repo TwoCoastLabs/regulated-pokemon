@@ -208,6 +208,22 @@ interface PendingAct {
  * falls back to the pack's own question and waits for words. */
 export const MAX_LADDER_TURNS = 3;
 
+/** Question furniture: tokens the stale-interpretation guard never counts as
+ * overlap, because they appear in nearly every ask ("what", "does", "tell")
+ * and so prove nothing about *which* ask an interpretation is reading. Only
+ * words of asking, auxiliaries and connective tissue belong here — never a
+ * domain word: a false negative costs one deterministic question, a false
+ * positive lets a card cite the wrong exchange. */
+const INTERPRETATION_FURNITURE = new Set([
+  "what", "whats", "which", "who", "whom", "whose", "how", "hows", "when", "where", "why",
+  "does", "did", "done", "doing", "are", "was", "were", "been", "being", "have", "has", "had",
+  "can", "could", "will", "would", "shall", "should", "may", "might", "must",
+  "the", "and", "but", "for", "with", "without", "about", "into", "onto", "from",
+  "that", "this", "these", "those", "there", "here",
+  "you", "your", "yours", "they", "them", "their", "she", "her", "him", "his", "its",
+  "tell", "say", "know", "mean", "please", "just", "want", "like",
+]);
+
 const LOCALE = "en-US";
 
 export function startSession(idPrefix?: string): SessionState {
@@ -246,12 +262,28 @@ function note(state: SessionState, at: string, text: string, tone: SessionNote["
  */
 function ask(state: SessionState, at: string, dimension: ScopeDimension, question: string): SessionState {
   const repeat = state.phase.kind === "asking" && state.phase.question === question;
+  // A repeat records no second question event — but when the trainer just
+  // spoke and their words answered nothing, silence reads as a swallowed
+  // turn (found live, porch round nine, 2026-09-01: a drifted ask earned
+  // zero visible response). The restatement is a note, not a question: the
+  // armed question is unchanged and the trainer was asked once.
+  const last = state.transcript[state.transcript.length - 1];
+  const reminded =
+    repeat && last !== undefined && last.kind === "utterance" && last.source === "trainer"
+      ? note(
+          state,
+          at,
+          `I still need that one answered first: ${question}`,
+          "social",
+          "unanswering reply while a question was armed — question restated",
+        )
+      : state;
   return {
-    ...state,
+    ...reminded,
     phase: { kind: "asking", dimension, question },
     transcript: repeat
-      ? state.transcript
-      : [...state.transcript, { kind: "question", at, source: "advisor", dimension, text: question }],
+      ? reminded.transcript
+      : [...reminded.transcript, { kind: "question", at, source: "advisor", dimension, text: question }],
   };
 }
 
@@ -532,6 +564,36 @@ async function drive(
       if (question !== undefined) return ask({ ...state, required: ["version"] }, deps.now(), "version", question);
     }
   }
+  // A fresh ask over an armed question is a topic change, not an answer.
+  // Found live (porch round nine, 2026-09-01): with the comparison-basis
+  // question armed, "does pikachu evolve?" answered no dimension, named a
+  // certified entity so the ladder's inbox filtered its clause, and the
+  // repeat re-ask recorded nothing — the trainer's new question vanished
+  // without a word on screen. The cue is deliberately narrow (ask-shaped
+  // AND entity-naming, both required): a bare species name could yet be a
+  // direct answer to some pack's question, and an ask-shaped clarification
+  // ("what do you mean?") names no entity — both fall through to the
+  // restated question below, never to a silent turn. Never over a pending
+  // act: consent cards are the act flow's business, not drift's.
+  if (
+    askedAlready &&
+    lastSaid !== undefined &&
+    (state.phase.kind === "asking" || state.phase.kind === "confirming-scope") &&
+    looksLikeFreshAsk(world.registry, lastSaid.text)
+  ) {
+    const aside = note(
+      state,
+      deps.now(),
+      "New question — I've set the earlier one aside. Ask it again any time.",
+      "social",
+      "topic change while a question was armed — exchange reopened at the new ask",
+    );
+    const { pending: _pending, required: _required, ...reopened } = aside;
+    return drive(
+      { ...reopened, phase: { kind: "gathering" }, askStart: aside.transcript.length - 1, ladderTurns: 0 },
+      deps,
+    );
+  }
   // A listing follow-up short-circuits discovery entirely: the shape is not
   // the model's to learn — the set is the previous exchange's certified
   // roster, and the route composes the draft from the record. `routed` skips
@@ -627,11 +689,22 @@ async function drive(
     .join(" ");
   // Overlap by content token, not verbatim: an interpretation may compress
   // the wording, but one that shares not a single substantive word with this
-  // exchange is reading some other exchange.
+  // exchange is reading some other exchange. Substantive means not a
+  // function word — found live (porch round nine, 2026-09-01): a card
+  // interpreting the settled "what game should i start with?" survived the
+  // guard because "what" also appeared in this exchange's "what does it
+  // evolve into?". A question word is question furniture, not content; an
+  // interpretation with no content tokens at all is likewise held stale —
+  // it interprets nothing this guard can check.
   const interpretingTokens =
-    step.event === null ? [] : step.event.interpreting.toLowerCase().split(/[^a-z0-9]+/).filter((token) => token.length >= 3);
+    step.event === null
+      ? []
+      : step.event.interpreting
+          .toLowerCase()
+          .split(/[^a-z0-9]+/)
+          .filter((token) => token.length >= 3 && !INTERPRETATION_FURNITURE.has(token));
   const staleInterpretation =
-    step.event !== null && interpretingTokens.length > 0 && !interpretingTokens.some((token) => freshWords.includes(token));
+    step.event !== null && !interpretingTokens.some((token) => freshWords.includes(token));
   if (step.event === null || staleInterpretation) {
     // Nothing usable to propose (or a proposal about words already settled):
     // fall to the deterministic question rather than burning the remaining
@@ -826,6 +899,19 @@ function namesCertifiedEntity(registry: CertifiedRegistry, clause: string): bool
   return registry.speciesIds.some((id) =>
     new RegExp(`\\b${id.split("-").join("[\\s-]?")}\\b`).test(haystack),
   );
+}
+
+/** Words a question opens with — the ask-shape half of the topic-change cue. */
+const ASK_OPENER = /^(what|whats|which|who|how|hows|when|where|why|does|do|did|is|are|can|could|will|would|should|tell|show|list|name|give)\b/i;
+
+/** Whether an utterance reads as a fresh ask rather than an answer: it has a
+ * question's shape (a question mark, or an interrogative opener) and it names
+ * a certified species. Both halves are required on purpose — see the
+ * topic-change door in {@link drive} for what each half rules out. */
+function looksLikeFreshAsk(registry: CertifiedRegistry, text: string): boolean {
+  const trimmed = text.trim();
+  if (!trimmed.includes("?") && !ASK_OPENER.test(trimmed)) return false;
+  return namesCertifiedEntity(registry, trimmed);
 }
 
 /**

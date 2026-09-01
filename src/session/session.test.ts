@@ -1074,6 +1074,80 @@ describe("porch round five: stale cards, social closes, rarity, direction", () =
   });
 });
 
+describe("porch round nine: drift over an armed question is never a silent turn", () => {
+  it("a fresh entity ask over an armed question reopens the exchange at the new ask", async () => {
+    // The model answers whichever ask it is shown — so the record proves
+    // which ask the reopened exchange is keyed on.
+    const pikachuFact = JSON.stringify({
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "pikachu", factId: "evolves-to" }],
+    });
+    const provider = new ScriptedProvider("keyed", (request) =>
+      request.purpose === "scope" ? "decline" : request.prompt.includes("pikachu") ? pikachuFact : "decline",
+    );
+    const d = deps(provider);
+    let state = await say(startSession(), "tell me about charmander", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+
+    // The trainer moves on instead of answering. Found live (2026-09-01):
+    // this turn produced zero model calls, zero notes, zero phase change.
+    state = await say(state, "does pikachu evolve?", d);
+    const aside = state.notes.find((n) => n.detail?.includes("topic change"));
+    expect(aside).toBeDefined();
+    expect(aside?.tone).toBe("social");
+
+    // The reopened exchange is keyed at the new ask: answering the version
+    // question now serves Pikachu, not Charmander.
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+    state = await say(state, "Red and Blue", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    const facts = record.manifest?.claims.filter((claim) => claim.kind === "fact") ?? [];
+    expect(facts.length).toBeGreaterThan(0);
+    expect(facts.every((claim) => claim.kind === "fact" && claim.entityId === "pikachu")).toBe(true);
+  });
+
+  it("a bare species name over an armed question is not read as drift", async () => {
+    const provider = scripted("mute", () => "decline");
+    const d = deps(provider);
+    let state = await say(startSession(), "tell me about charmander", d);
+    state = await say(state, "pikachu", d);
+    expect(state.notes.some((n) => n.detail?.includes("topic change"))).toBe(false);
+  });
+
+  it("the stale-interpretation guard does not count question furniture as overlap", async () => {
+    // Found live (2026-09-01): with the version question armed, "what does
+    // it evolve into?" drew a card whose interpretation was the trainer's
+    // own settled question, "what game should i start with?" — the guard
+    // passed it on the shared word "what".
+    const questionSourced = JSON.stringify({
+      candidate: { version: "red-blue" },
+      interpreting: "what game should i start with?",
+    });
+    const provider = scripted("leaky", (purpose) => (purpose === "scope" ? questionSourced : "decline"));
+    const d = deps(provider);
+    let state = await say(startSession(), "tell me about charmander", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+    state = await say(state, "what does it evolve into?", d);
+    expect(state.phase.kind).not.toBe("confirming-scope");
+  });
+
+  it("an unanswering reply earns the question restated, never silence", async () => {
+    const provider = scripted("mute", () => "decline");
+    const d = deps(provider);
+    let state = await say(startSession(), "tell me about charmander", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+    const notesBefore = state.notes.length;
+    // No entity named, so the topic-change door stands down — but the turn
+    // must still say something.
+    state = await say(state, "what does it evolve into?", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+    const restated = state.notes.slice(notesBefore).find((n) => n.detail?.includes("question restated"));
+    expect(restated).toBeDefined();
+    expect(restated?.text).toContain("Which game version");
+  });
+});
+
 describe("porch round six: the listing keeps to its subject", () => {
   it("'show me all the fire types' mints the fire roster, never the catalogue", async () => {
     const provider = scripted("mute", () => "decline");
