@@ -1011,7 +1011,7 @@ function composeListing(
  * cost only a model call.
  */
 const LISTING_STOPWORDS =
-  /\b(give|show|name|list|what|are|is|me|us|a|an|of|the|those|these|them|all|some|few|at|least|please|can|could|you|ok|okay|so|and|for|out|there|many|more)\b|[^a-z\s]/g;
+  /\b(give|show|name|list|what|are|is|me|us|a|an|of|the|those|these|them|all|some|few|at|least|please|can|could|you|ok|okay|so|and|for|out|there|many|more|tell|about|gimme)\b|[^a-z\s]/g;
 
 /**
  * The catalogue itself as a roster, for a bare listing ask with no filed
@@ -1034,17 +1034,62 @@ function qualifiedSet(world: SessionWorld, ask: string) {
     return built.ok ? built.value : undefined;
   }
   if (typesNamed.length > 1) return undefined;
-  const oneType = (() => {
-    const hay = ` ${ask.toLowerCase()} `;
-    const named = [...world.registry.typeNames].filter((type) => new RegExp(`\\b${type}\\b`).test(hay));
-    return named.length === 1 ? named[0] : undefined;
-  })();
   const rarity = /\brarest\b|\blegendar(?:y|ies)\b/i.test(ask) ? "legendary" : /\bmythicals?\b/i.test(ask) ? "mythical" : undefined;
   if (rarity !== undefined) {
     const built = buildRoster(world.registry, `${rarity}-pokemon`, { all: [{ kind: "rarity", rarity }] });
     return built.ok ? built.value : undefined;
   }
-  return mintCatalogue(world);
+  // The whole catalogue only for the bare ask — the same discipline as the
+  // cue door, enforced here so a nomination cannot reach a set the words
+  // did not pick ("which pokemon can learn fly?" is a learns-move ask, and
+  // the model path composes learns-move rosters perfectly well itself).
+  return bareCatalogueAsk(world, ask) ? mintCatalogue(world) : undefined;
+}
+
+/** The bareness test, shared by every catalogue door: after scope wording
+ * (the vocabulary's business, not a set qualifier — "I'm playing Red and
+ * Blue in Kanto" must not unbare the count that follows it), cue words,
+ * stop-words, superlatives (a ranking's business) and every qualifier the
+ * mints understand, nothing substantive may remain. */
+function bareCatalogueAsk(world: SessionWorld, ask: string): boolean {
+  const typeStripper = new RegExp(`\\b(${[...world.registry.typeNames].join("|")})\\b`, "g");
+  const unmatched = unmatchedClauses(world.pack, ask).join(" ");
+  const leftovers = unmatched
+    .toLowerCase()
+    .replace(/\bpok[eé]mons?\b|\bspecies\b|\btypes?\b/g, " ")
+    .replace(/\brarest\b|\blegendar(?:y|ies)\b|\bmythicals?\b|\bwhich\b|\bwhats?\b|\benumerate\b/g, " ")
+    .replace(/\b(strongest|fastest|slowest|weakest|best|highest|lowest|top|who|how)\b/g, " ")
+    .replace(typeStripper, " ")
+    .replace(LISTING_STOPWORDS, " ")
+    .trim();
+  return leftovers === "";
+}
+
+/**
+ * The wrong-set guard (porch round seven, 2026-09-01): the deterministic
+ * doors were already held to the ask's own qualifiers, and then the model
+ * composed the wrong set itself — an empty-criteria (whole-catalogue) roster
+ * with memberships and a count, for "which pokemon can learn fly?". The
+ * members were certified-true and the set was not the one the words picked.
+ * When a draft's membership or count claims cite an empty-criteria roster
+ * and the ask is not the bare catalogue ask, those claims are dropped — an
+ * honest pass beats a certified wrong set. Typed and compound rosters are
+ * untouched (their criteria carry the qualifiers), and route-composed
+ * listings ride bare asks by construction.
+ */
+function dropWrongSetClaims(
+  world: SessionWorld,
+  ask: string,
+  draft: Pick<ManifestDraft, "claims" | "rosters">,
+): Pick<ManifestDraft, "claims" | "rosters"> {
+  const catalogueIds = new Set(draft.rosters.filter((roster) => roster.criteria.all.length === 0).map((roster) => roster.id));
+  if (catalogueIds.size === 0 || bareCatalogueAsk(world, ask)) return draft;
+  const claims = draft.claims.filter(
+    (claim) => !((claim.kind === "membership" || claim.kind === "count") && catalogueIds.has(claim.rosterId)),
+  );
+  if (claims.length === draft.claims.length) return draft;
+  const cited = new Set(claims.flatMap((claim) => ("rosterId" in claim && typeof claim.rosterId === "string" ? [claim.rosterId] : [])));
+  return { claims, rosters: draft.rosters.filter((roster) => cited.has(roster.id)) };
 }
 
 function catalogueRoster(world: SessionWorld, ask: string) {
@@ -1102,7 +1147,9 @@ export const SESSION_ROUTES: readonly NominableRoute[] = [
     id: "listing",
     description:
       "the trainer wants members of a set enumerated — some of the species, a sample of a group " +
-      "they were just told about, or the certified catalogue itself",
+      "they were just told about, or the certified catalogue itself. NOT for qualified sets: " +
+      "for a type's members, a move's learners, or any filtered group, compose the roster " +
+      "yourself with the criteria and list memberships from it",
     args: {
       subject: { type: "string", enum: ["catalogue", "prior-roster"] },
       n: { type: "integer" },
@@ -1129,10 +1176,12 @@ function executeRoute(
   route: { routeId: string; [arg: string]: unknown },
 ): Pick<ManifestDraft, "claims" | "rosters"> | undefined {
   if (route.routeId === "listing") {
-    const currentAsk = state.transcript
+    // The exchange's OPENING utterance is the ask; later ones answer the
+    // pack's questions ("Red and Blue") and would unbare or requalify it.
+    const opening = state.transcript
       .slice(state.askStart)
-      .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
-      .join(" ");
+      .find((event) => event.kind === "utterance" && event.source === "trainer");
+    const currentAsk = opening?.kind === "utterance" ? opening.text : "";
     // Subject-correct by construction: the set comes from the ask's own
     // qualifiers, never from the nomination's say-so — a catalogue-subject
     // nomination for "show me all the fire types" mints the fire roster.
@@ -1366,7 +1415,11 @@ async function answer(
     // scoped answer that is all lessons for an ask naming one species gets
     // the entity's profile instead — the model can deflect at either hop.
     const directed = correctMatchupDirections(world, ask, decoded.claims);
-    const groomed = { ...decoded, claims: trimPaddedLessons(world, ask, directed.claims) };
+    // Keyed on the exchange's opening ask: later utterances answer the
+    // pack's questions ("Red and Blue") and would unbare a bare listing.
+    const openingWords = openingAsk?.kind === "utterance" ? openingAsk.text : ask;
+    const rightSet = dropWrongSetClaims(world, openingWords, { claims: directed.claims, rosters: decoded.rosters });
+    const groomed = { ...decoded, rosters: rightSet.rosters, claims: trimPaddedLessons(world, ask, rightSet.claims) };
     if (directed.flips > 0) withUsage = { ...withUsage, flips: withUsage.flips + directed.flips };
     const profile = deflectedProfileClaims(world, ask, groomed.claims);
     draft =
