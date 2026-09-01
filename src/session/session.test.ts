@@ -1145,6 +1145,14 @@ describe("porch round six: the listing keeps to its subject", () => {
     expect(record?.outcome.status).toBe("answered");
   });
 
+  it("a greeting gets a greeting — never the redirect", async () => {
+    const provider = scripted("mute", () => "decline");
+    const state = await say(startSession(), "yo whats up", deps(provider));
+    const last = state.notes[state.notes.length - 1];
+    expect(last?.tone).toBe("social");
+    expect(last?.text).toContain("Advisor");
+  });
+
   it("the provenance question gets the provenance answer", async () => {
     const provider = scripted("mute", () => "decline");
     const state = await say(startSession(), "what data do you use?", deps(provider));

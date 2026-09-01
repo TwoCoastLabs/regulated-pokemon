@@ -282,6 +282,12 @@ export async function say(state: SessionState, text: string, deps: SessionDeps):
  */
 function socialReply(text: string): string | undefined {
   const bare = text.trim().toLowerCase();
+  if (/^(hi|hello|hey|yo|sup|howdy|good (morning|afternoon|evening)|yo whats up|whats up|hey there|hi there)[!?,. ]*$/.test(bare)) {
+    return (
+      "Hey! I'm the League's Advisor — ask me about any Pok\u00e9mon, a matchup, or how the game works, " +
+      "and everything I answer is checked against the official records first."
+    );
+  }
   if (/^(thanks|thank you|thankyou|ty|thx|cool|nice|great|awesome|ok|okay|got it|perfect)[!. ]*$/.test(bare)) {
     return "You're welcome! Ask away whenever you're ready — a Pokémon, a matchup, or how the game works.";
   }
