@@ -574,10 +574,15 @@ async function drive(
   // direct answer to some pack's question, and an ask-shaped clarification
   // ("what do you mean?") names no entity — both fall through to the
   // restated question below, never to a silent turn. Never over a pending
-  // act: consent cards are the act flow's business, not drift's.
+  // act: consent cards are the act flow's business, not drift's. The phase
+  // is the gate (blocked on the trainer — a question armed or a card
+  // pending), not a question event: a ladder-first exchange arms a card
+  // without ever asking (found live, porch round eleven). And the utterance
+  // must be the transcript's last word — a /confirm or /reject appends its
+  // confirmation event after the words, and a decision is never drift.
   if (
-    askedAlready &&
     lastSaid !== undefined &&
+    lastSaid === state.transcript[state.transcript.length - 1] &&
     (state.phase.kind === "asking" || state.phase.kind === "confirming-scope") &&
     looksLikeFreshAsk(world.registry, lastSaid.text)
   ) {
@@ -647,7 +652,7 @@ async function drive(
   const scopeishClauses =
     lastSaid === undefined
       ? []
-      : unmatchedClauses(world.pack, lastSaid.text).filter((clause) => !namesCertifiedEntity(world.registry, clause));
+      : unmatchedClauses(world.pack, lastSaid.text).filter((clause) => !namesCertifiedSubject(world.registry, clause));
   const freshLongTail = scopeishClauses.length > 0;
   if (reuse?.routed === true || !freshLongTail || state.ladderTurns >= MAX_LADDER_TURNS) {
     return ask(state, deps.now(), outcome.asking, outcome.question);
@@ -710,6 +715,25 @@ async function drive(
     // fall to the deterministic question rather than burning the remaining
     // budget on the same words.
     return ask(spent, deps.now(), outcome.asking, outcome.question);
+  }
+
+  // The same card twice is not an answer to anything. Found live (porch
+  // round eleven, 2026-09-01): words that neither answered nor drifted drew
+  // the identical candidate again — a second card, a spent turn, and the
+  // trainer's actual words unacknowledged. The pending card keeps its
+  // identity (its id is what a confirmation names); the trainer gets the
+  // card restated instead of duplicated.
+  if (
+    state.phase.kind === "confirming-scope" &&
+    JSON.stringify(state.phase.proposal.candidate) === JSON.stringify(step.event.candidate)
+  ) {
+    return note(
+      { ...spent, phase: state.phase },
+      deps.now(),
+      "That one's still waiting on you — /confirm the card above if it reads right, or /reject it.",
+      "social",
+      "identical card re-proposed while one was pending — card restated",
+    );
   }
 
   return {
@@ -901,17 +925,35 @@ function namesCertifiedEntity(registry: CertifiedRegistry, clause: string): bool
   );
 }
 
+/** Whether a clause names any certified subject — species, move or item, the
+ * same word-bounded reading as {@link namesCertifiedEntity} but over every id
+ * the registry certifies. The wider net serves the doors that ask "is this
+ * about something we can answer?" (the drift door, the ladder's inbox); the
+ * profile door keeps the species-only check, because only species have
+ * profiles. Found live (porch round eleven, 2026-09-01): an item ask over a
+ * pending card was read as scope-ish wording because the check knew only
+ * species — a move or item ask deserves the same drift door a species ask
+ * gets. (Item ids are empty in the standard world and live in the Center
+ * world; a subject the registry does not certify still falls safely to the
+ * restated card or question below.) */
+function namesCertifiedSubject(registry: CertifiedRegistry, clause: string): boolean {
+  const haystack = ` ${clause.toLowerCase()} `;
+  const names = (ids: readonly string[]): boolean =>
+    ids.some((id) => new RegExp(`\\b${id.split("-").join("[\\s-]?")}\\b`).test(haystack));
+  return names(registry.speciesIds) || names(registry.moveIds) || names(registry.itemIds);
+}
+
 /** Words a question opens with — the ask-shape half of the topic-change cue. */
 const ASK_OPENER = /^(what|whats|which|who|how|hows|when|where|why|does|do|did|is|are|can|could|will|would|should|tell|show|list|name|give)\b/i;
 
 /** Whether an utterance reads as a fresh ask rather than an answer: it has a
  * question's shape (a question mark, or an interrogative opener) and it names
- * a certified species. Both halves are required on purpose — see the
+ * a certified subject. Both halves are required on purpose — see the
  * topic-change door in {@link drive} for what each half rules out. */
 function looksLikeFreshAsk(registry: CertifiedRegistry, text: string): boolean {
   const trimmed = text.trim();
   if (!trimmed.includes("?") && !ASK_OPENER.test(trimmed)) return false;
-  return namesCertifiedEntity(registry, trimmed);
+  return namesCertifiedSubject(registry, trimmed);
 }
 
 /**

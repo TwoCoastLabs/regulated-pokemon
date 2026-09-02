@@ -36,7 +36,7 @@
       "expect": {
         "version": "yellow"
       },
-      "notes": "no context word the vocabulary lists ('got') — expected to fall to the question"
+      "notes": "'got' is version context since 2026-09-01 — binds deterministically"
     },
     {
       "id": "v-bare-yellow",
