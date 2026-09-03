@@ -1169,6 +1169,63 @@ describe("porch round ten: the comparative ask binds its own basis", () => {
   });
 });
 
+describe("porch round twelve: the terse trainer and the trust question", () => {
+  it("a live card outranks the bare question for its own dimension", async () => {
+    // "red. pikachu. weaknesses. go" earns a version card; "hp?" is a
+    // vocabulary token (no long tail, no ladder) that used to fall to ask()
+    // and ERASE the card — card → question → new card, three turns, no
+    // answer. Now the card is restated and keeps its identity.
+    const versionCard = JSON.stringify({ candidate: { version: "red-blue" }, interpreting: "red" });
+    const provider = scripted("terse", (purpose) => (purpose === "scope" ? versionCard : "decline"));
+    const d = deps(provider);
+    let state = await say(startSession(), "red. pikachu. weaknesses. go", d);
+    expect(state.phase.kind).toBe("confirming-scope");
+    const pending = state.phase.kind === "confirming-scope" ? state.phase.proposal.id : undefined;
+
+    state = await say(state, "hp?", d);
+    expect(state.phase.kind === "confirming-scope" && state.phase.proposal.id).toBe(pending);
+    expect(state.notes.some((n) => n.detail?.includes("card restated"))).toBe(true);
+  });
+
+  it("a rejected card is never restated — the fall goes to the question", async () => {
+    const versionCard = JSON.stringify({ candidate: { version: "red-blue" }, interpreting: "red" });
+    const provider = scripted("terse", (purpose) => (purpose === "scope" ? versionCard : "decline"));
+    const d = deps(provider);
+    let state = await say(startSession(), "red. pikachu. weaknesses. go", d);
+    for (let i = 0; state.phase.kind === "confirming-scope" && i < MAX_LADDER_TURNS; i++) {
+      state = await decideScope(state, "reject", d);
+    }
+    expect(state.phase.kind).toBe("asking");
+  });
+
+  it("the trust question earns the architecture answer, not a routed lesson", async () => {
+    let calls = 0;
+    const provider = scripted("mute", () => { calls += 1; return "decline"; });
+    const state = await say(startSession(), "are you an AI? will you make stuff up?", deps(provider));
+    expect(calls).toBe(0);
+    const last = state.notes[state.notes.length - 1];
+    expect(last?.tone).toBe("social");
+    expect(last?.text).toContain("certified");
+    expect(state.records).toHaveLength(0);
+  });
+
+  it("an anaphoric ask the model cannot read asks for its antecedent, not the menu", async () => {
+    // A readable empty draft — the off-domain shape, as the weak model
+    // produces it live — rather than an unreadable decline.
+    const empty = JSON.stringify({ rosters: [], claims: [] });
+    const provider = scripted("empty", (purpose) => (purpose === "scope" ? "decline" : empty));
+    const d = deps(provider);
+    let state = await say(startSession(), "playing red. What is Thunderbolt's power?", d);
+    // The opener earns the generic menu (nothing before it to point back
+    // at); the follow-up below is anaphoric and earns the targeted line.
+    state = await say(state, "which one is stronger?", d);
+    const last = state.notes[state.notes.length - 1];
+    expect(last?.tone).toBe("abstention");
+    expect(last?.text).toContain("Name the");
+    expect(last?.detail).toContain("anaphoric");
+  });
+});
+
 describe("porch round eleven: cards do not eat questions", () => {
   it("'i got red' binds the version — the acquisition verb is context", async () => {
     // The live thread that found this round's seam never needed its card:
