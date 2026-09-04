@@ -3804,6 +3804,31 @@ shape, an executor composing without the cue door's guard, a cue
 misreading a copula — and every fix was a guard on what the model
 composed. That is R3's principle, arrived at by measurement.
 
+The N=3 leg on the final code, filed beside: `qwen3-235b` **305/411
+pooled, passes per repetition 99 / 106 / 100 (band 99–106)**; stable
+core 93/137 passing in every repetition, 26 stable fails, 18 flaky.
+Answerable resolution **74%** pooled (69 / 79 / 73% by repetition),
+certified-answer 89%, honest refusal **78%** (56/72), gated questions
+**100%** (33/33), advisory 26%, off-domain 30/30; enforcement held on
+all 411 samples. Read against the weak leg's single sample: on pass
+count the weak model's 101 sits *inside* the strong model's band —
+parity, not a lead; on the strict answerable rate the strong model
+trails (74% vs 85%); on the trust number it leads (78% vs 63%); on
+gated questions it leads (100% vs 82%). The 21 answerable denials
+across the three repetitions are one behaviour, not dice: on eleven
+`meta-*` lesson questions ("What's a gym badge?", "What is the
+League?", "What are stats?") the strong model proposes a *fact* about
+the concept noun as if it were a certified entity, and the kernel
+refuses it under IA-3/fabricated-entity — the right refusal, seven
+turns of ceremony, and a lesson the curriculum holds left untaught.
+That is a candidate recovery channel (a fabricated-entity denial whose
+ask a lesson accepts falls to the lesson), filed for R3, not built.
+R1's gate as written — "at least as well as the weak model" — is
+therefore **not met on the strict answerable rate and met on
+everything a regulated product would weigh first**: trust, gated
+questions, pass count. Which default the demo ships is that trade-off
+stated as a decision, and this entry is its evidence.
+
 ## Appendix — how to reproduce
 
 ```sh
