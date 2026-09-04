@@ -40,7 +40,7 @@ import type { AccordPack } from "../kernel/pack.js";
 import { planRender } from "../kernel/render.js";
 import type { CertifiedRegistry } from "../kernel/registry.js";
 import { restrictionsFor } from "../kernel/pack.js";
-import { resolveScope, type ScopeContext, unmatchedClauses } from "../kernel/scope.js";
+import { clauseTexts, deriveScope, resolveScope, type ScopeContext, unmatchedClauses } from "../kernel/scope.js";
 import { requiredDimensionsFor } from "../kernel/scope-deps.js";
 import { buildRoster } from "../kernel/roster.js";
 import { runTransaction, type Transaction } from "../kernel/transaction.js";
@@ -260,6 +260,38 @@ function note(state: SessionState, at: string, text: string, tone: SessionNote["
  * Re-asking the question already on the phase (a retry after an error, say)
  * records nothing new — the visitor was asked once.
  */
+/**
+ * A live card outranks the bare question for its own dimension. Falling from
+ * a card to `ask()` erases the card and re-asks in poorer form — found live
+ * (porch round twelve, 2026-09-01): a terse trainer's turns oscillated
+ * card → question → new card for the same candidate, three turns and no
+ * answer. If the pending card already proposes a value for the dimension
+ * being asked, the honest move is to point back at it.
+ */
+function askOrRestateCard(state: SessionState, at: string, dimension: ScopeDimension, question: string): SessionState {
+  // Undecided means undecided: during a /confirm or /reject the phase still
+  // reads confirming-scope while drive re-runs, and a decided card — above
+  // all a just-rejected one — must fall to the question, never be restated.
+  const decided =
+    state.phase.kind === "confirming-scope" &&
+    state.transcript.some(
+      (event) =>
+        event.kind === "confirmation" &&
+        "proposalId" in event &&
+        event.proposalId === (state.phase as Extract<SessionPhase, { kind: "confirming-scope" }>).proposal.id,
+    );
+  if (state.phase.kind === "confirming-scope" && !decided && state.phase.proposal.candidate[dimension] !== undefined) {
+    return note(
+      state,
+      at,
+      "That card above is still waiting — /confirm it if it reads right, or /reject it and answer in your own words.",
+      "social",
+      "card outranks its own dimension's question — card restated",
+    );
+  }
+  return ask(state, at, dimension, question);
+}
+
 function ask(state: SessionState, at: string, dimension: ScopeDimension, question: string): SessionState {
   const repeat = state.phase.kind === "asking" && state.phase.question === question;
   // A repeat records no second question event — but when the trainer just
@@ -298,6 +330,16 @@ function file(state: SessionState, record: Transaction, page?: DomElement): Sess
     askStart: state.transcript.length,
     ladderTurns: 0,
   };
+}
+
+/** Close the exchange without filing a record: the terminal note's state
+ * discipline mirrors {@link file}'s — pending and required dropped, ladder
+ * budget reset — because the next ask must open fresh. Found live (porch
+ * round twelve, 2026-09-01): a leaked narrowed `required` let the next ask
+ * skip discovery and inherit the previous ask's scope demands. */
+function closeExchange(state: SessionState): SessionState {
+  const { pending: _pending, required: _required, ...rest } = state;
+  return { ...rest, phase: { kind: "gathering" }, askStart: state.transcript.length, ladderTurns: 0 };
 }
 
 /** The visitor spoke. Their words join the record on the trainer's channel —
@@ -352,8 +394,31 @@ function socialReply(text: string): string | undefined {
       "The \u201cShow the machinery\u201d view has the full ruling."
     );
   }
+  // The trust question, in any of its porch forms \u2014 "are you an AI?", "will
+  // you make stuff up?" \u2014 deserves the honest architecture answer, not a
+  // routed lesson about something else (found live, porch round twelve: it
+  // drew the what-is-game lesson \u2014 a deflection to the wrong subject for the
+  // one question this design exists to answer). Same whole-utterance
+  // discipline as every social cue, allowing the natural compound ("are you
+  // an AI? will you make stuff up?").
+  if (new RegExp(`^${TRUST_CLAUSE}(?:[?!., ]+${TRUST_CLAUSE})*[?!,. ]*$`).test(bare)) {
+    return (
+      "I am an AI \u2014 with a rule that keeps me honest: I can only say what the League's certified records " +
+      "verify. A model drafts each answer, and a deterministic checker proves every claim against the " +
+      "certified snapshot before you see it; anything it cannot prove is refused by name rather than guessed. " +
+      "So making things up isn't a failure I'm permitted \u2014 the \u201cShow the machinery\u201d view shows each ruling."
+    );
+  }
   return undefined;
 }
+
+/** One trust-question form, for the whole-utterance social gate above. */
+const TRUST_CLAUSE =
+  "(?:(?:are|r) you (?:an? )?(?:ai|bot|robot|llm|real(?: person)?)" +
+  "|(?:will|would) you (?:make (?:stuff|things|it) up|lie(?: to me)?|hallucinate)" +
+  "|do you (?:make (?:stuff|things) up|hallucinate|lie|ever lie)" +
+  "|can i trust (?:you|this|that|your answers?)" +
+  "|how do i know you(?:'re|r| are)? not (?:lying|making (?:stuff|things|it) up))";
 
 /**
  * Content that reached the session on a channel the trainer does not speak on —
@@ -519,6 +584,12 @@ async function drive(
     if (outcome.grant.scope.version !== world.registry.document.scope.versionGroup) {
       return foreignVersion(state, deps);
     }
+    // A statement of scope with no ask in it ("ok. I actually play Red",
+    // or the "Red" that answers the re-asked question) has nothing for the
+    // model to answer; sending it anyway earned the honest-pass abstention,
+    // which reads as a refusal of a question never asked (found live,
+    // 2026-09-04). It earns an acknowledgment and a closed exchange.
+    if (reuse === undefined && scopeStatementOnly(world, state)) return acknowledgeScope(world, state, deps);
     return answer(state, deps, reuse);
   }
 
@@ -557,11 +628,34 @@ async function drive(
       versionOnly.status === "granted" &&
       versionOnly.grant.scope.version !== world.registry.document.scope.versionGroup
     ) {
-      const question = homeVersionMentioned(world, state);
+      const question = versionMentioned(world, state, "home");
       // Narrowed to the one dimension being re-asked: the switch-back is not
       // a fresh intake, and the default required set would turn one question
       // into an interrogation (region next, badges after).
       if (question !== undefined) return ask({ ...state, required: ["version"] }, deps.now(), "version", question);
+    }
+    // The correction: a direct statement contradicting a recorded answer
+    // ("Yellow", then "ok. I actually play Red") is a fresh contradiction by
+    // design (kernel/scope.ts), and the design says the trainer is asked
+    // again — not that discovery reads the correction as an ask and the
+    // model redirects it (found live, 2026-09-04: the trainer's correction
+    // earned "I lost the thread of that one"). Same narrowed re-ask.
+    if (versionOnly.status === "clarify" && versionOnly.derivation.contradicted.includes("version")) {
+      const question = versionMentioned(world, state, "any");
+      if (question !== undefined) return ask({ ...state, required: ["version"] }, deps.now(), "version", question);
+    }
+    // A statement of scope with no ask in it, before discovery can hand it
+    // to the model as if it were one: a foreign version teaches the
+    // boundary; anything else is acknowledged, never interrogated for the
+    // dimensions no ask has yet needed.
+    if (scopeStatementOnly(world, state)) {
+      if (
+        versionOnly.status === "granted" &&
+        versionOnly.grant.scope.version !== world.registry.document.scope.versionGroup
+      ) {
+        return foreignVersion(state, deps);
+      }
+      return acknowledgeScope(world, state, deps);
     }
   }
   // A fresh ask over an armed question is a topic change, not an answer.
@@ -619,7 +713,8 @@ async function drive(
     const attempt = await teachOrDiscover(state, deps);
     state = attempt.state;
     if (attempt.result === "taught") return state;
-    if (attempt.result === "off-domain") return redirect(state, deps);
+    if (attempt.result === "off-domain")
+      return redirect(state, deps, state.askStart > 0 && isAnaphoric(world, lastSaid.text));
     // "needs-scope": gather exactly the dimensions the proposed claims depend
     // on. "unusable" (the model gave no readable shape): fall to a version
     // floor and let the answer-time escalation add anything more the eventual
@@ -655,7 +750,7 @@ async function drive(
       : unmatchedClauses(world.pack, lastSaid.text).filter((clause) => !namesCertifiedSubject(world.registry, clause));
   const freshLongTail = scopeishClauses.length > 0;
   if (reuse?.routed === true || !freshLongTail || state.ladderTurns >= MAX_LADDER_TURNS) {
-    return ask(state, deps.now(), outcome.asking, outcome.question);
+    return askOrRestateCard(state, deps.now(), outcome.asking, outcome.question);
   }
 
   let step;
@@ -678,7 +773,7 @@ async function drive(
       "error",
       `the provider failed during scope resolution (${cause instanceof Error ? cause.message : String(cause)})`,
     );
-    return ask(failed, deps.now(), outcome.asking, outcome.question);
+    return askOrRestateCard(failed, deps.now(), outcome.asking, outcome.question);
   }
 
   const spent = { ...state, usage: addUsage(state.usage, step.usage), ladderTurns: state.ladderTurns + 1 };
@@ -714,7 +809,7 @@ async function drive(
     // Nothing usable to propose (or a proposal about words already settled):
     // fall to the deterministic question rather than burning the remaining
     // budget on the same words.
-    return ask(spent, deps.now(), outcome.asking, outcome.question);
+    return askOrRestateCard(spent, deps.now(), outcome.asking, outcome.question);
   }
 
   // The same card twice is not an answer to anything. Found live (porch
@@ -964,13 +1059,23 @@ function looksLikeFreshAsk(registry: CertifiedRegistry, text: string): boolean {
  * only end in an abstention, so the visitor gets an honest pointer at what the
  * Advisor can answer. Like an abstention, it files no record.
  */
-function redirect(state: SessionState, deps: SessionDeps): SessionState {
+function redirect(state: SessionState, deps: SessionDeps, anaphoric = false): SessionState {
+  // A generic capability menu right after answered exchanges about a subject
+  // reads as amnesia (found live, porch round twelve: "which evolution is
+  // best?" straight after two Eevee answers drew the menu). When the ask
+  // pointed back at something and the model still couldn't read it, the
+  // honest, actionable line is to ask for the antecedent by name.
+  const text = anaphoric
+    ? "I lost the thread of that one — it seems to point back at something we discussed. Name the " +
+      "Pokémon or move you mean and ask again in one line, and I'll answer what the records certify."
+    : "I couldn't line that up with anything I can certify. I answer questions about specific " +
+      "Pokémon, their moves and matchups, League eligibility, and how the game works — try one of those.";
   return note(
-    { ...state, phase: { kind: "gathering" }, askStart: state.transcript.length },
+    closeExchange(state),
     deps.now(),
-    "I couldn't line that up with anything I can certify. I answer questions about specific " +
-      "Pokémon, their moves and matchups, League eligibility, and how the game works — try one of those.",
+    text,
     "abstention",
+    ...(anaphoric ? ["discovery declined an anaphoric ask — antecedent re-requested"] : []),
   );
 }
 
@@ -1410,17 +1515,78 @@ async function foreignVersion(state: SessionState, deps: SessionDeps): Promise<S
  * context deliberately do not bind (lesson 1); here they earn the question
  * instead, which is free, deterministic and armed. */
 function homeVersionMentioned(world: SessionWorld, state: SessionState): string | undefined {
+  return versionMentioned(world, state, "home");
+}
+
+/** The pack's version question, when the trainer's latest words carry a
+ * version token — the home group's only, or any group's. Read from the
+ * vocabulary's own terms, so a pack that renames its versions moves this
+ * door with it. */
+function versionMentioned(world: SessionWorld, state: SessionState, which: "home" | "any"): string | undefined {
   const last = [...state.transcript].reverse().find((event) => event.kind === "utterance" && event.source === "trainer");
   if (last?.kind !== "utterance") return undefined;
   const rule = world.pack.vocabulary.dimensions.find((entry) => entry.dimension === "version");
+  if (rule === undefined) return undefined;
   const home = world.registry.document.scope.versionGroup;
-  const term = rule?.terms.find((entry) => entry.value === home);
-  if (rule === undefined || term === undefined) return undefined;
+  const terms = which === "home" ? rule.terms.filter((entry) => entry.value === home) : rule.terms;
   const haystack = ` ${last.text.toLowerCase()} `;
-  const mentioned = term.tokens.some((token) =>
-    new RegExp(`\\b${token.split("-").join("[\\s-]?")}\\b`).test(haystack),
+  const mentioned = terms.some((term) =>
+    term.tokens.some((token) => new RegExp(`\\b${token.split("-").join("[\\s-]?")}\\b`).test(haystack)),
   );
   return mentioned ? rule.question : undefined;
+}
+
+/**
+ * Whether this exchange's trainer words are a statement of scope and nothing
+ * else: no question mark or interrogative opener, no certified subject, and
+ * every clause either bound a dimension (its normalised text is a binding's
+ * matchedText) or is two tokens or fewer ("ok", "sorry" — filler, not an
+ * ask). Deterministic and narrow on purpose — a miss falls to today's path,
+ * a false hit would acknowledge an ask instead of answering it, so every
+ * gate here is a hard one. (The first cut read only the vocabulary's
+ * *unmatched* clauses, and "Build me a team of six Pokemon." — a clause
+ * carrying the token "six" and binding nothing — slipped through.)
+ */
+function scopeStatementOnly(world: SessionWorld, state: SessionState): boolean {
+  const exchange = state.transcript.slice(state.askStart);
+  const words = exchange.filter(
+    (event): event is Extract<ScopeEvent, { kind: "utterance" }> => event.kind === "utterance" && event.source === "trainer",
+  );
+  if (words.length === 0) return false;
+  const derivation = deriveScope(world.pack, exchange);
+  if (derivation.bindings.length === 0) return false;
+  // Read, not merely bound: the correction that armed the question ("i
+  // actually play red") is superseded by the answer that resolved it
+  // ("red") and lands in `ignored` — still scope-talk, not an ask.
+  const bound = new Set([...derivation.bindings, ...derivation.ignored].map((match) => match.matchedText));
+  for (const said of words) {
+    const text = said.text.trim();
+    if (text.includes("?") || ASK_OPENER.test(text)) return false;
+    if (namesCertifiedSubject(world.registry, text)) return false;
+    for (const clause of clauseTexts(world.pack, text)) {
+      if (!bound.has(clause) && clause.split(" ").length > 2) return false;
+    }
+  }
+  return true;
+}
+
+/** The acknowledgment a bare statement of scope earns: what now stands
+ * bound, in the trainer's terms, and the exchange closed — no model call,
+ * no record, nothing to certify. */
+function acknowledgeScope(world: SessionWorld, state: SessionState, deps: SessionDeps): SessionState {
+  const labels: string[] = [];
+  for (const binding of deriveScope(world.pack, state.transcript).bindings) {
+    if (binding.dimension === "version") labels.push(binding.value === "yellow" ? "Yellow" : "Red/Blue");
+    else if (binding.dimension === "region") labels.push(String(binding.value).replace(/^\w/, (c) => c.toUpperCase()));
+    else if (binding.dimension === "badgeLevel") labels.push(binding.value === 0 ? "no badges yet" : `${String(binding.value)} badge${binding.value === 1 ? "" : "s"}`);
+  }
+  return note(
+    closeExchange(state),
+    deps.now(),
+    `Got it — ${labels.length === 0 ? "noted" : labels.join(", ")}. Ask away whenever you're ready.`,
+    "social",
+    "scope statement acknowledged — no ask to answer, nothing sent to the model",
+  );
 }
 
 function teachBoundary(state: SessionState, deps: SessionDeps): SessionState {
@@ -1428,7 +1594,7 @@ function teachBoundary(state: SessionState, deps: SessionDeps): SessionState {
     // A pack without the boundary block falls to the honest note — never a
     // fabricated lesson, and never the bare denial this path exists to spare.
     return note(
-      { ...state, phase: { kind: "gathering" }, askStart: state.transcript.length },
+      closeExchange(state),
       deps.now(),
       "these records certify Red and Blue only — questions about your version's own facts are outside them, though the catalogue lessons still apply",
       "abstention",
@@ -1535,7 +1701,7 @@ async function answer(
       });
     } catch (cause) {
       return note(
-        { ...state, providerErrors: state.providerErrors + 1, phase: { kind: "gathering" }, askStart: state.transcript.length },
+        { ...closeExchange(state), providerErrors: state.providerErrors + 1 },
         deps.now(),
         "I couldn't reach the model just now — nothing was lost on your side. Try that again in a moment.",
         "error",
@@ -1563,7 +1729,7 @@ async function answer(
     const routed = eligibilityClaims(world, ask, []);
     if (routed.length === 0) {
       return note(
-        { ...withUsage, phase: { kind: "gathering" }, askStart: withUsage.transcript.length },
+        closeExchange(withUsage),
         deps.now(),
         "I don't have a certified answer for that one, so I'd rather pass than guess. " +
           "A specific Pokémon, a move, or a how-the-game-works question usually lands.",
@@ -1580,7 +1746,7 @@ async function answer(
     // A refused nomination with nothing beside it: the same honest pass an
     // empty reply earns, with the countable line in the detail register.
     return note(
-      { ...withUsage, phase: { kind: "gathering" }, askStart: withUsage.transcript.length },
+      closeExchange(withUsage),
       deps.now(),
       "I don't have a certified answer for that one, so I'd rather pass than guess. " +
         "A specific Pokémon, a move, or a how-the-game-works question usually lands.",
@@ -1613,7 +1779,7 @@ async function answer(
       // The guard emptied the draft: everything it carried was the wrong
       // set. An honest pass, never an empty certificate.
       return note(
-        { ...withUsage, phase: { kind: "gathering" }, askStart: withUsage.transcript.length },
+        closeExchange(withUsage),
         deps.now(),
         "I don't have a certified answer for that one, so I'd rather pass than guess. " +
           "A specific Pokémon, a move, or a how-the-game-works question usually lands.",

@@ -3644,6 +3644,82 @@ Recurring, filed not fixed: the nine-claim profile re-serve where one
 fact would do, now observed in three rounds ("what type is charizard"
 → "actually i meant blastoise" earned the full profile).
 
+### Porch round twelve: the terse trainer and the trust question (2026-09-01)
+
+Three arcs on the weak model ($0.015): a terse power user, a skeptic,
+and a deep chain. The skeptic's arc held where it matters — "what can
+you actually do?" served the capability lesson, and "can i catch
+zapdos?" with three badges served the eligibility verdict — but "are
+you an AI? will you make stuff up?" was routed to the *what-is-game*
+lesson: a wrong-subject dodge for the one question this architecture
+exists to answer. It now earns the honest architecture reply in the
+social register — an AI drafts, a deterministic checker proves every
+claim, refusal over guessing — at zero model calls and $0.0000. The
+terse arc ("red. pikachu. weaknesses. go" / "hp?" / "evolve it or
+nah?") exposed a ceremony oscillation: "hp?" is a vocabulary token, so
+no long tail reached the ladder, the fall to the pack's question
+*erased* the pending card, and the next turn re-proposed the same
+candidate as a new card — card, question, card, three turns, zero
+answers. The card now outranks the bare question for its own
+dimension: an undecided card is restated in a note (decided means
+decided — a just-rejected card still falls to the question, which the
+first cut of the fix got wrong and the rejection test caught). Live
+after: card, restatement, /confirm — and one record answering both
+asks, the weaknesses matchup *and* base-hp folded together ($0.0040).
+The deep chain ("tell me about eevee" → "which evolution is best?")
+found a tone bug and, under it, a state bug. The tone: an anaphoric
+ask the model cannot read drew the generic capability menu right after
+two answered Eevee exchanges — amnesia as copy; it now asks for the
+antecedent by name. The state bug, exposed by the test that tried to
+pin the tone fix: terminal abstention notes closed the exchange's
+words (askStart) but leaked its narrowed `required`, so the next ask
+skipped discovery and inherited the previous ask's scope demands — the
+`required` cousin of the pinned-askStart bug the activation round
+caught. Every terminal note now closes the exchange with file()'s own
+discipline (`closeExchange`: pending and required dropped, ladder
+budget reset). Two rounds running, the porch pattern repeats: the
+visible defect is tone or ceremony, and the test written to pin the
+fix surfaces a state leak underneath it.
+
+### Dogfood 2026-09-04: a statement of scope is not an ask
+
+The first self-driven dogfood session after twelve rounds hit three
+dead ends in seven turns — and two of them were not bugs at all: the
+worktree had been silently checked out to its original base branch
+(pre-every-round) between the last commit and the server start, so the
+trainer was talking to code twelve rounds old. Lesson recorded in the
+project memory: verify the branch before starting a server or reading
+a trace. Replayed on the real branch, "hi" earned the greeting and
+"Yellow" the boundary lesson. The third dead end was real: after the
+boundary lesson, "ok. I actually play Red" — the version correction
+the lesson itself invites — earned "I lost the thread of that one".
+The kernel reads a later direct statement contradicting a recorded
+answer as a fresh contradiction (by design: version is contradicted,
+nothing binds), and the design says the trainer is asked again; but no
+driver path re-asked. The correction fell to discovery, the model read
+it as an ask, and the anaphoric redirect fired with the wrong tone.
+Two additions, both deterministic and before any model call. First,
+the switch-back block gained the contradiction case: a contradicted
+version whose latest words carry any version token re-arms the pack's
+question, narrowed to version (the same narrowing the switch-back
+uses, for the same reason — one question, not an interrogation).
+Second, a statement of scope with no ask in it — the correction, the
+"Red" that answers it, a bare "im playing red" — is now recognised
+(`scopeStatementOnly`: no question mark or interrogative opener, no
+certified subject, every clause either read by the vocabulary or two
+tokens of filler, at least one dimension bound) and acknowledged
+("Got it — Red/Blue. Ask away") with the exchange closed, instead of
+being handed to the model as if it were a question and earning the
+honest-pass abstention for a question never asked; a bare foreign
+version teaches the boundary directly. The recogniser's first cut read
+only the vocabulary's *unmatched* clauses and let "Build me a team of
+six Pokemon" through (the token "six", binding nothing) — the
+scenario bank caught it, and the gate now reads the kernel's own clause
+split (`clauseTexts`) against what the derivation bound or read.
+Replayed live: seven turns, zero dead ends, the correction costs no
+model call, the acknowledgment costs none, and "what type is pikachu?"
+answers under the corrected version ($0.0060 for the thread).
+
 ## Appendix — how to reproduce
 
 ```sh
