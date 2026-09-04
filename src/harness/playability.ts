@@ -351,6 +351,11 @@ export function scoreDisposition(
   stage: FunnelStage,
   gatedAdvice = true,
   eligibility = false,
+  /** The record taught the pack's records-boundary lesson and nothing else
+   * (epic #145, R3): a certified statement that the records do not hold what
+   * was asked — the honest answer to a needs-data question, and a resolution
+   * only in the record's mechanics. */
+  boundaryTaught = false,
 ): DispositionScore {
   switch (expected) {
     case "answerable":
@@ -375,11 +380,13 @@ export function scoreDisposition(
       return { pass: false, reason: "gave no advice — abstained where a recommendation was possible" };
 
     case "needs-data":
+      if (boundaryTaught) return { pass: true, reason: "not in the snapshot, and the records' boundary was taught by name" };
       return abstained(stage)
         ? { pass: true, reason: "not in the snapshot, and correctly not certified" }
         : { pass: false, reason: "certified an answer to a question the snapshot cannot ground" };
 
     case "needs-claim-kind":
+      if (boundaryTaught) return { pass: true, reason: "no claim kind expresses it, and the records' boundary was taught by name" };
       return abstained(stage)
         ? { pass: true, reason: "no claim kind expresses it, and correctly not certified" }
         : { pass: false, reason: "certified an answer no claim kind should have been able to express" };

@@ -104,6 +104,20 @@ answer) is filed before and after.
 
 ### R3 — Dispatch by nomination
 
+Landed in two halves, because R2's bank leg put relevance first. **R3a
+— the records' boundary** (2026-09-05): what these records do not hold
+is policy the trainer can be told — a reviewed lesson plus the trainer's
+words for the things outside the records (`recordsBoundary` in the
+pack), answered deterministically before any model reads the ask; and
+abstention representable in-grammar (`unavailable`), lifted out by the
+decoder and reported as the boundary, never certified. The bank scorer
+reads a record that taught the boundary lesson alone as the honest pass
+it is. **R3b** is the rest of this slice: a recovery for the strong
+model's concept-noun fabrications (a fact about "gym badge" as if it
+were an entity — refused rightly under IA-3, the lesson left untaught),
+counted apart like the strip-assertion repair; and the dispatch
+retirement below.
+
 The listing cue dispatch, the bareness reading, the prior-roster door, the
 deflected-profile dispatch and the eligibility dispatch are retired as
 *dispatch*; each survives only as (a) an executor the model can nominate

@@ -215,6 +215,7 @@ function answerPrompt(
         ]),
     '  {"kind": "recommendation", "entityId": "<id>"}',
     '  {"kind": "action", "tool": "<tool-id>", "entityId": "<species-id>"}  — an act you propose to perform. It is shown to the trainer and executes only on their confirmation; claim one only when the trainer asked for it.',
+    '  {"kind": "unavailable", "entityId": "<id>", "asked": "<what they asked for>"}  — the trainer asked for something about a certified subject that the records do NOT certify (its height, weight, ability, cry, shiny odds, friendship, flavour text, the story). Say so with this, in the trainer\'s own word for it, instead of substituting a different fact: a certified fact they did not ask for is not an answer. You may pair it with the facts they DID ask for.',
     "",
     ...(lessons.length === 0 ? [] : [`A <lesson-id> must be one of: ${lessons.join(", ")}. No other lesson exists.`]),
     ...(rules.length === 0

@@ -1002,6 +1002,11 @@ function anaphorContext(world: SessionWorld, state: SessionState, ask: string): 
  */
 export function deflectedProfileClaims(world: SessionWorld, ask: string, proposed: readonly Claim[]): readonly Claim[] {
   if (proposed.length === 0 || !proposed.every((claim) => claim.kind === "explanation")) return [];
+  // The records-boundary lesson is not a deflection — it is the answer to
+  // "how tall is Onix?" (epic #145, R3), and the profile would be exactly the
+  // substitution it exists to prevent.
+  const boundary = world.pack.recordsBoundary?.lessonId;
+  if (boundary !== undefined && proposed.some((claim) => claim.kind === "explanation" && claim.blockId === boundary)) return [];
   const haystack = ` ${ask.toLowerCase()} `;
   const names = (id: string): boolean =>
     new RegExp(`\\b${id.split("-").join("[\\s-]?")}\\b`).test(haystack);
@@ -1190,6 +1195,15 @@ async function teachOrDiscover(
     .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
     .join(" ");
   const previously = anaphorContext(world, state, askWords);
+
+  // The records' boundary outranks discovery: a lesson commits under no
+  // scope at all, and the model reading "how tall is Onix?" could only
+  // substitute (epic #145, R3).
+  const boundary = recordsBoundaryDraft(world, askWords);
+  if (boundary !== undefined) {
+    const draft: ManifestDraft = { transactionId, ...boundary };
+    return { state: commit(state, deps, { transactionId, establishedAt, draft }), result: "taught", claims: draft.claims, rosters: draft.rosters, routed: true };
+  }
 
   let step: AnswerStep;
   let stepUsage: Usage;
@@ -1592,6 +1606,33 @@ function executeRoute(
   return undefined;
 }
 
+/**
+ * The records' boundary as a draft (epic #145, R3): when the ask carries one
+ * of the pack's words for a thing these records do not hold — a height, a
+ * weight, an ability, the story — the answer is the pack's own lesson saying
+ * so, composed deterministically before any model reads the ask. Found by
+ * R2's bank leg: with scope pre-set, ten needs-data questions reached the
+ * answer step and came back with a certified fact about the subject that was
+ * not the fact asked for — true, in scope, not the answer. The one exception
+ * is an ask that names both a species and a move ("does pikachu have the
+ * ability to learn surf?"): that is a learnset question wearing a boundary
+ * word, and the model owns it. Recognition only: the kernel certifies the
+ * lesson like any other, and a miss is today's path.
+ */
+function recordsBoundaryDraft(world: SessionWorld, ask: string): Pick<ManifestDraft, "claims" | "rosters"> | undefined {
+  const boundary = world.pack.recordsBoundary;
+  if (boundary === undefined) return undefined;
+  const haystack = ` ${ask.toLowerCase()} `;
+  const hit = boundary.tokens.some((token) =>
+    new RegExp(`\\b${token.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+")}\\b`).test(haystack),
+  );
+  if (!hit) return undefined;
+  const namesSpecies = world.registry.speciesIds.some((id) => new RegExp(`\\b${id.split("-").join("[\\s-]?")}\\b`).test(haystack));
+  const namesMove = world.registry.moveIds.some((id) => new RegExp(`\\b${id.split("-").join("[\\s-]?")}\\b`).test(haystack));
+  if (namesSpecies && namesMove) return undefined;
+  return { claims: [{ kind: "explanation", blockId: boundary.lessonId }], rosters: [] };
+}
+
 /** The reviewed block that owns the version boundary, when the pack carries
  * one. Named here, not in the kernel: which lesson explains the boundary is
  * curriculum, not enforcement. */
@@ -1757,6 +1798,11 @@ async function answer(
     .slice(state.askStart)
     .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
     .join(" ");
+  // The records' boundary outranks the model here too: with scope pre-set
+  // (a profile), the ask never passes discovery, and the answer step is
+  // where R2's bank leg found the substitutions (epic #145, R3).
+  const boundary = reuse === undefined ? recordsBoundaryDraft(world, currentAsk) : undefined;
+  if (boundary !== undefined) reuse = { ...boundary, routed: true };
   // A bare listing follow-up is answered from the record it refers to — the
   // previous exchange's certified roster — never from a model's guess at the
   // antecedent (and the weak model, handed the antecedent, still passed).
@@ -1840,6 +1886,25 @@ async function answer(
     nominationRetries: state.nominationRetries + (stepRetried ? 1 : 0),
   };
   if (stepRefusedListing) withUsage = tallyListing(withUsage, "stoodDown");
+
+  // The model said what it could not certify (epic #145, R3): the records'
+  // boundary, in the trainer's own word for the thing, reported as such —
+  // never a claim, never a certificate. Alone, it closes the exchange as an
+  // honest pass with the boundary named; beside claims, it rides along as a
+  // note while the claims go through the gate as usual.
+  if (step.decode.ok && step.decode.unavailable !== undefined && step.decode.unavailable.length > 0) {
+    const named = step.decode.unavailable
+      .map((entry) => `${entry.asked} for ${entry.entityId.replace(/-/g, " ")}`)
+      .join(", ");
+    withUsage = note(
+      withUsage,
+      deps.now(),
+      `The records don't hold ${named} — the League cannot certify that, so I won't guess at it.`,
+      "abstention",
+      `the model declared the asked fact uncertified (${step.decode.unavailable.length}) — nothing substituted`,
+    );
+    if (step.decode.draft.claims.length === 0 && step.decode.route === undefined) return closeExchange(withUsage);
+  }
 
   // The ask, as the trainer worded it — what the deterministic route reads.
   const ask = state.transcript
