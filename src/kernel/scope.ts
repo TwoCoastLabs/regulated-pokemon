@@ -560,6 +560,13 @@ function directMatches(vocabulary: ScopeVocabulary, transcript: ScopeTranscript)
  * vocabulary knows the word, and the ladder has nothing to add that a
  * recorded question would not bind more cheaply.
  */
+/** Every clause of one utterance, normalised exactly as a binding's
+ * `matchedText` is — so a caller can tell which clauses a derivation bound
+ * and which it left alone, without re-implementing the split. */
+export function clauseTexts(pack: AccordPack, text: string): string[] {
+  return clausesOf(text, pack.vocabulary).map((clause) => clause.text);
+}
+
 export function unmatchedClauses(pack: AccordPack, text: string): string[] {
   const vocabulary = pack.vocabulary;
   return clausesOf(text, vocabulary)

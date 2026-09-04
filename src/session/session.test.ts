@@ -1169,6 +1169,76 @@ describe("porch round ten: the comparative ask binds its own basis", () => {
   });
 });
 
+describe("dogfood 2026-09-04: a statement of scope is not an ask", () => {
+  it("a version correction re-asks the version question, and the answer is acknowledged", async () => {
+    // Live: "how many species?" → version question → "Yellow" (boundary
+    // lesson) → "ok. I actually play Red" earned "I lost the thread of that
+    // one". The correction contradicts the recorded answer; the design says
+    // ask again — deterministically, before any model reads it.
+    const count = JSON.stringify({
+      rosters: [{ id: "all-pokemon", criteria: { all: [] } }],
+      claims: [{ kind: "count", rosterId: "all-pokemon" }],
+    });
+    const pikachuTypes = JSON.stringify({ rosters: [], claims: [{ kind: "fact", entityId: "pikachu", factId: "types" }] });
+    let calls = 0;
+    const provider = new ScriptedProvider("dogfood", (request) => {
+      calls += 1;
+      if (request.purpose === "scope") return "decline";
+      return request.prompt.includes("pikachu") ? pikachuTypes : count;
+    });
+    const d = deps(provider);
+    let state = await say(startSession(), "how many species are there?", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+    state = await say(state, "Yellow", d);
+    expect(state.records[state.records.length - 1]?.manifest?.claims[0]).toMatchObject({ kind: "explanation" });
+
+    const before = calls;
+    state = await say(state, "ok. I actually play Red", d);
+    expect(calls).toBe(before); // no model reads a correction
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+
+    state = await say(state, "Red", d);
+    expect(calls).toBe(before);
+    const ack = state.notes[state.notes.length - 1];
+    expect(ack?.tone).toBe("social");
+    expect(ack?.text).toContain("Red/Blue");
+    expect(state.phase.kind).toBe("gathering");
+
+    // And the next ask answers under the corrected version.
+    state = await say(state, "what type is pikachu?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.grant?.scope.version).toBe("red-blue");
+  });
+
+  it("a bare 'im playing red' is acknowledged — no model, no interrogation", async () => {
+    let calls = 0;
+    const provider = scripted("mute", () => { calls += 1; return "decline"; });
+    const state = await say(startSession(), "im playing red", deps(provider));
+    expect(calls).toBe(0);
+    expect(state.transcript.filter((event) => event.kind === "question")).toHaveLength(0);
+    expect(state.notes[state.notes.length - 1]?.text).toContain("Red/Blue");
+    expect(state.phase.kind).toBe("gathering");
+  });
+
+  it("a bare 'im playing yellow' teaches the boundary — no question, no redirect", async () => {
+    const provider = scripted("mute", () => "decline");
+    const state = await say(startSession(), "im playing yellow", deps(provider));
+    expect(state.transcript.filter((event) => event.kind === "question")).toHaveLength(0);
+    expect(state.notes.some((n) => n.tone === "abstention")).toBe(false);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims[0]).toMatchObject({ kind: "explanation" });
+  });
+
+  it("a statement that carries an ask is still answered, never acknowledged", async () => {
+    const provider = scripted("scripted:honest", (purpose) => (purpose === "scope" ? "decline" : thunderboltAnswer()));
+    const state = await say(startSession(), `${PROFILE} What is Thunderbolt's power?`, deps(provider));
+    expect(state.records).toHaveLength(1);
+    expect(state.notes.some((n) => n.detail?.includes("scope statement acknowledged"))).toBe(false);
+  });
+});
+
 describe("porch round twelve: the terse trainer and the trust question", () => {
   it("a live card outranks the bare question for its own dimension", async () => {
     // "red. pikachu. weaknesses. go" earns a version card; "hp?" is a
