@@ -10,8 +10,10 @@ design into real high-stakes domains (and operating a knowledge base under
 it) is [docs/generalization.md](docs/generalization.md); the note placing the
 design against the academic and industrial field, with forward directions as
 hypotheses, is [docs/landscape.md](docs/landscape.md); the build epic (#1) is
-complete and closed; the current plan is **epic #94** (realistic inquiries) —
-work from the epic, keep its checkboxes honest.
+complete and closed; epic #94 (realistic inquiries) and epic #118 (scale,
+[docs/scale.md](docs/scale.md)) stand behind the current plan, **epic #145**
+([docs/routing.md](docs/routing.md): scope belongs to the profile, routing
+belongs to the model) — work from the epic, keep its checkboxes honest.
 
 ## Publication posture (read first)
 

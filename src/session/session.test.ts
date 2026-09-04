@@ -1169,6 +1169,35 @@ describe("porch round ten: the comparative ask binds its own basis", () => {
   });
 });
 
+describe("dogfood 2026-09-04: a superlative ask is never served the previous listing", () => {
+  it("'which pokemon is the fastest?' after a listing does not reuse the roster", async () => {
+    // Live: the bareness reading stripped "fastest" as noise, the prior-
+    // roster door read the ask as bare, and the previous exchange's ten
+    // species came back certified with no model call — true, in scope,
+    // and not what was asked. The door must stand down; the model (or a
+    // ranking route) owns a superlative.
+    const ranking = JSON.stringify({
+      rosters: [{ id: "all-pokemon", criteria: { all: [] } }],
+      claims: [{ kind: "ranking", rosterId: "all-pokemon", basis: "base-speed", direction: "highest" }],
+    });
+    const provider = scripted("ranker", (purpose) => (purpose === "scope" ? "decline" : ranking));
+    const d = deps(provider);
+    // Scope from its own exchange, as the live trainer gave it. (A version
+    // statement sharing the listing ask's utterance un-bares it for the
+    // door — one more door edge of the class docs/routing.md R3 retires.)
+    let state = await say(startSession(), "im playing red", d);
+    state = await say(state, "give me a list of Pokemon species", d);
+    const listing = state.records[state.records.length - 1]!;
+    expect(listing.manifest?.claims.some((claim) => claim.kind === "membership")).toBe(true);
+
+    state = await say(state, "which pokemon is the fastest?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.id).not.toBe(listing.id);
+    expect(record.manifest?.claims.some((claim) => claim.kind === "membership")).toBe(false);
+    expect(record.manifest?.claims[0]).toMatchObject({ kind: "ranking", basis: "base-speed" });
+  });
+});
+
 describe("dogfood 2026-09-04: a statement of scope is not an ask", () => {
   it("a version correction re-asks the version question, and the answer is acknowledged", async () => {
     // Live: "how many species?" → version question → "Yellow" (boundary

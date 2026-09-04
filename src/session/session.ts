@@ -1251,7 +1251,13 @@ function listingClaims(
   // its own subject, and the last exchange's set must not stand in for it
   // (found by the activation gauge, 2026-09-01: the stale all-species roster
   // served a learns-move ask and the guard then certified an empty record).
-  const prior = typesNamed.length === 1 || !bareCatalogueAsk(world, ask) ? undefined : priorRoster(state);
+  // Bareness gates the whole door, not just the prior roster. The round-
+  // seven guard only withheld the *prior* roster from a non-bare ask and
+  // fell through to the catalogue — so "which pokemon is the fastest?"
+  // was served every species, certified, with no model call (dogfood
+  // 2026-09-04). A qualified ask is the model's to compose.
+  if (typesNamed.length !== 1 && !bareCatalogueAsk(world, ask)) return { kind: "stood-down" };
+  const prior = typesNamed.length === 1 ? undefined : priorRoster(state);
   const roster = prior ?? catalogueRoster(world, ask);
   const asked = Number(/\d+/.exec(ask)?.[0]);
   const draft = composeListing(roster, Number.isFinite(asked) && asked > 0 ? asked : 10);
@@ -1333,12 +1339,20 @@ function qualifiedSet(world: SessionWorld, ask: string) {
  * mints understand, nothing substantive may remain. */
 function bareCatalogueAsk(world: SessionWorld, ask: string): boolean {
   const typeStripper = new RegExp(`\\b(${[...world.registry.typeNames].join("|")})\\b`, "g");
-  const unmatched = unmatchedClauses(world.pack, ask).join(" ");
+  const unmatched = unmatchedClauses(world.pack, ask).join(" ").toLowerCase();
+  // A superlative is a ranking's business — which means the ask is a
+  // ranking ask, not a bare one. Stripping it as noise (round seven) let
+  // "which pokemon is the fastest?" read as bare and be served the previous
+  // exchange's listing, certified, with no model call (dogfood 2026-09-04).
+  // Read on the raw ask, not the unmatched remainder: since round ten
+  // "fastest" binds comparisonBasis, so its clause is *matched* and would
+  // vanish from the remainder — vocabulary growth blinding a door is the
+  // class docs/routing.md R3 retires; until then the door stands down here.
+  if (/\b(strongest|fastest|slowest|weakest|best|worst|highest|lowest|top)\b/.test(ask.toLowerCase())) return false;
   const leftovers = unmatched
-    .toLowerCase()
     .replace(/\bpok[eé]mons?\b|\bspecies\b|\btypes?\b/g, " ")
     .replace(/\brarest\b|\blegendar(?:y|ies)\b|\bmythicals?\b|\bwhich\b|\bwhats?\b|\benumerate\b/g, " ")
-    .replace(/\b(strongest|fastest|slowest|weakest|best|highest|lowest|top|who|how)\b/g, " ")
+    .replace(/\b(who|how)\b/g, " ")
     .replace(typeStripper, " ")
     .replace(LISTING_STOPWORDS, " ")
     .trim();

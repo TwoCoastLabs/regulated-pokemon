@@ -3720,6 +3720,38 @@ Replayed live: seven turns, zero dead ends, the correction costs no
 model call, the acknowledgment costs none, and "what type is pikachu?"
 answers under the corrected version ($0.0060 for the thread).
 
+### The reflection: why the porch stopped paying (2026-09-04)
+
+The second self-driven session ended on "which pokemon is the fastest?"
+answered with the previous exchange's ten-species listing — certified,
+in scope, no model call, and not what was asked. The bareness reading
+had stripped "fastest" as noise (round seven: "a ranking's business"),
+so the prior-roster door read the ask as bare and served. It is the
+fifth wrong-shape answer the porch has produced, and every one came from
+two hand-written doors interacting — three of them, it turned out, once
+the patch was attempted: the round-seven guard withheld only the
+*prior* roster from a non-bare ask and fell through to the whole
+catalogue; and the bareness reader's own superlative check read the
+vocabulary's *unmatched* remainder, from which "fastest" had vanished
+the day round ten made it bind comparisonBasis — vocabulary growth
+blinding a door. The patch (a superlative on the raw ask marks a
+ranking ask; bareness gates the whole door; pinned by test) is small;
+the finding is that the class should die, not the instance. Twelve rounds
+say where the defects live: the kernel produced no fabrication, no
+wrong-scope commit and no unauthorized act in any of them, and nearly
+every bug sat in ~1,700 lines of driver heuristics written because the
+weak model could not route. The bank's own numbers close the argument:
+strong 71% and weak 62% before the deterministic routes, both 86–90%
+after — the routes did the work, and the routes are the bug surface.
+The Accord proves what is said is true and in scope; relevance is
+routing's job, and routing by regex is what "true but not what you
+asked" looks like. Hence [routing.md](routing.md) and epic #145: scope
+belongs to the profile (a typed trainer-channel event, no card owed),
+routing belongs to a capable model (nomination validated by the driver,
+verified by the kernel, dispatch doors retired), and the demo's default
+is the measured strong model — the weak model stays the harness's
+second leg, where the doctrine wants it.
+
 ## Appendix — how to reproduce
 
 ```sh
