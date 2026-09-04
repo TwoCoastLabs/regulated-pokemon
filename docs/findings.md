@@ -3681,6 +3681,45 @@ budget reset). Two rounds running, the porch pattern repeats: the
 visible defect is tone or ceremony, and the test written to pin the
 fix surfaces a state leak underneath it.
 
+### Dogfood 2026-09-04: a statement of scope is not an ask
+
+The first self-driven dogfood session after twelve rounds hit three
+dead ends in seven turns — and two of them were not bugs at all: the
+worktree had been silently checked out to its original base branch
+(pre-every-round) between the last commit and the server start, so the
+trainer was talking to code twelve rounds old. Lesson recorded in the
+project memory: verify the branch before starting a server or reading
+a trace. Replayed on the real branch, "hi" earned the greeting and
+"Yellow" the boundary lesson. The third dead end was real: after the
+boundary lesson, "ok. I actually play Red" — the version correction
+the lesson itself invites — earned "I lost the thread of that one".
+The kernel reads a later direct statement contradicting a recorded
+answer as a fresh contradiction (by design: version is contradicted,
+nothing binds), and the design says the trainer is asked again; but no
+driver path re-asked. The correction fell to discovery, the model read
+it as an ask, and the anaphoric redirect fired with the wrong tone.
+Two additions, both deterministic and before any model call. First,
+the switch-back block gained the contradiction case: a contradicted
+version whose latest words carry any version token re-arms the pack's
+question, narrowed to version (the same narrowing the switch-back
+uses, for the same reason — one question, not an interrogation).
+Second, a statement of scope with no ask in it — the correction, the
+"Red" that answers it, a bare "im playing red" — is now recognised
+(`scopeStatementOnly`: no question mark or interrogative opener, no
+certified subject, every clause either read by the vocabulary or two
+tokens of filler, at least one dimension bound) and acknowledged
+("Got it — Red/Blue. Ask away") with the exchange closed, instead of
+being handed to the model as if it were a question and earning the
+honest-pass abstention for a question never asked; a bare foreign
+version teaches the boundary directly. The recogniser's first cut read
+only the vocabulary's *unmatched* clauses and let "Build me a team of
+six Pokemon" through (the token "six", binding nothing) — the
+scenario bank caught it, and the gate now reads the kernel's own clause
+split (`clauseTexts`) against what the derivation bound or read.
+Replayed live: seven turns, zero dead ends, the correction costs no
+model call, the acknowledgment costs none, and "what type is pikachu?"
+answers under the corrected version ($0.0060 for the thread).
+
 ## Appendix — how to reproduce
 
 ```sh
