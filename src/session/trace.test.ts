@@ -89,6 +89,22 @@ describe("runTrace narrates what the session did", () => {
     expect(text).toContain("[phase] asking about comparisonBasis");
   });
 
+  it("traces the profile command: typed scope set once, no question, no card (epic #145, R2)", async () => {
+    const provider = new ScriptedProvider("scripted:mute-scope", (request) =>
+      request.purpose === "answer" ? rankingAnswer : "no JSON here",
+    );
+    const result = await runTrace(
+      ["/profile version=red-blue,region=kanto,badgeLevel=8,comparisonBasis=base-speed", "Which of the Electric ones is the quickest?"],
+      deps(provider),
+    );
+    expect(result.exitCode).toBe(0);
+    const text = result.lines.join("\n");
+    expect(text).toContain("[trainer profile] { version=red-blue, region=kanto, badgeLevel=8, comparisonBasis=base-speed }");
+    expect(text).not.toContain("[advisor asks");
+    expect(text).not.toContain("[advisor proposes");
+    expect(text).toContain("answered");
+  });
+
   it("refuses an unknown command by name, keeping the trace to that point", async () => {
     const provider = new ScriptedProvider("scripted:any", () => rankingAnswer);
     const result = await runTrace([`${PROFILE} What is Thunderbolt's power?`, "/frobnicate"], deps(provider));

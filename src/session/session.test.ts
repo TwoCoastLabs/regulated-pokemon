@@ -22,6 +22,7 @@ import {
   retry,
   say,
   type SessionDeps,
+  setProfile,
   startSession,
 } from "./session.js";
 
@@ -1166,6 +1167,173 @@ describe("porch round ten: the comparative ask binds its own basis", () => {
     const record = state.records[state.records.length - 1]!;
     expect(record.outcome.status).toBe("answered");
     expect(record.grant?.scope.comparisonBasis).toBe("base-speed");
+  });
+});
+
+describe("R2: the trainer's profile is scope set once, not asked for", () => {
+  it("a profile set before the ask means no version question, no card, and a record that replays", async () => {
+    const provider = scripted("scripted:honest", (purpose) => (purpose === "scope" ? "decline" : thunderboltAnswer()));
+    const d = deps(provider);
+    let state = await setProfile(startSession(), { version: "red-blue", region: "kanto", badgeLevel: 8 }, d);
+    // Acknowledged in the trainer's terms, nothing asked, nothing sent.
+    expect(state.notes[state.notes.length - 1]?.text).toContain("Red/Blue");
+    expect(state.usage.calls).toBe(0);
+    expect(state.transcript[0]?.kind).toBe("profile");
+
+    state = await say(state, "What is Thunderbolt's power?", d);
+    expect(state.transcript.filter((event) => event.kind === "question")).toHaveLength(0);
+    expect(state.transcript.filter((event) => event.kind === "proposal")).toHaveLength(0);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.grant?.scope).toMatchObject({ version: "red-blue", region: "kanto", badgeLevel: 8 });
+    expect(record.grant?.bindings.every((binding) => binding.route === "profile")).toBe(true);
+    expect(verifyReplay(world, record).allowed).toBe(true);
+  });
+
+  it("a profile set while a question is armed answers it and the exchange drives on", async () => {
+    // A model that nominates the profile route for the ask; the pack's
+    // version question still fires first, and the panel answers it.
+    const nominate = JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "profile", entityId: "charmander" }] });
+    const provider = scripted("nominator", (purpose) => (purpose === "scope" ? "decline" : nominate));
+    const d = deps(provider);
+    let state = await say(startSession(), "tell me about charmander", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+    state = await setProfile(state, { version: "red-blue" }, d);
+    expect(state.phase.kind).toBe("gathering");
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims.every((claim) => claim.kind === "fact" && claim.entityId === "charmander")).toBe(true);
+  });
+
+  it("a profile on the foreign version teaches the boundary, and a later correction is asked about", async () => {
+    const provider = scripted("mute", () => "decline");
+    const d = deps(provider);
+    let state = await setProfile(startSession(), { version: "yellow" }, d);
+    state = await say(state, "tell me about charmander", d);
+    expect(state.records[state.records.length - 1]?.manifest?.claims[0]).toMatchObject({ kind: "explanation" });
+    state = await say(state, "actually I play Red", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+  });
+
+  it("an unapproved profile value binds nothing — the pack's question still stands", async () => {
+    const provider = scripted("mute", () => "decline");
+    const d = deps(provider);
+    let state = await setProfile(startSession(), { version: "crystal" } as never, d);
+    state = await say(state, "tell me about charmander", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+  });
+});
+
+describe("R1 bank run 2026-09-04: a refused nomination is retried with the route door closed", () => {
+  it("a model that misuses the route variant gets one more call without it, and the fact goes through", async () => {
+    // Under the provider-enforced schema the strong model answered "What
+    // types is Charizard?" with a listing nomination for the catalogue; the
+    // door refused it and the empty remainder read as off-domain — fifteen
+    // answerable questions redirected at turn one. The offer is withdrawn
+    // for one call; the reply the model writes without it goes through.
+    const misuse = JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "listing", subject: "catalogue", n: 1 }] });
+    const fact = JSON.stringify({ rosters: [], claims: [{ kind: "fact", entityId: "charizard", factId: "types" }] });
+    let offered = 0;
+    let closed = 0;
+    const provider = new ScriptedProvider("steered", (request) => {
+      if (request.purpose === "scope") return "decline";
+      const routeOffered = JSON.stringify(request.schema ?? {}).includes('"route"');
+      if (routeOffered) offered += 1;
+      else closed += 1;
+      return routeOffered ? misuse : fact;
+    });
+    const d = deps(provider);
+    let state = await say(startSession(), "playing red. What types is Charizard?", d);
+    expect(state.notes.some((n) => n.tone === "abstention")).toBe(false);
+    expect(offered).toBeGreaterThan(0);
+    expect(closed).toBeGreaterThan(0);
+    expect(state.nominationRetries).toBeGreaterThan(0);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims[0]).toMatchObject({ kind: "fact", entityId: "charizard", factId: "types" });
+    // The refused listing nomination is still on the gauge.
+    expect(state.listingActivations.stoodDown).toBeGreaterThan(0);
+  });
+
+  it("the listing executor refuses an entity-naming ask, so the fact goes through on the retry", async () => {
+    // Live: "What's Pikachu's Speed stat?" drew a catalogue-listing
+    // nomination and the door composed ten certified members — the answer
+    // to a question nobody asked. The executor now carries the cue door's
+    // own guard.
+    const misuse = JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "listing", subject: "catalogue", n: 10 }] });
+    const fact = JSON.stringify({ rosters: [], claims: [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }] });
+    const provider = new ScriptedProvider("steered", (request) =>
+      request.purpose === "scope" ? "decline" : JSON.stringify(request.schema ?? {}).includes('"route"') ? misuse : fact,
+    );
+    const state = await say(startSession(), "playing red. What's Pikachu's Speed stat?", deps(provider));
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims.some((claim) => claim.kind === "membership")).toBe(false);
+    expect(record.manifest?.claims[0]).toMatchObject({ kind: "fact", entityId: "pikachu", factId: "base-speed" });
+  });
+
+  it("the profile executor refuses a move-naming ask, so the membership goes through on the retry", async () => {
+    const misuse = JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "profile", entityId: "pikachu" }] });
+    const learns = JSON.stringify({
+      rosters: [{ id: "selfdestruct-learners", criteria: { all: [{ kind: "learns-move", move: "self-destruct" }] } }],
+      claims: [{ kind: "membership", rosterId: "selfdestruct-learners", entityId: "pikachu", asserted: false }],
+    });
+    const provider = new ScriptedProvider("steered", (request) =>
+      request.purpose === "scope" ? "decline" : JSON.stringify(request.schema ?? {}).includes('"route"') ? misuse : learns,
+    );
+    const state = await say(startSession(), "playing red. Does Pikachu learn Selfdestruct?", deps(provider));
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims.some((claim) => claim.kind === "fact")).toBe(false);
+    expect(record.manifest?.claims[0]).toMatchObject({ kind: "membership", entityId: "pikachu" });
+  });
+
+  it("'What is Pokemon?' is a lesson's shape, never the catalogue", async () => {
+    const lesson = JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-pokemon" }] });
+    let calls = 0;
+    const provider = scripted("teacher", () => { calls += 1; return lesson; });
+    const state = await say(startSession(), "What is Pokemon?", deps(provider));
+    expect(calls).toBeGreaterThan(0);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.manifest?.claims.some((claim) => claim.kind === "membership")).toBe(false);
+    expect(record.manifest?.claims[0]).toMatchObject({ kind: "explanation" });
+  });
+
+  it("a nomination the driver accepts is not retried", async () => {
+    const nominate = JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "profile", entityId: "pikachu" }] });
+    const provider = scripted("nominator", (purpose) => (purpose === "scope" ? "decline" : nominate));
+    const state = await say(startSession(), "playing red. tell me about pikachu", deps(provider));
+    expect(state.nominationRetries).toBe(0);
+    expect(state.records[state.records.length - 1]?.outcome.status).toBe("answered");
+  });
+});
+
+describe("dogfood 2026-09-04: a superlative ask is never served the previous listing", () => {
+  it("'which pokemon is the fastest?' after a listing does not reuse the roster", async () => {
+    // Live: the bareness reading stripped "fastest" as noise, the prior-
+    // roster door read the ask as bare, and the previous exchange's ten
+    // species came back certified with no model call — true, in scope,
+    // and not what was asked. The door must stand down; the model (or a
+    // ranking route) owns a superlative.
+    const ranking = JSON.stringify({
+      rosters: [{ id: "all-pokemon", criteria: { all: [] } }],
+      claims: [{ kind: "ranking", rosterId: "all-pokemon", basis: "base-speed", direction: "highest" }],
+    });
+    const provider = scripted("ranker", (purpose) => (purpose === "scope" ? "decline" : ranking));
+    const d = deps(provider);
+    // Scope from its own exchange, as the live trainer gave it. (A version
+    // statement sharing the listing ask's utterance un-bares it for the
+    // door — one more door edge of the class docs/routing.md R3 retires.)
+    let state = await say(startSession(), "im playing red", d);
+    state = await say(state, "give me a list of Pokemon species", d);
+    const listing = state.records[state.records.length - 1]!;
+    expect(listing.manifest?.claims.some((claim) => claim.kind === "membership")).toBe(true);
+
+    state = await say(state, "which pokemon is the fastest?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.id).not.toBe(listing.id);
+    expect(record.manifest?.claims.some((claim) => claim.kind === "membership")).toBe(false);
+    expect(record.manifest?.claims[0]).toMatchObject({ kind: "ranking", basis: "base-speed" });
   });
 });
 

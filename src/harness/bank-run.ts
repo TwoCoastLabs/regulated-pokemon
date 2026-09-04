@@ -26,6 +26,7 @@ import {
   say,
   type SessionDeps,
   type SessionState,
+  setProfile,
   startSession,
 } from "../session/session.js";
 import { candidateIsTrue } from "./trainer.js";
@@ -188,8 +189,19 @@ function answeredThroughOtherKind(run: HarnessRun, expected: readonly ClaimKind[
 /** Drive the session to a settled state, answering as the trainer would. The
  * opening is one phrasing of the question — the canonical intent, or a variant
  * when robustness is being measured. */
-async function play(entry: BankEntry, opening: string, deps: SessionDeps): Promise<SessionState> {
-  let state = await say(startSession(), opening, deps);
+async function play(entry: BankEntry, opening: string, deps: SessionDeps, profile = false): Promise<SessionState> {
+  // The profile mode (epic #145, R2): the trainer set their version, region
+  // and badges on the panel before asking, so no pack question about them is
+  // owed. The entry's profile is the same one the question-answering trainer
+  // reads from — only the channel changes, from prose to the typed form.
+  let state = profile
+    ? await setProfile(
+        startSession(),
+        { version: entry.profile.version, region: entry.profile.region, badgeLevel: entry.profile.badgeLevel },
+        deps,
+      )
+    : startSession();
+  state = await say(state, opening, deps);
   const acts = wantsAct(entry);
 
   for (let step = 0; step < MAX_STEPS; step += 1) {
@@ -283,8 +295,9 @@ export async function runBankEntry(
   retrieval = false,
   gatedGrammar = false,
   repair = false,
+  profile = false,
 ): Promise<RecordedBankRun> {
-  const state = await play(entry, opening, { world, provider, now, grounded, retrieval, gatedGrammar, repair });
+  const state = await play(entry, opening, { world, provider, now, grounded, retrieval, gatedGrammar, repair }, profile);
   const run = asRun(entry, state, world, repetition);
   const stage = funnelOf(run, wantsAct(entry));
   return {
@@ -320,10 +333,13 @@ export async function runBank(
   retrieval = false,
   gatedGrammar = false,
   repair = false,
+  profile = false,
 ): Promise<readonly RecordedBankRun[]> {
   const runs: RecordedBankRun[] = [];
   for (const entry of entries) {
-    runs.push(await runBankEntry(world, entry, provider, clock(), entry.intent, repetition, grounded, retrieval, gatedGrammar, repair));
+    runs.push(
+      await runBankEntry(world, entry, provider, clock(), entry.intent, repetition, grounded, retrieval, gatedGrammar, repair, profile),
+    );
   }
   return runs;
 }

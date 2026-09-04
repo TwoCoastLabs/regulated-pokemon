@@ -3720,6 +3720,150 @@ Replayed live: seven turns, zero dead ends, the correction costs no
 model call, the acknowledgment costs none, and "what type is pikachu?"
 answers under the corrected version ($0.0060 for the thread).
 
+### The reflection: why the porch stopped paying (2026-09-04)
+
+The second self-driven session ended on "which pokemon is the fastest?"
+answered with the previous exchange's ten-species listing — certified,
+in scope, no model call, and not what was asked. The bareness reading
+had stripped "fastest" as noise (round seven: "a ranking's business"),
+so the prior-roster door read the ask as bare and served. It is the
+fifth wrong-shape answer the porch has produced, and every one came from
+two hand-written doors interacting — three of them, it turned out, once
+the patch was attempted: the round-seven guard withheld only the
+*prior* roster from a non-bare ask and fell through to the whole
+catalogue; and the bareness reader's own superlative check read the
+vocabulary's *unmatched* remainder, from which "fastest" had vanished
+the day round ten made it bind comparisonBasis — vocabulary growth
+blinding a door. The patch (a superlative on the raw ask marks a
+ranking ask; bareness gates the whole door; pinned by test) is small;
+the finding is that the class should die, not the instance. Twelve rounds
+say where the defects live: the kernel produced no fabrication, no
+wrong-scope commit and no unauthorized act in any of them, and nearly
+every bug sat in ~1,700 lines of driver heuristics written because the
+weak model could not route. The bank's own numbers close the argument:
+strong 71% and weak 62% before the deterministic routes, both 86–90%
+after — the routes did the work, and the routes are the bug surface.
+The Accord proves what is said is true and in scope; relevance is
+routing's job, and routing by regex is what "true but not what you
+asked" looks like. Hence [routing.md](routing.md) and epic #145: scope
+belongs to the profile (a typed trainer-channel event, no card owed),
+routing belongs to a capable model (nomination validated by the driver,
+verified by the kernel, dispatch doors retired), and the demo's default
+is the measured strong model — the weak model stays the harness's
+second leg, where the doctrine wants it.
+
+### R1, run: the schema steers, the doors compose, the number moves (2026-09-04)
+
+The playability bank (137 questions), production settings (retrieval,
+gated grammar, repair), N=1 per the fail-fast rule, both legs of the
+doctrine. The weak leg first, because it is the control:
+`gemini-3.5-flash-lite` **101/137**, answerable resolution 85% (67/79),
+certified-answer 100%, honest refusal 63% (15/24), gated questions 82%,
+advisory 0/13. The strong leg, `qwen3-235b`, on the code as merged:
+**79/137**, answerable 56%, honest refusal 96% — fifteen answerable
+questions "died of scope friction at turn one", which is not a thing
+that happens to "What types is Charizard?". It reproduced
+deterministically and had one cause: under the provider-enforced
+schema the strong model answers a plain fact ask with a *route
+nomination* — a listing of the catalogue, two of two — while without
+structured decoding it writes the fact claim four of four. The route
+variant (epic #118, validated on the weak model, which never misuses
+it) steers the strong model's shape; the door refuses the nomination;
+and a refused nomination with nothing beside it read as off-domain.
+Three changes, each a guard, none a new door. A refused nomination
+with nothing beside it is retried once with the route door closed
+(`withRouteFallback`, counted as `nominationRetries`): the offer is the
+driver's, not the model's obligation. The route executors carry the
+cue doors' own guards — the listing refuses a subject-naming or
+non-bare ask, the profile refuses a move-naming ask — because the
+second face of the steering was worse than the first: "What's Pikachu's
+Speed stat?" drew a catalogue nomination the executor *composed*, and
+"Does Pikachu learn Selfdestruct?" a profile it composed — certified
+members and certified facts, neither the answer, ten of the strong
+model's thirteen off-oracle answers. And "What is Pokémon?" was served
+ten species by the wh-tier cue; the singular copula is a lesson's
+shape. Rerun, retry only: **103/137**, answerable 78% (62/79),
+certified 95%, gated 100%, honest refusal 75%. Rerun with the
+executor guards: **103/137** again, answerable 73% (58/79), honest
+refusal 79%, advisory 38% — and seven `meta-*` lesson questions
+*denied* under IA-3/fabricated-entity after seven turns each, where
+the previous leg had resolved every one in a single call: the model,
+this sample, proposed a fact about "gym badge" as if it were a
+species, and the kernel refused it by name. Enforcement held on all
+three legs (no gated advice committed, no fabrication certified); the
+seven denials are the doctrine's point made at the trainer's expense.
+What R1's gate can honestly say from N=1: on pass count the default
+model now edges the weak one (103 vs 101, twice); on the strict
+answerable rate it trails (73–78% vs 85%); on the trust number it leads
+(75–79% vs 63%); on gated questions it leads (100% vs 82%). Mixed, and
+a single sample per leg — the N=3 run on the final code is filed
+beside this entry when it lands, and R1 is not ticked before it. The
+finding under the numbers is the epic's thesis at bank scale: every
+regression the run found was a *door* — a schema variant steering a
+shape, an executor composing without the cue door's guard, a cue
+misreading a copula — and every fix was a guard on what the model
+composed. That is R3's principle, arrived at by measurement.
+
+The N=3 leg on the final code, filed beside: `qwen3-235b` **305/411
+pooled, passes per repetition 99 / 106 / 100 (band 99–106)**; stable
+core 93/137 passing in every repetition, 26 stable fails, 18 flaky.
+Answerable resolution **74%** pooled (69 / 79 / 73% by repetition),
+certified-answer 89%, honest refusal **78%** (56/72), gated questions
+**100%** (33/33), advisory 26%, off-domain 30/30; enforcement held on
+all 411 samples. Read against the weak leg's single sample: on pass
+count the weak model's 101 sits *inside* the strong model's band —
+parity, not a lead; on the strict answerable rate the strong model
+trails (74% vs 85%); on the trust number it leads (78% vs 63%); on
+gated questions it leads (100% vs 82%). The 21 answerable denials
+across the three repetitions are one behaviour, not dice: on eleven
+`meta-*` lesson questions ("What's a gym badge?", "What is the
+League?", "What are stats?") the strong model proposes a *fact* about
+the concept noun as if it were a certified entity, and the kernel
+refuses it under IA-3/fabricated-entity — the right refusal, seven
+turns of ceremony, and a lesson the curriculum holds left untaught.
+That is a candidate recovery channel (a fabricated-entity denial whose
+ask a lesson accepts falls to the lesson), filed for R3, not built.
+R1's gate as written — "at least as well as the weak model" — is
+therefore **not met on the strict answerable rate and met on
+everything a regulated product would weigh first**: trust, gated
+questions, pass count. Which default the demo ships is that trade-off
+stated as a decision, and this entry is its evidence.
+
+### R2, built and run: the profile is the context (2026-09-05)
+
+The trainer profile of [routing.md](routing.md) R2, end to end. A typed
+`profile` event on the trainer channel — `{ version, region, badgeLevel }`
+from a panel on the live page, `/profile version=…` in the tracer,
+`--profile` in the coverage runner — binds on a kernel route of its own
+(`profile`): the form is the context, the way a recorded question is,
+so no context word and no card is owed. The channel decides as
+everywhere — a profile from any other channel is refused by its own
+name (IA-8/unauthorized-profile), and a typed value the vocabulary
+lacks by its own (IA-1/profile-value-not-approved); both are crucible
+mutations now, and the README's coverage counts moved with them (IA-1
+15 → 16, IA-8 7 → 8). A later profile supersedes an earlier answer
+under the existing witness rule; a later direct statement contradicting
+the profile is a contradiction like any other, and the trainer is
+asked. Live on the strong model, profile first: "tell me about
+charmander" and "can i catch zapdos?" both answered under the full
+scope with zero questions ($0.0009 for the thread). The bank, profile
+first, `qwen3-235b`, N=1: **98/137**, answerable 77%, certified 92%,
+gated 100%, enforcement held — and **ceremony 0.03 questions and 0.00
+scope cards per resolution, from 1.44 and 0.41** on the same code
+without a profile (N=3: 1.52 and 0.41). The three questions that
+remained were all comparisonBasis — the ask's own parameter, which no
+profile holds, by design; the version question fired zero times, which
+is R2's gate. Filed beside it, not hidden: the trust number fell from
+75–79% to **54%** (13/24). With scope granted at once, ten needs-data
+questions ("what's Onix's height?", "what are the shiny odds?") that
+used to die in scope gathering or abstain now reach the answer step
+and come back *resolved* — a certified fact about the subject, not the
+fact that was asked for. True, in scope, not the answer: the "true but
+not what you asked" class, now unmasked by the ceremony that used to
+hide it. That is R3's relevance problem in its purest form, and the
+profile made it measurable. Pass count 98 sits just under the N=3 band
+(99–106); one sample, filed as such.
+
 ## Appendix — how to reproduce
 
 ```sh

@@ -52,6 +52,28 @@ const basisProposal = JSON.stringify({ candidate: { comparisonBasis: "base-speed
 const releaseRaticate = JSON.stringify({ rosters: [], claims: [{ kind: "action", tool: "release", entityId: "raticate" }] });
 
 describe("runBankEntry buckets each disposition through the real session", () => {
+  it("in profile mode the trainer's scope is set on the panel first, and no pack question is asked (epic #145, R2)", async () => {
+    const run = await runBankEntry(
+      world,
+      entry("ans-fact-speed-pikachu"),
+      model(pikachuSpeed()),
+      clock(),
+      undefined,
+      0,
+      false,
+      false,
+      false,
+      false,
+      true,
+    );
+    expect(run.stage.kind).toBe("resolved");
+    expect(run.score.pass).toBe(true);
+    // The record's own transcript: a profile event first, and no question event.
+    const transcript = run.run.transcript;
+    expect(transcript[0]?.kind).toBe("profile");
+    expect(transcript.some((event) => event.kind === "question")).toBe(false);
+  });
+
   it("an answerable fact the model gets right resolves and passes", async () => {
     const run = await runBankEntry(world, entry("ans-fact-speed-pikachu"), model(pikachuSpeed()), clock());
     expect(run.stage.kind).toBe("resolved");

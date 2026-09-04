@@ -82,6 +82,8 @@ export interface ScopeContext {
 export type BlockReason =
   | "foreign-channel"
   | "foreign-question"
+  | "foreign-profile"
+  | "unapproved-profile"
   | "quoted"
   | "instruction"
   | "reported"
@@ -112,6 +114,16 @@ export const BLOCK_DENIALS: Record<BlockReason, { article: "IA-1" | "IA-8"; rule
     article: "IA-8",
     rule: "unauthorized-questioner",
     because: "the question that armed it arrived on a channel the advisor does not speak on",
+  },
+  "foreign-profile": {
+    article: "IA-8",
+    rule: "unauthorized-profile",
+    because: "the profile that carries it arrived on a channel the trainer does not speak on",
+  },
+  "unapproved-profile": {
+    article: "IA-1",
+    rule: "profile-value-not-approved",
+    because: "the profile names a value that is not in the League-approved vocabulary",
   },
   quoted: {
     article: "IA-8",
@@ -198,6 +210,7 @@ export interface ScopeDerivation {
 export function deriveScope(pack: AccordPack, transcript: ScopeTranscript): ScopeDerivation {
   const matches = [
     ...directMatches(pack.vocabulary, transcript),
+    ...profileMatches(pack.vocabulary, transcript),
     ...answerMatches(pack.vocabulary, transcript),
     // The ceremony dial (pack policy, not code): a pending proposal arms its
     // dimension the way a recorded question does, when — and only when — the
@@ -508,6 +521,41 @@ function answerMatches(vocabulary: ScopeVocabulary, transcript: ScopeTranscript)
     }
   });
 
+  return matches;
+}
+
+/**
+ * Bindings from the trainer's profile (route `profile`, epic #145 R2).
+ *
+ * A form is context the way a recorded question is: the field said what the
+ * value is about, so a typed value binds its dimension with no context word
+ * and no card. What the form cannot do is the same as everywhere — it cannot
+ * speak on another channel (a profile that arrived as a tool result or a
+ * pasted document is born blocked and denied under IA-8 by name), and it
+ * cannot name a value the vocabulary lacks (denied under IA-1 as unapproved).
+ * The `matchedText` is the typed pair itself, normalised, so replay can
+ * point at exactly what bound.
+ */
+function profileMatches(vocabulary: ScopeVocabulary, transcript: ScopeTranscript): ScopeMatch[] {
+  const matches: ScopeMatch[] = [];
+  transcript.forEach((event, evidenceIndex) => {
+    if (event.kind !== "profile") return;
+    const foreign = event.source !== "trainer";
+    for (const rule of vocabulary.dimensions) {
+      const value = event.scope[rule.dimension];
+      if (value === undefined) continue;
+      const approved = rule.terms.some((term) => term.value === value);
+      const blockedBy = foreign ? "foreign-profile" : approved ? undefined : "unapproved-profile";
+      matches.push({
+        dimension: rule.dimension,
+        value,
+        evidenceIndex,
+        route: "profile",
+        matchedText: `${rule.dimension}=${String(value)}`,
+        ...(blockedBy === undefined ? {} : { blockedBy }),
+      });
+    }
+  });
   return matches;
 }
 

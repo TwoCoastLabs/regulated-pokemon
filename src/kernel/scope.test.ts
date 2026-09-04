@@ -170,6 +170,51 @@ describe("an ask parameter binds inside the trainer's own question", () => {
   });
 });
 
+describe("the profile is the context (epic #145, R2)", () => {
+  const profile = (scope: Record<string, string | number>, source: UtteranceSource = "trainer"): ScopeEvent =>
+    ({ kind: "profile", at: ISSUED_AT, source, scope } as ScopeEvent);
+
+  it("binds typed scope from the trainer's own profile, on the profile route, with no wording", () => {
+    const derivation = deriveScope(pack, [profile({ version: "red-blue", region: "kanto", badgeLevel: 3 })]);
+    expect(Object.fromEntries(derivation.bindings.map((b) => [b.dimension, b.value]))).toEqual({
+      version: "red-blue",
+      region: "kanto",
+      badgeLevel: 3,
+    });
+    expect(derivation.bindings.every((b) => b.route === "profile")).toBe(true);
+    expect(derivation.bindings.find((b) => b.dimension === "version")?.matchedText).toBe("version=red-blue");
+  });
+
+  it("grants on a profile alone — no question, no card", () => {
+    const outcome = resolveScope(context, [profile({ version: "red-blue", region: "kanto", badgeLevel: 8 })]);
+    expect(outcome.status).toBe("granted");
+  });
+
+  it("establishes nothing from a profile on another channel, and says why", () => {
+    const derivation = deriveScope(pack, [profile({ version: "yellow", badgeLevel: 2 }, "tool")]);
+    expect(derivation.bindings).toEqual([]);
+    expect(derivation.ignored.map((m) => m.blockedBy)).toEqual(["foreign-profile", "foreign-profile"]);
+  });
+
+  it("refuses a typed value the vocabulary does not approve", () => {
+    const derivation = deriveScope(pack, [profile({ version: "crystal" })]);
+    expect(derivation.bindings).toEqual([]);
+    expect(derivation.ignored[0]?.blockedBy).toBe("unapproved-profile");
+  });
+
+  it("a later profile supersedes an earlier answer; a later direct statement contradicts the profile", () => {
+    // Profile after an answered question: the profile is the trainer's last
+    // word on it, and the earlier answer is set aside under its own name.
+    const superseding = deriveScope(pack, [asked("version"), said("yellow"), profile({ version: "red-blue" })]);
+    expect(superseding.bindings.find((b) => b.dimension === "version")?.value).toBe("red-blue");
+    expect(superseding.ignored.some((m) => m.blockedBy === "superseded" && m.value === "yellow")).toBe(true);
+    // A direct statement after the profile that disagrees is a fresh
+    // contradiction, and the trainer is asked — never a silent pick.
+    const contradicting = deriveScope(pack, [profile({ version: "red-blue" }), said("I'm playing Yellow.")]);
+    expect(contradicting.contradicted).toContain("version");
+  });
+});
+
 describe("the question is the context", () => {
   it("binds a bare answer to the recorded question, on the answer route", () => {
     const derivation = deriveScope(pack, [asked("version"), said("yellow")]);

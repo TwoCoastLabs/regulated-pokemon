@@ -71,6 +71,12 @@ function describeEvent(event: ScopeEvent, index: number): string {
     }
     case "confirmation":
       return `${at}${pad(`${event.source} ${event.decision}s`, 16)} ${event.proposalId}`;
+    case "profile": {
+      const scope = Object.entries(event.scope)
+        .map(([dimension, value]) => `${dimension}=${String(value)}`)
+        .join(", ");
+      return `${at}${pad(`${event.source} profile`, 16)} ${scope}`;
+    }
   }
 }
 

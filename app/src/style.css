@@ -1635,6 +1635,61 @@ body {
   font-style: italic;
 }
 
+/* The trainer's profile panel (epic #145, R2): typed scope set once. */
+.live-profile {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+}
+
+.live-profile summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.live-profile-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.live-profile-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.live-profile-fields select,
+.live-profile-fields input {
+  font: inherit;
+  font-size: 14px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--ink);
+}
+
+.live-profile-fields button {
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  background: var(--indigo);
+  color: white;
+  cursor: pointer;
+}
+
+.live-profile-fields button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .live-composer {
   display: flex;
   gap: 8px;

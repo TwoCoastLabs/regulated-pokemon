@@ -63,6 +63,8 @@ export interface CoverageArtifact {
    * 2) — post-repair outcomes are then possible and are named apart in the
    * map (`repaired`), so the flag travels with the number. */
   repair: boolean;
+  /** Set when the trainer's profile was set on the panel before the opener (epic #145, R2). */
+  profile?: boolean;
   /** Passes requested over the selected entries. The paid design runs the full
    * bank at 1 and the `should-refuse` slice at 3 — two artifacts, each honest
    * about which it is. */
@@ -94,6 +96,8 @@ export interface CoverageArtifactInput {
   retrieval: boolean;
   gatedGrammar: boolean;
   repair: boolean;
+  /** The trainer's profile was set on the panel before the opener (epic #145, R2). */
+  profile?: boolean;
   repetitions: number;
   dispositions?: readonly Disposition[];
   stoppedEarly: boolean;
@@ -121,6 +125,7 @@ export function buildCoverageArtifact(input: CoverageArtifactInput): CoverageArt
     retrieval: input.retrieval,
     gatedGrammar: input.gatedGrammar,
     repair: input.repair,
+    ...(input.profile === undefined ? {} : { profile: input.profile }),
     repetitions: input.repetitions,
     ...(input.dispositions === undefined ? {} : { dispositions: input.dispositions }),
     stoppedEarly: input.stoppedEarly,
