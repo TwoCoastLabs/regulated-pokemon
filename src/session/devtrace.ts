@@ -132,6 +132,7 @@ export function agentReport(meta: DevTraceMeta, state: SessionState, calls: read
     repairs: state.repairs,
     folds: state.folds,
     listingActivations: state.listingActivations,
+    nominationRetries: state.nominationRetries,
     modelCalls: calls,
     transcript: state.transcript,
     records: state.records,

@@ -1169,6 +1169,90 @@ describe("porch round ten: the comparative ask binds its own basis", () => {
   });
 });
 
+describe("R1 bank run 2026-09-04: a refused nomination is retried with the route door closed", () => {
+  it("a model that misuses the route variant gets one more call without it, and the fact goes through", async () => {
+    // Under the provider-enforced schema the strong model answered "What
+    // types is Charizard?" with a listing nomination for the catalogue; the
+    // door refused it and the empty remainder read as off-domain — fifteen
+    // answerable questions redirected at turn one. The offer is withdrawn
+    // for one call; the reply the model writes without it goes through.
+    const misuse = JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "listing", subject: "catalogue", n: 1 }] });
+    const fact = JSON.stringify({ rosters: [], claims: [{ kind: "fact", entityId: "charizard", factId: "types" }] });
+    let offered = 0;
+    let closed = 0;
+    const provider = new ScriptedProvider("steered", (request) => {
+      if (request.purpose === "scope") return "decline";
+      const routeOffered = JSON.stringify(request.schema ?? {}).includes('"route"');
+      if (routeOffered) offered += 1;
+      else closed += 1;
+      return routeOffered ? misuse : fact;
+    });
+    const d = deps(provider);
+    let state = await say(startSession(), "playing red. What types is Charizard?", d);
+    expect(state.notes.some((n) => n.tone === "abstention")).toBe(false);
+    expect(offered).toBeGreaterThan(0);
+    expect(closed).toBeGreaterThan(0);
+    expect(state.nominationRetries).toBeGreaterThan(0);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims[0]).toMatchObject({ kind: "fact", entityId: "charizard", factId: "types" });
+    // The refused listing nomination is still on the gauge.
+    expect(state.listingActivations.stoodDown).toBeGreaterThan(0);
+  });
+
+  it("the listing executor refuses an entity-naming ask, so the fact goes through on the retry", async () => {
+    // Live: "What's Pikachu's Speed stat?" drew a catalogue-listing
+    // nomination and the door composed ten certified members — the answer
+    // to a question nobody asked. The executor now carries the cue door's
+    // own guard.
+    const misuse = JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "listing", subject: "catalogue", n: 10 }] });
+    const fact = JSON.stringify({ rosters: [], claims: [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }] });
+    const provider = new ScriptedProvider("steered", (request) =>
+      request.purpose === "scope" ? "decline" : JSON.stringify(request.schema ?? {}).includes('"route"') ? misuse : fact,
+    );
+    const state = await say(startSession(), "playing red. What's Pikachu's Speed stat?", deps(provider));
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims.some((claim) => claim.kind === "membership")).toBe(false);
+    expect(record.manifest?.claims[0]).toMatchObject({ kind: "fact", entityId: "pikachu", factId: "base-speed" });
+  });
+
+  it("the profile executor refuses a move-naming ask, so the membership goes through on the retry", async () => {
+    const misuse = JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "profile", entityId: "pikachu" }] });
+    const learns = JSON.stringify({
+      rosters: [{ id: "selfdestruct-learners", criteria: { all: [{ kind: "learns-move", move: "self-destruct" }] } }],
+      claims: [{ kind: "membership", rosterId: "selfdestruct-learners", entityId: "pikachu", asserted: false }],
+    });
+    const provider = new ScriptedProvider("steered", (request) =>
+      request.purpose === "scope" ? "decline" : JSON.stringify(request.schema ?? {}).includes('"route"') ? misuse : learns,
+    );
+    const state = await say(startSession(), "playing red. Does Pikachu learn Selfdestruct?", deps(provider));
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims.some((claim) => claim.kind === "fact")).toBe(false);
+    expect(record.manifest?.claims[0]).toMatchObject({ kind: "membership", entityId: "pikachu" });
+  });
+
+  it("'What is Pokemon?' is a lesson's shape, never the catalogue", async () => {
+    const lesson = JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-pokemon" }] });
+    let calls = 0;
+    const provider = scripted("teacher", () => { calls += 1; return lesson; });
+    const state = await say(startSession(), "What is Pokemon?", deps(provider));
+    expect(calls).toBeGreaterThan(0);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.manifest?.claims.some((claim) => claim.kind === "membership")).toBe(false);
+    expect(record.manifest?.claims[0]).toMatchObject({ kind: "explanation" });
+  });
+
+  it("a nomination the driver accepts is not retried", async () => {
+    const nominate = JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "profile", entityId: "pikachu" }] });
+    const provider = scripted("nominator", (purpose) => (purpose === "scope" ? "decline" : nominate));
+    const state = await say(startSession(), "playing red. tell me about pikachu", deps(provider));
+    expect(state.nominationRetries).toBe(0);
+    expect(state.records[state.records.length - 1]?.outcome.status).toBe("answered");
+  });
+});
+
 describe("dogfood 2026-09-04: a superlative ask is never served the previous listing", () => {
   it("'which pokemon is the fastest?' after a listing does not reuse the roster", async () => {
     // Live: the bareness reading stripped "fastest" as noise, the prior-

@@ -3752,6 +3752,58 @@ verified by the kernel, dispatch doors retired), and the demo's default
 is the measured strong model — the weak model stays the harness's
 second leg, where the doctrine wants it.
 
+### R1, run: the schema steers, the doors compose, the number moves (2026-09-04)
+
+The playability bank (137 questions), production settings (retrieval,
+gated grammar, repair), N=1 per the fail-fast rule, both legs of the
+doctrine. The weak leg first, because it is the control:
+`gemini-3.5-flash-lite` **101/137**, answerable resolution 85% (67/79),
+certified-answer 100%, honest refusal 63% (15/24), gated questions 82%,
+advisory 0/13. The strong leg, `qwen3-235b`, on the code as merged:
+**79/137**, answerable 56%, honest refusal 96% — fifteen answerable
+questions "died of scope friction at turn one", which is not a thing
+that happens to "What types is Charizard?". It reproduced
+deterministically and had one cause: under the provider-enforced
+schema the strong model answers a plain fact ask with a *route
+nomination* — a listing of the catalogue, two of two — while without
+structured decoding it writes the fact claim four of four. The route
+variant (epic #118, validated on the weak model, which never misuses
+it) steers the strong model's shape; the door refuses the nomination;
+and a refused nomination with nothing beside it read as off-domain.
+Three changes, each a guard, none a new door. A refused nomination
+with nothing beside it is retried once with the route door closed
+(`withRouteFallback`, counted as `nominationRetries`): the offer is the
+driver's, not the model's obligation. The route executors carry the
+cue doors' own guards — the listing refuses a subject-naming or
+non-bare ask, the profile refuses a move-naming ask — because the
+second face of the steering was worse than the first: "What's Pikachu's
+Speed stat?" drew a catalogue nomination the executor *composed*, and
+"Does Pikachu learn Selfdestruct?" a profile it composed — certified
+members and certified facts, neither the answer, ten of the strong
+model's thirteen off-oracle answers. And "What is Pokémon?" was served
+ten species by the wh-tier cue; the singular copula is a lesson's
+shape. Rerun, retry only: **103/137**, answerable 78% (62/79),
+certified 95%, gated 100%, honest refusal 75%. Rerun with the
+executor guards: **103/137** again, answerable 73% (58/79), honest
+refusal 79%, advisory 38% — and seven `meta-*` lesson questions
+*denied* under IA-3/fabricated-entity after seven turns each, where
+the previous leg had resolved every one in a single call: the model,
+this sample, proposed a fact about "gym badge" as if it were a
+species, and the kernel refused it by name. Enforcement held on all
+three legs (no gated advice committed, no fabrication certified); the
+seven denials are the doctrine's point made at the trainer's expense.
+What R1's gate can honestly say from N=1: on pass count the default
+model now edges the weak one (103 vs 101, twice); on the strict
+answerable rate it trails (73–78% vs 85%); on the trust number it leads
+(75–79% vs 63%); on gated questions it leads (100% vs 82%). Mixed, and
+a single sample per leg — the N=3 run on the final code is filed
+beside this entry when it lands, and R1 is not ticked before it. The
+finding under the numbers is the epic's thesis at bank scale: every
+regression the run found was a *door* — a schema variant steering a
+shape, an executor composing without the cue door's guard, a cue
+misreading a copula — and every fix was a guard on what the model
+composed. That is R3's principle, arrived at by measurement.
+
 ## Appendix — how to reproduce
 
 ```sh

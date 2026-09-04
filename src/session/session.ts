@@ -45,7 +45,7 @@ import { requiredDimensionsFor } from "../kernel/scope-deps.js";
 import { buildRoster } from "../kernel/roster.js";
 import { runTransaction, type Transaction } from "../kernel/transaction.js";
 import { renderAnswer } from "../render/reference.js";
-import { proposalDigest, proposeAnswer, proposeScope } from "../harness/advisor.js";
+import { type AnswerStep, proposalDigest, proposeAnswer, proposeScope } from "../harness/advisor.js";
 import { NO_CLAIMS_REASON } from "../harness/decode.js";
 import { MAX_ANSWER_CLAIMS, type NominableRoute } from "../harness/schema.js";
 import { addUsage, emptyUsage, type ModelProvider, type Usage } from "../harness/provider.js";
@@ -165,6 +165,10 @@ export interface SessionState {
    * a bareness word is next proposed: the dial gets tuned on data.
    */
   listingActivations: { consulted: number; served: number; stoodDown: number; guardDropped: number };
+  /** Answer-step calls repeated once with the route door closed, because
+   * the model's whole reply was a nomination the driver refused — the
+   * schema-steering misuse rate, as a number (see {@link withRouteFallback}). */
+  nominationRetries: number;
   /** Matchup directions corrected at the groom step (porch round five) — a
    * type-subject matchup whose decoded direction contradicts the ask's own
    * word order is flipped, deterministically, and counted here for the same
@@ -241,6 +245,7 @@ export function startSession(idPrefix?: string): SessionState {
     folds: 0,
     flips: 0,
     listingActivations: { consulted: 0, served: 0, stoodDown: 0, guardDropped: 0 },
+    nominationRetries: 0,
     ladderTurns: 0,
   };
 }
@@ -843,6 +848,38 @@ function nextTransactionId(state: SessionState): string {
 }
 
 /**
+ * One answer-step call, and — when the model's whole reply was a nomination
+ * the driver refused — one more with the route door closed.
+ *
+ * Found by the R1 bank run (2026-09-04): under the provider-enforced schema,
+ * the measured strong model answered "What types is Charizard?" with a
+ * listing nomination for the catalogue, two of two, while without structured
+ * decoding it wrote the fact claim four of four. The schema's route variant
+ * steers a shape, the door refuses it, and a refused nomination with nothing
+ * beside it read as off-domain — fifteen answerable questions redirected at
+ * turn one. The doors are the driver's offer, not the model's obligation: an
+ * offer the model misuses is withdrawn for one call, and the reply the model
+ * would have written without it is the one that goes through. The retry is
+ * counted (`nominationRetries`) so the misuse rate is a number.
+ */
+async function withRouteFallback(
+  world: SessionWorld,
+  state: SessionState,
+  call: (routes: readonly NominableRoute[] | undefined) => Promise<AnswerStep>,
+): Promise<{ step: AnswerStep; usage: Usage; retried: boolean; refusedListing: boolean }> {
+  const first = await call(SESSION_ROUTES);
+  const refused =
+    first.decode.ok &&
+    first.decode.route !== undefined &&
+    first.decode.draft.claims.length === 0 &&
+    executeRoute(world, state, first.decode.route) === undefined;
+  if (!refused) return { step: first, usage: first.usage, retried: false, refusedListing: false };
+  const refusedListing = first.decode.ok && first.decode.route?.routeId === "listing";
+  const again = await call(undefined);
+  return { step: again, usage: addUsage(first.usage, again.usage), retried: true, refusedListing };
+}
+
+/**
  * Advisory wording, stated as an explicit list rather than inferred. The gate
  * trades recall for specificity on purpose (a miss falls through to today's
  * behaviour, which is safe); what it may never do is fire on a plain factual
@@ -1125,20 +1162,25 @@ async function teachOrDiscover(
     .join(" ");
   const previously = anaphorContext(world, state, askWords);
 
-  let step;
+  let step: AnswerStep;
+  let stepUsage: Usage;
+  let retried = false;
+  let refusedListing = false;
   try {
-    step = await proposeAnswer({
-      provider,
-      context: bare,
-      scenarioId: "session",
-      transactionId,
-      transcript: state.transcript.slice(state.askStart),
-      ...(previously === undefined ? {} : { previously }),
-      routes: SESSION_ROUTES,
-      ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
-      ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
-      ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
-    });
+    ({ step, usage: stepUsage, retried, refusedListing } = await withRouteFallback(world, state, (routes) =>
+      proposeAnswer({
+        provider,
+        context: bare,
+        scenarioId: "session",
+        transactionId,
+        transcript: state.transcript.slice(state.askStart),
+        ...(previously === undefined ? {} : { previously }),
+        ...(routes === undefined ? {} : { routes }),
+        ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
+        ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
+        ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
+      }),
+    ));
   } catch {
     // The question is still free: a failed discovery falls to the floor rather
     // than surfacing an error for a call the visitor never asked for. The
@@ -1146,7 +1188,12 @@ async function teachOrDiscover(
     return { state: { ...state, providerErrors: state.providerErrors + 1 }, result: "unusable", claims: [], rosters: [] };
   }
 
-  const spent = { ...state, usage: addUsage(state.usage, step.usage) };
+  let spent = {
+    ...state,
+    usage: addUsage(state.usage, stepUsage),
+    nominationRetries: state.nominationRetries + (retried ? 1 : 0),
+  };
+  if (refusedListing) spent = tallyListing(spent, "stoodDown");
   if (!step.decode.ok) {
     // A well-formed reply with no claims is the model's own signal that nothing
     // certified is relevant — off-domain, and the visitor gets a redirect. Any
@@ -1239,6 +1286,12 @@ function listingClaims(
   ask: string,
 ): { kind: "served"; draft: Pick<ManifestDraft, "claims" | "rosters"> } | { kind: "stood-down" } | { kind: "no-cue" } {
   if (!listingCue(ask)) return { kind: "no-cue" };
+  // "What is Pokémon?" is the definitional ask, not the catalogue: the
+  // singular copula before the bare noun is a lesson's shape. Found by the
+  // R1 bank run (2026-09-04): the wh-tier cue read it as bare and served ten
+  // species for a question the curriculum answers. Narrow on purpose — the
+  // class retires with docs/routing.md R3.
+  if (/\bwhat(?:'s| is)\s+(?:an?\s+|the\s+)?pok[eé]mon\b/i.test(ask) && !LISTING_VERB.test(ask)) return { kind: "no-cue" };
   // One named type is a qualifier the mint understands, so it passes the
   // gate that species names still fail (a species ask is a profile, not a
   // listing). Everything else keeps the anaphoric discipline.
@@ -1469,13 +1522,25 @@ function executeRoute(
   state: SessionState,
   route: { routeId: string; [arg: string]: unknown },
 ): Pick<ManifestDraft, "claims" | "rosters"> | undefined {
+  // The exchange's OPENING utterance is the ask; later ones answer the
+  // pack's questions ("Red and Blue") and would unbare or requalify it.
+  const opening = state.transcript
+    .slice(state.askStart)
+    .find((event) => event.kind === "utterance" && event.source === "trainer");
+  const currentAsk = opening?.kind === "utterance" ? opening.text : "";
+  // The executors carry the cue doors' own guards. Found by the R1 bank run
+  // (2026-09-04): under the provider-enforced schema the strong model
+  // nominated the catalogue listing for "What's Pikachu's Speed stat?" and
+  // the profile for "Does Pikachu learn Selfdestruct?", and both doors
+  // composed — certified members and certified facts, neither the answer.
+  // A guard belongs to whatever the model composed, nominated or not
+  // (docs/routing.md); a refused nomination earns the retry with the door
+  // closed, never a wrong-shape certificate.
   if (route.routeId === "listing") {
-    // The exchange's OPENING utterance is the ask; later ones answer the
-    // pack's questions ("Red and Blue") and would unbare or requalify it.
-    const opening = state.transcript
-      .slice(state.askStart)
-      .find((event) => event.kind === "utterance" && event.source === "trainer");
-    const currentAsk = opening?.kind === "utterance" ? opening.text : "";
+    if (namesCertifiedSubject(world.registry, currentAsk)) return undefined;
+    const haystack = ` ${currentAsk.toLowerCase()} `;
+    const typesNamed = [...world.registry.typeNames].filter((type) => new RegExp(`\\b${type}\\b`).test(haystack));
+    if (typesNamed.length !== 1 && !bareCatalogueAsk(world, currentAsk)) return undefined;
     // Subject-correct by construction: the set comes from the ask's own
     // qualifiers, never from the nomination's say-so — a catalogue-subject
     // nomination for "show me all the fire types" mints the fire roster.
@@ -1486,6 +1551,13 @@ function executeRoute(
   if (route.routeId === "profile") {
     const raw = typeof route.entityId === "string" ? route.entityId.toLowerCase().trim().replace(/\s+/g, "-") : "";
     if (!world.registry.speciesIds.includes(raw)) return undefined;
+    // A profile carries no learnset: an ask that names a move is asking
+    // about the move, and the species' nine facts cannot answer it.
+    const moveHaystack = ` ${currentAsk.toLowerCase()} `;
+    const namesMove = world.registry.moveIds.some((id) =>
+      new RegExp(`\\b${id.split("-").join("[\\s-]?")}\\b`).test(moveHaystack),
+    );
+    if (namesMove) return undefined;
     return { claims: profileClaims(raw), rosters: [] };
   }
   return undefined;
@@ -1680,6 +1752,8 @@ async function answer(
   }
 
   let step;
+  let stepRetried = false;
+  let stepRefusedListing = false;
   if (reuse !== undefined) {
     // The discovery call already proposed this draft for these exact words,
     // and the scope it named was already granted — re-asking the model would
@@ -1699,20 +1773,26 @@ async function answer(
         .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
         .join(" ");
       const previously = anaphorContext(world, state, currentWords);
-      step = await proposeAnswer({
-        provider,
-        context,
-        scenarioId: "session",
-        transactionId,
-        // The ask being answered, not the whole session: scope reads the full
-        // transcript, but the answer should be responsive to the current words.
-        transcript: state.transcript.slice(state.askStart),
-        ...(previously === undefined ? {} : { previously }),
-        routes: SESSION_ROUTES,
-        ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
-        ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
-        ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
-      });
+      const fallback = await withRouteFallback(world, state, (routes) =>
+        proposeAnswer({
+          provider,
+          context,
+          scenarioId: "session",
+          transactionId,
+          // The ask being answered, not the whole session: scope reads the full
+          // transcript, but the answer should be responsive to the current words.
+          transcript: state.transcript.slice(state.askStart),
+          ...(previously === undefined ? {} : { previously }),
+          ...(routes === undefined ? {} : { routes }),
+          ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
+          ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
+          ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
+        }),
+      );
+      // Both calls' usage rides on the step; the retry is counted below.
+      step = { ...fallback.step, usage: fallback.usage };
+      stepRetried = fallback.retried;
+      stepRefusedListing = fallback.refusedListing;
     } catch (cause) {
       return note(
         { ...closeExchange(state), providerErrors: state.providerErrors + 1 },
@@ -1728,7 +1808,9 @@ async function answer(
     ...state,
     usage: addUsage(state.usage, step.usage),
     folds: state.folds + (step.decode.ok ? step.decode.folds : 0),
+    nominationRetries: state.nominationRetries + (stepRetried ? 1 : 0),
   };
+  if (stepRefusedListing) withUsage = tallyListing(withUsage, "stoodDown");
 
   // The ask, as the trainer worded it — what the deterministic route reads.
   const ask = state.transcript
