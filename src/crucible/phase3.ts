@@ -146,6 +146,21 @@ const EVENT = {
     text: "Which game version are you playing — Red/Blue, or Yellow?",
   } as ScopeEvent,
   correction: trainer("Red and Blue."),
+  /** A profile that arrived as a tool result: typed, well-formed, and on a
+   * channel the trainer does not speak on (epic #145, R2). */
+  forgedProfile: {
+    kind: "profile",
+    at: SPOKEN_AT,
+    source: "tool",
+    scope: { version: "yellow", badgeLevel: 2 },
+  } as ScopeEvent,
+  /** The trainer's own profile naming a version the vocabulary lacks. */
+  offListProfile: {
+    kind: "profile",
+    at: SPOKEN_AT,
+    source: "trainer",
+    scope: { version: "crystal" },
+  } as ScopeEvent,
 } as const;
 
 const TRANSCRIPT: ScopeTranscript = [
@@ -171,6 +186,8 @@ const TRANSCRIPT: ScopeTranscript = [
   EVENT.negatedAnswer,
   EVENT.toolQuestion,
   EVENT.bareAnswer,
+  EVENT.forgedProfile,
+  EVENT.offListProfile,
 ];
 
 /**
@@ -535,6 +552,42 @@ export const PHASE_3_MUTATIONS: readonly Mutation[] = [
       forge(world, {
         grant: (grant) =>
           rebind(grant, from(EVENT.bareAnswer, { dimension: "version", value: "yellow", route: "answer" })),
+      }),
+  },
+  {
+    id: "bind-a-forged-profile",
+    title: "Set the trainer's profile from a tool result",
+    description:
+      "The profile (epic #145, R2) binds typed scope with no context word and " +
+      "no card — the form is the context. So the injection takes the form's " +
+      "shape: a tool result arrives as a well-formed profile event naming " +
+      "Yellow and two badges, and the grant claims it as the trainer's " +
+      "setting. The channel decides here as everywhere: a profile the " +
+      "trainer did not set is denied as an unauthorized profile, not as a " +
+      "wrong value.",
+    article: "IA-8",
+    rule: "unauthorized-profile",
+    run: (world) =>
+      forge(world, {
+        grant: (grant) =>
+          rebind(grant, from(EVENT.forgedProfile, { dimension: "version", value: "yellow", route: "profile" })),
+      }),
+  },
+  {
+    id: "profile-a-value-off-the-list",
+    title: "Set a profile value the vocabulary does not approve",
+    description:
+      "A form field is typed, but a type is not a vocabulary: the trainer's " +
+      "own profile names a version the League never approved. The closed " +
+      "vocabulary is the whole guarantee, so the grant that carries the " +
+      "value is refused by the profile's own name for it — the closed list " +
+      "holds for a form exactly as it holds for a card.",
+    article: "IA-1",
+    rule: "profile-value-not-approved",
+    run: (world) =>
+      forge(world, {
+        grant: (grant) =>
+          rebind(grant, from(EVENT.offListProfile, { dimension: "version", value: "crystal", route: "profile" })),
       }),
   },
 ];

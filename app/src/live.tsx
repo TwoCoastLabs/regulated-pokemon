@@ -41,6 +41,7 @@ import {
   decideScope,
   retry,
   say,
+  setProfile,
   type ScopeProposal,
   type SessionDeps,
   type SessionNote,
@@ -343,6 +344,9 @@ export function Live() {
   const [persona, setPersona] = useState<Persona>("honest");
   const [state, setState] = useState<SessionState>(startSession);
   const [draft, setDraft] = useState("");
+  // The trainer's profile panel (epic #145, R2): typed scope set once, recorded
+  // on the trainer channel as a profile event — no version question, no card.
+  const [profileDraft, setProfileDraft] = useState({ version: "red-blue", region: "kanto", badgeLevel: 0 });
   const [busy, setBusy] = useState(false);
   /** The message currently on its way through the driver, echoed immediately
    * so the visitor's words never vanish while the model is consulted. */
@@ -777,6 +781,52 @@ export function Live() {
 
         {console_ && <LiveConsole state={state} setup={setup} />}
       </div>
+
+      <details class="live-profile">
+        <summary>Your game — set it once, and the Advisor never has to ask</summary>
+        <p class="fine">
+          Version, region and badges are scope: they decide what the League may tell you. Set them here and they go
+          on the record as your own setting — typed, checked against the approved list, and never a guess.
+        </p>
+        <div class="live-profile-fields">
+          <label>
+            Version
+            <select
+              value={profileDraft.version}
+              onInput={(event) => setProfileDraft({ ...profileDraft, version: event.currentTarget.value })}
+            >
+              <option value="red-blue">Red / Blue</option>
+              <option value="yellow">Yellow</option>
+            </select>
+          </label>
+          <label>
+            Region
+            <select
+              value={profileDraft.region}
+              onInput={(event) => setProfileDraft({ ...profileDraft, region: event.currentTarget.value })}
+            >
+              <option value="kanto">Kanto</option>
+            </select>
+          </label>
+          <label>
+            Badges
+            <input
+              type="number"
+              min={0}
+              max={8}
+              value={profileDraft.badgeLevel}
+              onInput={(event) => setProfileDraft({ ...profileDraft, badgeLevel: Number(event.currentTarget.value) })}
+            />
+          </label>
+          <button
+            type="button"
+            disabled={busy || phase.kind === "confirming-act"}
+            onClick={() => run((previous) => (deps === null ? previous : setProfile(previous, { ...profileDraft }, deps)))}
+          >
+            Set profile
+          </button>
+        </div>
+      </details>
 
       <form
         class="live-composer"

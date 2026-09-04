@@ -3829,6 +3829,41 @@ everything a regulated product would weigh first**: trust, gated
 questions, pass count. Which default the demo ships is that trade-off
 stated as a decision, and this entry is its evidence.
 
+### R2, built and run: the profile is the context (2026-09-05)
+
+The trainer profile of [routing.md](routing.md) R2, end to end. A typed
+`profile` event on the trainer channel — `{ version, region, badgeLevel }`
+from a panel on the live page, `/profile version=…` in the tracer,
+`--profile` in the coverage runner — binds on a kernel route of its own
+(`profile`): the form is the context, the way a recorded question is,
+so no context word and no card is owed. The channel decides as
+everywhere — a profile from any other channel is refused by its own
+name (IA-8/unauthorized-profile), and a typed value the vocabulary
+lacks by its own (IA-1/profile-value-not-approved); both are crucible
+mutations now, and the README's coverage counts moved with them (IA-1
+15 → 16, IA-8 7 → 8). A later profile supersedes an earlier answer
+under the existing witness rule; a later direct statement contradicting
+the profile is a contradiction like any other, and the trainer is
+asked. Live on the strong model, profile first: "tell me about
+charmander" and "can i catch zapdos?" both answered under the full
+scope with zero questions ($0.0009 for the thread). The bank, profile
+first, `qwen3-235b`, N=1: **98/137**, answerable 77%, certified 92%,
+gated 100%, enforcement held — and **ceremony 0.03 questions and 0.00
+scope cards per resolution, from 1.44 and 0.41** on the same code
+without a profile (N=3: 1.52 and 0.41). The three questions that
+remained were all comparisonBasis — the ask's own parameter, which no
+profile holds, by design; the version question fired zero times, which
+is R2's gate. Filed beside it, not hidden: the trust number fell from
+75–79% to **54%** (13/24). With scope granted at once, ten needs-data
+questions ("what's Onix's height?", "what are the shiny odds?") that
+used to die in scope gathering or abstain now reach the answer step
+and come back *resolved* — a certified fact about the subject, not the
+fact that was asked for. True, in scope, not the answer: the "true but
+not what you asked" class, now unmasked by the ceremony that used to
+hide it. That is R3's relevance problem in its purest form, and the
+profile made it measurable. Pass count 98 sits just under the N=3 band
+(99–106); one sample, filed as such.
+
 ## Appendix — how to reproduce
 
 ```sh

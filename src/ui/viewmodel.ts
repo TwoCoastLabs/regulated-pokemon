@@ -103,7 +103,7 @@ export function modelOf(artifact: HarnessArtifact, providerId: string): Artifact
 
 /** One transcript event, as a line in the chat pane. */
 export interface TranscriptLine {
-  kind: "utterance" | "question" | "proposal" | "confirmation";
+  kind: "utterance" | "question" | "proposal" | "confirmation" | "profile";
   /** Who the pane shows speaking. Proposals and questions are the Advisor's. */
   speaker: "trainer" | "advisor" | "quoted-document" | "third-party" | "tool";
   text: string;
@@ -144,6 +144,18 @@ export function transcriptLines(transcript: ScopeTranscript): readonly Transcrip
           text: event.decision === "confirm" ? "Confirms that interpretation." : "Rejects that interpretation.",
           at: event.at,
         };
+      case "profile": {
+        const scope = Object.entries(event.scope)
+          .map(([dimension, value]) => `${dimension} = ${String(value)}`)
+          .join(", ");
+        return {
+          kind: "profile",
+          speaker: event.source,
+          text: `Sets their profile: ${scope.length === 0 ? "(nothing)" : scope}`,
+          detail: "typed scope from the panel — no context word, no card",
+          at: event.at,
+        };
+      }
     }
   });
 }

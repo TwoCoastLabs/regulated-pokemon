@@ -57,8 +57,10 @@ export interface ScopeBinding {
    * `confirmed` — the trainer's confirmation of one stated interpretation.
    * `answer` — the trainer's direct reply to a recorded clarifying question;
    *   the question supplies the context a bare value lacks.
+   * `profile` — a typed value the trainer set on a form; the form is the
+   *   context, so no wording and no card is owed (epic #145, R2).
    */
-  route: "direct" | "confirmed" | "answer";
+  route: "direct" | "confirmed" | "answer" | "profile";
   /** The exact wording this binding rests on, normalised for replay. */
   matchedText: string;
 }
@@ -103,6 +105,21 @@ export type ScopeEvent =
       /** Digest of the candidate as it was shown — not of the one on file now. */
       candidateDigest: string;
       decision: "confirm" | "reject";
+    }
+  | {
+      /**
+       * Typed scope the trainer set on a form rather than said in prose —
+       * the profile of epic #145, R2. The form is the context: a value here
+       * binds its dimension on the `profile` route with no context word and
+       * no card owed, the way a recorded question lets a bare reply bind.
+       * Typed values only, so a form cannot express one the vocabulary
+       * lacks; and the channel decides as everywhere (IA-8) — a profile
+       * that arrived on any channel but the trainer's establishes nothing.
+       */
+      kind: "profile";
+      at: string;
+      source: UtteranceSource;
+      scope: ScopeCandidate;
     };
 
 export type ScopeTranscript = readonly ScopeEvent[];

@@ -22,6 +22,7 @@ import {
   retry,
   say,
   type SessionDeps,
+  setProfile,
   startSession,
 } from "./session.js";
 
@@ -1166,6 +1167,60 @@ describe("porch round ten: the comparative ask binds its own basis", () => {
     const record = state.records[state.records.length - 1]!;
     expect(record.outcome.status).toBe("answered");
     expect(record.grant?.scope.comparisonBasis).toBe("base-speed");
+  });
+});
+
+describe("R2: the trainer's profile is scope set once, not asked for", () => {
+  it("a profile set before the ask means no version question, no card, and a record that replays", async () => {
+    const provider = scripted("scripted:honest", (purpose) => (purpose === "scope" ? "decline" : thunderboltAnswer()));
+    const d = deps(provider);
+    let state = await setProfile(startSession(), { version: "red-blue", region: "kanto", badgeLevel: 8 }, d);
+    // Acknowledged in the trainer's terms, nothing asked, nothing sent.
+    expect(state.notes[state.notes.length - 1]?.text).toContain("Red/Blue");
+    expect(state.usage.calls).toBe(0);
+    expect(state.transcript[0]?.kind).toBe("profile");
+
+    state = await say(state, "What is Thunderbolt's power?", d);
+    expect(state.transcript.filter((event) => event.kind === "question")).toHaveLength(0);
+    expect(state.transcript.filter((event) => event.kind === "proposal")).toHaveLength(0);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.grant?.scope).toMatchObject({ version: "red-blue", region: "kanto", badgeLevel: 8 });
+    expect(record.grant?.bindings.every((binding) => binding.route === "profile")).toBe(true);
+    expect(verifyReplay(world, record).allowed).toBe(true);
+  });
+
+  it("a profile set while a question is armed answers it and the exchange drives on", async () => {
+    // A model that nominates the profile route for the ask; the pack's
+    // version question still fires first, and the panel answers it.
+    const nominate = JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "profile", entityId: "charmander" }] });
+    const provider = scripted("nominator", (purpose) => (purpose === "scope" ? "decline" : nominate));
+    const d = deps(provider);
+    let state = await say(startSession(), "tell me about charmander", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+    state = await setProfile(state, { version: "red-blue" }, d);
+    expect(state.phase.kind).toBe("gathering");
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims.every((claim) => claim.kind === "fact" && claim.entityId === "charmander")).toBe(true);
+  });
+
+  it("a profile on the foreign version teaches the boundary, and a later correction is asked about", async () => {
+    const provider = scripted("mute", () => "decline");
+    const d = deps(provider);
+    let state = await setProfile(startSession(), { version: "yellow" }, d);
+    state = await say(state, "tell me about charmander", d);
+    expect(state.records[state.records.length - 1]?.manifest?.claims[0]).toMatchObject({ kind: "explanation" });
+    state = await say(state, "actually I play Red", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
+  });
+
+  it("an unapproved profile value binds nothing — the pack's question still stands", async () => {
+    const provider = scripted("mute", () => "decline");
+    const d = deps(provider);
+    let state = await setProfile(startSession(), { version: "crystal" } as never, d);
+    state = await say(state, "tell me about charmander", d);
+    expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
   });
 });
 

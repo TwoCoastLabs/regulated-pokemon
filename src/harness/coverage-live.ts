@@ -85,6 +85,10 @@ export interface CoverageArgs {
    * (`repaired`) and in the map, so post-repair is never blended with
    * first-attempt. */
   repair: boolean;
+  /** The trainer's profile was set on the panel before the opener (epic #145, R2)
+   * — no pack question about version, region or badges owed. Recorded so the
+   * ceremony numbers name their condition. */
+  profile: boolean;
   model?: string;
   limit?: number;
   ids?: readonly string[];
@@ -113,6 +117,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     retrieval: boolean;
     gatedGrammar: boolean;
     repair: boolean;
+    profile: boolean;
     model?: string;
     limit?: number;
     ids?: string[];
@@ -124,7 +129,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     source?: string;
     help: boolean;
     errors: string[];
-  } = { live: false, render: false, weak: false, dialogues: false, adversarial: false, center: false, grounded: false, retrieval: false, gatedGrammar: false, repair: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
+  } = { live: false, render: false, weak: false, dialogues: false, adversarial: false, center: false, grounded: false, retrieval: false, gatedGrammar: false, repair: false, profile: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
 
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index];
@@ -159,6 +164,9 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
         break;
       case "--repair":
         args.repair = true;
+        break;
+      case "--profile":
+        args.profile = true;
         break;
       case "--phrasings":
         args.phrasings = true;
@@ -271,6 +279,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     retrieval: args.retrieval,
     gatedGrammar: args.gatedGrammar,
     repair: args.repair,
+    profile: args.profile,
     phrasings: args.phrasings,
     repetitions: args.repetitions,
     out: args.out,
@@ -313,6 +322,8 @@ const USAGE = [
   "                      deflection fix). Composes with any grounding mode; recorded in the artifact.",
   "  --repair            strip-assertion resubmit: on an all-IA-2 fact-mismatch denial, strip the asserted",
   "                      values and run the full gate once more (docs/recovery.md). Counted apart, recorded.",
+  "  --profile           set the trainer's profile (version, region, badges) on the panel before the opener,",
+  "                      as the live page's form does (epic #145, R2) — no pack question owed. Recorded.",
   "  --render [PATH]     render a filed coverage artifact (a file, or a directory to take the newest",
   "                      coverage artifact from; default runs/coverage/). Reads no clock, no key, no network.",
   "  --page PATH         with --render, write the page there instead of printing it.",
@@ -504,6 +515,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
         `  grounding:     ${args.retrieval ? "retrieval — only the facts each question needs" : args.grounded ? "full — the whole certified registry" : "none — the model answers from its own knowledge"}`,
         `  gated grammar: ${args.gatedGrammar ? "yes — the answer schema narrows to the kinds each question nominates" : "no — every claim kind is offered"}`,
         `  repair:        ${args.repair ? "yes — an all-fact-mismatch denial is stripped and re-verified once" : "no — a mis-recalled value stays a denial"}`,
+        `  profile:       ${args.profile ? "yes — version, region and badges set on the panel before the opener" : "no — the trainer answers the pack's questions in prose"}`,
         `  model:         ${model}`,
         `  artifact:      filed under ${args.out}/`,
         `  add --live to run it against the model and bill your key.`,
@@ -537,7 +549,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
   } else {
     const runPass = options.runPass ?? runBank;
     for (let pass = 0; pass < args.repetitions; pass++) {
-      const sampled = await runPass(world, entries, provider, options.clock, pass, args.grounded, args.retrieval, args.gatedGrammar, args.repair);
+      const sampled = await runPass(world, entries, provider, options.clock, pass, args.grounded, args.retrieval, args.gatedGrammar, args.repair, args.profile);
       runs.push(...sampled);
       if (sampled.some((run) => run.score.enforcementEscalation === true)) {
         // The repetition discipline: a broken enforcement zero stops the run
@@ -561,6 +573,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
     retrieval: args.retrieval,
     gatedGrammar: args.gatedGrammar,
     repair: args.repair,
+    profile: args.profile,
     repetitions: args.repetitions,
     ...(args.dispositions === undefined ? {} : { dispositions: args.dispositions }),
     stoppedEarly,

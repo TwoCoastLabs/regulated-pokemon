@@ -33,7 +33,16 @@
  * repeats a millisecond would hand it a lie.
  */
 
-import type { Claim, ConfirmationEvent, ScopeDimension, ScopeEvent, ScopeTranscript, UtteranceSource, Violation } from "../kernel/contracts.js";
+import type {
+  Claim,
+  ConfirmationEvent,
+  ScopeCandidate,
+  ScopeDimension,
+  ScopeEvent,
+  ScopeTranscript,
+  UtteranceSource,
+  Violation,
+} from "../kernel/contracts.js";
 import { type DomElement, walkArtifact } from "../kernel/dom.js";
 import type { ManifestContext, ManifestDraft } from "../kernel/manifest.js";
 import type { AccordPack } from "../kernel/pack.js";
@@ -424,6 +433,26 @@ const TRUST_CLAUSE =
   "|do you (?:make (?:stuff|things) up|hallucinate|lie|ever lie)" +
   "|can i trust (?:you|this|that|your answers?)" +
   "|how do i know you(?:'re|r| are)? not (?:lying|making (?:stuff|things|it) up))";
+
+/**
+ * The trainer set their profile (epic #145, R2): typed scope from a form,
+ * recorded on the trainer's channel as a `profile` event — evidence like any
+ * utterance, replayable like any evidence, binding on the kernel's `profile`
+ * route with no context word and no card. Only the transport assigns the
+ * channel; the page's panel is the trainer's hand, so it records as trainer.
+ *
+ * When an exchange is open (a question armed, a card pending), the profile
+ * is the answer and the exchange drives on; otherwise the setting is
+ * acknowledged in the trainer's terms and nothing is asked. Values are
+ * passed through as typed — an unapproved one is the kernel's to refuse by
+ * name (IA-1/value-not-approved), never this function's to filter.
+ */
+export async function setProfile(state: SessionState, scope: ScopeCandidate, deps: SessionDeps): Promise<SessionState> {
+  const event: ScopeEvent = { kind: "profile", at: deps.now(), source: "trainer", scope };
+  const next = { ...state, transcript: [...state.transcript, event] };
+  if (state.phase.kind === "asking" || state.phase.kind === "confirming-scope") return drive(next, deps);
+  return acknowledgeScope(deps.world, next, deps);
+}
 
 /**
  * Content that reached the session on a channel the trainer does not speak on —

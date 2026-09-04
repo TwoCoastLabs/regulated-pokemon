@@ -72,6 +72,12 @@ describe("parseCoverageArgs fails closed on anything it does not understand", ()
     expect(bad.errors[0]).toContain("definitely-not-one");
   });
 
+  it("reads --profile as the panel-first condition, recorded (epic #145, R2)", () => {
+    expect(parseCoverageArgs([]).profile).toBe(false);
+    expect(parseCoverageArgs(["--profile"]).profile).toBe(true);
+    expect(parseCoverageArgs(["--profile"]).errors).toHaveLength(0);
+  });
+
   it("rejects contradictory modes", () => {
     expect(parseCoverageArgs(["--live", "--render"]).errors).toHaveLength(1);
     expect(parseCoverageArgs(["--phrasings", "--repetitions", "2"]).errors).toHaveLength(1);

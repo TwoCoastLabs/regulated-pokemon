@@ -15,7 +15,7 @@
  * point hands it a real one.
  */
 
-import type { ScopeEvent } from "../kernel/contracts.js";
+import type { ScopeCandidate, ScopeEvent } from "../kernel/contracts.js";
 import type { Claim } from "../kernel/contracts.js";
 import type { Transaction } from "../kernel/transaction.js";
 import { describeViolation } from "../kernel/violation.js";
@@ -24,6 +24,7 @@ import {
   decideScope,
   retry,
   say,
+  setProfile,
   type SessionDeps,
   type SessionState,
   startSession,
@@ -31,7 +32,7 @@ import {
 
 /** The inputs a trace understands: visitor words, or one of these commands
  * standing in for the page's buttons. */
-export const TRACE_COMMANDS = ["/confirm", "/reject", "/act", "/decline", "/retry"] as const;
+export const TRACE_COMMANDS = ["/confirm", "/reject", "/act", "/decline", "/retry", "/profile"] as const;
 
 /**
  * How the proposer is grounded in a live trace.
@@ -130,6 +131,18 @@ export async function runTrace(inputs: readonly string[], deps: SessionDeps): Pr
 }
 
 async function press(state: SessionState, command: string, deps: SessionDeps): Promise<SessionState> {
+  // "/profile version=red-blue,region=kanto,badgeLevel=3" — the page's panel,
+  // driven from the terminal. Typed as the form would type it: badgeLevel a
+  // number, the rest text; anything unapproved is the kernel's to refuse.
+  if (command.startsWith("/profile")) {
+    const scope: Record<string, string | number> = {};
+    for (const pair of command.slice("/profile".length).trim().split(",")) {
+      const [key, raw] = pair.split("=").map((part) => part.trim());
+      if (key === undefined || key === "" || raw === undefined) continue;
+      scope[key] = key === "badgeLevel" ? Number(raw) : raw;
+    }
+    return setProfile(state, scope as ScopeCandidate, deps);
+  }
   switch (command) {
     case "/confirm":
       return decideScope(state, "confirm", deps);
@@ -192,6 +205,12 @@ function describeEvent(event: ScopeEvent): string | undefined {
     }
     case "confirmation":
       return `[trainer decides] ${event.decision}`;
+    case "profile": {
+      const scope = Object.entries(event.scope)
+        .map(([dimension, value]) => `${dimension}=${String(value)}`)
+        .join(", ");
+      return `[${event.source} profile] { ${scope} }`;
+    }
     default:
       return undefined;
   }
