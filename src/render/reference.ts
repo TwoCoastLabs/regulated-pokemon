@@ -26,6 +26,7 @@ import {
   element,
   LOCALE_ATTRIBUTE,
   SLOT_ATTRIBUTE,
+  SUGGESTION_ATTRIBUTE,
   text,
   TRANSACTION_ATTRIBUTE,
   UNIT_ATTRIBUTE,
@@ -59,6 +60,9 @@ const LEAD_IN: Record<RenderUnitKind, string | undefined> = {
   action: "lead-in.action",
   warning: undefined,
   provenance: "provenance.snapshot",
+  // The suggestion register (R3b step 4) is introduced by the one line that
+  // labels it as the Advisor's own, uncertified — the label is the closure.
+  suggestions: "suggestions.lead",
 };
 
 /** Render a plan into a finished artifact. */
@@ -92,6 +96,7 @@ export function renderAnswer(pack: AccordPack, plan: RenderPlan): DomElement {
 
 /** One governed unit, with any disclosure it triggered nested inside it. */
 function card(pack: AccordPack, plan: RenderPlan, unit: RenderUnit, disclosures: readonly RenderUnit[]): DomElement {
+  if (unit.kind === "suggestions") return suggestionRegister(pack, plan, unit);
   const tag = unit.kind === "provenance" ? "footer" : "section";
   return element(tag, { [UNIT_ATTRIBUTE]: unit.id }, [
     ...block(pack, plan, unit),
@@ -109,6 +114,28 @@ function card(pack: AccordPack, plan: RenderPlan, unit: RenderUnit, disclosures:
             ? []
             : [element("p", {}, [...leadIn(pack, plan, disclosure), ...slots(disclosure)])]),
       ]),
+    ),
+  ]);
+}
+
+/**
+ * The suggestion register (R3b step 4): the catalogued label that says whose
+ * words these are, then each follow-up question as a marked item, numbered
+ * in the manifest's order. The words are the model's, recorded in the
+ * manifest; the mark is what lets the verifier hold each one to the record
+ * by equality and refuse any the record does not carry. Plain list items —
+ * the mount allows no button — and a page that wants them clickable wires
+ * the click itself, sending the text as the trainer's own utterance.
+ */
+function suggestionRegister(pack: AccordPack, plan: RenderPlan, unit: RenderUnit): DomElement {
+  return element("section", { [UNIT_ATTRIBUTE]: unit.id, class: "suggestions" }, [
+    element("p", {}, [...leadIn(pack, plan, unit)]),
+    element(
+      "ul",
+      {},
+      (unit.suggestions ?? []).map((suggestion, index) =>
+        element("li", { [SUGGESTION_ATTRIBUTE]: String(index + 1) }, [text(suggestion)]),
+      ),
     ),
   ]);
 }

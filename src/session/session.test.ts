@@ -2357,3 +2357,125 @@ describe("dogfood stop 2 (2026-09-05): what the first clarification runs found",
     expect(state.nominationRetries).toBe(0);
   });
 });
+
+describe("R3b step 4: follow-up suggestions — a next step beside every answer, the model's own and uncertified", () => {
+  const PROFILE_SCOPE = { version: "red-blue", region: "kanto", badgeLevel: 8 } as const;
+  const withSuggest = (provider: ModelProvider): SessionDeps => ({ ...deps(provider), suggest: true });
+  const suggesting = (asks: readonly string[]) =>
+    JSON.stringify({
+      asked: [{ phrase: "how fast", entityId: "pikachu", fieldId: "base-speed" }],
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }, { kind: "suggest", asks }],
+    });
+
+  it("the suggestions ride into the manifest and onto the certified page, in a labelled register the affidavit covers", async () => {
+    const provider = scripted("suggesting", (purpose) => (purpose === "scope" ? "decline" : suggesting(["What is it weak to?", "How does it evolve?"])));
+    const d = withSuggest(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.suggestions).toEqual(["What is it weak to?", "How does it evolve?"]);
+    expect(verifyReplay(world, record).allowed).toBe(true);
+    const page = JSON.stringify(state.pages[record.id]);
+    expect(page).toContain('"data-unit":"suggestions"');
+    expect(page).toContain('"data-suggestion":"1"');
+    expect(page).toContain("What is it weak to?");
+    expect(page).toContain("suggestions.lead");
+    expect(state.suggestions).toMatchObject({ offered: 2, kept: 2, dropped: 0 });
+  });
+
+  it("a suggestion that states a number or names a certified id is dropped, and the answer still certifies", async () => {
+    const provider = scripted("valuing", (purpose) =>
+      // The decoder already caps the list at three; the guard reads what it kept.
+      purpose === "scope" ? "decline" : suggesting(["What is it weak to?", "what is it weak to?", "Does it reach 90?", "Is it faster than Raichu?"]),
+    );
+    const d = withSuggest(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.suggestions).toEqual(["What is it weak to?"]);
+    expect(state.suggestions).toMatchObject({ offered: 3, kept: 1, dropped: 2 });
+  });
+
+  it("a suggestion said back is counted as taken and answered like any ask", async () => {
+    const provider = scripted("suggesting", (purpose) => (purpose === "scope" ? "decline" : suggesting(["What is it weak to?"])));
+    const d = withSuggest(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    state = await say(state, "What is it weak to?", d);
+    expect(state.suggestions.taken).toBe(1);
+    expect(state.records).toHaveLength(2);
+    state = await say(state, "how tall is it?", d);
+    expect(state.suggestions.taken).toBe(1);
+  });
+
+  it("with the door shut, a scripted suggestion is stripped and nothing reaches the manifest", async () => {
+    const provider = scripted("suggesting", (purpose) => (purpose === "scope" ? "decline" : suggesting(["What is it weak to?"])));
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.suggestions).toBeUndefined();
+    expect(state.suggestions).toEqual({ offered: 0, kept: 0, dropped: 0, taken: 0 });
+  });
+
+  it("the answer reached through the version question carries suggestions too", async () => {
+    const provider = scripted("suggesting", (purpose) => (purpose === "scope" ? "decline" : suggesting(["What is it weak to?"])));
+    const d = withSuggest(provider);
+    let state = await say(startSession(), "how fast is Pikachu?", d);
+    expect(state.phase.kind).toBe("asking");
+    state = await say(state, "red-blue", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.suggestions).toEqual(["What is it weak to?"]);
+    // Discovery, then the answer hop after the question intervened.
+    expect(state.usage.calls).toBe(2);
+  });
+
+  it("a grantless lesson carries its suggestions too", async () => {
+    const lesson = JSON.stringify({
+      rosters: [],
+      claims: [{ kind: "explanation", blockId: "what-is-badge" }, { kind: "suggest", asks: ["How do I earn one?"] }],
+    });
+    const provider = scripted("teaching", (purpose) => (purpose === "scope" ? "decline" : lesson));
+    const state = await say(startSession(), "what's a badge?", withSuggest(provider));
+    const record = state.records[0]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.suggestions).toEqual(["How do I earn one?"]);
+    expect(verifyReplay(world, record).allowed).toBe(true);
+  });
+});
+
+describe("the suggestion door is offered to the model exactly when it is open", () => {
+  const PROFILE_SCOPE = { version: "red-blue", region: "kanto", badgeLevel: 8 } as const;
+  function prompted(): { provider: ModelProvider; prompts: string[]; schemas: string[] } {
+    const prompts: string[] = [];
+    const schemas: string[] = [];
+    const provider = new ScriptedProvider("prompted", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      prompts.push(request.prompt);
+      schemas.push(JSON.stringify(request.schema?.schema ?? {}));
+      return thunderboltAnswer();
+    });
+    return { provider, prompts, schemas };
+  }
+
+  it("with suggest on, the prompt asks for a next step and the grammar admits it; off, neither", async () => {
+    const open = prompted();
+    let state = await setProfile(startSession(), PROFILE_SCOPE, { ...deps(open.provider), suggest: true });
+    state = await say(state, "What is Thunderbolt's power?", { ...deps(open.provider), suggest: true });
+    expect(state.records).toHaveLength(1);
+    expect(open.prompts[0]).toContain('"kind": "suggest"');
+    expect(open.schemas[0]).toContain('"suggest"');
+
+    const shut = prompted();
+    let plain = await setProfile(startSession(), PROFILE_SCOPE, deps(shut.provider));
+    plain = await say(plain, "What is Thunderbolt's power?", deps(shut.provider));
+    expect(plain.records).toHaveLength(1);
+    expect(shut.prompts[0]).not.toContain('"kind": "suggest"');
+    expect(shut.schemas[0]).not.toContain('"suggest"');
+  });
+});

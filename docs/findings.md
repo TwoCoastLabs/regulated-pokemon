@@ -4069,6 +4069,77 @@ the stop cannot say yet: whether a question the trainer sees as warm is
 one they answer — `picked` versus `ignored` on real visitors is the live
 page's to accumulate.
 
+### R3b step 4: a next step beside every answer, the model's own and uncertified (2026-09-06)
+
+**What landed.** The answer grammar gains a `suggest` entry — up to three
+short questions the trainer might ask next — behind `SessionDeps.suggest`
+(on in the live page and the tracer, off in the banks). A suggestion is
+not a claim and is never certified; it is *shown*, so it travels in the
+manifest and renders on the certified page in one labelled register: a
+`suggestions` unit whose lead-in is the pack's own copy ("the Advisor's
+own ideas, not certified") and whose items carry a `data-suggestion` mark
+the walker attributes to the model. The affidavit swears to the register's
+visibility like any unit's, and the verifier holds each mark to the
+manifest's text by equality — a reworded, extra, missing or hidden
+suggestion, or a mark outside the register, is refused by name under IA-6.
+The one rule the register lives by, *a suggestion names a topic, never a
+value*, is one function at two gates: the driver drops a suggestion with a
+digit or a certified id (species, move, item or type) so a bad one never
+costs a certified answer, and the kernel refuses any that reaches a
+manifest (IA-2 `suggestion-states-value`, `suggestion-names-subject`). The
+live page makes the latest answer's items clickable — a click says the
+question back as the trainer's own words, counted as `taken`. The
+text-closure rule now reads: a certified value, an approved disclosure, a
+catalogued string, or — inside the one register labelled for it — a
+suggested question held to the record by equality. Nothing else.
+
+**Dogfood stop 3, by tracer and by raw-reply dump, strong model
+(qwen3-235b) unless noted.** Two rounds, because the first prompt wording
+broke something.
+
+| ask | wording | what came back | suggestions |
+|---|---|---|---|
+| "how fast is Pikachu?" (profile set) | "you may add up to three follow-up questions" | Speed certified; three suggestions kept ("how does its speed compare to others?", "what moves benefit from high speed?", "can it outspeed most Pokémon?") | 3/3 kept |
+| same, weak model (mistral-nemo), 3 runs | any | Speed certified; no suggest entry written | 0 |
+| "what's a gym badge?" cold, 2 runs | "every answer ends with a next step" | the listing nomination refused, then the lesson — **no suggestions** | 0 |
+| "what's a gym badge?" cold, 4 runs | "every answer ends with a next step — a fact, a lesson, a matchup and a nomination alike" | **broken:** after the refused nomination the model answered with an `action` claim — `add-to-team` on the entity `what-is-badge` — and the exchange fell to the ladder, which proposed `badgeLevel=0` from "gym badge". `--no-suggest` on the same ask: the lesson, 2 calls | — |
+| "what's a gym badge?" cold, 3 runs | "ONE entry listing two or three QUESTIONS the trainer might want to ask you next" | the listing nomination refused, then the lesson, every run — no suggestions | 0 |
+| "how fast is Pikachu?" cold, 2 runs | same | Speed linked and claimed; a suggest entry in 1 of 2 ("how does its speed compare to others?", "what moves take advantage of high speed?", "does speed affect who goes first in battle?") | 3/3 kept in the one |
+| "how does its speed compare to others?" as a follow-up | same | fact + catalogue ranking, three suggestions kept | 3/3 |
+| "tell me about Pikachu" (profile set), 3 runs | any | the profile nomination or nine facts; no suggestions | 0 |
+
+**What the stop found.** (1) *The wording is load-bearing in a way the
+grammar is not.* "Ends with a next step" made the strong model emit an
+`action` — the one claim kind whose name means "do something next" — on a
+lesson id, four runs out of four; the same grammar with the sentence
+reworded around "questions" taught the lesson four of four. The kernel
+would have refused the act (IA-3, an uncertified entity) had scope been
+granted; what actually happened was worse for the trainer — the ladder
+read the lesson ask as scope wording and proposed a badge count from the
+word "badge", the R2 hazard the deflected-profile door was built against,
+reached by a new path. Filed as a finding rather than a fix because the
+fix is a sentence, and the lesson is that the register's prompt must
+describe *questions*, never *steps* or *actions*. (2) *The strong model
+attaches suggestions to plain fact answers about half the time and to
+lessons and nominations not at all* (fact 2 of 3 first-turn runs, lesson 0
+of 7, nomination 0 of 3; the weak model 0 of 3). Every suggestion that
+was written passed the guard — three of three, three of three, three of
+three — so the guard has not yet been seen to fire on a live reply; the
+scripted tests are what prove it. (3) *The listing nomination on "what's
+a gym badge?"* — `prior-roster`, one member — came back first on **every**
+one of nine runs, refused each time, and cost the route-door-closed retry
+each time. It predates this step and is step 5's business: the door is
+now measurably the most-misused one on the porch.
+
+**The honest reading.** The mechanism is complete and proven where it can
+be proven — the register renders, attests, replays and refuses drift; the
+guard drops and the kernel refuses by name; a click is a recorded
+utterance. Whether "every answer offers a next step" is met is the model's
+to deliver and the bank leg's to count, and on today's samples the strong
+model delivers it for facts and not for lessons. `suggestions.{offered,
+kept, dropped, taken}` are the numbers the leg reads; `taken` on real
+visitors is the live page's to accumulate.
+
 ## Appendix — how to reproduce
 
 ```sh

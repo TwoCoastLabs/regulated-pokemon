@@ -97,6 +97,13 @@
           "en-US": "Certified snapshot:",
           "en-GB": "Certified snapshot:"
         }
+      },
+      {
+        "id": "suggestions.lead",
+        "text": {
+          "en-US": "You might ask next — the Advisor's own ideas, not certified:",
+          "en-GB": "You might ask next — the Advisor's own ideas, not certified:"
+        }
       }
     ],
     "templates": [

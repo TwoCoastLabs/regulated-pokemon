@@ -475,7 +475,28 @@ wrong order for a "feels dumb" problem.
    in findings §19 ("R3b step 3").
 4. **Follow-up suggestions.** → **Dogfood stop 3:** every answer offers a
    next step; the conversation has a shape instead of a series of dead
-   stops.
+   stops. *Landed 2026-09-06:* the answer grammar gains a `suggest` entry
+   (up to three short questions in the trainer's voice) behind
+   `SessionDeps.suggest` — on in the live page and the tracer, off in the
+   banks. The suggestions are not claims and are never certified; they are
+   *shown*, so they travel in the manifest (`suggestions`) and render on
+   the certified page in one labelled register — a `suggestions` unit whose
+   lead-in is the pack's own copy ("the Advisor's own ideas, not certified")
+   and whose items carry a `data-suggestion` mark the walker attributes to
+   the model. The affidavit swears to the register's visibility like any
+   unit's; the verifier holds each mark to the manifest's text by equality
+   (drift, an extra, a missing or a hidden one, or a mark outside the
+   register, each refused by name under IA-6); and the topic-not-value rule
+   is one function at two gates (`suggestionProblem`: no digit, no
+   certified id of any kind) — the driver drops offenders so a bad
+   suggestion never costs a certified answer, and the kernel refuses any
+   that reach a manifest (IA-2 `suggestion-states-value`,
+   `suggestion-names-subject`). The live page makes the latest answer's
+   items clickable: a click says the suggestion back as the trainer's own
+   words, counted as `taken`. Counted:
+   `suggestions.{offered, kept, dropped, taken}`. The mount allows no
+   button, so the register is list items the page wires. Numbers in
+   findings §19 ("R3b step 4").
 5. **Delete the dispatch doors one at a time**, a bank leg after each so a
    regression names its door. → **Dogfood stop 4** after the listing door
    goes (the porch's most-trodden path). *The listing cue door went first,

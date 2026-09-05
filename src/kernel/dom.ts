@@ -43,22 +43,34 @@ export const COPY_ATTRIBUTE = "data-copy";
  * equality, so there is no wording a renderer can add or soften. */
 export const TEMPLATE_ATTRIBUTE = "data-template";
 
+/** Marks one follow-up question the advisor suggests (R3b step 4): the one
+ * register on the artifact whose words are the model's. It is attributed —
+ * to the model, uncertified — never certified: the verifier holds each mark
+ * to the manifest's own list by equality and to the labelled suggestions
+ * unit, so the register can carry a question and never a value. */
+export const SUGGESTION_ATTRIBUTE = "data-suggestion";
+
 /**
- * The three things visible text on a certified artifact may be.
+ * The things visible text on a certified artifact may be.
  *
- * There is no fourth, and that is the whole of "text closure": every visible
- * character is either a certified value, an approved disclosure, or a
- * catalogued string, and anything else is denied. Default-deny for text, the
- * way a content security policy is default-deny for script — the model picks
- * components and fills slots, and cannot write onto the artifact at all.
+ * Text closure: every visible character is either a certified value, an
+ * approved disclosure, a catalogued string, or — inside the one labelled
+ * register that exists for it — a suggested follow-up question attributed to
+ * the model and held to the manifest by equality; anything else is denied.
+ * Default-deny for text, the way a content security policy is default-deny
+ * for script — the model picks components and fills slots, and the only
+ * words of its own it can put on the artifact are questions in a register
+ * the page labels as uncertified, guarded so they name a topic and never a
+ * value.
  */
-export type AttributionKind = "slot" | "block" | "copy" | "template";
+export type AttributionKind = "slot" | "block" | "copy" | "template" | "suggestion";
 
 const ATTRIBUTION_ATTRIBUTES: ReadonlyArray<readonly [AttributionKind, string]> = [
   ["slot", SLOT_ATTRIBUTE],
   ["block", BLOCK_ATTRIBUTE],
   ["copy", COPY_ATTRIBUTE],
   ["template", TEMPLATE_ATTRIBUTE],
+  ["suggestion", SUGGESTION_ATTRIBUTE],
 ];
 
 export interface DomText {

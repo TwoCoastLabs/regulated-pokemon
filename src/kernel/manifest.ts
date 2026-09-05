@@ -77,6 +77,75 @@ export interface ManifestDraft {
   transactionId: string;
   claims: readonly Claim[];
   rosters: readonly ClosedRoster[];
+  /** Follow-up questions to offer beside the answer (R3b step 4); see
+   * {@link AnswerManifest.suggestions}. Copied through, guarded, never
+   * derived. */
+  suggestions?: readonly string[];
+}
+
+/** The most follow-ups one answer may offer; a next step is one to three
+ * questions, never a menu. */
+export const MAX_SUGGESTIONS = 3;
+
+/** The longest a suggestion may run — a short question in the trainer's
+ * voice, not a paragraph a value could hide in. */
+export const MAX_SUGGESTION_LENGTH = 120;
+
+/**
+ * Why a suggestion may not be shown, or nothing when it may. Structural, and
+ * the one rule the register lives by: a suggestion names a topic, never a
+ * value. A digit is a value stated; a certified id — a species, a move, an
+ * item, a type — is a value too, since the whole point of the register is
+ * that nothing on it was checked against the records. Shared by the kernel's
+ * gate and the driver's filter so the two cannot disagree about what "may
+ * name a topic" means.
+ */
+export function suggestionProblem(registry: CertifiedRegistry, text: string): string | undefined {
+  const trimmed = text.trim();
+  if (trimmed.length === 0) return "empty";
+  if (trimmed.length > MAX_SUGGESTION_LENGTH) return `longer than ${MAX_SUGGESTION_LENGTH} characters`;
+  if (/\d/.test(trimmed)) return "states a number";
+  const haystack = ` ${trimmed.toLowerCase().replace(/[^a-z0-9]+/g, " ")} `;
+  const names = (id: string): boolean => haystack.includes(` ${id.replace(/-/g, " ")} `);
+  const named =
+    registry.speciesIds.find(names) ?? registry.moveIds.find(names) ?? registry.itemIds.find(names) ?? [...registry.typeNames].find(names);
+  if (named !== undefined) return `names the certified id "${named}"`;
+  return undefined;
+}
+
+/** The register's gate (R3b step 4): count, shape and the topic-not-value
+ * rule, each refused by name. */
+function checkSuggestions(context: ManifestContext, manifest: AnswerManifest): Violation[] {
+  const suggestions = manifest.suggestions ?? [];
+  const violations: Violation[] = [];
+  if (suggestions.length > MAX_SUGGESTIONS) {
+    violations.push(
+      violation("IA-6", "suggestions-too-many", `the answer offers ${suggestions.length} follow-ups; at most ${MAX_SUGGESTIONS} may be shown`, {
+        expected: `at most ${MAX_SUGGESTIONS}`,
+        actual: String(suggestions.length),
+      }),
+    );
+  }
+  const seen = new Set<string>();
+  for (const suggestion of suggestions) {
+    const key = suggestion.trim().toLowerCase();
+    if (seen.has(key)) {
+      violations.push(violation("IA-6", "suggestion-duplicated", `the answer offers "${suggestion}" more than once`, { actual: suggestion }));
+      continue;
+    }
+    seen.add(key);
+    const problem = suggestionProblem(context.registry, suggestion);
+    if (problem === undefined) continue;
+    violations.push(
+      violation(
+        problem === "states a number" || problem.startsWith("names the certified id") ? "IA-2" : "IA-6",
+        problem === "states a number" ? "suggestion-states-value" : problem.startsWith("names the certified id") ? "suggestion-names-subject" : "suggestion-malformed",
+        `a suggestion may name a topic, never a value: "${suggestion}" ${problem}`,
+        { actual: suggestion },
+      ),
+    );
+  }
+  return violations;
 }
 
 /**
@@ -155,6 +224,7 @@ export function compileManifest(context: ManifestContext, draft: ManifestDraft):
     claims,
     rosters: draft.rosters,
     exhibits: requiredExhibits(context, claims, draft.rosters),
+    ...(draft.suggestions === undefined || draft.suggestions.length === 0 ? {} : { suggestions: draft.suggestions }),
   };
 
   const verdict = verifyManifest(context, manifest);
@@ -186,6 +256,7 @@ export function verifyManifest(context: ManifestContext, manifest: AnswerManifes
     ...checkRosters(context, manifest),
     ...checkExhibits(context, manifest),
     ...manifest.claims.flatMap((claim) => checkClaim(context, manifest, claim)),
+    ...checkSuggestions(context, manifest),
   ];
   return verdictOf(violations);
 }

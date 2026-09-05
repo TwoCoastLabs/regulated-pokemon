@@ -136,6 +136,7 @@ function answerPrompt(
   feedback: readonly string[] | undefined,
   items = false, itemCategories: readonly string[] = [],
   clarify = false,
+  suggest = false,
 ): string {
   return [
     // Grounding, when on: the certified facts in front of the model so it reads
@@ -164,6 +165,7 @@ function answerPrompt(
           "character or how the story unfolds, or anything no lesson squarely",
           "covers, also gets no claims — the records certify Pokémon and rules,",
           "not people or plot, and an honest pass beats teaching the nearest thing.",
+          ...(suggest ? ["A lesson you teach here also carries the suggested questions described below, like any answer."] : []),
         ]
       : [
           "Scope is established:",
@@ -243,6 +245,28 @@ function answerPrompt(
           "trainer's own scope (their game version, region or standing) — the system asks those",
           "itself; and the question may state no fact and no number. If their words already pick one reading",
           "(they named the field or the subject, or answered a question of yours), answer it.",
+          "",
+        ]
+      : []),
+    ...(suggest
+      ? [
+          // Follow-up suggestions (docs/routing.md, R3b step 4): a next step
+          // beside every answer, shown as the model's own and uncertified.
+          // The topic-not-value rule is the kernel's gate as well as this
+          // sentence; the driver drops what the gate would refuse.
+          // Worded around "questions", never "next step" or "follow-up
+          // action": the strong model read "ends with a next step" as an
+          // act and answered "what's a gym badge?" with an add-to-team
+          // action on the lesson id (dogfood, 2026-09-06). A suggestion is
+          // a question the trainer may ask; the sentence says only that.
+          "Also add, after your claims, ONE entry listing two or three QUESTIONS the trainer might want to",
+          "ask you next — for every answer, a lesson included:",
+          '  {"kind": "suggest", "asks": ["<a short question in the trainer\'s voice>", ...]}',
+          'Each is a question about this same subject or a related one, worded with "it" or "they" —',
+          "never a number and never a name from the records (no species, move, item or type by name): a",
+          "suggestion names a topic, not a value, and one that states a value is dropped. These are shown",
+          "beside the certified answer as your suggested questions, labelled uncertified. They are not",
+          "claims and not actions. Do not add them beside a clarify entry or an empty reply.",
           "",
         ]
       : []),
@@ -508,6 +532,11 @@ export interface AnswerStepInput {
    * instead of answering (docs/routing.md, R3b step 3). Off for every path
    * that has not opted in; the driver validates and caps what comes back. */
   clarify?: boolean;
+  /** Whether the model may offer follow-up suggestions beside its claims
+   * (docs/routing.md, R3b step 4). Off for every path that has not opted in;
+   * the driver and the kernel each hold what comes back to the
+   * topic-not-value rule. */
+  suggest?: boolean;
 }
 
 /** Ask the model for the certified answer and decode it into a draft. Whether
@@ -544,6 +573,7 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
       context.registry.itemIds.length > 0,
       [...new Set(context.registry.items.map((item) => item.category))].sort(),
       input.clarify === true,
+      input.suggest === true,
     ),
     hint: { scenarioId, ...(context.grant === undefined ? {} : { scope: context.grant.scope }) },
     // The same contract the prose describes, in a form a provider can enforce.
@@ -560,6 +590,7 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
         },
         input.routes,
         input.clarify === true,
+        input.suggest === true,
       ),
     },
   };

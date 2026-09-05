@@ -27,7 +27,7 @@ import type {
   ScopeDimension,
   ScopeValue,
 } from "../kernel/contracts.js";
-import type { ManifestContext, ManifestDraft } from "../kernel/manifest.js";
+import { type ManifestContext, type ManifestDraft, MAX_SUGGESTIONS } from "../kernel/manifest.js";
 import { buildRoster } from "../kernel/roster.js";
 import { type AccordPack, NO_FIELD } from "../kernel/pack.js";
 import { denialCode } from "../kernel/violation.js";
@@ -134,6 +134,10 @@ export type AnswerDecode =
        * option against the dictionary and the registry and decides whether
        * the question is asked at all. */
       clarify?: ClarifyNomination;
+      /** Follow-up questions the model offered (R3b step 4), trimmed and
+       * non-empty, at most {@link MAX_SUGGESTIONS}; the driver applies the
+       * topic-not-value guard before any reaches a draft. */
+      suggestions?: readonly string[];
     }
   | { ok: false; reason: string };
 
@@ -410,6 +414,7 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
   let folds = 0;
   let route: RouteNomination | undefined;
   let clarify: ClarifyNomination | undefined;
+  let suggestions: readonly string[] | undefined;
   for (const entry of parsed.claims) {
     // A nomination travels in the claims array (one more grammar variant)
     // but is not a claim: it names a deterministic door, and it never
@@ -426,6 +431,15 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
       if (!isString(entry.about) || !isString(entry.question)) return { ok: false, reason: "a clarification is malformed" };
       const options = Array.isArray(entry.options) ? entry.options.slice(0, MAX_CLARIFY_OPTIONS).flatMap(asClarificationOption) : [];
       if (clarify === undefined && options.length > 0) clarify = { about: entry.about, question: entry.question, options };
+      continue;
+    }
+    // Follow-up suggestions (R3b step 4) travel the same way and are not
+    // claims either: the first entry wins, the strings are trimmed, and an
+    // empty one is no suggestion.
+    if (isObject(entry) && entry.kind === "suggest") {
+      if (!Array.isArray(entry.asks)) return { ok: false, reason: "a suggestion list is malformed" };
+      const asks = entry.asks.filter(isString).map((ask) => ask.trim()).filter((ask) => ask.length > 0).slice(0, MAX_SUGGESTIONS);
+      if (suggestions === undefined && asks.length > 0) suggestions = asks;
       continue;
     }
     const claim = asClaim(entry);
@@ -486,6 +500,7 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
     ...(route === undefined ? {} : { route }),
     ...(unavailable.length === 0 ? {} : { unavailable }),
     ...(clarify === undefined ? {} : { clarify }),
+    ...(suggestions === undefined ? {} : { suggestions }),
   };
 }
 

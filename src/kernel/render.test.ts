@@ -606,3 +606,81 @@ function rewriteText(node: DomElement, from: string, to: string): DomElement {
       : { ...child, children: child.children.map(walk) };
   return walk(node) as DomElement;
 }
+
+describe("the suggestion register (R3b step 4): the model's words, attributed and held to the record", () => {
+  const SUGGESTIONS = ["What is it weak to?", "How does it evolve?"];
+
+  function suggested(): { manifest: AnswerManifest; artifact: DomElement } {
+    const compiled = compileManifest(world, { transactionId: "txn-suggest", claims: [SPEED], rosters: [], suggestions: SUGGESTIONS });
+    if (!compiled.ok) throw new Error(compiled.violations.map(denialCode).join(", "));
+    const planned = planRender(world, compiled.value);
+    if (!planned.ok) throw new Error(planned.violations.map(denialCode).join(", "));
+    return { manifest: compiled.value, artifact: renderAnswer(world.pack, planned.value) };
+  }
+
+  /** Rewrite the artifact: every element passes through `edit`, children first. */
+  function rewrite(node: DomNode, edit: (element: DomElement) => DomNode | null): DomNode | null {
+    if (node.kind === "text") return node;
+    const children = node.children.map((child) => rewrite(child, edit)).filter((child): child is DomNode => child !== null);
+    return edit({ ...node, children });
+  }
+  const mutated = (artifact: DomElement, edit: (element: DomElement) => DomNode | null): DomElement => {
+    const result = rewrite(artifact, edit);
+    if (result === null || result.kind !== "element") throw new Error("the root was removed");
+    return result;
+  };
+  const denialsFor = (manifest: AnswerManifest, artifact: DomElement): string[] => {
+    const sworn = attestRender(world, manifest, artifact, RENDERED_AT);
+    return sworn.ok ? [] : sworn.violations.map(denialCode);
+  };
+
+  it("the reference renderer's register attests: one labelled unit, each question marked in order, sworn visible", () => {
+    const { manifest, artifact } = suggested();
+    const sworn = attestRender(world, manifest, artifact, RENDERED_AT);
+    expect(sworn.ok).toBe(true);
+    if (sworn.ok) expect(sworn.value.units.some((unit) => unit.id === "suggestions" && unit.visible)).toBe(true);
+    const planned = planRender(world, manifest);
+    expect(planned.ok && planned.value.units.find((unit) => unit.kind === "suggestions")?.suggestions).toEqual(SUGGESTIONS);
+  });
+
+  it("a reworded suggestion is drift, an extra one is unplanned, a missing one is not rendered, a hidden one is not visible", () => {
+    const { manifest, artifact } = suggested();
+    const reworded = mutated(artifact, (el) =>
+      el.attributes["data-suggestion"] === "1" ? { ...el, children: [text("What is it weak to, really?")] } : el,
+    );
+    expect(denialsFor(manifest, reworded)).toEqual(["IA-6/suggestion-drift"]);
+
+    const extra = mutated(artifact, (el) =>
+      el.tag === "ul" && el.children.some((c) => c.kind === "element" && c.attributes["data-suggestion"] !== undefined)
+        ? { ...el, children: [...el.children, element("li", { "data-suggestion": "3" }, [text("Anything above 80 is fast enough.")])] }
+        : el,
+    );
+    expect(denialsFor(manifest, extra)).toEqual(["IA-6/suggestion-unplanned"]);
+
+    const missing = mutated(artifact, (el) => (el.attributes["data-suggestion"] === "2" ? null : el));
+    expect(denialsFor(manifest, missing)).toEqual(["IA-6/suggestion-not-rendered"]);
+
+    const hidden = mutated(artifact, (el) =>
+      el.attributes["data-suggestion"] === "2" ? { ...el, attributes: { ...el.attributes, hidden: "" } } : el,
+    );
+    expect(denialsFor(manifest, hidden)).toEqual(["IA-6/suggestion-not-visible"]);
+  });
+
+  it("a suggestion mark outside the register, or a register the manifest never planned, is refused", () => {
+    const { manifest, artifact } = suggested();
+    const strayed = mutated(artifact, (el) =>
+      el.tag === "article" ? { ...el, children: [...el.children, element("li", { "data-suggestion": "9" }, [text("Try a Water type next.")])] } : el,
+    );
+    expect(denialsFor(manifest, strayed)).toEqual(["IA-6/suggestion-unplanned"]);
+
+    // The same page against a manifest that offered nothing: the whole unit is unmanifested.
+    const plain = answer([SPEED]);
+    const withUnit = renderAnswer(bare.pack, plan(plain));
+    const smuggled = mutated(withUnit, (el) =>
+      el.tag === "article"
+        ? { ...el, children: [...el.children, element("section", { "data-unit": "suggestions" }, [element("li", { "data-suggestion": "1" }, [text("What is it weak to?")])])] }
+        : el,
+    );
+    expect(verifyRender(bare, plain, smuggled, attest(smuggled)).violations.map(denialCode)).toContain("IA-6/unmanifested-exhibit");
+  });
+});

@@ -451,3 +451,36 @@ describe("the clarification nomination (R3b step 3) is decoded for shape", () =>
     expect(decoded.ok).toBe(false);
   });
 });
+
+describe("follow-up suggestions (R3b step 4) are lifted out of the claims", () => {
+  it("keeps the first suggest entry's trimmed, non-empty asks, at most three, and never as claims", () => {
+    const decoded = decodeAnswer(
+      JSON.stringify({
+        rosters: [],
+        claims: [
+          { kind: "fact", entityId: "pikachu", factId: "base-speed" },
+          { kind: "suggest", asks: ["  What is it weak to? ", "", 7, "How does it evolve?", "Where is it found?", "A fourth?"] },
+          { kind: "suggest", asks: ["ignored"] },
+        ],
+      }),
+      context,
+      "txn-suggest",
+    );
+    expect(decoded.ok).toBe(true);
+    if (decoded.ok) {
+      expect(decoded.draft.claims).toHaveLength(1);
+      expect(decoded.suggestions).toEqual(["What is it weak to?", "How does it evolve?", "Where is it found?"]);
+    }
+  });
+
+  it("a malformed suggest entry is refused; an empty one is simply absent", () => {
+    expect(decodeAnswer(JSON.stringify({ rosters: [], claims: [{ kind: "suggest", asks: "no" }] }), context, "txn-bad").ok).toBe(false);
+    const empty = decodeAnswer(
+      JSON.stringify({ rosters: [], claims: [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }, { kind: "suggest", asks: [] }] }),
+      context,
+      "txn-empty",
+    );
+    expect(empty.ok).toBe(true);
+    if (empty.ok) expect(empty.suggestions).toBeUndefined();
+  });
+});

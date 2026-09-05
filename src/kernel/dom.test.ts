@@ -214,3 +214,18 @@ describe("the template mark (epic #94, slice 4)", () => {
     expect(walk.unattributed).toEqual([]);
   });
 });
+
+describe("the suggestion mark (R3b step 4) is an attribution like the others", () => {
+  it("attributes a marked follow-up to the register that encloses it, and leaves nothing unattributed", () => {
+    const artifact = element("article", { "data-transaction": "t", "data-locale": "en-US" }, [
+      element("section", { "data-unit": "suggestions" }, [
+        element("ul", {}, [element("li", { "data-suggestion": "1" }, [text("What is it weak to?")])]),
+      ]),
+    ]);
+    const walked = walkArtifact(artifact);
+    expect(walked.attributed).toEqual([
+      { kind: "suggestion", name: "1", unitId: "suggestions", text: "What is it weak to?", visible: true, path: [0, 0, 0] },
+    ]);
+    expect(walked.unattributed).toEqual([]);
+  });
+});

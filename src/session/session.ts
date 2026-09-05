@@ -45,7 +45,7 @@ import type {
   Violation,
 } from "../kernel/contracts.js";
 import { type DomElement, walkArtifact } from "../kernel/dom.js";
-import type { ManifestContext, ManifestDraft } from "../kernel/manifest.js";
+import { type ManifestContext, type ManifestDraft, MAX_SUGGESTIONS, suggestionProblem } from "../kernel/manifest.js";
 import type { AccordPack } from "../kernel/pack.js";
 import { planRender } from "../kernel/render.js";
 import type { CertifiedRegistry } from "../kernel/registry.js";
@@ -129,6 +129,19 @@ export interface SessionDeps {
    * live page and the tracer, off in the banks until their leg.
    */
   clarify?: boolean;
+  /**
+   * Follow-up suggestions (docs/routing.md, R3b step 4): the model may offer
+   * up to three questions the trainer might ask next, beside its claims.
+   * Not claims — a suggestion asserts nothing — and shown on the certified
+   * page in a register the pack labels as the Advisor's own, uncertified,
+   * which the affidavit attributes to the model. Held to one rule at two
+   * gates: a suggestion names a topic, never a value (no digit, no certified
+   * id) — the driver drops offenders here ({@link SessionState.suggestions}
+   * counts them) and the kernel refuses any that reach a manifest. Off by
+   * default — on in the live page and the tracer, off in the banks until
+   * their leg.
+   */
+  suggest?: boolean;
 }
 
 /** The advisor's own clarifying question, as recorded. */
@@ -249,6 +262,15 @@ export interface SessionState {
    * linking gauge.
    */
   clarification: { asked: number; picked: number; ignored: number; capped: number; phrased: number; unphrased: number };
+  /**
+   * The suggestion register's gauge (R3b step 4): `offered` counts every
+   * follow-up the model wrote, `kept` the ones that passed the
+   * topic-not-value rule into a draft, `dropped` the ones it refused, and
+   * `taken` the trainer utterances that were one of the previous answer's
+   * suggestions, said back — the number that says whether a next step
+   * offered is a next step taken.
+   */
+  suggestions: { offered: number; kept: number; dropped: number; taken: number };
   /** Ladder proposals spent on the current ask; a fresh utterance resets it. */
   ladderTurns: number;
   /**
@@ -330,6 +352,7 @@ export function startSession(idPrefix?: string): SessionState {
     feedbackDenials: [],
     linking: { mapped: 0, unlinked: 0, offTargetDropped: 0, contradictions: 0, staleDropped: 0 },
     clarification: { asked: 0, picked: 0, ignored: 0, capped: 0, phrased: 0, unphrased: 0 },
+    suggestions: { offered: 0, kept: 0, dropped: 0, taken: 0 },
     listingActivations: { consulted: 0, served: 0, stoodDown: 0, guardDropped: 0 },
     nominationRetries: 0,
     ladderTurns: 0,
@@ -477,7 +500,17 @@ function closeExchange(state: SessionState): SessionState {
  * the transport (this driver) is what assigns it — and the exchange advances. */
 export async function say(state: SessionState, text: string, deps: SessionDeps): Promise<SessionState> {
   const utterance: ScopeEvent = { kind: "utterance", at: deps.now(), source: "trainer", text };
-  const next = { ...state, transcript: [...state.transcript, utterance], ladderTurns: 0 };
+  // A suggestion said back (R3b step 4) — by click or by typing it — is
+  // counted as taken before anything reads it; it is then the trainer's own
+  // ask like any other, and nothing downstream treats it differently.
+  const offered = state.records[state.records.length - 1]?.manifest?.suggestions ?? [];
+  const taken = offered.some((suggestion) => suggestion.trim().toLowerCase() === text.trim().toLowerCase());
+  const next = {
+    ...state,
+    transcript: [...state.transcript, utterance],
+    ladderTurns: 0,
+    ...(taken ? { suggestions: { ...state.suggestions, taken: state.suggestions.taken + 1 } } : {}),
+  };
   // Social closes and the confidence question get their own words, before any
   // machinery runs (porch round five, 2026-09-01: "thanks!" and "are you
   // sure?" each re-ran the ladder and drew a stale card). Recorded like every
@@ -696,7 +729,7 @@ async function drive(
    * live 2026-08-30: the ladder read "tell me about Pikachu" and proposed
    * version=yellow from nothing, and the confirmed card died at the gate as
    * IA-2/scope-version-mismatch). */
-  reuse?: Pick<ManifestDraft, "claims" | "rosters"> & { routed?: boolean },
+  reuse?: Pick<ManifestDraft, "claims" | "rosters" | "suggestions"> & { routed?: boolean },
 ): Promise<SessionState> {
   const { world, provider } = deps;
 
@@ -896,7 +929,12 @@ async function drive(
       { ...state, required: nextRequired },
       deps,
       attempt.result === "needs-scope"
-        ? { claims: attempt.claims, rosters: attempt.rosters, ...(attempt.routed === true ? { routed: true } : {}) }
+        ? {
+            claims: attempt.claims,
+            rosters: attempt.rosters,
+            ...(attempt.suggestions === undefined ? {} : { suggestions: attempt.suggestions }),
+            ...(attempt.routed === true ? { routed: true } : {}),
+          }
         : undefined,
     );
   }
@@ -1334,6 +1372,8 @@ async function teachOrDiscover(
   /** The decoded rosters beside the claims, so a needs-scope draft can be
    * reused whole once the scope it named turns out to be already granted. */
   rosters: Pick<ManifestDraft, "rosters">["rosters"];
+  /** The follow-ups that passed the guard, riding with the draft (R3b step 4). */
+  suggestions?: readonly string[];
   /** True when a deterministic route composed the claims (the deflected
    * profile) — the ladder is then skipped for the scope they require. */
   routed?: boolean;
@@ -1372,6 +1412,7 @@ async function teachOrDiscover(
         ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
         ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
         ...(deps.clarify === undefined ? {} : { clarify: deps.clarify }),
+        ...(deps.suggest === undefined ? {} : { suggest: deps.suggest }),
       }),
     ));
   } catch {
@@ -1410,7 +1451,13 @@ async function teachOrDiscover(
   if (linked.verdict === "boundary") {
     return { state: teachRecordsBoundary(spentFolded, deps, transactionId, establishedAt), result: "taught", claims: [], rosters: [], routed: true };
   }
-  const draft: ManifestDraft = { ...step.decode.draft, claims: linked.claims };
+  // The follow-ups the model offered ride with whatever this hop composes
+  // (R3b step 4), guarded once here; a route-composed or profile draft keeps
+  // them too — the next step is about the subject, not the shape.
+  const suggested = withSuggestions(world, spentFolded, deps, step.decode, { ...step.decode.draft, claims: linked.claims });
+  spentFolded = suggested.state;
+  const draft: ManifestDraft = suggested.draft;
+  const carry = draft.suggestions === undefined ? {} : { suggestions: draft.suggestions };
   // A nomination outranks whatever else the reply carried: the model chose a
   // door, the door composes, the kernel judges. Invalid ones fall through to
   // exactly the flow a nomination-free reply takes.
@@ -1419,7 +1466,7 @@ async function teachOrDiscover(
     const isListing = step.decode.route.routeId === "listing";
     if (composed !== undefined) {
       const tallied = isListing ? tallyListing(spentFolded, "served") : spentFolded;
-      return { state: tallied, result: "needs-scope", claims: composed.claims, rosters: composed.rosters, routed: true };
+      return { state: tallied, result: "needs-scope", claims: composed.claims, rosters: composed.rosters, ...carry, routed: true };
     }
     if (isListing) spentFolded = tallyListing(spentFolded, "stoodDown");
     // A refused nomination with nothing beside it is the empty reply it
@@ -1433,22 +1480,55 @@ async function teachOrDiscover(
   // goes through scope like any personalized answer would have.
   const profile = deflectedProfileClaims(world, askWords, draft.claims);
   if (profile.length > 0) {
-    return { state: spentFolded, result: "needs-scope", claims: profile, rosters: [], routed: true };
+    return { state: spentFolded, result: "needs-scope", claims: profile, rosters: [], ...carry, routed: true };
   }
   // Under lessonsOnly, anything that reads the registry — a fact, a game
   // rule, any roster — is the caller's to answer, not this path's to commit:
   // the kernel would refuse it across the version boundary by name.
   if (lessonsOnly && (draft.claims.some((claim) => claim.kind !== "explanation") || draft.rosters.length > 0)) {
-    return { state: spentFolded, result: "needs-scope", claims: draft.claims, rosters: draft.rosters };
+    return { state: spentFolded, result: "needs-scope", claims: draft.claims, rosters: draft.rosters, ...carry };
   }
   // Commit grantless when nothing in the draft depends on scope — a lesson, a
   // game-rule constant, the same answer for every trainer (epic #64). Derived
   // from the one dependency table, so this never drifts from what the kernel's
   // own scope gate will allow grantless.
   if (requiredDimensionsFor(draft.claims).length === 0) {
-    return { state: commit(spentFolded, deps, { transactionId, establishedAt, draft }), result: "taught", claims: draft.claims, rosters: draft.rosters };
+    return { state: commit(spentFolded, deps, { transactionId, establishedAt, draft }), result: "taught", claims: draft.claims, rosters: draft.rosters, ...carry };
   }
-  return { state: spentFolded, result: "needs-scope", claims: draft.claims, rosters: draft.rosters };
+  return { state: spentFolded, result: "needs-scope", claims: draft.claims, rosters: draft.rosters, ...carry };
+}
+
+/**
+ * The follow-ups a reply offered, guarded into the draft (R3b step 4). Each
+ * is held to the kernel's own topic-not-value rule before it can reach a
+ * manifest — the gate downstream would refuse the whole answer for one bad
+ * suggestion, and a dropped follow-up should never cost a certified answer —
+ * deduplicated, and capped at {@link MAX_SUGGESTIONS}. Counted either way.
+ * With the door shut, whatever a reply carried is stripped: the register
+ * exists only where a page labels it.
+ */
+function withSuggestions(
+  world: SessionWorld,
+  state: SessionState,
+  deps: SessionDeps,
+  decode: Extract<AnswerDecode, { ok: true }>,
+  draft: ManifestDraft,
+): { state: SessionState; draft: ManifestDraft } {
+  const { suggestions: _carried, ...bare } = draft;
+  if (deps.suggest !== true) return { state, draft: bare };
+  if (decode.suggestions === undefined) return { state, draft };
+  const gauge = { ...state.suggestions, offered: state.suggestions.offered + decode.suggestions.length };
+  const kept: string[] = [];
+  for (const suggestion of decode.suggestions) {
+    const duplicate = kept.some((entry) => entry.toLowerCase() === suggestion.toLowerCase());
+    if (kept.length >= MAX_SUGGESTIONS || duplicate || suggestionProblem(world.registry, suggestion) !== undefined) {
+      gauge.dropped += 1;
+      continue;
+    }
+    kept.push(suggestion);
+  }
+  gauge.kept += kept.length;
+  return { state: { ...state, suggestions: gauge }, draft: kept.length === 0 ? bare : { ...bare, suggestions: kept } };
 }
 
 /** The listing gauge, now over nominations alone: `consulted` counts every
@@ -2188,7 +2268,7 @@ function teachBoundary(state: SessionState, deps: SessionDeps): SessionState {
 async function answer(
   state: SessionState,
   deps: SessionDeps,
-  reuse?: Pick<ManifestDraft, "claims" | "rosters"> & { routed?: boolean },
+  reuse?: Pick<ManifestDraft, "claims" | "rosters" | "suggestions"> & { routed?: boolean },
 ): Promise<SessionState> {
   const { world, provider } = deps;
   const transactionId = nextTransactionId(state);
@@ -2244,7 +2324,12 @@ async function answer(
     // it to the fields the model linked, and a route composes its own shape.
     step = {
       usage: emptyUsage(),
-      decode: { ok: true as const, draft: { transactionId, claims: reuse.claims, rosters: reuse.rosters }, folds: 0, asked: [] },
+      decode: {
+        ok: true as const,
+        draft: { transactionId, claims: reuse.claims, rosters: reuse.rosters, ...(reuse.suggestions === undefined ? {} : { suggestions: reuse.suggestions }) },
+        folds: 0,
+        asked: [],
+      },
     };
   } else {
     try {
@@ -2263,6 +2348,8 @@ async function answer(
           ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
           ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
           ...(deps.clarify === undefined ? {} : { clarify: deps.clarify }),
+          ...(deps.suggest === undefined ? {} : { suggest: deps.suggest }),
+        ...(deps.suggest === undefined ? {} : { suggest: deps.suggest }),
         }),
       );
       // Both calls' usage rides on the step; the retry is counted below.
@@ -2342,6 +2429,7 @@ async function answer(
         ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
         ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
         ...(deps.clarify === undefined ? {} : { clarify: deps.clarify }),
+        ...(deps.suggest === undefined ? {} : { suggest: deps.suggest }),
       });
     } catch {
       // The first denial is a complete, honest record; a provider that fails
@@ -2465,7 +2553,10 @@ function groom(
       : routed.length === 0
         ? groomed
         : { ...groomed, claims: [...groomed.claims, ...routed] };
-  return { kind: "draft", state, draft };
+  // Last, the follow-ups (R3b step 4): guarded onto whatever shape the
+  // guards settled on, so a next step rides with every certified answer.
+  const suggested = withSuggestions(world, state, deps, decode, draft);
+  return { kind: "draft", state: suggested.state, draft: suggested.draft };
 }
 
 /**

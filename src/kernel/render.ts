@@ -86,7 +86,8 @@ export type RenderUnitKind =
   | "recommendation"
   | "action"
   | "warning"
-  | "provenance";
+  | "provenance"
+  | "suggestions";
 
 /**
  * One certified value, and the one string that displays it.
@@ -125,6 +126,14 @@ export interface RenderUnit {
   sentence?: { templateId: string; expected: string };
   /** Mandatory text this unit must show verbatim, for disclosure units. */
   block?: DisclosureBlockRef;
+  /**
+   * The follow-up questions a suggestions unit shows (R3b step 4), in the
+   * manifest's order. Each must appear once, visible, marked as suggestion
+   * `1`, `2`, `3` in order, and equal the manifest's text after
+   * normalisation — the register may show the model's questions and cannot
+   * reword them, drop one, or add one.
+   */
+  suggestions?: readonly string[];
   /** The article a denial about this unit cites. */
   article: ArticleId;
   /**
@@ -188,9 +197,20 @@ export function planRender(context: ManifestContext, manifest: AnswerManifest): 
     units.push(built.value);
   }
 
+  // The suggestion register (R3b step 4): one unit, planned only when the
+  // manifest offers follow-ups, carrying their exact text. Its words are the
+  // model's and the plan says so by placing them here and nowhere else; the
+  // manifest gate already refused any that state a value.
+  if (manifest.suggestions !== undefined && manifest.suggestions.length > 0) {
+    units.push({ id: SUGGESTIONS_UNIT, kind: "suggestions", slots: [], suggestions: manifest.suggestions, article: "IA-6" });
+  }
+
   if (violations.length > 0) return { ok: false, violations };
   return { ok: true, value: { transactionId: manifest.transactionId, locale: manifest.locale, units } };
 }
+
+/** The one unit id the suggestion register may use. */
+export const SUGGESTIONS_UNIT = "suggestions";
 
 
 /**
@@ -799,9 +819,76 @@ function checkUnits(plan: RenderPlan, walk: ArtifactWalk): Violation[] {
     violations.push(...checkSlots(unit, walk));
     violations.push(...checkSentence(unit, walk));
     violations.push(...checkBlock(unit, walk));
+    violations.push(...checkSuggestionMarks(unit, walk));
     violations.push(...checkAdjacency(unit, rendered, shown));
   }
 
+  return violations;
+}
+
+/**
+ * The suggestion register, shown whole and unaltered (R3b step 4).
+ *
+ * Same discipline as a slot: each planned question is one mark, named by its
+ * position, visible, and equal to the manifest's text after normalisation;
+ * a mark the plan does not carry — in this unit or in any other — is a
+ * question the model put on the page that the record does not hold. The
+ * register may show what was recorded and nothing beyond it.
+ */
+function checkSuggestionMarks(unit: RenderUnit, walk: ArtifactWalk): Violation[] {
+  const violations: Violation[] = [];
+  const rendered = marksIn(walk, "suggestion", unit.id);
+  const planned = unit.suggestions ?? [];
+
+  planned.forEach((text, index) => {
+    const name = String(index + 1);
+    const [only, ...extra] = rendered.filter((entry) => entry.name === name);
+    if (only === undefined) {
+      violations.push(
+        violation(unit.article, "suggestion-not-rendered", `"${unit.id}" shows no suggestion ${name}`, {
+          expected: `${name} = "${normalise(text)}"`,
+          actual: rendered.map((entry) => entry.name).join(", ") || "no suggestions",
+        }),
+      );
+      return;
+    }
+    if (extra.length > 0) {
+      violations.push(
+        violation(unit.article, "suggestion-marked-twice", `"${unit.id}" marks suggestion ${name} on more than one element`, {
+          actual: [only, ...extra].map((entry) => entry.text).join(" | "),
+        }),
+      );
+      return;
+    }
+    if (!only.visible) {
+      violations.push(
+        violation(unit.article, "suggestion-not-visible", `suggestion ${name} of "${unit.id}" is in the document and not on the screen`, {
+          expected: normalise(text),
+          actual: "hidden",
+        }),
+      );
+      return;
+    }
+    if (normalise(only.text) !== normalise(text)) {
+      violations.push(
+        violation(unit.article, "suggestion-drift", `suggestion ${name} of "${unit.id}" is not the recorded question`, {
+          expected: normalise(text),
+          actual: normalise(only.text) || "nothing",
+        }),
+      );
+    }
+  });
+
+  const names = new Set(planned.map((_, index) => String(index + 1)));
+  for (const entry of rendered) {
+    if (names.has(entry.name)) continue;
+    violations.push(
+      violation(unit.article, "suggestion-unplanned", `"${unit.id}" shows a suggestion "${entry.name}" the record does not hold`, {
+        expected: [...names].join(", ") || "no suggestions",
+        actual: `${entry.name} = "${normalise(entry.text)}"`,
+      }),
+    );
+  }
   return violations;
 }
 
@@ -1102,6 +1189,13 @@ function checkClosure(context: ManifestContext, plan: RenderPlan, walk: Artifact
     violations.push(
       violation("IA-6", "disclosure-block-unplanned", `the artifact shows a "${stray.name}" disclosure outside every governed unit`, {
         actual: stray.name,
+      }),
+    );
+  }
+  for (const stray of marksIn(walk, "suggestion", undefined)) {
+    violations.push(
+      violation("IA-6", "suggestion-unplanned", `the artifact shows a suggestion "${stray.name}" outside the suggestion register`, {
+        actual: `${stray.name} = "${normalise(stray.text)}"`,
       }),
     );
   }
