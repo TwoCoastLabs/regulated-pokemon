@@ -441,7 +441,10 @@ wrong order for a "feels dumb" problem.
    the ask names (a move's word is no evidence about a species). The
    feedback retry is `SessionDeps.feedback` — on in the live page and the
    tracer, off in the banks until their leg — with the first denial kept in
-   `feedbackDenials`. The seventy tokens are gone; the gate reads 88.
+   `feedbackDenials`. The seventy tokens are gone; the gate reads 77 with
+   the listing door's deletion below. Numbers in findings §19 ("R3b, first
+   slice"): 97/137 on the strong model with the retry on, needs-data 74%,
+   honest refusal 71%, enforcement held.
 3. **Clarification nomination**, the model-phrased scope question, and the
    two-per-ask chain cap. → **Dogfood stop 2:** ambiguous asks ("the fast
    one", "is it strong?") get a real question with real options; a second

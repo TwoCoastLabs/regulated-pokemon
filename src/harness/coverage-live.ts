@@ -585,6 +585,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
     gatedGrammar: args.gatedGrammar,
     repair: args.repair,
     profile: args.profile,
+    feedback: args.feedback,
     repetitions: args.repetitions,
     ...(args.dispositions === undefined ? {} : { dispositions: args.dispositions }),
     stoppedEarly,

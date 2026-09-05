@@ -167,9 +167,10 @@ function answerPrompt(
       : [
           "Your previous answer to these words was refused by the verifier, by name:",
           ...feedback.map((line) => `  - ${line}`),
-          "Do not repeat the refused claim. Only the ids in the closed lists below resolve;",
-          "if the thing asked about is not one of them, answer with a lesson that covers it,",
-          "or with no claims at all.",
+          "Do not repeat the refused claim. Only the ids in the closed lists below resolve.",
+          "If the thing asked about is not one of them, link its phrase to \"none\" in \"asked\"",
+          "and claim nothing — unless a lesson squarely answers the question, in which case",
+          "teach that lesson; a lesson that is merely adjacent is worse than no claim.",
           "",
         ]),
     "Answer what they asked, and assert nothing they did not: an unrequested",
