@@ -1257,8 +1257,61 @@ describe("R3b: schema linking — the model links each phrase to a field, the dr
     let state = await setProfile(startSession(), PROFILE_SCOPE, d);
     state = await say(state, "how fast is Pikachu?", d);
     expect(state.records).toHaveLength(0);
-    expect(state.notes[state.notes.length - 1]?.text).toContain("facts you didn't ask for");
+    expect(state.notes[state.notes.length - 1]?.text).toContain("things you didn't ask for");
     expect(state.phase.kind).toBe("gathering");
+  });
+
+  it("R1 reaches set claims through their roster: a listing of the type asked about the chart is off the ask", async () => {
+    // Found live (strong model, 2026-09-05): "what beats water types?" came
+    // back as the water roster listed and counted — certified members, wrong
+    // question. The roster selects on `types`; the model linked `type-chart`.
+    const reply = JSON.stringify({
+      asked: [{ phrase: "what beats water", entityId: "water", fieldId: "type-chart" }],
+      rosters: [{ id: "water-pokemon", criteria: { all: [{ kind: "has-type", type: "water" }] } }],
+      claims: [
+        { kind: "membership", rosterId: "water-pokemon", entityId: "squirtle", asserted: true },
+        { kind: "count", rosterId: "water-pokemon" },
+      ],
+    });
+    const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : reply));
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "what beats water types?", d);
+    expect(state.records).toHaveLength(0);
+    expect(state.linking.offTargetDropped).toBe(2);
+    expect(state.notes[state.notes.length - 1]?.text).toContain("things you didn't ask for");
+  });
+
+  it("a link whose words come only from an earlier exchange is stale, and its claims fall with it", async () => {
+    // Found live (both models, 2026-09-05): shown the earlier asks as context
+    // for "what's a gym badge?", the model linked and answered them again.
+    let turn = 0;
+    const provider = scripted("echoing", (purpose) => {
+      if (purpose === "scope") return "decline";
+      turn += 1;
+      if (turn === 1) return JSON.stringify({ asked: [{ phrase: "speed", entityId: "pikachu", fieldId: "base-speed" }], rosters: [], claims: [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }] });
+      return JSON.stringify({
+        asked: [
+          { phrase: "what's Pikachu's Speed", entityId: "pikachu", fieldId: "base-speed" },
+          { phrase: "gym badge", entityId: "gym-badge", fieldId: "none" },
+        ],
+        rosters: [],
+        claims: [
+          { kind: "fact", entityId: "pikachu", factId: "base-speed" },
+          { kind: "explanation", blockId: "what-is-badge" },
+        ],
+      });
+    });
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "what's Pikachu's Speed?", d);
+    state = await say(state, "what's a gym badge?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-badge" }]);
+    expect(state.linking.staleDropped).toBe(1);
+    // A lesson answers the concept; the null link earns no boundary note beside it.
+    expect(state.notes.filter((n) => n.tone === "abstention")).toHaveLength(0);
   });
 
   it("R3: an alias contradiction is asked about, not answered — the dictionary's words can only make a question", async () => {

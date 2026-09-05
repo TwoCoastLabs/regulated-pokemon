@@ -9,7 +9,8 @@ import { describe, expect, it } from "vitest";
 
 import { harnessWorld } from "../harness/corpus.js";
 import type { Claim } from "../kernel/contracts.js";
-import { aliasContradiction, fieldOfClaim, linkClaims } from "./linking.js";
+import { aliasContradiction, fieldOfClaim, fieldsOfClaim, freshLinks, linkClaims } from "./linking.js";
+import type { ClosedRoster } from "../kernel/contracts.js";
 
 const world = harnessWorld();
 
@@ -26,6 +27,48 @@ describe("fieldOfClaim", () => {
     expect(fieldOfClaim(weakTo)).toBe("type-chart");
     expect(fieldOfClaim(lesson)).toBeUndefined();
     expect(fieldOfClaim({ kind: "count", rosterId: "r" })).toBeUndefined();
+  });
+});
+
+const waterRoster: ClosedRoster = { id: "water-pokemon", snapshotId: "kanto-red-blue", criteria: { all: [{ kind: "has-type", type: "water" }] }, memberIds: ["squirtle"], cardinality: 1 };
+const catalogue: ClosedRoster = { id: "all", snapshotId: "kanto-red-blue", criteria: { all: [] }, memberIds: ["squirtle"], cardinality: 1 };
+
+describe("fieldsOfClaim reaches set claims through their roster", () => {
+  it("reads a membership or count as being about what its roster selects on", () => {
+    expect(fieldsOfClaim({ kind: "membership", rosterId: "water-pokemon", entityId: "squirtle", asserted: true }, [waterRoster])).toEqual(["types"]);
+    expect(fieldsOfClaim({ kind: "count", rosterId: "water-pokemon" }, [waterRoster])).toEqual(["types"]);
+    expect(fieldsOfClaim({ kind: "ranking", rosterId: "water-pokemon", basis: "base-speed", direction: "highest" }, [waterRoster])).toEqual(["base-speed", "types"]);
+    // The whole catalogue selects on nothing: no field, no check.
+    expect(fieldsOfClaim({ kind: "count", rosterId: "all" }, [catalogue])).toEqual([]);
+  });
+
+  it("drops a listing of a type when the ask was about the chart", () => {
+    const asked = [{ phrase: "what beats water", entityId: "water", fieldId: "type-chart" }];
+    const claims: Claim[] = [{ kind: "membership", rosterId: "water-pokemon", entityId: "squirtle", asserted: true }, { kind: "count", rosterId: "water-pokemon" }];
+    expect(linkClaims(asked, claims, [waterRoster]).dropped).toBe(2);
+    // ...and keeps it when the ask was about the type's members.
+    expect(linkClaims([{ phrase: "the water ones", entityId: "water", fieldId: "types" }], claims, [waterRoster]).dropped).toBe(0);
+  });
+});
+
+describe("freshLinks — only this ask's links", () => {
+  it("drops a link whose content words all come from earlier exchanges and none from this one", () => {
+    const asked = [
+      { phrase: "what's Pikachu's Speed", entityId: "pikachu", fieldId: "base-speed" },
+      { phrase: "gym badge", entityId: "gym-badge", fieldId: null },
+    ];
+    const fresh = freshLinks(asked, "what's a gym badge?", "what's Pikachu's Speed? how tall is Onix?");
+    expect(fresh.stale).toBe(1);
+    expect(fresh.asked.map((entry) => entry.phrase)).toEqual(["gym badge"]);
+  });
+
+  it("keeps a paraphrase the current words do not contain, and a phrase with no content words", () => {
+    const fresh = freshLinks(
+      [{ phrase: "its velocity", entityId: "pikachu", fieldId: "base-speed" }, { phrase: "it", entityId: "pikachu", fieldId: "types" }],
+      "how fast is it?",
+      "what's a gym badge?",
+    );
+    expect(fresh.stale).toBe(0);
   });
 });
 

@@ -59,7 +59,7 @@ import { type AnswerStep, proposalDigest, proposeAnswer, proposeScope } from "..
 import { type AnswerDecode, NO_CLAIMS_REASON } from "../harness/decode.js";
 import { MAX_ANSWER_CLAIMS, type NominableRoute } from "../harness/schema.js";
 import { addUsage, emptyUsage, type ModelProvider, type Usage } from "../harness/provider.js";
-import { aliasContradiction, linkClaims } from "./linking.js";
+import { aliasContradiction, freshLinks, linkClaims } from "./linking.js";
 
 /** The certified world the session runs against — the same two values the
  * harness calls `HarnessWorld`, named here so the browser bundle never
@@ -212,7 +212,7 @@ export interface SessionState {
    * link; `contradictions` the alias cross-checks that turned into a
    * question. Findings read these the way they read the listing gauge.
    */
-  linking: { mapped: number; unlinked: number; offTargetDropped: number; contradictions: number };
+  linking: { mapped: number; unlinked: number; offTargetDropped: number; contradictions: number; staleDropped: number };
   /** Ladder proposals spent on the current ask; a fresh utterance resets it. */
   ladderTurns: number;
   /**
@@ -284,7 +284,7 @@ export function startSession(idPrefix?: string): SessionState {
     flips: 0,
     feedbackRetries: 0,
     feedbackDenials: [],
-    linking: { mapped: 0, unlinked: 0, offTargetDropped: 0, contradictions: 0 },
+    linking: { mapped: 0, unlinked: 0, offTargetDropped: 0, contradictions: 0, staleDropped: 0 },
     listingActivations: { consulted: 0, served: 0, stoodDown: 0, guardDropped: 0 },
     nominationRetries: 0,
     ladderTurns: 0,
@@ -1678,7 +1678,15 @@ function applyLinking(
   }
   gauge.mapped += 1;
 
-  const contradiction = aliasContradiction(world.pack, world.registry, decode.asked);
+  // Only this ask's links: the earlier exchanges the model was shown as
+  // context are not the ask, whatever it linked in them.
+  const trainerWords = (events: ScopeTranscript): string =>
+    events.flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : [])).join(" ");
+  const fresh = freshLinks(decode.asked, trainerWords(state.transcript.slice(state.askStart)), trainerWords(state.transcript.slice(0, state.askStart)));
+  gauge.staleDropped += fresh.stale;
+  const asked = fresh.asked;
+
+  const contradiction = aliasContradiction(world.pack, world.registry, asked);
   if (contradiction !== undefined) {
     gauge.contradictions += 1;
     const names = contradiction.suggested.map((field) => field.name).join(" or ");
@@ -1699,23 +1707,32 @@ function applyLinking(
     };
   }
 
-  const linked = linkClaims(decode.asked, decode.draft.claims);
+  const linked = linkClaims(asked, decode.draft.claims, decode.draft.rosters);
   gauge.offTargetDropped += linked.dropped;
   let next: SessionState = { ...state, linking: gauge };
 
   // What the model said it could not certify (the R3a abstention, now read
   // from the mapping): reported in the trainer's own phrase, never a claim.
-  const unavailable = decode.unavailable ?? [];
-  if (unavailable.length > 0) {
+  // Silent when a lesson answers beside it — "what's a gym badge?" links to
+  // no field because a badge is a concept, not a column, and the curriculum
+  // is exactly the answer to that; the note would contradict the page.
+  const teaches = linked.claims.some((claim) => claim.kind === "explanation");
+  const unavailable = asked.flatMap((entry) => (entry.fieldId === null ? [{ entityId: entry.entityId, asked: entry.phrase }] : []));
+  if (unavailable.length > 0 && !teaches) {
     // The phrase is the model's span of the ask; when it already names the
     // subject (found on the first live run: the whole question came back as
     // the phrase), naming it again reads as a stutter.
+    // ...and a subject the registry does not certify ("gym_badge", on the
+    // weak model's first run) is not one to name at all.
+    const registry = world.registry;
     const named = unavailable
       .map((entry) => {
-        const entity = entry.entityId.replace(/-/g, " ");
+        const id = entry.entityId.toLowerCase().trim();
+        const certified = registry.speciesIds.includes(id) || registry.moveIds.includes(id) || registry.itemIds.includes(id);
+        const entity = id.replace(/-/g, " ");
         const phrase = entry.asked.trim().replace(/[?.!]+$/, "");
         const namesEntity = new RegExp(`\\b${entity.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(phrase);
-        return namesEntity ? `"${phrase}"` : `"${phrase}" for ${entity}`;
+        return certified && !namesEntity ? `"${phrase}" for ${entity}` : `"${phrase}"`;
       })
       .join(", ");
     next = note(
@@ -1729,12 +1746,28 @@ function applyLinking(
 
   if (linked.claims.length === 0 && decode.route === undefined) {
     if (unavailable.length > 0) return { state: next, claims: [], verdict: "boundary" };
+    if (asked.length === 0) {
+      // Every link was stale: the reply answered the earlier exchanges and
+      // nothing in this one. An honest pass, with the stale count in the
+      // detail register.
+      return {
+        state: note(
+          closeExchange(next),
+          deps.now(),
+          "I lost the thread of that one — it seems to point back at something we discussed. Ask it again in one line, naming what you mean, and I'll answer what the records certify.",
+          "abstention",
+          `schema linking found every link (${fresh.stale}) about an earlier exchange — nothing was committed`,
+        ),
+        claims: [],
+        verdict: "closed",
+      };
+    }
     if (linked.dropped > 0) {
       return {
         state: note(
           closeExchange(next),
           deps.now(),
-          "I could only find facts you didn't ask for, so I'd rather pass than answer the wrong question.",
+          "I could only find answers to things you didn't ask for, so I'd rather pass than answer the wrong question.",
           "abstention",
           `schema linking dropped every claim (${linked.dropped}) as off the asked fields — nothing was committed`,
         ),

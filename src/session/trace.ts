@@ -204,6 +204,9 @@ function narrate(before: SessionState, after: SessionState): string[] {
   if (linking.contradictions > linkedBefore.contradictions) {
     lines.push("  [linking] an alias contradiction was asked about instead of answered");
   }
+  if (linking.staleDropped > linkedBefore.staleDropped) {
+    lines.push(`  [linking] ${linking.staleDropped - linkedBefore.staleDropped} link(s) about an earlier exchange dropped as stale`);
+  }
 
   lines.push(`  [phase] ${describePhase(after)}`);
   return lines;
