@@ -21,7 +21,7 @@
 
 import type { AskedField } from "../harness/decode.js";
 import type { Claim, ClosedRoster, RosterCriterion } from "../kernel/contracts.js";
-import type { AccordPack, DictionaryEntry, DictionarySubject } from "../kernel/pack.js";
+import { type AccordPack, type DictionaryEntry, type DictionarySubject, NO_FIELD } from "../kernel/pack.js";
 import type { CertifiedRegistry } from "../kernel/registry.js";
 
 /** The field a roster criterion selects on — a set defined by type is about
@@ -122,7 +122,14 @@ export function linkClaims(asked: readonly AskedField[], claims: readonly Claim[
   // type count and eight game rules. With a field linked, the ask was about
   // that field, and a constant beside it is the dump it looks like.
   const withoutConstants = linked.size === 0 ? kept : kept.filter((claim) => claim.kind !== "gameRule" && claim.kind !== "typeCount");
-  return { claims: withoutConstants, dropped: claims.length - withoutConstants.length };
+  // A claim about the reserved no-subject is the model saying it found no
+  // subject — "tell me about this", dogfood 2026-09-05, came back as a fact
+  // about the entity "none", which the kernel rightly refused twice and
+  // filed as a denial page for a shapeless opener. The word is the
+  // grammar's own, so the check is structural: such a claim is dropped
+  // here and the empty reply falls to the redirect it deserves.
+  const withSubjects = withoutConstants.filter((claim) => !("entityId" in claim && claim.entityId.toLowerCase().trim() === NO_FIELD));
+  return { claims: withSubjects, dropped: claims.length - withSubjects.length };
 }
 
 export interface Fresh {

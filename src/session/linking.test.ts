@@ -96,6 +96,12 @@ describe("linkClaims — R1, claims stay inside the ask", () => {
     expect(linkClaims([{ phrase: "how many types", entityId: "none", fieldId: null }], [types]).dropped).toBe(0);
   });
 
+  it("drops a claim about the reserved no-subject — the model found nothing to be about (dogfood, 2026-09-05)", () => {
+    const asked = [{ phrase: "tell me about this", entityId: "none", fieldId: null }];
+    const aboutNothing: Claim = { kind: "fact", entityId: "none", factId: "types" };
+    expect(linkClaims(asked, [aboutNothing])).toEqual({ claims: [], dropped: 1 });
+  });
+
   it("holds a set claim to nothing when the mapping links no field — 'how many' has no column", () => {
     // Found by the first R3b bank leg: every count over a typed roster fell
     // because the model linked "how many electric ones" to none, honestly.
