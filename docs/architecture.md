@@ -7,6 +7,11 @@ guarantee is demonstrated by a failure-injection test.
 
 ## The shape
 
+*The mechanism of one live turn — every model call named, every deterministic
+step beside it, and both prompts section by section — is drawn in
+[session-flow.md](session-flow.md). Read it after this section: this is the
+shape, that is the motion.*
+
 ```
 trainer message
    │
