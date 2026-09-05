@@ -20,7 +20,7 @@ import type { Exhibit, Resolution, ScopeDimension, ScopeValue, Violation } from 
 import { digestText } from "./digest.js";
 import { normalise } from "./dom.js";
 import { formatCarriesLocale, type FormatId, IMPLEMENTED_LOCALES, isFormatId } from "./format.js";
-import type { CertifiedRegistry } from "./registry.js";
+import { type CertifiedRegistry, fidelitySurfaces, ITEM_FACT_IDS, MOVE_FACT_IDS, SPECIES_FACT_IDS } from "./registry.js";
 import { AccordError, violation } from "./violation.js";
 
 export const PACK_SCHEMA_VERSION = 7;
@@ -387,17 +387,54 @@ export interface GameRule {
 }
 
 /**
- * What the records do not hold, as reviewed policy (epic #145, R3). The
- * tokens are the trainer's words for the things outside these records; the
- * lesson is the reviewed text that says so. Both are the pack's — the driver
- * only matches and routes, and the kernel certifies the lesson like any other.
+ * What the records do not hold, as reviewed policy (epic #145, R3): the
+ * lesson that says so. Which asks reach it is the model's mapping to decide
+ * (an `asked` entry linked to no field — docs/routing.md, R3b), never a word
+ * list: R3a's seventy tokens were the class of mechanism a bank or a
+ * hospital cannot re-tune per domain, and they are gone. The kernel
+ * certifies the lesson like any other.
  */
 export interface RecordsBoundaryRule {
   /** A curriculum lesson id; the loader refuses one the pack does not carry. */
   lessonId: string;
-  /** Word-bounded, case-insensitive phrases; a phrase may hold spaces. */
-  tokens: readonly string[];
 }
+
+/** Whose field a dictionary entry is: what a claim on it names as its
+ * subject. `type` is the type chart — the one certified surface that is not
+ * a fact of a species, a move or an item. */
+export type DictionarySubject = "species" | "move" | "item" | "type";
+
+/**
+ * One entry of the domain's data dictionary (docs/routing.md, R3b): a
+ * certified field, described for the model to link the trainer's phrases to
+ * and for the driver to cross-check that link with. The plain database
+ * sense of the term — the domain team authors one line per field, O(fields)
+ * not O(phrases). The loader pins the dictionary to the registry in both
+ * directions: every entry names a surface the registry certifies, and every
+ * certified surface has an entry, so the grammar's enum and the prompt's
+ * catalogue can never drift from what resolves.
+ */
+export interface DictionaryEntry {
+  /** The certified surface: a fact id, or "type-chart". */
+  id: string;
+  subject: DictionarySubject;
+  /** The field's everyday name. */
+  name: string;
+  /** One line: what the value is. */
+  description: string;
+  /**
+   * The trainer's words for this field, lowercase, word-bounded, spaces
+   * allowed. The one place the dictionary's words touch the driver: an
+   * alias of a *different* field in a phrase the model linked here is a
+   * contradiction the trainer is asked about. An alias can make the system
+   * ask; it can never make it answer.
+   */
+  aliases: readonly string[];
+}
+
+/** The `fieldId` a model writes for "the records certify no such field" —
+ * decoded as null. Reserved: no dictionary entry may claim it. */
+export const NO_FIELD = "none";
 
 /**
  * The ceremony dial: how much explicit confirmation the pack demands before
@@ -425,15 +462,15 @@ export interface AccordPack {
   /** Absent means strict: every proposal needs its confirmation. */
   ceremony?: CeremonyPolicy;
   /**
-   * The records' own boundary, as policy (epic #145, R3): the words a
-   * trainer uses for things these records do not hold — heights, weights,
-   * abilities, shiny odds, the story — and the reviewed lesson that says so.
-   * An ask carrying one of them is answered with that lesson, deterministically
-   * and before any model reads it: a certified statement of what the League
-   * holds beats a certified fact the trainer did not ask for. Optional — a
-   * pack without it lets the model decide, which is the measured control.
+   * The records' own boundary, as policy (epic #145, R3): the reviewed
+   * lesson that says what these records do not hold. Taught when the model's
+   * mapping links an ask to no certified field — a certified statement of
+   * what the League holds beats a certified fact the trainer did not ask
+   * for. Optional — a pack without it reports the boundary as a note alone.
    */
   recordsBoundary?: RecordsBoundaryRule;
+  /** The data dictionary: every certified field, described (R3b). */
+  dictionary: readonly DictionaryEntry[];
   presentation: Presentation;
   restrictions: readonly RestrictionRule[];
   actions: readonly ActionRule[];
@@ -592,28 +629,35 @@ export function loadPack(input: unknown, registry: CertifiedRegistry): Resolutio
     const curriculum = document.curriculum as ReadonlyArray<{ id?: unknown }>;
     const lessonKnown =
       typeof boundary.lessonId === "string" && curriculum.some((lesson) => lesson.id === boundary.lessonId);
-    const tokensSound =
-      Array.isArray(boundary.tokens) &&
-      boundary.tokens.length > 0 &&
-      boundary.tokens.every((token) => typeof token === "string" && token.trim().length > 0);
-    if (typeof document.recordsBoundary !== "object" || document.recordsBoundary === null || !lessonKnown || !tokensSound) {
-      // A boundary naming a lesson the pack does not carry would route to
-      // nothing; one with no words would never fire. Either is a hole that
-      // looks like policy.
+    if (typeof document.recordsBoundary !== "object" || document.recordsBoundary === null || !lessonKnown) {
+      // A boundary naming a lesson the pack does not carry would teach
+      // nothing — a hole that looks like policy.
       return {
         ok: false,
-        violations: [violation("IA-6", "pack-records-boundary-malformed", "Accord pack's records boundary names no carried lesson or no words")],
+        violations: [violation("IA-6", "pack-records-boundary-malformed", "Accord pack's records boundary names no carried lesson")],
       };
     }
   }
+  if (document.dictionary !== undefined && !Array.isArray(document.dictionary)) {
+    return {
+      ok: false,
+      violations: [violation("IA-6", "pack-dictionary-malformed", "Accord pack's data dictionary is not a list")],
+    };
+  }
 
-  const pack = document as AccordPack;
+  // A pack without a dictionary (the pre-R3b packs, still governing filed
+  // runs that must replay) offers the model no fields to link and the
+  // driver nothing to hold the claims to — the measured control, not an
+  // error. One that starts a dictionary must finish it: the checks below
+  // refuse a partial one as incomplete.
+  const pack = { ...document, dictionary: document.dictionary ?? [] } as AccordPack;
   const violations = [
     ...checkPresentation(pack.presentation),
     ...checkRules(pack, registry),
     ...checkActions(pack),
     ...checkGameRules(pack.gameRules),
     ...checkVocabulary(pack.vocabulary),
+    ...(document.dictionary === undefined ? [] : checkDictionary(pack.dictionary, registry)),
   ];
   if (violations.length > 0) return { ok: false, violations };
   return { ok: true, value: pack };
@@ -1195,6 +1239,94 @@ function checkVocabulary(vocabulary: ScopeVocabulary): Violation[] {
   }
 
   return violations;
+}
+
+/** The subject a certified surface belongs to, from the registry's own
+ * vocabulary — the check that a dictionary entry describes the field it
+ * names as the kind of thing it is. */
+function subjectOfSurface(id: string): DictionarySubject | undefined {
+  if (SPECIES_FACT_IDS.includes(id)) return "species";
+  if (MOVE_FACT_IDS.includes(id)) return "move";
+  if (ITEM_FACT_IDS.includes(id)) return "item";
+  if (id === "type-chart") return "type";
+  return undefined;
+}
+
+/**
+ * The dictionary pinned to the registry, both ways (R3b): every entry names
+ * a surface this world certifies and describes it as the right subject's
+ * field; every certified surface has an entry; no id twice; no alias on two
+ * fields of one subject (the cross-check could not tell which the phrase
+ * meant); no alias or id spelt like the reserved "none". Reviewed data, so
+ * this catches a malformation, not a wrong description — the words are the
+ * reviewer's.
+ */
+function checkDictionary(dictionary: readonly DictionaryEntry[], registry: CertifiedRegistry): Violation[] {
+  const violations: Violation[] = [];
+  const surfaces = fidelitySurfaces(registry.document);
+  const seen = new Set<string>();
+  const aliasOwners = new Map<string, string>();
+  for (const entry of dictionary) {
+    const sound =
+      typeof entry === "object" &&
+      entry !== null &&
+      typeof entry.id === "string" &&
+      entry.id.length > 0 &&
+      typeof entry.name === "string" &&
+      entry.name.trim().length > 0 &&
+      typeof entry.description === "string" &&
+      entry.description.trim().length > 0 &&
+      Array.isArray(entry.aliases) &&
+      entry.aliases.every((alias) => typeof alias === "string" && alias.trim().length > 0 && alias === alias.toLowerCase().trim());
+    if (!sound) {
+      violations.push(violation("IA-6", "pack-dictionary-entry-malformed", "a dictionary entry lacks an id, a name, a description or lowercase aliases"));
+      continue;
+    }
+    if (entry.id === NO_FIELD || entry.aliases.includes(NO_FIELD)) {
+      violations.push(violation("IA-6", "pack-dictionary-entry-malformed", `dictionary entry "${entry.id}" uses the reserved word "${NO_FIELD}"`, { actual: entry.id }));
+    }
+    if (seen.has(entry.id)) {
+      violations.push(violation("IA-6", "pack-dictionary-duplicate-field", `dictionary entry "${entry.id}" appears more than once`, { actual: entry.id }));
+    }
+    seen.add(entry.id);
+    const subject = subjectOfSurface(entry.id);
+    if (subject === undefined || !surfaces.includes(entry.id)) {
+      violations.push(violation("IA-6", "pack-dictionary-field-unknown", `dictionary entry "${entry.id}" names no surface these records certify`, { actual: entry.id }));
+    } else if (entry.subject !== subject) {
+      violations.push(
+        violation("IA-6", "pack-dictionary-subject-mismatch", `dictionary entry "${entry.id}" is a ${subject} field, not ${String(entry.subject)}`, {
+          expected: subject,
+          actual: String(entry.subject),
+        }),
+      );
+    }
+    // Unique within a subject: "type" may name a species' typing and a
+    // move's type at once, because the cross-check reads aliases per the
+    // subject the ask names; two species fields sharing a word could not
+    // be told apart by anything.
+    for (const alias of entry.aliases) {
+      const key = `${String(entry.subject)}:${alias}`;
+      const owner = aliasOwners.get(key);
+      if (owner !== undefined && owner !== entry.id) {
+        violations.push(
+          violation("IA-6", "pack-dictionary-alias-shared", `alias "${alias}" belongs to both "${owner}" and "${entry.id}"`, { actual: alias }),
+        );
+      }
+      aliasOwners.set(key, entry.id);
+    }
+  }
+  const missing = surfaces.filter((surface) => !seen.has(surface));
+  if (missing.length > 0) {
+    violations.push(
+      violation("IA-6", "pack-dictionary-incomplete", `the dictionary describes no entry for: ${missing.join(", ")}`, { actual: missing.join(", ") }),
+    );
+  }
+  return violations;
+}
+
+/** One dictionary entry by field id, or nothing. */
+export function dictionaryEntry(pack: AccordPack, id: string): DictionaryEntry | undefined {
+  return pack.dictionary.find((entry) => entry.id === id);
 }
 
 /** The restrictions that apply to one species, by its certified rarity. */

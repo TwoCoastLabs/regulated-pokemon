@@ -148,16 +148,69 @@ describe("a pack that cannot be trusted is refused by name", () => {
     ).toContain("IA-1/pack-ask-parameter-malformed");
   });
 
-  it("refuses a records boundary naming a lesson the pack does not carry, or carrying no words", () => {
+  it("refuses a records boundary naming a lesson the pack does not carry", () => {
     expect(
-      denials(loadWith((draft) => ((draft as { recordsBoundary: unknown }).recordsBoundary = { lessonId: "no-such-lesson", tokens: ["height"] }))),
+      denials(loadWith((draft) => ((draft as { recordsBoundary: unknown }).recordsBoundary = { lessonId: "no-such-lesson" }))),
     ).toContain("IA-6/pack-records-boundary-malformed");
-    expect(
-      denials(loadWith((draft) => ((draft as { recordsBoundary: unknown }).recordsBoundary = { lessonId: "what-the-records-hold", tokens: [] }))),
-    ).toContain("IA-6/pack-records-boundary-malformed");
-    expect(
-      denials(loadWith((draft) => ((draft as { recordsBoundary: unknown }).recordsBoundary = { lessonId: "what-the-records-hold", tokens: ["height", "  "] }))),
-    ).toContain("IA-6/pack-records-boundary-malformed");
+    expect(denials(loadWith((draft) => ((draft as { recordsBoundary: unknown }).recordsBoundary = "what-the-records-hold")))).toContain(
+      "IA-6/pack-records-boundary-malformed",
+    );
+  });
+
+  describe("the data dictionary is pinned to the registry, both ways (docs/routing.md, R3b)", () => {
+    type Mutable = { dictionary: { id: string; subject: string; name: string; description: string; aliases: string[] }[] };
+
+    it("loads a pack without a dictionary as one with none — the pre-R3b packs still govern filed runs — but refuses a partial one", () => {
+      const without = loadWith((draft) => delete (draft as unknown as Partial<Mutable>).dictionary);
+      expect(without.ok).toBe(true);
+      if (without.ok) expect(without.value.dictionary).toEqual([]);
+      expect(denials(loadWith((draft) => ((draft as unknown as Mutable).dictionary = [])))).toContain("IA-6/pack-dictionary-incomplete");
+      expect(denials(loadWith((draft) => ((draft as unknown as { dictionary: unknown }).dictionary = "fields")))).toContain("IA-6/pack-dictionary-malformed");
+    });
+
+    it("refuses an entry naming a surface the records do not certify, or the wrong subject for one they do", () => {
+      expect(
+        denials(loadWith((draft) => (draft as unknown as Mutable).dictionary.push({ id: "height", subject: "species", name: "Height", description: "How tall.", aliases: ["tall"] }))),
+      ).toContain("IA-6/pack-dictionary-field-unknown");
+      expect(
+        denials(loadWith((draft) => ((draft as unknown as Mutable).dictionary.find((entry) => entry.id === "base-speed")!.subject = "move"))),
+      ).toContain("IA-6/pack-dictionary-subject-mismatch");
+    });
+
+    it("refuses a dictionary that leaves a certified surface undescribed, or describes one twice", () => {
+      expect(
+        denials(loadWith((draft) => ((draft as unknown as Mutable).dictionary = (draft as unknown as Mutable).dictionary.filter((entry) => entry.id !== "base-speed")))),
+      ).toContain("IA-6/pack-dictionary-incomplete");
+      expect(
+        denials(loadWith((draft) => (draft as unknown as Mutable).dictionary.push({ ...(draft as unknown as Mutable).dictionary[0]! }))),
+      ).toContain("IA-6/pack-dictionary-duplicate-field");
+    });
+
+    it("refuses an alias two fields of one subject share, and allows one across subjects", () => {
+      expect(
+        denials(loadWith((draft) => (draft as unknown as Mutable).dictionary.find((entry) => entry.id === "base-attack")!.aliases.push("speed"))),
+      ).toContain("IA-6/pack-dictionary-alias-shared");
+      // "type" names a species' typing and a move's type at once: the cross-check
+      // reads aliases per the subject the ask names, so the pack allows it.
+      const pack = loadWith(() => undefined);
+      expect(pack.ok).toBe(true);
+      if (pack.ok) {
+        expect(pack.value.dictionary.find((entry) => entry.id === "types")?.aliases).toContain("type");
+        expect(pack.value.dictionary.find((entry) => entry.id === "move-type")?.aliases).toContain("type");
+      }
+    });
+
+    it("refuses an entry with no name, no description, an uppercase alias, or the reserved word", () => {
+      expect(
+        denials(loadWith((draft) => ((draft as unknown as Mutable).dictionary[0]!.description = "  "))),
+      ).toContain("IA-6/pack-dictionary-entry-malformed");
+      expect(
+        denials(loadWith((draft) => (draft as unknown as Mutable).dictionary[0]!.aliases.push("Speed"))),
+      ).toContain("IA-6/pack-dictionary-entry-malformed");
+      expect(
+        denials(loadWith((draft) => (draft as unknown as Mutable).dictionary[0]!.aliases.push("none"))),
+      ).toContain("IA-6/pack-dictionary-entry-malformed");
+    });
   });
 
   it("refuses two rules sharing one id", () => {

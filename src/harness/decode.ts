@@ -28,10 +28,10 @@ import type {
 } from "../kernel/contracts.js";
 import type { ManifestContext, ManifestDraft } from "../kernel/manifest.js";
 import { buildRoster } from "../kernel/roster.js";
-import type { AccordPack } from "../kernel/pack.js";
+import { type AccordPack, NO_FIELD } from "../kernel/pack.js";
 import { denialCode } from "../kernel/violation.js";
 import { canonicalizeClaims } from "./canonical.js";
-import { MAX_ANSWER_CLAIMS, MAX_ANSWER_ROSTERS } from "./schema.js";
+import { MAX_ANSWER_CLAIMS, MAX_ANSWER_ROSTERS, MAX_ASKED } from "./schema.js";
 
 // --- tiny typed predicates --------------------------------------------------
 
@@ -118,12 +118,32 @@ export function decodeCandidate(text: string, pack: AccordPack): DecodedCandidat
 // --- answers ----------------------------------------------------------------
 
 export type AnswerDecode =
-  | { ok: true; draft: ManifestDraft; folds: number; route?: RouteNomination; unavailable?: readonly Unavailable[] }
+  | {
+      ok: true;
+      draft: ManifestDraft;
+      folds: number;
+      route?: RouteNomination;
+      /** The model's schema linking (R3b): each thing asked for, linked to a
+       * certified field or to none. Empty when the reply carried no mapping
+       * — the checks that read it then have nothing to hold the claims to. */
+      asked: readonly AskedField[];
+      unavailable?: readonly Unavailable[];
+    }
   | { ok: false; reason: string };
 
-/** What the model was asked for and could not certify (epic #145, R3):
- * a subject and the trainer's own word for the thing — reported to the
- * trainer as the records' boundary, never compiled, never certified. */
+/** One link of the model's schema linking: the trainer's phrase, the subject
+ * it is about, and the certified field the model read it as — `null` when
+ * the model says the records certify no such field. */
+export interface AskedField {
+  phrase: string;
+  entityId: string;
+  fieldId: string | null;
+}
+
+/** What the model was asked for and could not certify (epic #145, R3): a
+ * subject and the trainer's own phrase for the thing — derived from every
+ * `asked` entry linked to no field, reported to the trainer as the records'
+ * boundary, never compiled, never certified. */
 export interface Unavailable {
   entityId: string;
   asked: string;
@@ -349,22 +369,36 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
     rosters.push(built.value);
   }
 
+  // The schema linking (R3b), read strictly like everything else: an entry
+  // that is not a phrase, a subject and a field is malformed. Absent
+  // entirely — a scripted model, the control arm — is an empty mapping, not
+  // an error: the checks that read it simply have nothing to hold to.
+  const asked: AskedField[] = [];
+  if (parsed.asked !== undefined) {
+    if (!Array.isArray(parsed.asked)) return { ok: false, reason: "asked is not a list" };
+    for (const entry of parsed.asked.slice(0, MAX_ASKED)) {
+      if (!isObject(entry) || !isString(entry.phrase) || !isString(entry.entityId) || !isString(entry.fieldId)) {
+        return { ok: false, reason: "an asked entry is malformed" };
+      }
+      asked.push({ phrase: entry.phrase, entityId: entry.entityId, fieldId: entry.fieldId === NO_FIELD ? null : entry.fieldId });
+    }
+  }
+  // A phrase linked to no field is the model saying the records do not hold
+  // it (the R3a abstention, now a structural reading of the mapping rather
+  // than a grammar variant of its own). Lifted out, never compiled.
+  const unavailable: Unavailable[] = asked.flatMap((entry) =>
+    entry.fieldId === null ? [{ entityId: entry.entityId, asked: entry.phrase }] : [],
+  );
+
   const claims: Claim[] = [];
   let folds = 0;
   let route: RouteNomination | undefined;
-  const unavailable: Unavailable[] = [];
   for (const entry of parsed.claims) {
     // A nomination travels in the claims array (one more grammar variant)
     // but is not a claim: it names a deterministic door, and it never
     // reaches compilation. First one wins; the rest are noise.
     if (isObject(entry) && entry.kind === "route" && isString(entry.routeId)) {
       route ??= entry as unknown as RouteNomination;
-      continue;
-    }
-    // An abstention travels the same way (epic #145, R3): the model names
-    // what it was asked for and cannot certify. Lifted out, never compiled.
-    if (isObject(entry) && entry.kind === "unavailable" && isString(entry.entityId) && isString(entry.asked)) {
-      unavailable.push({ entityId: entry.entityId, asked: entry.asked });
       continue;
     }
     const claim = asClaim(entry);
@@ -421,6 +455,7 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
     ok: true,
     draft: { transactionId, claims: distinct, rosters },
     folds,
+    asked,
     ...(route === undefined ? {} : { route }),
     ...(unavailable.length === 0 ? {} : { unavailable }),
   };

@@ -63,6 +63,9 @@ export interface TraceArgs {
    * player gets the certified value instead of a denial; docs/recovery.md,
    * channel 2); `--no-repair` files the first-attempt denial instead. */
   repair: boolean;
+  /** The verifier-in-the-loop retry (docs/routing.md, R3b) — on by default,
+   * the product posture; `--no-feedback` files the first-attempt denial. */
+  feedback: boolean;
   /** Converse with the Center world — kanto-center under its own pack, the
    * realistic-inquiry setting the coverage maps measure. Off by default: the
    * frozen red-blue world stays the tracer's baseline. */
@@ -81,6 +84,7 @@ export function parseTraceArgs(argv: readonly string[]): TraceArgs {
     grounding,
     gatedGrammar: !argv.includes("--loose-grammar"),
     repair: !argv.includes("--no-repair"),
+    feedback: !argv.includes("--no-feedback"),
     center: argv.includes("--center"),
   };
 }
@@ -185,6 +189,24 @@ function narrate(before: SessionState, after: SessionState): string[] {
     // the kernel read the certified one (docs/recovery.md, channel 2).
     lines.push("  [repair] the model mis-recalled a value; the assertion was stripped and the certified value read");
   }
+  if (after.feedbackRetries > before.feedbackRetries) {
+    // The first attempt on the books (docs/routing.md, R3b): whatever filed
+    // above was reached after the kernel's denial was carried back to the
+    // model once, by name.
+    const denials = after.feedbackDenials.slice(before.feedbackDenials.length).join(", ");
+    lines.push(`  [feedback] first attempt denied (${denials}); the denial was carried back to the model once`);
+  }
+  const linking = after.linking;
+  const linkedBefore = before.linking;
+  if (linking.offTargetDropped > linkedBefore.offTargetDropped) {
+    lines.push(`  [linking] ${linking.offTargetDropped - linkedBefore.offTargetDropped} claim(s) dropped as off the asked fields`);
+  }
+  if (linking.contradictions > linkedBefore.contradictions) {
+    lines.push("  [linking] an alias contradiction was asked about instead of answered");
+  }
+  if (linking.staleDropped > linkedBefore.staleDropped) {
+    lines.push(`  [linking] ${linking.staleDropped - linkedBefore.staleDropped} link(s) about an earlier exchange dropped as stale`);
+  }
 
   lines.push(`  [phase] ${describePhase(after)}`);
   return lines;
@@ -287,6 +309,10 @@ function summary(state: SessionState): string {
     `${state.notes.length} note(s), ${state.providerErrors} provider error(s), ` +
     `listing doors ${state.listingActivations.served}/${state.listingActivations.consulted} served` +
     (state.listingActivations.guardDropped > 0 ? ` (+${state.listingActivations.guardDropped} guard-dropped)` : "") +
+    `, linking ${state.linking.mapped} mapped/${state.linking.unlinked} unlinked` +
+    (state.linking.offTargetDropped > 0 ? ` (${state.linking.offTargetDropped} off-target dropped)` : "") +
+    (state.linking.contradictions > 0 ? ` (${state.linking.contradictions} contradiction(s) asked)` : "") +
+    (state.feedbackRetries > 0 ? `, ${state.feedbackRetries} feedback retr${state.feedbackRetries === 1 ? "y" : "ies"}` : "") +
     ", " +
     `${usage.calls} model call(s), $${usage.costUsd.toFixed(4)}${floor}`
   );

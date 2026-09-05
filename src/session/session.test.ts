@@ -742,12 +742,19 @@ describe("the version boundary is a teaching, not a dead end", () => {
   });
 });
 
+/** A listing nomination — the door the model names instead of composing
+ * (the cue that used to read the words for it is gone: R3b, 2026-09-05). */
+const listingNomination = (subject: "catalogue" | "prior-roster", n = 10) =>
+  JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "listing", subject, n }] });
+
 describe("an anaphoric follow-up carries its antecedent (found live, 2026-08-31)", () => {
-  it("shows the model the prior ask when the current words name nothing, and the listing certifies", async () => {
+  it("shows the model the prior ask when the current words name nothing, and a prior-roster nomination lists from the record", async () => {
     // "can you list at least 10 for me?" reached the model bare and could
     // only abstain — ten of what? The gate: only an ask naming no species
     // and no type gets the earlier words appended, so every subject-naming
-    // ask keeps its clean single-ask prompt.
+    // ask keeps its clean single-ask prompt. The set itself never comes
+    // from the model's head: a prior-roster nomination composes it from
+    // the previous exchange's certified roster.
     const seenPrompts: string[] = [];
     const countAnswer = JSON.stringify({
       rosters: [{ id: "all-species", criteria: { all: [] } }],
@@ -758,7 +765,7 @@ describe("an anaphoric follow-up carries its antecedent (found live, 2026-08-31)
       if (request.purpose !== "answer") return "decline";
       answerCalls += 1;
       seenPrompts.push(request.prompt);
-      return countAnswer;
+      return request.prompt.includes("list at least 10") ? listingNomination("prior-roster", 10) : countAnswer;
     });
     const d = deps(provider);
 
@@ -766,10 +773,9 @@ describe("an anaphoric follow-up carries its antecedent (found live, 2026-08-31)
     expect(state.records).toHaveLength(1);
     state = await say(state, "can you list at least 10 for me?", d);
 
-    // The listing is composed from the record — the previous exchange's
-    // certified roster — with no model call at all: the weak model, handed
-    // the antecedent live, still passed, and the set was never in its head.
-    expect(answerCalls).toBe(1);
+    // One call for the nomination; the listing is composed from the record.
+    expect(answerCalls).toBe(2);
+    expect(seenPrompts[1]).toContain("how many species are out there?");
     expect(state.records).toHaveLength(2);
     const record = state.records[1]!;
     expect(record.outcome.status).toBe("answered");
@@ -791,7 +797,7 @@ describe("an anaphoric follow-up carries its antecedent (found live, 2026-08-31)
     let scopeCalls = 0;
     const provider = new ScriptedProvider("scripted:cold-list", (request) => {
       if (request.purpose === "scope") { scopeCalls += 1; return "decline"; }
-      return countAnswer;
+      return request.prompt.includes("list a few") ? listingNomination("prior-roster") : countAnswer;
     });
     const d = deps(provider);
 
@@ -812,17 +818,17 @@ describe("an anaphoric follow-up carries its antecedent (found live, 2026-08-31)
     expect(scopeCalls).toBe(scopeCallsBefore);
   });
 
-  it("mints the catalogue roster for a bare species-listing ask, even with no roster on file", async () => {
+  it("a catalogue nomination mints the catalogue roster for a bare species-listing ask, even with no roster on file", async () => {
     // Found live: lesson, lesson, "give me a list of those species" — no
-    // roster in the record, route stood down, model abstained twice. A bare
-    // listing ask about species/Pokémon wants the catalogue itself, which
-    // the kernel already spells as the empty criteria list.
+    // roster in the record and the model abstained twice. A bare listing
+    // ask about species/Pokémon wants the catalogue itself, which the kernel
+    // already spells as the empty criteria list; the nomination names it.
     const lesson = JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-pokemon" }] });
     let answerCalls = 0;
     const provider = new ScriptedProvider("scripted:lessons", (request) => {
       if (request.purpose !== "answer") return "decline";
       answerCalls += 1;
-      return lesson;
+      return request.prompt.includes("list of those species") ? listingNomination("catalogue") : lesson;
     });
     const d = deps(provider);
 
@@ -834,15 +840,18 @@ describe("an anaphoric follow-up carries its antecedent (found live, 2026-08-31)
     expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
     state = await say(state, "Red and Blue", d);
 
-    expect(answerCalls).toBe(callsBefore); // composed from the registry, no model call
+    // The nomination at discovery, and once more at the answer hop — the
+    // version question intervened, and a draft never survives a question
+    // (drive's reuse rule). The set itself is composed from the registry.
+    expect(answerCalls).toBe(callsBefore + 2);
     const record = state.records[state.records.length - 1]!;
     expect(record.outcome.status).toBe("answered");
     expect(record.manifest?.claims.filter((claim) => claim.kind === "membership")).toHaveLength(10);
     expect(record.manifest?.claims.some((claim) => claim.kind === "count")).toBe(true);
   });
 
-  it("answers 'what are the Pokemon species?' as the listing it is, not an adjacent lesson", async () => {
-    const provider = scripted("mute", () => "decline");
+  it("answers 'what are the Pokemon species?' as the listing the model nominates, never a set the words decided", async () => {
+    const provider = scripted("nominator", (purpose) => (purpose === "answer" ? listingNomination("catalogue") : "decline"));
     const d = deps(provider);
     let state = await say(startSession(), "ok. what are the Pokemon species?", d);
     expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
@@ -850,6 +859,9 @@ describe("an anaphoric follow-up carries its antecedent (found live, 2026-08-31)
     const record = state.records[0]!;
     expect(record.outcome.status).toBe("answered");
     expect(record.manifest?.claims.some((claim) => claim.kind === "membership")).toBe(true);
+    // A mute model earns no listing at all: no cue reads the words any more.
+    const silent = await say(await say(startSession(), "ok. what are the Pokemon species?", deps(scripted("mute", () => "decline"))), "Red and Blue", deps(scripted("mute", () => "decline")));
+    expect(silent.records.some((entry) => entry.manifest?.claims.some((claim) => claim.kind === "membership"))).toBe(false);
   });
 
   it("stands down when the set is qualified — a wrong-subject certificate would be worse than a pass", async () => {
@@ -1038,8 +1050,8 @@ describe("porch round five: stale cards, social closes, rarity, direction", () =
     expect(last?.text).toContain("certified snapshot");
   });
 
-  it("'whats the rarest pokemon?' mints the legendary roster and lists it", async () => {
-    const provider = scripted("mute", () => "decline");
+  it("'whats the rarest pokemon?' nominated as a catalogue listing mints the legendary roster — the set comes from the words' qualifier", async () => {
+    const provider = scripted("nominator", (purpose) => (purpose === "answer" ? listingNomination("catalogue") : "decline"));
     const d = deps(provider);
     let state = await say(startSession(), "whats the rarest pokemon?", d);
     expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
@@ -1170,70 +1182,302 @@ describe("porch round ten: the comparative ask binds its own basis", () => {
   });
 });
 
-describe("R3: the records' boundary is taught, never substituted for", () => {
+describe("R3b: schema linking — the model links each phrase to a field, the driver holds the claims to it", () => {
   const boundaryLesson = () => world.pack.recordsBoundary?.lessonId;
+  const PROFILE_SCOPE = { version: "red-blue", region: "kanto", badgeLevel: 8 } as const;
+  /** A reply that links the asked phrase to no field and then substitutes a
+   * fact nobody asked for — R2's bank finding, in one JSON object. */
+  const substitution = (phrase: string, entityId: string) =>
+    JSON.stringify({
+      asked: [{ phrase, entityId, fieldId: "none" }],
+      rosters: [],
+      claims: [{ kind: "fact", entityId, factId: "types" }],
+    });
 
-  it("a question about a thing the records do not hold gets the boundary lesson — no model call, on the discovery hop", async () => {
-    let calls = 0;
-    const provider = scripted("mute", () => { calls += 1; return "decline"; });
+  it("a phrase linked to no field teaches the boundary lesson on the discovery hop, and the substituted fact is dropped", async () => {
+    const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : substitution("how tall", "onix")));
     const state = await say(startSession(), "how tall is Onix?", deps(provider));
-    expect(calls).toBe(0);
     const record = state.records[state.records.length - 1]!;
     expect(record.outcome.status).toBe("answered");
     expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: boundaryLesson() }]);
     expect(verifyReplay(world, record).allowed).toBe(true);
+    // The boundary named in the trainer's own phrase, and the substitution counted.
+    const boundaryNote = state.notes.find((n) => n.text.includes("\"how tall\" for onix"));
+    expect(boundaryNote?.tone).toBe("abstention");
+    expect(state.linking).toMatchObject({ mapped: 1, offTargetDropped: 1 });
+    expect(state.usage.calls).toBe(1);
   });
 
-  it("with scope pre-set, the boundary still outranks the model on the answer hop", async () => {
-    let calls = 0;
-    const provider = scripted("mute", () => { calls += 1; return "decline"; });
+  it("with scope pre-set, the same reading holds on the answer hop", async () => {
+    const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : substitution("weight", "snorlax")));
     const d = deps(provider);
-    let state = await setProfile(startSession(), { version: "red-blue", region: "kanto", badgeLevel: 8 }, d);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
     state = await say(state, "what's Snorlax's weight?", d);
-    expect(calls).toBe(0);
-    expect(state.records[state.records.length - 1]?.manifest?.claims[0]).toMatchObject({ kind: "explanation", blockId: boundaryLesson() });
+    const record = state.records[state.records.length - 1]!;
+    expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: boundaryLesson() }]);
+    expect(state.notes.some((n) => n.text.includes("\"weight\" for snorlax"))).toBe(true);
   });
 
-  it("a boundary word beside a species AND a move is a learnset question — the model owns it", async () => {
-    let calls = 0;
-    const provider = scripted("mute", () => { calls += 1; return "decline"; });
-    await say(startSession(), "playing red. does pikachu have the ability to learn surf?", deps(provider));
-    expect(calls).toBeGreaterThan(0);
-  });
-
-  it("the model's own 'unavailable' closes the exchange as an honest pass that names the boundary", async () => {
-    const unavailable = JSON.stringify({ rosters: [], claims: [{ kind: "unavailable", entityId: "onix", asked: "cry" }] });
-    const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : unavailable));
-    const d = deps(provider);
-    let state = await setProfile(startSession(), { version: "red-blue", region: "kanto", badgeLevel: 8 }, d);
-    // "noise" is not a boundary token, so this is the model's own abstention, not the pack's door.
-    state = await say(state, "what noise does Onix make?", d);
-    expect(state.records).toHaveLength(0);
-    const last = state.notes[state.notes.length - 1];
-    expect(last?.tone).toBe("abstention");
-    expect(last?.text).toContain("cry for onix");
-    expect(last?.detail).toContain("uncertified");
-    expect(state.phase.kind).toBe("gathering");
-  });
-
-  it("'unavailable' beside real claims rides along as a note while the claims certify", async () => {
+  it("a null link beside a linked claim is silent — the claim certifies, and the note is for a null link that is the whole answer", async () => {
     const partial = JSON.stringify({
-      rosters: [],
-      claims: [
-        { kind: "fact", entityId: "onix", factId: "types" },
-        { kind: "unavailable", entityId: "onix", asked: "cry" },
+      asked: [
+        { phrase: "what type", entityId: "onix", fieldId: "types" },
+        { phrase: "what noise", entityId: "onix", fieldId: "none" },
       ],
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "onix", factId: "types" }],
     });
     const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : partial));
     const d = deps(provider);
-    let state = await setProfile(startSession(), { version: "red-blue", region: "kanto", badgeLevel: 8 }, d);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
     state = await say(state, "what type is Onix, and what noise does it make?", d);
     const record = state.records[state.records.length - 1]!;
     expect(record.outcome.status).toBe("answered");
-    // The kernel fills the certified value on commit; the shape is what the test pins.
     expect(record.manifest?.claims).toHaveLength(1);
     expect(record.manifest?.claims[0]).toMatchObject({ kind: "fact", entityId: "onix", factId: "types" });
-    expect(state.notes.some((n) => n.detail?.includes("uncertified"))).toBe(true);
+    // Found live: every count and listing ask links its "how many" / "list
+    // ten" to none beside the set operation that answers it, so a null link
+    // beside an answer earns no boundary note.
+    expect(state.notes.some((n) => n.tone === "abstention")).toBe(false);
+    expect(state.linking.offTargetDropped).toBe(0);
+  });
+
+  it("a prior-roster nomination yields to the ask's own qualifier", async () => {
+    // Found live (2026-09-05, first run without the cue door): "whats the
+    // rarest pokemon?" nominated the prior roster and was served the fire
+    // roster of the exchange before. The words qualify a set; the words win.
+    const nominate = (subject: string) => JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "listing", subject, n: 10 }] });
+    const provider = new ScriptedProvider("prior", (request) =>
+      request.purpose !== "answer" ? "decline" : request.prompt.includes("rarest") ? nominate("prior-roster") : nominate("catalogue"),
+    );
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "show me all the fire types", d);
+    state = await say(state, "whats the rarest pokemon?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.manifest?.rosters[0]?.id).toBe("legendary-pokemon");
+  });
+
+  it("R1: a fact about a field the model did not link is dropped, and the linked one certifies", async () => {
+    const reply = JSON.stringify({
+      asked: [{ phrase: "how fast", entityId: "pikachu", fieldId: "base-speed" }],
+      rosters: [],
+      claims: [
+        { kind: "fact", entityId: "pikachu", factId: "base-speed" },
+        { kind: "fact", entityId: "pikachu", factId: "base-hp" },
+      ],
+    });
+    const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : reply));
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims.map((claim) => (claim.kind === "fact" ? claim.factId : claim.kind))).toEqual(["base-speed"]);
+    expect(state.linking.offTargetDropped).toBe(1);
+  });
+
+  it("R1: a reply emptied of everything but off-target facts is an honest pass, never a certificate", async () => {
+    const reply = JSON.stringify({
+      asked: [{ phrase: "how fast", entityId: "pikachu", fieldId: "base-speed" }],
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "pikachu", factId: "base-hp" }],
+    });
+    const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : reply));
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    expect(state.records).toHaveLength(0);
+    expect(state.notes[state.notes.length - 1]?.text).toContain("things you didn't ask for");
+    expect(state.phase.kind).toBe("gathering");
+  });
+
+  it("R1 reaches set claims through their roster: a listing of the type asked about the chart is off the ask", async () => {
+    // Found live (strong model, 2026-09-05): "what beats water types?" came
+    // back as the water roster listed and counted — certified members, wrong
+    // question. The roster selects on `types`; the model linked `type-chart`.
+    const reply = JSON.stringify({
+      asked: [{ phrase: "what beats water", entityId: "water", fieldId: "type-chart" }],
+      rosters: [{ id: "water-pokemon", criteria: { all: [{ kind: "has-type", type: "water" }] } }],
+      claims: [
+        { kind: "membership", rosterId: "water-pokemon", entityId: "squirtle", asserted: true },
+        { kind: "count", rosterId: "water-pokemon" },
+      ],
+    });
+    const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : reply));
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "what beats water types?", d);
+    expect(state.records).toHaveLength(0);
+    expect(state.linking.offTargetDropped).toBe(2);
+    expect(state.notes[state.notes.length - 1]?.text).toContain("things you didn't ask for");
+  });
+
+  it("a link whose words come only from an earlier exchange is stale, and its claims fall with it", async () => {
+    // Found live (both models, 2026-09-05): shown the earlier asks as context
+    // for "what's a gym badge?", the model linked and answered them again.
+    let turn = 0;
+    const provider = scripted("echoing", (purpose) => {
+      if (purpose === "scope") return "decline";
+      turn += 1;
+      if (turn === 1) return JSON.stringify({ asked: [{ phrase: "speed", entityId: "pikachu", fieldId: "base-speed" }], rosters: [], claims: [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }] });
+      return JSON.stringify({
+        asked: [
+          { phrase: "what's Pikachu's Speed", entityId: "pikachu", fieldId: "base-speed" },
+          { phrase: "gym badge", entityId: "gym-badge", fieldId: "none" },
+        ],
+        rosters: [],
+        claims: [
+          { kind: "fact", entityId: "pikachu", factId: "base-speed" },
+          { kind: "explanation", blockId: "what-is-badge" },
+        ],
+      });
+    });
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "what's Pikachu's Speed?", d);
+    state = await say(state, "what's a gym badge?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-badge" }]);
+    expect(state.linking.staleDropped).toBe(1);
+    // A lesson answers the concept; the null link earns no boundary note beside it.
+    expect(state.notes.filter((n) => n.tone === "abstention")).toHaveLength(0);
+  });
+
+  it("R3: an alias contradiction is asked about, not answered — the dictionary's words can only make a question", async () => {
+    const reply = JSON.stringify({
+      asked: [{ phrase: "how fast", entityId: "pikachu", fieldId: "base-attack" }],
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "pikachu", factId: "base-attack" }],
+    });
+    const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : reply));
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    expect(state.records).toHaveLength(0);
+    const last = state.notes[state.notes.length - 1];
+    expect(last?.tone).toBe("abstention");
+    expect(last?.text).toContain("Attack");
+    expect(last?.text).toContain("Speed");
+    expect(state.linking.contradictions).toBe(1);
+  });
+
+  it("a null link on a subject the records never certified is the off-domain redirect, not the boundary lesson", async () => {
+    // Found by the first R3b bank leg: every off-domain question ("what's
+    // the weather?") linked its phrase to none and taught the boundary
+    // lesson — a certified page for small talk.
+    const reply = JSON.stringify({ asked: [{ phrase: "the weather", entityId: "weather", fieldId: "none" }], rosters: [], claims: [] });
+    const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : reply));
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "what's the weather like today?", d);
+    expect(state.records).toHaveLength(0);
+    expect(state.notes[state.notes.length - 1]?.text).toContain("couldn't line that up");
+    // One note, not two: the boundary note is never written for a subject
+    // the records do not certify (dogfood, 2026-09-05: "tell me about this"
+    // drew both).
+    expect(state.notes.filter((n) => n.tone === "abstention")).toHaveLength(1);
+    // And on the discovery hop, the same.
+    const cold = await say(startSession(), "what's the weather like today?", deps(provider));
+    expect(cold.records).toHaveLength(0);
+    expect(cold.notes[cold.notes.length - 1]?.text).toContain("couldn't line that up");
+  });
+
+  it("a reply that links nothing is held to nothing — the measured control, counted as unlinked", async () => {
+    const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : thunderboltAnswer()));
+    const state = await say(startSession(), `${PROFILE} What is Thunderbolt's power?`, deps(provider));
+    expect(state.records[0]?.outcome.status).toBe("answered");
+    expect(state.linking).toMatchObject({ mapped: 0, unlinked: 1 });
+  });
+});
+
+describe("R3b: the verifier-in-the-loop retry — a denial the kernel can name is carried back once", () => {
+  const fabricated = JSON.stringify({ rosters: [], claims: [{ kind: "fact", entityId: "gym-badge", factId: "types" }] });
+  const lesson = JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-badge" }] });
+
+  /** Fabricates an entity on every answer call until it has been told the
+   * denial; then teaches. The porch's "what's a gym badge?", scripted. */
+  function correcting(): { provider: ModelProvider; prompts: string[] } {
+    const prompts: string[] = [];
+    const provider = new ScriptedProvider("correcting", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      prompts.push(request.prompt);
+      return request.prompt.includes("refused by the verifier") ? lesson : fabricated;
+    });
+    return { provider, prompts };
+  }
+
+  it("turns a first-attempt IA-3 into the lesson on the second call — and keeps the first denial on the books", async () => {
+    const { provider, prompts } = correcting();
+    const d = { ...deps(provider), feedback: true };
+    let state = await setProfile(startSession(), { version: "red-blue", region: "kanto", badgeLevel: 8 }, d);
+    state = await say(state, "what's a gym badge?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-badge" }]);
+    expect(state.feedbackRetries).toBe(1);
+    expect(state.feedbackDenials).toEqual(["IA-3/fabricated-entity"]);
+    // The retry's prompt carries the denial by name, in fixed wording; the
+    // first prompt carried nothing of the kind.
+    expect(prompts).toHaveLength(2);
+    expect(prompts[0]).not.toContain("refused by the verifier");
+    expect(prompts[1]).toContain("refused by the verifier, by name");
+    expect(prompts[1]).toContain("IA-3/fabricated-entity");
+    expect(prompts[1]).toContain('"gym-badge" is not certified');
+    expect(verifyReplay(world, record).allowed).toBe(true);
+  });
+
+  it("reaches the answer hop through the version question too — the discovery reply is not what is retried", async () => {
+    const { provider, prompts } = correcting();
+    const d = { ...deps(provider), feedback: true };
+    let state = await say(startSession(), "what's a gym badge?", d);
+    // The fabricated fact reads as intent at discovery: the version is asked.
+    expect(state.phase.kind).toBe("asking");
+    state = await say(state, "Red", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-badge" }]);
+    // Discovery, the answer hop's first attempt, and the one retry.
+    expect(prompts).toHaveLength(3);
+    expect(state.feedbackRetries).toBe(1);
+  });
+
+  it("without the door, the first denial files as it always did", async () => {
+    const { provider, prompts } = correcting();
+    const d = deps(provider);
+    let state = await setProfile(startSession(), { version: "red-blue", region: "kanto", badgeLevel: 8 }, d);
+    state = await say(state, "what's a gym badge?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("denied");
+    expect(state.feedbackRetries).toBe(0);
+    expect(prompts).toHaveLength(1);
+  });
+
+  it("a second denial files as a denial: no passing by trial and error", async () => {
+    const provider = scripted("stubborn", (purpose) => (purpose === "scope" ? "decline" : fabricated));
+    const d = { ...deps(provider), feedback: true };
+    let state = await setProfile(startSession(), { version: "red-blue", region: "kanto", badgeLevel: 8 }, d);
+    state = await say(state, "what's a gym badge?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("denied");
+    expect(state.feedbackRetries).toBe(1);
+    expect(state.usage.calls).toBe(2);
+  });
+
+  it("leaves the repair's own class alone: an all-fact-mismatch denial is stripped, not fed back", async () => {
+    const wrongSpeed = JSON.stringify({
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "pikachu", factId: "base-speed", asserted: { kind: "number", value: 1 } }],
+    });
+    const provider = scripted("misremembers", (purpose) => (purpose === "scope" ? "decline" : wrongSpeed));
+    const d = { ...deps(provider), feedback: true, repair: true };
+    let state = await setProfile(startSession(), { version: "red-blue", region: "kanto", badgeLevel: 8 }, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    expect(state.records[state.records.length - 1]?.outcome.status).toBe("answered");
+    expect(state.repairs).toBe(1);
+    expect(state.feedbackRetries).toBe(0);
+    expect(state.usage.calls).toBe(1);
   });
 });
 
@@ -1386,11 +1630,10 @@ describe("dogfood 2026-09-04: a superlative ask is never served the previous lis
       rosters: [{ id: "all-pokemon", criteria: { all: [] } }],
       claims: [{ kind: "ranking", rosterId: "all-pokemon", basis: "base-speed", direction: "highest" }],
     });
-    const provider = scripted("ranker", (purpose) => (purpose === "scope" ? "decline" : ranking));
+    const provider = new ScriptedProvider("ranker", (request) =>
+      request.purpose === "scope" ? "decline" : request.prompt.includes("fastest") ? ranking : listingNomination("catalogue"),
+    );
     const d = deps(provider);
-    // Scope from its own exchange, as the live trainer gave it. (A version
-    // statement sharing the listing ask's utterance un-bares it for the
-    // door — one more door edge of the class docs/routing.md R3 retires.)
     let state = await say(startSession(), "im playing red", d);
     state = await say(state, "give me a list of Pokemon species", d);
     const listing = state.records[state.records.length - 1]!;
@@ -1583,8 +1826,8 @@ describe("porch round eleven: cards do not eat questions", () => {
 });
 
 describe("porch round six: the listing keeps to its subject", () => {
-  it("'show me all the fire types' mints the fire roster, never the catalogue", async () => {
-    const provider = scripted("mute", () => "decline");
+  it("'show me all the fire types' nominated as a listing mints the fire roster, never the catalogue", async () => {
+    const provider = scripted("nominator", (purpose) => (purpose === "answer" ? listingNomination("catalogue") : "decline"));
     const d = deps(provider);
     let state = await say(startSession(), "show me all the fire types", d);
     expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
@@ -1620,7 +1863,9 @@ describe("porch round six: the listing keeps to its subject", () => {
     // The widened cue briefly made bare "what" a listing verb, and the meta
     // question reused the fire roster from the exchange before it.
     const lesson = JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-can-you-ask" }] });
-    const provider = scripted("teacher", (purpose) => (purpose === "answer" ? lesson : "decline"));
+    const provider = new ScriptedProvider("teacher", (request) =>
+      request.purpose !== "answer" ? "decline" : request.prompt.includes("what can you do") ? lesson : listingNomination("catalogue"),
+    );
     const d = deps(provider);
     let state = await say(startSession(), "show me all the fire types", d);
     state = await say(state, "Red and Blue", d);
@@ -1666,10 +1911,12 @@ describe("porch round six: the listing keeps to its subject", () => {
       rosters: [{ id: "all-species", criteria: { all: [] } }],
       claims: [{ kind: "membership", rosterId: "all-species", entityId: "bulbasaur", asserted: true }],
     });
-    const provider = scripted("lazy", (purpose) => (purpose === "answer" ? wrongSet : "decline"));
+    const provider = new ScriptedProvider("lazy", (request) =>
+      request.purpose !== "answer" ? "decline" : request.prompt.includes("learn fly") ? wrongSet : listingNomination("catalogue"),
+    );
     const d = deps(provider);
 
-    // A served cue listing…
+    // A served listing nomination…
     let state = await say(startSession(), "what are the Pokemon species?", d);
     state = await say(state, "Red and Blue", d);
     expect(state.listingActivations.served).toBeGreaterThanOrEqual(1);

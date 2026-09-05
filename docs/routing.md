@@ -112,7 +112,10 @@ pack), answered deterministically before any model reads the ask; and
 abstention representable in-grammar (`unavailable`), lifted out by the
 decoder and reported as the boundary, never certified. The bank scorer
 reads a record that taught the boundary lesson alone as the honest pass
-it is. **R3b** is the rest of this slice: a recovery for the strong
+it is. (Both halves were superseded on the same day by R3b's schema
+linking below: the tokens are deleted, and the abstention is now a `none`
+link in the `asked` mapping rather than a grammar variant of its own; the
+lesson and the scorer's reading of it stay.) **R3b** is the rest of this slice: a recovery for the strong
 model's concept-noun fabrications (a fact about "gym badge" as if it
 were an entity — refused rightly under IA-3, the lesson left untaught),
 counted apart like the strip-assertion repair; and the dispatch
@@ -352,8 +355,8 @@ budget this design needs.
 
 | today (driver code) | size | under R3b |
 |---|---|---|
-| listing verb/wh/noun cues, stop-words, bareness reading | ~180 lines | listing nomination + qualified-set executor guard (kept) |
-| prior-roster door, answer-hop listing door | ~60 | `subject: prior-roster` nomination; executor guard (kept) |
+| listing verb/wh/noun cues, stop-words, bareness reading | ~180 lines | listing nomination + qualified-set executor guard (kept). *Cues deleted 2026-09-05; the bareness reading stays as the executor's guard.* |
+| prior-roster door, answer-hop listing door | ~60 | `subject: prior-roster` nomination; executor guard (kept). *Both doors deleted 2026-09-05.* |
 | deflected-profile dispatch | ~40 | profile nomination; move-naming guard (kept) |
 | eligibility cue (`ADVISORY_WORDING`) | ~30 | eligibility nomination; the pack's restriction rules decide (data) |
 | `recordsBoundary` tokens | 70 tokens | R2: null mapping → unavailable; the lesson stays (data) |
@@ -361,13 +364,27 @@ budget this design needs.
 | scope vocabulary | pack data | optional: the profile is the production path (R2); chat inference stays as an override, still data |
 | question openers, interpretation furniture, social cues | ~90 | English function words and social register, not domain words — allowed by the gate by name |
 
-**The gate: no domain word in `src/`.** A CI test that reads every file
-under `src/` and `app/` and fails on any literal naming the domain —
-species, moves, types, rarity words, version names, "Pokémon", "badge",
-"gym", "League" — outside comments. It fails at **33 sites today**; R3b
-drives it to 0 and it stays there. It is the instrument the activation
-counter was: a number that moves per commit. A green gate on the Pokémon
-world is what lets the next world start from the same zero.
+**The gate: no domain word in the routing path.** A CI test
+(`src/testing/domain-words.test.ts`) that reads every string, template and
+regex literal — never a comment — in the files whose literals decide an
+ask's shape (the driver, the propose steps' prompt and grammar, the decoder,
+the retrieval front door, the scope vocabulary's reader; the list is
+`ROUTING_PATH`) and counts the ones naming the domain. The word list is
+derived, not written: every species, move and item id and type name in both
+snapshots, the packs' version and region tokens, and the world nouns the
+pack's copy uses ("Pokémon", "badge", "gym", "League", the rarity words). The
+count is pinned and ratchets down only: going up fails as "move it to
+data", going down without the pin fails as "lower the pin", so the ledger
+reads per commit. Landed 2026-09-05 at **90 sites** — 38 in the driver, 33
+in the retrieval front door's hand-written item lexicon, 13 in the answer
+prompt's copy, the rest in the grammar, the gate cue list and the scope
+reader's denial text. (The design's earlier "33" counted the driver's
+regexes alone.) The crucible's world transcripts, the demo script, the
+harness corpora and the app's copy are this world's test data and copy, not
+routing, and are outside the path by name. R3b drives the number to 0 and
+it stays there. It is the instrument the activation counter was; a green
+gate on the Pokémon world is what lets the next world start from the same
+zero.
 
 **The effort ledger, and how X% gets a number.** The port log's
 pre-registered budget per seam gains a category column:
@@ -388,7 +405,7 @@ ledger filled as it lands, gate at zero throughout, the bank written by
 engineering days ÷ total days, against the 30-human-day prior the playbook
 re-derived.
 
-**R3b's gate, as numbers.** Domain literals in `src/`: 33 → 0.
+**R3b's gate, as numbers.** Domain literals in the routing path: 90 → 0.
 Needs-data honest passes: at least R3a's 70%, now structural. Answerable
 resolution on both models: at least the current band. Enforcement: zero on
 every leg. Off-target claims dropped, alias contradictions asked, feedback
@@ -403,7 +420,8 @@ still feel dumb?* A bank leg follows a stop, never replaces it — the two
 slices before this one were measured before they were driven, which is the
 wrong order for a "feels dumb" problem.
 
-1. **Gate** (one commit; fails at 33 — the baseline). No stop.
+1. **Gate** (one commit; pinned at 90 — the baseline). No stop. *Landed
+   2026-09-05.*
 2. **Schema linking: the data dictionary + the `asked` mapping + the five
    checks**, boundary tokens
    deleted, and **the verifier-in-the-loop retry** (small enough to ride
@@ -411,6 +429,22 @@ wrong order for a "feels dumb" problem.
    "what's its Speed?", "what type is it?" — substitutions gone without a
    word-list; the honest pass names what was asked; "what's a gym badge?"
    teaches the lesson on the second round instead of dying on the first.
+   *Landed 2026-09-05:* the dictionary lives in the pack (`dictionary`, 24
+   entries in the standard world, 40 in the Center's; the loader pins it to
+   the registry both ways and refuses a shared alias within a subject), the
+   grammar carries `asked` over the dictionary's ids plus the reserved
+   `none`, the decoder reads a `none` link as the abstention R3a's grammar
+   variant carried (that variant is retired), and `src/session/linking.ts`
+   holds the checks: R1 drops off-target field claims and counts them, R2
+   teaches the boundary lesson from a null link, R3 turns an alias
+   contradiction into a question and never an answer, read per the subject
+   the ask names (a move's word is no evidence about a species). The
+   feedback retry is `SessionDeps.feedback` — on in the live page and the
+   tracer, off in the banks until their leg — with the first denial kept in
+   `feedbackDenials`. The seventy tokens are gone; the gate reads 77 with
+   the listing door's deletion below. Numbers in findings §19 ("R3b, first
+   slice"): 97/137 on the strong model with the retry on, needs-data 74%,
+   honest refusal 71%, enforcement held.
 3. **Clarification nomination**, the model-phrased scope question, and the
    two-per-ask chain cap. → **Dogfood stop 2:** ambiguous asks ("the fast
    one", "is it strong?") get a real question with real options; a second
@@ -421,7 +455,12 @@ wrong order for a "feels dumb" problem.
    stops.
 5. **Delete the dispatch doors one at a time**, a bank leg after each so a
    regression names its door. → **Dogfood stop 4** after the listing door
-   goes (the porch's most-trodden path).
+   goes (the porch's most-trodden path). *The listing cue door went first,
+   on 2026-09-05, ahead of its turn: the first schema-linking run showed it
+   reading "what beats water types?" as a listing and serving the water
+   roster before any model saw the ask — a certified wrong shape the new
+   R1 check could only have caught on the model path. Its executor and
+   guards stay as the `listing` nomination; the gate read 77 after.*
 6. **Both-model legs**, N=3 on the strong model, plus the reasoning-mode
    leg as an experiment; findings filed with `feedbackRetries` beside
    `repairs`; the gate at 0.

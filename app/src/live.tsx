@@ -362,8 +362,13 @@ export function Live() {
   // The two recall doors, dogfoodable per session (docs/scale.md, S1): both
   // change only what the model is asked, never what may commit, so flipping
   // them mid-session is safe — the next exchange simply walks the other door.
-  const [retrievalOn, setRetrievalOn] = useState(false);
-  const [gatedOn, setGatedOn] = useState(false);
+  // On by default: the product posture the tracer and the banks measure
+  // (findings §17, §19). Found by dogfood (2026-09-05): with both off, "which
+  // pokemon is the fastest?" certified a type count and eight game rules the
+  // gated grammar would never have offered — a live page measuring a
+  // different system from the one the numbers describe.
+  const [retrievalOn, setRetrievalOn] = useState(true);
+  const [gatedOn, setGatedOn] = useState(true);
   const devRef = useRef(dev);
   useEffect(() => {
     devRef.current = dev;
@@ -386,6 +391,9 @@ export function Live() {
       world: demoWorld(),
       provider: setup.trace.tap(setup.provider),
       now: clock,
+      // The verifier-in-the-loop retry is the product posture (docs/routing.md,
+      // R3b): a denial the kernel can name is carried back to the model once.
+      feedback: true,
       ...(retrievalOn ? { retrieval: true } : {}),
       ...(gatedOn ? { gatedGrammar: true } : {}),
     };

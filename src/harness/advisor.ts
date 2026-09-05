@@ -15,7 +15,7 @@
 
 import type { ScopeDimension, ScopeEvent, ScopeTranscript, TrainerScope } from "../kernel/contracts.js";
 import type { ManifestContext } from "../kernel/manifest.js";
-import type { AccordPack } from "../kernel/pack.js";
+import { type AccordPack, type DictionaryEntry, type DictionarySubject, NO_FIELD } from "../kernel/pack.js";
 import { MOVE_FACT_IDS, SPECIES_FACT_IDS , ITEM_FACT_IDS, STATUS_CONDITIONS } from "../kernel/registry.js";
 import { candidateDigest } from "../kernel/scope.js";
 import { type AnswerDecode, decodeAnswer, decodeCandidate } from "./decode.js";
@@ -87,6 +87,24 @@ function scopePrompt(pack: AccordPack, missing: readonly ScopeDimension[], said:
  * The whole block is part of the run artifact by design: a reader can see
  * exactly what the model was and was not told.
  */
+/** The dictionary as the model reads it: every certified field by id, with
+ * its name and one line of description, grouped by the subject whose field it
+ * is. Ids only — the aliases are the driver's cross-check, not a hint. */
+function dictionaryLines(dictionary: readonly DictionaryEntry[], items: boolean): string[] {
+  const heading: Record<DictionarySubject, string> = {
+    species: "about a species (entityId is a species id):",
+    move: "about a move (entityId is a move id):",
+    item: "about an item (entityId is an item id):",
+    type: "about type effectiveness (entityId is a species or a type; answer it with a matchup claim, never a fact):",
+  };
+  const subjects: DictionarySubject[] = items ? ["species", "move", "item", "type"] : ["species", "move", "type"];
+  return subjects.flatMap((subject) => {
+    const fields = dictionary.filter((entry) => entry.subject === subject);
+    if (fields.length === 0) return [];
+    return [`  ${heading[subject]}`, ...fields.map((entry) => `    ${entry.id} — ${entry.name}: ${entry.description}`)];
+  });
+}
+
 function answerPrompt(
   scope: TrainerScope | undefined,
   asks: readonly string[],
@@ -96,6 +114,8 @@ function answerPrompt(
   lessons: readonly string[],
   rules: readonly { id: string; label: string }[],
   reference: string | undefined,
+  dictionary: readonly DictionaryEntry[],
+  feedback: readonly string[] | undefined,
   items = false, itemCategories: readonly string[] = [],
 ): string {
   return [
@@ -138,6 +158,21 @@ function answerPrompt(
     "The trainer's own words:",
     ...asks.map((line) => `  - ${line}`),
     "",
+    // The verifier-in-the-loop retry (docs/routing.md, R3b): the previous
+    // reply's denial, by name, in fixed wording the driver derives from the
+    // violations — never free prose, so the record shows exactly what the
+    // model was told and a reader can replay the reasoning.
+    ...(feedback === undefined || feedback.length === 0
+      ? []
+      : [
+          "Your previous answer to these words was refused by the verifier, by name:",
+          ...feedback.map((line) => `  - ${line}`),
+          "Do not repeat the refused claim. Only the ids in the closed lists below resolve.",
+          "If the thing asked about is not one of them, link its phrase to \"none\" in \"asked\"",
+          "and claim nothing — unless a lesson squarely answers the question, in which case",
+          "teach that lesson; a lesson that is merely adjacent is worse than no claim.",
+          "",
+        ]),
     "Answer what they asked, and assert nothing they did not: an unrequested",
     "claim is one more thing that can be wrong, and one wrong claim refuses the",
     "whole answer. Omit anything you cannot support rather than guess. At most",
@@ -148,7 +183,25 @@ function answerPrompt(
     "count, a stat question a fact, a weakness question a matchup. Reach for a",
     "lesson only when no such claim fits.",
     "",
-    'Reply with one JSON object, {"rosters": [...], "claims": [...]}, and nothing else.',
+    ...(dictionary.length === 0
+      ? ['Reply with one JSON object, {"rosters": [...], "claims": [...]}, and nothing else.']
+      : [
+          // Schema linking (docs/routing.md, R3b): the model says what each
+          // phrase of the ask is about before it says anything about it.
+          // The driver holds the claims to this — a claim about a field not
+          // linked is dropped — so "true but not what you asked" cannot be
+          // stated in this grammar without the mapping contradicting it.
+          'Reply with one JSON object, {"asked": [...], "rosters": [...], "claims": [...]}, and nothing else.',
+          "",
+          "First, link each thing the trainer asked for to the certified field it names, from",
+          "the data dictionary at the end:",
+          `  {"phrase": "<their words for the thing>", "entityId": "<the subject's id>", "fieldId": "<field-id>" | "${NO_FIELD}"}`,
+          `One entry per thing asked for. Use "${NO_FIELD}" when the records certify no such field —`,
+          "a height, a weight, an ability, a cry, the story, anything the dictionary does not",
+          `list. "${NO_FIELD}" is an honest answer and is reported to the trainer in your phrase;`,
+          "linking a field that merely resembles the ask is not. Every fact, comparison, ranking",
+          "or matchup claim must be about a field you linked here: the others are dropped.",
+        ]),
     "",
     "A roster is a declarative set you name and then cite by id:",
     '  {"id": "<your-id>", "criteria": {"all": [<criterion>, ...]}}',
@@ -215,7 +268,6 @@ function answerPrompt(
         ]),
     '  {"kind": "recommendation", "entityId": "<id>"}',
     '  {"kind": "action", "tool": "<tool-id>", "entityId": "<species-id>"}  — an act you propose to perform. It is shown to the trainer and executes only on their confirmation; claim one only when the trainer asked for it.',
-    '  {"kind": "unavailable", "entityId": "<id>", "asked": "<what they asked for>"}  — the trainer asked for something about a certified subject that the records do NOT certify (its height, weight, ability, cry, shiny odds, friendship, flavour text, the story). Say so with this, in the trainer\'s own word for it, instead of substituting a different fact: a certified fact they did not ask for is not an answer. You may pair it with the facts they DID ask for.',
     "",
     ...(lessons.length === 0 ? [] : [`A <lesson-id> must be one of: ${lessons.join(", ")}. No other lesson exists.`]),
     ...(rules.length === 0
@@ -223,10 +275,17 @@ function answerPrompt(
       : [`A <rule-id> must be one of, each with what it counts: ${rules.map((rule) => `${rule.id} (${rule.label})`).join(", ")}. No other rule exists.`]),
     `A <tool-id> must be one of: ${tools.join(", ")}. No other tool exists.`,
     "",
-    "A <fact-id> must be one of these certified ids; no other resolves.",
-    `  about a species (entityId is a species id): ${SPECIES_FACT_IDS.join(", ")}`,
-    `  about a move (entityId is a move id): ${MOVE_FACT_IDS.join(", ")}`,
-    ...(items ? [`  about an item (entityId is an item id): ${ITEM_FACT_IDS.join(", ")}`] : []),
+    ...(dictionary.length === 0
+      ? [
+          "A <fact-id> must be one of these certified ids; no other resolves.",
+          `  about a species (entityId is a species id): ${SPECIES_FACT_IDS.join(", ")}`,
+          `  about a move (entityId is a move id): ${MOVE_FACT_IDS.join(", ")}`,
+          ...(items ? [`  about an item (entityId is an item id): ${ITEM_FACT_IDS.join(", ")}`] : []),
+        ]
+      : [
+          "The data dictionary — every certified field, by id. A <field-id> and a <fact-id> must be one of these; no other resolves.",
+          ...dictionaryLines(dictionary, items),
+        ]),
     "Cite only rosters you defined; recompute nothing you are unsure of — omit it.",
   ].join("\n");
 }
@@ -394,6 +453,14 @@ export interface AnswerStepInput {
    *  model holds; composition is what kept failing). The caller owns the
    *  catalogue and validates every nomination. */
   routes?: readonly NominableRoute[];
+  /**
+   * The verifier's word on the previous reply to these same words, one line
+   * per violation in the driver's fixed wording (docs/routing.md, R3b: the
+   * verifier-in-the-loop retry). Present only on the one retry the driver
+   * allows; the prompt is otherwise identical, so the record shows exactly
+   * what changed between the two calls.
+   */
+  feedback?: readonly string[];
 }
 
 /** Ask the model for the certified answer and decode it into a draft. Whether
@@ -423,6 +490,8 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
       context.pack.curriculum.map((lesson) => lesson.id),
       context.pack.gameRules.map((rule) => ({ id: rule.id, label: rule.label })),
       reference,
+      context.pack.dictionary,
+      input.feedback,
       context.registry.itemIds.length > 0,
       [...new Set(context.registry.items.map((item) => item.category))].sort(),
     ),
@@ -477,7 +546,10 @@ export async function proposeRawAnswer(input: RawStepInput): Promise<AnswerStep>
       [...new Set(context.registry.items.map((item) => item.category))].sort(),
     ),
     hint: { scenarioId },
-    schema: { name: ANSWER_SCHEMA_NAME, schema: answerSchema(context.pack) },
+    // No dictionary, so no `asked` array: the control arm links nothing
+    // because nothing downstream would check the link — that is the
+    // ungoverned condition, not a handicap on it.
+    schema: { name: ANSWER_SCHEMA_NAME, schema: answerSchema({ ...context.pack, dictionary: [] }) },
   };
   const completion = await provider.complete(request);
   const decode = decodeAnswer(completion.text, context, transactionId);

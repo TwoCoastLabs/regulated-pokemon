@@ -65,6 +65,8 @@ export interface CoverageArtifact {
   repair: boolean;
   /** Set when the trainer's profile was set on the panel before the opener (epic #145, R2). */
   profile?: boolean;
+  /** Set when the verifier-in-the-loop retry was on (docs/routing.md, R3b). */
+  feedback?: boolean;
   /** Passes requested over the selected entries. The paid design runs the full
    * bank at 1 and the `should-refuse` slice at 3 — two artifacts, each honest
    * about which it is. */
@@ -98,6 +100,8 @@ export interface CoverageArtifactInput {
   repair: boolean;
   /** The trainer's profile was set on the panel before the opener (epic #145, R2). */
   profile?: boolean;
+  /** Set when the verifier-in-the-loop retry was on (docs/routing.md, R3b). */
+  feedback?: boolean;
   repetitions: number;
   dispositions?: readonly Disposition[];
   stoppedEarly: boolean;
@@ -126,6 +130,7 @@ export function buildCoverageArtifact(input: CoverageArtifactInput): CoverageArt
     gatedGrammar: input.gatedGrammar,
     repair: input.repair,
     ...(input.profile === undefined ? {} : { profile: input.profile }),
+    ...(input.feedback === undefined ? {} : { feedback: input.feedback }),
     repetitions: input.repetitions,
     ...(input.dispositions === undefined ? {} : { dispositions: input.dispositions }),
     stoppedEarly: input.stoppedEarly,

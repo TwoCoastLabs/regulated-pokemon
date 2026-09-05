@@ -32,6 +32,7 @@
  * widens this schema in the same commit, or a test fails.
  */
 
+import { NO_FIELD } from "../kernel/pack.js";
 import { COMPARABLE_FACT_IDS, ITEM_FACT_IDS, MOVE_FACT_IDS, SPECIES_FACT_IDS, STATUS_CONDITIONS } from "../kernel/registry.js";
 import { STAT_NAMES } from "../kernel/snapshot-format.js";
 import type { FillerKind } from "./grammar-gate.js";
@@ -252,10 +253,37 @@ export const MAX_ANSWER_CLAIMS = 12;
  * two. Bounded for the same reason as {@link MAX_ANSWER_CLAIMS}. */
 export const MAX_ANSWER_ROSTERS = 4;
 
+/** Things one ask can ask for; a question rarely names more than three. */
+export const MAX_ASKED = 6;
+
+/**
+ * The schema linking the model performs (docs/routing.md, R3b): per thing
+ * the trainer asked for, the certified field the model read the phrase as,
+ * or the reserved "none" when the records certify no such field. The enum is
+ * built from the pack's data dictionary at call time, exactly as lesson and
+ * rule ids are, so a field the dictionary does not describe is
+ * unrepresentable. A nomination like any other: untrusted, recorded, and
+ * checked by the driver against the claims — structure, not words.
+ */
+function askedSchema(fieldIds: readonly string[]): JsonSchema {
+  return {
+    type: "array",
+    maxItems: MAX_ASKED,
+    items: object({
+      phrase: STRING,
+      entityId: STRING,
+      fieldId: { type: "string", enum: [...fieldIds, NO_FIELD] },
+    }),
+  };
+}
+
 export function answerSchema(
   pack: {
     curriculum: ReadonlyArray<{ id: string }>;
     gameRules: ReadonlyArray<{ id: string }>;
+    /** The data dictionary; an empty one offers no `asked` array at all (the
+     * ungoverned control arm, which links nothing because nothing checks). */
+    dictionary: ReadonlyArray<{ id: string }>;
   },
   /** When present, the filler kinds (`count`/`typeCount`/`gameRule`) a question
    * nominated; the schema offers only those three. Absent means no gate — all
@@ -273,6 +301,7 @@ export function answerSchema(
   routes?: readonly NominableRoute[],
 ): JsonSchema {
   return object({
+    ...(pack.dictionary.length === 0 ? {} : { asked: askedSchema(pack.dictionary.map((entry) => entry.id)) }),
     rosters: { type: "array", maxItems: MAX_ANSWER_ROSTERS, items: rosterSchema(items, vocabulary) },
     claims: {
       type: "array",
@@ -288,11 +317,6 @@ export function answerSchema(
           ...(routes ?? []).map((route) =>
             variant("route", { routeId: { type: "string", enum: [route.id] }, ...route.args }),
           ),
-          // Abstention, representable in-grammar (epic #145, R3): the model
-          // says what the records do not hold for a subject instead of
-          // substituting a fact nobody asked for. Never a claim — the decoder
-          // lifts it out and the driver reports it; nothing certifies.
-          variant("unavailable", { entityId: STRING, asked: STRING }),
         ],
       },
     },

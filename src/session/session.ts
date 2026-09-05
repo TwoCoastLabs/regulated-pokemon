@@ -54,10 +54,12 @@ import { requiredDimensionsFor } from "../kernel/scope-deps.js";
 import { buildRoster } from "../kernel/roster.js";
 import { runTransaction, type Transaction } from "../kernel/transaction.js";
 import { renderAnswer } from "../render/reference.js";
+import { denialCode } from "../kernel/violation.js";
 import { type AnswerStep, proposalDigest, proposeAnswer, proposeScope } from "../harness/advisor.js";
-import { NO_CLAIMS_REASON } from "../harness/decode.js";
+import { type AnswerDecode, NO_CLAIMS_REASON } from "../harness/decode.js";
 import { MAX_ANSWER_CLAIMS, type NominableRoute } from "../harness/schema.js";
 import { addUsage, emptyUsage, type ModelProvider, type Usage } from "../harness/provider.js";
+import { aliasContradiction, freshLinks, linkClaims } from "./linking.js";
 
 /** The certified world the session runs against — the same two values the
  * harness calls `HarnessWorld`, named here so the browser bundle never
@@ -99,6 +101,18 @@ export interface SessionDeps {
    * is still counted ({@link SessionState.repairs}). Off by default.
    */
   repair?: boolean;
+  /**
+   * The verifier-in-the-loop retry (docs/routing.md, R3b): when the answer
+   * step's draft is denied at the answer stage for anything but the repair's
+   * own class (an all-fact-mismatch denial), one more model call carries the
+   * denial by name — fixed wording derived from the violations, never free
+   * prose — and the second reply is groomed and verified exactly as the
+   * first. A second denial files as it stands. Counted
+   * ({@link SessionState.feedbackRetries}) and the first denial kept
+   * ({@link SessionState.feedbackDenials}), so a post-feedback resolution is
+   * never blended with a first-attempt one. Off by default.
+   */
+  feedback?: boolean;
 }
 
 export type ScopeProposal = Extract<ScopeEvent, { kind: "proposal" }>;
@@ -184,6 +198,21 @@ export interface SessionState {
    * reason repairs and folds are: a corrected resolution is never blended
    * with a first-shape one. */
   flips: number;
+  /** Verifier-in-the-loop retries taken (R3b) — one at most per answer. */
+  feedbackRetries: number;
+  /** The denial codes of every first attempt that earned a feedback retry,
+   * in order — the first attempt stays on the books whatever the second
+   * files, so the enforcement number keeps measuring first attempts. */
+  feedbackDenials: readonly string[];
+  /**
+   * Schema linking's gauge (R3b): `mapped` counts replies that carried a
+   * non-empty `asked`; `unlinked` those that carried none (a model that
+   * links nothing is measurably not doing the work); `offTargetDropped` the
+   * field-bearing claims dropped for being about a field the model did not
+   * link; `contradictions` the alias cross-checks that turned into a
+   * question. Findings read these the way they read the listing gauge.
+   */
+  linking: { mapped: number; unlinked: number; offTargetDropped: number; contradictions: number; staleDropped: number };
   /** Ladder proposals spent on the current ask; a fresh utterance resets it. */
   ladderTurns: number;
   /**
@@ -253,6 +282,9 @@ export function startSession(idPrefix?: string): SessionState {
     repairs: 0,
     folds: 0,
     flips: 0,
+    feedbackRetries: 0,
+    feedbackDenials: [],
+    linking: { mapped: 0, unlinked: 0, offTargetDropped: 0, contradictions: 0, staleDropped: 0 },
     listingActivations: { consulted: 0, served: 0, stoodDown: 0, guardDropped: 0 },
     nominationRetries: 0,
     ladderTurns: 0,
@@ -727,26 +759,19 @@ async function drive(
       deps,
     );
   }
-  // A listing follow-up short-circuits discovery entirely: the shape is not
-  // the model's to learn — the set is the previous exchange's certified
-  // roster, and the route composes the draft from the record. `routed` skips
-  // the ladder for whatever scope the memberships require, so a missing
-  // dimension costs the pack's own question, never a model interpretation.
-  if (lastSaid !== undefined && !askedAlready && state.required === undefined) {
-    const listed = listingClaims(world, state, lastSaid.text);
-    if (listed.kind === "served") {
-      const tallied = tallyListing(state, "served");
-      return drive({ ...tallied, required: requiredDimensionsFor(listed.draft.claims) }, deps, { ...listed.draft, routed: true });
-    }
-    if (listed.kind === "stood-down") state = tallyListing(state, "stoodDown");
-  }
+  // The listing cue door that stood here — "what/which … pokemon/types",
+  // a listing verb — was the first dispatch door R3b deleted (2026-09-05).
+  // Its executor survives as the `listing` nomination, with the same
+  // guards; the ask's shape is the model's to name. Found on the first
+  // schema-linking run: the cue read "what beats water types?" as a listing
+  // and served the water roster before any model saw the question.
   // Not during an escalation: a widened `required` means an answer was already
   // attempted and wants more scope, so the shape is known and a fresh discovery
   // would only re-ask the model what it just told us.
   if (lastSaid !== undefined && !askedAlready && state.required === undefined) {
     const attempt = await teachOrDiscover(state, deps);
     state = attempt.state;
-    if (attempt.result === "taught") return state;
+    if (attempt.result === "taught" || attempt.result === "closed") return state;
     if (attempt.result === "off-domain")
       return redirect(state, deps, state.askStart > 0 && isAnaphoric(world, lastSaid.text));
     // "needs-scope": gather exactly the dimensions the proposed claims depend
@@ -1171,7 +1196,10 @@ async function teachOrDiscover(
   lessonsOnly = false,
 ): Promise<{
   state: SessionState;
-  result: "taught" | "off-domain" | "needs-scope" | "unusable";
+  /** `closed`: the exchange ended in a note without a record — a linking
+   * contradiction asked about, or an answer emptied of everything but facts
+   * nobody asked for. */
+  result: "taught" | "off-domain" | "needs-scope" | "unusable" | "closed";
   claims: readonly Claim[];
   /** The decoded rosters beside the claims, so a needs-scope draft can be
    * reused whole once the scope it named turns out to be already granted. */
@@ -1195,15 +1223,6 @@ async function teachOrDiscover(
     .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
     .join(" ");
   const previously = anaphorContext(world, state, askWords);
-
-  // The records' boundary outranks discovery: a lesson commits under no
-  // scope at all, and the model reading "how tall is Onix?" could only
-  // substitute (epic #145, R3).
-  const boundary = recordsBoundaryDraft(world, askWords);
-  if (boundary !== undefined) {
-    const draft: ManifestDraft = { transactionId, ...boundary };
-    return { state: commit(state, deps, { transactionId, establishedAt, draft }), result: "taught", claims: draft.claims, rosters: draft.rosters, routed: true };
-  }
 
   let step: AnswerStep;
   let stepUsage: Usage;
@@ -1245,8 +1264,20 @@ async function teachOrDiscover(
     // waved away.
     return { state: spent, result: step.decode.reason === NO_CLAIMS_REASON ? "off-domain" : "unusable", claims: [], rosters: [] };
   }
-  const draft = step.decode.draft;
   let spentFolded = { ...spent, folds: spent.folds + step.decode.folds };
+  // The schema linking, read before anything else the reply carried (R3b):
+  // the claims are held to the fields the model linked, an alias
+  // contradiction becomes a question, and an ask linked to no field is the
+  // records' boundary — taught as the pack's lesson, grantless, with the
+  // trainer's own phrase named.
+  const linked = applyLinking(world, spentFolded, deps, step.decode);
+  spentFolded = linked.state;
+  if (linked.verdict === "closed") return { state: spentFolded, result: "closed", claims: [], rosters: [] };
+  if (linked.verdict === "off-domain") return { state: spentFolded, result: "off-domain", claims: [], rosters: [] };
+  if (linked.verdict === "boundary") {
+    return { state: teachRecordsBoundary(spentFolded, deps, transactionId, establishedAt), result: "taught", claims: [], rosters: [], routed: true };
+  }
+  const draft: ManifestDraft = { ...step.decode.draft, claims: linked.claims };
   // A nomination outranks whatever else the reply carried: the model chose a
   // door, the door composes, the kernel judges. Invalid ones fall through to
   // exactly the flow a nomination-free reply takes.
@@ -1287,30 +1318,10 @@ async function teachOrDiscover(
   return { state: spentFolded, result: "needs-scope", claims: draft.claims, rosters: draft.rosters };
 }
 
-/** Wording that asks for members to be enumerated. Word-bounded and paired
- * with the anaphoric gate, so "list Electric ones" (a subject of its own)
- * still goes to the model and only a bare "list some for me" takes the
- * deterministic road. */
-// Two tiers: the strong verbs stand alone ("list a few for me" — the prior
-// roster is the subject); "what/which" only counts beside a set noun, or
-// bare "what can you do?" becomes a listing and replays the last roster
-// (porch round six, live).
-const LISTING_VERB = /\b(list|name|show|give|enumerate)\b/i;
-const LISTING_WH = /\bwhat(?:s| is|'s| are| r)?\b|\bwhich\b/i;
-const LISTING_NOUN = /\b(pok[eé]mons?|species|types?|legendar(?:y|ies)|mythicals?|rarest)\b/i;
-const listingCue = (ask: string): boolean => LISTING_VERB.test(ask) || (LISTING_WH.test(ask) && LISTING_NOUN.test(ask));
-
-/**
- * The listing a bare "can you list at least 10 for me?" earns — composed
- * from the record, not the model. Found live (2026-08-31): the follow-up
- * reached the model with its antecedent attached and the model still
- * passed; but the antecedent's set is not in the model's head, it is the
- * previous exchange's certified roster, filed in the session's own records.
- * The route reuses that roster verbatim, lists its first N members as
- * membership claims (each re-verified by the kernel like any claim), and
- * keeps the count beside the sample so the total is never mistaken for the
- * list. N comes from the trainer's own number, clamped to the claim budget.
- */
+/** The listing gauge, now over nominations alone: `consulted` counts every
+ * listing nomination that reached the executor, `served` the ones it
+ * composed, `stoodDown` the ones its guards refused, `guardDropped` the
+ * model-composed catalogue claims the wrong-set guard removed. */
 function tallyListing(state: SessionState, outcome: "served" | "stoodDown" | "guardDropped"): SessionState {
   const t = state.listingActivations;
   return {
@@ -1321,43 +1332,6 @@ function tallyListing(state: SessionState, outcome: "served" | "stoodDown" | "gu
       [outcome]: t[outcome] + 1,
     },
   };
-}
-
-function listingClaims(
-  world: SessionWorld,
-  state: SessionState,
-  ask: string,
-): { kind: "served"; draft: Pick<ManifestDraft, "claims" | "rosters"> } | { kind: "stood-down" } | { kind: "no-cue" } {
-  if (!listingCue(ask)) return { kind: "no-cue" };
-  // "What is Pokémon?" is the definitional ask, not the catalogue: the
-  // singular copula before the bare noun is a lesson's shape. Found by the
-  // R1 bank run (2026-09-04): the wh-tier cue read it as bare and served ten
-  // species for a question the curriculum answers. Narrow on purpose — the
-  // class retires with docs/routing.md R3.
-  if (/\bwhat(?:'s| is)\s+(?:an?\s+|the\s+)?pok[eé]mon\b/i.test(ask) && !LISTING_VERB.test(ask)) return { kind: "no-cue" };
-  // One named type is a qualifier the mint understands, so it passes the
-  // gate that species names still fail (a species ask is a profile, not a
-  // listing). Everything else keeps the anaphoric discipline.
-  const haystack = ` ${ask.toLowerCase()} `;
-  const typesNamed = [...world.registry.typeNames].filter((type) => new RegExp(`\\b${type}\\b`).test(haystack));
-  if (typesNamed.length !== 1 && !isAnaphoric(world, ask)) return { kind: "stood-down" };
-  if (namesCertifiedEntity(world.registry, ask)) return { kind: "stood-down" };
-  // The prior roster answers only the bare follow-up ("list 10 of those") —
-  // an ask with substantive leftovers ("which pokemon can learn fly?") names
-  // its own subject, and the last exchange's set must not stand in for it
-  // (found by the activation gauge, 2026-09-01: the stale all-species roster
-  // served a learns-move ask and the guard then certified an empty record).
-  // Bareness gates the whole door, not just the prior roster. The round-
-  // seven guard only withheld the *prior* roster from a non-bare ask and
-  // fell through to the catalogue — so "which pokemon is the fastest?"
-  // was served every species, certified, with no model call (dogfood
-  // 2026-09-04). A qualified ask is the model's to compose.
-  if (typesNamed.length !== 1 && !bareCatalogueAsk(world, ask)) return { kind: "stood-down" };
-  const prior = typesNamed.length === 1 ? undefined : priorRoster(state);
-  const roster = prior ?? catalogueRoster(world, ask);
-  const asked = Number(/\d+/.exec(ask)?.[0]);
-  const draft = composeListing(roster, Number.isFinite(asked) && asked > 0 ? asked : 10);
-  return draft === undefined ? { kind: "stood-down" } : { kind: "served", draft };
 }
 
 /** The most recent certified roster on file, when one exists. */
@@ -1482,39 +1456,6 @@ function dropWrongSetClaims(
   return { claims, rosters: draft.rosters.filter((roster) => cited.has(roster.id)) };
 }
 
-function catalogueRoster(world: SessionWorld, ask: string) {
-  // Rarity is the one qualifier the mint understands (porch round five:
-  // "whats the rarest pokemon?" drew a stale basis card — rarity is not a
-  // numeric basis, and the honest answer is the legendaries themselves,
-  // expressible today as a rarity roster). Any other surviving word still
-  // stands the mint down: a qualified set is the model's to compose.
-  const oneType = (() => {
-    const hay = ` ${ask.toLowerCase()} `;
-    const named = [...world.registry.typeNames].filter((type) => new RegExp(`\\b${type}\\b`).test(hay));
-    return named.length === 1 ? named[0] : undefined;
-  })();
-  const rarity = /\brarest\b|\blegendar(?:y|ies)\b/i.test(ask) ? "legendary" : /\bmythicals?\b/i.test(ask) ? "mythical" : undefined;
-  const typeStripper = new RegExp(`\\b(${[...world.registry.typeNames].join("|")})\\b`, "g");
-  const leftovers = ask
-    .toLowerCase()
-    .replace(/\bpok[eé]mons?\b|\bspecies\b|\btypes?\b/g, " ")
-    .replace(/\brarest\b|\blegendar(?:y|ies)\b|\bmythicals?\b|\bwhich\b|\bwhats?\b/g, " ")
-    .replace(typeStripper, " ")
-    .replace(LISTING_STOPWORDS, " ")
-    .trim();
-  if (leftovers !== "") return undefined;
-  if (oneType !== undefined) {
-    const built = buildRoster(world.registry, `${oneType}-pokemon`, { all: [{ kind: "has-type", type: oneType }] });
-    return built.ok ? built.value : undefined;
-  }
-  if (rarity === undefined && !/\bpok[eé]mons?\b|\bspecies\b|\btypes?\b/i.test(ask)) return undefined;
-  if (rarity !== undefined) {
-    const built = buildRoster(world.registry, `${rarity}-pokemon`, { all: [{ kind: "rarity", rarity }] });
-    return built.ok ? built.value : undefined;
-  }
-  return mintCatalogue(world);
-}
-
 /** The whole certified species set as a roster — the kernel's own spelling
  * of "every member". */
 function mintCatalogue(world: SessionWorld) {
@@ -1586,8 +1527,14 @@ function executeRoute(
     if (typesNamed.length !== 1 && !bareCatalogueAsk(world, currentAsk)) return undefined;
     // Subject-correct by construction: the set comes from the ask's own
     // qualifiers, never from the nomination's say-so — a catalogue-subject
-    // nomination for "show me all the fire types" mints the fire roster.
-    const roster = route.subject === "prior-roster" ? (priorRoster(state) ?? qualifiedSet(world, currentAsk)) : qualifiedSet(world, currentAsk);
+    // nomination for "show me all the fire types" mints the fire roster, and
+    // a prior-roster nomination for "whats the rarest pokemon?" mints the
+    // legendaries, not the fire roster of the exchange before (found live,
+    // 2026-09-05, the first run without the cue door). The prior roster
+    // answers only an ask that qualifies nothing itself.
+    const qualified = qualifiedSet(world, currentAsk);
+    const qualifies = typesNamed.length === 1 || (qualified !== undefined && qualified.criteria.all.length > 0);
+    const roster = route.subject === "prior-roster" && !qualifies ? (priorRoster(state) ?? qualified) : qualified;
     const n = typeof route.n === "number" && Number.isFinite(route.n) && route.n > 0 ? route.n : 10;
     return composeListing(roster, n);
   }
@@ -1607,30 +1554,174 @@ function executeRoute(
 }
 
 /**
- * The records' boundary as a draft (epic #145, R3): when the ask carries one
- * of the pack's words for a thing these records do not hold — a height, a
- * weight, an ability, the story — the answer is the pack's own lesson saying
- * so, composed deterministically before any model reads the ask. Found by
- * R2's bank leg: with scope pre-set, ten needs-data questions reached the
- * answer step and came back with a certified fact about the subject that was
- * not the fact asked for — true, in scope, not the answer. The one exception
- * is an ask that names both a species and a move ("does pikachu have the
- * ability to learn surf?"): that is a learnset question wearing a boundary
- * word, and the model owns it. Recognition only: the kernel certifies the
- * lesson like any other, and a miss is today's path.
+ * The schema linking applied to one decoded reply (docs/routing.md, R3b) —
+ * the structural checks that replaced R3a's seventy boundary tokens, none of
+ * which contains a domain word:
+ *
+ *  - **An alias contradiction is a question.** The phrase carries the
+ *    dictionary's words for a different field than the one the model linked
+ *    (or for a field where it linked none): the trainer is asked which they
+ *    meant, and nothing certifies. Counted.
+ *  - **Claims stay inside the ask.** Field-bearing claims about fields the
+ *    model did not link are dropped and counted; a reply emptied by that is
+ *    an honest pass, never a certificate of facts nobody asked for.
+ *  - **A null link is the records' boundary.** Reported in the trainer's own
+ *    phrase; alone, it hands the caller the boundary verdict so the pack's
+ *    lesson is taught as the answer.
+ *
+ * Found by R2's bank leg (2026-09-05): with scope pre-set, ten needs-data
+ * questions came back with a certified fact about the subject that was not
+ * the fact asked for — true, in scope, not the answer. The token list that
+ * first caught them was the class of mechanism no other domain could re-tune;
+ * this is what replaced it.
  */
-function recordsBoundaryDraft(world: SessionWorld, ask: string): Pick<ManifestDraft, "claims" | "rosters"> | undefined {
-  const boundary = world.pack.recordsBoundary;
-  if (boundary === undefined) return undefined;
-  const haystack = ` ${ask.toLowerCase()} `;
-  const hit = boundary.tokens.some((token) =>
-    new RegExp(`\\b${token.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+")}\\b`).test(haystack),
-  );
-  if (!hit) return undefined;
-  const namesSpecies = world.registry.speciesIds.some((id) => new RegExp(`\\b${id.split("-").join("[\\s-]?")}\\b`).test(haystack));
-  const namesMove = world.registry.moveIds.some((id) => new RegExp(`\\b${id.split("-").join("[\\s-]?")}\\b`).test(haystack));
-  if (namesSpecies && namesMove) return undefined;
-  return { claims: [{ kind: "explanation", blockId: boundary.lessonId }], rosters: [] };
+function applyLinking(
+  world: SessionWorld,
+  state: SessionState,
+  deps: SessionDeps,
+  decode: Extract<AnswerDecode, { ok: true }>,
+): { state: SessionState; claims: readonly Claim[]; verdict: "proceed" | "closed" | "boundary" | "off-domain" } {
+  const gauge = { ...state.linking };
+  if (decode.asked.length === 0) {
+    gauge.unlinked += 1;
+    return { state: { ...state, linking: gauge }, claims: decode.draft.claims, verdict: "proceed" };
+  }
+  gauge.mapped += 1;
+
+  // Only this ask's links: the earlier exchanges the model was shown as
+  // context are not the ask, whatever it linked in them.
+  const trainerWords = (events: ScopeTranscript): string =>
+    events.flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : [])).join(" ");
+  const fresh = freshLinks(decode.asked, trainerWords(state.transcript.slice(state.askStart)), trainerWords(state.transcript.slice(0, state.askStart)));
+  gauge.staleDropped += fresh.stale;
+  const asked = fresh.asked;
+
+  const contradiction = aliasContradiction(world.pack, world.registry, asked);
+  if (contradiction !== undefined) {
+    gauge.contradictions += 1;
+    const names = contradiction.suggested.map((field) => field.name).join(" or ");
+    const text =
+      contradiction.linked === undefined
+        ? `You asked about "${contradiction.phrase}" — I don't think the records hold that as such, but they do hold ${names}. If that's what you meant, ask again naming it.`
+        : `I read "${contradiction.phrase}" as ${contradiction.linked.name}, but it could mean ${names}. Which did you mean? Ask again with that word and I'll answer it.`;
+    return {
+      state: note(
+        closeExchange({ ...state, linking: gauge }),
+        deps.now(),
+        text,
+        "abstention",
+        `alias contradiction: "${contradiction.phrase}" linked to ${contradiction.linked?.id ?? "no field"}, carries ${contradiction.suggested.map((field) => field.id).join(", ")} — asked, nothing certified`,
+      ),
+      claims: [],
+      verdict: "closed",
+    };
+  }
+
+  const linked = linkClaims(asked, decode.draft.claims, decode.draft.rosters);
+  gauge.offTargetDropped += linked.dropped;
+  let next: SessionState = { ...state, linking: gauge };
+
+  // What the model said it could not certify (the R3a abstention, now read
+  // from the mapping): reported in the trainer's own phrase, never a claim —
+  // and only when the null link is the whole answer. A null link beside a
+  // surviving claim or a nomination is the model naming what has no column
+  // ("how many", "list ten", "a gym badge") next to the set operation or
+  // lesson that answers it; found live (2026-09-05): every count and listing
+  // ask drew a boundary note beside its certified answer. Counted, silent.
+  const unavailable = asked.flatMap((entry) => (entry.fieldId === null ? [{ entityId: entry.entityId, asked: entry.phrase }] : []));
+  const answersRemain = linked.claims.length > 0 || decode.route !== undefined;
+  // The boundary is about a certified subject: "how tall is Onix?" is
+  // asking the records for something they do not hold. A null link on a
+  // subject the records never certified — the weather, "this" — is the
+  // off-domain reply it always was (found by the first R3b bank leg: every
+  // off-domain question taught the boundary lesson; and by dogfood the
+  // same evening: "tell me about this" drew the boundary note AND the
+  // redirect, because the note was written before this was checked).
+  const aboutRecords = unavailable.some((entry) => {
+    const id = entry.entityId.toLowerCase().trim();
+    return (
+      world.registry.speciesIds.includes(id) ||
+      world.registry.moveIds.includes(id) ||
+      world.registry.itemIds.includes(id) ||
+      world.registry.typeNames.has(id)
+    );
+  });
+  if (unavailable.length > 0 && !answersRemain && aboutRecords) {
+    // The phrase is the model's span of the ask; when it already names the
+    // subject (found on the first live run: the whole question came back as
+    // the phrase), naming it again reads as a stutter.
+    // ...and a subject the registry does not certify ("gym_badge", on the
+    // weak model's first run) is not one to name at all.
+    const registry = world.registry;
+    const named = unavailable
+      .map((entry) => {
+        const id = entry.entityId.toLowerCase().trim();
+        const certified = registry.speciesIds.includes(id) || registry.moveIds.includes(id) || registry.itemIds.includes(id);
+        const entity = id.replace(/-/g, " ");
+        const phrase = entry.asked.trim().replace(/[?.!]+$/, "");
+        const namesEntity = new RegExp(`\\b${entity.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(phrase);
+        return certified && !namesEntity ? `"${phrase}" for ${entity}` : `"${phrase}"`;
+      })
+      .join(", ");
+    next = note(
+      next,
+      deps.now(),
+      `The records don't hold ${named} — the League cannot certify that, so I won't guess at it.`,
+      "abstention",
+      `the model linked ${unavailable.length} asked phrase(s) to no certified field — nothing substituted`,
+    );
+  }
+
+  if (linked.claims.length === 0 && decode.route === undefined) {
+    if (unavailable.length > 0) return { state: next, claims: [], verdict: aboutRecords ? "boundary" : "off-domain" };
+    if (asked.length === 0) {
+      // Every link was stale: the reply answered the earlier exchanges and
+      // nothing in this one. An honest pass, with the stale count in the
+      // detail register.
+      return {
+        state: note(
+          closeExchange(next),
+          deps.now(),
+          "I lost the thread of that one — it seems to point back at something we discussed. Ask it again in one line, naming what you mean, and I'll answer what the records certify.",
+          "abstention",
+          `schema linking found every link (${fresh.stale}) about an earlier exchange — nothing was committed`,
+        ),
+        claims: [],
+        verdict: "closed",
+      };
+    }
+    if (linked.dropped > 0) {
+      return {
+        state: note(
+          closeExchange(next),
+          deps.now(),
+          "I could only find answers to things you didn't ask for, so I'd rather pass than answer the wrong question.",
+          "abstention",
+          `schema linking dropped every claim (${linked.dropped}) as off the asked fields — nothing was committed`,
+        ),
+        claims: [],
+        verdict: "closed",
+      };
+    }
+  }
+  return { state: next, claims: linked.claims, verdict: "proceed" };
+}
+
+/**
+ * The records' boundary, taught (R3b): the pack's reviewed lesson saying
+ * what these records hold, filed as a grantless record like any lesson — the
+ * "plain telling" a substitution would have hidden. A pack that names no
+ * boundary lesson has already said what it can in the note; the exchange
+ * closes there.
+ */
+function teachRecordsBoundary(state: SessionState, deps: SessionDeps, transactionId: string, establishedAt: string): SessionState {
+  const lessonId = deps.world.pack.recordsBoundary?.lessonId;
+  if (lessonId === undefined) return closeExchange(state);
+  return commit(state, deps, {
+    transactionId,
+    establishedAt,
+    draft: { transactionId, claims: [{ kind: "explanation", blockId: lessonId }], rosters: [] },
+  });
 }
 
 /** The reviewed block that owns the version boundary, when the pack carries
@@ -1661,7 +1752,7 @@ async function foreignVersion(state: SessionState, deps: SessionDeps): Promise<S
     return ask(state, deps.now(), "version", switchback);
   }
   const attempt = await teachOrDiscover(state, deps, true);
-  if (attempt.result === "taught") return attempt.state;
+  if (attempt.result === "taught" || attempt.result === "closed") return attempt.state;
   if (attempt.result === "off-domain") return redirect(attempt.state, deps);
   return teachBoundary(attempt.state, deps);
 }
@@ -1794,37 +1885,20 @@ async function answer(
     at: establishedAt,
   };
 
+  // The ask, as the trainer worded it — what the deterministic doors read,
+  // and what a retry is shown again.
   const currentAsk = state.transcript
     .slice(state.askStart)
     .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
     .join(" ");
-  // The records' boundary outranks the model here too: with scope pre-set
-  // (a profile), the ask never passes discovery, and the answer step is
-  // where R2's bank leg found the substitutions (epic #145, R3).
-  const boundary = reuse === undefined ? recordsBoundaryDraft(world, currentAsk) : undefined;
-  if (boundary !== undefined) reuse = { ...boundary, routed: true };
-  // A bare listing follow-up is answered from the record it refers to — the
-  // previous exchange's certified roster — never from a model's guess at the
-  // antecedent (and the weak model, handed the antecedent, still passed).
-  // The route outranks a model draft arriving on the discovery hop: for a
-  // listing ask, the record is the authority on what "them" means. Keyed on
-  // the exchange's FIRST utterance — the ask — because later utterances are
-  // answers to the pack's questions ("Red and Blue") and would unbare it.
+  const previously = anaphorContext(world, state, currentAsk);
+  // The exchange's FIRST utterance — the ask — is what the set guards read:
+  // later utterances answer the pack's questions ("Red and Blue") and would
+  // unbare it. (The listing cue door that read it here is gone — R3b, see
+  // the discovery hop; a listing is the model's to nominate.)
   const openingAsk = state.transcript
     .slice(state.askStart)
     .find((event) => event.kind === "utterance" && event.source === "trainer");
-  // Only when nothing route-composed already rode in: a routed draft was
-  // consulted and tallied at the dispatch hop, and re-checking here would
-  // double-count the gauge.
-  if (reuse?.routed !== true) {
-    const cueListing = listingClaims(world, state, openingAsk?.kind === "utterance" ? openingAsk.text : currentAsk);
-    if (cueListing.kind === "served") {
-      state = tallyListing(state, "served");
-      reuse = cueListing.draft;
-    } else if (cueListing.kind === "stood-down") {
-      state = tallyListing(state, "stoodDown");
-    }
-  }
 
   let step;
   let stepRetried = false;
@@ -1837,17 +1911,14 @@ async function answer(
     // replaced). The kernel compiles and verifies the reused draft exactly
     // as it would a fresh one; nothing about what may commit changes. Folds
     // and usage were already counted when the draft was decoded.
+    // No mapping rides with a reused draft: the discovery hop already held
+    // it to the fields the model linked, and a route composes its own shape.
     step = {
       usage: emptyUsage(),
-      decode: { ok: true as const, draft: { transactionId, claims: reuse.claims, rosters: reuse.rosters }, folds: 0 },
+      decode: { ok: true as const, draft: { transactionId, claims: reuse.claims, rosters: reuse.rosters }, folds: 0, asked: [] },
     };
   } else {
     try {
-      const currentWords = state.transcript
-        .slice(state.askStart)
-        .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
-        .join(" ");
-      const previously = anaphorContext(world, state, currentWords);
       const fallback = await withRouteFallback(world, state, (routes) =>
         proposeAnswer({
           provider,
@@ -1887,106 +1958,14 @@ async function answer(
   };
   if (stepRefusedListing) withUsage = tallyListing(withUsage, "stoodDown");
 
-  // The model said what it could not certify (epic #145, R3): the records'
-  // boundary, in the trainer's own word for the thing, reported as such —
-  // never a claim, never a certificate. Alone, it closes the exchange as an
-  // honest pass with the boundary named; beside claims, it rides along as a
-  // note while the claims go through the gate as usual.
-  if (step.decode.ok && step.decode.unavailable !== undefined && step.decode.unavailable.length > 0) {
-    const named = step.decode.unavailable
-      .map((entry) => `${entry.asked} for ${entry.entityId.replace(/-/g, " ")}`)
-      .join(", ");
-    withUsage = note(
-      withUsage,
-      deps.now(),
-      `The records don't hold ${named} — the League cannot certify that, so I won't guess at it.`,
-      "abstention",
-      `the model declared the asked fact uncertified (${step.decode.unavailable.length}) — nothing substituted`,
-    );
-    if (step.decode.draft.claims.length === 0 && step.decode.route === undefined) return closeExchange(withUsage);
-  }
+  // Keyed on the exchange's opening ask: later utterances answer the pack's
+  // questions ("Red and Blue") and would unbare a bare listing.
+  const openingWords = openingAsk?.kind === "utterance" ? openingAsk.text : currentAsk;
+  const exchange = { transactionId, establishedAt };
 
-  // The ask, as the trainer worded it — what the deterministic route reads.
-  const ask = state.transcript
-    .slice(state.askStart)
-    .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
-    .join(" ");
-
-  let draft: ManifestDraft;
-  if (!step.decode.ok) {
-    // Before conceding an abstention, let the pack answer what it can: a
-    // gated advisory ask has a deterministic, certified answer — the rule.
-    const routed = eligibilityClaims(world, ask, []);
-    if (routed.length === 0) {
-      return note(
-        closeExchange(withUsage),
-        deps.now(),
-        "I don't have a certified answer for that one, so I'd rather pass than guess. " +
-          "A specific Pokémon, a move, or a how-the-game-works question usually lands.",
-        "abstention",
-        `the model produced no usable answer (${step.decode.reason}) — nothing was committed`,
-      );
-    }
-    draft = { transactionId, claims: routed, rosters: [] };
-  } else if (
-    step.decode.route !== undefined &&
-    executeRoute(world, state, step.decode.route) === undefined &&
-    step.decode.draft.claims.length === 0
-  ) {
-    // A refused nomination with nothing beside it: the same honest pass an
-    // empty reply earns, with the countable line in the detail register.
-    return note(
-      closeExchange(withUsage),
-      deps.now(),
-      "I don't have a certified answer for that one, so I'd rather pass than guess. " +
-        "A specific Pokémon, a move, or a how-the-game-works question usually lands.",
-      "abstention",
-      "the model nominated a route the driver refused, and the reply carried nothing else — nothing was committed",
-    );
-  } else {
-    // A nomination at the scoped hop composes here too — same door, same
-    // validation, same kernel downstream; an invalid one is simply ignored.
-    const nominated = step.decode.route !== undefined ? executeRoute(world, state, step.decode.route) : undefined;
-    if (step.decode.route?.routeId === "listing") {
-      withUsage = tallyListing(withUsage, nominated !== undefined ? "served" : "stoodDown");
-    }
-    const decoded = nominated !== undefined ? { ...step.decode.draft, claims: nominated.claims, rosters: nominated.rosters } : step.decode.draft;
-    // A model that deflected a gated advisory ask into adjacent facts gets the
-    // on-target answer appended; one that addressed the species advice-wise —
-    // including by proposing the gated advice the kernel will deny — is left
-    // alone, so the route never softens a denial the gate has earned.
-    const routed = eligibilityClaims(world, ask, decoded.claims);
-    // The lesson deflection has the same backstop here as at discovery: a
-    // scoped answer that is all lessons for an ask naming one species gets
-    // the entity's profile instead — the model can deflect at either hop.
-    const directed = correctMatchupDirections(world, ask, decoded.claims);
-    // Keyed on the exchange's opening ask: later utterances answer the
-    // pack's questions ("Red and Blue") and would unbare a bare listing.
-    const openingWords = openingAsk?.kind === "utterance" ? openingAsk.text : ask;
-    const rightSet = dropWrongSetClaims(world, openingWords, { claims: directed.claims, rosters: decoded.rosters });
-    if (rightSet.claims.length < directed.claims.length) withUsage = tallyListing(withUsage, "guardDropped");
-    if (rightSet.claims.length === 0 && directed.claims.length > 0) {
-      // The guard emptied the draft: everything it carried was the wrong
-      // set. An honest pass, never an empty certificate.
-      return note(
-        closeExchange(withUsage),
-        deps.now(),
-        "I don't have a certified answer for that one, so I'd rather pass than guess. " +
-          "A specific Pokémon, a move, or a how-the-game-works question usually lands.",
-        "abstention",
-        "the wrong-set guard removed every claim the draft carried — nothing was committed",
-      );
-    }
-    const groomed = { ...decoded, rosters: rightSet.rosters, claims: trimPaddedLessons(world, ask, rightSet.claims) };
-    if (directed.flips > 0) withUsage = { ...withUsage, flips: withUsage.flips + directed.flips };
-    const profile = deflectedProfileClaims(world, ask, groomed.claims);
-    draft =
-      profile.length > 0
-        ? { ...groomed, claims: profile, rosters: [] }
-        : routed.length === 0
-          ? groomed
-          : { ...groomed, claims: [...groomed.claims, ...routed] };
-  }
+  const groomed = groom(world, withUsage, deps, step, currentAsk, openingWords, exchange);
+  if (groomed.kind === "settled") return groomed.state;
+  withUsage = groomed.state;
 
   // The scope escalation, generalized (epic #64, slice 2). The proposed answer
   // may depend on a dimension the grant does not hold — a ranking with no basis
@@ -1997,13 +1976,165 @@ async function answer(
   // the visitor a question rather than a denial. The trigger is the claims'
   // declared dependencies, never the wording; a miss costs a question, never a
   // wrongly scoped commit, which the manifest gate holds.
-  const needed = requiredDimensionsFor(draft.claims);
-  const unbound = needed.filter((dimension) => resolved.grant.scope[dimension] === undefined);
-  if (unbound.length > 0) {
-    return drive({ ...withUsage, required: needed }, deps);
+  const unbound = (draft: ManifestDraft): readonly ScopeDimension[] =>
+    requiredDimensionsFor(draft.claims).filter((dimension) => resolved.grant.scope[dimension] === undefined);
+  if (unbound(groomed.draft).length > 0) {
+    return drive({ ...withUsage, required: requiredDimensionsFor(groomed.draft.claims) }, deps);
   }
 
-  return commit(withUsage, deps, { transactionId, establishedAt, draft });
+  let ran = probe(withUsage, deps, { ...exchange, draft: groomed.draft });
+
+  // The verifier-in-the-loop retry (docs/routing.md, R3b). The kernel's
+  // denial names exactly why — "gym-badge" is not a certified species — and
+  // until now the driver threw that signal away. One more call carries it
+  // back in fixed wording; the second reply is groomed and verified exactly
+  // as the first, so the loop can only turn a denial into a certified answer
+  // or an honest pass, never into a pass by trial and error. Only for a draft
+  // the model wrote — a route-composed one has no reply to correct; a
+  // discovery draft carried in through the version question does, and that
+  // is exactly the porch's "what's a gym badge?" dying on its first round —
+  // only at the answer stage, never for the repair's own class, and never
+  // with the route door open: a nomination is not a correction.
+  if (reuse?.routed !== true && deps.feedback === true && feedbackEligible(ran.record)) {
+    const violations = ran.record.outcome.status === "denied" ? ran.record.outcome.violations : [];
+    const codes = violations.map(denialCode);
+    let again: AnswerStep | undefined;
+    try {
+      again = await proposeAnswer({
+        provider,
+        context,
+        scenarioId: "session",
+        transactionId,
+        transcript: state.transcript.slice(state.askStart),
+        ...(previously === undefined ? {} : { previously }),
+        feedback: violations.map((item) => `${denialCode(item)}: ${item.message}`),
+        ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
+        ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
+        ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
+      });
+    } catch {
+      // The first denial is a complete, honest record; a provider that fails
+      // on the retry files it as it stands, and the failure is counted.
+      withUsage = { ...withUsage, providerErrors: withUsage.providerErrors + 1 };
+    }
+    if (again !== undefined) {
+      withUsage = {
+        ...withUsage,
+        usage: addUsage(withUsage.usage, again.usage),
+        folds: withUsage.folds + (again.decode.ok ? again.decode.folds : 0),
+        feedbackRetries: withUsage.feedbackRetries + 1,
+        feedbackDenials: [...withUsage.feedbackDenials, ...codes],
+      };
+      const regroomed = groom(world, withUsage, deps, again, currentAsk, openingWords, exchange);
+      if (regroomed.kind === "settled") return regroomed.state;
+      withUsage = regroomed.state;
+      if (unbound(regroomed.draft).length > 0) {
+        return drive({ ...withUsage, required: requiredDimensionsFor(regroomed.draft.claims) }, deps);
+      }
+      ran = probe(withUsage, deps, { ...exchange, draft: regroomed.draft });
+    }
+  }
+
+  return fileProbe(withUsage, deps, exchange, ran);
+}
+
+/** Whether a probe's denial is the feedback retry's to answer: denied at the
+ * answer stage, for anything but the repair's own all-fact-mismatch class. */
+function feedbackEligible(record: Transaction): boolean {
+  if (record.outcome.status !== "denied" || record.outcome.stage !== "answer") return false;
+  const violations = record.outcome.violations;
+  if (violations.length === 0) return false;
+  return !violations.every((item) => item.article === "IA-2" && item.rule === "fact-mismatch");
+}
+
+type Groomed = { kind: "settled"; state: SessionState } | { kind: "draft"; state: SessionState; draft: ManifestDraft };
+
+/**
+ * One answer-step reply, made into the draft the seam will judge — or the
+ * settled exchange it earns instead. The schema linking first (R3b), then
+ * the doors' guards: a nomination composes, a gated advisory ask gets the
+ * pack's rule appended, a matchup's direction is held to the ask's word
+ * order, a wrong-set catalogue is dropped, padding lessons are trimmed, a
+ * lesson-only deflection becomes the entity's profile. Every step here is
+ * deterministic and counted; the kernel still verifies whatever leaves.
+ * Shared by the first reply and the feedback retry so the two are groomed
+ * identically — a retry that skipped a guard would be a second door.
+ */
+function groom(
+  world: SessionWorld,
+  state: SessionState,
+  deps: SessionDeps,
+  step: AnswerStep,
+  ask: string,
+  openingWords: string,
+  exchange: { transactionId: string; establishedAt: string },
+): Groomed {
+  const { transactionId, establishedAt } = exchange;
+  const honestPass = (withNote: SessionState, detail: string): Groomed => ({
+    kind: "settled",
+    state: note(
+      closeExchange(withNote),
+      deps.now(),
+      "I don't have a certified answer for that one, so I'd rather pass than guess. " +
+        "A specific Pokémon, a move, or a how-the-game-works question usually lands.",
+      "abstention",
+      detail,
+    ),
+  });
+
+  if (!step.decode.ok) {
+    // Before conceding an abstention, let the pack answer what it can: a
+    // gated advisory ask has a deterministic, certified answer — the rule.
+    const routed = eligibilityClaims(world, ask, []);
+    if (routed.length === 0) return honestPass(state, `the model produced no usable answer (${step.decode.reason}) — nothing was committed`);
+    return { kind: "draft", state, draft: { transactionId, claims: routed, rosters: [] } };
+  }
+
+  const linked = applyLinking(world, state, deps, step.decode);
+  state = linked.state;
+  if (linked.verdict === "closed") return { kind: "settled", state };
+  if (linked.verdict === "off-domain") return { kind: "settled", state: redirect(state, deps) };
+  if (linked.verdict === "boundary") return { kind: "settled", state: teachRecordsBoundary(state, deps, transactionId, establishedAt) };
+  const decode = { ...step.decode, draft: { ...step.decode.draft, claims: linked.claims } };
+
+  if (decode.route !== undefined && executeRoute(world, state, decode.route) === undefined && decode.draft.claims.length === 0) {
+    // A refused nomination with nothing beside it: the same honest pass an
+    // empty reply earns, with the countable line in the detail register.
+    return honestPass(state, "the model nominated a route the driver refused, and the reply carried nothing else — nothing was committed");
+  }
+  // A nomination at the scoped hop composes here too — same door, same
+  // validation, same kernel downstream; an invalid one is simply ignored.
+  const nominated = decode.route !== undefined ? executeRoute(world, state, decode.route) : undefined;
+  if (decode.route?.routeId === "listing") {
+    state = tallyListing(state, nominated !== undefined ? "served" : "stoodDown");
+  }
+  const decoded = nominated !== undefined ? { ...decode.draft, claims: nominated.claims, rosters: nominated.rosters } : decode.draft;
+  // A model that deflected a gated advisory ask into adjacent facts gets the
+  // on-target answer appended; one that addressed the species advice-wise —
+  // including by proposing the gated advice the kernel will deny — is left
+  // alone, so the route never softens a denial the gate has earned.
+  const routed = eligibilityClaims(world, ask, decoded.claims);
+  const directed = correctMatchupDirections(world, ask, decoded.claims);
+  const rightSet = dropWrongSetClaims(world, openingWords, { claims: directed.claims, rosters: decoded.rosters });
+  if (rightSet.claims.length < directed.claims.length) state = tallyListing(state, "guardDropped");
+  if (rightSet.claims.length === 0 && directed.claims.length > 0) {
+    // The guard emptied the draft: everything it carried was the wrong
+    // set. An honest pass, never an empty certificate.
+    return honestPass(state, "the wrong-set guard removed every claim the draft carried — nothing was committed");
+  }
+  const groomed = { ...decoded, rosters: rightSet.rosters, claims: trimPaddedLessons(world, ask, rightSet.claims) };
+  if (directed.flips > 0) state = { ...state, flips: state.flips + directed.flips };
+  // The lesson deflection has the same backstop here as at discovery: a
+  // scoped answer that is all lessons for an ask naming one species gets
+  // the entity's profile instead — the model can deflect at either hop.
+  const profile = deflectedProfileClaims(world, ask, groomed.claims);
+  const draft =
+    profile.length > 0
+      ? { ...groomed, claims: profile, rosters: [] }
+      : routed.length === 0
+        ? groomed
+        : { ...groomed, claims: [...groomed.claims, ...routed] };
+  return { kind: "draft", state, draft };
 }
 
 /**
@@ -2017,6 +2148,25 @@ function commit(
   deps: SessionDeps,
   exchange: { transactionId: string; establishedAt: string; draft: ManifestDraft },
 ): SessionState {
+  return fileProbe(state, deps, exchange, probe(state, deps, exchange));
+}
+
+/** One pass through the seam, with the repair: what {@link commit} judges
+ * before it files. Separated so the feedback retry can look at a denial and
+ * ask the model once more before anything is filed. */
+interface Probe {
+  record: Transaction;
+  planned: ManifestDraft;
+  committedAt: string;
+  renderedAt: string;
+  repaired: boolean;
+}
+
+function probe(
+  state: SessionState,
+  deps: SessionDeps,
+  exchange: { transactionId: string; establishedAt: string; draft: ManifestDraft },
+): Probe {
   const { world } = deps;
   const { transactionId, establishedAt, draft } = exchange;
 
@@ -2050,6 +2200,7 @@ function commit(
 
   let planned = draft;
   let ran = attempt(planned);
+  let repaired = false;
 
   // Strip-assertion resubmit (docs/recovery.md, channel 2). Only when every
   // violation is IA-2/fact-mismatch — the model named the right fact and
@@ -2065,13 +2216,24 @@ function commit(
     if (stripped !== undefined) {
       planned = stripped;
       ran = attempt(planned);
-      // The mis-recall stays on the books: whatever files below is a
-      // post-repair outcome, and the accounting never blends the two.
-      state = { ...state, repairs: state.repairs + 1 };
+      repaired = true;
     }
   }
+  return { ...ran, planned, repaired };
+}
 
-  const { record, committedAt, renderedAt } = ran;
+/** File what a probe judged: the exchange's record, or the pause for
+ * consent. The mis-recall a repair fixed stays on the books here — whatever
+ * files is a post-repair outcome, and the accounting never blends the two. */
+function fileProbe(
+  state: SessionState,
+  deps: SessionDeps,
+  exchange: { transactionId: string; establishedAt: string },
+  ran: Probe,
+): SessionState {
+  const { transactionId, establishedAt } = exchange;
+  if (ran.repaired) state = { ...state, repairs: state.repairs + 1 };
+  const { record, committedAt, renderedAt, planned } = ran;
   switch (record.outcome.status) {
     case "answered": {
       // No acts proposed: the probe is the exchange's record. The certified

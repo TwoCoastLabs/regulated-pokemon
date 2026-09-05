@@ -76,6 +76,15 @@ export interface BankRun {
    * (Center loop 2) — the self-pair folded to the fact it means, counted for
    * the same never-blend reason `repaired` is. */
   folded?: boolean;
+  /** True when the outcome followed a verifier-in-the-loop retry (docs/
+   * routing.md, R3b) — a post-feedback resolution, counted apart like the
+   * repair; `firstAttemptDenials` keeps what the first attempt was refused
+   * for, so the enforcement number still measures first attempts. */
+  feedbackRetried?: boolean;
+  firstAttemptDenials?: readonly string[];
+  /** Field-bearing claims the schema linking dropped as off the asked fields
+   * (R3b) — the substitution class, as a per-entry number. */
+  offTargetDropped?: number;
   /** One human line on how it ended, for the report's detail column. */
   detail: string;
 }
@@ -310,8 +319,9 @@ export async function runBankEntry(
   gatedGrammar = false,
   repair = false,
   profile = false,
+  feedback = false,
 ): Promise<RecordedBankRun> {
-  const state = await play(entry, opening, { world, provider, now, grounded, retrieval, gatedGrammar, repair }, profile);
+  const state = await play(entry, opening, { world, provider, now, grounded, retrieval, gatedGrammar, repair, feedback }, profile);
   const run = asRun(entry, state, world, repetition);
   const stage = funnelOf(run, wantsAct(entry));
   return {
@@ -328,6 +338,8 @@ export async function runBankEntry(
     ceremony: ceremonyOf(run),
     ...(state.repairs > 0 ? { repaired: true } : {}),
     ...(state.folds > 0 ? { folded: true } : {}),
+    ...(state.feedbackRetries > 0 ? { feedbackRetried: true, firstAttemptDenials: state.feedbackDenials } : {}),
+    ...(state.linking.offTargetDropped > 0 ? { offTargetDropped: state.linking.offTargetDropped } : {}),
     detail: run.detail,
     run,
   };
@@ -348,11 +360,12 @@ export async function runBank(
   gatedGrammar = false,
   repair = false,
   profile = false,
+  feedback = false,
 ): Promise<readonly RecordedBankRun[]> {
   const runs: RecordedBankRun[] = [];
   for (const entry of entries) {
     runs.push(
-      await runBankEntry(world, entry, provider, clock(), entry.intent, repetition, grounded, retrieval, gatedGrammar, repair, profile),
+      await runBankEntry(world, entry, provider, clock(), entry.intent, repetition, grounded, retrieval, gatedGrammar, repair, profile, feedback),
     );
   }
   return runs;

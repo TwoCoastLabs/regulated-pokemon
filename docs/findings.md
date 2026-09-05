@@ -3910,6 +3910,98 @@ a concept noun ("gym badge", "the League") as if it were a certified
 entity — the IA-3 refusal is right, the lesson stays untaught, and the
 recovery belongs beside the strip-assertion repair, counted apart.
 
+### R3b, first slice: schema linking lands, the first door goes, the number is honest (2026-09-05)
+
+The gate first. The domain-word gate
+(`src/testing/domain-words.test.ts`) reads every string, template and
+regex literal in the routing path — never a comment — against a word list
+derived from both snapshots and packs, and pins the count so it can only
+fall: **90** at its first commit (38 in the driver, 33 in the retrieval
+front door's hand-written item lexicon, 13 in the answer prompt), **77**
+by the end of the day. The design's "33" had counted the driver's regexes
+alone; the instrument counts what a medicine team would rewrite.
+
+Then the mechanism. The pack carries a data dictionary — 24 entries in the
+standard world, 40 in the Center's, one line each — pinned to the registry
+in both directions by the loader; the answer grammar carries `asked`, the
+model's link from each phrase to a dictionary field or the reserved
+`none`; and `src/session/linking.ts` holds the checks: a field-bearing
+claim about a field the model did not link is dropped and counted, a
+`none` link that is the whole answer teaches the boundary lesson, and an
+alias of a different field in a linked phrase becomes a question and never
+an answer, read per the subject the ask names. R3a's seventy tokens and
+its `unavailable` grammar variant are gone. The verifier-in-the-loop retry
+rode along: a denial at the answer stage, other than the repair's class,
+goes back to the model once by name.
+
+Live, before any bank, as the plan now insists. Strong model, profile
+first, nine asks: "how tall is Onix?" and "what egg group is Pikachu in?"
+each taught the boundary lesson at one call with the phrase named;
+Speed, type, the Pikachu–Raichu comparison and Eevee's evolution answered.
+Three defects, all structural, all fixed the same afternoon: shown the
+earlier asks as context, both models linked and *answered them again*
+("what's a gym badge?" came back with Pikachu's Speed and Onix's types
+beside the lesson) — a link whose content words all come from earlier
+exchanges is stale and falls with its claims; "what beats water types?"
+came back as the water roster listed and counted, which no field-bearing
+check could see — a set claim is now about what its roster selects on;
+and the deterministic listing cue door was reading that same ask as a
+listing before any model saw it, so it became the first dispatch door
+deleted, ahead of its turn. The weak model, same asks: "how tall is Onix?"
+was linked to `base-stat-total` and certified — no alias evidence either
+way, exactly the falsification clause the design names; relevance on the
+weak model is measured, not guaranteed, and the bank is where it gets its
+number.
+
+Then the bank, twice, `qwen3-235b`, profile first, N=1, both filed under
+`runs/coverage/`. The first leg (feedback off, artifact `…06-24-36`) read
+**88/137** and found three more structural holes: every count over a
+typed roster fell to the set-claim check because the model linked "how
+many" to none, honestly (no column counts) — a set claim is now off the
+ask only when some field was linked and none of the roster's; every
+off-domain question taught the boundary lesson, a certified page for small
+talk — the boundary is about a certified subject, and any other null link
+is the redirect; and the bank could not switch the retry on. The second
+leg (feedback on, artifact `…06-44-56`; the CLI omitted the flag from the
+artifact's header on that run, stamped by hand afterwards and fixed):
+**97/137** against R3a's 99 — answerable **71%** (56/79, from 73%),
+needs-data honest passes **74%** (17/23, from 70%), honest refusal on
+unanswerables **71%** (17/24, from 67%), gated 10/11, off-domain 10/10,
+enforcement held, ceremony 0.00 questions / 0.00 cards per resolution,
+$0.073. The retry fired on **21** of 137 and turned **15** into passes —
+nine gated asks that first drew IA-5/restricted-species and came back as
+the certified eligibility rule, a membership that first cited a roster not
+in the manifest, a moveset build denied four times as membership-mismatch
+— and turned three needs-data denials into adjacent lessons (a Poké Ball's
+price taught what a Poké Ball is): the retry's prompt now says a merely
+adjacent lesson is worse than no claim, and the next leg measures it. The
+linking dropped **71** off-target claims across 13 entries — 12 at a time
+on "summarize Pikachu" and "compare them all", the profile-shaped asks
+the model answers with everything it knows. The two-pass deficit against
+R3a is inside one leg's N=1 band, and the doors that remain (the
+deflected-profile and eligibility dispatch) are still lexical; the
+number to beat is filed.
+
+**Dogfood stop 1, the same evening.** Six asks on the live page, strong
+model, profile first, read from the dev trace: "what is a Pokemon" taught
+the lesson, "tell me about the species" listed the catalogue by
+nomination, "tell me about Caterpie" nominated the profile — three of six
+exactly as designed, at 3–10 s a call. The other three were one bug and
+one gap. "Tell me about this" drew the boundary note *and* the redirect,
+because the note was written before the off-domain check ran. "Tell me
+about the game" certified eight game-rule constants where the what-is-game
+lesson was the answer, and "which pokemon is the fastest?" linked Speed
+correctly and then certified a type count and eight game rules with no
+ranking in sight. Two causes: the live page ran with retrieval and the
+gated grammar **off** — its defaults, while the tracer and the banks
+default both on — so the grammar offered every constant kind the gate
+would have withheld; and the linking check governed field-bearing and set
+claims but not constants, which are about no subject at all. Both fixed:
+the live page now defaults to the product posture, and with a field
+linked a constant is off the ask. The lesson for the ledger: the live page
+had been measuring a different system from the one the numbers describe,
+and no bank leg could have shown it.
+
 ## Appendix — how to reproduce
 
 ```sh
