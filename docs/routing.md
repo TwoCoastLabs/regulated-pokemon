@@ -131,7 +131,23 @@ enforcement zeros; each of the five wrong-shape classes pinned by a bank
 entry or mutation as denied-or-abstained, never certified-wrong; the
 driver's cue-list count and line count filed before and after.
 
-### R3b design — routing by dictionary
+### R3b design — schema-linked routing
+
+> **In one sentence:** the model links each phrase of the ask to a field of
+> the domain's schema (*schema linking*, in the text-to-SQL sense); the
+> driver checks the answer against that link (*structure*, not words); the
+> schema's aliases can contradict a link but never make one. What it
+> replaces is *lexical routing* — cue lists and regexes deciding an ask's
+> shape from English before the model sees it.
+
+*Naming.* "Schema linking" is the standard term from text-to-SQL research
+for linking spans of a question to schema elements (IRNet, 2019; RAT-SQL,
+2020); the dialogue-systems cousin is slot filling against an ontology; the
+industry names are schema grounding and structured outputs. The artifact
+the domain supplies is its **data dictionary** — one entry per certified
+field: id, name, one-line description, aliases, value kind — in the plain
+database sense. Earlier drafts and the published design page called this
+"routing by dictionary"; the mechanism is unchanged, the name was.
 
 *Written 2026-09-05, after the reflection that a fixed English token list
 cannot be the mechanism a bank or a hospital re-tunes per domain. The
@@ -388,7 +404,8 @@ slices before this one were measured before they were driven, which is the
 wrong order for a "feels dumb" problem.
 
 1. **Gate** (one commit; fails at 33 — the baseline). No stop.
-2. **Dictionary + the `asked` mapping + the five checks**, boundary tokens
+2. **Schema linking: the data dictionary + the `asked` mapping + the five
+   checks**, boundary tokens
    deleted, and **the verifier-in-the-loop retry** (small enough to ride
    here). → **Dogfood stop 1:** "how tall is Onix?", "what egg group",
    "what's its Speed?", "what type is it?" — substitutions gone without a
@@ -410,7 +427,7 @@ wrong order for a "feels dumb" problem.
    `repairs`; the gate at 0.
 7. The openFDA epic, budgeted before it starts.
 
-**What would falsify it.** If, with a dictionary in place, the strong model
+**What would falsify it.** If, with the data dictionary in place, the strong model
 mislabels phrases at a rate the alias cross-check cannot catch — "how
 heavy" mapped to `base-hp` with no alias evidence either way — relevance
 needs judgment the kernel cannot verify, and the product claim narrows to

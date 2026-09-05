@@ -257,7 +257,8 @@ enforcement lives everywhere else and is proven.
 (listing cue, prior-roster, deflected-profile dispatch, boundary tokens)
 and adds one thing to the answer grammar: the model must declare, per
 phrase asked, which certified **field** it read the phrase as — from an
-enum built from the domain's data dictionary — or `null`. The driver then
+enum built from the domain's data dictionary — or `null`: *schema linking*,
+in the text-to-SQL sense. The driver then
 checks structure (claims inside the fields asked; `null` → the records'
 boundary; an alias contradiction → ask) instead of English. The amber
 nodes stay four; the green nodes lose their domain words; the kernel is
@@ -277,6 +278,6 @@ flowchart LR
     CHK --> K[kernel verifies · O answer]:::data
 ```
 
-The full design, with the effort ledger and the third-world plan that
-makes the onboarding claim measurable, is the R3b section of
-[routing.md](routing.md).
+The full design — *schema-linked routing*, with the effort ledger and the
+third-world plan that makes the onboarding claim measurable — is the R3b
+section of [routing.md](routing.md).
