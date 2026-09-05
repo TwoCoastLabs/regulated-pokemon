@@ -68,58 +68,76 @@ transaction (`completions`), which is why the record replays without it.
 
 ## 2. The driver's decision tree for one utterance
 
+Two diagrams, because the tree has two halves that never meet: what happens
+while scope is still being gathered, and what happens once it is granted.
+Green is deterministic driver logic, indigo is the kernel, amber is a model
+call.
+
+**Before scope is granted — gathering.** The deterministic doors run first;
+the model is asked only to learn the answer's *shape*, and the ladder only
+when the trainer's words carry scope wording the vocabulary cannot read.
+
 ```mermaid
 flowchart TD
     classDef det fill:#e6f2ec,stroke:#2e7d5b,color:#16192b
     classDef model fill:#fbeedd,stroke:#b8761a,color:#16192b
     classDef kernel fill:#e3e5f7,stroke:#3b3fa8,color:#16192b
-    classDef out fill:#ffffff,stroke:#5b6078,color:#16192b,stroke-dasharray: 4 3
+    classDef out fill:#ffffff,stroke:#5b6078,color:#16192b
 
-    A[utterance recorded on the trainer channel]:::det --> S{social cue?<br/>greeting, thanks, trust question}:::det
-    S -- yes --> S1[note in the social register<br/>no model, no record]:::out
+    U[utterance]:::det --> S{social cue?}:::det
+    S -- yes --> S1[social note, no model]:::out
     S -- no --> R[resolveScope]:::kernel
-    R -- refused --> R1[record: denied by name]:::out
-    R -- granted --> G1{foreign version?}:::det
-    G1 -- yes --> G2[boundary lesson filed]:::out
-    G1 -- no --> G3{statement of scope only?}:::det
-    G3 -- yes --> G4[acknowledge, close exchange]:::out
-    G3 -- no --> AN[answer hop]
-
-    R -- clarify --> C1{switch-back or version contradiction?}:::det
-    C1 -- yes --> Q[pack question, narrowed to version]:::out
-    C1 -- no --> C2{fresh ask over an armed question or card?}:::det
-    C2 -- yes --> C3[note: set aside, reopen at the new ask]:::det --> R
+    R -- granted --> G[go to the granted half]:::out
+    R -- clarify --> C1{switch-back or<br/>version contradiction?}:::det
+    C1 -- yes --> Q1[pack question, version only]:::out
+    C1 -- no --> C2{fresh ask over an<br/>armed question or card?}:::det
+    C2 -- yes --> C3[set aside, reopen at the new ask]:::det --> R
     C2 -- no --> C4{bare listing cue?}:::det
-    C4 -- served --> AN
-    C4 -- no --> DISC[proposeAnswer<br/>discovery hop, no scope]:::model
-    DISC -- taught --> T1[lesson filed now]:::out
-    DISC -- off-domain --> T2[redirect note]:::out
-    DISC -- needs-scope --> RS[resolveScope with only the dimensions those claims need]:::kernel
-    DISC -- unusable --> RS
-    RS -- granted --> AN
-    RS -- clarify --> L{long-tail scope wording present?}:::det
-    L -- no --> Q2[pack question, or card restated]:::out
-    L -- yes --> LAD[proposeScope<br/>the ladder]:::model
-    LAD --> LG{interpretation fresh? card not a duplicate?}:::det
+    C4 -- served --> G
+    C4 -- no --> M1[proposeAnswer<br/>discovery hop]:::model
+    M1 -- lesson --> T1[lesson filed]:::out
+    M1 -- nothing --> T2[redirect note]:::out
+    M1 -- other claims --> R2[resolveScope, narrowed to<br/>what those claims need]:::kernel
+    R2 -- granted --> G
+    R2 -- clarify --> L{long-tail scope<br/>wording present?}:::det
+    L -- no --> Q2[pack question,<br/>or card restated]:::out
+    L -- yes --> M2[proposeScope<br/>the ladder]:::model
+    M2 --> LG{fresh interpretation,<br/>not a duplicate?}:::det
     LG -- no --> Q2
-    LG -- yes --> CARD[card: confirm or reject]:::out
-
-    AN --> B1{records boundary word?<br/>listing follow-up?}:::det
-    B1 -- yes --> B2[draft composed deterministically]:::det --> V
-    B1 -- no --> ANS[proposeAnswer<br/>answer hop, scope + retrieval + gated grammar + routes]:::model
-    ANS --> RF{only a refused nomination?}:::det
-    RF -- yes --> ANS2[proposeAnswer again, route door closed]:::model --> DEC
-    RF -- no --> DEC[decode; unavailable → note]:::det
-    DEC --> EX[route executor and guards:<br/>subject, set, direction, padded lessons, eligibility]:::det
-    EX --> V[compileManifest + verify]:::kernel
-    V -- allowed --> F[record filed, page rendered]:::out
-    V -- denied, all IA-2 fact-mismatch --> REP[strip assertions, gate once more]:::det --> V
-    V -- denied otherwise --> DN[record: denied by article/rule]:::out
+    LG -- yes --> CARD[card: confirm / reject]:::out
 ```
 
-Green is deterministic driver logic, indigo is the kernel, amber is a
-model call. There are exactly four amber nodes; §3 lists what each is
-shown. Note where the amber nodes sit: always *between* deterministic
+**After scope is granted — answering.** Two deterministic drafts can
+pre-empt the model (the records boundary, a listing follow-up); otherwise
+the model composes, the guards trim, the kernel rules, and one repair may
+re-run the gate without a model.
+
+```mermaid
+flowchart TD
+    classDef det fill:#e6f2ec,stroke:#2e7d5b,color:#16192b
+    classDef model fill:#fbeedd,stroke:#b8761a,color:#16192b
+    classDef kernel fill:#e3e5f7,stroke:#3b3fa8,color:#16192b
+    classDef out fill:#ffffff,stroke:#5b6078,color:#16192b
+
+    G[scope granted]:::kernel --> F{foreign version?}:::det
+    F -- yes --> F1[boundary lesson filed]:::out
+    F -- no --> P{statement of<br/>scope only?}:::det
+    P -- yes --> P1[acknowledge, close]:::out
+    P -- no --> B{records boundary word,<br/>or listing follow-up?}:::det
+    B -- yes --> B1[draft composed<br/>deterministically]:::det --> V
+    B -- no --> M3[proposeAnswer<br/>answer hop]:::model
+    M3 --> RF{only a nomination<br/>the executor refused?}:::det
+    RF -- yes --> M4[proposeAnswer again,<br/>route door closed]:::model --> D
+    RF -- no --> D[decode<br/>unavailable becomes a note]:::det
+    D --> E[route executor and guards:<br/>subject, set, direction, padding]:::det
+    E --> V[compileManifest + verify]:::kernel
+    V -- allowed --> OK[record filed, page rendered]:::out
+    V -- denied, only fact mismatches --> REP[strip asserted values,<br/>gate once more]:::det --> V
+    V -- denied otherwise --> DN[record: denied by article and rule]:::out
+```
+
+There are exactly four amber nodes across the two halves; §3 lists what
+each is shown. Note where the amber nodes sit: always *between* deterministic
 checks, never adjacent to a record. A record is only ever written by the
 kernel node or by a driver note that files nothing.
 
