@@ -118,8 +118,16 @@ export function decodeCandidate(text: string, pack: AccordPack): DecodedCandidat
 // --- answers ----------------------------------------------------------------
 
 export type AnswerDecode =
-  | { ok: true; draft: ManifestDraft; folds: number; route?: RouteNomination }
+  | { ok: true; draft: ManifestDraft; folds: number; route?: RouteNomination; unavailable?: readonly Unavailable[] }
   | { ok: false; reason: string };
+
+/** What the model was asked for and could not certify (epic #145, R3):
+ * a subject and the trainer's own word for the thing — reported to the
+ * trainer as the records' boundary, never compiled, never certified. */
+export interface Unavailable {
+  entityId: string;
+  asked: string;
+}
 
 /**
  * A route the model nominated instead of (or beside) composing — decoded,
@@ -344,12 +352,19 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
   const claims: Claim[] = [];
   let folds = 0;
   let route: RouteNomination | undefined;
+  const unavailable: Unavailable[] = [];
   for (const entry of parsed.claims) {
     // A nomination travels in the claims array (one more grammar variant)
     // but is not a claim: it names a deterministic door, and it never
     // reaches compilation. First one wins; the rest are noise.
     if (isObject(entry) && entry.kind === "route" && isString(entry.routeId)) {
       route ??= entry as unknown as RouteNomination;
+      continue;
+    }
+    // An abstention travels the same way (epic #145, R3): the model names
+    // what it was asked for and cannot certify. Lifted out, never compiled.
+    if (isObject(entry) && entry.kind === "unavailable" && isString(entry.entityId) && isString(entry.asked)) {
+      unavailable.push({ entityId: entry.entityId, asked: entry.asked });
       continue;
     }
     const claim = asClaim(entry);
@@ -398,9 +413,15 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
   // technically true, useless, and read by a visitor as "answered". The
   // honest reading of an empty claims list is that the model had nothing to
   // say, which is an abstention, and abstentions are counted, not certified.
-  if (claims.length === 0 && route === undefined) {
+  if (claims.length === 0 && route === undefined && unavailable.length === 0) {
     return { ok: false, reason: NO_CLAIMS_REASON };
   }
 
-  return { ok: true, draft: { transactionId, claims: distinct, rosters }, folds, ...(route === undefined ? {} : { route }) };
+  return {
+    ok: true,
+    draft: { transactionId, claims: distinct, rosters },
+    folds,
+    ...(route === undefined ? {} : { route }),
+    ...(unavailable.length === 0 ? {} : { unavailable }),
+  };
 }

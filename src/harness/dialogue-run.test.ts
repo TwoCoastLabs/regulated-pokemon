@@ -57,7 +57,9 @@ describe("runDialogue reads each turn from the record that turn produced", () =>
       profile: { version: "red-blue", region: "kanto", badgeLevel: 8 },
       turns: [
         { say: "What's Pikachu's Speed stat?", disposition: "answerable", expectClaimKinds: ["fact"] },
-        { say: "What's Snorlax's catch rate?", disposition: "needs-data", notes: "not in the snapshot" },
+        // "experience" alone is not a records-boundary word, so this stays a model abstention,
+        // which is what the turn-isolation assertion below needs.
+        { say: "How much experience does Mew give?", disposition: "needs-data", notes: "not in the snapshot" },
       ],
     };
     const run = await runDialogue(world, entry, perTurn([["Pikachu", fact("pikachu", "base-speed")]]), clock());

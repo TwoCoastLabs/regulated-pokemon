@@ -104,6 +104,20 @@ answer) is filed before and after.
 
 ### R3 — Dispatch by nomination
 
+Landed in two halves, because R2's bank leg put relevance first. **R3a
+— the records' boundary** (2026-09-05): what these records do not hold
+is policy the trainer can be told — a reviewed lesson plus the trainer's
+words for the things outside the records (`recordsBoundary` in the
+pack), answered deterministically before any model reads the ask; and
+abstention representable in-grammar (`unavailable`), lifted out by the
+decoder and reported as the boundary, never certified. The bank scorer
+reads a record that taught the boundary lesson alone as the honest pass
+it is. **R3b** is the rest of this slice: a recovery for the strong
+model's concept-noun fabrications (a fact about "gym badge" as if it
+were an entity — refused rightly under IA-3, the lesson left untaught),
+counted apart like the strip-assertion repair; and the dispatch
+retirement below.
+
 The listing cue dispatch, the bareness reading, the prior-roster door, the
 deflected-profile dispatch and the eligibility dispatch are retired as
 *dispatch*; each survives only as (a) an executor the model can nominate
@@ -116,6 +130,248 @@ visible as a door that never fired.
 enforcement zeros; each of the five wrong-shape classes pinned by a bank
 entry or mutation as denied-or-abstained, never certified-wrong; the
 driver's cue-list count and line count filed before and after.
+
+### R3b design — routing by dictionary
+
+*Written 2026-09-05, after the reflection that a fixed English token list
+cannot be the mechanism a bank or a hospital re-tunes per domain. The
+mechanism of a turn, with every model call named, is drawn in
+[session-flow.md](session-flow.md); this section is the delta R3b makes to
+it, and the instrument that proves the delta transferred.*
+
+**The claim.** Onboarding a domain is authoring its data — dictionary,
+aliases, policy, curriculum, a reviewed question bank — and zero lines of
+routing code. Checkable per commit (the domain-word gate) and per domain
+(the effort ledger).
+
+**Where the claim stands.** Compliance is proven and usability is measured;
+adaptability has one data point (the Center port: ≈3 agent-days against a
+33-human-day pre-registered budget, ~80% data — [port-log.md](port-log.md))
+and one hidden liability the port never priced, because it accrued in the
+twelve porch rounds afterwards: the session driver is 2,155 lines with 33
+Pokémon-specific literals inside regexes and strings, nine cue constants,
+and — as of R3a — seventy boundary tokens. Each is a line a medicine team
+would rewrite by hand.
+
+**The mechanism: one layer changes.**
+
+```mermaid
+flowchart TB
+    classDef det fill:#e6f2ec,stroke:#2e7d5b,color:#16192b
+    classDef model fill:#fbeedd,stroke:#b8761a,color:#16192b
+    classDef data fill:#e3e5f7,stroke:#3b3fa8,color:#16192b
+    classDef gone fill:#fbe4e4,stroke:#b23a3a,color:#16192b,stroke-dasharray: 5 3
+
+    subgraph TODAY
+        A1[trainer's ask]:::det --> X[regex layer<br/>listing cue + bareness · prior-roster door<br/>profile / eligibility dispatch · 70 boundary tokens<br/>scope vocabulary]:::gone
+        X --> M1[model composes claims]:::model --> G1[guards: subject · set · direction]:::det --> K1[kernel verifies]:::data
+    end
+    subgraph R3b
+        A2[trainer's ask]:::det --> M2[model nominates<br/>asked → field or null · route · unavailable · claims]:::model
+        D[(data dictionary<br/>field ids · names · aliases · descriptions)]:::data -- enum --> M2
+        M2 --> C[driver: structural checks<br/>claims ⊆ fields asked · null → unavailable<br/>alias contradiction → ask · route → guarded executor]:::det
+        D -- aliases --> C
+        C --> G2[guards: subject · set · direction]:::det --> K2[kernel verifies]:::data
+    end
+```
+
+The regex layer decided an ask's *shape from English* before the model saw
+it. Under R3b the model nominates — for each phrase, the certified field it
+read the phrase as, or `null`; plus routes and `unavailable` — against an
+enum built from the domain's **data dictionary**, and the driver checks
+*structure*, not words. The guards and the kernel are untouched.
+
+**The trust boundary does not move.** The dictionary is domain-owned data;
+the kernel and the driver's checks read it directly; the model sits between
+the ask and the checks as recorded, untrusted nominations. That is why the
+dictionary's aliases can *cross-check* the model's mapping rather than trust
+it.
+
+```mermaid
+flowchart LR
+    classDef det fill:#e6f2ec,stroke:#2e7d5b,color:#16192b
+    classDef model fill:#fbeedd,stroke:#b8761a,color:#16192b
+    classDef data fill:#e3e5f7,stroke:#3b3fa8,color:#16192b
+    OWN[domain-owned data<br/>records · dictionary · aliases<br/>policy pack · curriculum · bank]:::data -- "enum + retrieval" --> MOD[model · untrusted<br/>maps phrases → fields<br/>nominates · composes]:::model
+    MOD -- "nominations, recorded" --> KER[kernel · deterministic<br/>structure · truth · policy<br/>files the record · replays]:::det
+    OWN -. "read directly by the checks" .-> KER
+```
+
+**The dictionary is a data product the domain already has.** FHIR element
+definitions, ISO 20022 component names, a fund fact-sheet's field glossary.
+Per certified field: id, name, one line of description, aliases. Where the
+registry's ids are mechanical (`base-speed`, `move-power`) the name and first
+aliases are derived; the description and long-tail aliases are one human
+line per field — O(fields), not O(phrases), authored by the domain team.
+
+| field id | name | aliases (derived + authored) | description | kind |
+|---|---|---|---|---|
+| `base-speed` | Speed | speed, base speed, how fast, faster, fastest, quick | The species' base Speed stat. | numeric |
+| `learnset` | Moves it learns | learn, learns, moveset, can it use | Every move the species can learn in this version. | list |
+| `locations` | Where to find it | where, catch, find, encounter, route | Areas where the species is encountered. | list |
+| `boxed_warning` | Boxed warning | black box, warning, serious risk | The FDA boxed warning text, verbatim. | text |
+| `dosage_and_administration` | Dosage | dose, how much, how often | Approved dosing from the label. | text |
+
+The last two rows are the same table for openFDA drug labels — the third
+world below. The mechanism does not change between the rows; the data does.
+
+**The grammar change.** One addition, always offered: per thing asked, the
+field the model resolved it to, or `null`; the enum is built from the
+dictionary at call time like lesson ids and rule ids already are.
+
+```json
+{
+  "asked": [
+    { "phrase": "how tall", "entityId": "onix", "fieldId": null },
+    { "phrase": "what it evolves into", "entityId": "onix", "fieldId": "evolves-to" }
+  ],
+  "rosters": [],
+  "claims": [ { "kind": "fact", "entityId": "onix", "factId": "evolves-to" } ]
+}
+```
+
+The mapping is a nomination like any other — untrusted, recorded in the
+transaction, replay-free — and auditable: the record shows what the model
+thought "how tall" meant.
+
+**The structural checks that replace the word-lists** (none contains a
+domain word):
+
+- **R1 Claims stay inside the ask.** Every claim's field must be a mapped
+  field in `asked`; an off-target claim is dropped and counted; nothing
+  left → honest pass. "True but not what you asked" becomes unrepresentable
+  given the mapping.
+- **R2 A null mapping is the records' boundary.** Each `fieldId: null`
+  becomes the unavailable note in the trainer's own phrase — the R3a
+  lesson, triggered by structure instead of seventy tokens.
+- **R3 Aliases cross-check the mapping.** A phrase containing an alias of a
+  *different* field than the one mapped is a contradiction: the trainer is
+  asked which they meant. The only place the dictionary's words touch the
+  driver, and it can only make the system ask, never answer.
+- **R4 No mapping and no subject is off-domain.** The redirect, as today.
+- **R5 Routes are nominations with guarded executors.** Listing, profile and
+  eligibility survive only as executors the model names, each with the
+  guards R1 gave them; the cue dispatch in front of them is deleted.
+
+**Clarification and follow-up: the model may ask, the trainer's pick binds.**
+Pushed back on 2026-09-05, rightly: an agent that can only ask the pack's
+fixed questions and never a question of its own feels dumb, and one that
+never offers a next step feels dumber. The earlier "deliberately not built"
+line treated a model-phrased question as a warmth-for-auditability trade;
+that was the wrong cut. The auditable part of a question was never its
+*wording* — it is what the answer *binds to*. So:
+
+- **A clarification is a nomination with typed options.** The grammar gains
+  `{"kind": "clarify", "about": "<phrase>", "question": "<text>", "options":
+  [{"label": "...", "fieldId": "..." | null} | {"label": "...", "dimension":
+  "...", "value": ...}]}`. The question text is the model's (shown in the
+  Advisor's voice, recorded verbatim, never a claim); the options are typed —
+  a certified field or `null`, or an approved scope value — so a pick is a
+  binding the kernel can verify. This generalises "the question is the
+  context": a recorded clarification arms the answer route exactly as the
+  pack's question does, for the option the trainer picks by click or by words
+  matching an option's label or alias.
+- **When the model asks.** An alias contradiction (R3 above) becomes a
+  model-phrased question with the two fields as options instead of a stock
+  line; an ambiguous subject ("the fast one") a question naming the
+  candidates; a scope gap a warm version of the pack's question with the
+  pack's values as options. The pack's fixed question stays as the fallback
+  when the model offers nothing usable — never the default it is today.
+- **A follow-up is a suggestion, not a claim.** `{"kind": "suggest", "asks":
+  ["what it's weak to", "where to catch it"]}` renders as chips in a
+  labelled *suggestion* register (the affidavit attributes them as the
+  model's, uncertified, like the trainer's own words); clicking one sends it
+  as the trainer's utterance. A suggestion asserts nothing — it is a question
+  the trainer may ask — so IA-4 has nothing to check; text closure requires
+  only that the register is labelled, which it is.
+- **Guards, deterministic:** a clarification with no typed option is dropped;
+  an option naming a field or value outside the enums is unrepresentable in
+  the grammar and dropped if it arrives; at most one clarification per turn;
+  a suggestion containing a number or a certified id is dropped (a suggestion
+  may name a topic, never a value). Counted: clarifications asked, picked,
+  ignored; suggestions shown, taken.
+
+**What is deleted, and what replaces it.**
+
+| today (driver code) | size | under R3b |
+|---|---|---|
+| listing verb/wh/noun cues, stop-words, bareness reading | ~180 lines | listing nomination + qualified-set executor guard (kept) |
+| prior-roster door, answer-hop listing door | ~60 | `subject: prior-roster` nomination; executor guard (kept) |
+| deflected-profile dispatch | ~40 | profile nomination; move-naming guard (kept) |
+| eligibility cue (`ADVISORY_WORDING`) | ~30 | eligibility nomination; the pack's restriction rules decide (data) |
+| `recordsBoundary` tokens | 70 tokens | R2: null mapping → unavailable; the lesson stays (data) |
+| direction cue, superlative list | ~25 | direction stays a guard on the composed claim; the superlative list dies with the bareness reading |
+| scope vocabulary | pack data | optional: the profile is the production path (R2); chat inference stays as an override, still data |
+| question openers, interpretation furniture, social cues | ~90 | English function words and social register, not domain words — allowed by the gate by name |
+
+**The gate: no domain word in `src/`.** A CI test that reads every file
+under `src/` and `app/` and fails on any literal naming the domain —
+species, moves, types, rarity words, version names, "Pokémon", "badge",
+"gym", "League" — outside comments. It fails at **33 sites today**; R3b
+drives it to 0 and it stays there. It is the instrument the activation
+counter was: a number that moves per commit. A green gate on the Pokémon
+world is what lets the next world start from the same zero.
+
+**The effort ledger, and how X% gets a number.** The port log's
+pre-registered budget per seam gains a category column:
+
+| category | what | who pays | target |
+|---|---|---|---|
+| core | kernel, driver, harness, app, crucible mechanics | nobody, per domain | 0 days · gate green |
+| owned data | records, data dictionary, alias tables, existing policy | ingest only | days to map, not to author |
+| authored data | certification review, curriculum, consent wording, bank + oracles, restriction rules | the domain team | the whole bill |
+| typed widening | new claim kinds / roster criteria as types (`contraindication` where Pokémon had `matchup`) | engineering, bounded | counted, reviewed, loud by design |
+
+Then a third world that is not Pokémon: **openFDA drug labels** — public,
+structured (indications, dosage, warnings, contraindications), a real alias
+table (RxNorm), a real disclosure rule (a boxed warning beside any dosing
+answer) that maps onto IA-6 directly. Budgeted per seam before it starts,
+ledger filled as it lands, gate at zero throughout, the bank written by
+"the domain team", usefulness produced by the bank on day one. X% is then
+engineering days ÷ total days, against the 30-human-day prior the playbook
+re-derived.
+
+**R3b's gate, as numbers.** Domain literals in `src/`: 33 → 0.
+Needs-data honest passes: at least R3a's 70%, now structural. Answerable
+resolution on both models: at least the current band. Enforcement: zero on
+every leg. Off-target claims dropped and alias contradictions asked:
+counted and filed. Both models per the doctrine — the weak model rarely
+nominates, the strong model sometimes mislabels — with the bank's
+per-field oracle telling those apart.
+
+**Sequencing, with the dogfood stops marked.** Every stop below is a
+point where the live page (`npm run app:dev`, relay on :8080) carries the
+slice and the question to answer is the only one that matters: *does it
+still feel dumb?* A bank leg follows a stop, never replaces it — the two
+slices before this one were measured before they were driven, which is the
+wrong order for a "feels dumb" problem.
+
+1. **Gate** (one commit; fails at 33 — the baseline). No stop.
+2. **Dictionary + the `asked` mapping + the five checks**, boundary tokens
+   deleted. → **Dogfood stop 1:** "how tall is Onix?", "what egg group",
+   "what's its Speed?", "what type is it?" — substitutions gone without a
+   word-list; the honest pass names what was asked.
+3. **Clarification nomination** and the model-phrased scope question.
+   → **Dogfood stop 2:** ambiguous asks ("the fast one", "is it strong?")
+   get a real question with real options; the version question stops
+   sounding like a form.
+4. **Follow-up suggestions.** → **Dogfood stop 3:** every answer offers a
+   next step; the conversation has a shape instead of a series of dead
+   stops.
+5. **Delete the dispatch doors one at a time**, a bank leg after each so a
+   regression names its door. → **Dogfood stop 4** after the listing door
+   goes (the porch's most-trodden path).
+6. **Both-model legs**, N=3 on the strong model; findings filed; the gate
+   at 0.
+7. The openFDA epic, budgeted before it starts.
+
+**What would falsify it.** If, with a dictionary in place, the strong model
+mislabels phrases at a rate the alias cross-check cannot catch — "how
+heavy" mapped to `base-hp` with no alias evidence either way — relevance
+needs judgment the kernel cannot verify, and the product claim narrows to
+*certified-true; relevance measured, not guaranteed*. The bank produces
+that number per field. What this slice cannot falsify: the compliance
+zero, which none of it touches.
 
 ### R4 — The ceremony audit
 
@@ -137,8 +393,9 @@ nondeterministic ever gates proof.
 
 ## Deliberately not built
 
-A model-phrased clarifying question (the pack's question is the binding
-instrument; rewording it buys warmth and costs auditability — revisit after
-R4's numbers). A per-user memory of scope across sessions (a profile is a
+~~A model-phrased clarifying question.~~ Reversed 2026-09-05 — see the R3b
+design: the wording was never the auditable part, the binding is, and a
+clarification with typed options keeps the binding while giving the
+question a voice. A per-user memory of scope across sessions (a profile is a
 setting the page keeps, not a record the kernel owns). Any relaxation of
 the closed route catalogue.

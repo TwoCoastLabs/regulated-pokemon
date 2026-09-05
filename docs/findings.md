@@ -3864,6 +3864,52 @@ hide it. That is R3's relevance problem in its purest form, and the
 profile made it measurable. Pass count 98 sits just under the N=3 band
 (99–106); one sample, filed as such.
 
+### R3, first half: the records' boundary is taught, not substituted for (2026-09-05)
+
+The relevance problem R2 unmasked, taken head on. A trainer who asks
+"how tall is Onix?" was getting Onix's types, stats and evolution —
+certified, in scope, not the answer — because the answer step, told to
+cite only certified facts, composed *something* about the subject
+rather than nothing. Two mechanisms, one principle: the records' own
+boundary is policy the trainer can be told, not a hole the model has to
+find. First, the pack now carries `recordsBoundary`: a reviewed lesson
+(`what-the-records-hold`: what these records certify and what they do
+not) and the trainer's words for the things outside them — seventy
+tokens by the end of the day, from "height" and "weight" through "egg
+group", "catch rate", "colour" and "move tutor". An ask carrying one is
+answered with that lesson deterministically, before any model reads it,
+on both hops; the one exception is an ask naming both a species and a
+move ("does pikachu have the ability to learn surf?"), which is a
+learnset question wearing a boundary word. The loader refuses a
+boundary naming a lesson the pack does not carry or carrying no words
+(IA-6/pack-records-boundary-malformed); the profile-deflection door
+exempts the boundary lesson, since the profile would be exactly the
+substitution it prevents; and the bank scorer reads a record that
+taught the boundary lesson alone as the honest pass it is. Second,
+abstention is representable in-grammar: an `unavailable` variant
+(subject and the trainer's own word for the thing) the decoder lifts
+out and the driver reports as the boundary, alone as an honest pass or
+beside real claims as a note — never a claim, never a certificate. Live
+on the strong model, profile first: "how tall is onix?", "what's
+snorlax's weight?" and "what are the shiny odds?" each taught the
+lesson at zero model calls, and "what type is onix?" answered. The
+strong model did not reach for `unavailable` unprompted — "what egg
+group is onix in?" still drew a four-fact substitution — so the pack's
+words are the working lever and the grammar variant the honest option
+held open for a model that takes it. The bank, profile first,
+`qwen3-235b`, N=1, on the 32-token boundary of the morning: **99/137**,
+needs-data **70%** (from 57% on R2's leg), honest refusal **67%** (from
+54%), nine needs-data questions taught the boundary by name, gated
+100%, ceremony 0.03 questions / 0.00 cards, enforcement held. The
+seven needs-data questions that still slipped are the words added
+after the leg launched — catch rate, egg group, base experience,
+colour, gender ratio, move tutor, playtime — data, not code, and the
+next leg's business. Filed for the second half of R3: the nine
+answerable denials are still the strong model proposing a *fact* about
+a concept noun ("gym badge", "the League") as if it were a certified
+entity — the IA-3 refusal is right, the lesson stays untaught, and the
+recovery belongs beside the strip-assertion repair, counted apart.
+
 ## Appendix — how to reproduce
 
 ```sh

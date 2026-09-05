@@ -1194,6 +1194,26 @@
           }
         ]
       }
+    },
+    {
+      "id": "what-the-records-hold",
+      "article": "IA-6",
+      "block": {
+        "id": "curriculum-what-the-records-hold",
+        "version": 1,
+        "content": [
+          {
+            "locale": "en-US",
+            "text": "These records hold, for every Pok\u00e9mon, its types, Pok\u00e9dex number, base stats, what it evolves into, the moves it can learn and where it is found; for every move, its type, power, accuracy, PP, damage class and effect; and the type chart. They do not hold heights, weights, abilities, cries, shiny odds, friendship, Pok\u00e9dex flavour text, trainer rosters or the story \u2014 so when you ask for one of those, the honest answer is that the League cannot certify it, and I would rather say so than substitute a fact you did not ask for.",
+            "digest": "sha256:a4cbbe4bb2e96dddd96498505c91875caec0b17776aa4a01ce0d0bbcf1d512e7"
+          },
+          {
+            "locale": "en-GB",
+            "text": "These records hold, for every Pok\u00e9mon, its types, Pok\u00e9dex number, base stats, what it evolves into, the moves it can learn and where it is found; for every move, its type, power, accuracy, PP, damage class and effect; and the type chart. They do not hold heights, weights, abilities, cries, shiny odds, friendship, Pok\u00e9dex flavour text, trainer rosters or the story \u2014 so when you ask for one of those, the honest answer is that the League cannot certify it, and I would rather say so than substitute a fact you did not ask for.",
+            "digest": "sha256:a4cbbe4bb2e96dddd96498505c91875caec0b17776aa4a01ce0d0bbcf1d512e7"
+          }
+        ]
+      }
     }
   ],
   "gameRules": [
@@ -1237,5 +1257,80 @@
       "value": 100,
       "label": "the highest level a Pok\u00e9mon can reach"
     }
-  ]
+  ],
+  "recordsBoundary": {
+    "lessonId": "what-the-records-hold",
+    "tokens": [
+      "height",
+      "heights",
+      "tall",
+      "taller",
+      "tallest",
+      "weight",
+      "weights",
+      "weigh",
+      "weighs",
+      "heavy",
+      "heavier",
+      "heaviest",
+      "ability",
+      "abilities",
+      "cry",
+      "cries",
+      "shiny",
+      "shinies",
+      "friendship",
+      "happiness",
+      "flavor text",
+      "flavour text",
+      "pokedex entry",
+      "pok\u00e9dex entry",
+      "elite four",
+      "gym leader",
+      "gym leaders",
+      "champion",
+      "storyline",
+      "the story",
+      "plot",
+      "ending",
+      "egg group",
+      "egg groups",
+      "breed",
+      "breeding",
+      "gender",
+      "genders",
+      "male",
+      "female",
+      "catch rate",
+      "base experience",
+      "growth rate",
+      "held item",
+      "nature",
+      "natures",
+      "iv",
+      "ivs",
+      "ev",
+      "evs",
+      "hidden ability",
+      "mega",
+      "megas",
+      "dynamax",
+      "regional form",
+      "footprint",
+      "colour",
+      "color",
+      "habitat",
+      "generation",
+      "generations",
+      "sound like",
+      "sounds like",
+      "move tutor",
+      "move tutors",
+      "tutor",
+      "how long",
+      "playtime",
+      "play time",
+      "hours"
+    ]
+  }
 }

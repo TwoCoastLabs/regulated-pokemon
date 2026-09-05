@@ -387,6 +387,19 @@ export interface GameRule {
 }
 
 /**
+ * What the records do not hold, as reviewed policy (epic #145, R3). The
+ * tokens are the trainer's words for the things outside these records; the
+ * lesson is the reviewed text that says so. Both are the pack's — the driver
+ * only matches and routes, and the kernel certifies the lesson like any other.
+ */
+export interface RecordsBoundaryRule {
+  /** A curriculum lesson id; the loader refuses one the pack does not carry. */
+  lessonId: string;
+  /** Word-bounded, case-insensitive phrases; a phrase may hold spaces. */
+  tokens: readonly string[];
+}
+
+/**
  * The ceremony dial: how much explicit confirmation the pack demands before
  * an interpretation binds. Policy, not code — a deployment's compliance
  * owner sets it in the reviewed pack, every filed record pins the pack that
@@ -411,6 +424,16 @@ export interface AccordPack {
   id: string;
   /** Absent means strict: every proposal needs its confirmation. */
   ceremony?: CeremonyPolicy;
+  /**
+   * The records' own boundary, as policy (epic #145, R3): the words a
+   * trainer uses for things these records do not hold — heights, weights,
+   * abilities, shiny odds, the story — and the reviewed lesson that says so.
+   * An ask carrying one of them is answered with that lesson, deterministically
+   * and before any model reads it: a certified statement of what the League
+   * holds beats a certified fact the trainer did not ask for. Optional — a
+   * pack without it lets the model decide, which is the measured control.
+   */
+  recordsBoundary?: RecordsBoundaryRule;
   presentation: Presentation;
   restrictions: readonly RestrictionRule[];
   actions: readonly ActionRule[];
@@ -560,6 +583,26 @@ export function loadPack(input: unknown, registry: CertifiedRegistry): Resolutio
       return {
         ok: false,
         violations: [violation("IA-1", "pack-ceremony-malformed", "Accord pack's ceremony section is not readable")],
+      };
+    }
+  }
+
+  if (document.recordsBoundary !== undefined) {
+    const boundary = document.recordsBoundary as unknown as Record<string, unknown>;
+    const curriculum = document.curriculum as ReadonlyArray<{ id?: unknown }>;
+    const lessonKnown =
+      typeof boundary.lessonId === "string" && curriculum.some((lesson) => lesson.id === boundary.lessonId);
+    const tokensSound =
+      Array.isArray(boundary.tokens) &&
+      boundary.tokens.length > 0 &&
+      boundary.tokens.every((token) => typeof token === "string" && token.trim().length > 0);
+    if (typeof document.recordsBoundary !== "object" || document.recordsBoundary === null || !lessonKnown || !tokensSound) {
+      // A boundary naming a lesson the pack does not carry would route to
+      // nothing; one with no words would never fire. Either is a hole that
+      // looks like policy.
+      return {
+        ok: false,
+        violations: [violation("IA-6", "pack-records-boundary-malformed", "Accord pack's records boundary names no carried lesson or no words")],
       };
     }
   }

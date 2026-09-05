@@ -1170,6 +1170,73 @@ describe("porch round ten: the comparative ask binds its own basis", () => {
   });
 });
 
+describe("R3: the records' boundary is taught, never substituted for", () => {
+  const boundaryLesson = () => world.pack.recordsBoundary?.lessonId;
+
+  it("a question about a thing the records do not hold gets the boundary lesson — no model call, on the discovery hop", async () => {
+    let calls = 0;
+    const provider = scripted("mute", () => { calls += 1; return "decline"; });
+    const state = await say(startSession(), "how tall is Onix?", deps(provider));
+    expect(calls).toBe(0);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: boundaryLesson() }]);
+    expect(verifyReplay(world, record).allowed).toBe(true);
+  });
+
+  it("with scope pre-set, the boundary still outranks the model on the answer hop", async () => {
+    let calls = 0;
+    const provider = scripted("mute", () => { calls += 1; return "decline"; });
+    const d = deps(provider);
+    let state = await setProfile(startSession(), { version: "red-blue", region: "kanto", badgeLevel: 8 }, d);
+    state = await say(state, "what's Snorlax's weight?", d);
+    expect(calls).toBe(0);
+    expect(state.records[state.records.length - 1]?.manifest?.claims[0]).toMatchObject({ kind: "explanation", blockId: boundaryLesson() });
+  });
+
+  it("a boundary word beside a species AND a move is a learnset question — the model owns it", async () => {
+    let calls = 0;
+    const provider = scripted("mute", () => { calls += 1; return "decline"; });
+    await say(startSession(), "playing red. does pikachu have the ability to learn surf?", deps(provider));
+    expect(calls).toBeGreaterThan(0);
+  });
+
+  it("the model's own 'unavailable' closes the exchange as an honest pass that names the boundary", async () => {
+    const unavailable = JSON.stringify({ rosters: [], claims: [{ kind: "unavailable", entityId: "onix", asked: "cry" }] });
+    const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : unavailable));
+    const d = deps(provider);
+    let state = await setProfile(startSession(), { version: "red-blue", region: "kanto", badgeLevel: 8 }, d);
+    // "noise" is not a boundary token, so this is the model's own abstention, not the pack's door.
+    state = await say(state, "what noise does Onix make?", d);
+    expect(state.records).toHaveLength(0);
+    const last = state.notes[state.notes.length - 1];
+    expect(last?.tone).toBe("abstention");
+    expect(last?.text).toContain("cry for onix");
+    expect(last?.detail).toContain("uncertified");
+    expect(state.phase.kind).toBe("gathering");
+  });
+
+  it("'unavailable' beside real claims rides along as a note while the claims certify", async () => {
+    const partial = JSON.stringify({
+      rosters: [],
+      claims: [
+        { kind: "fact", entityId: "onix", factId: "types" },
+        { kind: "unavailable", entityId: "onix", asked: "cry" },
+      ],
+    });
+    const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : partial));
+    const d = deps(provider);
+    let state = await setProfile(startSession(), { version: "red-blue", region: "kanto", badgeLevel: 8 }, d);
+    state = await say(state, "what type is Onix, and what noise does it make?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    // The kernel fills the certified value on commit; the shape is what the test pins.
+    expect(record.manifest?.claims).toHaveLength(1);
+    expect(record.manifest?.claims[0]).toMatchObject({ kind: "fact", entityId: "onix", factId: "types" });
+    expect(state.notes.some((n) => n.detail?.includes("uncertified"))).toBe(true);
+  });
+});
+
 describe("R2: the trainer's profile is scope set once, not asked for", () => {
   it("a profile set before the ask means no version question, no card, and a record that replays", async () => {
     const provider = scripted("scripted:honest", (purpose) => (purpose === "scope" ? "decline" : thunderboltAnswer()));

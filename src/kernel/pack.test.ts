@@ -148,6 +148,18 @@ describe("a pack that cannot be trusted is refused by name", () => {
     ).toContain("IA-1/pack-ask-parameter-malformed");
   });
 
+  it("refuses a records boundary naming a lesson the pack does not carry, or carrying no words", () => {
+    expect(
+      denials(loadWith((draft) => ((draft as { recordsBoundary: unknown }).recordsBoundary = { lessonId: "no-such-lesson", tokens: ["height"] }))),
+    ).toContain("IA-6/pack-records-boundary-malformed");
+    expect(
+      denials(loadWith((draft) => ((draft as { recordsBoundary: unknown }).recordsBoundary = { lessonId: "what-the-records-hold", tokens: [] }))),
+    ).toContain("IA-6/pack-records-boundary-malformed");
+    expect(
+      denials(loadWith((draft) => ((draft as { recordsBoundary: unknown }).recordsBoundary = { lessonId: "what-the-records-hold", tokens: ["height", "  "] }))),
+    ).toContain("IA-6/pack-records-boundary-malformed");
+  });
+
   it("refuses two rules sharing one id", () => {
     expect(
       denials(loadWith((draft) => (draft.restrictions as unknown[]).push({ ...draft.restrictions[0] }))),

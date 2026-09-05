@@ -5,7 +5,9 @@
 A demonstration that provable factuality and compliance for AI agents come
 from architecture, not model capability. The canon is
 [docs/the-indigo-accord.md](docs/the-indigo-accord.md); the design is
-[docs/architecture.md](docs/architecture.md); the strategy for carrying the
+[docs/architecture.md](docs/architecture.md), and the mechanism of one live
+turn — which steps call a model, which never do, and what each prompt holds —
+is [docs/session-flow.md](docs/session-flow.md); the strategy for carrying the
 design into real high-stakes domains (and operating a knowledge base under
 it) is [docs/generalization.md](docs/generalization.md); the note placing the
 design against the academic and industrial field, with forward directions as

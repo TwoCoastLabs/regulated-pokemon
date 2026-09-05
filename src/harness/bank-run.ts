@@ -139,7 +139,21 @@ export interface DispositionOracle {
  * into a pass.
  */
 export function scoreOracle(oracle: DispositionOracle, run: HarnessRun, world: DemoWorld, stage: FunnelStage): DispositionScore {
-  const score = scoreDisposition(oracle.disposition, stage, committedGatedAdvice(run, world), eligibilityAnswered(run, world));
+  // The records-boundary lesson, taught alone, is the honest answer to a
+  // needs-data question (epic #145, R3) — a resolution in the record's
+  // mechanics that scores as the abstention it means.
+  const boundaryLesson = world.pack.recordsBoundary?.lessonId;
+  const boundaryTaught =
+    boundaryLesson !== undefined &&
+    routedLesson(run, [boundaryLesson]) &&
+    (run.transaction?.manifest?.claims ?? []).every((claim) => claim.kind === "explanation" && claim.blockId === boundaryLesson);
+  const score = scoreDisposition(
+    oracle.disposition,
+    stage,
+    committedGatedAdvice(run, world),
+    eligibilityAnswered(run, world),
+    boundaryTaught,
+  );
   // The overrides judge a *resolution*'s target; a pass earned by a named
   // denial or an honest abstention (a should-refuse, a needs-data) is left
   // exactly as scored.

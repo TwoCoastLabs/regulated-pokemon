@@ -288,6 +288,11 @@ export function answerSchema(
           ...(routes ?? []).map((route) =>
             variant("route", { routeId: { type: "string", enum: [route.id] }, ...route.args }),
           ),
+          // Abstention, representable in-grammar (epic #145, R3): the model
+          // says what the records do not hold for a subject instead of
+          // substituting a fact nobody asked for. Never a claim — the decoder
+          // lifts it out and the driver reports it; nothing certifies.
+          variant("unavailable", { entityId: STRING, asked: STRING }),
         ],
       },
     },

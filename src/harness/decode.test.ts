@@ -73,6 +73,38 @@ describe("markdown fences — packaging, not a claim", () => {
   });
 });
 
+describe("decodeAnswer lifts an in-grammar abstention out of the claims (epic #145, R3)", () => {
+  it("carries 'unavailable' beside the decoded claims, never as one of them", () => {
+    const text = JSON.stringify({
+      rosters: [],
+      claims: [
+        { kind: "fact", entityId: "onix", factId: "types" },
+        { kind: "unavailable", entityId: "onix", asked: "height" },
+      ],
+    });
+    const decoded = decodeAnswer(text, context, "txn-unavailable");
+    expect(decoded.ok).toBe(true);
+    if (!decoded.ok) return;
+    expect(decoded.draft.claims).toEqual([{ kind: "fact", entityId: "onix", factId: "types" }]);
+    expect(decoded.unavailable).toEqual([{ entityId: "onix", asked: "height" }]);
+  });
+
+  it("an abstention alone is a well-formed reply, not the no-claims refusal", () => {
+    const text = JSON.stringify({ rosters: [], claims: [{ kind: "unavailable", entityId: "onix", asked: "height" }] });
+    const decoded = decodeAnswer(text, context, "txn-unavailable-alone");
+    expect(decoded.ok).toBe(true);
+    if (decoded.ok) {
+      expect(decoded.draft.claims).toEqual([]);
+      expect(decoded.unavailable).toHaveLength(1);
+    }
+  });
+
+  it("a malformed abstention is malformed, like any other entry", () => {
+    const text = JSON.stringify({ rosters: [], claims: [{ kind: "unavailable", entityId: "onix" }] });
+    expect(decodeAnswer(text, context, "txn-unavailable-bad").ok).toBe(false);
+  });
+});
+
 describe("decodeAnswer folds repeated claims (docs/scale.md, S1)", () => {
   it("keeps the first statement of a value-identical claim and drops the rest", () => {
     const text = JSON.stringify({

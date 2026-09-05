@@ -92,7 +92,9 @@ describe("the answer grammar tracks the kernel, not a copy of it", () => {
 
   it("offers every claim kind the decoder accepts, so the grammar narrows nothing", () => {
     expect(new Set(claimKinds)).toEqual(
-      new Set(["fact", "count", "typeCount", "gameRule", "membership", "ranking", "matchup", "eligibility", "explanation", "recommendation", "action"]),
+      // "unavailable" is offered so abstention is representable in-grammar
+      // (epic #145, R3); the decoder lifts it out, so it is never a claim.
+      new Set(["fact", "count", "typeCount", "gameRule", "membership", "ranking", "matchup", "eligibility", "explanation", "recommendation", "action", "unavailable"]),
     );
   });
 
@@ -215,6 +217,8 @@ describe("anything the grammar admits, the decoder reads", () => {
       { kind: "explanation", blockId: "what-is-badge" },
       { kind: "recommendation", entityId: "pikachu" },
       { kind: "action", tool: "catch", entityId: "pikachu" },
+      // Abstention in-grammar: lifted out by the decoder, never a claim.
+      { kind: "unavailable", entityId: "onix", asked: "height" },
     ];
     // Sets, not arrays: the fact kind appears twice in the grammar (with and
     // without an asserted value), which is one kind offered two ways.
@@ -222,7 +226,10 @@ describe("anything the grammar admits, the decoder reads", () => {
 
     const decoded = decodeAnswer(JSON.stringify({ rosters: [], claims }), context, "txn-schema");
     expect(decoded.ok).toBe(true);
-    if (decoded.ok) expect(decoded.draft.claims).toHaveLength(claims.length);
+    if (decoded.ok) {
+      expect(decoded.draft.claims).toHaveLength(claims.length - 1);
+      expect(decoded.unavailable).toEqual([{ entityId: "onix", asked: "height" }]);
+    }
   });
 
   it("decodes a roster built from every criterion kind", () => {
