@@ -3982,6 +3982,26 @@ R3a is inside one leg's N=1 band, and the doors that remain (the
 deflected-profile and eligibility dispatch) are still lexical; the
 number to beat is filed.
 
+**Dogfood stop 1, the same evening.** Six asks on the live page, strong
+model, profile first, read from the dev trace: "what is a Pokemon" taught
+the lesson, "tell me about the species" listed the catalogue by
+nomination, "tell me about Caterpie" nominated the profile — three of six
+exactly as designed, at 3–10 s a call. The other three were one bug and
+one gap. "Tell me about this" drew the boundary note *and* the redirect,
+because the note was written before the off-domain check ran. "Tell me
+about the game" certified eight game-rule constants where the what-is-game
+lesson was the answer, and "which pokemon is the fastest?" linked Speed
+correctly and then certified a type count and eight game rules with no
+ranking in sight. Two causes: the live page ran with retrieval and the
+gated grammar **off** — its defaults, while the tracer and the banks
+default both on — so the grammar offered every constant kind the gate
+would have withheld; and the linking check governed field-bearing and set
+claims but not constants, which are about no subject at all. Both fixed:
+the live page now defaults to the product posture, and with a field
+linked a constant is off the ask. The lesson for the ledger: the live page
+had been measuring a different system from the one the numbers describe,
+and no bank leg could have shown it.
+
 ## Appendix — how to reproduce
 
 ```sh

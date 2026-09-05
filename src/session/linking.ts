@@ -116,7 +116,13 @@ export function linkClaims(asked: readonly AskedField[], claims: readonly Claim[
     const setClaim = claim.kind === "membership" || claim.kind === "count";
     return setClaim && linked.size === 0;
   });
-  return { claims: kept, dropped: claims.length - kept.length };
+  // The constants — a rule of the game, the size of the type chart — are
+  // about no subject at all. Found live (dogfood, 2026-09-05): "which
+  // pokemon is the fastest?" linked Speed correctly and then certified a
+  // type count and eight game rules. With a field linked, the ask was about
+  // that field, and a constant beside it is the dump it looks like.
+  const withoutConstants = linked.size === 0 ? kept : kept.filter((claim) => claim.kind !== "gameRule" && claim.kind !== "typeCount");
+  return { claims: withoutConstants, dropped: claims.length - withoutConstants.length };
 }
 
 export interface Fresh {

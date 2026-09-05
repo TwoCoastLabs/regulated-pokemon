@@ -1374,6 +1374,10 @@ describe("R3b: schema linking — the model links each phrase to a field, the dr
     state = await say(state, "what's the weather like today?", d);
     expect(state.records).toHaveLength(0);
     expect(state.notes[state.notes.length - 1]?.text).toContain("couldn't line that up");
+    // One note, not two: the boundary note is never written for a subject
+    // the records do not certify (dogfood, 2026-09-05: "tell me about this"
+    // drew both).
+    expect(state.notes.filter((n) => n.tone === "abstention")).toHaveLength(1);
     // And on the discovery hop, the same.
     const cold = await say(startSession(), "what's the weather like today?", deps(provider));
     expect(cold.records).toHaveLength(0);

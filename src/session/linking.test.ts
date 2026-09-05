@@ -87,6 +87,15 @@ describe("linkClaims — R1, claims stay inside the ask", () => {
     expect(linkClaims(asked, [speed, weakTo])).toEqual({ claims: [], dropped: 2 });
   });
 
+  it("drops a constant beside a linked field — a game rule is about no subject (dogfood, 2026-09-05)", () => {
+    const asked = [{ phrase: "the fastest", entityId: "none", fieldId: "base-speed" }];
+    const rule: Claim = { kind: "gameRule", ruleId: "party-size" };
+    const types: Claim = { kind: "typeCount" };
+    expect(linkClaims(asked, [rule, types, lesson])).toEqual({ claims: [lesson], dropped: 2 });
+    // With no field linked, "how many types are there?" keeps its constant.
+    expect(linkClaims([{ phrase: "how many types", entityId: "none", fieldId: null }], [types]).dropped).toBe(0);
+  });
+
   it("holds a set claim to nothing when the mapping links no field — 'how many' has no column", () => {
     // Found by the first R3b bank leg: every count over a typed roster fell
     // because the model linked "how many electric ones" to none, honestly.

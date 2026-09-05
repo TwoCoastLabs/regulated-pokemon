@@ -1630,7 +1630,23 @@ function applyLinking(
   // ask drew a boundary note beside its certified answer. Counted, silent.
   const unavailable = asked.flatMap((entry) => (entry.fieldId === null ? [{ entityId: entry.entityId, asked: entry.phrase }] : []));
   const answersRemain = linked.claims.length > 0 || decode.route !== undefined;
-  if (unavailable.length > 0 && !answersRemain) {
+  // The boundary is about a certified subject: "how tall is Onix?" is
+  // asking the records for something they do not hold. A null link on a
+  // subject the records never certified — the weather, "this" — is the
+  // off-domain reply it always was (found by the first R3b bank leg: every
+  // off-domain question taught the boundary lesson; and by dogfood the
+  // same evening: "tell me about this" drew the boundary note AND the
+  // redirect, because the note was written before this was checked).
+  const aboutRecords = unavailable.some((entry) => {
+    const id = entry.entityId.toLowerCase().trim();
+    return (
+      world.registry.speciesIds.includes(id) ||
+      world.registry.moveIds.includes(id) ||
+      world.registry.itemIds.includes(id) ||
+      world.registry.typeNames.has(id)
+    );
+  });
+  if (unavailable.length > 0 && !answersRemain && aboutRecords) {
     // The phrase is the model's span of the ask; when it already names the
     // subject (found on the first live run: the whole question came back as
     // the phrase), naming it again reads as a stutter.
@@ -1657,24 +1673,7 @@ function applyLinking(
   }
 
   if (linked.claims.length === 0 && decode.route === undefined) {
-    if (unavailable.length > 0) {
-      // The boundary is about a certified subject: "how tall is Onix?" is
-      // asking the records for something they do not hold. A null link on
-      // a subject the records never certified — the weather, the capital
-      // of France — is the off-domain reply it always was (found by the
-      // first R3b bank leg: every off-domain question taught the boundary
-      // lesson, a certified page for small talk).
-      const aboutRecords = unavailable.some((entry) => {
-        const id = entry.entityId.toLowerCase().trim();
-        return (
-          world.registry.speciesIds.includes(id) ||
-          world.registry.moveIds.includes(id) ||
-          world.registry.itemIds.includes(id) ||
-          world.registry.typeNames.has(id)
-        );
-      });
-      return { state: next, claims: [], verdict: aboutRecords ? "boundary" : "off-domain" };
-    }
+    if (unavailable.length > 0) return { state: next, claims: [], verdict: aboutRecords ? "boundary" : "off-domain" };
     if (asked.length === 0) {
       // Every link was stale: the reply answered the earlier exchanges and
       // nothing in this one. An honest pass, with the stale count in the
