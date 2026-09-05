@@ -86,6 +86,16 @@ describe("linkClaims — R1, claims stay inside the ask", () => {
     const asked = [{ phrase: "how tall", entityId: "onix", fieldId: null }];
     expect(linkClaims(asked, [speed, weakTo])).toEqual({ claims: [], dropped: 2 });
   });
+
+  it("holds a set claim to nothing when the mapping links no field — 'how many' has no column", () => {
+    // Found by the first R3b bank leg: every count over a typed roster fell
+    // because the model linked "how many electric ones" to none, honestly.
+    const asked = [{ phrase: "how many electric ones", entityId: "electric", fieldId: null }];
+    const count: Claim = { kind: "count", rosterId: "water-pokemon" };
+    expect(linkClaims(asked, [count], [waterRoster]).dropped).toBe(0);
+    // ...but a fact beside it is still the substitution class.
+    expect(linkClaims(asked, [count, speed], [waterRoster]).dropped).toBe(1);
+  });
 });
 
 describe("aliasContradiction — R3, the dictionary's words can only make the system ask", () => {

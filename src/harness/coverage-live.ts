@@ -89,6 +89,9 @@ export interface CoverageArgs {
    * — no pack question about version, region or badges owed. Recorded so the
    * ceremony numbers name their condition. */
   profile: boolean;
+  /** The verifier-in-the-loop retry (docs/routing.md, R3b): a denial at the
+   * answer stage is carried back to the model once. Recorded. */
+  feedback: boolean;
   model?: string;
   limit?: number;
   ids?: readonly string[];
@@ -118,6 +121,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     gatedGrammar: boolean;
     repair: boolean;
     profile: boolean;
+    feedback: boolean;
     model?: string;
     limit?: number;
     ids?: string[];
@@ -129,7 +133,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     source?: string;
     help: boolean;
     errors: string[];
-  } = { live: false, render: false, weak: false, dialogues: false, adversarial: false, center: false, grounded: false, retrieval: false, gatedGrammar: false, repair: false, profile: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
+  } = { live: false, render: false, weak: false, dialogues: false, adversarial: false, center: false, grounded: false, retrieval: false, gatedGrammar: false, repair: false, profile: false, feedback: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
 
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index];
@@ -167,6 +171,9 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
         break;
       case "--profile":
         args.profile = true;
+        break;
+      case "--feedback":
+        args.feedback = true;
         break;
       case "--phrasings":
         args.phrasings = true;
@@ -280,6 +287,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     gatedGrammar: args.gatedGrammar,
     repair: args.repair,
     profile: args.profile,
+    feedback: args.feedback,
     phrasings: args.phrasings,
     repetitions: args.repetitions,
     out: args.out,
@@ -324,6 +332,8 @@ const USAGE = [
   "                      values and run the full gate once more (docs/recovery.md). Counted apart, recorded.",
   "  --profile           set the trainer's profile (version, region, badges) on the panel before the opener,",
   "                      as the live page's form does (epic #145, R2) — no pack question owed. Recorded.",
+  "  --feedback          the verifier-in-the-loop retry (docs/routing.md, R3b): a denial at the answer stage,",
+  "                      other than the repair's class, is carried back to the model once by name. Counted apart.",
   "  --render [PATH]     render a filed coverage artifact (a file, or a directory to take the newest",
   "                      coverage artifact from; default runs/coverage/). Reads no clock, no key, no network.",
   "  --page PATH         with --render, write the page there instead of printing it.",
@@ -516,6 +526,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
         `  gated grammar: ${args.gatedGrammar ? "yes — the answer schema narrows to the kinds each question nominates" : "no — every claim kind is offered"}`,
         `  repair:        ${args.repair ? "yes — an all-fact-mismatch denial is stripped and re-verified once" : "no — a mis-recalled value stays a denial"}`,
         `  profile:       ${args.profile ? "yes — version, region and badges set on the panel before the opener" : "no — the trainer answers the pack's questions in prose"}`,
+        `  feedback:      ${args.feedback ? "yes — a named denial is carried back to the model once" : "no — the first denial files"}`,
         `  model:         ${model}`,
         `  artifact:      filed under ${args.out}/`,
         `  add --live to run it against the model and bill your key.`,
@@ -549,7 +560,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
   } else {
     const runPass = options.runPass ?? runBank;
     for (let pass = 0; pass < args.repetitions; pass++) {
-      const sampled = await runPass(world, entries, provider, options.clock, pass, args.grounded, args.retrieval, args.gatedGrammar, args.repair, args.profile);
+      const sampled = await runPass(world, entries, provider, options.clock, pass, args.grounded, args.retrieval, args.gatedGrammar, args.repair, args.profile, args.feedback);
       runs.push(...sampled);
       if (sampled.some((run) => run.score.enforcementEscalation === true)) {
         // The repetition discipline: a broken enforcement zero stops the run

@@ -1363,6 +1363,23 @@ describe("R3b: schema linking — the model links each phrase to a field, the dr
     expect(state.linking.contradictions).toBe(1);
   });
 
+  it("a null link on a subject the records never certified is the off-domain redirect, not the boundary lesson", async () => {
+    // Found by the first R3b bank leg: every off-domain question ("what's
+    // the weather?") linked its phrase to none and taught the boundary
+    // lesson — a certified page for small talk.
+    const reply = JSON.stringify({ asked: [{ phrase: "the weather", entityId: "weather", fieldId: "none" }], rosters: [], claims: [] });
+    const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : reply));
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "what's the weather like today?", d);
+    expect(state.records).toHaveLength(0);
+    expect(state.notes[state.notes.length - 1]?.text).toContain("couldn't line that up");
+    // And on the discovery hop, the same.
+    const cold = await say(startSession(), "what's the weather like today?", deps(provider));
+    expect(cold.records).toHaveLength(0);
+    expect(cold.notes[cold.notes.length - 1]?.text).toContain("couldn't line that up");
+  });
+
   it("a reply that links nothing is held to nothing — the measured control, counted as unlinked", async () => {
     const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : thunderboltAnswer()));
     const state = await say(startSession(), `${PROFILE} What is Thunderbolt's power?`, deps(provider));

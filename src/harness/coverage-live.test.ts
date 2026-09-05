@@ -72,6 +72,12 @@ describe("parseCoverageArgs fails closed on anything it does not understand", ()
     expect(bad.errors[0]).toContain("definitely-not-one");
   });
 
+  it("reads --feedback as the verifier-in-the-loop condition, recorded (docs/routing.md, R3b)", () => {
+    expect(parseCoverageArgs([]).feedback).toBe(false);
+    expect(parseCoverageArgs(["--feedback"]).feedback).toBe(true);
+    expect(parseCoverageArgs(["--feedback"]).errors).toHaveLength(0);
+  });
+
   it("reads --profile as the panel-first condition, recorded (epic #145, R2)", () => {
     expect(parseCoverageArgs([]).profile).toBe(false);
     expect(parseCoverageArgs(["--profile"]).profile).toBe(true);

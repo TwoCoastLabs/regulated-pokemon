@@ -1273,6 +1273,7 @@ async function teachOrDiscover(
   const linked = applyLinking(world, spentFolded, deps, step.decode);
   spentFolded = linked.state;
   if (linked.verdict === "closed") return { state: spentFolded, result: "closed", claims: [], rosters: [] };
+  if (linked.verdict === "off-domain") return { state: spentFolded, result: "off-domain", claims: [], rosters: [] };
   if (linked.verdict === "boundary") {
     return { state: teachRecordsBoundary(spentFolded, deps, transactionId, establishedAt), result: "taught", claims: [], rosters: [], routed: true };
   }
@@ -1579,7 +1580,7 @@ function applyLinking(
   state: SessionState,
   deps: SessionDeps,
   decode: Extract<AnswerDecode, { ok: true }>,
-): { state: SessionState; claims: readonly Claim[]; verdict: "proceed" | "closed" | "boundary" } {
+): { state: SessionState; claims: readonly Claim[]; verdict: "proceed" | "closed" | "boundary" | "off-domain" } {
   const gauge = { ...state.linking };
   if (decode.asked.length === 0) {
     gauge.unlinked += 1;
@@ -1656,7 +1657,24 @@ function applyLinking(
   }
 
   if (linked.claims.length === 0 && decode.route === undefined) {
-    if (unavailable.length > 0) return { state: next, claims: [], verdict: "boundary" };
+    if (unavailable.length > 0) {
+      // The boundary is about a certified subject: "how tall is Onix?" is
+      // asking the records for something they do not hold. A null link on
+      // a subject the records never certified — the weather, the capital
+      // of France — is the off-domain reply it always was (found by the
+      // first R3b bank leg: every off-domain question taught the boundary
+      // lesson, a certified page for small talk).
+      const aboutRecords = unavailable.some((entry) => {
+        const id = entry.entityId.toLowerCase().trim();
+        return (
+          world.registry.speciesIds.includes(id) ||
+          world.registry.moveIds.includes(id) ||
+          world.registry.itemIds.includes(id) ||
+          world.registry.typeNames.has(id)
+        );
+      });
+      return { state: next, claims: [], verdict: aboutRecords ? "boundary" : "off-domain" };
+    }
     if (asked.length === 0) {
       // Every link was stale: the reply answered the earlier exchanges and
       // nothing in this one. An honest pass, with the stale count in the
@@ -2076,6 +2094,7 @@ function groom(
   const linked = applyLinking(world, state, deps, step.decode);
   state = linked.state;
   if (linked.verdict === "closed") return { kind: "settled", state };
+  if (linked.verdict === "off-domain") return { kind: "settled", state: redirect(state, deps) };
   if (linked.verdict === "boundary") return { kind: "settled", state: teachRecordsBoundary(state, deps, transactionId, establishedAt) };
   const decode = { ...step.decode, draft: { ...step.decode.draft, claims: linked.claims } };
 

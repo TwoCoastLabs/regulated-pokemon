@@ -103,7 +103,18 @@ export function linkClaims(asked: readonly AskedField[], claims: readonly Claim[
   const linked = new Set(asked.flatMap((entry) => (entry.fieldId === null ? [] : [entry.fieldId])));
   const kept = claims.filter((claim) => {
     const fields = fieldsOfClaim(claim, rosters);
-    return fields.length === 0 || fields.some((field) => linked.has(field));
+    if (fields.length === 0) return true;
+    if (fields.some((field) => linked.has(field))) return true;
+    // A set claim is about what its roster selects on, but the ask itself
+    // may have been the set operation — "how many electric ones?" links
+    // "how many" to none, honestly, because no column counts. Found by the
+    // first R3b bank leg: every count and listing over a typed roster fell
+    // here. So a set claim is off the ask only when the model linked some
+    // field and none of the roster's; a mapping that links nothing at all
+    // holds a set claim to nothing. A fact, comparison or ranking basis is
+    // held either way — that is the substitution class.
+    const setClaim = claim.kind === "membership" || claim.kind === "count";
+    return setClaim && linked.size === 0;
   });
   return { claims: kept, dropped: claims.length - kept.length };
 }
