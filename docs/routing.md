@@ -361,13 +361,27 @@ budget this design needs.
 | scope vocabulary | pack data | optional: the profile is the production path (R2); chat inference stays as an override, still data |
 | question openers, interpretation furniture, social cues | ~90 | English function words and social register, not domain words — allowed by the gate by name |
 
-**The gate: no domain word in `src/`.** A CI test that reads every file
-under `src/` and `app/` and fails on any literal naming the domain —
-species, moves, types, rarity words, version names, "Pokémon", "badge",
-"gym", "League" — outside comments. It fails at **33 sites today**; R3b
-drives it to 0 and it stays there. It is the instrument the activation
-counter was: a number that moves per commit. A green gate on the Pokémon
-world is what lets the next world start from the same zero.
+**The gate: no domain word in the routing path.** A CI test
+(`src/testing/domain-words.test.ts`) that reads every string, template and
+regex literal — never a comment — in the files whose literals decide an
+ask's shape (the driver, the propose steps' prompt and grammar, the decoder,
+the retrieval front door, the scope vocabulary's reader; the list is
+`ROUTING_PATH`) and counts the ones naming the domain. The word list is
+derived, not written: every species, move and item id and type name in both
+snapshots, the packs' version and region tokens, and the world nouns the
+pack's copy uses ("Pokémon", "badge", "gym", "League", the rarity words). The
+count is pinned and ratchets down only: going up fails as "move it to
+data", going down without the pin fails as "lower the pin", so the ledger
+reads per commit. Landed 2026-09-05 at **90 sites** — 38 in the driver, 33
+in the retrieval front door's hand-written item lexicon, 13 in the answer
+prompt's copy, the rest in the grammar, the gate cue list and the scope
+reader's denial text. (The design's earlier "33" counted the driver's
+regexes alone.) The crucible's world transcripts, the demo script, the
+harness corpora and the app's copy are this world's test data and copy, not
+routing, and are outside the path by name. R3b drives the number to 0 and
+it stays there. It is the instrument the activation counter was; a green
+gate on the Pokémon world is what lets the next world start from the same
+zero.
 
 **The effort ledger, and how X% gets a number.** The port log's
 pre-registered budget per seam gains a category column:
@@ -388,7 +402,7 @@ ledger filled as it lands, gate at zero throughout, the bank written by
 engineering days ÷ total days, against the 30-human-day prior the playbook
 re-derived.
 
-**R3b's gate, as numbers.** Domain literals in `src/`: 33 → 0.
+**R3b's gate, as numbers.** Domain literals in the routing path: 90 → 0.
 Needs-data honest passes: at least R3a's 70%, now structural. Answerable
 resolution on both models: at least the current band. Enforcement: zero on
 every leg. Off-target claims dropped, alias contradictions asked, feedback
@@ -403,7 +417,8 @@ still feel dumb?* A bank leg follows a stop, never replaces it — the two
 slices before this one were measured before they were driven, which is the
 wrong order for a "feels dumb" problem.
 
-1. **Gate** (one commit; fails at 33 — the baseline). No stop.
+1. **Gate** (one commit; pinned at 90 — the baseline). No stop. *Landed
+   2026-09-05.*
 2. **Schema linking: the data dictionary + the `asked` mapping + the five
    checks**, boundary tokens
    deleted, and **the verifier-in-the-loop retry** (small enough to ride
