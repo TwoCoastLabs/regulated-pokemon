@@ -29,7 +29,7 @@ function json(path: string): unknown {
  * speaks in the League's voice. R3b drives it to zero; lower it in the
  * change that removes a site, never raise it.
  */
-const PINNED_SITES = 90;
+const PINNED_SITES = 88;
 
 describe("the domain-word gate", () => {
   const words = domainWords(

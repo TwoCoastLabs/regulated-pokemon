@@ -5,7 +5,8 @@ import { harnessWorld } from "./corpus.js";
 import { decodeAnswer } from "./decode.js";
 import type { FillerKind } from "./grammar-gate.js";
 import { COMPARABLE_FACT_IDS } from "../kernel/registry.js";
-import { answerSchema, FACT_IDS, MAX_ANSWER_CLAIMS, MAX_ANSWER_ROSTERS } from "./schema.js";
+import { NO_FIELD } from "../kernel/pack.js";
+import { answerSchema, FACT_IDS, MAX_ANSWER_CLAIMS, MAX_ANSWER_ROSTERS, MAX_ASKED } from "./schema.js";
 
 const world = harnessWorld();
 const context = {
@@ -92,10 +93,21 @@ describe("the answer grammar tracks the kernel, not a copy of it", () => {
 
   it("offers every claim kind the decoder accepts, so the grammar narrows nothing", () => {
     expect(new Set(claimKinds)).toEqual(
-      // "unavailable" is offered so abstention is representable in-grammar
-      // (epic #145, R3); the decoder lifts it out, so it is never a claim.
-      new Set(["fact", "count", "typeCount", "gameRule", "membership", "ranking", "matchup", "eligibility", "explanation", "recommendation", "action", "unavailable"]),
+      new Set(["fact", "count", "typeCount", "gameRule", "membership", "ranking", "matchup", "eligibility", "explanation", "recommendation", "action"]),
     );
+  });
+
+  it("offers the schema linking as an `asked` array over exactly the dictionary's fields, plus the reserved none", () => {
+    // The enum is built from the pack's data dictionary at call time, like
+    // lesson and rule ids: a field the dictionary does not describe is
+    // unrepresentable, and the reserved word is the honest "no such field".
+    const asked = properties.asked as { maxItems: number; items: { properties: Record<string, { enum?: string[] }>; required: string[] } };
+    expect(asked.maxItems).toBe(MAX_ASKED);
+    expect(asked.items.required).toEqual(["phrase", "entityId", "fieldId"]);
+    expect(asked.items.properties.fieldId?.enum).toEqual([...world.pack.dictionary.map((entry) => entry.id), NO_FIELD]);
+    // The control arm links nothing: an empty dictionary offers no array.
+    const bare = answerSchema({ curriculum: [], gameRules: [], dictionary: [] }) as { properties: Record<string, unknown> };
+    expect(bare.properties.asked).toBeUndefined();
   });
 
   it("offers exactly the lessons the pack teaches, so a fabricated one is unrepresentable", () => {
@@ -108,7 +120,7 @@ describe("the answer grammar tracks the kernel, not a copy of it", () => {
   it("offers no explanation shape at all for a pack that teaches nothing", () => {
     // An empty enum is a schema some providers reject wholesale; the variant
     // vanishes with the catalogue instead.
-    const bare = answerSchema({ curriculum: [], gameRules: [] }) as { properties: Record<string, { items: unknown }> };
+    const bare = answerSchema({ curriculum: [], gameRules: [], dictionary: [] }) as { properties: Record<string, { items: unknown }> };
     expect(kindsOf(bare.properties.claims?.items)).not.toContain("explanation");
     expect(kindsOf(bare.properties.claims?.items)).not.toContain("gameRule");
   });
@@ -217,17 +229,25 @@ describe("anything the grammar admits, the decoder reads", () => {
       { kind: "explanation", blockId: "what-is-badge" },
       { kind: "recommendation", entityId: "pikachu" },
       { kind: "action", tool: "catch", entityId: "pikachu" },
-      // Abstention in-grammar: lifted out by the decoder, never a claim.
-      { kind: "unavailable", entityId: "onix", asked: "height" },
     ];
     // Sets, not arrays: the fact kind appears twice in the grammar (with and
     // without an asserted value), which is one kind offered two ways.
     expect(new Set(claims.map((claim) => claim.kind))).toEqual(new Set(claimKinds));
 
-    const decoded = decodeAnswer(JSON.stringify({ rosters: [], claims }), context, "txn-schema");
+    // The schema linking rides beside the claims (R3b): a field, and the
+    // reserved none for a thing the records do not hold.
+    const asked = [
+      { phrase: "speed", entityId: "pikachu", fieldId: "base-speed" },
+      { phrase: "height", entityId: "onix", fieldId: NO_FIELD },
+    ];
+    const decoded = decodeAnswer(JSON.stringify({ asked, rosters: [], claims }), context, "txn-schema");
     expect(decoded.ok).toBe(true);
     if (decoded.ok) {
-      expect(decoded.draft.claims).toHaveLength(claims.length - 1);
+      expect(decoded.draft.claims).toHaveLength(claims.length);
+      expect(decoded.asked).toEqual([
+        { phrase: "speed", entityId: "pikachu", fieldId: "base-speed" },
+        { phrase: "height", entityId: "onix", fieldId: null },
+      ]);
       expect(decoded.unavailable).toEqual([{ entityId: "onix", asked: "height" }]);
     }
   });

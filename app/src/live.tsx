@@ -386,6 +386,9 @@ export function Live() {
       world: demoWorld(),
       provider: setup.trace.tap(setup.provider),
       now: clock,
+      // The verifier-in-the-loop retry is the product posture (docs/routing.md,
+      // R3b): a denial the kernel can name is carried back to the model once.
+      feedback: true,
       ...(retrievalOn ? { retrieval: true } : {}),
       ...(gatedOn ? { gatedGrammar: true } : {}),
     };

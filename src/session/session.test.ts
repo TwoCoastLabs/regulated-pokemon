@@ -1170,70 +1170,209 @@ describe("porch round ten: the comparative ask binds its own basis", () => {
   });
 });
 
-describe("R3: the records' boundary is taught, never substituted for", () => {
+describe("R3b: schema linking — the model links each phrase to a field, the driver holds the claims to it", () => {
   const boundaryLesson = () => world.pack.recordsBoundary?.lessonId;
+  const PROFILE_SCOPE = { version: "red-blue", region: "kanto", badgeLevel: 8 } as const;
+  /** A reply that links the asked phrase to no field and then substitutes a
+   * fact nobody asked for — R2's bank finding, in one JSON object. */
+  const substitution = (phrase: string, entityId: string) =>
+    JSON.stringify({
+      asked: [{ phrase, entityId, fieldId: "none" }],
+      rosters: [],
+      claims: [{ kind: "fact", entityId, factId: "types" }],
+    });
 
-  it("a question about a thing the records do not hold gets the boundary lesson — no model call, on the discovery hop", async () => {
-    let calls = 0;
-    const provider = scripted("mute", () => { calls += 1; return "decline"; });
+  it("a phrase linked to no field teaches the boundary lesson on the discovery hop, and the substituted fact is dropped", async () => {
+    const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : substitution("how tall", "onix")));
     const state = await say(startSession(), "how tall is Onix?", deps(provider));
-    expect(calls).toBe(0);
     const record = state.records[state.records.length - 1]!;
     expect(record.outcome.status).toBe("answered");
     expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: boundaryLesson() }]);
     expect(verifyReplay(world, record).allowed).toBe(true);
+    // The boundary named in the trainer's own phrase, and the substitution counted.
+    const boundaryNote = state.notes.find((n) => n.text.includes("\"how tall\" for onix"));
+    expect(boundaryNote?.tone).toBe("abstention");
+    expect(state.linking).toMatchObject({ mapped: 1, offTargetDropped: 1 });
+    expect(state.usage.calls).toBe(1);
   });
 
-  it("with scope pre-set, the boundary still outranks the model on the answer hop", async () => {
-    let calls = 0;
-    const provider = scripted("mute", () => { calls += 1; return "decline"; });
+  it("with scope pre-set, the same reading holds on the answer hop", async () => {
+    const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : substitution("weight", "snorlax")));
     const d = deps(provider);
-    let state = await setProfile(startSession(), { version: "red-blue", region: "kanto", badgeLevel: 8 }, d);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
     state = await say(state, "what's Snorlax's weight?", d);
-    expect(calls).toBe(0);
-    expect(state.records[state.records.length - 1]?.manifest?.claims[0]).toMatchObject({ kind: "explanation", blockId: boundaryLesson() });
+    const record = state.records[state.records.length - 1]!;
+    expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: boundaryLesson() }]);
+    expect(state.notes.some((n) => n.text.includes("\"weight\" for snorlax"))).toBe(true);
   });
 
-  it("a boundary word beside a species AND a move is a learnset question — the model owns it", async () => {
-    let calls = 0;
-    const provider = scripted("mute", () => { calls += 1; return "decline"; });
-    await say(startSession(), "playing red. does pikachu have the ability to learn surf?", deps(provider));
-    expect(calls).toBeGreaterThan(0);
-  });
-
-  it("the model's own 'unavailable' closes the exchange as an honest pass that names the boundary", async () => {
-    const unavailable = JSON.stringify({ rosters: [], claims: [{ kind: "unavailable", entityId: "onix", asked: "cry" }] });
-    const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : unavailable));
-    const d = deps(provider);
-    let state = await setProfile(startSession(), { version: "red-blue", region: "kanto", badgeLevel: 8 }, d);
-    // "noise" is not a boundary token, so this is the model's own abstention, not the pack's door.
-    state = await say(state, "what noise does Onix make?", d);
-    expect(state.records).toHaveLength(0);
-    const last = state.notes[state.notes.length - 1];
-    expect(last?.tone).toBe("abstention");
-    expect(last?.text).toContain("cry for onix");
-    expect(last?.detail).toContain("uncertified");
-    expect(state.phase.kind).toBe("gathering");
-  });
-
-  it("'unavailable' beside real claims rides along as a note while the claims certify", async () => {
+  it("a null link beside a linked claim rides along as a note while the claim certifies", async () => {
     const partial = JSON.stringify({
-      rosters: [],
-      claims: [
-        { kind: "fact", entityId: "onix", factId: "types" },
-        { kind: "unavailable", entityId: "onix", asked: "cry" },
+      asked: [
+        { phrase: "what type", entityId: "onix", fieldId: "types" },
+        { phrase: "what noise", entityId: "onix", fieldId: "none" },
       ],
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "onix", factId: "types" }],
     });
     const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : partial));
     const d = deps(provider);
-    let state = await setProfile(startSession(), { version: "red-blue", region: "kanto", badgeLevel: 8 }, d);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
     state = await say(state, "what type is Onix, and what noise does it make?", d);
     const record = state.records[state.records.length - 1]!;
     expect(record.outcome.status).toBe("answered");
-    // The kernel fills the certified value on commit; the shape is what the test pins.
     expect(record.manifest?.claims).toHaveLength(1);
     expect(record.manifest?.claims[0]).toMatchObject({ kind: "fact", entityId: "onix", factId: "types" });
-    expect(state.notes.some((n) => n.detail?.includes("uncertified"))).toBe(true);
+    expect(state.notes.some((n) => n.text.includes("\"what noise\" for onix"))).toBe(true);
+    expect(state.linking.offTargetDropped).toBe(0);
+  });
+
+  it("R1: a fact about a field the model did not link is dropped, and the linked one certifies", async () => {
+    const reply = JSON.stringify({
+      asked: [{ phrase: "how fast", entityId: "pikachu", fieldId: "base-speed" }],
+      rosters: [],
+      claims: [
+        { kind: "fact", entityId: "pikachu", factId: "base-speed" },
+        { kind: "fact", entityId: "pikachu", factId: "base-hp" },
+      ],
+    });
+    const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : reply));
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims.map((claim) => (claim.kind === "fact" ? claim.factId : claim.kind))).toEqual(["base-speed"]);
+    expect(state.linking.offTargetDropped).toBe(1);
+  });
+
+  it("R1: a reply emptied of everything but off-target facts is an honest pass, never a certificate", async () => {
+    const reply = JSON.stringify({
+      asked: [{ phrase: "how fast", entityId: "pikachu", fieldId: "base-speed" }],
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "pikachu", factId: "base-hp" }],
+    });
+    const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : reply));
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    expect(state.records).toHaveLength(0);
+    expect(state.notes[state.notes.length - 1]?.text).toContain("facts you didn't ask for");
+    expect(state.phase.kind).toBe("gathering");
+  });
+
+  it("R3: an alias contradiction is asked about, not answered — the dictionary's words can only make a question", async () => {
+    const reply = JSON.stringify({
+      asked: [{ phrase: "how fast", entityId: "pikachu", fieldId: "base-attack" }],
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "pikachu", factId: "base-attack" }],
+    });
+    const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : reply));
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    expect(state.records).toHaveLength(0);
+    const last = state.notes[state.notes.length - 1];
+    expect(last?.tone).toBe("abstention");
+    expect(last?.text).toContain("Attack");
+    expect(last?.text).toContain("Speed");
+    expect(state.linking.contradictions).toBe(1);
+  });
+
+  it("a reply that links nothing is held to nothing — the measured control, counted as unlinked", async () => {
+    const provider = scripted("honest", (purpose) => (purpose === "scope" ? "decline" : thunderboltAnswer()));
+    const state = await say(startSession(), `${PROFILE} What is Thunderbolt's power?`, deps(provider));
+    expect(state.records[0]?.outcome.status).toBe("answered");
+    expect(state.linking).toMatchObject({ mapped: 0, unlinked: 1 });
+  });
+});
+
+describe("R3b: the verifier-in-the-loop retry — a denial the kernel can name is carried back once", () => {
+  const fabricated = JSON.stringify({ rosters: [], claims: [{ kind: "fact", entityId: "gym-badge", factId: "types" }] });
+  const lesson = JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-badge" }] });
+
+  /** Fabricates an entity on every answer call until it has been told the
+   * denial; then teaches. The porch's "what's a gym badge?", scripted. */
+  function correcting(): { provider: ModelProvider; prompts: string[] } {
+    const prompts: string[] = [];
+    const provider = new ScriptedProvider("correcting", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      prompts.push(request.prompt);
+      return request.prompt.includes("refused by the verifier") ? lesson : fabricated;
+    });
+    return { provider, prompts };
+  }
+
+  it("turns a first-attempt IA-3 into the lesson on the second call — and keeps the first denial on the books", async () => {
+    const { provider, prompts } = correcting();
+    const d = { ...deps(provider), feedback: true };
+    let state = await setProfile(startSession(), { version: "red-blue", region: "kanto", badgeLevel: 8 }, d);
+    state = await say(state, "what's a gym badge?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-badge" }]);
+    expect(state.feedbackRetries).toBe(1);
+    expect(state.feedbackDenials).toEqual(["IA-3/fabricated-entity"]);
+    // The retry's prompt carries the denial by name, in fixed wording; the
+    // first prompt carried nothing of the kind.
+    expect(prompts).toHaveLength(2);
+    expect(prompts[0]).not.toContain("refused by the verifier");
+    expect(prompts[1]).toContain("refused by the verifier, by name");
+    expect(prompts[1]).toContain("IA-3/fabricated-entity");
+    expect(prompts[1]).toContain('"gym-badge" is not certified');
+    expect(verifyReplay(world, record).allowed).toBe(true);
+  });
+
+  it("reaches the answer hop through the version question too — the discovery reply is not what is retried", async () => {
+    const { provider, prompts } = correcting();
+    const d = { ...deps(provider), feedback: true };
+    let state = await say(startSession(), "what's a gym badge?", d);
+    // The fabricated fact reads as intent at discovery: the version is asked.
+    expect(state.phase.kind).toBe("asking");
+    state = await say(state, "Red", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-badge" }]);
+    // Discovery, the answer hop's first attempt, and the one retry.
+    expect(prompts).toHaveLength(3);
+    expect(state.feedbackRetries).toBe(1);
+  });
+
+  it("without the door, the first denial files as it always did", async () => {
+    const { provider, prompts } = correcting();
+    const d = deps(provider);
+    let state = await setProfile(startSession(), { version: "red-blue", region: "kanto", badgeLevel: 8 }, d);
+    state = await say(state, "what's a gym badge?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("denied");
+    expect(state.feedbackRetries).toBe(0);
+    expect(prompts).toHaveLength(1);
+  });
+
+  it("a second denial files as a denial: no passing by trial and error", async () => {
+    const provider = scripted("stubborn", (purpose) => (purpose === "scope" ? "decline" : fabricated));
+    const d = { ...deps(provider), feedback: true };
+    let state = await setProfile(startSession(), { version: "red-blue", region: "kanto", badgeLevel: 8 }, d);
+    state = await say(state, "what's a gym badge?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("denied");
+    expect(state.feedbackRetries).toBe(1);
+    expect(state.usage.calls).toBe(2);
+  });
+
+  it("leaves the repair's own class alone: an all-fact-mismatch denial is stripped, not fed back", async () => {
+    const wrongSpeed = JSON.stringify({
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "pikachu", factId: "base-speed", asserted: { kind: "number", value: 1 } }],
+    });
+    const provider = scripted("misremembers", (purpose) => (purpose === "scope" ? "decline" : wrongSpeed));
+    const d = { ...deps(provider), feedback: true, repair: true };
+    let state = await setProfile(startSession(), { version: "red-blue", region: "kanto", badgeLevel: 8 }, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    expect(state.records[state.records.length - 1]?.outcome.status).toBe("answered");
+    expect(state.repairs).toBe(1);
+    expect(state.feedbackRetries).toBe(0);
+    expect(state.usage.calls).toBe(1);
   });
 });
 

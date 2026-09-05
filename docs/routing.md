@@ -112,7 +112,10 @@ pack), answered deterministically before any model reads the ask; and
 abstention representable in-grammar (`unavailable`), lifted out by the
 decoder and reported as the boundary, never certified. The bank scorer
 reads a record that taught the boundary lesson alone as the honest pass
-it is. **R3b** is the rest of this slice: a recovery for the strong
+it is. (Both halves were superseded on the same day by R3b's schema
+linking below: the tokens are deleted, and the abstention is now a `none`
+link in the `asked` mapping rather than a grammar variant of its own; the
+lesson and the scorer's reading of it stay.) **R3b** is the rest of this slice: a recovery for the strong
 model's concept-noun fabrications (a fact about "gym badge" as if it
 were an entity — refused rightly under IA-3, the lesson left untaught),
 counted apart like the strip-assertion repair; and the dispatch
@@ -426,6 +429,19 @@ wrong order for a "feels dumb" problem.
    "what's its Speed?", "what type is it?" — substitutions gone without a
    word-list; the honest pass names what was asked; "what's a gym badge?"
    teaches the lesson on the second round instead of dying on the first.
+   *Landed 2026-09-05:* the dictionary lives in the pack (`dictionary`, 24
+   entries in the standard world, 40 in the Center's; the loader pins it to
+   the registry both ways and refuses a shared alias within a subject), the
+   grammar carries `asked` over the dictionary's ids plus the reserved
+   `none`, the decoder reads a `none` link as the abstention R3a's grammar
+   variant carried (that variant is retired), and `src/session/linking.ts`
+   holds the checks: R1 drops off-target field claims and counts them, R2
+   teaches the boundary lesson from a null link, R3 turns an alias
+   contradiction into a question and never an answer, read per the subject
+   the ask names (a move's word is no evidence about a species). The
+   feedback retry is `SessionDeps.feedback` — on in the live page and the
+   tracer, off in the banks until their leg — with the first denial kept in
+   `feedbackDenials`. The seventy tokens are gone; the gate reads 88.
 3. **Clarification nomination**, the model-phrased scope question, and the
    two-per-ask chain cap. → **Dogfood stop 2:** ambiguous asks ("the fast
    one", "is it strong?") get a real question with real options; a second

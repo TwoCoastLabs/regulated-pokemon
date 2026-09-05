@@ -73,25 +73,31 @@ describe("markdown fences — packaging, not a claim", () => {
   });
 });
 
-describe("decodeAnswer lifts an in-grammar abstention out of the claims (epic #145, R3)", () => {
-  it("carries 'unavailable' beside the decoded claims, never as one of them", () => {
+describe("decodeAnswer reads the schema linking beside the claims (docs/routing.md, R3b)", () => {
+  it("carries each asked phrase with its field, and reads the reserved none as null", () => {
     const text = JSON.stringify({
-      rosters: [],
-      claims: [
-        { kind: "fact", entityId: "onix", factId: "types" },
-        { kind: "unavailable", entityId: "onix", asked: "height" },
+      asked: [
+        { phrase: "what type", entityId: "onix", fieldId: "types" },
+        { phrase: "how tall", entityId: "onix", fieldId: "none" },
       ],
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "onix", factId: "types" }],
     });
-    const decoded = decodeAnswer(text, context, "txn-unavailable");
+    const decoded = decodeAnswer(text, context, "txn-asked");
     expect(decoded.ok).toBe(true);
     if (!decoded.ok) return;
     expect(decoded.draft.claims).toEqual([{ kind: "fact", entityId: "onix", factId: "types" }]);
-    expect(decoded.unavailable).toEqual([{ entityId: "onix", asked: "height" }]);
+    expect(decoded.asked).toEqual([
+      { phrase: "what type", entityId: "onix", fieldId: "types" },
+      { phrase: "how tall", entityId: "onix", fieldId: null },
+    ]);
+    // A null link is the abstention the R3a grammar variant used to carry.
+    expect(decoded.unavailable).toEqual([{ entityId: "onix", asked: "how tall" }]);
   });
 
-  it("an abstention alone is a well-formed reply, not the no-claims refusal", () => {
-    const text = JSON.stringify({ rosters: [], claims: [{ kind: "unavailable", entityId: "onix", asked: "height" }] });
-    const decoded = decodeAnswer(text, context, "txn-unavailable-alone");
+  it("a reply that links every phrase to none and claims nothing is well-formed, not the no-claims refusal", () => {
+    const text = JSON.stringify({ asked: [{ phrase: "height", entityId: "onix", fieldId: "none" }], rosters: [], claims: [] });
+    const decoded = decodeAnswer(text, context, "txn-asked-alone");
     expect(decoded.ok).toBe(true);
     if (decoded.ok) {
       expect(decoded.draft.claims).toEqual([]);
@@ -99,9 +105,21 @@ describe("decodeAnswer lifts an in-grammar abstention out of the claims (epic #1
     }
   });
 
-  it("a malformed abstention is malformed, like any other entry", () => {
-    const text = JSON.stringify({ rosters: [], claims: [{ kind: "unavailable", entityId: "onix" }] });
-    expect(decodeAnswer(text, context, "txn-unavailable-bad").ok).toBe(false);
+  it("a reply with no asked array at all carries an empty mapping — a scripted model links nothing", () => {
+    const text = JSON.stringify({ rosters: [], claims: [{ kind: "fact", entityId: "onix", factId: "types" }] });
+    const decoded = decodeAnswer(text, context, "txn-unlinked");
+    expect(decoded.ok).toBe(true);
+    if (decoded.ok) {
+      expect(decoded.asked).toEqual([]);
+      expect(decoded.unavailable).toBeUndefined();
+    }
+  });
+
+  it("a malformed asked entry is malformed, like any other shape", () => {
+    expect(decodeAnswer(JSON.stringify({ asked: [{ phrase: "height", entityId: "onix" }], rosters: [], claims: [] }), context, "txn-asked-bad").ok).toBe(false);
+    expect(decodeAnswer(JSON.stringify({ asked: "height", rosters: [], claims: [] }), context, "txn-asked-bad").ok).toBe(false);
+    // The retired R3a variant is no longer a claim the decoder knows.
+    expect(decodeAnswer(JSON.stringify({ rosters: [], claims: [{ kind: "unavailable", entityId: "onix", asked: "height" }] }), context, "txn-old").ok).toBe(false);
   });
 });
 

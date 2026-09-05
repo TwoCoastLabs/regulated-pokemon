@@ -32,7 +32,7 @@ sequenceDiagram
     alt clarify, no question armed yet
         D->>D: deterministic doors (switch-back, contradiction re-ask, drift, scope statement, listing cue)
         D->>M: proposeAnswer — discovery hop (no scope, grammar + optional retrieval block)
-        M-->>D: JSON: rosters, claims, route?, unavailable?
+        M-->>D: JSON: asked (phrase → field | none), rosters, claims, route?
         D->>D: decode → taught / off-domain / needs-scope / unusable
         D->>K: resolveScope(required = only what those claims need)
         K-->>D: granted | clarify
@@ -44,18 +44,23 @@ sequenceDiagram
         end
     end
     alt granted
-        D->>D: records boundary? scope statement? listing follow-up? (deterministic)
+        D->>D: scope statement? listing follow-up? (deterministic)
         D->>M: proposeAnswer — answer hop (scope, retrieval block, gated grammar, routes)
-        M-->>D: JSON: rosters, claims, route?, unavailable?
+        M-->>D: JSON: asked (phrase → field | none), rosters, claims, route?
         opt reply was only a nomination the executor refused
             D->>M: proposeAnswer again, route door closed
             M-->>D: JSON
         end
-        D->>D: decode, unavailable note, route executor, guards (subject / set / direction / padding)
+        D->>D: decode, schema-linking checks (claims ⊆ asked fields · none → boundary lesson · alias contradiction → ask), route executor, guards (subject / set / direction / padding)
         D->>K: compileManifest + verify (facts, rosters, policy, disclosures)
         K-->>D: allowed | denied by article/rule
         opt denied only as IA-2 fact-mismatch
             D->>D: strip asserted values, re-run the gate once (repair, counted apart)
+        end
+        opt denied at the answer stage for anything else, once (feedback on)
+            D->>M: proposeAnswer again — the denial named, in fixed wording; route door closed
+            M-->>D: JSON
+            D->>D: groom identically, gate once more (feedback retry, counted apart; first denial kept)
         end
         D-->>T: certified page + filed record, or an honest pass by name
     end
@@ -123,32 +128,37 @@ flowchart TD
     F -- yes --> F1[boundary lesson filed]:::out
     F -- no --> P{statement of<br/>scope only?}:::det
     P -- yes --> P1[acknowledge, close]:::out
-    P -- no --> B{records boundary word,<br/>or listing follow-up?}:::det
+    P -- no --> B{listing follow-up?}:::det
     B -- yes --> B1[draft composed<br/>deterministically]:::det --> V
     B -- no --> M3[proposeAnswer<br/>answer hop]:::model
     M3 --> RF{only a nomination<br/>the executor refused?}:::det
     RF -- yes --> M4[proposeAnswer again,<br/>route door closed]:::model --> D
-    RF -- no --> D[decode<br/>unavailable becomes a note]:::det
+    RF -- no --> D[decode + schema linking:<br/>claims held to the asked fields,<br/>none → boundary lesson,<br/>alias contradiction → ask]:::det
     D --> E[route executor and guards:<br/>subject, set, direction, padding]:::det
     E --> V[compileManifest + verify]:::kernel
     V -- allowed --> OK[record filed, page rendered]:::out
     V -- denied, only fact mismatches --> REP[strip asserted values,<br/>gate once more]:::det --> V
+    V -- denied otherwise, feedback on, once --> FB[proposeAnswer again,<br/>the denial named]:::model --> D
     V -- denied otherwise --> DN[record: denied by article and rule]:::out
 ```
 
-There are exactly four amber nodes across the two halves; §3 lists what
+There are exactly five amber nodes across the two halves; §3 lists what
 each is shown. Note where the amber nodes sit: always *between* deterministic
 checks, never adjacent to a record. A record is only ever written by the
-kernel node or by a driver note that files nothing.
+kernel node or by a driver note that files nothing — and the fifth node,
+the feedback retry, re-enters the same decode and the same gate as the
+first, so a loop can only end in a certified answer, an honest pass or a
+denial by name.
 
 ## 3. Every model call the live session can make
 
 | # | purpose | when | prompt (see §4) | grammar | what the reply becomes | if the reply is bad |
 |---|---|---|---|---|---|---|
-| 1 | `answer` — discovery hop | scope not yet granted, no question armed, the deterministic doors stood down | answer prompt with **"Scope is NOT established yet"**; retrieval block when `retrieval` is on | `answerSchema` (+ `route` variants, + `unavailable`; filler kinds gated by the cue) | a lesson commits at once; anything else is read as *intent* and names the scope to establish | unreadable → fall to the version floor; empty → off-domain redirect |
+| 1 | `answer` — discovery hop | scope not yet granted, no question armed, the deterministic doors stood down | answer prompt with **"Scope is NOT established yet"**; retrieval block when `retrieval` is on | `answerSchema` (`asked` over the data dictionary's fields + `none`; + `route` variants; filler kinds gated by the cue) | a lesson commits at once; anything else is read as *intent* and names the scope to establish | unreadable → fall to the version floor; empty → off-domain redirect |
 | 2 | `scope` — the ladder | clarify, a question is not the better move, the words carry long-tail scope wording | scope prompt: the trainer's lines, the missing dimensions, the approved values | none (plain JSON asked; decoded by `decodeCandidate`) | an untrusted `proposal` event; binds only on the trainer's confirmation | malformed or stale → the pack's own question |
 | 3 | `answer` — answer hop | scope granted, no deterministic draft | answer prompt with **"Scope is established: …"**; retrieval block; `previously` for anaphoric asks | as #1 | decoded draft → executor/guards → kernel | malformed → honest pass; token cap → truncation named |
 | 4 | `answer` — route-door-closed retry | #1 or #3 replied with only a nomination the executor refused | same prompt, `routes` omitted | as #1 minus the route variants | as #3 | as #3 |
+| 5 | `answer` — verifier-in-the-loop retry (R3b) | #3's groomed draft was denied at the answer stage for anything but the repair's all-fact-mismatch class, `feedback` on, once per answer | same prompt plus **"Your previous answer … was refused by the verifier, by name"** and one line per violation in fixed wording (`IA-3/fabricated-entity: "gym-badge" is not certified…`); `routes` omitted | as #4 | groomed identically to #3, gated once more; counted as `feedbackRetries`, the first denial kept in `feedbackDenials` | a second denial files as a denial |
 
 Not in the live session: `proposeRawAnswer`, the harness's ungoverned control arm (same question, same grammar, no kernel), which exists so a published number has its comparison leg.
 
@@ -200,16 +210,24 @@ In order:
    the winner), `matchup` (direction follows the question, not the
    subject), `eligibility` (the rule itself is a useful answer),
    `explanation` (a reviewed lesson, last resort), `recommendation`,
-   `action` (executes only on consent), and since R3a `unavailable`
-   (what the records do not hold, in the trainer's word — never
-   substitute).
+   `action` (executes only on consent).
 8. **The nominations**, when offered: the route catalogue (`listing`,
    `profile`) with each route's description and arguments — the door, not
    the work.
-9. **The closed lists**: lesson ids, rule ids with what they count, tool
-   ids, and the certified fact ids per entity kind — *ids, never values*.
-   An id outside these is unrepresentable in the grammar and refused by
-   the kernel if it somehow arrives.
+9. **The schema linking** (R3b, since 2026-09-05): before the claims, one
+   `asked` entry per thing the trainer asked for — their phrase, the
+   subject's id, and the certified field it names or the reserved `none`
+   when the records certify no such field. The prompt says `none` is an
+   honest answer, that linking a field which merely resembles the ask is
+   not, and that a fact, comparison, ranking or matchup about an unlinked
+   field is dropped.
+10. **The closed lists**: lesson ids, rule ids with what they count, tool
+   ids, and **the data dictionary** — every certified field by id with its
+   everyday name and one line of description, grouped by the subject whose
+   field it is (species, move, item, the type chart) — *ids and
+   descriptions, never values*. The aliases are not shown: they are the
+   driver's cross-check, not a hint. An id outside these is unrepresentable
+   in the grammar and refused by the kernel if it somehow arrives.
 
 What is deliberately **not** in the prompt: any fact value, any count,
 any policy threshold. The prompt describes a contract; the content the
@@ -247,7 +265,7 @@ is covered by offline tests with scripted models:
   text closure, the render affidavit); the strip-assertion repair
 - replay: a filed transaction re-verifies byte for byte with no model
 
-And the nondeterministic list is §3's four rows. That asymmetry is the
+And the nondeterministic list is §3's five rows. That asymmetry is the
 architecture: usefulness lives in the amber nodes and is measured;
 enforcement lives everywhere else and is proven.
 
@@ -257,12 +275,16 @@ enforcement lives everywhere else and is proven.
 (listing cue, prior-roster, deflected-profile dispatch, boundary tokens)
 and adds one thing to the answer grammar: the model must declare, per
 phrase asked, which certified **field** it read the phrase as — from an
-enum built from the domain's data dictionary — or `null`: *schema linking*,
+enum built from the domain's data dictionary — or `none`: *schema linking*,
 in the text-to-SQL sense. The driver then
-checks structure (claims inside the fields asked; `null` → the records'
-boundary; an alias contradiction → ask) instead of English. The amber
-nodes stay four; the green nodes lose their domain words; the kernel is
-untouched.
+checks structure (claims inside the fields asked; `none` → the records'
+boundary; an alias contradiction → ask) instead of English. The green
+nodes lose their domain words; the kernel is untouched. *Landed
+2026-09-05:* the dictionary, the `asked` mapping and the three checks
+(`src/session/linking.ts`), the boundary tokens deleted, and the fifth
+amber node — the verifier-in-the-loop retry. Still to land: the dispatch
+doors' deletion, one at a time with a bank leg each (routing.md,
+sequencing step 5).
 
 ```mermaid
 flowchart LR

@@ -1470,79 +1470,648 @@
       "label": "the highest level a Pokémon can reach"
     }
   ],
+  "dictionary": [
+    {
+      "id": "pokedex-number",
+      "subject": "species",
+      "name": "Pokédex number",
+      "description": "The species' number in the Kanto Pokédex.",
+      "aliases": [
+        "pokedex number",
+        "pokédex number",
+        "dex number",
+        "dex no",
+        "national number",
+        "numbered"
+      ]
+    },
+    {
+      "id": "types",
+      "subject": "species",
+      "name": "Type",
+      "description": "The species' type, or both types when it has two.",
+      "aliases": [
+        "type",
+        "types",
+        "typing",
+        "dual type",
+        "what type is",
+        "element"
+      ]
+    },
+    {
+      "id": "is-legendary",
+      "subject": "species",
+      "name": "Legendary",
+      "description": "Whether the species is one of the legendary Pokémon.",
+      "aliases": [
+        "legendary",
+        "is it legendary",
+        "legendaries"
+      ]
+    },
+    {
+      "id": "is-mythical",
+      "subject": "species",
+      "name": "Mythical",
+      "description": "Whether the species is one of the mythical Pokémon.",
+      "aliases": [
+        "mythical",
+        "is it mythical",
+        "mythicals"
+      ]
+    },
+    {
+      "id": "learnset",
+      "subject": "species",
+      "name": "Moves it learns",
+      "description": "Every move the species can learn in this version, by any means.",
+      "aliases": [
+        "learn",
+        "learns",
+        "learnset",
+        "moveset",
+        "movepool",
+        "moves it knows",
+        "moves can it learn",
+        "attacks it learns",
+        "can it use"
+      ]
+    },
+    {
+      "id": "base-hp",
+      "subject": "species",
+      "name": "HP",
+      "description": "The species' base HP stat.",
+      "aliases": [
+        "hp",
+        "hit points",
+        "health",
+        "base hp",
+        "hp stat"
+      ]
+    },
+    {
+      "id": "base-attack",
+      "subject": "species",
+      "name": "Attack",
+      "description": "The species' base Attack stat.",
+      "aliases": [
+        "attack stat",
+        "base attack",
+        "physical attack",
+        "atk",
+        "how hard does it hit"
+      ]
+    },
+    {
+      "id": "base-defense",
+      "subject": "species",
+      "name": "Defense",
+      "description": "The species' base Defense stat.",
+      "aliases": [
+        "defense",
+        "defence",
+        "def",
+        "base defense",
+        "defense stat",
+        "how tough"
+      ]
+    },
+    {
+      "id": "base-special-attack",
+      "subject": "species",
+      "name": "Special Attack",
+      "description": "The species' base Special Attack stat.",
+      "aliases": [
+        "special attack",
+        "sp. atk",
+        "sp atk",
+        "spatk",
+        "special atk"
+      ]
+    },
+    {
+      "id": "base-special-defense",
+      "subject": "species",
+      "name": "Special Defense",
+      "description": "The species' base Special Defense stat.",
+      "aliases": [
+        "special defense",
+        "special defence",
+        "sp. def",
+        "sp def",
+        "spdef"
+      ]
+    },
+    {
+      "id": "base-speed",
+      "subject": "species",
+      "name": "Speed",
+      "description": "The species' base Speed stat.",
+      "aliases": [
+        "speed",
+        "how fast",
+        "fast",
+        "faster",
+        "fastest",
+        "quick",
+        "quicker",
+        "quickest",
+        "slow",
+        "slower",
+        "slowest",
+        "spd",
+        "speed stat"
+      ]
+    },
+    {
+      "id": "base-stat-total",
+      "subject": "species",
+      "name": "Base stat total",
+      "description": "The sum of the species' six base stats.",
+      "aliases": [
+        "base stat total",
+        "bst",
+        "stat total",
+        "total stats",
+        "overall stats",
+        "strongest overall",
+        "best stats"
+      ]
+    },
+    {
+      "id": "evolves-from",
+      "subject": "species",
+      "name": "Evolves from",
+      "description": "What the species evolves from, if anything.",
+      "aliases": [
+        "evolves from",
+        "evolve from",
+        "evolved from",
+        "pre-evolution",
+        "previous form",
+        "what does it come from",
+        "before it"
+      ]
+    },
+    {
+      "id": "evolves-to",
+      "subject": "species",
+      "name": "Evolves into",
+      "description": "What the species evolves into, if anything.",
+      "aliases": [
+        "evolve",
+        "evolves",
+        "evolution",
+        "evolutions",
+        "evolves into",
+        "evolve into",
+        "evolves to",
+        "next form",
+        "final form",
+        "does it evolve",
+        "turn into"
+      ]
+    },
+    {
+      "id": "evolution-methods",
+      "subject": "species",
+      "name": "How it evolves",
+      "description": "What it takes to evolve: a level, a stone or a trade.",
+      "aliases": [
+        "how does it evolve",
+        "how to evolve",
+        "evolve at",
+        "what level does it evolve",
+        "evolution level",
+        "evolution stone",
+        "level up to evolve",
+        "evolve by",
+        "when does it evolve"
+      ]
+    },
+    {
+      "id": "locations",
+      "subject": "species",
+      "name": "Where to find it",
+      "description": "The areas where the species is encountered in this version.",
+      "aliases": [
+        "where can i find",
+        "where to find",
+        "where to catch",
+        "where is",
+        "where do i find",
+        "find it",
+        "catch it",
+        "found in",
+        "location",
+        "locations",
+        "encounter",
+        "habitat",
+        "which route",
+        "area",
+        "where do you get"
+      ]
+    },
+    {
+      "id": "machine",
+      "subject": "move",
+      "name": "TM/HM",
+      "description": "The TM or HM that teaches the move, if any.",
+      "aliases": [
+        "tm",
+        "hm",
+        "machine",
+        "tm number",
+        "hm number",
+        "technical machine",
+        "hidden machine",
+        "which tm",
+        "which hm"
+      ]
+    },
+    {
+      "id": "move-type",
+      "subject": "move",
+      "name": "Move type",
+      "description": "The move's type.",
+      "aliases": [
+        "type",
+        "types",
+        "move type",
+        "type of move",
+        "type of the move",
+        "type of attack",
+        "what type of move",
+        "element"
+      ]
+    },
+    {
+      "id": "move-damage-class",
+      "subject": "move",
+      "name": "Damage class",
+      "description": "Whether the move is physical, special or a status move.",
+      "aliases": [
+        "physical or special",
+        "damage class",
+        "physical",
+        "special move",
+        "status move",
+        "category",
+        "kind of move"
+      ]
+    },
+    {
+      "id": "move-power",
+      "subject": "move",
+      "name": "Power",
+      "description": "The move's base power.",
+      "aliases": [
+        "power",
+        "base power",
+        "how strong",
+        "strong is",
+        "damage",
+        "how much damage",
+        "hits hard",
+        "strength of",
+        "powerful"
+      ]
+    },
+    {
+      "id": "move-accuracy",
+      "subject": "move",
+      "name": "Accuracy",
+      "description": "The move's accuracy, as a percentage.",
+      "aliases": [
+        "accuracy",
+        "accurate",
+        "hit chance",
+        "how often does it hit",
+        "miss",
+        "misses",
+        "land"
+      ]
+    },
+    {
+      "id": "move-pp",
+      "subject": "move",
+      "name": "PP",
+      "description": "The move's PP: how many times it can be used before it runs out.",
+      "aliases": [
+        "pp",
+        "power points",
+        "how many times can it be used",
+        "uses",
+        "how many uses"
+      ]
+    },
+    {
+      "id": "move-effect",
+      "subject": "move",
+      "name": "Effect",
+      "description": "What the move does, in the game's own short description.",
+      "aliases": [
+        "effect",
+        "what does it do",
+        "does it do",
+        "secondary effect",
+        "side effect",
+        "what happens",
+        "what is it for"
+      ]
+    },
+    {
+      "id": "item-category",
+      "subject": "item",
+      "name": "Category",
+      "description": "The shop category the item belongs to.",
+      "aliases": [
+        "category",
+        "kind of item",
+        "what kind",
+        "type of item",
+        "which category"
+      ]
+    },
+    {
+      "id": "cost",
+      "subject": "item",
+      "name": "Price",
+      "description": "What the item costs to buy, in the game's money.",
+      "aliases": [
+        "cost",
+        "costs",
+        "price",
+        "how much",
+        "how much does it cost",
+        "expensive",
+        "cheap",
+        "cheapest",
+        "priciest",
+        "buy for",
+        "sell for",
+        "afford"
+      ]
+    },
+    {
+      "id": "consumable",
+      "subject": "item",
+      "name": "Consumable",
+      "description": "Whether the item is used up when used.",
+      "aliases": [
+        "consumable",
+        "used up",
+        "single use",
+        "one use",
+        "reusable",
+        "runs out",
+        "keep it"
+      ]
+    },
+    {
+      "id": "usable-in-battle",
+      "subject": "item",
+      "name": "Usable in battle",
+      "description": "Whether the item can be used during a battle.",
+      "aliases": [
+        "in battle",
+        "during battle",
+        "usable in battle",
+        "use in a fight",
+        "mid-battle",
+        "while fighting"
+      ]
+    },
+    {
+      "id": "usable-overworld",
+      "subject": "item",
+      "name": "Usable outside battle",
+      "description": "Whether the item can be used outside of battle.",
+      "aliases": [
+        "outside battle",
+        "overworld",
+        "out of battle",
+        "usable outside",
+        "in the field",
+        "from the menu",
+        "outside of a fight"
+      ]
+    },
+    {
+      "id": "item-effect",
+      "subject": "item",
+      "name": "Effect",
+      "description": "What the item does, in the game's own short description.",
+      "aliases": [
+        "effect",
+        "what does it do",
+        "does it do",
+        "what is it for",
+        "used for",
+        "what happens"
+      ]
+    },
+    {
+      "id": "restores-hp",
+      "subject": "item",
+      "name": "HP restored",
+      "description": "How much HP the item restores, when it heals.",
+      "aliases": [
+        "restores hp",
+        "heal",
+        "heals",
+        "how much hp",
+        "hp does it restore",
+        "recover hp",
+        "healing amount",
+        "restore health",
+        "how much does it heal"
+      ]
+    },
+    {
+      "id": "cures",
+      "subject": "item",
+      "name": "Cures",
+      "description": "The status conditions the item cures.",
+      "aliases": [
+        "cure",
+        "cures",
+        "fix",
+        "fixes",
+        "status",
+        "poisoned",
+        "poison",
+        "burn",
+        "burned",
+        "paralysis",
+        "paralyzed",
+        "paralysed",
+        "sleep",
+        "asleep",
+        "frozen",
+        "freeze",
+        "confusion",
+        "confused",
+        "heals status",
+        "removes"
+      ]
+    },
+    {
+      "id": "revives",
+      "subject": "item",
+      "name": "Revives",
+      "description": "Whether the item revives a fainted Pokémon, and with how much HP.",
+      "aliases": [
+        "revive",
+        "revives",
+        "fainted",
+        "bring back",
+        "resurrect",
+        "knocked out"
+      ]
+    },
+    {
+      "id": "restores-pp",
+      "subject": "item",
+      "name": "PP restored",
+      "description": "How much PP the item restores.",
+      "aliases": [
+        "restores pp",
+        "pp back",
+        "recover pp",
+        "pp does it restore",
+        "pp restore",
+        "refill pp",
+        "how much pp"
+      ]
+    },
+    {
+      "id": "pp-scope",
+      "subject": "item",
+      "name": "PP scope",
+      "description": "Whether PP is restored for one move or for every move.",
+      "aliases": [
+        "all moves",
+        "one move",
+        "every move",
+        "which moves",
+        "pp scope",
+        "all of its moves"
+      ]
+    },
+    {
+      "id": "repel-steps",
+      "subject": "item",
+      "name": "Repel steps",
+      "description": "How many steps the repel keeps wild Pokémon away for.",
+      "aliases": [
+        "steps",
+        "how long does it last",
+        "repel last",
+        "how many steps",
+        "duration",
+        "wears off",
+        "last for"
+      ]
+    },
+    {
+      "id": "catch-rate-multiplier",
+      "subject": "item",
+      "name": "Catch rate",
+      "description": "The ball's catch-rate multiplier.",
+      "aliases": [
+        "catch rate",
+        "catch multiplier",
+        "how good at catching",
+        "better at catching",
+        "catch chance",
+        "catch bonus",
+        "catching",
+        "easier to catch"
+      ]
+    },
+    {
+      "id": "always-catches",
+      "subject": "item",
+      "name": "Always catches",
+      "description": "Whether the ball catches without fail.",
+      "aliases": [
+        "always catch",
+        "never fail",
+        "never fails",
+        "guaranteed catch",
+        "catches every time",
+        "without fail",
+        "100%",
+        "guaranteed"
+      ]
+    },
+    {
+      "id": "evolves",
+      "subject": "item",
+      "name": "Evolves",
+      "description": "Which Pokémon the item evolves, and into what.",
+      "aliases": [
+        "evolve",
+        "evolves",
+        "evolution",
+        "what does it evolve",
+        "evolves who",
+        "use on",
+        "which pokemon does it evolve",
+        "who can use"
+      ]
+    },
+    {
+      "id": "era-name",
+      "subject": "item",
+      "name": "Era name",
+      "description": "The item's name in this generation, when it differed from today's.",
+      "aliases": [
+        "called",
+        "name in",
+        "old name",
+        "original name",
+        "era name",
+        "what was it called",
+        "known as",
+        "used to be called"
+      ]
+    },
+    {
+      "id": "type-chart",
+      "subject": "type",
+      "name": "Type chart",
+      "description": "Type effectiveness: what a type or a species is weak to, resists, is immune to, or is strong against.",
+      "aliases": [
+        "weak to",
+        "weakness",
+        "weaknesses",
+        "weak against",
+        "resist",
+        "resists",
+        "resistant",
+        "immune",
+        "immunity",
+        "strong against",
+        "super effective",
+        "effective against",
+        "not very effective",
+        "beats",
+        "counter",
+        "counters",
+        "good against",
+        "matchup",
+        "matchups",
+        "type advantage",
+        "what beats",
+        "vulnerable"
+      ]
+    }
+  ],
   "recordsBoundary": {
-    "lessonId": "what-the-records-hold",
-    "tokens": [
-      "height",
-      "heights",
-      "tall",
-      "taller",
-      "tallest",
-      "weight",
-      "weights",
-      "weigh",
-      "weighs",
-      "heavy",
-      "heavier",
-      "heaviest",
-      "ability",
-      "abilities",
-      "cry",
-      "cries",
-      "shiny",
-      "shinies",
-      "friendship",
-      "happiness",
-      "flavor text",
-      "flavour text",
-      "pokedex entry",
-      "pokédex entry",
-      "elite four",
-      "gym leader",
-      "gym leaders",
-      "champion",
-      "storyline",
-      "the story",
-      "plot",
-      "ending",
-      "egg group",
-      "egg groups",
-      "breed",
-      "breeding",
-      "gender",
-      "genders",
-      "male",
-      "female",
-      "catch rate",
-      "base experience",
-      "growth rate",
-      "held item",
-      "nature",
-      "natures",
-      "iv",
-      "ivs",
-      "ev",
-      "evs",
-      "hidden ability",
-      "mega",
-      "megas",
-      "dynamax",
-      "regional form",
-      "footprint",
-      "colour",
-      "color",
-      "habitat",
-      "generation",
-      "generations",
-      "sound like",
-      "sounds like",
-      "move tutor",
-      "move tutors",
-      "tutor",
-      "how long",
-      "playtime",
-      "play time",
-      "hours"
-    ]
+    "lessonId": "what-the-records-hold"
   }
 }
