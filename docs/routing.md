@@ -253,6 +253,44 @@ domain word):
   eligibility survive only as executors the model names, each with the
   guards R1 gave them; the cue dispatch in front of them is deleted.
 
+**Clarification and follow-up: the model may ask, the trainer's pick binds.**
+Pushed back on 2026-09-05, rightly: an agent that can only ask the pack's
+fixed questions and never a question of its own feels dumb, and one that
+never offers a next step feels dumber. The earlier "deliberately not built"
+line treated a model-phrased question as a warmth-for-auditability trade;
+that was the wrong cut. The auditable part of a question was never its
+*wording* — it is what the answer *binds to*. So:
+
+- **A clarification is a nomination with typed options.** The grammar gains
+  `{"kind": "clarify", "about": "<phrase>", "question": "<text>", "options":
+  [{"label": "...", "fieldId": "..." | null} | {"label": "...", "dimension":
+  "...", "value": ...}]}`. The question text is the model's (shown in the
+  Advisor's voice, recorded verbatim, never a claim); the options are typed —
+  a certified field or `null`, or an approved scope value — so a pick is a
+  binding the kernel can verify. This generalises "the question is the
+  context": a recorded clarification arms the answer route exactly as the
+  pack's question does, for the option the trainer picks by click or by words
+  matching an option's label or alias.
+- **When the model asks.** An alias contradiction (R3 above) becomes a
+  model-phrased question with the two fields as options instead of a stock
+  line; an ambiguous subject ("the fast one") a question naming the
+  candidates; a scope gap a warm version of the pack's question with the
+  pack's values as options. The pack's fixed question stays as the fallback
+  when the model offers nothing usable — never the default it is today.
+- **A follow-up is a suggestion, not a claim.** `{"kind": "suggest", "asks":
+  ["what it's weak to", "where to catch it"]}` renders as chips in a
+  labelled *suggestion* register (the affidavit attributes them as the
+  model's, uncertified, like the trainer's own words); clicking one sends it
+  as the trainer's utterance. A suggestion asserts nothing — it is a question
+  the trainer may ask — so IA-4 has nothing to check; text closure requires
+  only that the register is labelled, which it is.
+- **Guards, deterministic:** a clarification with no typed option is dropped;
+  an option naming a field or value outside the enums is unrepresentable in
+  the grammar and dropped if it arrives; at most one clarification per turn;
+  a suggestion containing a number or a certified id is dropped (a suggestion
+  may name a topic, never a value). Counted: clarifications asked, picked,
+  ignored; suggestions shown, taken.
+
 **What is deleted, and what replaces it.**
 
 | today (driver code) | size | under R3b |
@@ -301,10 +339,31 @@ counted and filed. Both models per the doctrine — the weak model rarely
 nominates, the strong model sometimes mislabels — with the bank's
 per-field oracle telling those apart.
 
-**Sequencing.** Gate first (one commit; it fails at 33 — the baseline).
-Dictionary + grammar. The five checks. Delete the doors one at a time with
-a bank run after each so a regression names its door. Both-model legs, N=3
-on the strong model. Then the openFDA epic, budgeted before it starts.
+**Sequencing, with the dogfood stops marked.** Every stop below is a
+point where the live page (`npm run app:dev`, relay on :8080) carries the
+slice and the question to answer is the only one that matters: *does it
+still feel dumb?* A bank leg follows a stop, never replaces it — the two
+slices before this one were measured before they were driven, which is the
+wrong order for a "feels dumb" problem.
+
+1. **Gate** (one commit; fails at 33 — the baseline). No stop.
+2. **Dictionary + the `asked` mapping + the five checks**, boundary tokens
+   deleted. → **Dogfood stop 1:** "how tall is Onix?", "what egg group",
+   "what's its Speed?", "what type is it?" — substitutions gone without a
+   word-list; the honest pass names what was asked.
+3. **Clarification nomination** and the model-phrased scope question.
+   → **Dogfood stop 2:** ambiguous asks ("the fast one", "is it strong?")
+   get a real question with real options; the version question stops
+   sounding like a form.
+4. **Follow-up suggestions.** → **Dogfood stop 3:** every answer offers a
+   next step; the conversation has a shape instead of a series of dead
+   stops.
+5. **Delete the dispatch doors one at a time**, a bank leg after each so a
+   regression names its door. → **Dogfood stop 4** after the listing door
+   goes (the porch's most-trodden path).
+6. **Both-model legs**, N=3 on the strong model; findings filed; the gate
+   at 0.
+7. The openFDA epic, budgeted before it starts.
 
 **What would falsify it.** If, with a dictionary in place, the strong model
 mislabels phrases at a rate the alias cross-check cannot catch — "how
@@ -334,8 +393,9 @@ nondeterministic ever gates proof.
 
 ## Deliberately not built
 
-A model-phrased clarifying question (the pack's question is the binding
-instrument; rewording it buys warmth and costs auditability — revisit after
-R4's numbers). A per-user memory of scope across sessions (a profile is a
+~~A model-phrased clarifying question.~~ Reversed 2026-09-05 — see the R3b
+design: the wording was never the auditable part, the binding is, and a
+clarification with typed options keeps the binding while giving the
+question a voice. A per-user memory of scope across sessions (a profile is a
 setting the page keeps, not a record the kernel owns). Any relaxation of
 the closed route catalogue.
