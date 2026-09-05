@@ -355,8 +355,8 @@ budget this design needs.
 
 | today (driver code) | size | under R3b |
 |---|---|---|
-| listing verb/wh/noun cues, stop-words, bareness reading | ~180 lines | listing nomination + qualified-set executor guard (kept) |
-| prior-roster door, answer-hop listing door | ~60 | `subject: prior-roster` nomination; executor guard (kept) |
+| listing verb/wh/noun cues, stop-words, bareness reading | ~180 lines | listing nomination + qualified-set executor guard (kept). *Cues deleted 2026-09-05; the bareness reading stays as the executor's guard.* |
+| prior-roster door, answer-hop listing door | ~60 | `subject: prior-roster` nomination; executor guard (kept). *Both doors deleted 2026-09-05.* |
 | deflected-profile dispatch | ~40 | profile nomination; move-naming guard (kept) |
 | eligibility cue (`ADVISORY_WORDING`) | ~30 | eligibility nomination; the pack's restriction rules decide (data) |
 | `recordsBoundary` tokens | 70 tokens | R2: null mapping → unavailable; the lesson stays (data) |
@@ -452,7 +452,12 @@ wrong order for a "feels dumb" problem.
    stops.
 5. **Delete the dispatch doors one at a time**, a bank leg after each so a
    regression names its door. → **Dogfood stop 4** after the listing door
-   goes (the porch's most-trodden path).
+   goes (the porch's most-trodden path). *The listing cue door went first,
+   on 2026-09-05, ahead of its turn: the first schema-linking run showed it
+   reading "what beats water types?" as a listing and serving the water
+   roster before any model saw the ask — a certified wrong shape the new
+   R1 check could only have caught on the model path. Its executor and
+   guards stay as the `listing` nomination; the gate read 77 after.*
 6. **Both-model legs**, N=3 on the strong model, plus the reasoning-mode
    leg as an experiment; findings filed with `feedbackRetries` beside
    `repairs`; the gate at 0.

@@ -759,19 +759,12 @@ async function drive(
       deps,
     );
   }
-  // A listing follow-up short-circuits discovery entirely: the shape is not
-  // the model's to learn — the set is the previous exchange's certified
-  // roster, and the route composes the draft from the record. `routed` skips
-  // the ladder for whatever scope the memberships require, so a missing
-  // dimension costs the pack's own question, never a model interpretation.
-  if (lastSaid !== undefined && !askedAlready && state.required === undefined) {
-    const listed = listingClaims(world, state, lastSaid.text);
-    if (listed.kind === "served") {
-      const tallied = tallyListing(state, "served");
-      return drive({ ...tallied, required: requiredDimensionsFor(listed.draft.claims) }, deps, { ...listed.draft, routed: true });
-    }
-    if (listed.kind === "stood-down") state = tallyListing(state, "stoodDown");
-  }
+  // The listing cue door that stood here — "what/which … pokemon/types",
+  // a listing verb — was the first dispatch door R3b deleted (2026-09-05).
+  // Its executor survives as the `listing` nomination, with the same
+  // guards; the ask's shape is the model's to name. Found on the first
+  // schema-linking run: the cue read "what beats water types?" as a listing
+  // and served the water roster before any model saw the question.
   // Not during an escalation: a widened `required` means an answer was already
   // attempted and wants more scope, so the shape is known and a fresh discovery
   // would only re-ask the model what it just told us.
@@ -1324,30 +1317,10 @@ async function teachOrDiscover(
   return { state: spentFolded, result: "needs-scope", claims: draft.claims, rosters: draft.rosters };
 }
 
-/** Wording that asks for members to be enumerated. Word-bounded and paired
- * with the anaphoric gate, so "list Electric ones" (a subject of its own)
- * still goes to the model and only a bare "list some for me" takes the
- * deterministic road. */
-// Two tiers: the strong verbs stand alone ("list a few for me" — the prior
-// roster is the subject); "what/which" only counts beside a set noun, or
-// bare "what can you do?" becomes a listing and replays the last roster
-// (porch round six, live).
-const LISTING_VERB = /\b(list|name|show|give|enumerate)\b/i;
-const LISTING_WH = /\bwhat(?:s| is|'s| are| r)?\b|\bwhich\b/i;
-const LISTING_NOUN = /\b(pok[eé]mons?|species|types?|legendar(?:y|ies)|mythicals?|rarest)\b/i;
-const listingCue = (ask: string): boolean => LISTING_VERB.test(ask) || (LISTING_WH.test(ask) && LISTING_NOUN.test(ask));
-
-/**
- * The listing a bare "can you list at least 10 for me?" earns — composed
- * from the record, not the model. Found live (2026-08-31): the follow-up
- * reached the model with its antecedent attached and the model still
- * passed; but the antecedent's set is not in the model's head, it is the
- * previous exchange's certified roster, filed in the session's own records.
- * The route reuses that roster verbatim, lists its first N members as
- * membership claims (each re-verified by the kernel like any claim), and
- * keeps the count beside the sample so the total is never mistaken for the
- * list. N comes from the trainer's own number, clamped to the claim budget.
- */
+/** The listing gauge, now over nominations alone: `consulted` counts every
+ * listing nomination that reached the executor, `served` the ones it
+ * composed, `stoodDown` the ones its guards refused, `guardDropped` the
+ * model-composed catalogue claims the wrong-set guard removed. */
 function tallyListing(state: SessionState, outcome: "served" | "stoodDown" | "guardDropped"): SessionState {
   const t = state.listingActivations;
   return {
@@ -1358,43 +1331,6 @@ function tallyListing(state: SessionState, outcome: "served" | "stoodDown" | "gu
       [outcome]: t[outcome] + 1,
     },
   };
-}
-
-function listingClaims(
-  world: SessionWorld,
-  state: SessionState,
-  ask: string,
-): { kind: "served"; draft: Pick<ManifestDraft, "claims" | "rosters"> } | { kind: "stood-down" } | { kind: "no-cue" } {
-  if (!listingCue(ask)) return { kind: "no-cue" };
-  // "What is Pokémon?" is the definitional ask, not the catalogue: the
-  // singular copula before the bare noun is a lesson's shape. Found by the
-  // R1 bank run (2026-09-04): the wh-tier cue read it as bare and served ten
-  // species for a question the curriculum answers. Narrow on purpose — the
-  // class retires with docs/routing.md R3.
-  if (/\bwhat(?:'s| is)\s+(?:an?\s+|the\s+)?pok[eé]mon\b/i.test(ask) && !LISTING_VERB.test(ask)) return { kind: "no-cue" };
-  // One named type is a qualifier the mint understands, so it passes the
-  // gate that species names still fail (a species ask is a profile, not a
-  // listing). Everything else keeps the anaphoric discipline.
-  const haystack = ` ${ask.toLowerCase()} `;
-  const typesNamed = [...world.registry.typeNames].filter((type) => new RegExp(`\\b${type}\\b`).test(haystack));
-  if (typesNamed.length !== 1 && !isAnaphoric(world, ask)) return { kind: "stood-down" };
-  if (namesCertifiedEntity(world.registry, ask)) return { kind: "stood-down" };
-  // The prior roster answers only the bare follow-up ("list 10 of those") —
-  // an ask with substantive leftovers ("which pokemon can learn fly?") names
-  // its own subject, and the last exchange's set must not stand in for it
-  // (found by the activation gauge, 2026-09-01: the stale all-species roster
-  // served a learns-move ask and the guard then certified an empty record).
-  // Bareness gates the whole door, not just the prior roster. The round-
-  // seven guard only withheld the *prior* roster from a non-bare ask and
-  // fell through to the catalogue — so "which pokemon is the fastest?"
-  // was served every species, certified, with no model call (dogfood
-  // 2026-09-04). A qualified ask is the model's to compose.
-  if (typesNamed.length !== 1 && !bareCatalogueAsk(world, ask)) return { kind: "stood-down" };
-  const prior = typesNamed.length === 1 ? undefined : priorRoster(state);
-  const roster = prior ?? catalogueRoster(world, ask);
-  const asked = Number(/\d+/.exec(ask)?.[0]);
-  const draft = composeListing(roster, Number.isFinite(asked) && asked > 0 ? asked : 10);
-  return draft === undefined ? { kind: "stood-down" } : { kind: "served", draft };
 }
 
 /** The most recent certified roster on file, when one exists. */
@@ -1517,39 +1453,6 @@ function dropWrongSetClaims(
   if (claims.length === draft.claims.length) return draft;
   const cited = new Set(claims.flatMap((claim) => ("rosterId" in claim && typeof claim.rosterId === "string" ? [claim.rosterId] : [])));
   return { claims, rosters: draft.rosters.filter((roster) => cited.has(roster.id)) };
-}
-
-function catalogueRoster(world: SessionWorld, ask: string) {
-  // Rarity is the one qualifier the mint understands (porch round five:
-  // "whats the rarest pokemon?" drew a stale basis card — rarity is not a
-  // numeric basis, and the honest answer is the legendaries themselves,
-  // expressible today as a rarity roster). Any other surviving word still
-  // stands the mint down: a qualified set is the model's to compose.
-  const oneType = (() => {
-    const hay = ` ${ask.toLowerCase()} `;
-    const named = [...world.registry.typeNames].filter((type) => new RegExp(`\\b${type}\\b`).test(hay));
-    return named.length === 1 ? named[0] : undefined;
-  })();
-  const rarity = /\brarest\b|\blegendar(?:y|ies)\b/i.test(ask) ? "legendary" : /\bmythicals?\b/i.test(ask) ? "mythical" : undefined;
-  const typeStripper = new RegExp(`\\b(${[...world.registry.typeNames].join("|")})\\b`, "g");
-  const leftovers = ask
-    .toLowerCase()
-    .replace(/\bpok[eé]mons?\b|\bspecies\b|\btypes?\b/g, " ")
-    .replace(/\brarest\b|\blegendar(?:y|ies)\b|\bmythicals?\b|\bwhich\b|\bwhats?\b/g, " ")
-    .replace(typeStripper, " ")
-    .replace(LISTING_STOPWORDS, " ")
-    .trim();
-  if (leftovers !== "") return undefined;
-  if (oneType !== undefined) {
-    const built = buildRoster(world.registry, `${oneType}-pokemon`, { all: [{ kind: "has-type", type: oneType }] });
-    return built.ok ? built.value : undefined;
-  }
-  if (rarity === undefined && !/\bpok[eé]mons?\b|\bspecies\b|\btypes?\b/i.test(ask)) return undefined;
-  if (rarity !== undefined) {
-    const built = buildRoster(world.registry, `${rarity}-pokemon`, { all: [{ kind: "rarity", rarity }] });
-    return built.ok ? built.value : undefined;
-  }
-  return mintCatalogue(world);
 }
 
 /** The whole certified species set as a roster — the kernel's own spelling
@@ -1964,28 +1867,13 @@ async function answer(
     .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
     .join(" ");
   const previously = anaphorContext(world, state, currentAsk);
-  // A bare listing follow-up is answered from the record it refers to — the
-  // previous exchange's certified roster — never from a model's guess at the
-  // antecedent (and the weak model, handed the antecedent, still passed).
-  // The route outranks a model draft arriving on the discovery hop: for a
-  // listing ask, the record is the authority on what "them" means. Keyed on
-  // the exchange's FIRST utterance — the ask — because later utterances are
-  // answers to the pack's questions ("Red and Blue") and would unbare it.
+  // The exchange's FIRST utterance — the ask — is what the set guards read:
+  // later utterances answer the pack's questions ("Red and Blue") and would
+  // unbare it. (The listing cue door that read it here is gone — R3b, see
+  // the discovery hop; a listing is the model's to nominate.)
   const openingAsk = state.transcript
     .slice(state.askStart)
     .find((event) => event.kind === "utterance" && event.source === "trainer");
-  // Only when nothing route-composed already rode in: a routed draft was
-  // consulted and tallied at the dispatch hop, and re-checking here would
-  // double-count the gauge.
-  if (reuse?.routed !== true) {
-    const cueListing = listingClaims(world, state, openingAsk?.kind === "utterance" ? openingAsk.text : currentAsk);
-    if (cueListing.kind === "served") {
-      state = tallyListing(state, "served");
-      reuse = cueListing.draft;
-    } else if (cueListing.kind === "stood-down") {
-      state = tallyListing(state, "stoodDown");
-    }
-  }
 
   let step;
   let stepRetried = false;

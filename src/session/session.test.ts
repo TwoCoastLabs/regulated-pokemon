@@ -742,12 +742,19 @@ describe("the version boundary is a teaching, not a dead end", () => {
   });
 });
 
+/** A listing nomination — the door the model names instead of composing
+ * (the cue that used to read the words for it is gone: R3b, 2026-09-05). */
+const listingNomination = (subject: "catalogue" | "prior-roster", n = 10) =>
+  JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "listing", subject, n }] });
+
 describe("an anaphoric follow-up carries its antecedent (found live, 2026-08-31)", () => {
-  it("shows the model the prior ask when the current words name nothing, and the listing certifies", async () => {
+  it("shows the model the prior ask when the current words name nothing, and a prior-roster nomination lists from the record", async () => {
     // "can you list at least 10 for me?" reached the model bare and could
     // only abstain — ten of what? The gate: only an ask naming no species
     // and no type gets the earlier words appended, so every subject-naming
-    // ask keeps its clean single-ask prompt.
+    // ask keeps its clean single-ask prompt. The set itself never comes
+    // from the model's head: a prior-roster nomination composes it from
+    // the previous exchange's certified roster.
     const seenPrompts: string[] = [];
     const countAnswer = JSON.stringify({
       rosters: [{ id: "all-species", criteria: { all: [] } }],
@@ -758,7 +765,7 @@ describe("an anaphoric follow-up carries its antecedent (found live, 2026-08-31)
       if (request.purpose !== "answer") return "decline";
       answerCalls += 1;
       seenPrompts.push(request.prompt);
-      return countAnswer;
+      return request.prompt.includes("list at least 10") ? listingNomination("prior-roster", 10) : countAnswer;
     });
     const d = deps(provider);
 
@@ -766,10 +773,9 @@ describe("an anaphoric follow-up carries its antecedent (found live, 2026-08-31)
     expect(state.records).toHaveLength(1);
     state = await say(state, "can you list at least 10 for me?", d);
 
-    // The listing is composed from the record — the previous exchange's
-    // certified roster — with no model call at all: the weak model, handed
-    // the antecedent live, still passed, and the set was never in its head.
-    expect(answerCalls).toBe(1);
+    // One call for the nomination; the listing is composed from the record.
+    expect(answerCalls).toBe(2);
+    expect(seenPrompts[1]).toContain("how many species are out there?");
     expect(state.records).toHaveLength(2);
     const record = state.records[1]!;
     expect(record.outcome.status).toBe("answered");
@@ -791,7 +797,7 @@ describe("an anaphoric follow-up carries its antecedent (found live, 2026-08-31)
     let scopeCalls = 0;
     const provider = new ScriptedProvider("scripted:cold-list", (request) => {
       if (request.purpose === "scope") { scopeCalls += 1; return "decline"; }
-      return countAnswer;
+      return request.prompt.includes("list a few") ? listingNomination("prior-roster") : countAnswer;
     });
     const d = deps(provider);
 
@@ -812,17 +818,17 @@ describe("an anaphoric follow-up carries its antecedent (found live, 2026-08-31)
     expect(scopeCalls).toBe(scopeCallsBefore);
   });
 
-  it("mints the catalogue roster for a bare species-listing ask, even with no roster on file", async () => {
+  it("a catalogue nomination mints the catalogue roster for a bare species-listing ask, even with no roster on file", async () => {
     // Found live: lesson, lesson, "give me a list of those species" — no
-    // roster in the record, route stood down, model abstained twice. A bare
-    // listing ask about species/Pokémon wants the catalogue itself, which
-    // the kernel already spells as the empty criteria list.
+    // roster in the record and the model abstained twice. A bare listing
+    // ask about species/Pokémon wants the catalogue itself, which the kernel
+    // already spells as the empty criteria list; the nomination names it.
     const lesson = JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-pokemon" }] });
     let answerCalls = 0;
     const provider = new ScriptedProvider("scripted:lessons", (request) => {
       if (request.purpose !== "answer") return "decline";
       answerCalls += 1;
-      return lesson;
+      return request.prompt.includes("list of those species") ? listingNomination("catalogue") : lesson;
     });
     const d = deps(provider);
 
@@ -834,15 +840,18 @@ describe("an anaphoric follow-up carries its antecedent (found live, 2026-08-31)
     expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
     state = await say(state, "Red and Blue", d);
 
-    expect(answerCalls).toBe(callsBefore); // composed from the registry, no model call
+    // The nomination at discovery, and once more at the answer hop — the
+    // version question intervened, and a draft never survives a question
+    // (drive's reuse rule). The set itself is composed from the registry.
+    expect(answerCalls).toBe(callsBefore + 2);
     const record = state.records[state.records.length - 1]!;
     expect(record.outcome.status).toBe("answered");
     expect(record.manifest?.claims.filter((claim) => claim.kind === "membership")).toHaveLength(10);
     expect(record.manifest?.claims.some((claim) => claim.kind === "count")).toBe(true);
   });
 
-  it("answers 'what are the Pokemon species?' as the listing it is, not an adjacent lesson", async () => {
-    const provider = scripted("mute", () => "decline");
+  it("answers 'what are the Pokemon species?' as the listing the model nominates, never a set the words decided", async () => {
+    const provider = scripted("nominator", (purpose) => (purpose === "answer" ? listingNomination("catalogue") : "decline"));
     const d = deps(provider);
     let state = await say(startSession(), "ok. what are the Pokemon species?", d);
     expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
@@ -850,6 +859,9 @@ describe("an anaphoric follow-up carries its antecedent (found live, 2026-08-31)
     const record = state.records[0]!;
     expect(record.outcome.status).toBe("answered");
     expect(record.manifest?.claims.some((claim) => claim.kind === "membership")).toBe(true);
+    // A mute model earns no listing at all: no cue reads the words any more.
+    const silent = await say(await say(startSession(), "ok. what are the Pokemon species?", deps(scripted("mute", () => "decline"))), "Red and Blue", deps(scripted("mute", () => "decline")));
+    expect(silent.records.some((entry) => entry.manifest?.claims.some((claim) => claim.kind === "membership"))).toBe(false);
   });
 
   it("stands down when the set is qualified — a wrong-subject certificate would be worse than a pass", async () => {
@@ -1038,8 +1050,8 @@ describe("porch round five: stale cards, social closes, rarity, direction", () =
     expect(last?.text).toContain("certified snapshot");
   });
 
-  it("'whats the rarest pokemon?' mints the legendary roster and lists it", async () => {
-    const provider = scripted("mute", () => "decline");
+  it("'whats the rarest pokemon?' nominated as a catalogue listing mints the legendary roster — the set comes from the words' qualifier", async () => {
+    const provider = scripted("nominator", (purpose) => (purpose === "answer" ? listingNomination("catalogue") : "decline"));
     const d = deps(provider);
     let state = await say(startSession(), "whats the rarest pokemon?", d);
     expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
@@ -1578,11 +1590,10 @@ describe("dogfood 2026-09-04: a superlative ask is never served the previous lis
       rosters: [{ id: "all-pokemon", criteria: { all: [] } }],
       claims: [{ kind: "ranking", rosterId: "all-pokemon", basis: "base-speed", direction: "highest" }],
     });
-    const provider = scripted("ranker", (purpose) => (purpose === "scope" ? "decline" : ranking));
+    const provider = new ScriptedProvider("ranker", (request) =>
+      request.purpose === "scope" ? "decline" : request.prompt.includes("fastest") ? ranking : listingNomination("catalogue"),
+    );
     const d = deps(provider);
-    // Scope from its own exchange, as the live trainer gave it. (A version
-    // statement sharing the listing ask's utterance un-bares it for the
-    // door — one more door edge of the class docs/routing.md R3 retires.)
     let state = await say(startSession(), "im playing red", d);
     state = await say(state, "give me a list of Pokemon species", d);
     const listing = state.records[state.records.length - 1]!;
@@ -1775,8 +1786,8 @@ describe("porch round eleven: cards do not eat questions", () => {
 });
 
 describe("porch round six: the listing keeps to its subject", () => {
-  it("'show me all the fire types' mints the fire roster, never the catalogue", async () => {
-    const provider = scripted("mute", () => "decline");
+  it("'show me all the fire types' nominated as a listing mints the fire roster, never the catalogue", async () => {
+    const provider = scripted("nominator", (purpose) => (purpose === "answer" ? listingNomination("catalogue") : "decline"));
     const d = deps(provider);
     let state = await say(startSession(), "show me all the fire types", d);
     expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
@@ -1812,7 +1823,9 @@ describe("porch round six: the listing keeps to its subject", () => {
     // The widened cue briefly made bare "what" a listing verb, and the meta
     // question reused the fire roster from the exchange before it.
     const lesson = JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-can-you-ask" }] });
-    const provider = scripted("teacher", (purpose) => (purpose === "answer" ? lesson : "decline"));
+    const provider = new ScriptedProvider("teacher", (request) =>
+      request.purpose !== "answer" ? "decline" : request.prompt.includes("what can you do") ? lesson : listingNomination("catalogue"),
+    );
     const d = deps(provider);
     let state = await say(startSession(), "show me all the fire types", d);
     state = await say(state, "Red and Blue", d);
@@ -1858,10 +1871,12 @@ describe("porch round six: the listing keeps to its subject", () => {
       rosters: [{ id: "all-species", criteria: { all: [] } }],
       claims: [{ kind: "membership", rosterId: "all-species", entityId: "bulbasaur", asserted: true }],
     });
-    const provider = scripted("lazy", (purpose) => (purpose === "answer" ? wrongSet : "decline"));
+    const provider = new ScriptedProvider("lazy", (request) =>
+      request.purpose !== "answer" ? "decline" : request.prompt.includes("learn fly") ? wrongSet : listingNomination("catalogue"),
+    );
     const d = deps(provider);
 
-    // A served cue listing…
+    // A served listing nomination…
     let state = await say(startSession(), "what are the Pokemon species?", d);
     state = await say(state, "Red and Blue", d);
     expect(state.listingActivations.served).toBeGreaterThanOrEqual(1);
