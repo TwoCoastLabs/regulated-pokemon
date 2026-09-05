@@ -291,6 +291,47 @@ that was the wrong cut. The auditable part of a question was never its
   may name a topic, never a value). Counted: clarifications asked, picked,
   ignored; suggestions shown, taken.
 
+**Two bounded rounds, and no more: the loops R3b adds.** Asked on
+2026-09-05: nothing so far loops with the model — one discovery call, one
+answer call, two narrow recoveries (the route-door-closed retry, the
+deterministic strip-assertion repair), and a ladder that loops with the
+*trainer*, never the model. Yet the kernel produces exactly the signal a
+retry needs and throws it away: a denial says precisely why, by name. In
+R1's N=3 leg, 21 of 411 samples died as `IA-3/fabricated-entity` on
+concept nouns ("gym badge" proposed as a species) — every one a question a
+carried lesson answers.
+
+- **The verifier-in-the-loop retry.** On a kernel denial that is not a
+  fact mismatch (the repair owns those), one more model call carrying the
+  named violation in fixed wording and a pointer at what *is*
+  representable — the closed lists the prompt already holds. A second
+  denial files as today. Counted as `feedbackRetries`, reported beside
+  `repairs` and `nominationRetries`; first-attempt, post-repair and
+  post-feedback resolutions are never blended, so the enforcement number
+  keeps measuring first attempts and the loop's credit is usefulness's.
+- **Bounded clarification chains.** Clarify → pick → answer is the design
+  above; one further clarification on the same ask is allowed (an
+  ambiguous subject after an ambiguous field), capped at two per ask like
+  the ladder's cards, so the bot can ask twice and never interrogate. The
+  cap is a constant beside `MAX_LADDER_TURNS`, and a chain that hits it
+  falls to the honest pass naming what stayed ambiguous.
+- **A reasoning-mode experiment, not a commitment.** Whether a thinking
+  mode before the JSON improves the `asked → field` mapping is a per-field
+  number one bank leg produces. If it does, it is a provider flag recorded
+  in the artifact; if it does not, that is filed too.
+
+Why this is safe where an agent loop would not be: every round is
+re-verified by the kernel, so a loop can only turn a denial into a
+certified answer or an honest pass — a second fabricated entity is refused
+like the first, and there is no passing by trial and error; every round's
+completion is in the record, so IA-10 replay holds; and the feedback text
+is derived from the violation by fixed wording, never free prose. What is
+deliberately not built: an open-ended plan/act/reflect agent. In a closed
+world with a verifier the kernel already says when to stop and why; a
+round costs about two seconds on the strong model and a longer record,
+and two bounded rounds — one for shape, one for repair — is the whole
+budget this design needs.
+
 **What is deleted, and what replaces it.**
 
 | today (driver code) | size | under R3b |
@@ -334,8 +375,8 @@ re-derived.
 **R3b's gate, as numbers.** Domain literals in `src/`: 33 → 0.
 Needs-data honest passes: at least R3a's 70%, now structural. Answerable
 resolution on both models: at least the current band. Enforcement: zero on
-every leg. Off-target claims dropped and alias contradictions asked:
-counted and filed. Both models per the doctrine — the weak model rarely
+every leg. Off-target claims dropped, alias contradictions asked, feedback
+retries taken and clarification chains capped: counted and filed. Both models per the doctrine — the weak model rarely
 nominates, the strong model sometimes mislabels — with the bank's
 per-field oracle telling those apart.
 
@@ -348,12 +389,15 @@ wrong order for a "feels dumb" problem.
 
 1. **Gate** (one commit; fails at 33 — the baseline). No stop.
 2. **Dictionary + the `asked` mapping + the five checks**, boundary tokens
-   deleted. → **Dogfood stop 1:** "how tall is Onix?", "what egg group",
+   deleted, and **the verifier-in-the-loop retry** (small enough to ride
+   here). → **Dogfood stop 1:** "how tall is Onix?", "what egg group",
    "what's its Speed?", "what type is it?" — substitutions gone without a
-   word-list; the honest pass names what was asked.
-3. **Clarification nomination** and the model-phrased scope question.
-   → **Dogfood stop 2:** ambiguous asks ("the fast one", "is it strong?")
-   get a real question with real options; the version question stops
+   word-list; the honest pass names what was asked; "what's a gym badge?"
+   teaches the lesson on the second round instead of dying on the first.
+3. **Clarification nomination**, the model-phrased scope question, and the
+   two-per-ask chain cap. → **Dogfood stop 2:** ambiguous asks ("the fast
+   one", "is it strong?") get a real question with real options; a second
+   question is allowed and a third never asked; the version question stops
    sounding like a form.
 4. **Follow-up suggestions.** → **Dogfood stop 3:** every answer offers a
    next step; the conversation has a shape instead of a series of dead
@@ -361,8 +405,9 @@ wrong order for a "feels dumb" problem.
 5. **Delete the dispatch doors one at a time**, a bank leg after each so a
    regression names its door. → **Dogfood stop 4** after the listing door
    goes (the porch's most-trodden path).
-6. **Both-model legs**, N=3 on the strong model; findings filed; the gate
-   at 0.
+6. **Both-model legs**, N=3 on the strong model, plus the reasoning-mode
+   leg as an experiment; findings filed with `feedbackRetries` beside
+   `repairs`; the gate at 0.
 7. The openFDA epic, budgeted before it starts.
 
 **What would falsify it.** If, with a dictionary in place, the strong model
