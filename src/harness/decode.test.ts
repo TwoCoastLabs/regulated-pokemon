@@ -484,3 +484,40 @@ describe("follow-up suggestions (R3b step 4) are lifted out of the claims", () =
     if (empty.ok) expect(empty.suggestions).toBeUndefined();
   });
 });
+
+describe("the lesson fold (dogfood 2026-09-06): a claim whose subject is a lesson id is the lesson", () => {
+  it("folds a fact, an action or a recommendation on a lesson id to the explanation it means, and counts it", () => {
+    const decoded = decodeAnswer(
+      JSON.stringify({
+        rosters: [],
+        claims: [
+          { kind: "action", tool: "add-to-team", entityId: "what-is-badge" },
+          { kind: "fact", entityId: "what-is-pokemon", factId: "types" },
+          { kind: "recommendation", entityId: "how-to-play" },
+          { kind: "fact", entityId: "pikachu", factId: "types" },
+        ],
+      }),
+      context,
+      "txn-lesson-fold",
+    );
+    expect(decoded.ok).toBe(true);
+    if (decoded.ok) {
+      expect(decoded.draft.claims).toEqual([
+        { kind: "explanation", blockId: "what-is-badge" },
+        { kind: "explanation", blockId: "what-is-pokemon" },
+        { kind: "explanation", blockId: "how-to-play" },
+        { kind: "fact", entityId: "pikachu", factId: "types" },
+      ]);
+      expect(decoded.folds).toBe(3);
+    }
+  });
+
+  it("leaves an id the pack does not teach alone — the kernel names that one", () => {
+    const decoded = decodeAnswer(JSON.stringify({ rosters: [], claims: [{ kind: "fact", entityId: "gym-badge", factId: "types" }] }), context, "txn-no-fold");
+    expect(decoded.ok).toBe(true);
+    if (decoded.ok) {
+      expect(decoded.draft.claims).toEqual([{ kind: "fact", entityId: "gym-badge", factId: "types" }]);
+      expect(decoded.folds).toBe(0);
+    }
+  });
+});

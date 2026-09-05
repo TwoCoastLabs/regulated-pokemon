@@ -127,6 +127,7 @@ function answerPrompt(
   scope: TrainerScope | undefined,
   asks: readonly string[],
   previously: readonly string[] | undefined,
+  previousSubjects: readonly string[] | undefined,
   routes: readonly NominableRoute[] | undefined,
   tools: readonly string[],
   lessons: readonly string[],
@@ -176,6 +177,13 @@ function answerPrompt(
     ...(previously === undefined || previously.length === 0
       ? []
       : ["Earlier in this conversation the trainer said (context for the ask below, not itself the ask):", ...previously.map((line) => `  - ${line}`), ""]),
+    ...(previousSubjects === undefined || previousSubjects.length === 0
+      ? []
+      : [
+          `The previous certified answer the trainer is looking at was about: ${previousSubjects.join(", ")}.`,
+          '"It", "this one" or "this species" in the ask below most likely means one of these — use that id.',
+          "",
+        ]),
     "The trainer's own words:",
     ...asks.map((line) => `  - ${line}`),
     "",
@@ -504,6 +512,13 @@ export interface AnswerStepInput {
    * Trainer channel only, like everything the answer step reads (IA-8).
    */
   previously?: readonly string[];
+  /**
+   * The certified subjects of the previous filed answer, for an anaphoric
+   * ask whose antecedent is the page the trainer was just reading rather
+   * than anything they said (found live, 2026-09-06). Read from the record,
+   * offered as the answer's context and never as the trainer's words.
+   */
+  previousSubjects?: readonly string[];
   /** Hand the model the certified registry to compose from, instead of asking
    *  it to recall. Facts only, never policy — see {@link certifiedReference}. */
   grounded?: boolean;
@@ -563,6 +578,7 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
       // there was one — otherwise exactly the trainer's lines.
       input.clarify === true ? exchangeLines(input.transcript) : trainerLines,
       input.previously,
+      input.previousSubjects,
       input.routes,
       context.pack.actions.map((action) => action.id),
       context.pack.curriculum.map((lesson) => lesson.id),

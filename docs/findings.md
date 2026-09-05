@@ -4140,6 +4140,62 @@ model delivers it for facts and not for lessons. `suggestions.{offered,
 kept, dropped, taken}` are the numbers the leg reads; `taken` on real
 visitors is the live page's to accumulate.
 
+**Dogfood stop 3, live page, the same morning — a three-ask train wreck,
+read from the dev trace.** Strong model, profile set (five badges).
+"Tell me about the game" taught the what-is-game lesson. "What is a
+Pokemon" was answered with **Bulbasaur and a count of 151**: the model
+nominated `{listing, catalogue, n: 1}`, the door's bareness reading found
+nothing in "what is a pokemon" that qualified a set, and a one-member
+catalogue listing was certified where the what-is-pokemon lesson was the
+answer. "That's not what I asked, but tell me more about this specie" —
+meaning Bulbasaur, the one name on the page — came back as
+"this specie" → `pikachu` → `none` with twelve Pikachu facts beside it:
+the facts fell as off the ask (the R1 check doing its job — a certified
+Pikachu profile for "this species" would have been a wrong-subject
+certificate), but the null link on a certified id then taught the
+records' boundary *about Pikachu*, a Pokémon nobody had mentioned. No
+suggestion was offered on any of the three; 4 calls, $0.0018.
+
+Three causes, each closed with a scripted test. (1) *An enumeration of one
+is not an enumeration:* the listing executor refuses `n < 2`, so the
+route-door-closed retry asks the model for the answer it meant — the
+nomination's own argument carries what the bareness reading cannot see,
+and the same `n: 1` shape had come back first on every one of nine "what's
+a gym badge?" tracer runs. (2) *The antecedent of "this" is as often the
+advisor's last answer as the trainer's last sentence:* an anaphoric ask is
+now shown the certified subjects of the previous filed answer, read from
+the record and labelled as the answer's — the model had been shown only
+the trainer's earlier words, and "this specie" after a Bulbasaur page had
+no Bulbasaur in its prompt. (3) *A subject the model supplied from nowhere
+is not the records' boundary:* the boundary lesson now requires the null
+link's subject to be one the trainer named in the exchange or was just
+shown; otherwise the reply is the anaphoric redirect ("name the Pokémon
+you mean"), which is what the ask deserved. On the tracer afterwards:
+"what type is Bulbasaur?" then "tell me more about this specie" gave
+Bulbasaur's types and then **Bulbasaur's nine-fact profile** (1 call,
+$0.0005) — the antecedent read from the record did what the trainer's
+words could not. The wrecked thread's first replay gave the lesson, the
+lesson, and the anaphoric redirect; its second exposed a fourth cause on
+the middle ask. (4) *The lesson in the wrong variant:* with the listing
+refused, the model answered "what is a Pokemon" with a claim on the
+**entity** `what-is-pokemon` — an action once, a fact on the
+verifier-in-the-loop retry — denied twice as IA-3/fabricated-entity and
+filed as a denial where the lesson was the answer (3 calls, $0.0009;
+enforcement held, the trainer got nothing). The id comes from the prompt's
+closed lesson list and names nothing else, so the shape meant is
+unambiguous: a fact, action or recommendation whose subject is a lesson id
+the registry never certifies now folds to that explanation at decode, the
+way a self-comparison folds to its fact — propose-side, deterministic,
+counted in `folds`, and verified by the kernel like any lesson. The
+feedback retry, carrying the denial by name, had not cured it: a named
+denial tells the model *what* was wrong, and this model kept choosing the
+wrong variant for the right id. Two replays of the whole thread after the
+fold: the lesson, the lesson, the anaphoric redirect, both times — and in
+one of the two, both lessons carried three suggestions each ("how do I
+catch a Pokémon?", "what are types for?"), six of six past the guard, the
+first lessons seen to; in the other, none. That is the rate the bank leg
+measures, and it is not zero.
+
 ## Appendix — how to reproduce
 
 ```sh

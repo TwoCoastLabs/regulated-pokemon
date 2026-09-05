@@ -912,7 +912,7 @@ async function drive(
     state = attempt.state;
     if (attempt.result === "taught" || attempt.result === "closed") return state;
     if (attempt.result === "off-domain")
-      return redirect(state, deps, state.askStart > 0 && isAnaphoric(world, lastSaid.text));
+      return redirect(state, deps, pointsBack(world, state, lastSaid.text));
     // "needs-scope": gather exactly the dimensions the proposed claims depend
     // on. "unusable" (the model gave no readable shape): fall to a version
     // floor and let the answer-time escalation add anything more the eventual
@@ -1161,6 +1161,14 @@ function isAnaphoric(world: SessionWorld, ask: string): boolean {
   return ![...world.registry.typeNames].some((type) => new RegExp(`\\b${type}\\b`).test(haystack));
 }
 
+/** Whether an off-domain reply to this ask should ask for the antecedent
+ * by name: the ask names nothing, and there was an earlier ask for "it" to
+ * point back at — a profile set first is not one. */
+function pointsBack(world: SessionWorld, state: SessionState, ask: string): boolean {
+  const earlier = state.transcript.slice(0, state.askStart).some((event) => event.kind === "utterance" && event.source === "trainer");
+  return earlier && isAnaphoric(world, ask);
+}
+
 function anaphorContext(world: SessionWorld, state: SessionState, ask: string): readonly string[] | undefined {
   if (state.askStart === 0) return undefined;
   if (!isAnaphoric(world, ask)) return undefined;
@@ -1169,6 +1177,29 @@ function anaphorContext(world: SessionWorld, state: SessionState, ask: string): 
     .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
     .slice(-3);
   return prior.length === 0 ? undefined : prior;
+}
+
+/**
+ * What the previous certified answer was about, for an anaphoric ask —
+ * "tell me more about this species" right after a page that showed
+ * Bulbasaur (found live, dogfood 2026-09-06: the model was shown the
+ * trainer's earlier words and not the answer they were reading, invented
+ * Pikachu, and every fact fell as off the ask). The antecedent of "this"
+ * is as often the advisor's last answer as the trainer's last sentence.
+ * Read from the filed record — the certified subjects, never the model's
+ * unverified reply — and offered as context, labelled as the answer's,
+ * never as the trainer's words (IA-8). Species, moves and items only: a
+ * type on a matchup page is a value, not a subject.
+ */
+function previousSubjects(world: SessionWorld, state: SessionState, ask: string): readonly string[] | undefined {
+  if (!isAnaphoric(world, ask)) return undefined;
+  const last = [...state.records].reverse().find((record) => record.manifest !== undefined);
+  if (last?.manifest === undefined) return undefined;
+  const ids = last.manifest.claims.flatMap((claim) => subjectsOfClaim(claim).map(canonicalId));
+  const certified = [...new Set(ids)].filter(
+    (id) => world.registry.speciesIds.includes(id) || world.registry.moveIds.includes(id) || world.registry.itemIds.includes(id),
+  );
+  return certified.length === 0 ? undefined : certified.slice(0, 12);
 }
 
 /**
@@ -1393,6 +1424,7 @@ async function teachOrDiscover(
     .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
     .join(" ");
   const previously = anaphorContext(world, state, askWords);
+  const about = previousSubjects(world, state, askWords);
 
   let step: AnswerStep;
   let stepUsage: Usage;
@@ -1407,6 +1439,7 @@ async function teachOrDiscover(
         transactionId,
         transcript: state.transcript.slice(state.askStart),
         ...(previously === undefined ? {} : { previously }),
+        ...(about === undefined ? {} : { previousSubjects: about }),
         ...(routes === undefined ? {} : { routes }),
         ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
         ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
@@ -1759,6 +1792,15 @@ function executeRoute(
     const qualified = qualifiedSet(world, currentAsk);
     const qualifies = typesNamed.length === 1 || (qualified !== undefined && qualified.criteria.all.length > 0);
     const roster = route.subject === "prior-roster" && !qualifies ? (priorRoster(state) ?? qualified) : qualified;
+    // An enumeration of one is not an enumeration. Found live (dogfood,
+    // 2026-09-06): "what is a Pokemon" drew a catalogue listing with n = 1
+    // and was served Bulbasaur and a count where the what-is-pokemon lesson
+    // was the answer; the tracer had shown the same shape — listing,
+    // prior-roster, n = 1 — on every one of nine "what's a gym badge?" runs.
+    // The bareness reading cannot see it (the ask is lexically bare); the
+    // nomination's own argument can. Refused, so the route-door-closed retry
+    // asks the model for the answer it meant.
+    if (typeof route.n === "number" && Number.isFinite(route.n) && route.n < 2) return undefined;
     const n = typeof route.n === "number" && Number.isFinite(route.n) && route.n > 0 ? route.n : 10;
     return composeListing(roster, n);
   }
@@ -1923,14 +1965,26 @@ function applyLinking(
   // off-domain question taught the boundary lesson; and by dogfood the
   // same evening: "tell me about this" drew the boundary note AND the
   // redirect, because the note was written before this was checked).
+  // ...and a subject the trainer actually named — in this exchange's words
+  // or on the page they were just reading. A certified id the model supplied
+  // from nowhere is the fabricated-subject class in the mapping's clothes:
+  // found live (dogfood, 2026-09-06), "tell me more about this specie" after
+  // two lessons drew "this specie" → pikachu → none, twelve Pikachu facts
+  // dropped as off the ask, and the boundary lesson taught about a Pokémon
+  // nobody had mentioned. With no named subject the reply is the anaphoric
+  // redirect it always was: name what you mean.
+  const exchangeWords = ` ${trainerWords(state.transcript.slice(state.askStart)).toLowerCase()} `;
+  const shown = previousSubjects(world, state, trainerWords(state.transcript.slice(state.askStart))) ?? [];
+  const namedByTrainer = (id: string): boolean =>
+    shown.includes(id) || new RegExp(`\\b${id.split("-").join("[\\s-]?").replace(/\./g, "\\.")}\\b`).test(exchangeWords);
   const aboutRecords = unavailable.some((entry) => {
-    const id = entry.entityId.toLowerCase().trim();
-    return (
+    const id = canonicalId(entry.entityId);
+    const certified =
       world.registry.speciesIds.includes(id) ||
       world.registry.moveIds.includes(id) ||
       world.registry.itemIds.includes(id) ||
-      world.registry.typeNames.has(id)
-    );
+      world.registry.typeNames.has(id);
+    return certified && namedByTrainer(id);
   });
   if (unavailable.length > 0 && !answersRemain && aboutRecords) {
     // The phrase is the model's span of the ask; when it already names the
@@ -2301,6 +2355,7 @@ async function answer(
     .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
     .join(" ");
   const previously = anaphorContext(world, state, currentAsk);
+  const about = previousSubjects(world, state, currentAsk);
   // The exchange's FIRST utterance — the ask — is what the set guards read:
   // later utterances answer the pack's questions ("Red and Blue") and would
   // unbare it. (The listing cue door that read it here is gone — R3b, see
@@ -2343,6 +2398,8 @@ async function answer(
           // transcript, but the answer should be responsive to the current words.
           transcript: state.transcript.slice(state.askStart),
           ...(previously === undefined ? {} : { previously }),
+          ...(about === undefined ? {} : { previousSubjects: about }),
+        ...(about === undefined ? {} : { previousSubjects: about }),
           ...(routes === undefined ? {} : { routes }),
           ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
           ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
@@ -2424,6 +2481,7 @@ async function answer(
         transactionId,
         transcript: state.transcript.slice(state.askStart),
         ...(previously === undefined ? {} : { previously }),
+        ...(about === undefined ? {} : { previousSubjects: about }),
         feedback: violations.map((item) => `${denialCode(item)}: ${item.message}`),
         ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
         ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
@@ -2512,7 +2570,9 @@ function groom(
   const linked = applyLinking(world, state, deps, step.decode);
   state = linked.state;
   if (linked.verdict === "closed" || linked.verdict === "clarifying") return { kind: "settled", state };
-  if (linked.verdict === "off-domain") return { kind: "settled", state: redirect(state, deps) };
+  // The anaphoric redirect names what is missing — the antecedent — the way
+  // the discovery hop's does; the answer hop had fallen to the generic menu.
+  if (linked.verdict === "off-domain") return { kind: "settled", state: redirect(state, deps, pointsBack(world, state, ask)) };
   if (linked.verdict === "boundary") return { kind: "settled", state: teachRecordsBoundary(state, deps, transactionId, establishedAt) };
   const decode = { ...step.decode, draft: { ...step.decode.draft, claims: linked.claims } };
 

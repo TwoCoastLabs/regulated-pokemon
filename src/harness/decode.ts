@@ -460,6 +460,22 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
       claims.push({ kind: "fact", entityId: claim.leftId, factId: claim.factId });
       continue;
     }
+    // A claim whose subject is a lesson id is the lesson in the wrong
+    // variant: the id comes from the prompt's closed lesson list and names
+    // nothing else, so the shape the model meant is unambiguous. Found live
+    // (dogfood, 2026-09-06): "what is a Pokemon" came back as an action —
+    // and, on the verifier-in-the-loop retry, a fact — on the entity
+    // "what-is-pokemon", denied twice as IA-3/fabricated-entity and filed
+    // as a denial where the lesson was the answer. Same discipline as the
+    // self-comparison fold: propose-side, deterministic, counted, and the
+    // kernel still verifies the lesson like any other claim. Only ids the
+    // pack teaches and the registry never certifies fold — a collision
+    // would be the pack's to refuse, not this line's to guess at.
+    if ((claim.kind === "fact" || claim.kind === "action" || claim.kind === "recommendation") && isLessonId(context, claim.entityId)) {
+      folds += 1;
+      claims.push({ kind: "explanation", blockId: claim.entityId.trim() });
+      continue;
+    }
     claims.push(claim);
   }
   const canonical = canonicalizeClaims(context.registry, claims);
@@ -502,6 +518,15 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
     ...(clarify === undefined ? {} : { clarify }),
     ...(suggestions === undefined ? {} : { suggestions }),
   };
+}
+
+/** Whether an id is one of the pack's lesson ids and not an id the registry
+ * certifies — the namespace test the lesson fold rests on. */
+function isLessonId(context: ManifestContext, id: string): boolean {
+  const trimmed = id.trim();
+  if (!context.pack.curriculum.some((lesson) => lesson.id === trimmed)) return false;
+  const { registry } = context;
+  return !registry.speciesIds.includes(trimmed) && !registry.moveIds.includes(trimmed) && !registry.itemIds.includes(trimmed);
 }
 
 /** One typed option, or nothing: a `field` option names a dictionary id or

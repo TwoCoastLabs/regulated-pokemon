@@ -2479,3 +2479,115 @@ describe("the suggestion door is offered to the model exactly when it is open", 
     expect(shut.schemas[0]).not.toContain('"suggest"');
   });
 });
+
+describe("dogfood stop 3 (2026-09-06): the train wreck, three asks long", () => {
+  const PROFILE_SCOPE = { version: "red-blue", region: "kanto", badgeLevel: 5 } as const;
+
+  it("a listing of one is not a listing: the nomination is refused and the retry teaches the lesson", async () => {
+    // "what is a Pokemon" drew {listing, catalogue, n: 1} and was served
+    // Bulbasaur and a count of 151 — the bareness reading cannot see it.
+    let calls = 0;
+    const provider = new ScriptedProvider("one-member", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      calls += 1;
+      return calls === 1
+        ? JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "listing", subject: "catalogue", n: 1 }] })
+        : JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-pokemon" }] });
+    });
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "what is a Pokemon", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-pokemon" }]);
+    expect(state.listingActivations.served).toBe(0);
+    expect(state.nominationRetries).toBe(1);
+    // A real sample still composes.
+    const ten = new ScriptedProvider("ten", (request) =>
+      request.purpose === "answer" ? JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "listing", subject: "catalogue", n: 10 }] }) : "decline",
+    );
+    let listed = await setProfile(startSession(), PROFILE_SCOPE, deps(ten));
+    listed = await say(listed, "what are the pokemon species?", deps(ten));
+    expect(listed.listingActivations.served).toBe(1);
+  });
+
+  it("an anaphoric ask is shown what the previous certified answer was about, read from the record", async () => {
+    // "tell me more about this specie" right after a page showing Bulbasaur:
+    // the model was shown only the trainer's earlier words, invented
+    // Pikachu, and every fact fell as off the ask.
+    const prompts: string[] = [];
+    let calls = 0;
+    const provider = new ScriptedProvider("anaphoric", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      prompts.push(request.prompt);
+      calls += 1;
+      return calls === 1
+        ? JSON.stringify({ rosters: [], claims: [{ kind: "fact", entityId: "bulbasaur", factId: "types" }] })
+        : JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "profile", entityId: "bulbasaur" }] });
+    });
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "what type is Bulbasaur?", d);
+    expect(prompts[0]).not.toContain("previous certified answer");
+    state = await say(state, "tell me more about this specie", d);
+    expect(prompts[1]).toContain("The previous certified answer the trainer is looking at was about: bulbasaur.");
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims.every((claim) => claim.kind === "fact" && claim.entityId === "bulbasaur")).toBe(true);
+    // An ask that names its own subject is shown nothing of the sort.
+    state = await say(state, "what type is Pikachu?", d);
+    expect(prompts[2]).not.toContain("previous certified answer");
+  });
+});
+
+describe("dogfood stop 3, the second cause: a subject the model supplied from nowhere is not the records' boundary", () => {
+  const PROFILE_SCOPE = { version: "red-blue", region: "kanto", badgeLevel: 5 } as const;
+  const inventedProfile = JSON.stringify({
+    asked: [{ phrase: "this specie", entityId: "pikachu", fieldId: "none" }],
+    rosters: [],
+    claims: ["pokedex-number", "types", "base-hp", "base-speed"].map((factId) => ({ kind: "fact", entityId: "pikachu", factId })),
+  });
+
+  it("with no named antecedent, the reply falls to the anaphoric redirect — no boundary note, no lesson about a stranger", async () => {
+    let calls = 0;
+    const provider = new ScriptedProvider("inventing", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      calls += 1;
+      return calls === 1 ? JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-pokemon" }] }) : inventedProfile;
+    });
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "what is a Pokemon", d);
+    state = await say(state, "that's not what I asked, but tell me more about this specie", d);
+    expect(state.records).toHaveLength(1);
+    const last = state.notes[state.notes.length - 1];
+    expect(last?.text).toContain("I lost the thread");
+    expect(state.notes.some((n) => n.text.includes("pikachu"))).toBe(false);
+    expect(state.linking.offTargetDropped).toBe(4);
+  });
+
+  it("the boundary still teaches when the trainer named the subject, or was just shown it", async () => {
+    const provider = scripted("honest", (purpose) =>
+      purpose === "scope" ? "decline" : JSON.stringify({ asked: [{ phrase: "how tall", entityId: "onix", fieldId: "none" }], rosters: [], claims: [] }),
+    );
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how tall is Onix?", d);
+    expect(state.records[0]?.manifest?.claims).toEqual([{ kind: "explanation", blockId: world.pack.recordsBoundary?.lessonId }]);
+
+    // Shown it: the previous page was about Bulbasaur, and "how tall is it" is about Bulbasaur.
+    let calls = 0;
+    const shown = new ScriptedProvider("shown", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      calls += 1;
+      return calls === 1
+        ? JSON.stringify({ rosters: [], claims: [{ kind: "fact", entityId: "bulbasaur", factId: "types" }] })
+        : JSON.stringify({ asked: [{ phrase: "how tall", entityId: "bulbasaur", fieldId: "none" }], rosters: [], claims: [] });
+    });
+    const s = deps(shown);
+    let after = await setProfile(startSession(), PROFILE_SCOPE, s);
+    after = await say(after, "what type is Bulbasaur?", s);
+    after = await say(after, "how tall is it?", s);
+    expect(after.records[1]?.manifest?.claims).toEqual([{ kind: "explanation", blockId: world.pack.recordsBoundary?.lessonId }]);
+    expect(after.notes.some((n) => n.text.includes('"how tall" for bulbasaur'))).toBe(true);
+  });
+});
