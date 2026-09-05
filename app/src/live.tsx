@@ -43,6 +43,7 @@ import {
   say,
   setProfile,
   type ScopeProposal,
+  type ClarificationEvent,
   type SessionDeps,
   type SessionNote,
   type SessionState,
@@ -110,6 +111,7 @@ async function probeRelay(): Promise<RelayStatus> {
 type ChatItem =
   | { at: string; kind: "visitor"; text: string }
   | { at: string; kind: "question"; text: string }
+  | { at: string; kind: "clarification"; clarification: ClarificationEvent }
   | { at: string; kind: "proposal"; proposal: ScopeProposal }
   | { at: string; kind: "decision"; decision: "confirm" | "reject" }
   | { at: string; kind: "note"; note: SessionNote }
@@ -125,6 +127,11 @@ function chatItems(state: SessionState): ChatItem[] {
       // answer binds against them) and the chat's durable history at once: a
       // question the visitor has already answered still happened.
       items.push({ at: event.at, kind: "question", text: event.text });
+    } else if (event.kind === "clarification" && event.source === "advisor") {
+      // The Advisor's own question (R3b step 3): its wording is the model's,
+      // its options are typed, and it sits in the transcript like the pack's
+      // question does — a pick binds against the recorded options.
+      items.push({ at: event.at, kind: "clarification", clarification: event });
     } else if (event.kind === "proposal") {
       items.push({ at: event.at, kind: "proposal", proposal: event });
     } else if (event.kind === "confirmation") {
@@ -394,6 +401,9 @@ export function Live() {
       // The verifier-in-the-loop retry is the product posture (docs/routing.md,
       // R3b): a denial the kernel can name is carried back to the model once.
       feedback: true,
+      // Clarification (R3b step 3): the model may ask with typed options, a
+      // pick binds, and the pack's scope question is phrased by the model.
+      clarify: true,
       ...(retrievalOn ? { retrieval: true } : {}),
       ...(gatedOn ? { gatedGrammar: true } : {}),
     };
@@ -473,6 +483,14 @@ export function Live() {
     setDraft("");
     setInFlight(text);
     run((previous) => say(previous, text, deps));
+  };
+
+  /** A click on an option says its label — the trainer's own utterance, on
+   * the trainer's channel, read exactly as typed words would be. */
+  const pick = (label: string) => {
+    if (deps === null) return;
+    setInFlight(label);
+    run((previous) => say(previous, label, deps));
   };
 
   if (setup === null || deps === null) {
@@ -661,13 +679,47 @@ export function Live() {
                     <p class="live-bubble trainer">{item.text}</p>
                   </div>
                 );
-              case "question":
+              case "question": {
+                // The pack's approved values as clicks under the question
+                // that is still waiting: a click says the label, and the
+                // recorded question is the context the kernel reads it in.
+                const active = latest && phase.kind === "asking" && phase.question === item.text && !busy;
                 return (
                   <div class="live-item advisor">
                     <Role who="advisor" />
                     <p class="live-bubble advisor">{item.text}</p>
+                    {active && phase.options.length > 0 && (
+                      <div class="live-actions live-options">
+                        {phase.options.map((label) => (
+                          <button type="button" class="quiet" onClick={() => pick(label)}>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
+              }
+              case "clarification": {
+                const active = latest && phase.kind === "clarifying" && phase.clarification.at === item.clarification.at && !busy;
+                return (
+                  <div class="live-item advisor">
+                    <Role who="advisor" />
+                    <p class="live-bubble advisor" title={`The Advisor's own question, about "${item.clarification.about}" — the options are typed against the certified records; your pick binds the answer to it.`}>
+                      {item.clarification.text}
+                    </p>
+                    {active && (
+                      <div class="live-actions live-options">
+                        {item.clarification.options.map((option) => (
+                          <button type="button" class="quiet" onClick={() => pick(option.label)}>
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
               case "proposal": {
                 const active = phase.kind === "confirming-scope" && phase.proposal.id === item.proposal.id && !busy;
                 return (
@@ -851,7 +903,9 @@ export function Live() {
               ? "…or answer in your own words"
               : phase.kind === "asking"
                 ? "Answer the question above in your own words"
-                : "Say something to the Advisor"
+                : phase.kind === "clarifying"
+                  ? "Pick one above, answer in your own words, or ask something else"
+                  : "Say something to the Advisor"
           }
           onInput={(event) => setDraft(event.currentTarget.value)}
         />

@@ -35,6 +35,7 @@
 
 import type {
   Claim,
+  ClarificationOption,
   ConfirmationEvent,
   ScopeCandidate,
   ScopeDimension,
@@ -55,11 +56,12 @@ import { buildRoster } from "../kernel/roster.js";
 import { runTransaction, type Transaction } from "../kernel/transaction.js";
 import { renderAnswer } from "../render/reference.js";
 import { denialCode } from "../kernel/violation.js";
-import { type AnswerStep, proposalDigest, proposeAnswer, proposeScope } from "../harness/advisor.js";
+import { type AnswerStep, phraseQuestion, proposalDigest, proposeAnswer, proposeScope, usableQuestion } from "../harness/advisor.js";
 import { type AnswerDecode, NO_CLAIMS_REASON } from "../harness/decode.js";
 import { MAX_ANSWER_CLAIMS, type NominableRoute } from "../harness/schema.js";
 import { addUsage, emptyUsage, type ModelProvider, type Usage } from "../harness/provider.js";
 import { aliasContradiction, freshLinks, linkClaims } from "./linking.js";
+import { canonicalId, certifies, MAX_CLARIFICATIONS, matchPick, scopeOptions, validOptions } from "./clarify.js";
 
 /** The certified world the session runs against — the same two values the
  * harness calls `HarnessWorld`, named here so the browser bundle never
@@ -113,7 +115,24 @@ export interface SessionDeps {
    * never blended with a first-attempt one. Off by default.
    */
   feedback?: boolean;
+  /**
+   * Clarification (docs/routing.md, R3b step 3): the model may ask, the
+   * trainer's pick binds. Three things turn on together — the answer grammar
+   * offers a `clarify` nomination with typed options; an alias contradiction
+   * becomes a question with the two fields as options instead of a stock
+   * line; and the pack's fixed scope question is put to the model to phrase
+   * in the light of the ask (one small call, the pack's line as fallback).
+   * Every option is typed against the dictionary or the registry, a pick is
+   * applied structurally at linking, at most {@link MAX_CLARIFICATIONS}
+   * questions are asked per ask, and every question is a recorded event.
+   * Counted ({@link SessionState.clarification}). Off by default — on in the
+   * live page and the tracer, off in the banks until their leg.
+   */
+  clarify?: boolean;
 }
+
+/** The advisor's own clarifying question, as recorded. */
+export type ClarificationEvent = Extract<ScopeEvent, { kind: "clarification" }>;
 
 export type ScopeProposal = Extract<ScopeEvent, { kind: "proposal" }>;
 
@@ -123,6 +142,11 @@ export type ScopeProposal = Extract<ScopeEvent, { kind: "proposal" }>;
  *  - `gathering`        the visitor's words, to open or continue an exchange.
  *  - `asking`           an answer to the pack's own clarifying question — the
  *                       deterministic fallback when the model cannot help.
+ *                       `options` are the vocabulary's approved values, for
+ *                       a page to offer as clicks; a click says the label.
+ *  - `clarifying`       the visitor's pick among the typed options of the
+ *                       advisor's own question (R3b step 3) — by click, or
+ *                       by words matching an option's label or alias.
  *  - `confirming-scope` the visitor's verdict on the model's interpretation:
  *                       the propose/confirm ladder, with a person on the end.
  *  - `confirming-act`   consent to the acts on the attested page — the one
@@ -130,7 +154,8 @@ export type ScopeProposal = Extract<ScopeEvent, { kind: "proposal" }>;
  */
 export type SessionPhase =
   | { kind: "gathering" }
-  | { kind: "asking"; dimension: ScopeDimension; question: string }
+  | { kind: "asking"; dimension: ScopeDimension; question: string; options: readonly string[] }
+  | { kind: "clarifying"; clarification: ClarificationEvent }
   | { kind: "confirming-scope"; proposal: ScopeProposal }
   | { kind: "confirming-act"; artifact: DomElement };
 
@@ -213,8 +238,27 @@ export interface SessionState {
    * question. Findings read these the way they read the listing gauge.
    */
   linking: { mapped: number; unlinked: number; offTargetDropped: number; contradictions: number; staleDropped: number };
+  /**
+   * Clarification's gauge (R3b step 3): `asked` counts the advisor's own
+   * questions recorded (model-nominated and contradiction-born alike);
+   * `picked` the replies that matched exactly one option; `ignored` the
+   * replies that matched none and were asked again; `capped` the asks that
+   * hit {@link MAX_CLARIFICATIONS} and fell to the honest pass; `phrased`
+   * the pack questions the model reworded, `unphrased` the ones it could not
+   * (the pack's line was asked). Findings read these the way they read the
+   * linking gauge.
+   */
+  clarification: { asked: number; picked: number; ignored: number; capped: number; phrased: number; unphrased: number };
   /** Ladder proposals spent on the current ask; a fresh utterance resets it. */
   ladderTurns: number;
+  /**
+   * The option the trainer picked on the current exchange's clarification,
+   * when they picked one. Applied at linking: a field pick holds every claim
+   * to that field (or, for none, teaches the records' boundary); a subject
+   * pick drops claims about any other certified subject. Cleared with the
+   * exchange, like `required`.
+   */
+  bound?: ClarificationOption;
   /**
    * The namespace this session's transaction ids are minted under. The
    * default "session" serves one live tab; a harness running the same
@@ -285,6 +329,7 @@ export function startSession(idPrefix?: string): SessionState {
     feedbackRetries: 0,
     feedbackDenials: [],
     linking: { mapped: 0, unlinked: 0, offTargetDropped: 0, contradictions: 0, staleDropped: 0 },
+    clarification: { asked: 0, picked: 0, ignored: 0, capped: 0, phrased: 0, unphrased: 0 },
     listingActivations: { consulted: 0, served: 0, stoodDown: 0, guardDropped: 0 },
     nominationRetries: 0,
     ladderTurns: 0,
@@ -314,7 +359,7 @@ function note(state: SessionState, at: string, text: string, tone: SessionNote["
  * answer. If the pending card already proposes a value for the dimension
  * being asked, the honest move is to point back at it.
  */
-function askOrRestateCard(state: SessionState, at: string, dimension: ScopeDimension, question: string): SessionState {
+async function askOrRestateCard(state: SessionState, deps: SessionDeps, dimension: ScopeDimension, question: string): Promise<SessionState> {
   // Undecided means undecided: during a /confirm or /reject the phase still
   // reads confirming-scope while drive re-runs, and a decided card — above
   // all a just-rejected one — must fall to the question, never be restated.
@@ -329,16 +374,56 @@ function askOrRestateCard(state: SessionState, at: string, dimension: ScopeDimen
   if (state.phase.kind === "confirming-scope" && !decided && state.phase.proposal.candidate[dimension] !== undefined) {
     return note(
       state,
-      at,
+      deps.now(),
       "That card above is still waiting — /confirm it if it reads right, or /reject it and answer in your own words.",
       "social",
       "card outranks its own dimension's question — card restated",
     );
   }
-  return ask(state, at, dimension, question);
+  return askPhrased(state, deps, dimension, question);
 }
 
-function ask(state: SessionState, at: string, dimension: ScopeDimension, question: string): SessionState {
+/**
+ * The pack's question, in the model's words when the door is open (R3b step
+ * 3: "the version question stops sounding like a form"). The wording is all
+ * the model supplies: the dimension the recorded question arms, the options
+ * the trainer is offered and the terms a reply binds against are the pack's,
+ * so the answer route reads a reply to the rewrite exactly as it reads one to
+ * the fixed line. A question already armed for this dimension is not
+ * rephrased — the trainer was asked once, and `ask` reads a repeat by its
+ * text. Anything unusable, and any provider failure, asks the pack's line;
+ * both outcomes are counted.
+ */
+async function askPhrased(state: SessionState, deps: SessionDeps, dimension: ScopeDimension, question: string): Promise<SessionState> {
+  if (deps.clarify !== true) return ask(deps.world, state, deps.now(), dimension, question);
+  if (state.phase.kind === "asking" && state.phase.dimension === dimension) {
+    return ask(deps.world, state, deps.now(), dimension, state.phase.question);
+  }
+  const gauge = { ...state.clarification };
+  try {
+    const phrased = await phraseQuestion({
+      provider: deps.provider,
+      scenarioId: "session",
+      transcript: state.transcript.slice(state.askStart),
+      need: question,
+      options: scopeOptions(deps.world.pack, dimension),
+    });
+    const spent = { ...state, usage: addUsage(state.usage, phrased.usage) };
+    if (phrased.text !== null) {
+      gauge.phrased += 1;
+      return ask(deps.world, { ...spent, clarification: gauge }, deps.now(), dimension, phrased.text);
+    }
+    gauge.unphrased += 1;
+    return ask(deps.world, { ...spent, clarification: gauge }, deps.now(), dimension, question);
+  } catch {
+    // The question is still free: a failed rewrite asks the pack's line, and
+    // the failure is counted where every provider failure is.
+    gauge.unphrased += 1;
+    return ask(deps.world, { ...state, providerErrors: state.providerErrors + 1, clarification: gauge }, deps.now(), dimension, question);
+  }
+}
+
+function ask(world: SessionWorld, state: SessionState, at: string, dimension: ScopeDimension, question: string): SessionState {
   const repeat = state.phase.kind === "asking" && state.phase.question === question;
   // A repeat records no second question event — but when the trainer just
   // spoke and their words answered nothing, silence reads as a swallowed
@@ -358,7 +443,7 @@ function ask(state: SessionState, at: string, dimension: ScopeDimension, questio
       : state;
   return {
     ...reminded,
-    phase: { kind: "asking", dimension, question },
+    phase: { kind: "asking", dimension, question, options: scopeOptions(world.pack, dimension) },
     transcript: repeat
       ? reminded.transcript
       : [...reminded.transcript, { kind: "question", at, source: "advisor", dimension, text: question }],
@@ -367,7 +452,7 @@ function ask(state: SessionState, at: string, dimension: ScopeDimension, questio
 
 /** File a settled exchange and open the next one, with the default demands. */
 function file(state: SessionState, record: Transaction, page?: DomElement): SessionState {
-  const { pending: _pending, required: _required, ...rest } = state;
+  const { pending: _pending, required: _required, bound: _bound, ...rest } = state;
   return {
     ...rest,
     records: [...state.records, record],
@@ -384,7 +469,7 @@ function file(state: SessionState, record: Transaction, page?: DomElement): Sess
  * round twelve, 2026-09-01): a leaked narrowed `required` let the next ask
  * skip discovery and inherit the previous ask's scope demands. */
 function closeExchange(state: SessionState): SessionState {
-  const { pending: _pending, required: _required, ...rest } = state;
+  const { pending: _pending, required: _required, bound: _bound, ...rest } = state;
   return { ...rest, phase: { kind: "gathering" }, askStart: state.transcript.length, ladderTurns: 0 };
 }
 
@@ -402,7 +487,8 @@ export async function say(state: SessionState, text: string, deps: SessionDeps):
   if (state.phase.kind !== "confirming-act") {
     const social = socialReply(text);
     if (social !== undefined) {
-      return note({ ...next, phase: state.phase.kind === "asking" || state.phase.kind === "confirming-scope" ? state.phase : { kind: "gathering" } }, deps.now(), social, "social");
+      const open = state.phase.kind === "asking" || state.phase.kind === "clarifying" || state.phase.kind === "confirming-scope";
+      return note({ ...next, phase: open ? state.phase : { kind: "gathering" } }, deps.now(), social, "social");
     }
   }
   return drive(next, deps);
@@ -483,7 +569,9 @@ export async function setProfile(state: SessionState, scope: ScopeCandidate, dep
   const event: ScopeEvent = { kind: "profile", at: deps.now(), source: "trainer", scope };
   const next = { ...state, transcript: [...state.transcript, event] };
   if (state.phase.kind === "asking" || state.phase.kind === "confirming-scope") return drive(next, deps);
-  return acknowledgeScope(deps.world, next, deps);
+  // A profile set while the advisor's own question waits is scope, not the
+  // pick: acknowledged, and the question stays armed.
+  return acknowledgeScope(deps.world, next, deps, state.phase.kind === "clarifying");
 }
 
 /**
@@ -612,6 +700,38 @@ async function drive(
 ): Promise<SessionState> {
   const { world, provider } = deps;
 
+  const lastSaid = [...state.transcript]
+    .reverse()
+    .find((event): event is Extract<ScopeEvent, { kind: "utterance" }> => event.kind === "utterance" && event.source === "trainer");
+  const justSaid = lastSaid !== undefined && lastSaid === state.transcript[state.transcript.length - 1];
+
+  // The advisor's own question is waiting (R3b step 3). The trainer's words
+  // are read against its typed options first — before scope, before any
+  // door — because a pick binds the exchange: one matching option is the
+  // pick, bound for the linking step and the exchange drives on with it; a
+  // fresh ask naming a subject is drift and falls to the drift door below; a
+  // reply matching nothing is asked again once, then the honest pass. The
+  // counts make the dial readable: picked, ignored, capped.
+  if (state.phase.kind === "clarifying" && justSaid && lastSaid !== undefined) {
+    const clarification = state.phase.clarification;
+    const pick = matchPick(world.pack, world.registry, clarification.options, lastSaid.text);
+    if (pick !== undefined) {
+      state = {
+        ...state,
+        bound: pick,
+        phase: { kind: "gathering" },
+        clarification: { ...state.clarification, picked: state.clarification.picked + 1 },
+      };
+    } else if (looksLikeFreshAsk(world.registry, lastSaid.text)) {
+      // Drift over the advisor's own question — reopened here, before scope
+      // is read, because a granted scope would otherwise carry the new ask
+      // straight to the answer step with the old exchange still open.
+      return reopenAtFreshAsk(state, deps);
+    } else {
+      return unansweredClarification(state, deps, clarification);
+    }
+  }
+
   const scopeContext: ScopeContext = {
     pack: world.pack,
     at: deps.now(),
@@ -666,9 +786,6 @@ async function drive(
   // latest words actually contain some — anything else turned every missing
   // dimension into a model call and a confirmation, which is how one
   // catalogue question became an interrogation.
-  const lastSaid = [...state.transcript]
-    .reverse()
-    .find((event): event is Extract<ScopeEvent, { kind: "utterance" }> => event.kind === "utterance" && event.source === "trainer");
 
   // Propose first, then gather only what the answer needs (epic #64, slice 2).
   // On the *first* clarify of an ask, the model is asked once with no grant:
@@ -698,7 +815,7 @@ async function drive(
       // Narrowed to the one dimension being re-asked: the switch-back is not
       // a fresh intake, and the default required set would turn one question
       // into an interrogation (region next, badges after).
-      if (question !== undefined) return ask({ ...state, required: ["version"] }, deps.now(), "version", question);
+      if (question !== undefined) return ask(world, { ...state, required: ["version"] }, deps.now(), "version", question);
     }
     // The correction: a direct statement contradicting a recorded answer
     // ("Yellow", then "ok. I actually play Red") is a fresh contradiction by
@@ -708,7 +825,7 @@ async function drive(
     // earned "I lost the thread of that one"). Same narrowed re-ask.
     if (versionOnly.status === "clarify" && versionOnly.derivation.contradicted.includes("version")) {
       const question = versionMentioned(world, state, "any");
-      if (question !== undefined) return ask({ ...state, required: ["version"] }, deps.now(), "version", question);
+      if (question !== undefined) return ask(world, { ...state, required: ["version"] }, deps.now(), "version", question);
     }
     // A statement of scope with no ask in it, before discovery can hand it
     // to the model as if it were one: a foreign version teaches the
@@ -742,22 +859,11 @@ async function drive(
   // confirmation event after the words, and a decision is never drift.
   if (
     lastSaid !== undefined &&
-    lastSaid === state.transcript[state.transcript.length - 1] &&
+    justSaid &&
     (state.phase.kind === "asking" || state.phase.kind === "confirming-scope") &&
     looksLikeFreshAsk(world.registry, lastSaid.text)
   ) {
-    const aside = note(
-      state,
-      deps.now(),
-      "New question — I've set the earlier one aside. Ask it again any time.",
-      "social",
-      "topic change while a question was armed — exchange reopened at the new ask",
-    );
-    const { pending: _pending, required: _required, ...reopened } = aside;
-    return drive(
-      { ...reopened, phase: { kind: "gathering" }, askStart: aside.transcript.length - 1, ladderTurns: 0 },
-      deps,
-    );
+    return reopenAtFreshAsk(state, deps);
   }
   // The listing cue door that stood here — "what/which … pokemon/types",
   // a listing verb — was the first dispatch door R3b deleted (2026-09-05).
@@ -808,8 +914,11 @@ async function drive(
       ? []
       : unmatchedClauses(world.pack, lastSaid.text).filter((clause) => !namesCertifiedSubject(world.registry, clause));
   const freshLongTail = scopeishClauses.length > 0;
-  if (reuse?.routed === true || !freshLongTail || state.ladderTurns >= MAX_LADDER_TURNS) {
-    return askOrRestateCard(state, deps.now(), outcome.asking, outcome.question);
+  // A bound pick is the trainer's answer to the advisor's question, not
+  // scope wording: "Speed" reaches the ladder's inbox as an unmatched clause
+  // and a ladder handed it would propose scope out of it (lesson 1).
+  if (reuse?.routed === true || state.bound !== undefined || !freshLongTail || state.ladderTurns >= MAX_LADDER_TURNS) {
+    return askOrRestateCard(state, deps, outcome.asking, outcome.question);
   }
 
   let step;
@@ -832,7 +941,7 @@ async function drive(
       "error",
       `the provider failed during scope resolution (${cause instanceof Error ? cause.message : String(cause)})`,
     );
-    return askOrRestateCard(failed, deps.now(), outcome.asking, outcome.question);
+    return askOrRestateCard(failed, deps, outcome.asking, outcome.question);
   }
 
   const spent = { ...state, usage: addUsage(state.usage, step.usage), ladderTurns: state.ladderTurns + 1 };
@@ -868,7 +977,7 @@ async function drive(
     // Nothing usable to propose (or a proposal about words already settled):
     // fall to the deterministic question rather than burning the remaining
     // budget on the same words.
-    return askOrRestateCard(spent, deps.now(), outcome.asking, outcome.question);
+    return askOrRestateCard(spent, deps, outcome.asking, outcome.question);
   }
 
   // The same card twice is not an answer to anything. Found live (porch
@@ -897,6 +1006,20 @@ async function drive(
   };
 }
 
+/** The drift door's move: set the open exchange aside with a word on screen
+ * and drive on with the trainer's latest utterance as a fresh ask. */
+function reopenAtFreshAsk(state: SessionState, deps: SessionDeps): Promise<SessionState> {
+  const aside = note(
+    state,
+    deps.now(),
+    "New question — I've set the earlier one aside. Ask it again any time.",
+    "social",
+    "topic change while a question was armed — exchange reopened at the new ask",
+  );
+  const { pending: _pending, required: _required, bound: _bound, ...reopened } = aside;
+  return drive({ ...reopened, phase: { kind: "gathering" }, askStart: aside.transcript.length - 1, ladderTurns: 0 }, deps);
+}
+
 function nextTransactionId(state: SessionState): string {
   return `${state.idPrefix ?? "session"}-${state.records.length + 1}`;
 }
@@ -919,13 +1042,20 @@ function nextTransactionId(state: SessionState): string {
 async function withRouteFallback(
   world: SessionWorld,
   state: SessionState,
+  deps: SessionDeps,
   call: (routes: readonly NominableRoute[] | undefined) => Promise<AnswerStep>,
 ): Promise<{ step: AnswerStep; usage: Usage; retried: boolean; refusedListing: boolean }> {
   const first = await call(SESSION_ROUTES);
+  // A clarification beside the refused nomination is something the reply
+  // carried (R3b step 3): the model asked, and the question goes through —
+  // found live 2026-09-05, when the listing nomination beside a clarify cost
+  // a second call for the same question.
+  const asksInstead = first.decode.ok && first.decode.clarify !== undefined && deps.clarify === true;
   const refused =
     first.decode.ok &&
     first.decode.route !== undefined &&
     first.decode.draft.claims.length === 0 &&
+    !asksInstead &&
     executeRoute(world, state, first.decode.route) === undefined;
   if (!refused) return { step: first, usage: first.usage, retried: false, refusedListing: false };
   const refusedListing = first.decode.ok && first.decode.route?.routeId === "listing";
@@ -1229,7 +1359,7 @@ async function teachOrDiscover(
   let retried = false;
   let refusedListing = false;
   try {
-    ({ step, usage: stepUsage, retried, refusedListing } = await withRouteFallback(world, state, (routes) =>
+    ({ step, usage: stepUsage, retried, refusedListing } = await withRouteFallback(world, state, deps, (routes) =>
       proposeAnswer({
         provider,
         context: bare,
@@ -1241,6 +1371,7 @@ async function teachOrDiscover(
         ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
         ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
         ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
+        ...(deps.clarify === undefined ? {} : { clarify: deps.clarify }),
       }),
     ));
   } catch {
@@ -1272,7 +1403,9 @@ async function teachOrDiscover(
   // trainer's own phrase named.
   const linked = applyLinking(world, spentFolded, deps, step.decode);
   spentFolded = linked.state;
-  if (linked.verdict === "closed") return { state: spentFolded, result: "closed", claims: [], rosters: [] };
+  // "clarifying" leaves the exchange open on the advisor's question — the
+  // caller returns the state as it stands, the trainer's pick drives it on.
+  if (linked.verdict === "closed" || linked.verdict === "clarifying") return { state: spentFolded, result: "closed", claims: [], rosters: [] };
   if (linked.verdict === "off-domain") return { state: spentFolded, result: "off-domain", claims: [], rosters: [] };
   if (linked.verdict === "boundary") {
     return { state: teachRecordsBoundary(spentFolded, deps, transactionId, establishedAt), result: "taught", claims: [], rosters: [], routed: true };
@@ -1419,6 +1552,17 @@ function bareCatalogueAsk(world: SessionWorld, ask: string): boolean {
   // vanish from the remainder — vocabulary growth blinding a door is the
   // class docs/routing.md R3 retires; until then the door stands down here.
   if (/\b(strongest|fastest|slowest|weakest|best|worst|highest|lowest|top)\b/.test(ask.toLowerCase())) return false;
+  // An ask-parameter term (the comparison basis: "speed", "attack") is a
+  // qualifier, not scope about the trainer — but it binds, so its clause
+  // vanishes from the unmatched remainder and the bare one-word "speed"
+  // read as the catalogue ask (found live 2026-09-05, weak model: "speed"
+  // after a closed exchange was served ten species and a count). Read from
+  // the vocabulary's own ask-parameter rules, never a word list here.
+  const haystack = ` ${ask.toLowerCase()} `;
+  const namesAskParameter = world.pack.vocabulary.dimensions
+    .filter((rule) => rule.askParameter === true)
+    .some((rule) => rule.terms.some((term) => term.tokens.some((token) => new RegExp(`\\b${token.split("-").join("[\\s-]?")}\\b`).test(haystack))));
+  if (namesAskParameter) return false;
   const leftovers = unmatched
     .replace(/\bpok[eé]mons?\b|\bspecies\b|\btypes?\b/g, " ")
     .replace(/\brarest\b|\blegendar(?:y|ies)\b|\bmythicals?\b|\bwhich\b|\bwhats?\b|\benumerate\b/g, " ")
@@ -1580,13 +1724,50 @@ function applyLinking(
   state: SessionState,
   deps: SessionDeps,
   decode: Extract<AnswerDecode, { ok: true }>,
-): { state: SessionState; claims: readonly Claim[]; verdict: "proceed" | "closed" | "boundary" | "off-domain" } {
-  const gauge = { ...state.linking };
-  if (decode.asked.length === 0) {
-    gauge.unlinked += 1;
-    return { state: { ...state, linking: gauge }, claims: decode.draft.claims, verdict: "proceed" };
+): { state: SessionState; claims: readonly Claim[]; verdict: "proceed" | "closed" | "boundary" | "off-domain" | "clarifying" } {
+  // The model asked instead of answering (R3b step 3). A nomination like any
+  // other: the options are typed against the dictionary and the registry,
+  // the chain is capped, and the question is a recorded event the trainer
+  // answers by pick. Honored only through the open door — a scripted reply
+  // carrying one with the door shut is read as the claims beside it.
+  if (deps.clarify === true && decode.clarify !== undefined) {
+    const options = validOptions(world.pack, world.registry, decode.clarify.options);
+    if (options.length > 0) {
+      const question = usableQuestion(decode.clarify.question)
+        ? decode.clarify.question.trim()
+        : `When you said "${decode.clarify.about}", which did you mean — ${options.map((option) => option.label).join(", ")}?`;
+      return clarify(state, deps, { about: decode.clarify.about, text: question, options, source: "the model's nomination" });
+    }
+    // No typed option survived: the model said "ambiguous" and named nothing
+    // a pick could bind to. The claims beside it stand as they would have;
+    // a reply with nothing beside it is the honest pass, naming the phrase.
+    if (decode.draft.claims.length === 0 && decode.route === undefined && decode.asked.every((entry) => entry.fieldId !== null)) {
+      return {
+        state: note(
+          closeExchange(state),
+          deps.now(),
+          `I'm not sure what you mean by "${decode.clarify.about}" — ask it again in one line, naming the subject and the thing about it you want, and I'll answer what the records certify.`,
+          "abstention",
+          "clarification dropped: no typed option survived validation — nothing was asked, nothing certified",
+        ),
+        claims: [],
+        verdict: "closed",
+      };
+    }
   }
-  gauge.mapped += 1;
+
+  const gauge = { ...state.linking };
+  // The trainer's pick on this exchange's clarification binds the ask (R3b
+  // step 3): a field pick replaces the model's mapping with the one link the
+  // trainer chose, so the claims are held to it below whatever the model
+  // linked; a subject pick is applied after linking, dropping claims about
+  // any other certified subject. Structural both ways — the pick is an id.
+  const bound = state.bound;
+  if (decode.asked.length === 0 && bound?.kind !== "field") {
+    gauge.unlinked += 1;
+    return { state: { ...state, linking: gauge }, claims: holdToSubject(world, decode.draft.claims, bound, gauge), verdict: "proceed" };
+  }
+  if (decode.asked.length > 0) gauge.mapped += 1;
 
   // Only this ask's links: the earlier exchanges the model was shown as
   // context are not the ask, whatever it linked in them.
@@ -1594,12 +1775,36 @@ function applyLinking(
     events.flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : [])).join(" ");
   const fresh = freshLinks(decode.asked, trainerWords(state.transcript.slice(state.askStart)), trainerWords(state.transcript.slice(0, state.askStart)));
   gauge.staleDropped += fresh.stale;
-  const asked = fresh.asked;
+  const subject = fresh.asked.map((entry) => canonicalId(entry.entityId)).find((id) => certifies(world.registry, id)) ?? fresh.asked[0]?.entityId ?? "";
+  const asked =
+    bound?.kind === "field" ? [{ phrase: bound.label, entityId: subject, fieldId: bound.fieldId }] : fresh.asked;
 
-  const contradiction = aliasContradiction(world.pack, world.registry, asked);
+  // The dictionary's words cross-check the model's link, never a pick the
+  // trainer made themselves.
+  const contradiction = bound?.kind === "field" ? undefined : aliasContradiction(world.pack, world.registry, asked);
   if (contradiction !== undefined) {
     gauge.contradictions += 1;
     const names = contradiction.suggested.map((field) => field.name).join(" or ");
+    if (deps.clarify === true) {
+      // The question with the fields as typed options (R3b step 3): the
+      // pick binds, where the stock line could only send the trainer away
+      // to ask again. Driver-worded — the fields and the phrase are all the
+      // question needs, and a fixed wording is a countable one.
+      const fields = [...(contradiction.linked === undefined ? [] : [contradiction.linked]), ...contradiction.suggested];
+      return clarify(
+        { ...state, linking: gauge },
+        deps,
+        {
+          about: contradiction.phrase,
+          text:
+            contradiction.linked === undefined
+              ? `When you said "${contradiction.phrase}", did you mean ${names}?`
+              : `I read "${contradiction.phrase}" as ${contradiction.linked.name}, but it could mean ${names} — which did you mean?`,
+          options: fields.map((field) => ({ kind: "field", label: field.name, fieldId: field.id })),
+          source: `alias contradiction: "${contradiction.phrase}" linked to ${contradiction.linked?.id ?? "no field"}, carries ${contradiction.suggested.map((field) => field.id).join(", ")}`,
+        },
+      );
+    }
     const text =
       contradiction.linked === undefined
         ? `You asked about "${contradiction.phrase}" — I don't think the records hold that as such, but they do hold ${names}. If that's what you meant, ask again naming it.`
@@ -1617,8 +1822,9 @@ function applyLinking(
     };
   }
 
-  const linked = linkClaims(asked, decode.draft.claims, decode.draft.rosters);
-  gauge.offTargetDropped += linked.dropped;
+  const held = linkClaims(asked, decode.draft.claims, decode.draft.rosters);
+  gauge.offTargetDropped += held.dropped;
+  const linked = { ...held, claims: holdToSubject(world, held.claims, bound, gauge) };
   let next: SessionState = { ...state, linking: gauge };
 
   // What the model said it could not certify (the R3a abstention, now read
@@ -1690,14 +1896,18 @@ function applyLinking(
         verdict: "closed",
       };
     }
-    if (linked.dropped > 0) {
+    if (decode.draft.claims.length > 0) {
+      // Everything the reply carried was off the ask — the fields the model
+      // linked, or the reading the trainer picked.
       return {
         state: note(
           closeExchange(next),
           deps.now(),
-          "I could only find answers to things you didn't ask for, so I'd rather pass than answer the wrong question.",
+          bound === undefined
+            ? "I could only find answers to things you didn't ask for, so I'd rather pass than answer the wrong question."
+            : `You picked "${bound.label}", and I couldn't put together a certified answer about that — I'd rather pass than answer something else.`,
           "abstention",
-          `schema linking dropped every claim (${linked.dropped}) as off the asked fields — nothing was committed`,
+          `schema linking dropped every claim (${decode.draft.claims.length}) as off the asked fields — nothing was committed`,
         ),
         claims: [],
         verdict: "closed",
@@ -1705,6 +1915,125 @@ function applyLinking(
     }
   }
   return { state: next, claims: linked.claims, verdict: "proceed" };
+}
+
+/**
+ * A subject pick, applied (R3b step 3): the trainer said which of the
+ * candidates they meant, so a claim about any *other* certified subject is
+ * the substitution class and is dropped, counted with the off-target claims.
+ * Claims about no certified subject (a lesson, a set operation, a claim on
+ * an id the registry never certified — the kernel's to refuse) pass through.
+ */
+function holdToSubject(
+  world: SessionWorld,
+  claims: readonly Claim[],
+  bound: ClarificationOption | undefined,
+  gauge: SessionState["linking"],
+): readonly Claim[] {
+  if (bound?.kind !== "entity") return claims;
+  const kept = claims.filter((claim) => {
+    const subjects = subjectsOfClaim(claim).map(canonicalId).filter((id) => certifies(world.registry, id));
+    return subjects.length === 0 || subjects.includes(bound.entityId);
+  });
+  gauge.offTargetDropped += claims.length - kept.length;
+  return kept;
+}
+
+/** The subject ids a claim is about, for the pick check — structure only. */
+function subjectsOfClaim(claim: Claim): readonly string[] {
+  switch (claim.kind) {
+    case "fact":
+    case "eligibility":
+    case "recommendation":
+    case "action":
+    case "membership":
+      return [claim.entityId];
+    case "comparison":
+      return [claim.leftId, claim.rightId];
+    case "treats":
+      return [claim.itemId];
+    case "matchup":
+      return claim.subject.kind === "species" ? [claim.subject.entityId] : [claim.subject.typeId];
+    default:
+      return [];
+  }
+}
+
+/**
+ * Ask the advisor's own question (R3b step 3): recorded as a `clarification`
+ * event with its typed options, the phase set to wait for the pick, the
+ * chain capped. The question text is shown in the advisor's voice and never
+ * certifies anything; the options are what a pick binds to. At the cap the
+ * exchange closes with the honest pass, naming what stayed ambiguous — the
+ * bot may ask twice and never interrogate.
+ */
+function clarify(
+  state: SessionState,
+  deps: SessionDeps,
+  question: { about: string; text: string; options: readonly ClarificationOption[]; source: string },
+): { state: SessionState; claims: readonly Claim[]; verdict: "closed" | "clarifying" } {
+  const askedSoFar = state.transcript.slice(state.askStart).filter((event) => event.kind === "clarification").length;
+  if (askedSoFar >= MAX_CLARIFICATIONS) {
+    return {
+      state: note(
+        closeExchange({ ...state, clarification: { ...state.clarification, capped: state.clarification.capped + 1 } }),
+        deps.now(),
+        `I've asked twice and still can't pin down what you mean by "${question.about}" — ask it again in one line, naming it, and I'll answer what the records certify.`,
+        "abstention",
+        `clarification chain capped at ${MAX_CLARIFICATIONS} on "${question.about}" (${question.source}) — nothing was certified`,
+      ),
+      claims: [],
+      verdict: "closed",
+    };
+  }
+  const event: ClarificationEvent = {
+    kind: "clarification",
+    at: deps.now(),
+    source: "advisor",
+    about: question.about,
+    text: question.text,
+    options: question.options,
+  };
+  const { bound: _bound, ...rest } = state;
+  return {
+    state: {
+      ...rest,
+      transcript: [...state.transcript, event],
+      phase: { kind: "clarifying", clarification: event },
+      clarification: { ...state.clarification, asked: state.clarification.asked + 1 },
+    },
+    claims: [],
+    verdict: "clarifying",
+  };
+}
+
+/**
+ * The trainer replied to the advisor's question with words that picked no
+ * option and asked nothing new. Once, the question is restated with its
+ * options — the reply may have been a paraphrase the labels do not cover;
+ * twice, the honest pass names what stayed ambiguous. Counted as ignored.
+ */
+function unansweredClarification(state: SessionState, deps: SessionDeps, clarification: ClarificationEvent): SessionState {
+  const gauge = { ...state.clarification, ignored: state.clarification.ignored + 1 };
+  const since = state.transcript.indexOf(clarification);
+  const replies = state.transcript.slice(since + 1).filter((event) => event.kind === "utterance" && event.source === "trainer").length;
+  const labels = clarification.options.map((option) => `"${option.label}"`).join(", ");
+  if (replies >= 2) {
+    return note(
+      closeExchange({ ...state, clarification: gauge }),
+      deps.now(),
+      `I couldn't tell which you meant by "${clarification.about}", so I'll leave it there — ask it again in one line, naming it, and I'll answer what the records certify.`,
+      "abstention",
+      "clarification unanswered twice — exchange closed, nothing certified",
+    );
+  }
+  return note(
+    { ...state, clarification: gauge },
+    deps.now(),
+    `I still need to know which you meant — say one of ${labels}, or ask me something else.`,
+    "social",
+    "reply matched no clarification option — question restated once",
+  );
 }
 
 /**
@@ -1749,7 +2078,7 @@ async function foreignVersion(state: SessionState, deps: SessionDeps): Promise<S
   // question, never a wrong bind.
   const switchback = homeVersionMentioned(deps.world, state);
   if (switchback !== undefined) {
-    return ask(state, deps.now(), "version", switchback);
+    return ask(deps.world, state, deps.now(), "version", switchback);
   }
   const attempt = await teachOrDiscover(state, deps, true);
   if (attempt.result === "taught" || attempt.result === "closed") return attempt.state;
@@ -1820,7 +2149,7 @@ function scopeStatementOnly(world: SessionWorld, state: SessionState): boolean {
 /** The acknowledgment a bare statement of scope earns: what now stands
  * bound, in the trainer's terms, and the exchange closed — no model call,
  * no record, nothing to certify. */
-function acknowledgeScope(world: SessionWorld, state: SessionState, deps: SessionDeps): SessionState {
+function acknowledgeScope(world: SessionWorld, state: SessionState, deps: SessionDeps, keepExchange = false): SessionState {
   const labels: string[] = [];
   for (const binding of deriveScope(world.pack, state.transcript).bindings) {
     if (binding.dimension === "version") labels.push(binding.value === "yellow" ? "Yellow" : "Red/Blue");
@@ -1828,9 +2157,9 @@ function acknowledgeScope(world: SessionWorld, state: SessionState, deps: Sessio
     else if (binding.dimension === "badgeLevel") labels.push(binding.value === 0 ? "no badges yet" : `${String(binding.value)} badge${binding.value === 1 ? "" : "s"}`);
   }
   return note(
-    closeExchange(state),
+    keepExchange ? state : closeExchange(state),
     deps.now(),
-    `Got it — ${labels.length === 0 ? "noted" : labels.join(", ")}. Ask away whenever you're ready.`,
+    `Got it — ${labels.length === 0 ? "noted" : labels.join(", ")}. ${keepExchange ? "Now, the question above is still waiting." : "Ask away whenever you're ready."}`,
     "social",
     "scope statement acknowledged — no ask to answer, nothing sent to the model",
   );
@@ -1919,7 +2248,7 @@ async function answer(
     };
   } else {
     try {
-      const fallback = await withRouteFallback(world, state, (routes) =>
+      const fallback = await withRouteFallback(world, state, deps, (routes) =>
         proposeAnswer({
           provider,
           context,
@@ -1933,6 +2262,7 @@ async function answer(
           ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
           ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
           ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
+          ...(deps.clarify === undefined ? {} : { clarify: deps.clarify }),
         }),
       );
       // Both calls' usage rides on the step; the retry is counted below.
@@ -2011,6 +2341,7 @@ async function answer(
         ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
         ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
         ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
+        ...(deps.clarify === undefined ? {} : { clarify: deps.clarify }),
       });
     } catch {
       // The first denial is a complete, honest record; a provider that fails
@@ -2092,7 +2423,7 @@ function groom(
 
   const linked = applyLinking(world, state, deps, step.decode);
   state = linked.state;
-  if (linked.verdict === "closed") return { kind: "settled", state };
+  if (linked.verdict === "closed" || linked.verdict === "clarifying") return { kind: "settled", state };
   if (linked.verdict === "off-domain") return { kind: "settled", state: redirect(state, deps) };
   if (linked.verdict === "boundary") return { kind: "settled", state: teachRecordsBoundary(state, deps, transactionId, establishedAt) };
   const decode = { ...step.decode, draft: { ...step.decode.draft, claims: linked.claims } };

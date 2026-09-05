@@ -33,7 +33,11 @@ sequenceDiagram
         D->>D: deterministic doors (switch-back, contradiction re-ask, drift, scope statement, listing cue)
         D->>M: proposeAnswer — discovery hop (no scope, grammar + optional retrieval block)
         M-->>D: JSON: asked (phrase → field | none), rosters, claims, route?
-        D->>D: decode → taught / off-domain / needs-scope / unusable
+        D->>D: decode → taught / off-domain / needs-scope / unusable / clarifying
+        opt the reply was a clarify nomination (clarify on)
+            D->>D: options typed against dictionary + registry, chain cap checked
+            D-->>T: the advisor's own question, options as clicks — the pick binds at linking
+        end
         D->>K: resolveScope(required = only what those claims need)
         K-->>D: granted | clarify
         opt still clarify and the words carry long-tail scope wording
@@ -41,6 +45,11 @@ sequenceDiagram
             M-->>D: {candidate, interpreting}
             D->>D: stale-interpretation guard, duplicate-card guard
             D-->>T: card (confirm / reject) — or the pack's own question
+        end
+        opt the pack's question is the move (clarify on)
+            D->>M: phraseQuestion — the pack's line, the ask, the approved values
+            M-->>D: {question} — held to one sentence, a question mark, no digit; else the pack's line
+            D-->>T: question event armed for the dimension, the vocabulary's values as clicks
         end
     end
     alt granted
@@ -51,7 +60,7 @@ sequenceDiagram
             D->>M: proposeAnswer again, route door closed
             M-->>D: JSON
         end
-        D->>D: decode, schema-linking checks (claims ⊆ asked fields · none → boundary lesson · alias contradiction → ask), route executor, guards (subject / set / direction / padding)
+        D->>D: decode, schema-linking checks (claims ⊆ asked fields · a pick binds · none → boundary lesson · alias contradiction → question with the fields as options), route executor, guards (subject / set / direction / padding)
         D->>K: compileManifest + verify (facts, rosters, policy, disclosures)
         K-->>D: allowed | denied by article/rule
         opt denied only as IA-2 fact-mismatch
@@ -91,7 +100,11 @@ flowchart TD
 
     U[utterance]:::det --> S{social cue?}:::det
     S -- yes --> S1[social note, no model]:::out
-    S -- no --> R[resolveScope]:::kernel
+    S -- no --> PK{advisor's question<br/>waiting?}:::det
+    PK -- pick matches one option --> PB[pick bound for linking]:::det --> R[resolveScope]:::kernel
+    PK -- fresh ask --> C3
+    PK -- neither --> PR[restate once,<br/>then honest pass]:::out
+    PK -- none waiting --> R
     R -- granted --> G[go to the granted half]:::out
     R -- clarify --> C1{switch-back or<br/>version contradiction?}:::det
     C1 -- yes --> Q1[pack question, version only]:::out
@@ -102,13 +115,14 @@ flowchart TD
     C4 -- no --> M1[proposeAnswer<br/>discovery hop]:::model
     M1 -- lesson --> T1[lesson filed]:::out
     M1 -- nothing --> T2[redirect note]:::out
+    M1 -- clarify nomination --> CL[options typed, chain capped:<br/>the advisor's own question]:::out
     M1 -- other claims --> R2[resolveScope, narrowed to<br/>what those claims need]:::kernel
     R2 -- granted --> G
     R2 -- clarify --> L{long-tail scope<br/>wording present?}:::det
-    L -- no --> Q2[pack question,<br/>or card restated]:::out
+    L -- no --> M6[phraseQuestion<br/>the pack's line reworded]:::model --> Q2[question armed,<br/>values as clicks;<br/>or card restated]:::out
     L -- yes --> M2[proposeScope<br/>the ladder]:::model
     M2 --> LG{fresh interpretation,<br/>not a duplicate?}:::det
-    LG -- no --> Q2
+    LG -- no --> M6
     LG -- yes --> CARD[card: confirm / reject]:::out
 ```
 
@@ -133,7 +147,8 @@ flowchart TD
     B -- no --> M3[proposeAnswer<br/>answer hop]:::model
     M3 --> RF{only a nomination<br/>the executor refused?}:::det
     RF -- yes --> M4[proposeAnswer again,<br/>route door closed]:::model --> D
-    RF -- no --> D[decode + schema linking:<br/>claims held to the asked fields,<br/>none → boundary lesson,<br/>alias contradiction → ask]:::det
+    RF -- no --> D[decode + schema linking:<br/>a pick binds; claims held to the asked fields,<br/>none → boundary lesson,<br/>alias contradiction → question with the fields as options]:::det
+    D -- clarify nomination --> CL2[the advisor's own question,<br/>options typed, chain capped]:::out
     D --> E[route executor and guards:<br/>subject, set, direction, padding]:::det
     E --> V[compileManifest + verify]:::kernel
     V -- allowed --> OK[record filed, page rendered]:::out
@@ -142,13 +157,19 @@ flowchart TD
     V -- denied otherwise --> DN[record: denied by article and rule]:::out
 ```
 
-There are exactly five amber nodes across the two halves; §3 lists what
+There are exactly six amber nodes across the two halves; §3 lists what
 each is shown. Note where the amber nodes sit: always *between* deterministic
 checks, never adjacent to a record. A record is only ever written by the
-kernel node or by a driver note that files nothing — and the fifth node,
-the feedback retry, re-enters the same decode and the same gate as the
-first, so a loop can only end in a certified answer, an honest pass or a
-denial by name.
+kernel node or by a driver note that files nothing — the fifth node, the
+feedback retry, re-enters the same decode and the same gate as the first,
+so a loop can only end in a certified answer, an honest pass or a denial
+by name; and the sixth, the phrase step, supplies wording alone — what the
+question is about, what a reply may bind to and which values are offered
+are the pack's, so a bad rewrite costs one call and the pack's own line.
+The advisor's clarification (the two white `CL` nodes) is not a seventh
+call: it is a reply the answer hop may give instead of claims, typed and
+capped by the driver, and the trainer's pick is applied at the same
+linking step every claim goes through.
 
 ## 3. Every model call the live session can make
 
@@ -159,6 +180,9 @@ denial by name.
 | 3 | `answer` — answer hop | scope granted, no deterministic draft | answer prompt with **"Scope is established: …"**; retrieval block; `previously` for anaphoric asks | as #1 | decoded draft → executor/guards → kernel | malformed → honest pass; token cap → truncation named |
 | 4 | `answer` — route-door-closed retry | #1 or #3 replied with only a nomination the executor refused | same prompt, `routes` omitted | as #1 minus the route variants | as #3 | as #3 |
 | 5 | `answer` — verifier-in-the-loop retry (R3b) | #3's groomed draft was denied at the answer stage for anything but the repair's all-fact-mismatch class, `feedback` on, once per answer | same prompt plus **"Your previous answer … was refused by the verifier, by name"** and one line per violation in fixed wording (`IA-3/fabricated-entity: "gym-badge" is not certified…`); `routes` omitted | as #4 | groomed identically to #3, gated once more; counted as `feedbackRetries`, the first denial kept in `feedbackDenials` | a second denial files as a denial |
+| 6 | `phrase` — the pack's question reworded (R3b step 3) | the pack's fixed question is the move (no ladder, or the ladder fell through), `clarify` on, once per dimension per ask | the trainer's lines, the pack's own wording, the approved values; "put that question in your own words … state no fact, no value and no number" | `{"question": string}` | a `question` event armed for the same dimension, text the model's; the phase carries the vocabulary's values as clicks | not one sentence ending in `?`, a digit, too long → the pack's own line (`clarification.unphrased`) |
+
+Calls #1 and #3 also admit, when `clarify` is on, one more reply shape beside claims and routes: the **clarify nomination** — `{"kind": "clarify", "about", "question", "options": [{"kind": "field", "label", "fieldId" | "none"} | {"kind": "entity", "label", "entityId"}]}`. It is not a call of its own: the driver validates every option (a dictionary id or `none`; a registry-certified subject), drops the rest, caps the chain at two per ask, and records the question as a `clarification` event with its typed options. The trainer's reply is read against the options (label, dictionary alias, subject name; a subject question answered with an unlisted certified subject is a pick too); one match binds — a field pick holds the next reply's claims to that field, a subject pick drops claims about any other certified subject — none restates once then passes honestly, and a fresh ask is drift. An alias contradiction (R3) takes the same shape with the two fields as options, driver-worded.
 
 Not in the live session: `proposeRawAnswer`, the harness's ungoverned control arm (same question, same grammar, no kernel), which exists so a published number has its comparison leg.
 
@@ -260,12 +284,16 @@ is covered by offline tests with scripted models:
   on purpose), the fold of self-comparisons, the claim budget
 - the route executors and their guards; the wrong-set, direction and
   padded-lesson guards; the eligibility route
+- clarification's driver half (`src/session/clarify.ts`): option
+  validation against the dictionary and the registry, the pick matcher,
+  the chain cap, the scope options; the phrased question's structural guard
+  (`usableQuestion`); the bound pick applied at linking
 - the manifest compile and every verification (facts against the
   snapshot, rosters recomputed, policy gates, mandatory disclosures,
   text closure, the render affidavit); the strip-assertion repair
 - replay: a filed transaction re-verifies byte for byte with no model
 
-And the nondeterministic list is §3's five rows. That asymmetry is the
+And the nondeterministic list is §3's six rows. That asymmetry is the
 architecture: usefulness lives in the amber nodes and is measured;
 enforcement lives everywhere else and is proven.
 
@@ -282,9 +310,13 @@ boundary; an alias contradiction → ask) instead of English. The green
 nodes lose their domain words; the kernel is untouched. *Landed
 2026-09-05:* the dictionary, the `asked` mapping and the three checks
 (`src/session/linking.ts`), the boundary tokens deleted, and the fifth
-amber node — the verifier-in-the-loop retry. Still to land: the dispatch
-doors' deletion, one at a time with a bank leg each (routing.md,
-sequencing step 5).
+amber node — the verifier-in-the-loop retry. *Landed the same day, step
+3:* the clarify nomination (the model may ask, with typed options; the
+pick binds at linking), the alias contradiction as that same question, and
+the sixth amber node — the pack's scope question in the model's words,
+guarded structurally and falling back to the pack's line. Still to land:
+follow-up suggestions (step 4) and the dispatch doors' deletion, one at a
+time with a bank leg each (routing.md, sequencing step 5).
 
 ```mermaid
 flowchart LR

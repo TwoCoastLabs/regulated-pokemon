@@ -108,6 +108,27 @@ export type ScopeEvent =
     }
   | {
       /**
+       * A clarifying question of the advisor's own (epic #145, R3b step 3),
+       * recorded as evidence with its typed options. The wording is a
+       * model's — shown in the advisor's voice, kept verbatim, never a claim
+       * — and the auditable part was never the wording: it is what the
+       * trainer's pick *binds to*. Every option is typed (a certified field
+       * or none of them, or a certified subject), so a pick is a binding the
+       * driver applies structurally and the record carries whole. The kernel
+       * reads this event only as a change of subject: it binds no dimension
+       * of scope, and it closes any open answer window the way a question
+       * does. The channel decides as everywhere (IA-8).
+       */
+      kind: "clarification";
+      at: string;
+      source: UtteranceSource;
+      /** The trainer's phrase the question is about. */
+      about: string;
+      text: string;
+      options: readonly ClarificationOption[];
+    }
+  | {
+      /**
        * Typed scope the trainer set on a form rather than said in prose —
        * the profile of epic #145, R2. The form is the context: a value here
        * binds its dimension on the `profile` route with no context word and
@@ -123,6 +144,17 @@ export type ScopeEvent =
     };
 
 export type ScopeTranscript = readonly ScopeEvent[];
+
+/**
+ * One typed option of a clarification. `field` names a certified field of
+ * the data dictionary — or `null`, "none of these", the records' boundary —
+ * and a pick holds the answer to that field; `entity` names a certified
+ * subject and a pick holds the answer to it. The label is what the trainer
+ * sees and may say back; the binding is the id beside it.
+ */
+export type ClarificationOption =
+  | { kind: "field"; label: string; fieldId: string | null }
+  | { kind: "entity"; label: string; entityId: string };
 
 /** Proof that scope was established, with a validity window. */
 export interface ScopeGrant {

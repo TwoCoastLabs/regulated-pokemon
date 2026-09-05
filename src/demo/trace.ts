@@ -63,6 +63,8 @@ function describeEvent(event: ScopeEvent, index: number): string {
       return `${at}${pad(event.source, 16)} ${event.text}`;
     case "question":
       return `${at}${pad(`${event.source} asks`, 16)} ${event.text}  — about ${event.dimension}`;
+    case "clarification":
+      return `${at}${pad(`${event.source} clarifies`, 16)} ${event.text}  — options: ${event.options.map((option) => option.label).join(", ")}`;
     case "proposal": {
       const candidate = Object.entries(event.candidate)
         .map(([dimension, value]) => `${dimension}=${String(value)}`)

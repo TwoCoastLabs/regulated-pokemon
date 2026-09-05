@@ -103,7 +103,7 @@ export function modelOf(artifact: HarnessArtifact, providerId: string): Artifact
 
 /** One transcript event, as a line in the chat pane. */
 export interface TranscriptLine {
-  kind: "utterance" | "question" | "proposal" | "confirmation" | "profile";
+  kind: "utterance" | "question" | "clarification" | "proposal" | "confirmation" | "profile";
   /** Who the pane shows speaking. Proposals and questions are the Advisor's. */
   speaker: "trainer" | "advisor" | "quoted-document" | "third-party" | "tool";
   text: string;
@@ -123,6 +123,14 @@ export function transcriptLines(transcript: ScopeTranscript): readonly Transcrip
           speaker: event.source,
           text: event.text,
           detail: `asking about ${event.dimension}`,
+          at: event.at,
+        };
+      case "clarification":
+        return {
+          kind: "clarification",
+          speaker: event.source,
+          text: event.text,
+          detail: `clarifying "${event.about}" — options: ${event.options.map((option) => option.label).join(", ")}`,
           at: event.at,
         };
       case "proposal": {

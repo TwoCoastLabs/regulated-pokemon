@@ -4,7 +4,7 @@ import type { ScopeGrant } from "../kernel/contracts.js";
 import type { ManifestContext } from "../kernel/manifest.js";
 import { SPECIES_FACT_IDS } from "../kernel/registry.js";
 import { candidateDigest } from "../kernel/scope.js";
-import { proposalDigest, proposeAnswer, proposeScope } from "./advisor.js";
+import { phraseQuestion, proposalDigest, proposeAnswer, proposeScope, usableQuestion } from "./advisor.js";
 import { harnessWorld } from "./corpus.js";
 import { ScriptedProvider } from "./provider.js";
 
@@ -175,5 +175,32 @@ describe("proposalDigest", () => {
   it("is the digest the kernel checks a confirmation against", () => {
     const event = { kind: "proposal", at: AT, id: "prop-x", candidate: { version: "red-blue" }, interpreting: "w" } as const;
     expect(proposalDigest(event)).toBe(candidateDigest("prop-x", event.candidate));
+  });
+});
+
+describe("usableQuestion — the shape a model-phrased question must have", () => {
+  it("accepts one plain question and refuses numbers, statements and fragments", () => {
+    expect(usableQuestion("Which game are you playing — Red/Blue, or Yellow?")).toBe(true);
+    expect(usableQuestion("  Quick one first: which version are you on?  ")).toBe(true);
+    expect(usableQuestion("Pikachu's Speed is 90. Which version?")).toBe(false);
+    expect(usableQuestion("Which version? Red or Blue?")).toBe(false);
+    expect(usableQuestion("Which version are you playing")).toBe(false);
+    expect(usableQuestion("Which?")).toBe(false);
+    expect(usableQuestion("Which\nversion?")).toBe(false);
+    expect(usableQuestion(`${"a".repeat(250)}?`)).toBe(false);
+  });
+});
+
+describe("phraseQuestion — the pack's question in the model's words, or nothing", () => {
+  it("returns the model's wording when usable and null otherwise, and keeps the usage either way", async () => {
+    const good = new ScriptedProvider("phrase-good", () => JSON.stringify({ question: "Which game are you on?" }));
+    const okay = await phraseQuestion({ provider: good, scenarioId: "t", transcript: [], need: "Which game version are you playing?", options: ["red-blue", "yellow"] });
+    expect(okay.text).toBe("Which game are you on?");
+    expect(okay.usage.calls).toBe(1);
+    const bad = new ScriptedProvider("phrase-bad", () => "```json\n{\"question\": \"You have 8 badges. Which game?\"}\n```");
+    const refused = await phraseQuestion({ provider: bad, scenarioId: "t", transcript: [], need: "q?", options: ["a"] });
+    expect(refused.text).toBeNull();
+    const prose = new ScriptedProvider("phrase-prose", () => "Which game are you on?");
+    expect((await phraseQuestion({ provider: prose, scenarioId: "t", transcript: [], need: "q?", options: ["a"] })).text).toBeNull();
   });
 });

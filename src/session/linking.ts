@@ -211,6 +211,15 @@ export function aliasContradiction(
     );
     if (evidence.length === 0) continue;
     if (linked !== undefined && evidence.some((field) => field.id === linked.id)) continue;
+    // A phrase linked to none whose every alias names a field *another*
+    // entry of the same mapping already linked is not a missed field — the
+    // model split the ask into the field and the thing it could not place
+    // ("what's the speed of the fast one?": "the speed" → Speed, "the fast
+    // one" → none, found live 2026-09-05). The subject is what is missing
+    // there, and a question offering Speed as the one option answers
+    // nothing. Left to the null-link reading, which knows what to do.
+    const linkedElsewhere = new Set(asked.filter((other) => other !== entry).flatMap((other) => (other.fieldId === null ? [] : [other.fieldId])));
+    if (linked === undefined && evidence.every((field) => linkedElsewhere.has(field.id))) continue;
     return { phrase: entry.phrase, ...(linked === undefined ? {} : { linked }), suggested: evidence };
   }
   return undefined;

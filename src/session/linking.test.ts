@@ -143,6 +143,19 @@ describe("aliasContradiction — R3, the dictionary's words can only make the sy
     expect(found?.suggested.map((field) => field.id)).toEqual(["move-power"]);
   });
 
+  it("is silent for a null link whose aliases all name a field another entry already linked — the subject is what is missing", () => {
+    // Found live (2026-09-05, strong model): "what's the speed of the fast
+    // one?" split into "the speed" → Speed and "the fast one" → none, and
+    // the contradiction offered Speed as the one option.
+    const asked = [
+      { phrase: "the speed", entityId: "none", fieldId: "base-speed" },
+      { phrase: "the fast one", entityId: "none", fieldId: null },
+    ];
+    expect(aliasContradiction(world.pack, world.registry, asked)).toBeUndefined();
+    // Alone, the same null link is still the missed field it looks like.
+    expect(aliasContradiction(world.pack, world.registry, [asked[1]!])?.suggested.map((field) => field.id)).toEqual(["base-speed"]);
+  });
+
   it("matches word-bounded, so 'type' inside 'typing' is one alias, not two", () => {
     expect(aliasContradiction(world.pack, world.registry, [{ phrase: "its typing", entityId: "pikachu", fieldId: "types" }])).toBeUndefined();
     expect(aliasContradiction(world.pack, world.registry, [{ phrase: "hyper", entityId: "pikachu", fieldId: "base-speed" }])).toBeUndefined();

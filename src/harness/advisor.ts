@@ -33,6 +33,24 @@ function trainerText(transcript: ScopeTranscript): string[] {
     .map((event) => event.text);
 }
 
+/**
+ * The exchange as the answer step is shown it: the trainer's own words, and
+ * — between them, where it happened — the advisor's own clarification (R3b
+ * step 3) so the pick that follows it can be read. The clarification is
+ * labelled as the advisor's, never as the trainer's words: IA-8 holds in the
+ * prompt as in the resolver, and a question the model itself asked is
+ * context, not evidence.
+ */
+function exchangeLines(transcript: ScopeTranscript): string[] {
+  return transcript.flatMap((event) => {
+    if (event.kind === "utterance" && event.source === "trainer") return [event.text];
+    if (event.kind === "clarification" && event.source === "advisor") {
+      return [`(you asked them: "${event.text}" — options: ${event.options.map((option) => option.label).join(" / ")})`];
+    }
+    return [];
+  });
+}
+
 function approvedValues(pack: AccordPack, dimension: ScopeDimension): string {
   const rule = pack.vocabulary.dimensions.find((entry) => entry.dimension === dimension);
   return (rule?.terms ?? []).map((term) => String(term.value)).join(", ");
@@ -117,6 +135,7 @@ function answerPrompt(
   dictionary: readonly DictionaryEntry[],
   feedback: readonly string[] | undefined,
   items = false, itemCategories: readonly string[] = [],
+  clarify = false,
 ): string {
   return [
     // Grounding, when on: the certified facts in front of the model so it reads
@@ -203,6 +222,30 @@ function answerPrompt(
           "or matchup claim must be about a field you linked here: the others are dropped.",
         ]),
     "",
+    ...(clarify && dictionary.length > 0
+      ? [
+          // The clarification nomination (docs/routing.md, R3b step 3): the
+          // model may ask, in its own words, with typed options; the
+          // trainer's pick binds. Asked only for a real ambiguity — the
+          // driver caps the chain at two per ask, and a question the model
+          // could have answered is a lost turn, not a safe one.
+          "When their words are genuinely ambiguous — you cannot tell WHICH field they mean",
+          '("is it strong?" could be its Attack or, for a move, its power) or WHICH subject ("the fast',
+          'one") — do not guess and do not answer the nearest reading: ask. Reply with ONE clarify',
+          "entry in \"claims\" and no other claim:",
+          '  {"kind": "clarify", "about": "<their words for the ambiguous thing>", "question": "<one short question in your own words, ending in ?>",',
+          '   "options": [{"kind": "field", "label": "<two or three words>", "fieldId": "<field-id>" | "' + NO_FIELD + '"} | {"kind": "entity", "label": "<its name>", "entityId": "<certified id>"}, ...]}',
+          "Two to four options, each a real reading of their words, typed: a field of the dictionary",
+          `("${NO_FIELD}" for "none of these"), or a certified subject. The trainer picks one and you`,
+          `then answer that reading. A phrase whose SUBJECT you cannot place is not "${NO_FIELD}" and not an`,
+          "empty reply — an empty reply is for small talk and off-topic words; an on-topic ask you cannot",
+          "place is this question, with the likely subjects as entity options. Ask only when the ambiguity is real; never ask about the",
+          "trainer's own scope (their game version, region or standing) — the system asks those",
+          "itself; and the question may state no fact and no number. If their words already pick one reading",
+          "(they named the field or the subject, or answered a question of yours), answer it.",
+          "",
+        ]
+      : []),
     "A roster is a declarative set you name and then cite by id:",
     '  {"id": "<your-id>", "criteria": {"all": [<criterion>, ...]}}',
     // Vacuous satisfaction is a logician's reading; the catalogue-wide set
@@ -461,6 +504,10 @@ export interface AnswerStepInput {
    * what changed between the two calls.
    */
   feedback?: readonly string[];
+  /** Whether the model may nominate a clarification with typed options
+   * instead of answering (docs/routing.md, R3b step 3). Off for every path
+   * that has not opted in; the driver validates and caps what comes back. */
+  clarify?: boolean;
 }
 
 /** Ask the model for the certified answer and decode it into a draft. Whether
@@ -483,7 +530,9 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
     purpose: "answer",
     prompt: answerPrompt(
       context.grant?.scope,
-      trainerLines,
+      // The exchange with the advisor's own clarification in place, when
+      // there was one — otherwise exactly the trainer's lines.
+      input.clarify === true ? exchangeLines(input.transcript) : trainerLines,
       input.previously,
       input.routes,
       context.pack.actions.map((action) => action.id),
@@ -494,6 +543,7 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
       input.feedback,
       context.registry.itemIds.length > 0,
       [...new Set(context.registry.items.map((item) => item.category))].sort(),
+      input.clarify === true,
     ),
     hint: { scenarioId, ...(context.grant === undefined ? {} : { scope: context.grant.scope }) },
     // The same contract the prose describes, in a form a provider can enforce.
@@ -509,6 +559,7 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
           itemCategories: [...new Set(context.registry.items.map((item) => item.category))].sort(),
         },
         input.routes,
+        input.clarify === true,
       ),
     },
   };
@@ -521,6 +572,99 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
     return { usage: completion.usage, decode: { ok: false, reason: `${decode.reason} — the completion hit the token cap (truncated)` } };
   }
   return { usage: completion.usage, decode };
+}
+
+export interface PhraseStepInput {
+  provider: ModelProvider;
+  scenarioId: string;
+  /** The exchange so far — trainer channel only, as everywhere. */
+  transcript: ScopeTranscript;
+  /** What the League needs to know, in the pack's own fixed words. */
+  need: string;
+  /** The typed options the trainer will be offered, by label. */
+  options: readonly string[];
+}
+
+export interface PhraseStep {
+  usage: Usage;
+  /** The model's wording of the question, or null when it offered nothing
+   * usable — the caller then asks the pack's fixed question. */
+  text: string | null;
+}
+
+/** The phrase step's grammar: one string, nothing else. */
+export const PHRASE_SCHEMA_NAME = "clarifying_question";
+
+/**
+ * Ask the model to put the League's fixed question in its own words, in the
+ * light of the ask (docs/routing.md, R3b step 3: "the version question stops
+ * sounding like a form"). The wording is the only thing the model supplies:
+ * what the question is *about* and what a reply may bind to stay the pack's
+ * — the options are the vocabulary's values, the recorded question event
+ * carries the dimension, and the kernel's answer route reads the trainer's
+ * reply against the approved terms exactly as it reads a reply to the fixed
+ * wording. The text is held to {@link usableQuestion}; anything else falls
+ * back to the pack's line, so a bad rewrite costs one call and nothing more.
+ */
+export async function phraseQuestion(input: PhraseStepInput): Promise<PhraseStep> {
+  const said = trainerText(input.transcript);
+  const request: CompletionRequest = {
+    purpose: "phrase",
+    prompt: [
+      "The trainer said:",
+      ...said.map((line) => `  - ${line}`),
+      "",
+      "Before their question can be answered, one thing about the trainer must be established.",
+      `The fixed wording for asking it is: "${input.need}"`,
+      `Their answer will be one of: ${input.options.join(", ")}.`,
+      "",
+      "Put that question in your own words, briefly and warmly, so it reads as part of this",
+      "conversation — say in passing what you need it for. One sentence, ending in a question",
+      "mark. State no fact, no value and no number; ask only that question.",
+      'Reply with one JSON object, {"question": "<your wording>"}, and nothing else.',
+    ].join("\n"),
+    hint: { scenarioId: input.scenarioId },
+    schema: {
+      name: PHRASE_SCHEMA_NAME,
+      schema: { type: "object", properties: { question: { type: "string" } }, required: ["question"], additionalProperties: false },
+    },
+  };
+  const completion = await input.provider.complete(request);
+  const parsed = decodePhrase(completion.text);
+  return { usage: completion.usage, text: parsed !== null && usableQuestion(parsed) ? parsed.trim() : null };
+}
+
+function decodePhrase(text: string): string | null {
+  const fenced = /```(?:json)?\s*([\s\S]*?)```/i.exec(text);
+  const body = fenced?.[1] ?? text;
+  try {
+    const parsed: unknown = JSON.parse(body);
+    if (typeof parsed === "object" && parsed !== null && typeof (parsed as { question?: unknown }).question === "string") {
+      return (parsed as { question: string }).question;
+    }
+  } catch {
+    // not JSON — nothing usable
+  }
+  return null;
+}
+
+/**
+ * The shape a model-phrased question must have to be shown at all — a
+ * structural guard, never a word list: one sentence (no sentence break
+ * before the question mark, no line break), ending in a question mark, of a
+ * length a person would say, and carrying no digit — a number in a question
+ * is a value stated, and a question may state nothing.
+ */
+export function usableQuestion(text: string): boolean {
+  const trimmed = text.trim();
+  if (trimmed.length < 8 || trimmed.length > 240) return false;
+  if (!trimmed.endsWith("?")) return false;
+  if (/\d/.test(trimmed)) return false;
+  if (/\n/.test(trimmed)) return false;
+  // A statement before the question: "X is fast. Which version?" — the only
+  // sentence allowed is the question itself.
+  if (/[.!?]\s+\S/.test(trimmed)) return false;
+  return true;
 }
 
 export interface RawStepInput {

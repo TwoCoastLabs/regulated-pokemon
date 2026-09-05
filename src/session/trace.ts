@@ -66,6 +66,11 @@ export interface TraceArgs {
   /** The verifier-in-the-loop retry (docs/routing.md, R3b) — on by default,
    * the product posture; `--no-feedback` files the first-attempt denial. */
   feedback: boolean;
+  /** Clarification (docs/routing.md, R3b step 3) — on by default, the
+   * product posture: the model may ask with typed options, a contradiction
+   * becomes a question, the pack's scope question is phrased by the model;
+   * `--no-clarify` asks the pack's fixed lines and closes on a contradiction. */
+  clarify: boolean;
   /** Converse with the Center world — kanto-center under its own pack, the
    * realistic-inquiry setting the coverage maps measure. Off by default: the
    * frozen red-blue world stays the tracer's baseline. */
@@ -85,6 +90,7 @@ export function parseTraceArgs(argv: readonly string[]): TraceArgs {
     gatedGrammar: !argv.includes("--loose-grammar"),
     repair: !argv.includes("--no-repair"),
     feedback: !argv.includes("--no-feedback"),
+    clarify: !argv.includes("--no-clarify"),
     center: argv.includes("--center"),
   };
 }
@@ -207,6 +213,13 @@ function narrate(before: SessionState, after: SessionState): string[] {
   if (linking.staleDropped > linkedBefore.staleDropped) {
     lines.push(`  [linking] ${linking.staleDropped - linkedBefore.staleDropped} link(s) about an earlier exchange dropped as stale`);
   }
+  const clarifying = after.clarification;
+  const clarifiedBefore = before.clarification;
+  if (clarifying.picked > clarifiedBefore.picked) lines.push("  [clarify] the reply picked one option — bound for this exchange");
+  if (clarifying.ignored > clarifiedBefore.ignored) lines.push("  [clarify] the reply picked no option");
+  if (clarifying.capped > clarifiedBefore.capped) lines.push("  [clarify] the chain hit its cap — honest pass");
+  if (clarifying.phrased > clarifiedBefore.phrased) lines.push("  [clarify] the pack's question was phrased by the model");
+  if (clarifying.unphrased > clarifiedBefore.unphrased) lines.push("  [clarify] the model offered no usable wording — the pack's question was asked");
 
   lines.push(`  [phase] ${describePhase(after)}`);
   return lines;
@@ -219,6 +232,10 @@ function describeEvent(event: ScopeEvent): string | undefined {
       return event.source === "trainer" ? undefined : `[${event.source}] ${event.text}`;
     case "question":
       return `[advisor asks · ${event.dimension}] ${event.text}`;
+    case "clarification":
+      return `[advisor clarifies · "${event.about}"] ${event.text} — options: ${event.options
+        .map((option) => `${option.label} (${option.kind === "field" ? (option.fieldId ?? "none") : option.entityId})`)
+        .join(", ")}`;
     case "proposal": {
       const candidate = Object.entries(event.candidate)
         .map(([dimension, value]) => `${dimension}=${String(value)}`)
@@ -292,7 +309,9 @@ function describePhase(state: SessionState): string {
     case "gathering":
       return "gathering — waiting for the visitor's words";
     case "asking":
-      return `asking about ${phase.dimension} — answer in your own words`;
+      return `asking about ${phase.dimension} — answer in your own words${phase.options.length === 0 ? "" : ` (one of: ${phase.options.join(", ")})`}`;
+    case "clarifying":
+      return `clarifying "${phase.clarification.about}" — say one of: ${phase.clarification.options.map((option) => option.label).join(", ")}`;
     case "confirming-scope":
       return "confirming-scope — /confirm or /reject the proposal above";
     case "confirming-act":
@@ -313,6 +332,12 @@ function summary(state: SessionState): string {
     (state.linking.offTargetDropped > 0 ? ` (${state.linking.offTargetDropped} off-target dropped)` : "") +
     (state.linking.contradictions > 0 ? ` (${state.linking.contradictions} contradiction(s) asked)` : "") +
     (state.feedbackRetries > 0 ? `, ${state.feedbackRetries} feedback retr${state.feedbackRetries === 1 ? "y" : "ies"}` : "") +
+    (state.clarification.asked > 0
+      ? `, clarifications ${state.clarification.asked} asked/${state.clarification.picked} picked/${state.clarification.ignored} ignored/${state.clarification.capped} capped`
+      : "") +
+    (state.clarification.phrased + state.clarification.unphrased > 0
+      ? `, scope questions ${state.clarification.phrased} phrased/${state.clarification.unphrased} pack-worded`
+      : "") +
     ", " +
     `${usage.calls} model call(s), $${usage.costUsd.toFixed(4)}${floor}`
   );

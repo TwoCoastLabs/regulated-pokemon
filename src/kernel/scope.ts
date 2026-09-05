@@ -435,7 +435,7 @@ function proposalAnswerMatches(vocabulary: ScopeVocabulary, transcript: ScopeTra
       const reply = transcript[index]!;
       // A new question or proposal changes the subject; the card's own
       // confirmation settles it — either way this card stops arming.
-      if (reply.kind === "question" || reply.kind === "proposal") break;
+      if (reply.kind === "question" || reply.kind === "clarification" || reply.kind === "proposal") break;
       if (reply.kind === "confirmation" && reply.proposalId === event.id) break;
       if (reply.kind !== "utterance" || reply.source !== "trainer") continue;
 
@@ -483,7 +483,8 @@ function answerMatches(vocabulary: ScopeVocabulary, transcript: ScopeTranscript)
     for (let index = questionIndex + 1; index < transcript.length; index += 1) {
       const reply = transcript[index]!;
       // The next question changes the subject; answers do not carry across it.
-      if (reply.kind === "question") break;
+      // The advisor's own clarification is a question too (R3b step 3).
+      if (reply.kind === "question" || reply.kind === "clarification") break;
       if (reply.kind !== "utterance" || reply.source !== "trainer") continue;
 
       // The window closes once the question is *answered* — the first trainer

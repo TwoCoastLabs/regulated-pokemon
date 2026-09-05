@@ -28,6 +28,7 @@ import { resolve } from "node:path";
  * in the path. Relative to the repository root. */
 export const ROUTING_PATH: readonly string[] = [
   "src/session/session.ts",
+  "src/session/clarify.ts",
   "src/session/trace.ts",
   "src/harness/advisor.ts",
   "src/harness/schema.ts",
