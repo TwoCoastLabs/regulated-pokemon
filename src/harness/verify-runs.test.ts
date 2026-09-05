@@ -107,7 +107,12 @@ describe("the filed evidence base replays (epic #87, slice 2)", () => {
     // newest filed artifacts must be against the bundled world.
     expect(verified, "no artifact was verifiable against the bundled world — the leg is vacuous").toBeGreaterThan(0);
     expect(transactions).toBeGreaterThan(0);
-  });
+  // The sweep's work grows with the ledger by design — every filed artifact
+  // is re-executed, and the two R3b coverage legs (2026-09-05) took it past
+  // vitest's 5 s default on the coverage-instrumented CI runner (5.7 s on
+  // main's merge run, ~1 s locally). The budget is generous on purpose: a
+  // slow replay is still a replay, and a wrong verdict fails above, not here.
+  }, 120_000);
 
   it("fails a doctored record — the leg is not fail-closed theater", () => {
     // Find any reproducible artifact carrying a committed numeric fact with a
