@@ -166,8 +166,8 @@ describe("runTrace narrates what the session did", () => {
 describe("parseTraceArgs keeps the entry point straight-line", () => {
   it("splits flags from inputs and honors --model over --weak", () => {
     const { parseTraceArgs } = trace;
-    expect(parseTraceArgs(["hi", "/confirm"])).toEqual({ inputs: ["hi", "/confirm"], weak: false, adversarial: false, grounding: "retrieval", gatedGrammar: true, repair: true, feedback: true, center: false });
-    expect(parseTraceArgs(["--weak", "hi"])).toEqual({ inputs: ["hi"], weak: true, adversarial: false, grounding: "retrieval", gatedGrammar: true, repair: true, feedback: true, center: false });
+    expect(parseTraceArgs(["hi", "/confirm"])).toEqual({ inputs: ["hi", "/confirm"], weak: false, adversarial: false, grounding: "retrieval", gatedGrammar: true, repair: true, feedback: true, clarify: true, center: false });
+    expect(parseTraceArgs(["--weak", "hi"])).toEqual({ inputs: ["hi"], weak: true, adversarial: false, grounding: "retrieval", gatedGrammar: true, repair: true, feedback: true, clarify: true, center: false });
     expect(parseTraceArgs(["--adversarial", "--model", "acme/z-1", "hi"])).toEqual({
       inputs: ["hi"],
       model: "acme/z-1",
@@ -177,8 +177,15 @@ describe("parseTraceArgs keeps the entry point straight-line", () => {
       gatedGrammar: true,
       repair: true,
       feedback: true,
+      clarify: true,
       center: false,
     });
+  });
+
+  it("clarification defaults on and --no-clarify asks the pack's fixed lines", () => {
+    const { parseTraceArgs } = trace;
+    expect(parseTraceArgs(["hi"]).clarify).toBe(true);
+    expect(parseTraceArgs(["--no-clarify", "hi"]).clarify).toBe(false);
   });
 
   it("selects the Center world only when asked — the dogfooding door stays shut by default", () => {

@@ -64,7 +64,7 @@ const grounded = args.grounding === "full";
 const retrieval = args.grounding === "retrieval";
 const world = args.center ? centerWorld() : demoWorld();
 console.log(
-  `[config] model ${model}, world ${world.registry.snapshot.id} + ${world.pack.id}, grounding ${args.grounding}, grammar ${args.gatedGrammar ? "gated" : "loose"}, repair ${args.repair ? "on" : "off"}, feedback ${args.feedback ? "on" : "off"}${args.adversarial ? ", adversarial" : ""}`,
+  `[config] model ${model}, world ${world.registry.snapshot.id} + ${world.pack.id}, grounding ${args.grounding}, grammar ${args.gatedGrammar ? "gated" : "loose"}, repair ${args.repair ? "on" : "off"}, feedback ${args.feedback ? "on" : "off"}, clarify ${args.clarify ? "on" : "off"}${args.adversarial ? ", adversarial" : ""}`,
 );
 
 runTrace(args.inputs, {
@@ -76,6 +76,7 @@ runTrace(args.inputs, {
   gatedGrammar: args.gatedGrammar,
   repair: args.repair,
   feedback: args.feedback,
+  clarify: args.clarify,
 }).then((result) => {
   for (const line of result.lines) console.log(line);
   process.exit(result.exitCode);

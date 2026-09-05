@@ -21,7 +21,7 @@ import type { JsonSchema } from "./schema.js";
 /** Which propose step a request belongs to. `raw` is the control arm: the
  * same question, no kernel — the reply is published as-is and only measured
  * afterwards. */
-export type Purpose = "scope" | "answer" | "raw";
+export type Purpose = "scope" | "answer" | "raw" | "phrase";
 
 /**
  * Structured context a prompt was built from.

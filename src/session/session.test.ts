@@ -2003,3 +2003,357 @@ it("a failed teaching attempt falls to the question and moves the failure counte
   expect(state.transcript.some((event) => event.kind === "question")).toBe(true);
   expect(state.providerErrors).toBeGreaterThan(0);
 });
+
+describe("R3b step 3: clarification — the model may ask, the trainer's pick binds", () => {
+  const PROFILE_SCOPE = { version: "red-blue", region: "kanto", badgeLevel: 8 } as const;
+  const withClarify = (provider: ModelProvider): SessionDeps => ({ ...deps(provider), clarify: true });
+
+  const fieldClarify = JSON.stringify({
+    asked: [],
+    rosters: [],
+    claims: [
+      {
+        kind: "clarify",
+        about: "is it strong",
+        question: "Do you mean how hard Pikachu hits, or how fast it is?",
+        options: [
+          { kind: "field", label: "how hard it hits", fieldId: "base-attack" },
+          { kind: "field", label: "how fast it is", fieldId: "base-speed" },
+          { kind: "field", label: "something else", fieldId: "none" },
+        ],
+      },
+    ],
+  });
+  const speedAndAttack = JSON.stringify({
+    asked: [{ phrase: "is it strong", entityId: "pikachu", fieldId: "base-attack" }],
+    rosters: [],
+    claims: [
+      { kind: "fact", entityId: "pikachu", factId: "base-attack" },
+      { kind: "fact", entityId: "pikachu", factId: "base-speed" },
+    ],
+  });
+
+  /** Clarifies on the first answer call, answers on every later one, and
+   * keeps every answer prompt it was shown. */
+  function clarifyingThenAnswering(answer: string, clarification = fieldClarify): { provider: ModelProvider; prompts: string[] } {
+    const prompts: string[] = [];
+    let calls = 0;
+    const provider = new ScriptedProvider("clarifying", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      prompts.push(request.prompt);
+      calls += 1;
+      return calls === 1 ? clarification : answer;
+    });
+    return { provider, prompts };
+  }
+
+  it("a nominated clarification is a recorded event with typed options, and the exchange waits for the pick", async () => {
+    const { provider, prompts } = clarifyingThenAnswering(speedAndAttack);
+    const d = withClarify(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "is Pikachu strong?", d);
+    expect(state.records).toHaveLength(0);
+    expect(state.phase.kind).toBe("clarifying");
+    const event = state.transcript[state.transcript.length - 1];
+    expect(event?.kind).toBe("clarification");
+    if (event?.kind === "clarification") {
+      expect(event.source).toBe("advisor");
+      expect(event.text).toBe("Do you mean how hard Pikachu hits, or how fast it is?");
+      expect(event.options.map((option) => (option.kind === "field" ? option.fieldId : option.entityId))).toEqual(["base-attack", "base-speed", null]);
+    }
+    expect(state.clarification).toMatchObject({ asked: 1, picked: 0 });
+    // The grammar offered the door: the prompt carries the instruction.
+    expect(prompts[0]).toContain('"kind": "clarify"');
+  });
+
+  it("the pick binds: claims are held to the picked field whatever the model linked, and the record replays", async () => {
+    const { provider, prompts } = clarifyingThenAnswering(speedAndAttack);
+    const d = withClarify(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "is Pikachu strong?", d);
+    state = await say(state, "how fast it is", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims.map((claim) => (claim.kind === "fact" ? `${claim.entityId}.${claim.factId}` : claim.kind))).toEqual(["pikachu.base-speed"]);
+    expect(verifyReplay(world, record).allowed).toBe(true);
+    expect(state.clarification).toMatchObject({ asked: 1, picked: 1 });
+    expect(state.linking.offTargetDropped).toBe(1);
+    expect(state.phase.kind).toBe("gathering");
+    // The second call was shown the advisor's own question and the pick, in
+    // order, labelled as the advisor's.
+    expect(prompts[1]).toContain('(you asked them: "Do you mean how hard Pikachu hits, or how fast it is?"');
+    expect(prompts[1]).toContain("how fast it is");
+    // The record's transcript carries the clarification whole.
+    expect(record.transcript.some((event) => event.kind === "clarification")).toBe(true);
+  });
+
+  it("a pick by alias binds too — 'speed' picks the Speed option", async () => {
+    const { provider } = clarifyingThenAnswering(speedAndAttack);
+    const d = withClarify(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "is Pikachu strong?", d);
+    state = await say(state, "speed", d);
+    expect(state.records[0]?.manifest?.claims.map((claim) => (claim.kind === "fact" ? claim.factId : claim.kind))).toEqual(["base-speed"]);
+  });
+
+  it("picking 'none of these' about a certified subject teaches the records' boundary", async () => {
+    const { provider } = clarifyingThenAnswering(speedAndAttack);
+    const d = withClarify(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "is Pikachu strong?", d);
+    state = await say(state, "something else", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: world.pack.recordsBoundary?.lessonId }]);
+    expect(state.notes.some((n) => n.tone === "abstention" && n.text.includes("something else"))).toBe(true);
+  });
+
+  it("a subject pick drops claims about any other certified subject", async () => {
+    const entityClarify = JSON.stringify({
+      rosters: [],
+      claims: [
+        {
+          kind: "clarify",
+          about: "the electric mouse",
+          question: "Which one do you mean?",
+          options: [
+            { kind: "entity", label: "Pikachu", entityId: "pikachu" },
+            { kind: "entity", label: "Raichu", entityId: "raichu" },
+          ],
+        },
+      ],
+    });
+    const both = JSON.stringify({
+      asked: [{ phrase: "how fast", entityId: "raichu", fieldId: "base-speed" }],
+      rosters: [],
+      claims: [
+        { kind: "fact", entityId: "pikachu", factId: "base-speed" },
+        { kind: "fact", entityId: "raichu", factId: "base-speed" },
+      ],
+    });
+    const { provider } = clarifyingThenAnswering(both, entityClarify);
+    const d = withClarify(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how fast is the electric mouse?", d);
+    expect(state.phase.kind).toBe("clarifying");
+    state = await say(state, "Raichu", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.manifest?.claims.map((claim) => (claim.kind === "fact" ? claim.entityId : claim.kind))).toEqual(["raichu"]);
+    expect(state.linking.offTargetDropped).toBe(1);
+  });
+
+  it("a reply matching no option is asked again once, then the honest pass — counted as ignored", async () => {
+    const { provider } = clarifyingThenAnswering(speedAndAttack);
+    const d = withClarify(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "is Pikachu strong?", d);
+    state = await say(state, "hmm, the usual", d);
+    expect(state.phase.kind).toBe("clarifying");
+    expect(state.notes[state.notes.length - 1]?.text).toContain("I still need to know which you meant");
+    expect(state.clarification.ignored).toBe(1);
+    state = await say(state, "you know what I mean", d);
+    expect(state.phase.kind).toBe("gathering");
+    expect(state.records).toHaveLength(0);
+    expect(state.notes[state.notes.length - 1]?.tone).toBe("abstention");
+    expect(state.clarification.ignored).toBe(2);
+    expect(state.usage.calls).toBe(1);
+  });
+
+  it("a fresh ask over the advisor's question is drift, not a pick", async () => {
+    const { provider } = clarifyingThenAnswering(thunderboltAnswer());
+    const d = withClarify(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "is Pikachu strong?", d);
+    state = await say(state, "what is Thunderbolt's power?", d);
+    expect(state.notes.some((n) => n.text.startsWith("New question"))).toBe(true);
+    expect(state.records[0]?.outcome.status).toBe("answered");
+    expect(state.clarification.picked).toBe(0);
+  });
+
+  it("a pleasantry keeps the question armed", async () => {
+    const { provider } = clarifyingThenAnswering(speedAndAttack);
+    const d = withClarify(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "is Pikachu strong?", d);
+    state = await say(state, "thanks", d);
+    expect(state.phase.kind).toBe("clarifying");
+  });
+
+  it("the chain is capped at two per ask: a third clarification falls to the honest pass naming the phrase", async () => {
+    const always = new ScriptedProvider("always-asking", (request) => (request.purpose === "answer" ? fieldClarify : "decline"));
+    const d = withClarify(always);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "is Pikachu strong?", d);
+    state = await say(state, "speed", d);
+    expect(state.phase.kind).toBe("clarifying");
+    expect(state.clarification.asked).toBe(2);
+    state = await say(state, "speed", d);
+    expect(state.phase.kind).toBe("gathering");
+    expect(state.records).toHaveLength(0);
+    expect(state.notes[state.notes.length - 1]?.text).toContain('"is it strong"');
+    expect(state.clarification).toMatchObject({ asked: 2, picked: 2, capped: 1 });
+  });
+
+  it("an option outside the enums is dropped, and a clarification with none left is dropped whole", async () => {
+    const bad = JSON.stringify({
+      rosters: [],
+      claims: [
+        { kind: "clarify", about: "how tall", question: "Its height?", options: [{ kind: "field", label: "its height", fieldId: "height" }, { kind: "entity", label: "Missingno", entityId: "missingno" }] },
+      ],
+    });
+    const provider = new ScriptedProvider("bad-options", (request) => (request.purpose === "answer" ? bad : "decline"));
+    const d = withClarify(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how tall is Pikachu?", d);
+    expect(state.phase.kind).toBe("gathering");
+    expect(state.records).toHaveLength(0);
+    expect(state.transcript.some((event) => event.kind === "clarification")).toBe(false);
+    expect(state.notes[state.notes.length - 1]?.text).toContain('"how tall"');
+    expect(state.clarification.asked).toBe(0);
+  });
+
+  it("a question that states a number is not shown; the driver's wording over the same options is", async () => {
+    const numbered = JSON.stringify({
+      rosters: [],
+      claims: [
+        { kind: "clarify", about: "is it strong", question: "Its Attack is 55 — did you mean that, or Speed?", options: [{ kind: "field", label: "Attack", fieldId: "base-attack" }, { kind: "field", label: "Speed", fieldId: "base-speed" }] },
+      ],
+    });
+    const { provider } = clarifyingThenAnswering(speedAndAttack, numbered);
+    const d = withClarify(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "is Pikachu strong?", d);
+    const event = state.transcript[state.transcript.length - 1];
+    expect(event?.kind).toBe("clarification");
+    if (event?.kind === "clarification") {
+      expect(event.text).not.toContain("55");
+      expect(event.text).toContain("Attack, Speed");
+    }
+  });
+
+  it("with the door shut, a scripted clarification is read as the claims beside it", async () => {
+    const mixed = JSON.stringify({
+      rosters: [],
+      claims: [
+        { kind: "clarify", about: "x", question: "Which?", options: [{ kind: "field", label: "Speed", fieldId: "base-speed" }] },
+        { kind: "fact", entityId: "pikachu", factId: "base-speed" },
+      ],
+    });
+    const provider = new ScriptedProvider("shut", (request) => (request.purpose === "answer" ? mixed : "decline"));
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    expect(state.records[0]?.outcome.status).toBe("answered");
+    expect(state.transcript.some((event) => event.kind === "clarification")).toBe(false);
+  });
+
+  it("R3 under the door: an alias contradiction becomes a question with the fields as options, and the pick binds", async () => {
+    const contradicting = JSON.stringify({
+      asked: [{ phrase: "how fast", entityId: "pikachu", fieldId: "base-attack" }],
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "pikachu", factId: "base-attack" }],
+    });
+    let calls = 0;
+    const provider = new ScriptedProvider("contradicting", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      calls += 1;
+      return calls === 1 ? contradicting : speedAndAttack;
+    });
+    const d = withClarify(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    expect(state.phase.kind).toBe("clarifying");
+    const event = state.transcript[state.transcript.length - 1];
+    if (event?.kind === "clarification") {
+      expect(event.options).toEqual([
+        { kind: "field", label: "Attack", fieldId: "base-attack" },
+        { kind: "field", label: "Speed", fieldId: "base-speed" },
+      ]);
+    }
+    expect(state.linking.contradictions).toBe(1);
+    state = await say(state, "Speed", d);
+    expect(state.records[0]?.manifest?.claims.map((claim) => (claim.kind === "fact" ? claim.factId : claim.kind))).toEqual(["base-speed"]);
+  });
+
+  it("the pack's scope question is phrased by the model, armed for the same dimension, with the vocabulary's values as options", async () => {
+    const phrased = "To look up how fast Pikachu is I need to know which game you're on — which version are you playing?";
+    const provider = new ScriptedProvider("phrasing", (request) => {
+      if (request.purpose === "phrase") return JSON.stringify({ question: phrased });
+      if (request.purpose === "answer") return JSON.stringify({ asked: [{ phrase: "how fast", entityId: "pikachu", fieldId: "base-speed" }], rosters: [], claims: [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }] });
+      return "decline";
+    });
+    const d = withClarify(provider);
+    let state = await say(startSession(), "how fast is Pikachu?", d);
+    expect(state.phase).toMatchObject({ kind: "asking", dimension: "version", question: phrased, options: ["red-blue", "yellow"] });
+    const question = state.transcript.find((event) => event.kind === "question");
+    expect(question?.kind === "question" && question.text).toBe(phrased);
+    expect(state.clarification.phrased).toBe(1);
+    // A bare click on an option binds — the recorded question is the context.
+    state = await say(state, "red-blue", d);
+    expect(state.records[0]?.outcome.status).toBe("answered");
+    expect(state.records[0]?.grant?.scope.version).toBe("red-blue");
+  });
+
+  it("an unusable rewrite asks the pack's own line, and a repeat is not rephrased", async () => {
+    let phraseCalls = 0;
+    const provider = new ScriptedProvider("bad-phrasing", (request) => {
+      if (request.purpose === "phrase") {
+        phraseCalls += 1;
+        return JSON.stringify({ question: "Pikachu's Speed is 90. Which version?" });
+      }
+      if (request.purpose === "answer") return JSON.stringify({ asked: [{ phrase: "how fast", entityId: "pikachu", fieldId: "base-speed" }], rosters: [], claims: [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }] });
+      return "decline";
+    });
+    const d = withClarify(provider);
+    let state = await say(startSession(), "how fast is Pikachu?", d);
+    const packQuestion = world.pack.vocabulary.dimensions.find((rule) => rule.dimension === "version")?.question;
+    expect(state.phase).toMatchObject({ kind: "asking", question: packQuestion });
+    expect(state.clarification).toMatchObject({ phrased: 0, unphrased: 1 });
+    expect(phraseCalls).toBe(1);
+    state = await say(state, "hmm", d);
+    // Restated, not re-asked, and no second phrase call (the ladder's own
+    // call on the unreadable words is the pre-existing path).
+    expect(state.transcript.filter((event) => event.kind === "question")).toHaveLength(1);
+    expect(phraseCalls).toBe(1);
+  });
+
+  it("with the door shut the pack's line is asked and no phrase call is made", async () => {
+    const provider = scripted("plain", (purpose) => (purpose === "phrase" ? "unreachable" : purpose === "scope" ? "decline" : thunderboltAnswer()));
+    const state = await say(startSession(), "What is Thunderbolt's power?", deps(provider));
+    expect(state.phase.kind).toBe("asking");
+    expect(state.clarification).toMatchObject({ phrased: 0, unphrased: 0 });
+  });
+});
+
+describe("dogfood stop 2 (2026-09-05): what the first clarification runs found", () => {
+  const PROFILE_SCOPE = { version: "red-blue", region: "kanto", badgeLevel: 8 } as const;
+
+  it("a one-word ask-parameter utterance is not the bare catalogue ask — the listing door stands down", async () => {
+    // Weak model: "speed" after a closed exchange nominated the catalogue
+    // listing and was served ten species and a count. The word binds the
+    // comparison basis, so its clause vanished from the bareness reading.
+    const nominate = JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "listing", subject: "catalogue", n: 10 }] });
+    const provider = new ScriptedProvider("bare-speed", (request) => (request.purpose === "answer" ? nominate : "decline"));
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "speed", d);
+    expect(state.records).toHaveLength(0);
+    expect(state.listingActivations.served).toBe(0);
+  });
+
+  it("a clarification beside a refused nomination goes through without the route-door-closed retry", async () => {
+    const both = JSON.stringify({
+      rosters: [],
+      claims: [
+        { kind: "route", routeId: "listing", subject: "catalogue", n: 10 },
+        { kind: "clarify", about: "is it strong", question: "Attack, or Speed?", options: [{ kind: "field", label: "Attack", fieldId: "base-attack" }, { kind: "field", label: "Speed", fieldId: "base-speed" }] },
+      ],
+    });
+    const provider = new ScriptedProvider("route-and-clarify", (request) => (request.purpose === "answer" ? both : "decline"));
+    const d: SessionDeps = { ...deps(provider), clarify: true };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "is Pikachu strong?", d);
+    expect(state.phase.kind).toBe("clarifying");
+    expect(state.usage.calls).toBe(1);
+    expect(state.nominationRetries).toBe(0);
+  });
+});

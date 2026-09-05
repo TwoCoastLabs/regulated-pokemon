@@ -449,7 +449,30 @@ wrong order for a "feels dumb" problem.
    two-per-ask chain cap. → **Dogfood stop 2:** ambiguous asks ("the fast
    one", "is it strong?") get a real question with real options; a second
    question is allowed and a third never asked; the version question stops
-   sounding like a form.
+   sounding like a form. *Landed 2026-09-05:* the answer grammar gains the
+   `clarify` nomination — a question in the model's words about one phrase,
+   with options typed as a dictionary field (or `none`) or a certified
+   subject — behind `SessionDeps.clarify` (on in the live page and the
+   tracer, off in the banks until their leg). The question is a
+   `clarification` transcript event the kernel reads only as a change of
+   subject; the pick is read against the options by label, by the
+   dictionary's aliases or by the subject's name (a subject question
+   answered with a certified subject the model did not list is a pick too),
+   and binds at linking: a field pick holds every claim to that field (or
+   teaches the boundary for `none`), a subject pick drops claims about any
+   other certified subject. An alias contradiction becomes the same kind of
+   question with the fields as options — driver-worded, since the fields
+   and the phrase are all it needs — where before it was a stock line and a
+   closed exchange. The pack's fixed scope question is put to the model to
+   phrase in the light of the ask (`phraseQuestion`, one small call; the
+   text is held to a structural guard — one sentence, a question mark, no
+   digit — and the pack's line is the fallback), armed for the same
+   dimension with the vocabulary's values as clicks, so a bare "red-blue"
+   binds as it always did. `MAX_CLARIFICATIONS = 2` per ask; the third
+   falls to the honest pass naming what stayed ambiguous. Counted:
+   `clarification.{asked, picked, ignored, capped, phrased, unphrased}`.
+   The gate stayed at 77; `src/session/clarify.ts` is in its path. Numbers
+   in findings §19 ("R3b step 3").
 4. **Follow-up suggestions.** → **Dogfood stop 3:** every answer offers a
    next step; the conversation has a shape instead of a series of dead
    stops.

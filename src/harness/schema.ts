@@ -277,6 +277,36 @@ function askedSchema(fieldIds: readonly string[]): JsonSchema {
   };
 }
 
+/** Options one clarification may offer; a real ambiguity is two or three
+ * readings, never a menu. */
+export const MAX_CLARIFY_OPTIONS = 4;
+
+/**
+ * The clarification the model may nominate instead of answering (R3b step
+ * 3): a question in its own words about one phrase of the ask, with typed
+ * options — a certified field of the dictionary (or the reserved none), or a
+ * certified subject. Each option is a binding the driver can apply when the
+ * trainer picks it; the question text is shown and recorded, never a claim.
+ * One more claim variant, like a route nomination: it travels in `claims`
+ * and never reaches compilation.
+ */
+function clarifySchema(fieldIds: readonly string[]): JsonSchema {
+  return variant("clarify", {
+    about: STRING,
+    question: STRING,
+    options: {
+      type: "array",
+      maxItems: MAX_CLARIFY_OPTIONS,
+      items: {
+        anyOf: [
+          variant("field", { label: STRING, fieldId: { type: "string", enum: [...fieldIds, NO_FIELD] } }),
+          variant("entity", { label: STRING, entityId: STRING }),
+        ],
+      },
+    },
+  });
+}
+
 export function answerSchema(
   pack: {
     curriculum: ReadonlyArray<{ id: string }>;
@@ -299,9 +329,14 @@ export function answerSchema(
    * path that has not opted in, so the harness banks measure an unchanged
    * grammar. */
   routes?: readonly NominableRoute[],
+  /** Whether the model may nominate a clarification (R3b step 3). Offered
+   * only with a dictionary to type the options against; off for every path
+   * that has not opted in, so the banks measure an unchanged grammar. */
+  clarify = false,
 ): JsonSchema {
+  const fieldIds = pack.dictionary.map((entry) => entry.id);
   return object({
-    ...(pack.dictionary.length === 0 ? {} : { asked: askedSchema(pack.dictionary.map((entry) => entry.id)) }),
+    ...(pack.dictionary.length === 0 ? {} : { asked: askedSchema(fieldIds) }),
     rosters: { type: "array", maxItems: MAX_ANSWER_ROSTERS, items: rosterSchema(items, vocabulary) },
     claims: {
       type: "array",
@@ -317,6 +352,7 @@ export function answerSchema(
           ...(routes ?? []).map((route) =>
             variant("route", { routeId: { type: "string", enum: [route.id] }, ...route.args }),
           ),
+          ...(clarify && fieldIds.length > 0 ? [clarifySchema(fieldIds)] : []),
         ],
       },
     },

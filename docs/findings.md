@@ -4002,6 +4002,73 @@ linked a constant is off the ask. The lesson for the ledger: the live page
 had been measuring a different system from the one the numbers describe,
 and no bank leg could have shown it.
 
+### R3b step 3: the model may ask, the pick binds (2026-09-05)
+
+**What landed.** The answer grammar gains a `clarify` nomination — a
+question in the model's own words about one phrase of the ask, with two to
+four options typed as a dictionary field (or `none`) or a certified
+subject — and the driver does the rest deterministically: options outside
+the dictionary or the registry are dropped, the chain is capped at two per
+ask, the question is a `clarification` transcript event (the kernel reads
+it only as a change of subject; the record carries it whole and replays),
+and the trainer's pick — by click, by label, by a dictionary alias, by a
+subject's name — binds at the linking step: a field pick holds every
+claim to that field, a subject pick drops claims about any other certified
+subject, `none` teaches the records' boundary. The alias contradiction of
+the first slice becomes the same kind of question with the two fields as
+options instead of a stock line and a closed exchange. And the pack's
+fixed scope question is put to the model to reword in the light of the
+ask — one small call whose text is held to a structural guard (one
+sentence, a question mark, no digit; the pack's line is the fallback) and
+armed for the same dimension with the vocabulary's values as clicks, so a
+bare "red-blue" binds exactly as it did. All behind `SessionDeps.clarify`:
+on in the live page and the tracer, off in the banks until their leg. The
+domain-word gate stayed at 77 with the new module in its path.
+
+**Dogfood stop 2, by tracer, strong model (qwen3-235b), profile set
+unless noted; each line one run, model calls and cost as the tracer
+printed them.**
+
+| ask → reply | what happened | calls | cost |
+|---|---|---|---|
+| "how fast is Pikachu?" cold → "red-blue" | version question **model-phrased** ("Hey, just to help me give you the right info, which game version are you playing — Red/Blue or Yellow?"), options `red-blue`/`yellow`; the bare click bound; Speed certified | 3 | $0.0011 |
+| same, weak model (mistral-nemo) | rewrite unusable → the pack's own line asked, counted `unphrased`; the click bound; Speed certified | 5 | $0.0006 |
+| "is Pikachu strong?" → "speed" | the model **asked**: "Do you mean its base stats, or a specific stat like Attack or Speed?" with four typed options (Attack, Speed, HP, Special); the pick held the next reply to Speed alone | 4 | $0.0016 |
+| same, weak model | no question: Attack certified outright (the weak model rarely nominates — as the design predicted) | 2 | $0.0003 |
+| "what's the speed of the fast one?" → "Pikachu", first run | the R3 contradiction fired on "the fast one" → `none` (the phrase carries the Speed alias) and offered **Speed as the one option** — the subject was what was missing; "Pikachu" matched nothing | 1 | $0.0004 |
+| same, after the fix, five runs | the model asked **which subject** in 3 of 5 (options e.g. Pidgeot, Raichu, Alakazam, Rapidash — never Pikachu); "Pikachu" bound as an unlisted certified subject and Speed certified for it in every one of those 3; in the other 2 the model answered off the asked field (honest pass, 1 claim dropped) or with nothing (honest pass) | 3 | $0.0007–0.0014 |
+| "is it strong?" with no antecedent, twice | no question: the model returned no claims both times → honest pass; "Thunderbolt" next answered move power | 3 | $0.0014 |
+| "tell me about Pikachu" → "is it strong?" | no question: Attack, Special Attack and base stat total certified — the model read the ambiguity as resolved | 1 | $0.0007 |
+
+**What the stop found and fixed, in order.** (1) A null link whose
+aliases all name a field *another* entry of the same mapping already
+linked is not a missed field but a missing subject ("the speed" → Speed,
+"the fast one" → none): the contradiction check now stays silent there,
+and the prompt says a subject the model cannot place is this question,
+not `none` and not an empty reply. (2) A subject question answered with a
+certified subject the model did not list is a pick — the options were the
+model's guesses, the trainer's own word outranks a guess, and the id is
+typed exactly as a listed option's is. (3) A clarification beside a
+refused listing nomination is something the reply carried, so it goes
+through without the route-door-closed retry (the first "is Pikachu
+strong?" paid a second call for it). (4) On the weak model a one-word
+"speed" after a closed exchange nominated the catalogue listing and was
+**served ten species and a count** — the word binds the comparison basis,
+so its clause vanished from the bareness reading: the ask-parameter terms
+of the vocabulary now unbare an ask, read from the pack. Each has a
+scripted test.
+
+**The honest reading.** Nondeterminism is the number here (lesson 5): the
+same ambiguous ask drew a clarification in 3 of 5 runs and an honest pass
+in 2, at temperature 0, and every one of the five was safe — the two
+misses filed nothing. The weak model asked nothing in 2 of 2 asks where
+the strong one asked; that is the per-model nomination rate the bank leg
+(step 6) exists to measure, and the counters (`clarification.asked /
+picked / ignored / capped / phrased / unphrased`) are what it reads. What
+the stop cannot say yet: whether a question the trainer sees as warm is
+one they answer — `picked` versus `ignored` on real visitors is the live
+page's to accumulate.
+
 ## Appendix — how to reproduce
 
 ```sh

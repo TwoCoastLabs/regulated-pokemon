@@ -396,3 +396,58 @@ describe("the degenerate comparison folds to the fact it means (Center loop 2)",
     expect(decoded.ok).toBe(true);
   });
 });
+
+describe("the clarification nomination (R3b step 3) is decoded for shape", () => {
+  it("lifts the first clarify entry out of the claims with its typed options, malformed options dropped", () => {
+    const decoded = decodeAnswer(
+      JSON.stringify({
+        rosters: [],
+        claims: [
+          {
+            kind: "clarify",
+            about: "is it strong",
+            question: "Attack, or Speed?",
+            options: [
+              { kind: "field", label: "Attack", fieldId: "base-attack" },
+              { kind: "field", label: "none of these", fieldId: "none" },
+              { kind: "entity", label: "Pikachu", entityId: "pikachu" },
+              { kind: "field", label: "", fieldId: "base-speed" },
+              { kind: "colour", label: "yellow" },
+            ],
+          },
+          { kind: "clarify", about: "second", question: "ignored?", options: [{ kind: "field", label: "x", fieldId: "base-hp" }] },
+        ],
+      }),
+      context,
+      "txn-clarify",
+    );
+    expect(decoded.ok).toBe(true);
+    if (decoded.ok) {
+      expect(decoded.draft.claims).toEqual([]);
+      expect(decoded.clarify).toEqual({
+        about: "is it strong",
+        question: "Attack, or Speed?",
+        options: [
+          { kind: "field", label: "Attack", fieldId: "base-attack" },
+          { kind: "field", label: "none of these", fieldId: null },
+          { kind: "entity", label: "Pikachu", entityId: "pikachu" },
+        ],
+      });
+    }
+  });
+
+  it("a clarification with no typed option is no clarification, and alone it is the abstention", () => {
+    const decoded = decodeAnswer(
+      JSON.stringify({ rosters: [], claims: [{ kind: "clarify", about: "x", question: "y?", options: [] }] }),
+      context,
+      "txn-clarify-empty",
+    );
+    expect(decoded.ok).toBe(false);
+    if (!decoded.ok) expect(decoded.reason).toBe("the answer asserts no claims at all");
+  });
+
+  it("a clarify entry missing its question is malformed", () => {
+    const decoded = decodeAnswer(JSON.stringify({ rosters: [], claims: [{ kind: "clarify", about: "x", options: [] }] }), context, "txn-clarify-bad");
+    expect(decoded.ok).toBe(false);
+  });
+});

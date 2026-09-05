@@ -282,3 +282,25 @@ describe("anything the grammar admits, the decoder reads", () => {
     }
   });
 });
+
+describe("the clarify variant (R3b step 3) is offered only through the open door", () => {
+  const variants = (schema: Record<string, unknown>): string[] => {
+    const claims = (schema.properties as Record<string, { items: { anyOf: Array<{ properties: { kind: { enum: string[] } } }> } }>).claims!;
+    return claims.items.anyOf.map((entry) => entry.properties.kind.enum[0]!);
+  };
+
+  it("is absent by default and with no dictionary, present when asked for", () => {
+    expect(variants(answerSchema(world.pack))).not.toContain("clarify");
+    expect(variants(answerSchema({ ...world.pack, dictionary: [] }, undefined, false, undefined, undefined, true))).not.toContain("clarify");
+    expect(variants(answerSchema(world.pack, undefined, false, undefined, undefined, true))).toContain("clarify");
+  });
+
+  it("types the field options over the dictionary's ids plus the reserved none", () => {
+    const schema = answerSchema(world.pack, undefined, false, undefined, undefined, true);
+    const claims = (schema.properties as Record<string, { items: { anyOf: Array<Record<string, unknown>> } }>).claims!;
+    const clarify = claims.items.anyOf.find((entry) => ((entry.properties as Record<string, { enum: string[] }>).kind!).enum[0] === "clarify")!;
+    const options = (clarify.properties as Record<string, { items: { anyOf: Array<{ properties: Record<string, { enum?: string[] }> }> } }>).options!;
+    const fieldIds = options.items.anyOf[0]!.properties.fieldId!.enum!;
+    expect(fieldIds).toEqual([...world.pack.dictionary.map((entry) => entry.id), "none"]);
+  });
+});

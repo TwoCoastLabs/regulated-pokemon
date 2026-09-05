@@ -20,6 +20,7 @@
 
 import type {
   Claim,
+  ClarificationOption,
   FactValue,
   RosterCriteria,
   ScopeCandidate,
@@ -31,7 +32,7 @@ import { buildRoster } from "../kernel/roster.js";
 import { type AccordPack, NO_FIELD } from "../kernel/pack.js";
 import { denialCode } from "../kernel/violation.js";
 import { canonicalizeClaims } from "./canonical.js";
-import { MAX_ANSWER_CLAIMS, MAX_ANSWER_ROSTERS, MAX_ASKED } from "./schema.js";
+import { MAX_ANSWER_CLAIMS, MAX_ANSWER_ROSTERS, MAX_ASKED, MAX_CLARIFY_OPTIONS } from "./schema.js";
 
 // --- tiny typed predicates --------------------------------------------------
 
@@ -128,8 +129,23 @@ export type AnswerDecode =
        * — the checks that read it then have nothing to hold the claims to. */
       asked: readonly AskedField[];
       unavailable?: readonly Unavailable[];
+      /** The clarification the model nominated instead of answering (R3b
+       * step 3), when it did. Decoded for shape; the driver validates every
+       * option against the dictionary and the registry and decides whether
+       * the question is asked at all. */
+      clarify?: ClarifyNomination;
     }
   | { ok: false; reason: string };
+
+/** A clarification as the model wrote it: the phrase it is about, the
+ * question in the model's words, and the typed options it offers. Options
+ * that are not one of the two typed shapes are dropped here; whether the
+ * ids they name exist is the driver's check. */
+export interface ClarifyNomination {
+  about: string;
+  question: string;
+  options: readonly ClarificationOption[];
+}
 
 /** One link of the model's schema linking: the trainer's phrase, the subject
  * it is about, and the certified field the model read it as — `null` when
@@ -393,12 +409,23 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
   const claims: Claim[] = [];
   let folds = 0;
   let route: RouteNomination | undefined;
+  let clarify: ClarifyNomination | undefined;
   for (const entry of parsed.claims) {
     // A nomination travels in the claims array (one more grammar variant)
     // but is not a claim: it names a deterministic door, and it never
     // reaches compilation. First one wins; the rest are noise.
     if (isObject(entry) && entry.kind === "route" && isString(entry.routeId)) {
       route ??= entry as unknown as RouteNomination;
+      continue;
+    }
+    // A clarification likewise (R3b step 3): at most one per turn — the
+    // first wins — and one whose options are all malformed is no
+    // clarification at all, dropped here, so the claims beside it stand as
+    // they would have.
+    if (isObject(entry) && entry.kind === "clarify") {
+      if (!isString(entry.about) || !isString(entry.question)) return { ok: false, reason: "a clarification is malformed" };
+      const options = Array.isArray(entry.options) ? entry.options.slice(0, MAX_CLARIFY_OPTIONS).flatMap(asClarificationOption) : [];
+      if (clarify === undefined && options.length > 0) clarify = { about: entry.about, question: entry.question, options };
       continue;
     }
     const claim = asClaim(entry);
@@ -447,7 +474,7 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
   // technically true, useless, and read by a visitor as "answered". The
   // honest reading of an empty claims list is that the model had nothing to
   // say, which is an abstention, and abstentions are counted, not certified.
-  if (claims.length === 0 && route === undefined && unavailable.length === 0) {
+  if (claims.length === 0 && route === undefined && unavailable.length === 0 && clarify === undefined) {
     return { ok: false, reason: NO_CLAIMS_REASON };
   }
 
@@ -458,5 +485,21 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
     asked,
     ...(route === undefined ? {} : { route }),
     ...(unavailable.length === 0 ? {} : { unavailable }),
+    ...(clarify === undefined ? {} : { clarify }),
   };
+}
+
+/** One typed option, or nothing: a `field` option names a dictionary id or
+ * the reserved none (read here as `null`), an `entity` option a subject id.
+ * Shape only — an id the dictionary or registry does not hold is the
+ * driver's to drop. */
+function asClarificationOption(value: unknown): ClarificationOption[] {
+  if (!isObject(value) || !isString(value.label) || value.label.trim().length === 0) return [];
+  if (value.kind === "field" && isString(value.fieldId)) {
+    return [{ kind: "field", label: value.label.trim(), fieldId: value.fieldId === NO_FIELD ? null : value.fieldId }];
+  }
+  if (value.kind === "entity" && isString(value.entityId) && value.entityId.trim().length > 0) {
+    return [{ kind: "entity", label: value.label.trim(), entityId: value.entityId.trim() }];
+  }
+  return [];
 }
