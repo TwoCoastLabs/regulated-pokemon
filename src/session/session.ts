@@ -1526,8 +1526,14 @@ function executeRoute(
     if (typesNamed.length !== 1 && !bareCatalogueAsk(world, currentAsk)) return undefined;
     // Subject-correct by construction: the set comes from the ask's own
     // qualifiers, never from the nomination's say-so — a catalogue-subject
-    // nomination for "show me all the fire types" mints the fire roster.
-    const roster = route.subject === "prior-roster" ? (priorRoster(state) ?? qualifiedSet(world, currentAsk)) : qualifiedSet(world, currentAsk);
+    // nomination for "show me all the fire types" mints the fire roster, and
+    // a prior-roster nomination for "whats the rarest pokemon?" mints the
+    // legendaries, not the fire roster of the exchange before (found live,
+    // 2026-09-05, the first run without the cue door). The prior roster
+    // answers only an ask that qualifies nothing itself.
+    const qualified = qualifiedSet(world, currentAsk);
+    const qualifies = typesNamed.length === 1 || (qualified !== undefined && qualified.criteria.all.length > 0);
+    const roster = route.subject === "prior-roster" && !qualifies ? (priorRoster(state) ?? qualified) : qualified;
     const n = typeof route.n === "number" && Number.isFinite(route.n) && route.n > 0 ? route.n : 10;
     return composeListing(roster, n);
   }
@@ -1615,13 +1621,15 @@ function applyLinking(
   let next: SessionState = { ...state, linking: gauge };
 
   // What the model said it could not certify (the R3a abstention, now read
-  // from the mapping): reported in the trainer's own phrase, never a claim.
-  // Silent when a lesson answers beside it — "what's a gym badge?" links to
-  // no field because a badge is a concept, not a column, and the curriculum
-  // is exactly the answer to that; the note would contradict the page.
-  const teaches = linked.claims.some((claim) => claim.kind === "explanation");
+  // from the mapping): reported in the trainer's own phrase, never a claim —
+  // and only when the null link is the whole answer. A null link beside a
+  // surviving claim or a nomination is the model naming what has no column
+  // ("how many", "list ten", "a gym badge") next to the set operation or
+  // lesson that answers it; found live (2026-09-05): every count and listing
+  // ask drew a boundary note beside its certified answer. Counted, silent.
   const unavailable = asked.flatMap((entry) => (entry.fieldId === null ? [{ entityId: entry.entityId, asked: entry.phrase }] : []));
-  if (unavailable.length > 0 && !teaches) {
+  const answersRemain = linked.claims.length > 0 || decode.route !== undefined;
+  if (unavailable.length > 0 && !answersRemain) {
     // The phrase is the model's span of the ask; when it already names the
     // subject (found on the first live run: the whole question came back as
     // the phrase), naming it again reads as a stutter.

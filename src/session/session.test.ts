@@ -1218,7 +1218,7 @@ describe("R3b: schema linking — the model links each phrase to a field, the dr
     expect(state.notes.some((n) => n.text.includes("\"weight\" for snorlax"))).toBe(true);
   });
 
-  it("a null link beside a linked claim rides along as a note while the claim certifies", async () => {
+  it("a null link beside a linked claim is silent — the claim certifies, and the note is for a null link that is the whole answer", async () => {
     const partial = JSON.stringify({
       asked: [
         { phrase: "what type", entityId: "onix", fieldId: "types" },
@@ -1235,8 +1235,27 @@ describe("R3b: schema linking — the model links each phrase to a field, the dr
     expect(record.outcome.status).toBe("answered");
     expect(record.manifest?.claims).toHaveLength(1);
     expect(record.manifest?.claims[0]).toMatchObject({ kind: "fact", entityId: "onix", factId: "types" });
-    expect(state.notes.some((n) => n.text.includes("\"what noise\" for onix"))).toBe(true);
+    // Found live: every count and listing ask links its "how many" / "list
+    // ten" to none beside the set operation that answers it, so a null link
+    // beside an answer earns no boundary note.
+    expect(state.notes.some((n) => n.tone === "abstention")).toBe(false);
     expect(state.linking.offTargetDropped).toBe(0);
+  });
+
+  it("a prior-roster nomination yields to the ask's own qualifier", async () => {
+    // Found live (2026-09-05, first run without the cue door): "whats the
+    // rarest pokemon?" nominated the prior roster and was served the fire
+    // roster of the exchange before. The words qualify a set; the words win.
+    const nominate = (subject: string) => JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "listing", subject, n: 10 }] });
+    const provider = new ScriptedProvider("prior", (request) =>
+      request.purpose !== "answer" ? "decline" : request.prompt.includes("rarest") ? nominate("prior-roster") : nominate("catalogue"),
+    );
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "show me all the fire types", d);
+    state = await say(state, "whats the rarest pokemon?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.manifest?.rosters[0]?.id).toBe("legendary-pokemon");
   });
 
   it("R1: a fact about a field the model did not link is dropped, and the linked one certifies", async () => {
