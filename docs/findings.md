@@ -4196,6 +4196,27 @@ catch a Pokémon?", "what are types for?"), six of six past the guard, the
 first lessons seen to; in the other, none. That is the rate the bank leg
 measures, and it is not zero.
 
+**Attribution, kept apart.** Enforcement held on every turn — nothing false
+was certified, and the one fabrication was refused twice by name. The
+failures were shape and usefulness, and they split as follows.
+
+*Model errors:* nominated a one-member catalogue listing for a concept
+question (a shape mistake, not a fact mistake); invented Pikachu as the
+subject of "this specie" when given no antecedent; wrote the lesson id as
+an entity, twice, and did not correct it when the denial was named; offered
+no suggestion on any of the three asks.
+
+*Harness factors:* the listing door certified the model's shape mistake
+because its only guard was the lexical bareness reading and a
+route-composed draft bypasses the schema-linking check (a remaining
+dispatch door, step 5's business); the prompt never showed the model the
+page the trainer was reading, only the trainer's words (a context gap); the
+boundary decision trusted the model's own `entityId` in the mapping after
+the same mapping's facts had just been dropped (a trust gap); the suggest
+instruction's earlier "next step" wording had primed the action variant
+(a prompt factor). Two of the four causes were the harness's alone, one was
+shared, and one was the model's with the prompt contributing.
+
 ## Appendix — how to reproduce
 
 ```sh
