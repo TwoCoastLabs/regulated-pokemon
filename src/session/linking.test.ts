@@ -152,8 +152,22 @@ describe("aliasContradiction — R3, the dictionary's words can only make the sy
       { phrase: "the fast one", entityId: "none", fieldId: null },
     ];
     expect(aliasContradiction(world.pack, world.registry, asked)).toBeUndefined();
-    // Alone, the same null link is still the missed field it looks like.
-    expect(aliasContradiction(world.pack, world.registry, [asked[1]!])?.suggested.map((field) => field.id)).toEqual(["base-speed"]);
+    // Alone, the same null link names no certified subject either, and an
+    // alias is evidence only against a subject it could be a field of.
+    expect(aliasContradiction(world.pack, world.registry, [asked[1]!])).toBeUndefined();
+    // With a subject, the missed field is asked about.
+    expect(aliasContradiction(world.pack, world.registry, [{ phrase: "the fast one", entityId: "pikachu", fieldId: null }])?.suggested.map((field) => field.id)).toEqual(["base-speed"]);
+  });
+
+  it("reads no alias against the reserved none or a lesson id — a lesson with a null link is the answer, not a missed field (R3b step 5 leg, 2026-09-06)", () => {
+    // "What is evolution?" came back as the what-is-evolution lesson, linked
+    // to none about nothing; "evolution" is an alias of evolves-to, and the
+    // check asked "did you mean Evolves into?" with no subject to answer about.
+    expect(aliasContradiction(world.pack, world.registry, [{ phrase: "What is evolution?", entityId: "none", fieldId: null }])).toBeUndefined();
+    expect(aliasContradiction(world.pack, world.registry, [{ phrase: "What is a TM or HM?", entityId: "what-is-tm-hm", fieldId: null }])).toBeUndefined();
+    // A misspelled subject the registry never heard of is no subject either:
+    // nothing could certify about it whichever field was meant.
+    expect(aliasContradiction(world.pack, world.registry, [{ phrase: "how fast is Pikchu", entityId: "pikchu", fieldId: "base-attack" }])).toBeUndefined();
   });
 
   it("matches word-bounded, so 'type' inside 'typing' is one alias, not two", () => {

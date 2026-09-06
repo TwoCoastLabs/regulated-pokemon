@@ -2765,3 +2765,41 @@ describe("a clarification needs a choice: one option is not a question (found by
     expect(state.phase.kind).toBe("clarifying");
   });
 });
+
+describe("a lesson with a null link and no subject is taught, not questioned (found by the R3b step 5 leg, 2026-09-06)", () => {
+  const PROFILE = { version: "red-blue", region: "kanto", badgeLevel: 8 } as const;
+
+  it("'What is evolution?' — the model links none about nothing and teaches the lesson; the alias cross-check stays silent", async () => {
+    // The strong model's actual reply (raw-reply dump, 2026-09-06). Before
+    // this, "evolution" — an alias of evolves-to — made the driver ask "did
+    // you mean Evolves into?", a one-option question with no subject to
+    // answer it about, and the right lesson never reached the trainer.
+    const reply = JSON.stringify({
+      asked: [{ phrase: "What is evolution?", entityId: "none", fieldId: "none" }],
+      rosters: [],
+      claims: [{ kind: "explanation", blockId: "what-is-evolution" }],
+    });
+    const provider = scripted("teacher", (purpose) => (purpose === "answer" ? reply : "decline"));
+    const d: SessionDeps = { ...deps(provider), clarify: true };
+    let state = await setProfile(startSession(), PROFILE, d);
+    state = await say(state, "What is evolution?", d);
+    expect(state.clarification.asked).toBe(0);
+    expect(state.linking.contradictions).toBe(0);
+    expect(state.records.at(-1)?.outcome.status).toBe("answered");
+    expect(state.records.at(-1)?.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-evolution" }]);
+  });
+
+  it("the same word about a certified subject is still a question — 'what does Eevee evolve into' linked to none", async () => {
+    const reply = JSON.stringify({
+      asked: [{ phrase: "what does it evolve into", entityId: "eevee", fieldId: "none" }],
+      rosters: [],
+      claims: [],
+    });
+    const provider = scripted("hedger", (purpose) => (purpose === "answer" ? reply : "decline"));
+    const d: SessionDeps = { ...deps(provider), clarify: true };
+    let state = await setProfile(startSession(), PROFILE, d);
+    state = await say(state, "what does Eevee evolve into?", d);
+    expect(state.linking.contradictions).toBe(1);
+    expect(state.phase.kind).toBe("clarifying");
+  });
+});
