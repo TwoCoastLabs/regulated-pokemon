@@ -557,53 +557,54 @@ describe("eligibilityClaims — the recall gate's own edges", () => {
   });
 });
 
-describe("the deflected profile: a lesson cannot answer for a named species (epic #118 dogfooding)", () => {
+describe("the profile is the model's to nominate: the deflected-profile dispatch is gone (R3b step 5)", () => {
   const deflection = JSON.stringify({
     rosters: [],
     claims: [{ kind: "explanation", blockId: "what-is-pokemon" }],
   });
+  const nomination = JSON.stringify({
+    rosters: [],
+    claims: [{ kind: "route", routeId: "profile", entityId: "pikachu" }],
+  });
 
-  it("certifies the species profile instead of the adjacent lesson, one model call", async () => {
-    // Observed live: "tell me about Pikachu" decoded to the generic
-    // what-is-pokemon lesson on the fast model, and the retry deflected the
-    // same way. The route reads the ask deterministically: one named
-    // species + an all-lesson draft = the entity's certified profile,
-    // through scope like any personalized answer.
+  it("a lesson-only reply for a named species is taught as the lesson the model composed — the driver substitutes nothing", async () => {
+    // From 2026-08-30 to 2026-09-06 the driver read this ask deterministically
+    // — one named species + an all-lesson draft = the species' nine-fact
+    // profile — and certified facts nobody asked for. That was the
+    // substitution class R3b exists to end (docs/routing.md, step 5): the
+    // lesson is certified-true, the bank's oracle scores it as the miss it
+    // is, and the profile is the model's to nominate (below).
     let answerCalls = 0;
     const provider = scripted("deflector", (purpose) => {
       if (purpose !== "answer") return "decline";
       answerCalls += 1;
       return deflection;
     });
-    let state = await say(startSession(), "I'm playing Red and Blue in Kanto. Tell me about Pikachu!", deps(provider));
+    const state = await say(startSession(), "I'm playing Red and Blue in Kanto. Tell me about Pikachu!", deps(provider));
 
     expect(state.records).toHaveLength(1);
     const record = state.records[0]!;
     expect(record.outcome.status).toBe("answered");
-    const kinds = record.manifest?.claims.map((claim) => claim.kind) ?? [];
-    expect(kinds).not.toContain("explanation");
-    expect(record.manifest?.claims.every((claim) => claim.kind === "fact" && claim.entityId === "pikachu")).toBe(true);
-    expect(record.manifest?.claims.map((claim) => (claim.kind === "fact" ? claim.factId : ""))).toContain("base-speed");
-    // The discovery call is the only model call: the profile rode the
-    // needs-scope -> granted hop and was certified without a re-ask.
+    expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-pokemon" }]);
     expect(answerCalls).toBe(1);
     expect(verifyReplay(world, record).allowed).toBe(true);
   });
 
-  it("asks the pack's own question when the routed profile needs scope — the ladder is never consulted", async () => {
-    // Observed live: with no version established, the ladder read "tell me
-    // about Pikachu" and proposed version=yellow from nothing; the confirmed
-    // card died at the gate (IA-2/scope-version-mismatch). A routed draft's
-    // ask was about an entity, not scope — there is no vague wording to
-    // interpret, so the deterministic question outranks the model (hard-won
-    // lesson 1). The scope purpose must never be consulted on this path.
+  it("a nominated profile that needs scope gets the pack's own question — the ladder is never consulted", async () => {
+    // Observed live (2026-08-30): with no version established, the ladder
+    // read "tell me about Pikachu" and proposed version=yellow from nothing;
+    // the confirmed card died at the gate (IA-2/scope-version-mismatch). A
+    // routed draft's ask was about an entity, not scope — there is no vague
+    // wording to interpret, so the deterministic question outranks the model
+    // (hard-won lesson 1). The property held for the deleted door; it holds
+    // for the nomination that replaced it.
     let scopeCalls = 0;
-    const provider = scripted("deflector", (purpose) => {
+    const provider = scripted("nominator", (purpose) => {
       if (purpose === "scope") {
         scopeCalls += 1;
         return JSON.stringify({ candidate: { version: "yellow" }, interpreting: "tell me about Pikachu" });
       }
-      return deflection;
+      return nomination;
     });
     const d = deps(provider);
 
@@ -611,12 +612,13 @@ describe("the deflected profile: a lesson cannot answer for a named species (epi
     expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
     expect(scopeCalls).toBe(0);
 
-    // The direct answer to the recorded question binds deterministically;
-    // the answer-hop backstop routes the second deflection to the profile.
+    // The direct answer to the recorded question binds deterministically and
+    // the nominated profile rides the needs-scope → granted hop.
     state = await say(state, "Red and Blue", d);
     expect(state.records).toHaveLength(1);
     expect(state.records[0]!.outcome.status).toBe("answered");
     expect(state.records[0]!.manifest?.claims.every((claim) => claim.kind === "fact" && claim.entityId === "pikachu")).toBe(true);
+    expect(state.records[0]!.manifest?.claims.map((claim) => (claim.kind === "fact" ? claim.factId : ""))).toContain("base-speed");
     expect(scopeCalls).toBe(0);
   });
 
@@ -729,7 +731,18 @@ describe("the version boundary is a teaching, not a dead end", () => {
 
   it("still teaches an ordinary lesson across the boundary", async () => {
     const lesson = JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-badge" }] });
-    const provider = scripted("teacher", (purpose) => (purpose === "answer" ? lesson : "decline"));
+    // The species ask is routed by the model's own nomination (the driver's
+    // deflected-profile door that once composed it is gone — R3b step 5);
+    // the badge ask gets the lesson.
+    const squirtle = JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "profile", entityId: "squirtle" }] });
+    let answerCalls = 0;
+    const provider = new ScriptedProvider("teacher", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      answerCalls += 1;
+      // The prompt for the later, subject-less ask carries the earlier words
+      // as context, so the ask is told apart by call order, not by its text.
+      return answerCalls === 1 ? squirtle : lesson;
+    });
     const d = deps(provider);
 
     let state = await say(startSession(), "tell me about Squirtle", d);
