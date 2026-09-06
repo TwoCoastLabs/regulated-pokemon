@@ -67,6 +67,10 @@ export interface CoverageArtifact {
   profile?: boolean;
   /** Set when the verifier-in-the-loop retry was on (docs/routing.md, R3b). */
   feedback?: boolean;
+  /** Set when the model could ask its own clarifying question (R3b step 3). */
+  clarify?: boolean;
+  /** Set when the model could offer follow-up suggestions (R3b step 4). */
+  suggest?: boolean;
   /** Passes requested over the selected entries. The paid design runs the full
    * bank at 1 and the `should-refuse` slice at 3 — two artifacts, each honest
    * about which it is. */
@@ -102,6 +106,10 @@ export interface CoverageArtifactInput {
   profile?: boolean;
   /** Set when the verifier-in-the-loop retry was on (docs/routing.md, R3b). */
   feedback?: boolean;
+  /** Set when the model could ask its own clarifying question (R3b step 3). */
+  clarify?: boolean;
+  /** Set when the model could offer follow-up suggestions (R3b step 4). */
+  suggest?: boolean;
   repetitions: number;
   dispositions?: readonly Disposition[];
   stoppedEarly: boolean;
@@ -131,6 +139,8 @@ export function buildCoverageArtifact(input: CoverageArtifactInput): CoverageArt
     repair: input.repair,
     ...(input.profile === undefined ? {} : { profile: input.profile }),
     ...(input.feedback === undefined ? {} : { feedback: input.feedback }),
+    ...(input.clarify === undefined ? {} : { clarify: input.clarify }),
+    ...(input.suggest === undefined ? {} : { suggest: input.suggest }),
     repetitions: input.repetitions,
     ...(input.dispositions === undefined ? {} : { dispositions: input.dispositions }),
     stoppedEarly: input.stoppedEarly,
@@ -157,7 +167,7 @@ export function renderCoverageArtifact(artifact: CoverageArtifact): string {
     "<!-- Generated from a coverage artifact; do not hand-edit. Regenerate with `npm run coverage:map`. -->",
     "",
     `Generated from a **${artifact.label}** run started \`${artifact.startedAt}\` on \`${artifact.model.slug}\`, ` +
-      `${artifact.retrieval ? "**grounded by retrieval** (only the facts each question needs)" : artifact.grounded ? "**grounded** (the whole certified registry)" : "ungrounded (the proposer answered from its own knowledge)"}${artifact.gatedGrammar ? ", **gated grammar** (the schema narrowed to each question's nominated kinds)" : ""}${artifact.repair ? ", **repair** (strip-assertion resubmit on fact-mismatch denials)" : ""}, ` +
+      `${artifact.retrieval ? "**grounded by retrieval** (only the facts each question needs)" : artifact.grounded ? "**grounded** (the whole certified registry)" : "ungrounded (the proposer answered from its own knowledge)"}${artifact.gatedGrammar ? ", **gated grammar** (the schema narrowed to each question's nominated kinds)" : ""}${artifact.repair ? ", **repair** (strip-assertion resubmit on fact-mismatch denials)" : ""}${artifact.profile === true ? ", **profile** (scope set on the panel before the opener)" : ""}${artifact.feedback === true ? ", **feedback** (a named denial carried back to the model once)" : ""}${artifact.clarify === true ? ", **clarify** (the model may ask its own question)" : ""}${artifact.suggest === true ? ", **suggest** (the model may offer follow-ups)" : ""}, ` +
       `${artifact.repetitions} repetition(s)${artifact.stoppedEarly ? " — **stopped early** on an enforcement escalation; the runs below are fewer than requested" : ""}; ${scope}.`,
     "",
     "## Provenance",

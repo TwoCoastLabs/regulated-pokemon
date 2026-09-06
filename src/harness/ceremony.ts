@@ -17,6 +17,12 @@
  *    A question on any other channel armed nothing (IA-8) and cost the
  *    trainer nothing to answer honestly, but it was still not the advisor
  *    asking; only the advisor's are the product's own friction.
+ *  - **clarifications** — the advisor's *own* questions (docs/routing.md,
+ *    R3b step 3): a `clarification` event on the advisor's channel, the
+ *    model's nominated question with typed options. Counted apart from the
+ *    pack's questions because they price different things — the pack's ask
+ *    for scope, the model's for meaning — and R4's ceremony audit needs both
+ *    numbers, not their sum.
  *  - **scopeCards** — confirmation events on the trainer's channel, whatever
  *    the decision. A rejected card was still a card endured; counting only
  *    the confirmed ones would price rigor at zero whenever the model guessed
@@ -32,8 +38,11 @@ import type { Transaction } from "../kernel/transaction.js";
 import type { HarnessRun } from "./run.js";
 
 export interface Ceremony {
-  /** Clarifying questions put to the trainer, on the advisor's channel. */
+  /** The pack's clarifying questions put to the trainer, on the advisor's channel. */
   questions: number;
+  /** The model's own clarifying questions, with typed options, on the
+   * advisor's channel (R3b step 3). */
+  clarifications: number;
   /** Scope confirmation cards the trainer ruled on — confirmed or rejected. */
   scopeCards: number;
   /** Act consent cards the trainer confirmed, read from the transaction. */
@@ -43,9 +52,11 @@ export interface Ceremony {
 /** The ceremony inside one span of recorded events, plus the record's consent. */
 export function ceremonyOfEvents(events: ScopeTranscript, transaction?: Transaction): Ceremony {
   const isAdvisorQuestion = (event: ScopeEvent): boolean => event.kind === "question" && event.source === "advisor";
+  const isAdvisorClarification = (event: ScopeEvent): boolean => event.kind === "clarification" && event.source === "advisor";
   const isTrainerRuling = (event: ScopeEvent): boolean => event.kind === "confirmation" && event.source === "trainer";
   return {
     questions: events.filter(isAdvisorQuestion).length,
+    clarifications: events.filter(isAdvisorClarification).length,
     scopeCards: events.filter(isTrainerRuling).length,
     actCards: transaction?.confirmation === undefined ? 0 : 1,
   };
@@ -59,9 +70,12 @@ export function ceremonyOf(run: HarnessRun): Ceremony {
 export function addCeremony(a: Ceremony, b: Ceremony): Ceremony {
   return {
     questions: a.questions + b.questions,
+    // Artifacts filed before the model could ask carry no field here; they
+    // read as zero, which is what they were.
+    clarifications: (a.clarifications ?? 0) + (b.clarifications ?? 0),
     scopeCards: a.scopeCards + b.scopeCards,
     actCards: a.actCards + b.actCards,
   };
 }
 
-export const NO_CEREMONY: Ceremony = { questions: 0, scopeCards: 0, actCards: 0 };
+export const NO_CEREMONY: Ceremony = { questions: 0, clarifications: 0, scopeCards: 0, actCards: 0 };

@@ -78,6 +78,20 @@ describe("parseCoverageArgs fails closed on anything it does not understand", ()
     expect(parseCoverageArgs(["--feedback"]).errors).toHaveLength(0);
   });
 
+  it("reads --clarify and --suggest as the two R3b model doors, single-turn only (docs/routing.md, R3b steps 3 and 4)", () => {
+    expect(parseCoverageArgs([]).clarify).toBe(false);
+    expect(parseCoverageArgs([]).suggest).toBe(false);
+    const both = parseCoverageArgs(["--clarify", "--suggest"]);
+    expect(both.clarify).toBe(true);
+    expect(both.suggest).toBe(true);
+    expect(both.errors).toHaveLength(0);
+    // The robustness and dialogue banks do not carry them: refused by name,
+    // never silently ignored.
+    expect(parseCoverageArgs(["--phrasings", "--clarify"]).errors[0]).toContain("--clarify");
+    expect(parseCoverageArgs(["--dialogues", "--suggest"]).errors[0]).toContain("--suggest");
+    expect(parseCoverageArgs(["--dialogues", "--profile"]).errors[0]).toContain("--profile");
+  });
+
   it("reads --profile as the panel-first condition, recorded (epic #145, R2)", () => {
     expect(parseCoverageArgs([]).profile).toBe(false);
     expect(parseCoverageArgs(["--profile"]).profile).toBe(true);
@@ -121,6 +135,44 @@ describe("the dry run prices nothing and states the plan", () => {
     const result = await runCoverage(options(["--live"], { env: {} }));
     expect(result.exitCode).toBe(2);
     expect(result.lines[0]).toContain("OPENROUTER_API_KEY");
+  });
+});
+
+describe("the live page's configuration runs as one leg", () => {
+  it("threads profile, feedback, clarify and suggest to the session, records all four, and states them in the plan and the page", async () => {
+    const flags = ["--profile", "--feedback", "--clarify", "--suggest"];
+    const plan = await runCoverage(options(["--ids", "ans-fact-speed-pikachu", ...flags]));
+    const planned = plan.lines.join("\n");
+    expect(planned).toContain("clarify:       yes");
+    expect(planned).toContain("suggest:       yes");
+
+    const prompts: string[] = [];
+    const opts = options(["--live", "--ids", "ans-fact-speed-pikachu", ...flags], {
+      makeProvider: () =>
+        new ScriptedProvider("coverage:doors", (request) => {
+          if (request.purpose === "answer") prompts.push(request.prompt);
+          return request.purpose === "answer" ? pikachuSpeed() : "decline";
+        }),
+    });
+    const result = await runCoverage(opts);
+    expect(result.exitCode).toBe(0);
+    // Both doors reached the grammar the model was handed.
+    expect(prompts[0]).toContain('"kind": "clarify"');
+    expect(prompts[0]).toContain('"kind": "suggest"');
+
+    const { artifact } = filedArtifact(opts.written);
+    expect(artifact).toMatchObject({ profile: true, feedback: true, clarify: true, suggest: true });
+    // The profile was set on the panel: no pack question on the record.
+    expect(artifact.runs[0]!.run.transcript[0]!.kind).toBe("profile");
+    expect(artifact.runs[0]!.clarified).toEqual({ asked: 0, picked: 0, ignored: 0, capped: 0 });
+    expect(artifact.runs[0]!.suggestions).toEqual({ shown: 0, dropped: 0 });
+    expect(artifact.map.clarification).toEqual({ runs: 1, asked: 0, picked: 0, ignored: 0, capped: 0 });
+    expect(artifact.map.suggestions).toEqual({ runs: 1, shown: 0, answersWith: 0, dropped: 0 });
+    const page = renderCoverageArtifact(artifact);
+    expect(page).toContain("**profile**");
+    expect(page).toContain("**feedback**");
+    expect(page).toContain("**clarify**");
+    expect(page).toContain("**suggest**");
   });
 });
 

@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
 import { harnessWorld } from "./corpus.js";
 import { ScriptedProvider } from "./provider.js";
 import { type BankEntry, readBank } from "./bank.js";
-import { phrasingsOf, runBank, runBankEntry, runIntentRobustness } from "./bank-run.js";
+import { NO_HONEST_PICK, phrasingsOf, runBank, runBankEntry, runIntentRobustness, truthfulPick } from "./bank-run.js";
 
 const world = harnessWorld();
 const bank = readBank();
@@ -53,19 +53,7 @@ const releaseRaticate = JSON.stringify({ rosters: [], claims: [{ kind: "action",
 
 describe("runBankEntry buckets each disposition through the real session", () => {
   it("in profile mode the trainer's scope is set on the panel first, and no pack question is asked (epic #145, R2)", async () => {
-    const run = await runBankEntry(
-      world,
-      entry("ans-fact-speed-pikachu"),
-      model(pikachuSpeed()),
-      clock(),
-      undefined,
-      0,
-      false,
-      false,
-      false,
-      false,
-      true,
-    );
+    const run = await runBankEntry(world, entry("ans-fact-speed-pikachu"), model(pikachuSpeed()), clock(), undefined, 0, { profile: true });
     expect(run.stage.kind).toBe("resolved");
     expect(run.score.pass).toBe(true);
     // The record's own transcript: a profile event first, and no question event.
@@ -219,7 +207,7 @@ describe("runBankEntry buckets each disposition through the real session", () =>
       if (request.purpose === "answer") grounded.push(request.prompt);
       return request.purpose === "answer" ? pikachuSpeed() : "decline";
     });
-    await runBankEntry(world, entry("ans-fact-speed-pikachu"), spyGround, clock(), undefined, 0, true);
+    await runBankEntry(world, entry("ans-fact-speed-pikachu"), spyGround, clock(), undefined, 0, { grounded: true });
     expect(grounded.some((prompt) => prompt.includes("CERTIFIED REGISTRY"))).toBe(true);
 
     const plain: string[] = [];
@@ -239,9 +227,9 @@ describe("runBankEntry buckets each disposition through the real session", () =>
       });
 
     const full: string[] = [];
-    await runBankEntry(world, entry("ans-fact-speed-pikachu"), capture(full), clock(), undefined, 0, true, false);
+    await runBankEntry(world, entry("ans-fact-speed-pikachu"), capture(full), clock(), undefined, 0, { grounded: true });
     const retrieved: string[] = [];
-    await runBankEntry(world, entry("ans-fact-speed-pikachu"), capture(retrieved), clock(), undefined, 0, false, true);
+    await runBankEntry(world, entry("ans-fact-speed-pikachu"), capture(retrieved), clock(), undefined, 0, { retrieval: true });
 
     // Both grounded; the retrieved block still names the reference and Pikachu's
     // row, but is far smaller than the whole registry.
@@ -267,7 +255,7 @@ describe("runBankEntry buckets each disposition through the real session", () =>
       if (request.purpose === "answer") seen.push(kindsIn(request));
       return request.purpose === "answer" ? rankingAnswer : basisProposal;
     });
-    await runBankEntry(world, entry("ans-rank-fastest-electric"), spy, clock(), undefined, 0, false, false, true);
+    await runBankEntry(world, entry("ans-rank-fastest-electric"), spy, clock(), undefined, 0, { gatedGrammar: true });
     const offered = seen.at(-1)!;
     for (const filler of ["count", "typeCount", "gameRule"]) expect(offered).not.toContain(filler);
     expect(offered).toContain("ranking");
@@ -312,8 +300,7 @@ describe("runBankEntry buckets each disposition through the real session", () =>
     expect(denied.stage.kind).toBe("denied");
     expect(denied.repaired).toBeUndefined();
 
-    const repaired = await runBankEntry(
-      world, entry("ans-fact-speed-pikachu"), model(wrongSpeed), clock(), undefined, 0, false, false, false, true);
+    const repaired = await runBankEntry(world, entry("ans-fact-speed-pikachu"), model(wrongSpeed), clock(), undefined, 0, { repair: true });
     expect(repaired.stage.kind).toBe("resolved");
     expect(repaired.score.pass).toBe(true);
     expect(repaired.repaired).toBe(true);
@@ -330,8 +317,7 @@ describe("runBankEntry buckets each disposition through the real session", () =>
       rosters: [],
       claims: [{ kind: "fact", entityId: "digimon", factId: "base-speed", asserted: { kind: "number", value: 9 } }],
     });
-    const still = await runBankEntry(
-      world, entry("ans-fact-speed-pikachu"), model(fabricated), clock(), undefined, 0, false, false, false, true);
+    const still = await runBankEntry(world, entry("ans-fact-speed-pikachu"), model(fabricated), clock(), undefined, 0, { repair: true });
     expect(still.stage.kind).toBe("denied");
     expect(still.repaired).toBeUndefined();
 
@@ -344,8 +330,7 @@ describe("runBankEntry buckets each disposition through the real session", () =>
         { kind: "fact", entityId: "digimon", factId: "base-speed", asserted: { kind: "number", value: 9 } },
       ],
     });
-    const closed = await runBankEntry(
-      world, entry("ans-fact-speed-pikachu"), model(mixed), clock(), undefined, 0, false, false, false, true);
+    const closed = await runBankEntry(world, entry("ans-fact-speed-pikachu"), model(mixed), clock(), undefined, 0, { repair: true });
     expect(closed.stage.kind).toBe("denied");
     expect(closed.repaired).toBeUndefined();
   });
@@ -421,5 +406,164 @@ describe("gated-advisory through the real spine (epic #54, slice 2)", () => {
     const run = await runBankEntry(world, entry("refuse-legendary-generic"), model(""), clock());
     expect(run.score.pass).toBe(false);
     expect(run.score.enforcementEscalation ?? false).toBe(false);
+  });
+});
+
+describe("R3b step 3 in the bank: the model may ask, the truthful trainer answers from the oracle", () => {
+  const P8 = { version: "red-blue", region: "kanto", badgeLevel: 8 };
+  const fieldClarify = JSON.stringify({
+    asked: [],
+    rosters: [],
+    claims: [
+      {
+        kind: "clarify",
+        about: "speed",
+        question: "Do you mean how hard Pikachu hits, or how fast it is?",
+        options: [
+          { kind: "field", label: "how hard it hits", fieldId: "base-attack" },
+          { kind: "field", label: "how fast it is", fieldId: "base-speed" },
+          { kind: "field", label: "something else", fieldId: "none" },
+        ],
+      },
+    ],
+  });
+
+  /** Clarifies on the first answer call, answers on every later one, and
+   * keeps every answer prompt it was shown. */
+  function clarifyingThenAnswering(answer: string, clarification = fieldClarify): { provider: ScriptedProvider; prompts: string[] } {
+    const prompts: string[] = [];
+    let calls = 0;
+    const provider = new ScriptedProvider("scripted:clarifying", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      prompts.push(request.prompt);
+      calls += 1;
+      return calls === 1 ? clarification : answer;
+    });
+    return { provider, prompts };
+  }
+
+  describe("truthfulPick reads the entry's oracle, never the options' wording", () => {
+    const options = [
+      { kind: "field", label: "how hard it hits", fieldId: "base-attack" },
+      { kind: "field", label: "how fast it is", fieldId: "base-speed" },
+      { kind: "field", label: "something else", fieldId: null },
+    ] as const;
+
+    it("picks the field the entry expects a fact in", () => {
+      const picked = truthfulPick(entry("ans-fact-speed-pikachu"), "What's Pikachu's Speed stat?", options);
+      expect(picked).toEqual({ kind: "field", label: "how fast it is", fieldId: "base-speed" });
+    });
+
+    it("picks the basis a ranking entry ranks by", () => {
+      const ranking = entry("ans-rank-fastest-electric");
+      expect(ranking.profile.comparisonBasis).toBe("base-speed");
+      expect(truthfulPick(ranking, ranking.intent, options)).toMatchObject({ fieldId: "base-speed" });
+    });
+
+    it("picks the no-field option for a lesson entry, and nothing for a fact entry offered only the wrong fields", () => {
+      const lesson: BankEntry = { id: "l", intent: "What is a gym badge?", profile: P8, disposition: "answerable", expectClaimKinds: ["explanation"], expectBlockIds: ["what-is-badge"] };
+      expect(truthfulPick(lesson, lesson.intent, options)).toEqual(options[2]);
+      const hp: BankEntry = { id: "h", intent: "Pikachu's HP?", profile: P8, disposition: "answerable", expectClaimKinds: ["fact"], expectFacts: [{ entityId: "pikachu", factId: "base-hp" }] };
+      expect(truthfulPick(hp, hp.intent, options)).toBeUndefined();
+    });
+
+    it("picks a subject the oracle accepts, or one the trainer's own words named — and nothing otherwise", () => {
+      const subjects = [
+        { kind: "entity", label: "Raichu", entityId: "raichu" },
+        { kind: "entity", label: "Pikachu", entityId: "pikachu" },
+      ] as const;
+      expect(truthfulPick(entry("ans-fact-speed-pikachu"), "how fast is it?", subjects)).toEqual(subjects[1]);
+      const gated = entry("refuse-mewtwo-2");
+      expect(gated.expectFacts).toBeUndefined();
+      expect(truthfulPick(gated, gated.intent, [{ kind: "entity", label: "Mew", entityId: "mew" }, { kind: "entity", label: "Mewtwo", entityId: "mewtwo" }])).toMatchObject({ entityId: "mewtwo" });
+      expect(truthfulPick(entry("data-berry-effect"), "what does a berry do?", subjects)).toBeUndefined();
+    });
+  });
+
+  it("with the door open the grammar offers the clarify entry, the pick binds, and the run records it", async () => {
+    const speedAndAttack = JSON.stringify({
+      asked: [{ phrase: "speed", entityId: "pikachu", fieldId: "base-attack" }],
+      rosters: [],
+      claims: [
+        { kind: "fact", entityId: "pikachu", factId: "base-attack" },
+        { kind: "fact", entityId: "pikachu", factId: "base-speed" },
+      ],
+    });
+    const { provider, prompts } = clarifyingThenAnswering(speedAndAttack);
+    const run = await runBankEntry(world, entry("ans-fact-speed-pikachu"), provider, clock(), undefined, 0, { profile: true, clarify: true });
+    expect(prompts[0]).toContain('"kind": "clarify"');
+    // The trainer picked Speed from the oracle; the pick held the reply to it.
+    expect(run.stage.kind).toBe("resolved");
+    expect(run.score.pass).toBe(true);
+    expect(run.clarified).toEqual({ asked: 1, picked: 1, ignored: 0, capped: 0 });
+    const facts = run.run.transaction!.manifest!.claims.filter((claim) => claim.kind === "fact").map((claim) => (claim as { factId: string }).factId);
+    expect(facts).toEqual(["base-speed"]);
+    // The ceremony reads the model's question from the record, apart from the pack's.
+    expect(run.ceremony).toMatchObject({ questions: 0, clarifications: 1 });
+    // The trainer's pick is on the record as their own words.
+    const said = run.run.transcript.filter((event) => event.kind === "utterance" && event.source === "trainer").map((event) => (event as { text: string }).text);
+    expect(said).toEqual([entry("ans-fact-speed-pikachu").intent, "how fast it is"]);
+  });
+
+  it("with the door shut the grammar offers no clarify entry and the run carries no gauge", async () => {
+    const { provider, prompts } = clarifyingThenAnswering(pikachuSpeed());
+    const run = await runBankEntry(world, entry("ans-fact-speed-pikachu"), provider, clock(), undefined, 0, { profile: true });
+    expect(prompts[0]).not.toContain('"kind": "clarify"');
+    expect(run.clarified).toBeUndefined();
+    expect(run.ceremony?.clarifications).toBe(0);
+  });
+
+  it("a question with no right option is declined in plain words twice and the exchange closes — the model's miss, counted, at no model cost", async () => {
+    // A needs-data entry: the oracle holds no field, so no option can be
+    // right. The truthful trainer says so; the driver restates once, then
+    // closes the exchange as an abstention — the honest outcome for an
+    // unanswerable question, and a pass for its disposition.
+    const { provider, prompts } = clarifyingThenAnswering(pikachuSpeed());
+    const run = await runBankEntry(world, entry("data-berry-effect"), provider, clock(), undefined, 0, { profile: true, clarify: true });
+    expect(run.clarified).toEqual({ asked: 1, picked: 0, ignored: 2, capped: 0 });
+    expect(run.stage.kind).toBe("abstained-answer");
+    expect(run.score.pass).toBe(true);
+    // One answer call: the two declines were read deterministically.
+    expect(prompts).toHaveLength(1);
+    const said = run.run.transcript.filter((event) => event.kind === "utterance" && event.source === "trainer").map((event) => (event as { text: string }).text);
+    expect(said.slice(1)).toEqual([NO_HONEST_PICK, NO_HONEST_PICK]);
+  });
+});
+
+describe("R3b step 4 in the bank: suggestions are offered, shown and counted, never taken", () => {
+  const suggesting = (asks: readonly string[]) =>
+    JSON.stringify({
+      asked: [{ phrase: "speed", entityId: "pikachu", fieldId: "base-speed" }],
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }, { kind: "suggest", asks }],
+    });
+
+  it("with the door open the suggestions ride into the record, an offender is dropped, and the run counts both", async () => {
+    const prompts: string[] = [];
+    const provider = new ScriptedProvider("scripted:suggesting", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      prompts.push(request.prompt);
+      return suggesting(["What is it weak to?", "Is 90 a good Speed?"]);
+    });
+    const run = await runBankEntry(world, entry("ans-fact-speed-pikachu"), provider, clock(), undefined, 0, { profile: true, suggest: true });
+    expect(prompts[0]).toContain('"kind": "suggest"');
+    expect(run.stage.kind).toBe("resolved");
+    // The digit-bearing one states a value and was dropped before the kernel saw it.
+    expect(run.suggestions).toEqual({ shown: 1, dropped: 1 });
+    expect(run.run.transaction!.manifest!.suggestions).toEqual(["What is it weak to?"]);
+    // The bank's trainer never takes one: the exchange ends with the answer.
+    expect(run.run.transcript.filter((event) => event.kind === "utterance" && event.source === "trainer")).toHaveLength(1);
+  });
+
+  it("with the door shut the grammar offers no suggest entry and the run carries no count", async () => {
+    const prompts: string[] = [];
+    const provider = new ScriptedProvider("scripted:plain", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      prompts.push(request.prompt);
+      return pikachuSpeed();
+    });
+    const run = await runBankEntry(world, entry("ans-fact-speed-pikachu"), provider, clock(), undefined, 0, { profile: true });
+    expect(prompts[0]).not.toContain('"kind": "suggest"');
+    expect(run.suggestions).toBeUndefined();
   });
 });

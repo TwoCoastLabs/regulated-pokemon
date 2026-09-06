@@ -63,7 +63,24 @@ export interface CoverageMap {
    * the trainer endured, not only in what the model billed. `resolved` is the
    * denominator for a per-resolution reading.
    */
-  ceremony?: { questions: number; scopeCards: number; actCards: number; resolved: number };
+  ceremony?: { questions: number; clarifications: number; scopeCards: number; actCards: number; resolved: number };
+  /**
+   * The model's own questions across the runs, when the clarify door was
+   * open (docs/routing.md, R3b step 3): how many it asked, how many the
+   * truthful trainer could answer from the oracle, how many held no right
+   * answer (`ignored`) and how many a third ask was refused (`capped`).
+   * `ignored` is the number that says whether the model asks about the
+   * right thing; `asked` over `runs` is the nomination rate.
+   */
+  clarification?: { runs: number; asked: number; picked: number; ignored: number; capped: number };
+  /**
+   * Follow-up suggestions across the runs, when the suggest door was open
+   * (R3b step 4): `shown` read from the records, `answersWith` the resolved
+   * runs whose certified answer carried at least one — the number that says
+   * whether the conversation has a shape — and `dropped` the offenders the
+   * topic-not-value rule removed before the kernel saw them.
+   */
+  suggestions?: { runs: number; shown: number; answersWith: number; dropped: number };
   /** The per-entry stability reading, present when the runs span more than one
    * repetition. This is the §21 noise-floor instrument: at N=1 a topline is one
    * draw from an unmeasured churn band; at N≥2 the band is measured and a delta
@@ -182,6 +199,33 @@ export function coverageMap(runs: readonly BankRun[]): CoverageMap {
           ...carried.reduce((sum, run) => addCeremony(sum, run.ceremony ?? NO_CEREMONY), NO_CEREMONY),
           resolved: runs.filter((run) => run.stage.kind === "resolved").length,
         };
+  const clarified = runs.filter((run) => run.clarified !== undefined);
+  const clarification =
+    clarified.length === 0
+      ? undefined
+      : clarified.reduce(
+          (sum, run) => ({
+            runs: sum.runs + 1,
+            asked: sum.asked + (run.clarified?.asked ?? 0),
+            picked: sum.picked + (run.clarified?.picked ?? 0),
+            ignored: sum.ignored + (run.clarified?.ignored ?? 0),
+            capped: sum.capped + (run.clarified?.capped ?? 0),
+          }),
+          { runs: 0, asked: 0, picked: 0, ignored: 0, capped: 0 },
+        );
+  const suggested = runs.filter((run) => run.suggestions !== undefined);
+  const suggestions =
+    suggested.length === 0
+      ? undefined
+      : suggested.reduce(
+          (sum, run) => ({
+            runs: sum.runs + 1,
+            shown: sum.shown + (run.suggestions?.shown ?? 0),
+            answersWith: sum.answersWith + ((run.suggestions?.shown ?? 0) > 0 ? 1 : 0),
+            dropped: sum.dropped + (run.suggestions?.dropped ?? 0),
+          }),
+          { runs: 0, shown: 0, answersWith: 0, dropped: 0 },
+        );
   return {
     total: runs.length,
     pass: runs.filter((run) => run.score.pass).length,
@@ -194,6 +238,8 @@ export function coverageMap(runs: readonly BankRun[]): CoverageMap {
       .map((run) => run.entryId),
     repaired: runs.filter((run) => run.repaired === true).map((run) => run.entryId),
     ...(ceremony === undefined ? {} : { ceremony }),
+    ...(clarification === undefined ? {} : { clarification }),
+    ...(suggestions === undefined ? {} : { suggestions }),
     ...(repetition === undefined ? {} : { repetition }),
   };
 }
@@ -295,11 +341,32 @@ export function renderCoverage(map: CoverageMap, heading = "Playability coverage
   if (map.ceremony !== undefined) {
     const c = map.ceremony;
     const per = (value: number): string => (c.resolved === 0 ? "—" : (value / c.resolved).toFixed(2));
+    // Artifacts filed before the model could ask carry no clarification
+    // count; they read as zero, which is what they were.
+    const clarifications = c.clarifications ?? 0;
     lines.push(
-      `**Ceremony, from the record:** ${c.questions} clarifying question(s), ${c.scopeCards} scope card(s), ` +
+      `**Ceremony, from the record:** ${c.questions} clarifying question(s), ${clarifications} advisor question(s), ${c.scopeCards} scope card(s), ` +
         `${c.actCards} act consent(s) across ${map.total} sample(s) — per resolution: ` +
-        `${per(c.questions)} questions, ${per(c.scopeCards)} scope cards, ${per(c.actCards)} act consents. ` +
+        `${per(c.questions)} questions, ${per(clarifications)} advisor questions, ${per(c.scopeCards)} scope cards, ${per(c.actCards)} act consents. ` +
         "The trainer's cost beside the model's; the consent gradient priced in clicks actually endured.",
+    );
+  }
+  // The two model doors of R3b, when they were open. Each line names its
+  // condition — a run with the door shut reports nothing here rather than a
+  // zero that would read as "the model never asked".
+  if (map.clarification !== undefined) {
+    const q = map.clarification;
+    lines.push(
+      `**Clarification (door open on ${q.runs} run(s)):** the model asked ${q.asked} question(s) — ` +
+        `${q.picked} answered from the oracle, ${q.ignored} held no right option (the trainer said so), ${q.capped} refused as a third. ` +
+        "The nomination rate is asked over runs; ignored is whether the model asks about the right thing.",
+    );
+  }
+  if (map.suggestions !== undefined) {
+    const s = map.suggestions;
+    lines.push(
+      `**Suggestions (door open on ${s.runs} run(s)):** ${s.shown} shown on ${s.answersWith} certified answer(s), ` +
+        `${s.dropped} dropped by the topic-not-value rule before the kernel saw them. Never certified; shown in their own register.`,
     );
   }
   lines.push("");
