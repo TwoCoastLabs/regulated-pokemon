@@ -2684,3 +2684,84 @@ describe("dogfood stop 3, the dead end (2026-09-06): a reply the driver emptied 
     expect(state.suggestions).toMatchObject({ taken: 1, deadEnded: 1 });
   });
 });
+
+describe("a clarification needs a choice: one option is not a question (found by the R3b step 5 baseline leg, 2026-09-06)", () => {
+  // 15 of the 25 questions the strong model nominated on the bank carried a
+  // single option — "Which field do you mean?" over the reserved none alone,
+  // "did you mean Move type?" — a hedge worded as a question, which the
+  // truthful trainer could only decline twice. There is nothing to pick from
+  // one option; the reply is read as the mapping and the claims beside it.
+  const PROFILE = { version: "red-blue", region: "kanto", badgeLevel: 8 } as const;
+
+  it("a lone null-field option falls to the null-link reading — the records' boundary is taught and no question is asked", async () => {
+    const hedge = JSON.stringify({
+      asked: [{ phrase: "what ability", entityId: "pikachu", fieldId: "none" }],
+      rosters: [],
+      claims: [
+        {
+          kind: "clarify",
+          about: "What ability does Pikachu have?",
+          question: "Which field do you mean?",
+          options: [{ kind: "field", label: "something else", fieldId: "none" }],
+        },
+      ],
+    });
+    const provider = scripted("hedger", (purpose) => (purpose === "answer" ? hedge : "decline"));
+    const d: SessionDeps = { ...deps(provider), clarify: true };
+    let state = await setProfile(startSession(), PROFILE, d);
+    state = await say(state, "What ability does Pikachu have?", d);
+    expect(state.clarification.asked).toBe(0);
+    expect(state.transcript.some((event) => event.kind === "clarification")).toBe(false);
+    expect(state.phase.kind).toBe("gathering");
+    expect(state.records.at(-1)?.manifest?.claims).toEqual([{ kind: "explanation", blockId: world.pack.recordsBoundary!.lessonId }]);
+  });
+
+  it("a lone field option is read as the claims beside it — the count is certified, no question is asked", async () => {
+    const hedge = JSON.stringify({
+      // (The phrase carries no dictionary alias, so the alias cross-check —
+      // which asks its own question — stays out of this test.)
+      asked: [{ phrase: "how many are there", entityId: "psychic", fieldId: "none" }],
+      rosters: [{ id: "psychic-kanto", criteria: { all: [{ kind: "has-type", type: "psychic" }] } }],
+      claims: [
+        { kind: "count", rosterId: "psychic-kanto" },
+        {
+          kind: "clarify",
+          about: "How many Psychic types are there?",
+          question: "Did you mean Move type?",
+          options: [{ kind: "field", label: "Move type", fieldId: "move-type" }],
+        },
+      ],
+    });
+    const provider = scripted("hedger", (purpose) => (purpose === "answer" ? hedge : "decline"));
+    const d: SessionDeps = { ...deps(provider), clarify: true };
+    let state = await setProfile(startSession(), PROFILE, d);
+    state = await say(state, "How many Psychic types are there?", d);
+    expect(state.clarification.asked).toBe(0);
+    expect(state.records.at(-1)?.outcome.status).toBe("answered");
+    expect(state.records.at(-1)?.manifest?.claims.map((claim) => claim.kind)).toEqual(["count"]);
+  });
+
+  it("two options are still a question", async () => {
+    const question = JSON.stringify({
+      asked: [],
+      rosters: [],
+      claims: [
+        {
+          kind: "clarify",
+          about: "its type",
+          question: "Do you mean the species' type, or a move's type?",
+          options: [
+            { kind: "field", label: "the species' type", fieldId: "types" },
+            { kind: "field", label: "a move's type", fieldId: "move-type" },
+          ],
+        },
+      ],
+    });
+    const provider = scripted("asker", (purpose) => (purpose === "answer" ? question : "decline"));
+    const d: SessionDeps = { ...deps(provider), clarify: true };
+    let state = await setProfile(startSession(), PROFILE, d);
+    state = await say(state, "what's its type?", d);
+    expect(state.clarification.asked).toBe(1);
+    expect(state.phase.kind).toBe("clarifying");
+  });
+});

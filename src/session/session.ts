@@ -1896,15 +1896,23 @@ function applyLinking(
   // carrying one with the door shut is read as the claims beside it.
   if (deps.clarify === true && decode.clarify !== undefined) {
     const options = validOptions(world.pack, world.registry, decode.clarify.options);
-    if (options.length > 0) {
+    // A question needs a choice: two typed options at least. Found by the
+    // step 5 baseline leg (2026-09-06, strong model): 15 of 25 nominated
+    // questions carried one option — "Which field do you mean?" over the
+    // reserved none alone, "did you mean Move type?" — a hedge worded as a
+    // question, which the truthful trainer could only decline twice. With
+    // one option there is nothing to pick; the reply is read as the claims
+    // and the mapping beside it, where a null link already knows what to do.
+    if (options.length >= 2) {
       const question = usableQuestion(decode.clarify.question)
         ? decode.clarify.question.trim()
         : `When you said "${decode.clarify.about}", which did you mean — ${options.map((option) => option.label).join(", ")}?`;
       return clarify(state, deps, { about: decode.clarify.about, text: question, options, source: "the model's nomination" });
     }
-    // No typed option survived: the model said "ambiguous" and named nothing
-    // a pick could bind to. The claims beside it stand as they would have;
-    // a reply with nothing beside it is the honest pass, naming the phrase.
+    // No choice survived: the model said "ambiguous" and named nothing (or
+    // one thing) a pick could bind to. The claims beside it stand as they
+    // would have; a reply with nothing beside it is the honest pass, naming
+    // the phrase.
     if (decode.draft.claims.length === 0 && decode.route === undefined && decode.asked.every((entry) => entry.fieldId !== null)) {
       return {
         state: note(
