@@ -4265,3 +4265,121 @@ npm run coverage:map -- --render --page docs/coverage.md   # re-render a filed a
 Every live run files a complete artifact — transcripts, transactions, metrics,
 provenance (snapshot id, content digest, upstream commit, pack id) — and the
 results page is generated from it, never hand-transcribed.
+
+### R3b step 5: the baseline the live page runs, and the second door goes (2026-09-06)
+
+**What landed.** The bank runs the configuration the live page runs. The
+coverage harness threads `--clarify` and `--suggest` beside `--profile`
+and `--feedback` (the runner's row of positional booleans became a
+`BankRunOptions` object; each dial travels with the artifact and is stated
+in the plan and on the page). The truthful trainer answers the model's own
+question the way it answers the pack's — from the entry's oracle, never
+from the options' wording: a field option is right when the entry expects
+a fact in that field or ranks by it, a no-field option when the entry
+expects a lesson, a subject option when the oracle accepts it or the
+trainer's own words named it; no right option and the trainer says so in
+plain words ("neither of those"), the driver restates once and closes, and
+the miss is counted at no model cost. The ceremony reader gains
+`clarifications` — the model's questions on the record, apart from the
+pack's, because R4 needs both numbers and not their sum. Then the second
+dispatch door went: **the deflected-profile dispatch**, which from
+2026-08-30 replaced a lesson-only reply on an ask naming one species with
+the species' nine-fact profile. Both hops are gone; the profile survives as
+the `profile` nomination; a lesson the model composed is the lesson it
+composed. Driver 2940 → 2906 lines; the domain-word gate unchanged at 77
+(the door read registry ids, never a literal). Two guards followed from
+the legs (below): a clarification needs two typed options at least, and an
+alias is evidence only against a subject it could be a field of.
+
+**The legs, strong model (qwen3-235b), N=1, retrieval + gated grammar +
+repair + profile + feedback throughout.** Cost of the whole slice's live
+work: $0.24 across three legs and five tracer runs.
+
+| leg | doors | pass | answerable | certified answers | enforcement | model questions asked / picked / no right option | suggestions shown / certified answers with one | feedback retries | off-target dropped | calls |
+|---|---|---|---|---|---|---|---|---|---|---|
+| R3b first slice (2026-09-05, for reference) | shut | 97/137 | 56/79 | 66 | 0 | — | — | 21 | 71 | 214 |
+| step 5 baseline, door still in | open | 103/137 | 64/79 | 69 | 0 | 25 / 3 / 22 | 64 / 22 of 97 | 21 | 71 | 232 |
+| after the deflected-profile door | open | 103/137 | 65/79 | 67 | 0 | 19 / 0 / 19 | 57 / 21 of 98 | 28 | 67 | 241 |
+| the 24 entries the model questioned, after both guards | open | 14/24 (11/24 in the baseline) | 0/7 | — | 0 | 11 / 0 / 11 | 0 | 4 | 3 | 45 |
+
+**What the door's deletion did.** Nothing measurable, which is the result:
+103 → 103 with 11 entries gained and 11 lost, inside the N=3 band (99–106)
+the R1 run measured on this bank; the deletion's own signature — an
+answerable ask naming one species certified as a lesson alone — appeared
+**0 times in 79** answerable entries, and "Tell me everything about
+Pikachu" resolved on the model's own nine facts in both legs (one call
+before, two after). The door had been guarding against a model that no
+longer needs guarding from: the strong model composes or nominates the
+profile itself. (The two lesson-only off-oracle answers the after-leg
+carries, `meta-how-to-play` taught as what-is-game and `meta-how-catch` as
+how-to-play, name no species — mis-teaches of the curriculum's own kind,
+not the door's class.)
+
+**What the model's questions were, by the numbers.** 25 asked on 137
+entries (18%); by disposition answerable 7, needs-data 8, advisory 3,
+gated-advisory 3, off-domain 3. The truthful trainer could pick **3**;
+**22 held no right option**, and 15 of the 25 carried a *single* option —
+"Which field do you mean?" over the reserved none alone, "did you mean
+Move type?" for "How many Psychic types are there?". Of the 3 picks, 2 led
+to off-oracle resolutions: "Is Zapdos a good pick for me?" drew a
+four-option question, the trainer said "Zapdos", and the model then
+answered facts about Zapdos where the pack's rule was the answer.
+
+*Model errors* (the model's own choices, counted separately as the standing
+rule requires): (1) asking instead of abstaining — 11 of 25 questions on
+needs-data and off-domain asks ("Are you asking about cooking in the real
+world, or is this related to Pokémon?" for "How do I cook pasta?"), a hedge
+worded as a question; the outcome was still the honest abstention, at the
+cost of two trainer turns each. (2) Asking instead of teaching — 3 lesson
+asks: "What does a Pokemon's type actually mean?" and "How many types of
+Pokemon are there?" drew "Type or Move type?", "How many Psychic types are
+there?" drew "Move type?"; the what-is-type lesson and the type count were
+in the grammar. (3) Asking instead of answering the rule — 3 gated-advisory
+asks. (4) "What is a Pokémon?" fell to the redirect in the baseline (an
+`action` on the entity none twice, the emptied-reply round taken) and
+taught the lesson in the after-leg: lesson 5, nondeterminism at the same
+prompt. (5) "Does Pikachu learn Selfdestruct?" came back as
+eligibility + recommendation + two acts, and the bank's trainer declined
+the surprise act. (6) "Which legendary should I add to my team?" (tracer):
+seven `IA-3/fabricated-entity` denials, carried back once, then an act
+proposal — every one refused or held for consent. (7) Suggestions on 22 of
+97 certified answers (23%), consistent with the dogfood reading that the
+strong model attaches them to facts and not to lessons; 7 dropped for a
+digit or an id.
+
+*Harness factors* (the driver's, fixed in this slice where marked):
+(a) **Fixed** — a nomination with one option was honoured as a question; 15
+of 25 were. The door now needs two typed options at least; with fewer the
+reply is read as the mapping and the claims beside it. On the 24-entry
+leg the eight single-option needs-data asks all teach the records'
+boundary with no question (resolved, pass), and `refuse-zapdos-2`,
+`refuse-articuno-4` and `kind-worth-evolving` flipped to pass. (b) **Fixed**
+— the alias cross-check read an uncertified subject as "could be anything"
+and matched every subject's aliases, so "What is evolution?" — answered
+exactly right by the model as the what-is-evolution lesson linked to none
+about nothing — drew "did you mean Evolves into?", a one-option question
+with no subject to answer it about; same for "What is a TM or HM?" and
+"Which legendary should I add to my team?". An alias is evidence only
+against a certified subject now; live after the fix, both lesson asks
+teach in 2 calls ($0.0006 each). (c) **Named, not fixed** — the bank's
+truthful trainer has no oracle for an advisory preference question ("What
+do you value most in a moveset: raw power, useful effects, or
+consistency?"), so it declines and the entry is counted `ignored`; a real
+trainer would answer. The 3 advisory questions are a measurement limit,
+not a model error. (d) **Named** — `clarified.asked` counts the model's
+nominations and the alias cross-check's own driver-worded questions alike
+(both are `clarification` events); the 24-entry leg's 11 include the 3
+alias questions the fix removed. The next leg reads them apart by the
+event's source line.
+
+**The honest reading.** Enforcement held on every leg: 0 escalations, 0
+provider errors, every denial named. The door's deletion is the second of
+the plan's five and cost nothing the bank can see. The clarification
+mechanism, measured on a bank for the first time, is mostly the model
+hedging: 22 of 25 questions had no right answer, and the two harness
+classes accounted for 18 of them — those are closed. What remains is the
+model's: 7 questions where teaching, abstaining or the rule was the answer,
+and a nomination rate that the step 6 both-model legs will read per model.
+The 24-entry re-run is a targeted check, not a bank number: 14/24 against
+11/24 on the same entries says the guards did what the tests say, and the
+next full leg is the one that files a pass count.
