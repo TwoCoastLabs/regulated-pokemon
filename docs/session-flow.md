@@ -179,8 +179,10 @@ linking step every claim goes through.
 | 2 | `scope` — the ladder | clarify, a question is not the better move, the words carry long-tail scope wording | scope prompt: the trainer's lines, the missing dimensions, the approved values | none (plain JSON asked; decoded by `decodeCandidate`) | an untrusted `proposal` event; binds only on the trainer's confirmation | malformed or stale → the pack's own question |
 | 3 | `answer` — answer hop | scope granted, no deterministic draft | answer prompt with **"Scope is established: …"**; retrieval block; `previously` for anaphoric asks | as #1 | decoded draft → executor/guards → kernel | malformed → honest pass; token cap → truncation named |
 | 4 | `answer` — route-door-closed retry | #1 or #3 replied with only a nomination the executor refused | same prompt, `routes` omitted | as #1 minus the route variants | as #3 | as #3 |
-| 5 | `answer` — verifier-in-the-loop retry (R3b) | #3's groomed draft was denied at the answer stage for anything but the repair's all-fact-mismatch class, `feedback` on, once per answer | same prompt plus **"Your previous answer … was refused by the verifier, by name"** and one line per violation in fixed wording (`IA-3/fabricated-entity: "gym-badge" is not certified…`); `routes` omitted | as #4 | groomed identically to #3, gated once more; counted as `feedbackRetries`, the first denial kept in `feedbackDenials` | a second denial files as a denial |
+| 5 | `answer` — verifier-in-the-loop retry (R3b) | #3's groomed draft was denied at the answer stage for anything but the repair's all-fact-mismatch class — or the driver itself emptied the reply at linking (every claim off the ask or about no subject, where the model had written something: `driver/no-subject`, `driver/off-ask`; dogfood 2026-09-06) — `feedback` on, once per answer, on either hop | same prompt plus **"Your previous answer … was refused by the verifier, by name"** and one line per violation in fixed wording (`IA-3/fabricated-entity: "gym-badge" is not certified…`); `routes` omitted | as #4 | groomed identically to #3, gated once more; counted as `feedbackRetries`, the first denial kept in `feedbackDenials` | a second denial files as a denial |
 | 6 | `phrase` — the pack's question reworded (R3b step 3) | the pack's fixed question is the move (no ladder, or the ladder fell through), `clarify` on, once per dimension per ask | the trainer's lines, the pack's own wording, the approved values; "put that question in your own words … state no fact, no value and no number" | `{"question": string}` | a `question` event armed for the same dimension, text the model's; the phase carries the vocabulary's values as clicks | not one sentence ending in `?`, a digit, too long → the pack's own line (`clarification.unphrased`) |
+
+Calls #1 and #3 also admit, when `suggest` is on, a **suggest entry** — `{"kind": "suggest", "asks": [up to three short questions]}` — lifted out at decode and never a claim: the driver drops any that state a value (a digit, a certified id), the rest ride in the manifest's `suggestions` and render as the certified page's one labelled register (`data-unit="suggestions"`, items marked `data-suggestion`), which the walker attributes to the model, the affidavit swears visible, and the verifier holds to the record by equality. The kernel refuses a manifest whose suggestion states a value, so the register can carry a question and never a fact.
 
 Calls #1 and #3 also admit, when `clarify` is on, one more reply shape beside claims and routes: the **clarify nomination** — `{"kind": "clarify", "about", "question", "options": [{"kind": "field", "label", "fieldId" | "none"} | {"kind": "entity", "label", "entityId"}]}`. It is not a call of its own: the driver validates every option (a dictionary id or `none`; a registry-certified subject), drops the rest, caps the chain at two per ask, and records the question as a `clarification` event with its typed options. The trainer's reply is read against the options (label, dictionary alias, subject name; a subject question answered with an unlisted certified subject is a pick too); one match binds — a field pick holds the next reply's claims to that field, a subject pick drops claims about any other certified subject — none restates once then passes honestly, and a fresh ask is drift. An alias contradiction (R3) takes the same shape with the two fields as options, driver-worded.
 
@@ -291,6 +293,10 @@ is covered by offline tests with scripted models:
 - the manifest compile and every verification (facts against the
   snapshot, rosters recomputed, policy gates, mandatory disclosures,
   text closure, the render affidavit); the strip-assertion repair
+- the suggestion register's two gates (`suggestionProblem`: no digit, no
+  certified id; the driver's drop and the kernel's refusal), and the
+  register's closure on the page (each mark held to the manifest by
+  equality, inside the one labelled unit)
 - replay: a filed transaction re-verifies byte for byte with no model
 
 And the nondeterministic list is §3's six rows. That asymmetry is the
@@ -314,9 +320,12 @@ amber node — the verifier-in-the-loop retry. *Landed the same day, step
 3:* the clarify nomination (the model may ask, with typed options; the
 pick binds at linking), the alias contradiction as that same question, and
 the sixth amber node — the pack's scope question in the model's words,
-guarded structurally and falling back to the pack's line. Still to land:
-follow-up suggestions (step 4) and the dispatch doors' deletion, one at a
-time with a bank leg each (routing.md, sequencing step 5).
+guarded structurally and falling back to the pack's line. *Step 4,
+2026-09-06:* follow-up suggestions — the model's own questions on the
+certified page, in one labelled register the affidavit attributes to it,
+held to the record by equality and to the topic-not-value rule at two
+gates. Still to land: the dispatch doors' deletion, one at a time with a
+bank leg each (routing.md, sequencing step 5).
 
 ```mermaid
 flowchart LR

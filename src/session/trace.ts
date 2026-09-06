@@ -71,6 +71,9 @@ export interface TraceArgs {
    * becomes a question, the pack's scope question is phrased by the model;
    * `--no-clarify` asks the pack's fixed lines and closes on a contradiction. */
   clarify: boolean;
+  /** Follow-up suggestions (docs/routing.md, R3b step 4) — on by default;
+   * `--no-suggest` offers none and strips any a reply carries. */
+  suggest: boolean;
   /** Converse with the Center world — kanto-center under its own pack, the
    * realistic-inquiry setting the coverage maps measure. Off by default: the
    * frozen red-blue world stays the tracer's baseline. */
@@ -91,6 +94,7 @@ export function parseTraceArgs(argv: readonly string[]): TraceArgs {
     repair: !argv.includes("--no-repair"),
     feedback: !argv.includes("--no-feedback"),
     clarify: !argv.includes("--no-clarify"),
+    suggest: !argv.includes("--no-suggest"),
     center: argv.includes("--center"),
   };
 }
@@ -220,6 +224,13 @@ function narrate(before: SessionState, after: SessionState): string[] {
   if (clarifying.capped > clarifiedBefore.capped) lines.push("  [clarify] the chain hit its cap — honest pass");
   if (clarifying.phrased > clarifiedBefore.phrased) lines.push("  [clarify] the pack's question was phrased by the model");
   if (clarifying.unphrased > clarifiedBefore.unphrased) lines.push("  [clarify] the model offered no usable wording — the pack's question was asked");
+  const suggesting = after.suggestions;
+  const suggestedBefore = before.suggestions;
+  if (suggesting.dropped > suggestedBefore.dropped) {
+    lines.push(`  [suggest] ${suggesting.dropped - suggestedBefore.dropped} follow-up(s) dropped for stating a value or naming a certified id`);
+  }
+  if (suggesting.taken > suggestedBefore.taken) lines.push("  [suggest] the trainer took a suggested follow-up");
+  if (suggesting.deadEnded > suggestedBefore.deadEnded) lines.push("  [suggest] the suggested follow-up dead-ended — no record, nothing left open");
 
   lines.push(`  [phase] ${describePhase(after)}`);
   return lines;
@@ -296,6 +307,7 @@ function describeRecord(record: Transaction): string[] {
     lines.push(`[record · ${record.id}] ${outcome.status}`);
   }
   for (const claim of record.manifest?.claims ?? []) lines.push(`    claim: ${describeClaim(claim)}`);
+  for (const suggestion of record.manifest?.suggestions ?? []) lines.push(`    suggests: ${suggestion}`);
   const scope = Object.entries(record.grant?.scope ?? {});
   if (scope.length > 0) {
     lines.push(`    scope: ${scope.map(([dimension, value]) => `${dimension}=${String(value)}`).join(", ")}`);
@@ -337,6 +349,9 @@ function summary(state: SessionState): string {
       : "") +
     (state.clarification.phrased + state.clarification.unphrased > 0
       ? `, scope questions ${state.clarification.phrased} phrased/${state.clarification.unphrased} pack-worded`
+      : "") +
+    (state.suggestions.offered > 0
+      ? `, suggestions ${state.suggestions.offered} offered/${state.suggestions.kept} kept/${state.suggestions.dropped} dropped/${state.suggestions.taken} taken/${state.suggestions.deadEnded} dead-ended`
       : "") +
     ", " +
     `${usage.calls} model call(s), $${usage.costUsd.toFixed(4)}${floor}`

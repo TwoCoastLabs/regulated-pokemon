@@ -32,6 +32,7 @@
  * widens this schema in the same commit, or a test fails.
  */
 
+import { MAX_SUGGESTIONS } from "../kernel/manifest.js";
 import { NO_FIELD } from "../kernel/pack.js";
 import { COMPARABLE_FACT_IDS, ITEM_FACT_IDS, MOVE_FACT_IDS, SPECIES_FACT_IDS, STATUS_CONDITIONS } from "../kernel/registry.js";
 import { STAT_NAMES } from "../kernel/snapshot-format.js";
@@ -307,6 +308,17 @@ function clarifySchema(fieldIds: readonly string[]): JsonSchema {
   });
 }
 
+/**
+ * The follow-up suggestions the model may offer beside its claims (R3b step
+ * 4): up to {@link MAX_SUGGESTIONS} short questions in the trainer's voice.
+ * Not claims — nothing is certified or recomputed — and shown in a labelled
+ * register the affidavit attributes to the model; the kernel refuses one
+ * that states a value. One more claim variant, lifted out at decode.
+ */
+function suggestSchema(): JsonSchema {
+  return variant("suggest", { asks: { type: "array", maxItems: MAX_SUGGESTIONS, items: STRING } });
+}
+
 export function answerSchema(
   pack: {
     curriculum: ReadonlyArray<{ id: string }>;
@@ -333,6 +345,9 @@ export function answerSchema(
    * only with a dictionary to type the options against; off for every path
    * that has not opted in, so the banks measure an unchanged grammar. */
   clarify = false,
+  /** Whether the model may offer follow-up suggestions (R3b step 4). Off for
+   * every path that has not opted in. */
+  suggest = false,
 ): JsonSchema {
   const fieldIds = pack.dictionary.map((entry) => entry.id);
   return object({
@@ -353,6 +368,7 @@ export function answerSchema(
             variant("route", { routeId: { type: "string", enum: [route.id] }, ...route.args }),
           ),
           ...(clarify && fieldIds.length > 0 ? [clarifySchema(fieldIds)] : []),
+          ...(suggest ? [suggestSchema()] : []),
         ],
       },
     },

@@ -27,7 +27,7 @@ import type {
   ScopeDimension,
   ScopeValue,
 } from "../kernel/contracts.js";
-import type { ManifestContext, ManifestDraft } from "../kernel/manifest.js";
+import { type ManifestContext, type ManifestDraft, MAX_SUGGESTIONS } from "../kernel/manifest.js";
 import { buildRoster } from "../kernel/roster.js";
 import { type AccordPack, NO_FIELD } from "../kernel/pack.js";
 import { denialCode } from "../kernel/violation.js";
@@ -134,6 +134,10 @@ export type AnswerDecode =
        * option against the dictionary and the registry and decides whether
        * the question is asked at all. */
       clarify?: ClarifyNomination;
+      /** Follow-up questions the model offered (R3b step 4), trimmed and
+       * non-empty, at most {@link MAX_SUGGESTIONS}; the driver applies the
+       * topic-not-value guard before any reaches a draft. */
+      suggestions?: readonly string[];
     }
   | { ok: false; reason: string };
 
@@ -410,6 +414,7 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
   let folds = 0;
   let route: RouteNomination | undefined;
   let clarify: ClarifyNomination | undefined;
+  let suggestions: readonly string[] | undefined;
   for (const entry of parsed.claims) {
     // A nomination travels in the claims array (one more grammar variant)
     // but is not a claim: it names a deterministic door, and it never
@@ -428,6 +433,15 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
       if (clarify === undefined && options.length > 0) clarify = { about: entry.about, question: entry.question, options };
       continue;
     }
+    // Follow-up suggestions (R3b step 4) travel the same way and are not
+    // claims either: the first entry wins, the strings are trimmed, and an
+    // empty one is no suggestion.
+    if (isObject(entry) && entry.kind === "suggest") {
+      if (!Array.isArray(entry.asks)) return { ok: false, reason: "a suggestion list is malformed" };
+      const asks = entry.asks.filter(isString).map((ask) => ask.trim()).filter((ask) => ask.length > 0).slice(0, MAX_SUGGESTIONS);
+      if (suggestions === undefined && asks.length > 0) suggestions = asks;
+      continue;
+    }
     const claim = asClaim(entry);
     if (claim === null) return { ok: false, reason: "a claim is malformed" };
     // A comparison of a thing with itself compares nothing — it is one
@@ -444,6 +458,22 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
     if (claim.kind === "comparison" && claim.leftId === claim.rightId) {
       folds += 1;
       claims.push({ kind: "fact", entityId: claim.leftId, factId: claim.factId });
+      continue;
+    }
+    // A claim whose subject is a lesson id is the lesson in the wrong
+    // variant: the id comes from the prompt's closed lesson list and names
+    // nothing else, so the shape the model meant is unambiguous. Found live
+    // (dogfood, 2026-09-06): "what is a Pokemon" came back as an action —
+    // and, on the verifier-in-the-loop retry, a fact — on the entity
+    // "what-is-pokemon", denied twice as IA-3/fabricated-entity and filed
+    // as a denial where the lesson was the answer. Same discipline as the
+    // self-comparison fold: propose-side, deterministic, counted, and the
+    // kernel still verifies the lesson like any other claim. Only ids the
+    // pack teaches and the registry never certifies fold — a collision
+    // would be the pack's to refuse, not this line's to guess at.
+    if ((claim.kind === "fact" || claim.kind === "action" || claim.kind === "recommendation") && isLessonId(context, claim.entityId)) {
+      folds += 1;
+      claims.push({ kind: "explanation", blockId: claim.entityId.trim() });
       continue;
     }
     claims.push(claim);
@@ -486,7 +516,17 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
     ...(route === undefined ? {} : { route }),
     ...(unavailable.length === 0 ? {} : { unavailable }),
     ...(clarify === undefined ? {} : { clarify }),
+    ...(suggestions === undefined ? {} : { suggestions }),
   };
+}
+
+/** Whether an id is one of the pack's lesson ids and not an id the registry
+ * certifies — the namespace test the lesson fold rests on. */
+function isLessonId(context: ManifestContext, id: string): boolean {
+  const trimmed = id.trim();
+  if (!context.pack.curriculum.some((lesson) => lesson.id === trimmed)) return false;
+  const { registry } = context;
+  return !registry.speciesIds.includes(trimmed) && !registry.moveIds.includes(trimmed) && !registry.itemIds.includes(trimmed);
 }
 
 /** One typed option, or nothing: a `field` option names a dictionary id or

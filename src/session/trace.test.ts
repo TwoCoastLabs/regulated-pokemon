@@ -166,8 +166,8 @@ describe("runTrace narrates what the session did", () => {
 describe("parseTraceArgs keeps the entry point straight-line", () => {
   it("splits flags from inputs and honors --model over --weak", () => {
     const { parseTraceArgs } = trace;
-    expect(parseTraceArgs(["hi", "/confirm"])).toEqual({ inputs: ["hi", "/confirm"], weak: false, adversarial: false, grounding: "retrieval", gatedGrammar: true, repair: true, feedback: true, clarify: true, center: false });
-    expect(parseTraceArgs(["--weak", "hi"])).toEqual({ inputs: ["hi"], weak: true, adversarial: false, grounding: "retrieval", gatedGrammar: true, repair: true, feedback: true, clarify: true, center: false });
+    expect(parseTraceArgs(["hi", "/confirm"])).toEqual({ inputs: ["hi", "/confirm"], weak: false, adversarial: false, grounding: "retrieval", gatedGrammar: true, repair: true, feedback: true, clarify: true, suggest: true, center: false });
+    expect(parseTraceArgs(["--weak", "hi"])).toEqual({ inputs: ["hi"], weak: true, adversarial: false, grounding: "retrieval", gatedGrammar: true, repair: true, feedback: true, clarify: true, suggest: true, center: false });
     expect(parseTraceArgs(["--adversarial", "--model", "acme/z-1", "hi"])).toEqual({
       inputs: ["hi"],
       model: "acme/z-1",
@@ -178,6 +178,7 @@ describe("parseTraceArgs keeps the entry point straight-line", () => {
       repair: true,
       feedback: true,
       clarify: true,
+      suggest: true,
       center: false,
     });
   });

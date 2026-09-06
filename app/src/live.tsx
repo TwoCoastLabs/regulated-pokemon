@@ -149,7 +149,7 @@ function chatItems(state: SessionState): ChatItem[] {
 
 /** A recorded page, mounted for real — same refusal-on-unmountable rule as
  * the ledger's exhibit: what is on screen must be what the record can say. */
-function Page(props: { artifact: DomElement }) {
+function Page(props: { artifact: DomElement; onSuggest?: (text: string) => void }) {
   const [refusal, setRefusal] = useState<string | null>(null);
   // Progressive disclosure: the answer leads, the reassurance ceremony (the
   // "Your certified answer / every value was checked" header) is folded behind
@@ -184,7 +184,20 @@ function Page(props: { artifact: DomElement }) {
         </span>
       </button>
       {refusal !== null && <p class="exhibit-refusal">{refusal}</p>}
-      <div class="exhibit-page" ref={attach} />
+      {/* The suggestion register (R3b step 4) is plain list items on the
+          certified page — the mount allows no button — so the click is the
+          page's: a suggestion clicked is said back as the trainer's own
+          words, exactly as if typed. Live only under the latest answer. */}
+      <div
+        class={`exhibit-page${props.onSuggest === undefined ? "" : " suggestions-live"}`}
+        ref={attach}
+        onClick={(event) => {
+          if (props.onSuggest === undefined) return;
+          const item = (event.target as HTMLElement | null)?.closest("[data-suggestion]");
+          const said = item?.textContent?.trim() ?? "";
+          if (said !== "") props.onSuggest(said);
+        }}
+      />
     </figure>
   );
 }
@@ -205,7 +218,7 @@ function Role(props: { who: "you" | "advisor" }) {
   return <span class={`live-role ${props.who}`}>{props.who === "you" ? "You" : "Advisor"}</span>;
 }
 
-function RecordItem(props: { record: Transaction; page: DomElement | undefined }) {
+function RecordItem(props: { record: Transaction; page: DomElement | undefined; onSuggest?: (text: string) => void }) {
   const { record, page } = props;
   const outcome = record.outcome;
   if (outcome.status === "denied") {
@@ -234,7 +247,7 @@ function RecordItem(props: { record: Transaction; page: DomElement | undefined }
   return (
     <div class="live-item advisor">
       <Role who="advisor" />
-      {page !== undefined && <Page artifact={page} />}
+      {page !== undefined && <Page artifact={page} {...(props.onSuggest === undefined ? {} : { onSuggest: props.onSuggest })} />}
       {/* The certified badge already carries the reassurance for a plain
           answer; only an act or a decline needs a word about what happened. */}
       {(outcome.status === "acted" || outcome.status === "declined") && (
@@ -404,6 +417,9 @@ export function Live() {
       // Clarification (R3b step 3): the model may ask with typed options, a
       // pick binds, and the pack's scope question is phrased by the model.
       clarify: true,
+      // Follow-up suggestions (R3b step 4): a next step beside every answer,
+      // in a register the page labels as the Advisor's own, uncertified.
+      suggest: true,
       ...(retrievalOn ? { retrieval: true } : {}),
       ...(gatedOn ? { gatedGrammar: true } : {}),
     };
@@ -798,7 +814,7 @@ export function Live() {
                   </div>
                 );
               case "record":
-                return <RecordItem record={item.record} page={item.page} />;
+                return <RecordItem record={item.record} page={item.page} {...(latest && !busy ? { onSuggest: pick } : {})} />;
               default:
                 return null;
             }

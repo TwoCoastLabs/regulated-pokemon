@@ -4069,6 +4069,185 @@ the stop cannot say yet: whether a question the trainer sees as warm is
 one they answer — `picked` versus `ignored` on real visitors is the live
 page's to accumulate.
 
+### R3b step 4: a next step beside every answer, the model's own and uncertified (2026-09-06)
+
+**What landed.** The answer grammar gains a `suggest` entry — up to three
+short questions the trainer might ask next — behind `SessionDeps.suggest`
+(on in the live page and the tracer, off in the banks). A suggestion is
+not a claim and is never certified; it is *shown*, so it travels in the
+manifest and renders on the certified page in one labelled register: a
+`suggestions` unit whose lead-in is the pack's own copy ("the Advisor's
+own ideas, not certified") and whose items carry a `data-suggestion` mark
+the walker attributes to the model. The affidavit swears to the register's
+visibility like any unit's, and the verifier holds each mark to the
+manifest's text by equality — a reworded, extra, missing or hidden
+suggestion, or a mark outside the register, is refused by name under IA-6.
+The one rule the register lives by, *a suggestion names a topic, never a
+value*, is one function at two gates: the driver drops a suggestion with a
+digit or a certified id (species, move, item or type) so a bad one never
+costs a certified answer, and the kernel refuses any that reaches a
+manifest (IA-2 `suggestion-states-value`, `suggestion-names-subject`). The
+live page makes the latest answer's items clickable — a click says the
+question back as the trainer's own words, counted as `taken`. The
+text-closure rule now reads: a certified value, an approved disclosure, a
+catalogued string, or — inside the one register labelled for it — a
+suggested question held to the record by equality. Nothing else.
+
+**Dogfood stop 3, by tracer and by raw-reply dump, strong model
+(qwen3-235b) unless noted.** Two rounds, because the first prompt wording
+broke something.
+
+| ask | wording | what came back | suggestions |
+|---|---|---|---|
+| "how fast is Pikachu?" (profile set) | "you may add up to three follow-up questions" | Speed certified; three suggestions kept ("how does its speed compare to others?", "what moves benefit from high speed?", "can it outspeed most Pokémon?") | 3/3 kept |
+| same, weak model (mistral-nemo), 3 runs | any | Speed certified; no suggest entry written | 0 |
+| "what's a gym badge?" cold, 2 runs | "every answer ends with a next step" | the listing nomination refused, then the lesson — **no suggestions** | 0 |
+| "what's a gym badge?" cold, 4 runs | "every answer ends with a next step — a fact, a lesson, a matchup and a nomination alike" | **broken:** after the refused nomination the model answered with an `action` claim — `add-to-team` on the entity `what-is-badge` — and the exchange fell to the ladder, which proposed `badgeLevel=0` from "gym badge". `--no-suggest` on the same ask: the lesson, 2 calls | — |
+| "what's a gym badge?" cold, 3 runs | "ONE entry listing two or three QUESTIONS the trainer might want to ask you next" | the listing nomination refused, then the lesson, every run — no suggestions | 0 |
+| "how fast is Pikachu?" cold, 2 runs | same | Speed linked and claimed; a suggest entry in 1 of 2 ("how does its speed compare to others?", "what moves take advantage of high speed?", "does speed affect who goes first in battle?") | 3/3 kept in the one |
+| "how does its speed compare to others?" as a follow-up | same | fact + catalogue ranking, three suggestions kept | 3/3 |
+| "tell me about Pikachu" (profile set), 3 runs | any | the profile nomination or nine facts; no suggestions | 0 |
+
+**What the stop found.** (1) *The wording is load-bearing in a way the
+grammar is not.* "Ends with a next step" made the strong model emit an
+`action` — the one claim kind whose name means "do something next" — on a
+lesson id, four runs out of four; the same grammar with the sentence
+reworded around "questions" taught the lesson four of four. The kernel
+would have refused the act (IA-3, an uncertified entity) had scope been
+granted; what actually happened was worse for the trainer — the ladder
+read the lesson ask as scope wording and proposed a badge count from the
+word "badge", the R2 hazard the deflected-profile door was built against,
+reached by a new path. Filed as a finding rather than a fix because the
+fix is a sentence, and the lesson is that the register's prompt must
+describe *questions*, never *steps* or *actions*. (2) *The strong model
+attaches suggestions to plain fact answers about half the time and to
+lessons and nominations not at all* (fact 2 of 3 first-turn runs, lesson 0
+of 7, nomination 0 of 3; the weak model 0 of 3). Every suggestion that
+was written passed the guard — three of three, three of three, three of
+three — so the guard has not yet been seen to fire on a live reply; the
+scripted tests are what prove it. (3) *The listing nomination on "what's
+a gym badge?"* — `prior-roster`, one member — came back first on **every**
+one of nine runs, refused each time, and cost the route-door-closed retry
+each time. It predates this step and is step 5's business: the door is
+now measurably the most-misused one on the porch.
+
+**The honest reading.** The mechanism is complete and proven where it can
+be proven — the register renders, attests, replays and refuses drift; the
+guard drops and the kernel refuses by name; a click is a recorded
+utterance. Whether "every answer offers a next step" is met is the model's
+to deliver and the bank leg's to count, and on today's samples the strong
+model delivers it for facts and not for lessons. `suggestions.{offered,
+kept, dropped, taken}` are the numbers the leg reads; `taken` on real
+visitors is the live page's to accumulate.
+
+**Dogfood stop 3, live page, the same morning — a three-ask train wreck,
+read from the dev trace.** Strong model, profile set (five badges).
+"Tell me about the game" taught the what-is-game lesson. "What is a
+Pokemon" was answered with **Bulbasaur and a count of 151**: the model
+nominated `{listing, catalogue, n: 1}`, the door's bareness reading found
+nothing in "what is a pokemon" that qualified a set, and a one-member
+catalogue listing was certified where the what-is-pokemon lesson was the
+answer. "That's not what I asked, but tell me more about this specie" —
+meaning Bulbasaur, the one name on the page — came back as
+"this specie" → `pikachu` → `none` with twelve Pikachu facts beside it:
+the facts fell as off the ask (the R1 check doing its job — a certified
+Pikachu profile for "this species" would have been a wrong-subject
+certificate), but the null link on a certified id then taught the
+records' boundary *about Pikachu*, a Pokémon nobody had mentioned. No
+suggestion was offered on any of the three; 4 calls, $0.0018.
+
+Three causes, each closed with a scripted test. (1) *An enumeration of one
+is not an enumeration:* the listing executor refuses `n < 2`, so the
+route-door-closed retry asks the model for the answer it meant — the
+nomination's own argument carries what the bareness reading cannot see,
+and the same `n: 1` shape had come back first on every one of nine "what's
+a gym badge?" tracer runs. (2) *The antecedent of "this" is as often the
+advisor's last answer as the trainer's last sentence:* an anaphoric ask is
+now shown the certified subjects of the previous filed answer, read from
+the record and labelled as the answer's — the model had been shown only
+the trainer's earlier words, and "this specie" after a Bulbasaur page had
+no Bulbasaur in its prompt. (3) *A subject the model supplied from nowhere
+is not the records' boundary:* the boundary lesson now requires the null
+link's subject to be one the trainer named in the exchange or was just
+shown; otherwise the reply is the anaphoric redirect ("name the Pokémon
+you mean"), which is what the ask deserved. On the tracer afterwards:
+"what type is Bulbasaur?" then "tell me more about this specie" gave
+Bulbasaur's types and then **Bulbasaur's nine-fact profile** (1 call,
+$0.0005) — the antecedent read from the record did what the trainer's
+words could not. The wrecked thread's first replay gave the lesson, the
+lesson, and the anaphoric redirect; its second exposed a fourth cause on
+the middle ask. (4) *The lesson in the wrong variant:* with the listing
+refused, the model answered "what is a Pokemon" with a claim on the
+**entity** `what-is-pokemon` — an action once, a fact on the
+verifier-in-the-loop retry — denied twice as IA-3/fabricated-entity and
+filed as a denial where the lesson was the answer (3 calls, $0.0009;
+enforcement held, the trainer got nothing). The id comes from the prompt's
+closed lesson list and names nothing else, so the shape meant is
+unambiguous: a fact, action or recommendation whose subject is a lesson id
+the registry never certifies now folds to that explanation at decode, the
+way a self-comparison folds to its fact — propose-side, deterministic,
+counted in `folds`, and verified by the kernel like any lesson. The
+feedback retry, carrying the denial by name, had not cured it: a named
+denial tells the model *what* was wrong, and this model kept choosing the
+wrong variant for the right id. Two replays of the whole thread after the
+fold: the lesson, the lesson, the anaphoric redirect, both times — and in
+one of the two, both lessons carried three suggestions each ("how do I
+catch a Pokémon?", "what are types for?"), six of six past the guard, the
+first lessons seen to; in the other, none. That is the rate the bank leg
+measures, and it is not zero.
+
+**Attribution, kept apart.** Enforcement held on every turn — nothing false
+was certified, and the one fabrication was refused twice by name. The
+failures were shape and usefulness, and they split as follows.
+
+*Model errors:* nominated a one-member catalogue listing for a concept
+question (a shape mistake, not a fact mistake); invented Pikachu as the
+subject of "this specie" when given no antecedent; wrote the lesson id as
+an entity, twice, and did not correct it when the denial was named; offered
+no suggestion on any of the three asks.
+
+*Harness factors:* the listing door certified the model's shape mistake
+because its only guard was the lexical bareness reading and a
+route-composed draft bypasses the schema-linking check (a remaining
+dispatch door, step 5's business); the prompt never showed the model the
+page the trainer was reading, only the trainer's words (a context gap); the
+boundary decision trusted the model's own `entityId` in the mapping after
+the same mapping's facts had just been dropped (a trust gap); the suggest
+instruction's earlier "next step" wording had primed the action variant
+(a prompt factor). Two of the four causes were the harness's alone, one was
+shared, and one was the model's with the prompt contributing.
+
+**Dogfood stop 3, second thread, the same day — a dead end on the model's
+own suggestion.** Profile set (four badges). "Tell me about the game" took
+two calls and thirty seconds (12 s, then 18 s — the provider, not the
+kernel): the first reply was four listing nominations, `n` = 1 to 4,
+refused; the second the lesson with three suggestions ("what is the
+game?", "how do I play?", "what are Pokémon?"). The trainer clicked the
+third — `taken` = 1 — and got a dead end: a one-member catalogue listing,
+refused; then an `action` on the entity `none`, dropped at linking as a
+claim about no subject; nothing left, so the redirect — worded "I lost the
+thread of that one", for a question with no thread in it. 4 calls, $0.0011.
+
+*Model errors:* nominated the catalogue listing, `n` = 1, for a concept
+question twice more (that shape is now the porch's signature failure);
+answered the retry with an action on no subject where the what-is-pokemon
+lesson was the answer; and suggested a question it then could not answer.
+
+*Harness factors:* the driver emptied the reply and threw the signal away
+— the kernel's denials had been carried back to the model since R3b's
+first slice, the driver's own refusals never were (a loop gap); and the
+redirect read the ask as anaphoric because it names no certified subject,
+when anaphora needs a word that points back (a wording gap). Both closed
+with tests: a reply the driver empties — every claim dropped as off the
+ask or about no subject, where the model had written something — is now
+carried back once with the refusal in fixed wording (`driver/no-subject`,
+`driver/off-ask`), on both hops, counted under `feedbackRetries` with the
+code in `feedbackDenials`; a reply the model itself left empty is not
+(nothing to correct). "I lost the thread" now requires an anaphor in the
+ask. And a suggestion taken that dead-ends — exchange closed, no record,
+nothing left open — is counted (`suggestions.deadEnded`), the worst next
+step there is, so the bank leg can read it.
+
 ## Appendix — how to reproduce
 
 ```sh

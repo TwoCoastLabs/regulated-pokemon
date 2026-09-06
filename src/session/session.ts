@@ -45,11 +45,11 @@ import type {
   Violation,
 } from "../kernel/contracts.js";
 import { type DomElement, walkArtifact } from "../kernel/dom.js";
-import type { ManifestContext, ManifestDraft } from "../kernel/manifest.js";
+import { type ManifestContext, type ManifestDraft, MAX_SUGGESTIONS, suggestionProblem } from "../kernel/manifest.js";
 import type { AccordPack } from "../kernel/pack.js";
 import { planRender } from "../kernel/render.js";
 import type { CertifiedRegistry } from "../kernel/registry.js";
-import { restrictionsFor } from "../kernel/pack.js";
+import { NO_FIELD, restrictionsFor } from "../kernel/pack.js";
 import { clauseTexts, deriveScope, resolveScope, type ScopeContext, unmatchedClauses } from "../kernel/scope.js";
 import { requiredDimensionsFor } from "../kernel/scope-deps.js";
 import { buildRoster } from "../kernel/roster.js";
@@ -129,6 +129,19 @@ export interface SessionDeps {
    * live page and the tracer, off in the banks until their leg.
    */
   clarify?: boolean;
+  /**
+   * Follow-up suggestions (docs/routing.md, R3b step 4): the model may offer
+   * up to three questions the trainer might ask next, beside its claims.
+   * Not claims — a suggestion asserts nothing — and shown on the certified
+   * page in a register the pack labels as the Advisor's own, uncertified,
+   * which the affidavit attributes to the model. Held to one rule at two
+   * gates: a suggestion names a topic, never a value (no digit, no certified
+   * id) — the driver drops offenders here ({@link SessionState.suggestions}
+   * counts them) and the kernel refuses any that reach a manifest. Off by
+   * default — on in the live page and the tracer, off in the banks until
+   * their leg.
+   */
+  suggest?: boolean;
 }
 
 /** The advisor's own clarifying question, as recorded. */
@@ -249,6 +262,15 @@ export interface SessionState {
    * linking gauge.
    */
   clarification: { asked: number; picked: number; ignored: number; capped: number; phrased: number; unphrased: number };
+  /**
+   * The suggestion register's gauge (R3b step 4): `offered` counts every
+   * follow-up the model wrote, `kept` the ones that passed the
+   * topic-not-value rule into a draft, `dropped` the ones it refused, and
+   * `taken` the trainer utterances that were one of the previous answer's
+   * suggestions, said back — the number that says whether a next step
+   * offered is a next step taken.
+   */
+  suggestions: { offered: number; kept: number; dropped: number; taken: number; deadEnded: number };
   /** Ladder proposals spent on the current ask; a fresh utterance resets it. */
   ladderTurns: number;
   /**
@@ -330,6 +352,7 @@ export function startSession(idPrefix?: string): SessionState {
     feedbackDenials: [],
     linking: { mapped: 0, unlinked: 0, offTargetDropped: 0, contradictions: 0, staleDropped: 0 },
     clarification: { asked: 0, picked: 0, ignored: 0, capped: 0, phrased: 0, unphrased: 0 },
+    suggestions: { offered: 0, kept: 0, dropped: 0, taken: 0, deadEnded: 0 },
     listingActivations: { consulted: 0, served: 0, stoodDown: 0, guardDropped: 0 },
     nominationRetries: 0,
     ladderTurns: 0,
@@ -477,7 +500,17 @@ function closeExchange(state: SessionState): SessionState {
  * the transport (this driver) is what assigns it — and the exchange advances. */
 export async function say(state: SessionState, text: string, deps: SessionDeps): Promise<SessionState> {
   const utterance: ScopeEvent = { kind: "utterance", at: deps.now(), source: "trainer", text };
-  const next = { ...state, transcript: [...state.transcript, utterance], ladderTurns: 0 };
+  // A suggestion said back (R3b step 4) — by click or by typing it — is
+  // counted as taken before anything reads it; it is then the trainer's own
+  // ask like any other, and nothing downstream treats it differently.
+  const offered = state.records[state.records.length - 1]?.manifest?.suggestions ?? [];
+  const taken = offered.some((suggestion) => suggestion.trim().toLowerCase() === text.trim().toLowerCase());
+  const next = {
+    ...state,
+    transcript: [...state.transcript, utterance],
+    ladderTurns: 0,
+    ...(taken ? { suggestions: { ...state.suggestions, taken: state.suggestions.taken + 1 } } : {}),
+  };
   // Social closes and the confidence question get their own words, before any
   // machinery runs (porch round five, 2026-09-01: "thanks!" and "are you
   // sure?" each re-ran the ladder and drew a stale card). Recorded like every
@@ -491,7 +524,13 @@ export async function say(state: SessionState, text: string, deps: SessionDeps):
       return note({ ...next, phase: open ? state.phase : { kind: "gathering" } }, deps.now(), social, "social");
     }
   }
-  return drive(next, deps);
+  const driven = await drive(next, deps);
+  // A suggestion the advisor offered and then could not answer is the worst
+  // next step there is (found live, 2026-09-06: "what are Pokémon?" was the
+  // model's own suggestion and dead-ended in a redirect). Counted: taken,
+  // exchange closed, no record and nothing left open for the trainer.
+  const deadEnded = taken && driven.records.length === state.records.length && driven.phase.kind === "gathering";
+  return deadEnded ? { ...driven, suggestions: { ...driven.suggestions, deadEnded: driven.suggestions.deadEnded + 1 } } : driven;
 }
 
 /**
@@ -696,7 +735,7 @@ async function drive(
    * live 2026-08-30: the ladder read "tell me about Pikachu" and proposed
    * version=yellow from nothing, and the confirmed card died at the gate as
    * IA-2/scope-version-mismatch). */
-  reuse?: Pick<ManifestDraft, "claims" | "rosters"> & { routed?: boolean },
+  reuse?: Pick<ManifestDraft, "claims" | "rosters" | "suggestions"> & { routed?: boolean },
 ): Promise<SessionState> {
   const { world, provider } = deps;
 
@@ -879,7 +918,7 @@ async function drive(
     state = attempt.state;
     if (attempt.result === "taught" || attempt.result === "closed") return state;
     if (attempt.result === "off-domain")
-      return redirect(state, deps, state.askStart > 0 && isAnaphoric(world, lastSaid.text));
+      return redirect(state, deps, pointsBack(world, state, lastSaid.text));
     // "needs-scope": gather exactly the dimensions the proposed claims depend
     // on. "unusable" (the model gave no readable shape): fall to a version
     // floor and let the answer-time escalation add anything more the eventual
@@ -896,7 +935,12 @@ async function drive(
       { ...state, required: nextRequired },
       deps,
       attempt.result === "needs-scope"
-        ? { claims: attempt.claims, rosters: attempt.rosters, ...(attempt.routed === true ? { routed: true } : {}) }
+        ? {
+            claims: attempt.claims,
+            rosters: attempt.rosters,
+            ...(attempt.suggestions === undefined ? {} : { suggestions: attempt.suggestions }),
+            ...(attempt.routed === true ? { routed: true } : {}),
+          }
         : undefined,
     );
   }
@@ -1123,6 +1167,26 @@ function isAnaphoric(world: SessionWorld, ask: string): boolean {
   return ![...world.registry.typeNames].some((type) => new RegExp(`\\b${type}\\b`).test(haystack));
 }
 
+/** Whether an off-domain reply to this ask should ask for the antecedent
+ * by name: the ask names nothing, and there was an earlier ask for "it" to
+ * point back at — a profile set first is not one. */
+function pointsBack(world: SessionWorld, state: SessionState, ask: string): boolean {
+  const earlier = state.transcript.slice(0, state.askStart).some((event) => event.kind === "utterance" && event.source === "trainer");
+  // An ask points back only if it carries a word that does — "it", "this
+  // one", "them". Found live (dogfood, 2026-09-06): "what are Pokémon?"
+  // names no certified subject and so read as anaphoric, and the trainer
+  // was told "I lost the thread" of a question with no thread in it.
+  const tokens = ask.toLowerCase().split(/[^a-z0-9']+/);
+  return earlier && isAnaphoric(world, ask) && tokens.some((token) => ANAPHORS.has(token));
+}
+
+/** Words that point back at something said or shown — English function
+ * words, never a domain word (the gate holds this file). */
+const ANAPHORS: ReadonlySet<string> = new Set([
+  "it", "its", "it's", "this", "that", "these", "those", "they", "them", "their", "theirs",
+  "he", "she", "him", "her", "his", "hers", "one", "ones", "same", "former", "latter", "more",
+]);
+
 function anaphorContext(world: SessionWorld, state: SessionState, ask: string): readonly string[] | undefined {
   if (state.askStart === 0) return undefined;
   if (!isAnaphoric(world, ask)) return undefined;
@@ -1131,6 +1195,29 @@ function anaphorContext(world: SessionWorld, state: SessionState, ask: string): 
     .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
     .slice(-3);
   return prior.length === 0 ? undefined : prior;
+}
+
+/**
+ * What the previous certified answer was about, for an anaphoric ask —
+ * "tell me more about this species" right after a page that showed
+ * Bulbasaur (found live, dogfood 2026-09-06: the model was shown the
+ * trainer's earlier words and not the answer they were reading, invented
+ * Pikachu, and every fact fell as off the ask). The antecedent of "this"
+ * is as often the advisor's last answer as the trainer's last sentence.
+ * Read from the filed record — the certified subjects, never the model's
+ * unverified reply — and offered as context, labelled as the answer's,
+ * never as the trainer's words (IA-8). Species, moves and items only: a
+ * type on a matchup page is a value, not a subject.
+ */
+function previousSubjects(world: SessionWorld, state: SessionState, ask: string): readonly string[] | undefined {
+  if (!isAnaphoric(world, ask)) return undefined;
+  const last = [...state.records].reverse().find((record) => record.manifest !== undefined);
+  if (last?.manifest === undefined) return undefined;
+  const ids = last.manifest.claims.flatMap((claim) => subjectsOfClaim(claim).map(canonicalId));
+  const certified = [...new Set(ids)].filter(
+    (id) => world.registry.speciesIds.includes(id) || world.registry.moveIds.includes(id) || world.registry.itemIds.includes(id),
+  );
+  return certified.length === 0 ? undefined : certified.slice(0, 12);
 }
 
 /**
@@ -1334,6 +1421,8 @@ async function teachOrDiscover(
   /** The decoded rosters beside the claims, so a needs-scope draft can be
    * reused whole once the scope it named turns out to be already granted. */
   rosters: Pick<ManifestDraft, "rosters">["rosters"];
+  /** The follow-ups that passed the guard, riding with the draft (R3b step 4). */
+  suggestions?: readonly string[];
   /** True when a deterministic route composed the claims (the deflected
    * profile) — the ladder is then skipped for the scope they require. */
   routed?: boolean;
@@ -1353,6 +1442,7 @@ async function teachOrDiscover(
     .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
     .join(" ");
   const previously = anaphorContext(world, state, askWords);
+  const about = previousSubjects(world, state, askWords);
 
   let step: AnswerStep;
   let stepUsage: Usage;
@@ -1367,11 +1457,13 @@ async function teachOrDiscover(
         transactionId,
         transcript: state.transcript.slice(state.askStart),
         ...(previously === undefined ? {} : { previously }),
+        ...(about === undefined ? {} : { previousSubjects: about }),
         ...(routes === undefined ? {} : { routes }),
         ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
         ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
         ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
         ...(deps.clarify === undefined ? {} : { clarify: deps.clarify }),
+        ...(deps.suggest === undefined ? {} : { suggest: deps.suggest }),
       }),
     ));
   } catch {
@@ -1395,14 +1487,55 @@ async function teachOrDiscover(
     // waved away.
     return { state: spent, result: step.decode.reason === NO_CLAIMS_REASON ? "off-domain" : "unusable", claims: [], rosters: [] };
   }
-  let spentFolded = { ...spent, folds: spent.folds + step.decode.folds };
+  // Narrowed once; the emptied-reply round below may replace it.
+  let decode: Extract<AnswerDecode, { ok: true }> = step.decode;
+  let spentFolded = { ...spent, folds: spent.folds + decode.folds };
   // The schema linking, read before anything else the reply carried (R3b):
   // the claims are held to the fields the model linked, an alias
   // contradiction becomes a question, and an ask linked to no field is the
   // records' boundary — taught as the pack's lesson, grantless, with the
   // trainer's own phrase named.
-  const linked = applyLinking(world, spentFolded, deps, step.decode);
+  let linked = applyLinking(world, spentFolded, deps, decode, deps.feedback === true);
   spentFolded = linked.state;
+  if (linked.verdict === "retry") {
+    // The driver emptied the discovery reply: the same one round the answer
+    // hop takes, here before any scope is gathered.
+    let again: AnswerStep | undefined;
+    try {
+      again = await proposeAnswer({
+        provider,
+        context: bare,
+        scenarioId: "session",
+        transactionId,
+        transcript: state.transcript.slice(state.askStart),
+        ...(previously === undefined ? {} : { previously }),
+        ...(about === undefined ? {} : { previousSubjects: about }),
+        feedback: linked.feedback ?? [],
+        ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
+        ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
+        ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
+        ...(deps.clarify === undefined ? {} : { clarify: deps.clarify }),
+        ...(deps.suggest === undefined ? {} : { suggest: deps.suggest }),
+      });
+    } catch {
+      spentFolded = { ...spentFolded, providerErrors: spentFolded.providerErrors + 1 };
+    }
+    spentFolded = {
+      ...spentFolded,
+      feedbackRetries: spentFolded.feedbackRetries + 1,
+      feedbackDenials: [...spentFolded.feedbackDenials, ...(linked.feedback ?? []).filter((line) => line.startsWith("driver/")).map((line) => line.split(":")[0]!)],
+    };
+    if (again !== undefined) {
+      spentFolded = { ...spentFolded, usage: addUsage(spentFolded.usage, again.usage), folds: spentFolded.folds + (again.decode.ok ? again.decode.folds : 0) };
+      if (!again.decode.ok) {
+        return { state: spentFolded, result: again.decode.reason === NO_CLAIMS_REASON ? "off-domain" : "unusable", claims: [], rosters: [] };
+      }
+      decode = again.decode;
+    }
+    linked = applyLinking(world, spentFolded, deps, decode, false);
+    spentFolded = linked.state;
+    if (linked.verdict === "retry") throw new Error("unreachable: an un-retryable linking asked to retry");
+  }
   // "clarifying" leaves the exchange open on the advisor's question — the
   // caller returns the state as it stands, the trainer's pick drives it on.
   if (linked.verdict === "closed" || linked.verdict === "clarifying") return { state: spentFolded, result: "closed", claims: [], rosters: [] };
@@ -1410,16 +1543,22 @@ async function teachOrDiscover(
   if (linked.verdict === "boundary") {
     return { state: teachRecordsBoundary(spentFolded, deps, transactionId, establishedAt), result: "taught", claims: [], rosters: [], routed: true };
   }
-  const draft: ManifestDraft = { ...step.decode.draft, claims: linked.claims };
+  // The follow-ups the model offered ride with whatever this hop composes
+  // (R3b step 4), guarded once here; a route-composed or profile draft keeps
+  // them too — the next step is about the subject, not the shape.
+  const suggested = withSuggestions(world, spentFolded, deps, decode, { ...decode.draft, claims: linked.claims });
+  spentFolded = suggested.state;
+  const draft: ManifestDraft = suggested.draft;
+  const carry = draft.suggestions === undefined ? {} : { suggestions: draft.suggestions };
   // A nomination outranks whatever else the reply carried: the model chose a
   // door, the door composes, the kernel judges. Invalid ones fall through to
   // exactly the flow a nomination-free reply takes.
-  if (step.decode.route !== undefined) {
-    const composed = executeRoute(world, state, step.decode.route);
-    const isListing = step.decode.route.routeId === "listing";
+  if (decode.route !== undefined) {
+    const composed = executeRoute(world, state, decode.route);
+    const isListing = decode.route.routeId === "listing";
     if (composed !== undefined) {
       const tallied = isListing ? tallyListing(spentFolded, "served") : spentFolded;
-      return { state: tallied, result: "needs-scope", claims: composed.claims, rosters: composed.rosters, routed: true };
+      return { state: tallied, result: "needs-scope", claims: composed.claims, rosters: composed.rosters, ...carry, routed: true };
     }
     if (isListing) spentFolded = tallyListing(spentFolded, "stoodDown");
     // A refused nomination with nothing beside it is the empty reply it
@@ -1433,22 +1572,55 @@ async function teachOrDiscover(
   // goes through scope like any personalized answer would have.
   const profile = deflectedProfileClaims(world, askWords, draft.claims);
   if (profile.length > 0) {
-    return { state: spentFolded, result: "needs-scope", claims: profile, rosters: [], routed: true };
+    return { state: spentFolded, result: "needs-scope", claims: profile, rosters: [], ...carry, routed: true };
   }
   // Under lessonsOnly, anything that reads the registry — a fact, a game
   // rule, any roster — is the caller's to answer, not this path's to commit:
   // the kernel would refuse it across the version boundary by name.
   if (lessonsOnly && (draft.claims.some((claim) => claim.kind !== "explanation") || draft.rosters.length > 0)) {
-    return { state: spentFolded, result: "needs-scope", claims: draft.claims, rosters: draft.rosters };
+    return { state: spentFolded, result: "needs-scope", claims: draft.claims, rosters: draft.rosters, ...carry };
   }
   // Commit grantless when nothing in the draft depends on scope — a lesson, a
   // game-rule constant, the same answer for every trainer (epic #64). Derived
   // from the one dependency table, so this never drifts from what the kernel's
   // own scope gate will allow grantless.
   if (requiredDimensionsFor(draft.claims).length === 0) {
-    return { state: commit(spentFolded, deps, { transactionId, establishedAt, draft }), result: "taught", claims: draft.claims, rosters: draft.rosters };
+    return { state: commit(spentFolded, deps, { transactionId, establishedAt, draft }), result: "taught", claims: draft.claims, rosters: draft.rosters, ...carry };
   }
-  return { state: spentFolded, result: "needs-scope", claims: draft.claims, rosters: draft.rosters };
+  return { state: spentFolded, result: "needs-scope", claims: draft.claims, rosters: draft.rosters, ...carry };
+}
+
+/**
+ * The follow-ups a reply offered, guarded into the draft (R3b step 4). Each
+ * is held to the kernel's own topic-not-value rule before it can reach a
+ * manifest — the gate downstream would refuse the whole answer for one bad
+ * suggestion, and a dropped follow-up should never cost a certified answer —
+ * deduplicated, and capped at {@link MAX_SUGGESTIONS}. Counted either way.
+ * With the door shut, whatever a reply carried is stripped: the register
+ * exists only where a page labels it.
+ */
+function withSuggestions(
+  world: SessionWorld,
+  state: SessionState,
+  deps: SessionDeps,
+  decode: Extract<AnswerDecode, { ok: true }>,
+  draft: ManifestDraft,
+): { state: SessionState; draft: ManifestDraft } {
+  const { suggestions: _carried, ...bare } = draft;
+  if (deps.suggest !== true) return { state, draft: bare };
+  if (decode.suggestions === undefined) return { state, draft };
+  const gauge = { ...state.suggestions, offered: state.suggestions.offered + decode.suggestions.length };
+  const kept: string[] = [];
+  for (const suggestion of decode.suggestions) {
+    const duplicate = kept.some((entry) => entry.toLowerCase() === suggestion.toLowerCase());
+    if (kept.length >= MAX_SUGGESTIONS || duplicate || suggestionProblem(world.registry, suggestion) !== undefined) {
+      gauge.dropped += 1;
+      continue;
+    }
+    kept.push(suggestion);
+  }
+  gauge.kept += kept.length;
+  return { state: { ...state, suggestions: gauge }, draft: kept.length === 0 ? bare : { ...bare, suggestions: kept } };
 }
 
 /** The listing gauge, now over nominations alone: `consulted` counts every
@@ -1679,6 +1851,15 @@ function executeRoute(
     const qualified = qualifiedSet(world, currentAsk);
     const qualifies = typesNamed.length === 1 || (qualified !== undefined && qualified.criteria.all.length > 0);
     const roster = route.subject === "prior-roster" && !qualifies ? (priorRoster(state) ?? qualified) : qualified;
+    // An enumeration of one is not an enumeration. Found live (dogfood,
+    // 2026-09-06): "what is a Pokemon" drew a catalogue listing with n = 1
+    // and was served Bulbasaur and a count where the what-is-pokemon lesson
+    // was the answer; the tracer had shown the same shape — listing,
+    // prior-roster, n = 1 — on every one of nine "what's a gym badge?" runs.
+    // The bareness reading cannot see it (the ask is lexically bare); the
+    // nomination's own argument can. Refused, so the route-door-closed retry
+    // asks the model for the answer it meant.
+    if (typeof route.n === "number" && Number.isFinite(route.n) && route.n < 2) return undefined;
     const n = typeof route.n === "number" && Number.isFinite(route.n) && route.n > 0 ? route.n : 10;
     return composeListing(roster, n);
   }
@@ -1724,7 +1905,17 @@ function applyLinking(
   state: SessionState,
   deps: SessionDeps,
   decode: Extract<AnswerDecode, { ok: true }>,
-): { state: SessionState; claims: readonly Claim[]; verdict: "proceed" | "closed" | "boundary" | "off-domain" | "clarifying" } {
+  /** Whether a reply this step empties may be carried back to the model
+   * once, the refusal named ({@link SessionDeps.feedback}); false on the
+   * retry itself, so the loop is one round. */
+  retryable = false,
+): {
+  state: SessionState;
+  claims: readonly Claim[];
+  verdict: "proceed" | "closed" | "boundary" | "off-domain" | "clarifying" | "retry";
+  /** For `retry`: the refusal in fixed wording, one line per reason. */
+  feedback?: readonly string[];
+} {
   // The model asked instead of answering (R3b step 3). A nomination like any
   // other: the options are typed against the dictionary and the registry,
   // the chain is capped, and the question is a recorded event the trainer
@@ -1843,14 +2034,26 @@ function applyLinking(
   // off-domain question taught the boundary lesson; and by dogfood the
   // same evening: "tell me about this" drew the boundary note AND the
   // redirect, because the note was written before this was checked).
+  // ...and a subject the trainer actually named — in this exchange's words
+  // or on the page they were just reading. A certified id the model supplied
+  // from nowhere is the fabricated-subject class in the mapping's clothes:
+  // found live (dogfood, 2026-09-06), "tell me more about this specie" after
+  // two lessons drew "this specie" → pikachu → none, twelve Pikachu facts
+  // dropped as off the ask, and the boundary lesson taught about a Pokémon
+  // nobody had mentioned. With no named subject the reply is the anaphoric
+  // redirect it always was: name what you mean.
+  const exchangeWords = ` ${trainerWords(state.transcript.slice(state.askStart)).toLowerCase()} `;
+  const shown = previousSubjects(world, state, trainerWords(state.transcript.slice(state.askStart))) ?? [];
+  const namedByTrainer = (id: string): boolean =>
+    shown.includes(id) || new RegExp(`\\b${id.split("-").join("[\\s-]?").replace(/\./g, "\\.")}\\b`).test(exchangeWords);
   const aboutRecords = unavailable.some((entry) => {
-    const id = entry.entityId.toLowerCase().trim();
-    return (
+    const id = canonicalId(entry.entityId);
+    const certified =
       world.registry.speciesIds.includes(id) ||
       world.registry.moveIds.includes(id) ||
       world.registry.itemIds.includes(id) ||
-      world.registry.typeNames.has(id)
-    );
+      world.registry.typeNames.has(id);
+    return certified && namedByTrainer(id);
   });
   if (unavailable.length > 0 && !answersRemain && aboutRecords) {
     // The phrase is the model's span of the ask; when it already names the
@@ -1879,6 +2082,29 @@ function applyLinking(
   }
 
   if (linked.claims.length === 0 && decode.route === undefined) {
+    // The driver emptied a reply the model meant as an answer — every claim
+    // dropped as off the ask or about no subject — and until now threw the
+    // signal away, the way the kernel's denials once were. Found live
+    // (dogfood, 2026-09-06): "what are Pokémon?", the model's own suggested
+    // follow-up, came back as an action on the entity "none", was emptied,
+    // and dead-ended in a redirect where the what-is-pokemon lesson was the
+    // answer. One round, the refusal named in fixed wording, the second
+    // reply read by exactly this step with the door shut; a reply the model
+    // itself left empty (no claim at all) is not carried back — it said
+    // nothing, and there is nothing to correct.
+    const emptied = decode.draft.claims.length > 0 && !aboutRecords;
+    if (retryable && emptied) {
+      const reasons = [
+        ...(decode.draft.claims.some((claim) => "entityId" in claim && canonicalId(claim.entityId) === NO_FIELD)
+          ? [`driver/no-subject: a claim named "${NO_FIELD}" as its subject — a claim needs a certified subject, or none should be made`]
+          : []),
+        ...(linked.dropped > 0
+          ? [`driver/off-ask: ${linked.dropped} claim(s) were about a field the mapping did not link, or a subject not asked about`]
+          : []),
+        "If a reviewed lesson squarely answers the question, teach that lesson; if a certified subject and field answer it, name them and link the field; otherwise reply with no claims at all.",
+      ];
+      return { state: next, claims: [], verdict: "retry", feedback: reasons };
+    }
     if (unavailable.length > 0) return { state: next, claims: [], verdict: aboutRecords ? "boundary" : "off-domain" };
     if (asked.length === 0) {
       // Every link was stale: the reply answered the earlier exchanges and
@@ -2188,7 +2414,7 @@ function teachBoundary(state: SessionState, deps: SessionDeps): SessionState {
 async function answer(
   state: SessionState,
   deps: SessionDeps,
-  reuse?: Pick<ManifestDraft, "claims" | "rosters"> & { routed?: boolean },
+  reuse?: Pick<ManifestDraft, "claims" | "rosters" | "suggestions"> & { routed?: boolean },
 ): Promise<SessionState> {
   const { world, provider } = deps;
   const transactionId = nextTransactionId(state);
@@ -2221,6 +2447,7 @@ async function answer(
     .flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []))
     .join(" ");
   const previously = anaphorContext(world, state, currentAsk);
+  const about = previousSubjects(world, state, currentAsk);
   // The exchange's FIRST utterance — the ask — is what the set guards read:
   // later utterances answer the pack's questions ("Red and Blue") and would
   // unbare it. (The listing cue door that read it here is gone — R3b, see
@@ -2244,7 +2471,12 @@ async function answer(
     // it to the fields the model linked, and a route composes its own shape.
     step = {
       usage: emptyUsage(),
-      decode: { ok: true as const, draft: { transactionId, claims: reuse.claims, rosters: reuse.rosters }, folds: 0, asked: [] },
+      decode: {
+        ok: true as const,
+        draft: { transactionId, claims: reuse.claims, rosters: reuse.rosters, ...(reuse.suggestions === undefined ? {} : { suggestions: reuse.suggestions }) },
+        folds: 0,
+        asked: [],
+      },
     };
   } else {
     try {
@@ -2258,11 +2490,15 @@ async function answer(
           // transcript, but the answer should be responsive to the current words.
           transcript: state.transcript.slice(state.askStart),
           ...(previously === undefined ? {} : { previously }),
+          ...(about === undefined ? {} : { previousSubjects: about }),
+        ...(about === undefined ? {} : { previousSubjects: about }),
           ...(routes === undefined ? {} : { routes }),
           ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
           ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
           ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
           ...(deps.clarify === undefined ? {} : { clarify: deps.clarify }),
+          ...(deps.suggest === undefined ? {} : { suggest: deps.suggest }),
+        ...(deps.suggest === undefined ? {} : { suggest: deps.suggest }),
         }),
       );
       // Both calls' usage rides on the step; the retry is counted below.
@@ -2293,7 +2529,48 @@ async function answer(
   const openingWords = openingAsk?.kind === "utterance" ? openingAsk.text : currentAsk;
   const exchange = { transactionId, establishedAt };
 
-  const groomed = groom(world, withUsage, deps, step, currentAsk, openingWords, exchange);
+  let groomed = groom(world, withUsage, deps, step, currentAsk, openingWords, exchange, reuse === undefined && deps.feedback === true);
+  let carriedBack = false;
+  if (groomed.kind === "retry") {
+    // The driver emptied the reply: one more call with the refusal named,
+    // the door shut, groomed once more with no further retry (R3b, the
+    // verifier-in-the-loop round, extended to the driver's own refusals).
+    withUsage = groomed.state;
+    let again: AnswerStep | undefined;
+    try {
+      again = await proposeAnswer({
+        provider,
+        context,
+        scenarioId: "session",
+        transactionId,
+        transcript: state.transcript.slice(state.askStart),
+        ...(previously === undefined ? {} : { previously }),
+        ...(about === undefined ? {} : { previousSubjects: about }),
+        feedback: groomed.feedback,
+        ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
+        ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
+        ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
+        ...(deps.clarify === undefined ? {} : { clarify: deps.clarify }),
+        ...(deps.suggest === undefined ? {} : { suggest: deps.suggest }),
+      });
+    } catch {
+      withUsage = { ...withUsage, providerErrors: withUsage.providerErrors + 1 };
+    }
+    withUsage = {
+      ...withUsage,
+      feedbackRetries: withUsage.feedbackRetries + 1,
+      feedbackDenials: [...withUsage.feedbackDenials, ...groomed.feedback.filter((line) => line.startsWith("driver/")).map((line) => line.split(":")[0]!)],
+    };
+    carriedBack = true;
+    if (again === undefined) {
+      // The provider failed on the round: the first reply's honest reading stands.
+      groomed = groom(world, withUsage, deps, step, currentAsk, openingWords, exchange, false);
+    } else {
+      withUsage = { ...withUsage, usage: addUsage(withUsage.usage, again.usage), folds: withUsage.folds + (again.decode.ok ? again.decode.folds : 0) };
+      groomed = groom(world, withUsage, deps, again, currentAsk, openingWords, exchange, false);
+    }
+    if (groomed.kind === "retry") throw new Error("unreachable: an un-retryable groom asked to retry");
+  }
   if (groomed.kind === "settled") return groomed.state;
   withUsage = groomed.state;
 
@@ -2325,7 +2602,7 @@ async function answer(
   // is exactly the porch's "what's a gym badge?" dying on its first round —
   // only at the answer stage, never for the repair's own class, and never
   // with the route door open: a nomination is not a correction.
-  if (reuse?.routed !== true && deps.feedback === true && feedbackEligible(ran.record)) {
+  if (reuse?.routed !== true && deps.feedback === true && !carriedBack && feedbackEligible(ran.record)) {
     const violations = ran.record.outcome.status === "denied" ? ran.record.outcome.violations : [];
     const codes = violations.map(denialCode);
     let again: AnswerStep | undefined;
@@ -2337,11 +2614,13 @@ async function answer(
         transactionId,
         transcript: state.transcript.slice(state.askStart),
         ...(previously === undefined ? {} : { previously }),
+        ...(about === undefined ? {} : { previousSubjects: about }),
         feedback: violations.map((item) => `${denialCode(item)}: ${item.message}`),
         ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
         ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
         ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
         ...(deps.clarify === undefined ? {} : { clarify: deps.clarify }),
+        ...(deps.suggest === undefined ? {} : { suggest: deps.suggest }),
       });
     } catch {
       // The first denial is a complete, honest record; a provider that fails
@@ -2356,8 +2635,9 @@ async function answer(
         feedbackRetries: withUsage.feedbackRetries + 1,
         feedbackDenials: [...withUsage.feedbackDenials, ...codes],
       };
-      const regroomed = groom(world, withUsage, deps, again, currentAsk, openingWords, exchange);
+      const regroomed = groom(world, withUsage, deps, again, currentAsk, openingWords, exchange, false);
       if (regroomed.kind === "settled") return regroomed.state;
+      if (regroomed.kind === "retry") throw new Error("unreachable: an un-retryable groom asked to retry");
       withUsage = regroomed.state;
       if (unbound(regroomed.draft).length > 0) {
         return drive({ ...withUsage, required: requiredDimensionsFor(regroomed.draft.claims) }, deps);
@@ -2378,7 +2658,11 @@ function feedbackEligible(record: Transaction): boolean {
   return !violations.every((item) => item.article === "IA-2" && item.rule === "fact-mismatch");
 }
 
-type Groomed = { kind: "settled"; state: SessionState } | { kind: "draft"; state: SessionState; draft: ManifestDraft };
+type Groomed =
+  | { kind: "settled"; state: SessionState }
+  | { kind: "draft"; state: SessionState; draft: ManifestDraft }
+  /** The driver emptied the reply; carry the refusal back once. */
+  | { kind: "retry"; state: SessionState; feedback: readonly string[] };
 
 /**
  * One answer-step reply, made into the draft the seam will judge — or the
@@ -2399,6 +2683,8 @@ function groom(
   ask: string,
   openingWords: string,
   exchange: { transactionId: string; establishedAt: string },
+  /** Whether an emptied reply may be carried back once (see {@link applyLinking}). */
+  retryable = false,
 ): Groomed {
   const { transactionId, establishedAt } = exchange;
   const honestPass = (withNote: SessionState, detail: string): Groomed => ({
@@ -2421,10 +2707,13 @@ function groom(
     return { kind: "draft", state, draft: { transactionId, claims: routed, rosters: [] } };
   }
 
-  const linked = applyLinking(world, state, deps, step.decode);
+  const linked = applyLinking(world, state, deps, step.decode, retryable);
   state = linked.state;
+  if (linked.verdict === "retry") return { kind: "retry", state, feedback: linked.feedback ?? [] };
   if (linked.verdict === "closed" || linked.verdict === "clarifying") return { kind: "settled", state };
-  if (linked.verdict === "off-domain") return { kind: "settled", state: redirect(state, deps) };
+  // The anaphoric redirect names what is missing — the antecedent — the way
+  // the discovery hop's does; the answer hop had fallen to the generic menu.
+  if (linked.verdict === "off-domain") return { kind: "settled", state: redirect(state, deps, pointsBack(world, state, ask)) };
   if (linked.verdict === "boundary") return { kind: "settled", state: teachRecordsBoundary(state, deps, transactionId, establishedAt) };
   const decode = { ...step.decode, draft: { ...step.decode.draft, claims: linked.claims } };
 
@@ -2465,7 +2754,10 @@ function groom(
       : routed.length === 0
         ? groomed
         : { ...groomed, claims: [...groomed.claims, ...routed] };
-  return { kind: "draft", state, draft };
+  // Last, the follow-ups (R3b step 4): guarded onto whatever shape the
+  // guards settled on, so a next step rides with every certified answer.
+  const suggested = withSuggestions(world, state, deps, decode, draft);
+  return { kind: "draft", state: suggested.state, draft: suggested.draft };
 }
 
 /**

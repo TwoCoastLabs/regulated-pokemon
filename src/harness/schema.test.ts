@@ -304,3 +304,14 @@ describe("the clarify variant (R3b step 3) is offered only through the open door
     expect(fieldIds).toEqual([...world.pack.dictionary.map((entry) => entry.id), "none"]);
   });
 });
+
+describe("the suggest variant (R3b step 4) is offered only through the open door", () => {
+  const kinds = (schema: Record<string, unknown>): string[] => {
+    const claims = (schema.properties as Record<string, { items: { anyOf: Array<{ properties: { kind: { enum: string[] } } }> } }>).claims!;
+    return claims.items.anyOf.map((entry) => entry.properties.kind.enum[0]!);
+  };
+  it("is absent by default and present when asked for", () => {
+    expect(kinds(answerSchema(world.pack))).not.toContain("suggest");
+    expect(kinds(answerSchema(world.pack, undefined, false, undefined, undefined, false, true))).toContain("suggest");
+  });
+});

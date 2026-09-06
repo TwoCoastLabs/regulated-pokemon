@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 
 import type { AnswerManifest, Claim, ClosedRoster } from "./contracts.js";
 import { digestText } from "./digest.js";
-import { compileManifest, type ManifestContext, requiredExhibits, verifyManifest } from "./manifest.js";
+import { compileManifest, type ManifestContext, requiredExhibits, suggestionProblem, verifyManifest } from "./manifest.js";
 import { buildRoster } from "./roster.js";
 import { denialCode } from "./violation.js";
 import { COMMIT_TIME, manifestContext, trainerGrant } from "../testing/fixtures.js";
@@ -658,4 +658,42 @@ it("a grantless draft naming an eligibility leaves the finding underived and ref
   const result = compile([{ kind: "eligibility", entityId: "mewtwo" }], [], bare);
   expect(result.ok).toBe(false);
   if (!result.ok) expect(result.violations.map(denialCode)).toEqual(["IA-1/scope-not-established"]);
+});
+
+describe("follow-up suggestions (R3b step 4): a suggestion names a topic, never a value", () => {
+  const withSuggestions = (suggestions: readonly string[]) =>
+    compileManifest(context, { transactionId: "txn-suggest", claims: [PIKACHU_SPEED], rosters: [], suggestions });
+  const denials = (suggestions: readonly string[]): string[] => {
+    const result = withSuggestions(suggestions);
+    return result.ok ? [] : result.violations.map(denialCode);
+  };
+
+  it("carries well-formed suggestions through compile and verify, and replays them by equality", () => {
+    const compiled = withSuggestions(["What is it weak to?", "How does it evolve?"]);
+    expect(compiled.ok).toBe(true);
+    if (compiled.ok) {
+      expect(compiled.value.suggestions).toEqual(["What is it weak to?", "How does it evolve?"]);
+      expect(verifyManifest(context, compiled.value).allowed).toBe(true);
+    }
+    // None offered: the field is absent, as every filed manifest before it.
+    const none = compileManifest(context, { transactionId: "txn-none", claims: [PIKACHU_SPEED], rosters: [], suggestions: [] });
+    expect(none.ok && none.value.suggestions).toBeUndefined();
+  });
+
+  it("refuses a number, a certified id of any kind, a duplicate, an empty one, and more than three — each by name", () => {
+    expect(denials(["Does it reach 90?"])).toEqual(["IA-2/suggestion-states-value"]);
+    expect(denials(["Is it faster than Raichu?"])).toEqual(["IA-2/suggestion-names-subject"]);
+    expect(denials(["Does it learn Thunderbolt?"])).toEqual(["IA-2/suggestion-names-subject"]);
+    expect(denials(["Is it weak to fire?"])).toEqual(["IA-2/suggestion-names-subject"]);
+    expect(denials(["What is it weak to?", "what is it weak to?"])).toEqual(["IA-6/suggestion-duplicated"]);
+    expect(denials(["   "])).toEqual(["IA-6/suggestion-malformed"]);
+    expect(denials(["a", "b", "c", "d"])).toContain("IA-6/suggestions-too-many");
+  });
+
+  it("suggestionProblem is the one rule both gates read", () => {
+    expect(suggestionProblem(context.registry, "What is it weak to?")).toBeUndefined();
+    expect(suggestionProblem(context.registry, "Where can I catch Mr. Mime?")).toBe('names the certified id "mr-mime"');
+    expect(suggestionProblem(context.registry, "How many types are there? 15?")).toBe("states a number");
+    expect(suggestionProblem(context.registry, "x".repeat(121))).toBe("longer than 120 characters");
+  });
 });

@@ -464,6 +464,19 @@ export interface AnswerManifest {
   locale: string;
   claims: readonly Claim[];
   /**
+   * Follow-up questions the advisor suggests the trainer might ask next
+   * (epic #145, R3b step 4). Not claims: a suggestion asserts nothing — it
+   * is a question the trainer may ask — so nothing here is certified and
+   * nothing is recomputed. It is in the manifest because it is *shown*: the
+   * artifact renders it in a labelled register the affidavit attributes to
+   * the model, uncertified, and the record carries exactly what the trainer
+   * saw. Guarded structurally (`checkSuggestions`): a suggestion may name a
+   * topic and never a value — no digit, no certified id — and a manifest
+   * that breaks that is refused by name, so the register can never smuggle
+   * an uncertified fact onto a certified page. Absent when none were made.
+   */
+  suggestions?: readonly string[];
+  /**
    * Every roster a claim cites, carried in the record rather than referenced
    * out of it. A count whose set lives elsewhere cannot be recomputed at
    * verification time and cannot be replayed at all (IA-10) — it would have to
