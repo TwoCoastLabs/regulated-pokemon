@@ -230,6 +230,7 @@ function narrate(before: SessionState, after: SessionState): string[] {
     lines.push(`  [suggest] ${suggesting.dropped - suggestedBefore.dropped} follow-up(s) dropped for stating a value or naming a certified id`);
   }
   if (suggesting.taken > suggestedBefore.taken) lines.push("  [suggest] the trainer took a suggested follow-up");
+  if (suggesting.deadEnded > suggestedBefore.deadEnded) lines.push("  [suggest] the suggested follow-up dead-ended — no record, nothing left open");
 
   lines.push(`  [phase] ${describePhase(after)}`);
   return lines;
@@ -350,7 +351,7 @@ function summary(state: SessionState): string {
       ? `, scope questions ${state.clarification.phrased} phrased/${state.clarification.unphrased} pack-worded`
       : "") +
     (state.suggestions.offered > 0
-      ? `, suggestions ${state.suggestions.offered} offered/${state.suggestions.kept} kept/${state.suggestions.dropped} dropped/${state.suggestions.taken} taken`
+      ? `, suggestions ${state.suggestions.offered} offered/${state.suggestions.kept} kept/${state.suggestions.dropped} dropped/${state.suggestions.taken} taken/${state.suggestions.deadEnded} dead-ended`
       : "") +
     ", " +
     `${usage.calls} model call(s), $${usage.costUsd.toFixed(4)}${floor}`

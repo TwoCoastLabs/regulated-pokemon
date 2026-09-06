@@ -161,3 +161,10 @@ describe("aliasContradiction — R3, the dictionary's words can only make the sy
     expect(aliasContradiction(world.pack, world.registry, [{ phrase: "hyper", entityId: "pikachu", fieldId: "base-speed" }])).toBeUndefined();
   });
 });
+
+describe("the reserved no-subject is dropped before the mapping is read", () => {
+  it("drops a claim about the entity none even when the mapping is empty — a stale-dropped mapping once let one through (dogfood, 2026-09-06)", () => {
+    const aboutNothing: Claim = { kind: "fact", entityId: "none", factId: "types" };
+    expect(linkClaims([], [aboutNothing, speed])).toEqual({ claims: [speed], dropped: 1 });
+  });
+});

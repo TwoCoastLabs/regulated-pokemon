@@ -2419,7 +2419,7 @@ describe("R3b step 4: follow-up suggestions — a next step beside every answer,
     const record = state.records[state.records.length - 1]!;
     expect(record.outcome.status).toBe("answered");
     expect(record.manifest?.suggestions).toBeUndefined();
-    expect(state.suggestions).toEqual({ offered: 0, kept: 0, dropped: 0, taken: 0 });
+    expect(state.suggestions).toEqual({ offered: 0, kept: 0, dropped: 0, taken: 0, deadEnded: 0 });
   });
 
   it("the answer reached through the version question carries suggestions too", async () => {
@@ -2589,5 +2589,85 @@ describe("dogfood stop 3, the second cause: a subject the model supplied from no
     after = await say(after, "how tall is it?", s);
     expect(after.records[1]?.manifest?.claims).toEqual([{ kind: "explanation", blockId: world.pack.recordsBoundary?.lessonId }]);
     expect(after.notes.some((n) => n.text.includes('"how tall" for bulbasaur'))).toBe(true);
+  });
+});
+
+describe("dogfood stop 3, the dead end (2026-09-06): a reply the driver emptied is carried back once", () => {
+  const PROFILE_SCOPE = { version: "red-blue", region: "kanto", badgeLevel: 4 } as const;
+  const noSubject = JSON.stringify({
+    asked: [{ phrase: "the question", entityId: "none", fieldId: "none" }],
+    rosters: [],
+    claims: [{ kind: "action", tool: "add-to-team", entityId: "none" }],
+  });
+  const lesson = JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-pokemon" }] });
+
+  function emptiedThenTeaching(): { provider: ModelProvider; prompts: string[] } {
+    const prompts: string[] = [];
+    const provider = new ScriptedProvider("emptied", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      prompts.push(request.prompt);
+      return request.prompt.includes("driver/no-subject") ? lesson : noSubject;
+    });
+    return { provider, prompts };
+  }
+
+  it("on the answer hop: the refusal is named, the second reply teaches, and the round is counted as a feedback retry", async () => {
+    const { provider, prompts } = emptiedThenTeaching();
+    const d: SessionDeps = { ...deps(provider), feedback: true };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "what are Pokémon?", d);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-pokemon" }]);
+    expect(state.feedbackRetries).toBe(1);
+    expect(state.feedbackDenials).toEqual(["driver/no-subject", "driver/off-ask"]);
+    expect(prompts[1]).toContain('a claim named "none" as its subject');
+    expect(state.usage.calls).toBe(2);
+    expect(verifyReplay(world, record).allowed).toBe(true);
+  });
+
+  it("on the discovery hop too, before any scope is gathered", async () => {
+    const { provider } = emptiedThenTeaching();
+    const state = await say(startSession(), "what are Pokémon?", { ...deps(provider), feedback: true });
+    expect(state.records[0]?.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-pokemon" }]);
+    expect(state.feedbackRetries).toBe(1);
+  });
+
+  it("a reply the model itself left empty is not carried back — there is nothing to correct", async () => {
+    const empty = JSON.stringify({ asked: [{ phrase: "the weather", entityId: "weather", fieldId: "none" }], rosters: [], claims: [] });
+    const provider = scripted("empty", (purpose) => (purpose === "scope" ? "decline" : empty));
+    const d: SessionDeps = { ...deps(provider), feedback: true };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "what's the weather like?", d);
+    expect(state.records).toHaveLength(0);
+    expect(state.feedbackRetries).toBe(0);
+    expect(state.usage.calls).toBe(1);
+  });
+
+  it("with feedback off the emptied reply falls to the redirect — and 'lost the thread' only for an ask that points back", async () => {
+    const provider = scripted("stuck", (purpose) => (purpose === "scope" ? "decline" : noSubject));
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "tell me about the game", d);
+    state = await say(state, "what are Pokémon?", d);
+    expect(state.notes[state.notes.length - 1]?.text).toContain("couldn't line that up");
+    state = await say(state, "what are they good for?", d);
+    expect(state.notes[state.notes.length - 1]?.text).toContain("I lost the thread");
+  });
+
+  it("a suggestion taken and then dead-ended is counted", async () => {
+    let calls = 0;
+    const provider = new ScriptedProvider("dead-end", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      calls += 1;
+      return calls === 1
+        ? JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-game" }, { kind: "suggest", asks: ["what are Pokémon?"] }] })
+        : noSubject;
+    });
+    const d: SessionDeps = { ...deps(provider), suggest: true };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "tell me about the game", d);
+    state = await say(state, "what are Pokémon?", d);
+    expect(state.suggestions).toMatchObject({ taken: 1, deadEnded: 1 });
   });
 });

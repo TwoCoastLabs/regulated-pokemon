@@ -49,7 +49,7 @@ import { type ManifestContext, type ManifestDraft, MAX_SUGGESTIONS, suggestionPr
 import type { AccordPack } from "../kernel/pack.js";
 import { planRender } from "../kernel/render.js";
 import type { CertifiedRegistry } from "../kernel/registry.js";
-import { restrictionsFor } from "../kernel/pack.js";
+import { NO_FIELD, restrictionsFor } from "../kernel/pack.js";
 import { clauseTexts, deriveScope, resolveScope, type ScopeContext, unmatchedClauses } from "../kernel/scope.js";
 import { requiredDimensionsFor } from "../kernel/scope-deps.js";
 import { buildRoster } from "../kernel/roster.js";
@@ -270,7 +270,7 @@ export interface SessionState {
    * suggestions, said back — the number that says whether a next step
    * offered is a next step taken.
    */
-  suggestions: { offered: number; kept: number; dropped: number; taken: number };
+  suggestions: { offered: number; kept: number; dropped: number; taken: number; deadEnded: number };
   /** Ladder proposals spent on the current ask; a fresh utterance resets it. */
   ladderTurns: number;
   /**
@@ -352,7 +352,7 @@ export function startSession(idPrefix?: string): SessionState {
     feedbackDenials: [],
     linking: { mapped: 0, unlinked: 0, offTargetDropped: 0, contradictions: 0, staleDropped: 0 },
     clarification: { asked: 0, picked: 0, ignored: 0, capped: 0, phrased: 0, unphrased: 0 },
-    suggestions: { offered: 0, kept: 0, dropped: 0, taken: 0 },
+    suggestions: { offered: 0, kept: 0, dropped: 0, taken: 0, deadEnded: 0 },
     listingActivations: { consulted: 0, served: 0, stoodDown: 0, guardDropped: 0 },
     nominationRetries: 0,
     ladderTurns: 0,
@@ -524,7 +524,13 @@ export async function say(state: SessionState, text: string, deps: SessionDeps):
       return note({ ...next, phase: open ? state.phase : { kind: "gathering" } }, deps.now(), social, "social");
     }
   }
-  return drive(next, deps);
+  const driven = await drive(next, deps);
+  // A suggestion the advisor offered and then could not answer is the worst
+  // next step there is (found live, 2026-09-06: "what are Pokémon?" was the
+  // model's own suggestion and dead-ended in a redirect). Counted: taken,
+  // exchange closed, no record and nothing left open for the trainer.
+  const deadEnded = taken && driven.records.length === state.records.length && driven.phase.kind === "gathering";
+  return deadEnded ? { ...driven, suggestions: { ...driven.suggestions, deadEnded: driven.suggestions.deadEnded + 1 } } : driven;
 }
 
 /**
@@ -1166,8 +1172,20 @@ function isAnaphoric(world: SessionWorld, ask: string): boolean {
  * point back at — a profile set first is not one. */
 function pointsBack(world: SessionWorld, state: SessionState, ask: string): boolean {
   const earlier = state.transcript.slice(0, state.askStart).some((event) => event.kind === "utterance" && event.source === "trainer");
-  return earlier && isAnaphoric(world, ask);
+  // An ask points back only if it carries a word that does — "it", "this
+  // one", "them". Found live (dogfood, 2026-09-06): "what are Pokémon?"
+  // names no certified subject and so read as anaphoric, and the trainer
+  // was told "I lost the thread" of a question with no thread in it.
+  const tokens = ask.toLowerCase().split(/[^a-z0-9']+/);
+  return earlier && isAnaphoric(world, ask) && tokens.some((token) => ANAPHORS.has(token));
 }
+
+/** Words that point back at something said or shown — English function
+ * words, never a domain word (the gate holds this file). */
+const ANAPHORS: ReadonlySet<string> = new Set([
+  "it", "its", "it's", "this", "that", "these", "those", "they", "them", "their", "theirs",
+  "he", "she", "him", "her", "his", "hers", "one", "ones", "same", "former", "latter", "more",
+]);
 
 function anaphorContext(world: SessionWorld, state: SessionState, ask: string): readonly string[] | undefined {
   if (state.askStart === 0) return undefined;
@@ -1469,14 +1487,55 @@ async function teachOrDiscover(
     // waved away.
     return { state: spent, result: step.decode.reason === NO_CLAIMS_REASON ? "off-domain" : "unusable", claims: [], rosters: [] };
   }
-  let spentFolded = { ...spent, folds: spent.folds + step.decode.folds };
+  // Narrowed once; the emptied-reply round below may replace it.
+  let decode: Extract<AnswerDecode, { ok: true }> = step.decode;
+  let spentFolded = { ...spent, folds: spent.folds + decode.folds };
   // The schema linking, read before anything else the reply carried (R3b):
   // the claims are held to the fields the model linked, an alias
   // contradiction becomes a question, and an ask linked to no field is the
   // records' boundary — taught as the pack's lesson, grantless, with the
   // trainer's own phrase named.
-  const linked = applyLinking(world, spentFolded, deps, step.decode);
+  let linked = applyLinking(world, spentFolded, deps, decode, deps.feedback === true);
   spentFolded = linked.state;
+  if (linked.verdict === "retry") {
+    // The driver emptied the discovery reply: the same one round the answer
+    // hop takes, here before any scope is gathered.
+    let again: AnswerStep | undefined;
+    try {
+      again = await proposeAnswer({
+        provider,
+        context: bare,
+        scenarioId: "session",
+        transactionId,
+        transcript: state.transcript.slice(state.askStart),
+        ...(previously === undefined ? {} : { previously }),
+        ...(about === undefined ? {} : { previousSubjects: about }),
+        feedback: linked.feedback ?? [],
+        ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
+        ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
+        ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
+        ...(deps.clarify === undefined ? {} : { clarify: deps.clarify }),
+        ...(deps.suggest === undefined ? {} : { suggest: deps.suggest }),
+      });
+    } catch {
+      spentFolded = { ...spentFolded, providerErrors: spentFolded.providerErrors + 1 };
+    }
+    spentFolded = {
+      ...spentFolded,
+      feedbackRetries: spentFolded.feedbackRetries + 1,
+      feedbackDenials: [...spentFolded.feedbackDenials, ...(linked.feedback ?? []).filter((line) => line.startsWith("driver/")).map((line) => line.split(":")[0]!)],
+    };
+    if (again !== undefined) {
+      spentFolded = { ...spentFolded, usage: addUsage(spentFolded.usage, again.usage), folds: spentFolded.folds + (again.decode.ok ? again.decode.folds : 0) };
+      if (!again.decode.ok) {
+        return { state: spentFolded, result: again.decode.reason === NO_CLAIMS_REASON ? "off-domain" : "unusable", claims: [], rosters: [] };
+      }
+      decode = again.decode;
+    }
+    linked = applyLinking(world, spentFolded, deps, decode, false);
+    spentFolded = linked.state;
+    if (linked.verdict === "retry") throw new Error("unreachable: an un-retryable linking asked to retry");
+  }
   // "clarifying" leaves the exchange open on the advisor's question — the
   // caller returns the state as it stands, the trainer's pick drives it on.
   if (linked.verdict === "closed" || linked.verdict === "clarifying") return { state: spentFolded, result: "closed", claims: [], rosters: [] };
@@ -1487,16 +1546,16 @@ async function teachOrDiscover(
   // The follow-ups the model offered ride with whatever this hop composes
   // (R3b step 4), guarded once here; a route-composed or profile draft keeps
   // them too — the next step is about the subject, not the shape.
-  const suggested = withSuggestions(world, spentFolded, deps, step.decode, { ...step.decode.draft, claims: linked.claims });
+  const suggested = withSuggestions(world, spentFolded, deps, decode, { ...decode.draft, claims: linked.claims });
   spentFolded = suggested.state;
   const draft: ManifestDraft = suggested.draft;
   const carry = draft.suggestions === undefined ? {} : { suggestions: draft.suggestions };
   // A nomination outranks whatever else the reply carried: the model chose a
   // door, the door composes, the kernel judges. Invalid ones fall through to
   // exactly the flow a nomination-free reply takes.
-  if (step.decode.route !== undefined) {
-    const composed = executeRoute(world, state, step.decode.route);
-    const isListing = step.decode.route.routeId === "listing";
+  if (decode.route !== undefined) {
+    const composed = executeRoute(world, state, decode.route);
+    const isListing = decode.route.routeId === "listing";
     if (composed !== undefined) {
       const tallied = isListing ? tallyListing(spentFolded, "served") : spentFolded;
       return { state: tallied, result: "needs-scope", claims: composed.claims, rosters: composed.rosters, ...carry, routed: true };
@@ -1846,7 +1905,17 @@ function applyLinking(
   state: SessionState,
   deps: SessionDeps,
   decode: Extract<AnswerDecode, { ok: true }>,
-): { state: SessionState; claims: readonly Claim[]; verdict: "proceed" | "closed" | "boundary" | "off-domain" | "clarifying" } {
+  /** Whether a reply this step empties may be carried back to the model
+   * once, the refusal named ({@link SessionDeps.feedback}); false on the
+   * retry itself, so the loop is one round. */
+  retryable = false,
+): {
+  state: SessionState;
+  claims: readonly Claim[];
+  verdict: "proceed" | "closed" | "boundary" | "off-domain" | "clarifying" | "retry";
+  /** For `retry`: the refusal in fixed wording, one line per reason. */
+  feedback?: readonly string[];
+} {
   // The model asked instead of answering (R3b step 3). A nomination like any
   // other: the options are typed against the dictionary and the registry,
   // the chain is capped, and the question is a recorded event the trainer
@@ -2013,6 +2082,29 @@ function applyLinking(
   }
 
   if (linked.claims.length === 0 && decode.route === undefined) {
+    // The driver emptied a reply the model meant as an answer — every claim
+    // dropped as off the ask or about no subject — and until now threw the
+    // signal away, the way the kernel's denials once were. Found live
+    // (dogfood, 2026-09-06): "what are Pokémon?", the model's own suggested
+    // follow-up, came back as an action on the entity "none", was emptied,
+    // and dead-ended in a redirect where the what-is-pokemon lesson was the
+    // answer. One round, the refusal named in fixed wording, the second
+    // reply read by exactly this step with the door shut; a reply the model
+    // itself left empty (no claim at all) is not carried back — it said
+    // nothing, and there is nothing to correct.
+    const emptied = decode.draft.claims.length > 0 && !aboutRecords;
+    if (retryable && emptied) {
+      const reasons = [
+        ...(decode.draft.claims.some((claim) => "entityId" in claim && canonicalId(claim.entityId) === NO_FIELD)
+          ? [`driver/no-subject: a claim named "${NO_FIELD}" as its subject — a claim needs a certified subject, or none should be made`]
+          : []),
+        ...(linked.dropped > 0
+          ? [`driver/off-ask: ${linked.dropped} claim(s) were about a field the mapping did not link, or a subject not asked about`]
+          : []),
+        "If a reviewed lesson squarely answers the question, teach that lesson; if a certified subject and field answer it, name them and link the field; otherwise reply with no claims at all.",
+      ];
+      return { state: next, claims: [], verdict: "retry", feedback: reasons };
+    }
     if (unavailable.length > 0) return { state: next, claims: [], verdict: aboutRecords ? "boundary" : "off-domain" };
     if (asked.length === 0) {
       // Every link was stale: the reply answered the earlier exchanges and
@@ -2437,7 +2529,48 @@ async function answer(
   const openingWords = openingAsk?.kind === "utterance" ? openingAsk.text : currentAsk;
   const exchange = { transactionId, establishedAt };
 
-  const groomed = groom(world, withUsage, deps, step, currentAsk, openingWords, exchange);
+  let groomed = groom(world, withUsage, deps, step, currentAsk, openingWords, exchange, reuse === undefined && deps.feedback === true);
+  let carriedBack = false;
+  if (groomed.kind === "retry") {
+    // The driver emptied the reply: one more call with the refusal named,
+    // the door shut, groomed once more with no further retry (R3b, the
+    // verifier-in-the-loop round, extended to the driver's own refusals).
+    withUsage = groomed.state;
+    let again: AnswerStep | undefined;
+    try {
+      again = await proposeAnswer({
+        provider,
+        context,
+        scenarioId: "session",
+        transactionId,
+        transcript: state.transcript.slice(state.askStart),
+        ...(previously === undefined ? {} : { previously }),
+        ...(about === undefined ? {} : { previousSubjects: about }),
+        feedback: groomed.feedback,
+        ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
+        ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
+        ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
+        ...(deps.clarify === undefined ? {} : { clarify: deps.clarify }),
+        ...(deps.suggest === undefined ? {} : { suggest: deps.suggest }),
+      });
+    } catch {
+      withUsage = { ...withUsage, providerErrors: withUsage.providerErrors + 1 };
+    }
+    withUsage = {
+      ...withUsage,
+      feedbackRetries: withUsage.feedbackRetries + 1,
+      feedbackDenials: [...withUsage.feedbackDenials, ...groomed.feedback.filter((line) => line.startsWith("driver/")).map((line) => line.split(":")[0]!)],
+    };
+    carriedBack = true;
+    if (again === undefined) {
+      // The provider failed on the round: the first reply's honest reading stands.
+      groomed = groom(world, withUsage, deps, step, currentAsk, openingWords, exchange, false);
+    } else {
+      withUsage = { ...withUsage, usage: addUsage(withUsage.usage, again.usage), folds: withUsage.folds + (again.decode.ok ? again.decode.folds : 0) };
+      groomed = groom(world, withUsage, deps, again, currentAsk, openingWords, exchange, false);
+    }
+    if (groomed.kind === "retry") throw new Error("unreachable: an un-retryable groom asked to retry");
+  }
   if (groomed.kind === "settled") return groomed.state;
   withUsage = groomed.state;
 
@@ -2469,7 +2602,7 @@ async function answer(
   // is exactly the porch's "what's a gym badge?" dying on its first round —
   // only at the answer stage, never for the repair's own class, and never
   // with the route door open: a nomination is not a correction.
-  if (reuse?.routed !== true && deps.feedback === true && feedbackEligible(ran.record)) {
+  if (reuse?.routed !== true && deps.feedback === true && !carriedBack && feedbackEligible(ran.record)) {
     const violations = ran.record.outcome.status === "denied" ? ran.record.outcome.violations : [];
     const codes = violations.map(denialCode);
     let again: AnswerStep | undefined;
@@ -2502,8 +2635,9 @@ async function answer(
         feedbackRetries: withUsage.feedbackRetries + 1,
         feedbackDenials: [...withUsage.feedbackDenials, ...codes],
       };
-      const regroomed = groom(world, withUsage, deps, again, currentAsk, openingWords, exchange);
+      const regroomed = groom(world, withUsage, deps, again, currentAsk, openingWords, exchange, false);
       if (regroomed.kind === "settled") return regroomed.state;
+      if (regroomed.kind === "retry") throw new Error("unreachable: an un-retryable groom asked to retry");
       withUsage = regroomed.state;
       if (unbound(regroomed.draft).length > 0) {
         return drive({ ...withUsage, required: requiredDimensionsFor(regroomed.draft.claims) }, deps);
@@ -2524,7 +2658,11 @@ function feedbackEligible(record: Transaction): boolean {
   return !violations.every((item) => item.article === "IA-2" && item.rule === "fact-mismatch");
 }
 
-type Groomed = { kind: "settled"; state: SessionState } | { kind: "draft"; state: SessionState; draft: ManifestDraft };
+type Groomed =
+  | { kind: "settled"; state: SessionState }
+  | { kind: "draft"; state: SessionState; draft: ManifestDraft }
+  /** The driver emptied the reply; carry the refusal back once. */
+  | { kind: "retry"; state: SessionState; feedback: readonly string[] };
 
 /**
  * One answer-step reply, made into the draft the seam will judge — or the
@@ -2545,6 +2683,8 @@ function groom(
   ask: string,
   openingWords: string,
   exchange: { transactionId: string; establishedAt: string },
+  /** Whether an emptied reply may be carried back once (see {@link applyLinking}). */
+  retryable = false,
 ): Groomed {
   const { transactionId, establishedAt } = exchange;
   const honestPass = (withNote: SessionState, detail: string): Groomed => ({
@@ -2567,8 +2707,9 @@ function groom(
     return { kind: "draft", state, draft: { transactionId, claims: routed, rosters: [] } };
   }
 
-  const linked = applyLinking(world, state, deps, step.decode);
+  const linked = applyLinking(world, state, deps, step.decode, retryable);
   state = linked.state;
+  if (linked.verdict === "retry") return { kind: "retry", state, feedback: linked.feedback ?? [] };
   if (linked.verdict === "closed" || linked.verdict === "clarifying") return { kind: "settled", state };
   // The anaphoric redirect names what is missing — the antecedent — the way
   // the discovery hop's does; the answer hop had fallen to the generic menu.

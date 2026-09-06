@@ -4217,6 +4217,37 @@ instruction's earlier "next step" wording had primed the action variant
 (a prompt factor). Two of the four causes were the harness's alone, one was
 shared, and one was the model's with the prompt contributing.
 
+**Dogfood stop 3, second thread, the same day — a dead end on the model's
+own suggestion.** Profile set (four badges). "Tell me about the game" took
+two calls and thirty seconds (12 s, then 18 s — the provider, not the
+kernel): the first reply was four listing nominations, `n` = 1 to 4,
+refused; the second the lesson with three suggestions ("what is the
+game?", "how do I play?", "what are Pokémon?"). The trainer clicked the
+third — `taken` = 1 — and got a dead end: a one-member catalogue listing,
+refused; then an `action` on the entity `none`, dropped at linking as a
+claim about no subject; nothing left, so the redirect — worded "I lost the
+thread of that one", for a question with no thread in it. 4 calls, $0.0011.
+
+*Model errors:* nominated the catalogue listing, `n` = 1, for a concept
+question twice more (that shape is now the porch's signature failure);
+answered the retry with an action on no subject where the what-is-pokemon
+lesson was the answer; and suggested a question it then could not answer.
+
+*Harness factors:* the driver emptied the reply and threw the signal away
+— the kernel's denials had been carried back to the model since R3b's
+first slice, the driver's own refusals never were (a loop gap); and the
+redirect read the ask as anaphoric because it names no certified subject,
+when anaphora needs a word that points back (a wording gap). Both closed
+with tests: a reply the driver empties — every claim dropped as off the
+ask or about no subject, where the model had written something — is now
+carried back once with the refusal in fixed wording (`driver/no-subject`,
+`driver/off-ask`), on both hops, counted under `feedbackRetries` with the
+code in `feedbackDenials`; a reply the model itself left empty is not
+(nothing to correct). "I lost the thread" now requires an anaphor in the
+ask. And a suggestion taken that dead-ends — exchange closed, no record,
+nothing left open — is counted (`suggestions.deadEnded`), the worst next
+step there is, so the bank leg can read it.
+
 ## Appendix — how to reproduce
 
 ```sh

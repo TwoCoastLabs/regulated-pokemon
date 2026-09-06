@@ -324,7 +324,14 @@ carried lesson answers.
   fact mismatch (the repair owns those), one more model call carrying the
   named violation in fixed wording and a pointer at what *is*
   representable — the closed lists the prompt already holds. A second
-  denial files as today. Counted as `feedbackRetries`, reported beside
+  denial files as today. *Extended 2026-09-06 to the driver's own
+  refusals:* a reply the linking step empties — every claim dropped as off
+  the ask or about no subject, where the model had written something — is
+  carried back the same way (`driver/no-subject`, `driver/off-ask`), on the
+  discovery hop as well as the answer hop; a reply the model itself left
+  empty is not, since there is nothing to correct. Still one round: the
+  second reply is read by the same step with no further retry, and the
+  kernel's own round does not run after it. Counted as `feedbackRetries`, reported beside
   `repairs` and `nominationRetries`; first-attempt, post-repair and
   post-feedback resolutions are never blended, so the enforcement number
   keeps measuring first attempts and the loop's credit is usefulness's.

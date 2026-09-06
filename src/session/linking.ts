@@ -99,9 +99,14 @@ export interface Linked {
  * nothing to anything, and the claims stand as they would have.
  */
 export function linkClaims(asked: readonly AskedField[], claims: readonly Claim[], rosters: readonly ClosedRoster[] = []): Linked {
-  if (asked.length === 0) return { claims, dropped: 0 };
+  // A claim about the reserved no-subject is the model saying it found no
+  // subject — dropped whatever the mapping says, and before the empty-mapping
+  // return below: found live (dogfood, 2026-09-06), a stale-dropped mapping
+  // left an action on the entity "none" standing, and it went to the kernel.
+  const withSubject = claims.filter((claim) => !("entityId" in claim && claim.entityId.toLowerCase().trim() === NO_FIELD));
+  if (asked.length === 0) return { claims: withSubject, dropped: claims.length - withSubject.length };
   const linked = new Set(asked.flatMap((entry) => (entry.fieldId === null ? [] : [entry.fieldId])));
-  const kept = claims.filter((claim) => {
+  const kept = withSubject.filter((claim) => {
     const fields = fieldsOfClaim(claim, rosters);
     if (fields.length === 0) return true;
     if (fields.some((field) => linked.has(field))) return true;
@@ -122,14 +127,10 @@ export function linkClaims(asked: readonly AskedField[], claims: readonly Claim[
   // type count and eight game rules. With a field linked, the ask was about
   // that field, and a constant beside it is the dump it looks like.
   const withoutConstants = linked.size === 0 ? kept : kept.filter((claim) => claim.kind !== "gameRule" && claim.kind !== "typeCount");
-  // A claim about the reserved no-subject is the model saying it found no
-  // subject — "tell me about this", dogfood 2026-09-05, came back as a fact
-  // about the entity "none", which the kernel rightly refused twice and
-  // filed as a denial page for a shapeless opener. The word is the
-  // grammar's own, so the check is structural: such a claim is dropped
-  // here and the empty reply falls to the redirect it deserves.
-  const withSubjects = withoutConstants.filter((claim) => !("entityId" in claim && claim.entityId.toLowerCase().trim() === NO_FIELD));
-  return { claims: withSubjects, dropped: claims.length - withSubjects.length };
+  // (The reserved no-subject — "tell me about this", dogfood 2026-09-05,
+  // a fact about the entity "none" refused twice by the kernel — is dropped
+  // at the top of this function, before any mapping is read.)
+  return { claims: withoutConstants, dropped: claims.length - withoutConstants.length };
 }
 
 export interface Fresh {
