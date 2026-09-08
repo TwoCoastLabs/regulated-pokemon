@@ -512,6 +512,26 @@ wrong order for a "feels dumb" problem.
    roster before any model saw the ask — a certified wrong shape the new
    R1 check could only have caught on the model path. Its executor and
    guards stay as the `listing` nomination; the gate read 77 after.*
+   *2026-09-06 — the baseline first, then the second door.* The bank could
+   not run the configuration the live page runs (`--clarify` and
+   `--suggest` were not threaded), so no leg after a deletion could have
+   named its door against steps 3 and 4; now it can, the truthful trainer
+   answers the model's question from the entry's oracle or says no option
+   is right, and the ceremony reader counts the model's questions apart
+   from the pack's (`clarifications`). Baseline on the strong model with
+   the live page's doors open: 103/137, answerable 64/79, enforcement 0.
+   Then **the deflected-profile dispatch went** — both hops; the profile
+   survives as the `profile` nomination — and the leg after read 103/137,
+   answerable 65/79, enforcement 0, with the deletion's own signature (a
+   lesson-only answer on an ask naming one species) seen 0 times in 79.
+   The legs found two harness classes in the model's questions instead: 15
+   of 25 nominated questions carried a single option (now two at least, or
+   the reply is read as the mapping beside it), and the alias cross-check
+   questioned a lesson linked to none about nothing (an alias is evidence
+   only against a certified subject now). Numbers in findings §19 ("R3b
+   step 5"). Remaining: the eligibility dispatch (needs a nominatable
+   route first), and the bareness and prior-roster readings, which are
+   guards inside the listing executor and may stay.
 6. **Both-model legs**, N=3 on the strong model, plus the reasoning-mode
    leg as an experiment; findings filed with `feedbackRetries` beside
    `repairs`; the gate at 0.

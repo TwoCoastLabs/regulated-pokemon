@@ -228,14 +228,22 @@ export function aliasContradiction(
 
 /** The subjects an entity id can be a field of, read from the registry: a
  * species has species fields and the type chart; a type name the chart
- * alone; an id the registry does not certify could be anything. */
+ * alone. An id the registry does not certify — the reserved none, a lesson
+ * id, a name it never heard — is a field of nothing, so no alias is
+ * evidence against its link. Found by the R3b step 5 leg (2026-09-06):
+ * "What is evolution?" came back as the what-is-evolution lesson with a
+ * null link and no subject, and the word "evolution" made the check ask
+ * "did you mean Evolves into?" — a question with no subject to answer it
+ * about, where the lesson was the answer. (Earlier this fell back to every
+ * subject, on the thought that an uncertified id could be anything; a
+ * field question with nothing to be about certifies nothing either way.) */
 function subjectsOf(registry: CertifiedRegistry, entityId: string): ReadonlySet<DictionarySubject> {
   const id = entityId.toLowerCase().trim();
   if (registry.speciesIds.includes(id)) return new Set(["species", "type"]);
   if (registry.moveIds.includes(id)) return new Set(["move"]);
   if (registry.itemIds.includes(id)) return new Set(["item"]);
   if (registry.typeNames.has(id)) return new Set(["type"]);
-  return new Set(["species", "move", "item", "type"]);
+  return new Set();
 }
 
 /** Whether a phrase carries an alias, word-bounded on letters and digits. */

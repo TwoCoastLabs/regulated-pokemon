@@ -16,7 +16,7 @@
  * from the record, exactly as replay reads.
  */
 
-import type { ScopeDimension, TrainerScope } from "../kernel/contracts.js";
+import type { ClarificationOption, ScopeDimension, TrainerScope } from "../kernel/contracts.js";
 import { deriveScope } from "../kernel/scope.js";
 import type { ModelProvider } from "./provider.js";
 import type { DemoWorld } from "../demo/script.js";
@@ -85,8 +85,43 @@ export interface BankRun {
   /** Field-bearing claims the schema linking dropped as off the asked fields
    * (R3b) — the substitution class, as a per-entry number. */
   offTargetDropped?: number;
+  /** The advisor's own questions on this run (R3b step 3), from the driver's
+   * gauge, and how the truthful trainer fared: `picked` when an option held
+   * the entry's truth, `ignored` when none did — the model asked a question
+   * whose answers did not include the right one — and `capped` when the
+   * driver refused a third. Present when the clarify door was open. */
+  clarified?: { asked: number; picked: number; ignored: number; capped: number };
+  /** Follow-up suggestions (R3b step 4): `shown` is read from the record —
+   * the certified answer's manifest — and `dropped` from the driver's gauge,
+   * the offenders the topic-not-value rule removed. Present when the suggest
+   * door was open. */
+  suggestions?: { shown: number; dropped: number };
   /** One human line on how it ended, for the report's detail column. */
   detail: string;
+}
+
+/** The dials a bank run threads to the session, all off by default so a
+ * scripted run in CI measures the bare spine. Each one that changes what the
+ * number means travels with the artifact. */
+export interface BankRunOptions {
+  /** Hand the proposer the whole certified registry to compose from. */
+  grounded?: boolean;
+  /** Ground with only the rows each question needs. */
+  retrieval?: boolean;
+  /** Narrow the answer grammar to the kinds each question nominates. */
+  gatedGrammar?: boolean;
+  /** Strip-assertion resubmit on an all-fact-mismatch denial (docs/recovery.md). */
+  repair?: boolean;
+  /** The trainer's profile set on the panel before the opener (epic #145, R2). */
+  profile?: boolean;
+  /** The verifier-in-the-loop retry (docs/routing.md, R3b). */
+  feedback?: boolean;
+  /** The model may ask its own clarifying question (R3b step 3); the truthful
+   * trainer answers it from the entry's oracle ({@link truthfulPick}). */
+  clarify?: boolean;
+  /** The model may offer follow-up suggestions (R3b step 4); the bank's
+   * trainer never takes one — what is measured is whether they are offered. */
+  suggest?: boolean;
 }
 
 /** A bank run still carrying the whole record behind its verdict — transcript,
@@ -119,6 +154,43 @@ export function profileWord(dimension: ScopeDimension, profile: TrainerScope): s
 function wantsAct(entry: BankEntry): boolean {
   return (entry.expectClaimKinds ?? []).includes("action");
 }
+
+/**
+ * What the truthful trainer says when the model asks which reading it meant
+ * (R3b step 3) — read from the entry's oracle, never from the options'
+ * wording (lesson 3: the simulated truthful user verifies every pinned
+ * dimension). A field option is right when the entry expects a fact in that
+ * field or ranks by it; a no-field option is right when the entry expects a
+ * lesson and no fact; a subject option is right when the oracle accepts that
+ * subject or the trainer's own question named it. The first right option is
+ * the pick. None right means the model asked a question whose answers do not
+ * include the truth, and the trainer says so ({@link NO_HONEST_PICK}) rather
+ * than guess — a pick from nothing would be the simulated user answering
+ * only the interesting dimension.
+ */
+export function truthfulPick(entry: BankEntry, opening: string, options: readonly ClarificationOption[]): ClarificationOption | undefined {
+  const facts = entry.expectFacts ?? [];
+  const kinds = entry.expectClaimKinds ?? [];
+  const fields = new Set([
+    ...facts.flatMap((fact) => (fact.factId === undefined ? [] : [fact.factId])),
+    ...(entry.profile.comparisonBasis === undefined ? [] : [entry.profile.comparisonBasis]),
+  ]);
+  const lessonOnly = kinds.includes("explanation") && !kinds.includes("fact") && facts.length === 0;
+  const named = (id: string): boolean => new RegExp(`(^|[^a-z0-9])${id.replace(/-/g, "[ -]")}([^a-z0-9]|$)`, "i").test(opening);
+  return options.find((option) =>
+    option.kind === "field"
+      ? option.fieldId === null
+        ? lessonOnly
+        : fields.has(option.fieldId)
+      : facts.some((fact) => fact.entityId === option.entityId) || named(option.entityId),
+  );
+}
+
+/** The truthful trainer's reply when no option is right. Plain words that
+ * carry no option label, field alias or subject name, so the driver reads
+ * it as no pick, restates once, and closes — the honest outcome of a
+ * question with no honest answer, at no model cost. */
+export const NO_HONEST_PICK = "neither of those";
 
 /**
  * The disposition oracle a scoring pass reads: the expected disposition, and —
@@ -239,6 +311,11 @@ async function play(entry: BankEntry, opening: string, deps: SessionDeps, profil
       // No ask, no consent: the trainer confirms an act only when it is the one
       // they came for, and declines a surprise — the honest-trainer discipline.
       state = await decideAct(state, acts ? "confirm" : "decline", deps);
+    } else if (phase.kind === "clarifying") {
+      // The model's own question (R3b step 3): answered from the oracle, or
+      // declined in plain words when no option holds the truth.
+      const pick = truthfulPick(entry, opening, phase.clarification.options);
+      state = await say(state, pick === undefined ? NO_HONEST_PICK : pick.label, deps);
     }
   }
   return state;
@@ -314,15 +391,24 @@ export async function runBankEntry(
   now: () => string,
   opening: string = entry.intent,
   repetition = 0,
-  grounded = false,
-  retrieval = false,
-  gatedGrammar = false,
-  repair = false,
-  profile = false,
-  feedback = false,
+  options: BankRunOptions = {},
 ): Promise<RecordedBankRun> {
-  const state = await play(entry, opening, { world, provider, now, grounded, retrieval, gatedGrammar, repair, feedback }, profile);
+  const deps: SessionDeps = {
+    world,
+    provider,
+    now,
+    grounded: options.grounded ?? false,
+    retrieval: options.retrieval ?? false,
+    gatedGrammar: options.gatedGrammar ?? false,
+    repair: options.repair ?? false,
+    feedback: options.feedback ?? false,
+    ...(options.clarify === undefined ? {} : { clarify: options.clarify }),
+    ...(options.suggest === undefined ? {} : { suggest: options.suggest }),
+  };
+  const state = await play(entry, opening, deps, options.profile ?? false);
   const run = asRun(entry, state, world, repetition);
+  const { asked, picked, ignored, capped } = state.clarification;
+  const shown = run.transaction?.manifest?.suggestions?.length ?? 0;
   const stage = funnelOf(run, wantsAct(entry));
   return {
     entryId: entry.id,
@@ -340,6 +426,8 @@ export async function runBankEntry(
     ...(state.folds > 0 ? { folded: true } : {}),
     ...(state.feedbackRetries > 0 ? { feedbackRetried: true, firstAttemptDenials: state.feedbackDenials } : {}),
     ...(state.linking.offTargetDropped > 0 ? { offTargetDropped: state.linking.offTargetDropped } : {}),
+    ...(options.clarify === true ? { clarified: { asked, picked, ignored, capped } } : {}),
+    ...(options.suggest === true ? { suggestions: { shown, dropped: state.suggestions.dropped } } : {}),
     detail: run.detail,
     run,
   };
@@ -355,18 +443,11 @@ export async function runBank(
   provider: ModelProvider,
   clock: () => () => string,
   repetition = 0,
-  grounded = false,
-  retrieval = false,
-  gatedGrammar = false,
-  repair = false,
-  profile = false,
-  feedback = false,
+  options: BankRunOptions = {},
 ): Promise<readonly RecordedBankRun[]> {
   const runs: RecordedBankRun[] = [];
   for (const entry of entries) {
-    runs.push(
-      await runBankEntry(world, entry, provider, clock(), entry.intent, repetition, grounded, retrieval, gatedGrammar, repair, profile, feedback),
-    );
+    runs.push(await runBankEntry(world, entry, provider, clock(), entry.intent, repetition, options));
   }
   return runs;
 }

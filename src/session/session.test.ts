@@ -557,53 +557,54 @@ describe("eligibilityClaims — the recall gate's own edges", () => {
   });
 });
 
-describe("the deflected profile: a lesson cannot answer for a named species (epic #118 dogfooding)", () => {
+describe("the profile is the model's to nominate: the deflected-profile dispatch is gone (R3b step 5)", () => {
   const deflection = JSON.stringify({
     rosters: [],
     claims: [{ kind: "explanation", blockId: "what-is-pokemon" }],
   });
+  const nomination = JSON.stringify({
+    rosters: [],
+    claims: [{ kind: "route", routeId: "profile", entityId: "pikachu" }],
+  });
 
-  it("certifies the species profile instead of the adjacent lesson, one model call", async () => {
-    // Observed live: "tell me about Pikachu" decoded to the generic
-    // what-is-pokemon lesson on the fast model, and the retry deflected the
-    // same way. The route reads the ask deterministically: one named
-    // species + an all-lesson draft = the entity's certified profile,
-    // through scope like any personalized answer.
+  it("a lesson-only reply for a named species is taught as the lesson the model composed — the driver substitutes nothing", async () => {
+    // From 2026-08-30 to 2026-09-06 the driver read this ask deterministically
+    // — one named species + an all-lesson draft = the species' nine-fact
+    // profile — and certified facts nobody asked for. That was the
+    // substitution class R3b exists to end (docs/routing.md, step 5): the
+    // lesson is certified-true, the bank's oracle scores it as the miss it
+    // is, and the profile is the model's to nominate (below).
     let answerCalls = 0;
     const provider = scripted("deflector", (purpose) => {
       if (purpose !== "answer") return "decline";
       answerCalls += 1;
       return deflection;
     });
-    let state = await say(startSession(), "I'm playing Red and Blue in Kanto. Tell me about Pikachu!", deps(provider));
+    const state = await say(startSession(), "I'm playing Red and Blue in Kanto. Tell me about Pikachu!", deps(provider));
 
     expect(state.records).toHaveLength(1);
     const record = state.records[0]!;
     expect(record.outcome.status).toBe("answered");
-    const kinds = record.manifest?.claims.map((claim) => claim.kind) ?? [];
-    expect(kinds).not.toContain("explanation");
-    expect(record.manifest?.claims.every((claim) => claim.kind === "fact" && claim.entityId === "pikachu")).toBe(true);
-    expect(record.manifest?.claims.map((claim) => (claim.kind === "fact" ? claim.factId : ""))).toContain("base-speed");
-    // The discovery call is the only model call: the profile rode the
-    // needs-scope -> granted hop and was certified without a re-ask.
+    expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-pokemon" }]);
     expect(answerCalls).toBe(1);
     expect(verifyReplay(world, record).allowed).toBe(true);
   });
 
-  it("asks the pack's own question when the routed profile needs scope — the ladder is never consulted", async () => {
-    // Observed live: with no version established, the ladder read "tell me
-    // about Pikachu" and proposed version=yellow from nothing; the confirmed
-    // card died at the gate (IA-2/scope-version-mismatch). A routed draft's
-    // ask was about an entity, not scope — there is no vague wording to
-    // interpret, so the deterministic question outranks the model (hard-won
-    // lesson 1). The scope purpose must never be consulted on this path.
+  it("a nominated profile that needs scope gets the pack's own question — the ladder is never consulted", async () => {
+    // Observed live (2026-08-30): with no version established, the ladder
+    // read "tell me about Pikachu" and proposed version=yellow from nothing;
+    // the confirmed card died at the gate (IA-2/scope-version-mismatch). A
+    // routed draft's ask was about an entity, not scope — there is no vague
+    // wording to interpret, so the deterministic question outranks the model
+    // (hard-won lesson 1). The property held for the deleted door; it holds
+    // for the nomination that replaced it.
     let scopeCalls = 0;
-    const provider = scripted("deflector", (purpose) => {
+    const provider = scripted("nominator", (purpose) => {
       if (purpose === "scope") {
         scopeCalls += 1;
         return JSON.stringify({ candidate: { version: "yellow" }, interpreting: "tell me about Pikachu" });
       }
-      return deflection;
+      return nomination;
     });
     const d = deps(provider);
 
@@ -611,12 +612,13 @@ describe("the deflected profile: a lesson cannot answer for a named species (epi
     expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
     expect(scopeCalls).toBe(0);
 
-    // The direct answer to the recorded question binds deterministically;
-    // the answer-hop backstop routes the second deflection to the profile.
+    // The direct answer to the recorded question binds deterministically and
+    // the nominated profile rides the needs-scope → granted hop.
     state = await say(state, "Red and Blue", d);
     expect(state.records).toHaveLength(1);
     expect(state.records[0]!.outcome.status).toBe("answered");
     expect(state.records[0]!.manifest?.claims.every((claim) => claim.kind === "fact" && claim.entityId === "pikachu")).toBe(true);
+    expect(state.records[0]!.manifest?.claims.map((claim) => (claim.kind === "fact" ? claim.factId : ""))).toContain("base-speed");
     expect(scopeCalls).toBe(0);
   });
 
@@ -729,7 +731,18 @@ describe("the version boundary is a teaching, not a dead end", () => {
 
   it("still teaches an ordinary lesson across the boundary", async () => {
     const lesson = JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-badge" }] });
-    const provider = scripted("teacher", (purpose) => (purpose === "answer" ? lesson : "decline"));
+    // The species ask is routed by the model's own nomination (the driver's
+    // deflected-profile door that once composed it is gone — R3b step 5);
+    // the badge ask gets the lesson.
+    const squirtle = JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "profile", entityId: "squirtle" }] });
+    let answerCalls = 0;
+    const provider = new ScriptedProvider("teacher", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      answerCalls += 1;
+      // The prompt for the later, subject-less ask carries the earlier words
+      // as context, so the ask is told apart by call order, not by its text.
+      return answerCalls === 1 ? squirtle : lesson;
+    });
     const d = deps(provider);
 
     let state = await say(startSession(), "tell me about Squirtle", d);
@@ -2669,5 +2682,124 @@ describe("dogfood stop 3, the dead end (2026-09-06): a reply the driver emptied 
     state = await say(state, "tell me about the game", d);
     state = await say(state, "what are Pokémon?", d);
     expect(state.suggestions).toMatchObject({ taken: 1, deadEnded: 1 });
+  });
+});
+
+describe("a clarification needs a choice: one option is not a question (found by the R3b step 5 baseline leg, 2026-09-06)", () => {
+  // 15 of the 25 questions the strong model nominated on the bank carried a
+  // single option — "Which field do you mean?" over the reserved none alone,
+  // "did you mean Move type?" — a hedge worded as a question, which the
+  // truthful trainer could only decline twice. There is nothing to pick from
+  // one option; the reply is read as the mapping and the claims beside it.
+  const PROFILE = { version: "red-blue", region: "kanto", badgeLevel: 8 } as const;
+
+  it("a lone null-field option falls to the null-link reading — the records' boundary is taught and no question is asked", async () => {
+    const hedge = JSON.stringify({
+      asked: [{ phrase: "what ability", entityId: "pikachu", fieldId: "none" }],
+      rosters: [],
+      claims: [
+        {
+          kind: "clarify",
+          about: "What ability does Pikachu have?",
+          question: "Which field do you mean?",
+          options: [{ kind: "field", label: "something else", fieldId: "none" }],
+        },
+      ],
+    });
+    const provider = scripted("hedger", (purpose) => (purpose === "answer" ? hedge : "decline"));
+    const d: SessionDeps = { ...deps(provider), clarify: true };
+    let state = await setProfile(startSession(), PROFILE, d);
+    state = await say(state, "What ability does Pikachu have?", d);
+    expect(state.clarification.asked).toBe(0);
+    expect(state.transcript.some((event) => event.kind === "clarification")).toBe(false);
+    expect(state.phase.kind).toBe("gathering");
+    expect(state.records.at(-1)?.manifest?.claims).toEqual([{ kind: "explanation", blockId: world.pack.recordsBoundary!.lessonId }]);
+  });
+
+  it("a lone field option is read as the claims beside it — the count is certified, no question is asked", async () => {
+    const hedge = JSON.stringify({
+      // (The phrase carries no dictionary alias, so the alias cross-check —
+      // which asks its own question — stays out of this test.)
+      asked: [{ phrase: "how many are there", entityId: "psychic", fieldId: "none" }],
+      rosters: [{ id: "psychic-kanto", criteria: { all: [{ kind: "has-type", type: "psychic" }] } }],
+      claims: [
+        { kind: "count", rosterId: "psychic-kanto" },
+        {
+          kind: "clarify",
+          about: "How many Psychic types are there?",
+          question: "Did you mean Move type?",
+          options: [{ kind: "field", label: "Move type", fieldId: "move-type" }],
+        },
+      ],
+    });
+    const provider = scripted("hedger", (purpose) => (purpose === "answer" ? hedge : "decline"));
+    const d: SessionDeps = { ...deps(provider), clarify: true };
+    let state = await setProfile(startSession(), PROFILE, d);
+    state = await say(state, "How many Psychic types are there?", d);
+    expect(state.clarification.asked).toBe(0);
+    expect(state.records.at(-1)?.outcome.status).toBe("answered");
+    expect(state.records.at(-1)?.manifest?.claims.map((claim) => claim.kind)).toEqual(["count"]);
+  });
+
+  it("two options are still a question", async () => {
+    const question = JSON.stringify({
+      asked: [],
+      rosters: [],
+      claims: [
+        {
+          kind: "clarify",
+          about: "its type",
+          question: "Do you mean the species' type, or a move's type?",
+          options: [
+            { kind: "field", label: "the species' type", fieldId: "types" },
+            { kind: "field", label: "a move's type", fieldId: "move-type" },
+          ],
+        },
+      ],
+    });
+    const provider = scripted("asker", (purpose) => (purpose === "answer" ? question : "decline"));
+    const d: SessionDeps = { ...deps(provider), clarify: true };
+    let state = await setProfile(startSession(), PROFILE, d);
+    state = await say(state, "what's its type?", d);
+    expect(state.clarification.asked).toBe(1);
+    expect(state.phase.kind).toBe("clarifying");
+  });
+});
+
+describe("a lesson with a null link and no subject is taught, not questioned (found by the R3b step 5 leg, 2026-09-06)", () => {
+  const PROFILE = { version: "red-blue", region: "kanto", badgeLevel: 8 } as const;
+
+  it("'What is evolution?' — the model links none about nothing and teaches the lesson; the alias cross-check stays silent", async () => {
+    // The strong model's actual reply (raw-reply dump, 2026-09-06). Before
+    // this, "evolution" — an alias of evolves-to — made the driver ask "did
+    // you mean Evolves into?", a one-option question with no subject to
+    // answer it about, and the right lesson never reached the trainer.
+    const reply = JSON.stringify({
+      asked: [{ phrase: "What is evolution?", entityId: "none", fieldId: "none" }],
+      rosters: [],
+      claims: [{ kind: "explanation", blockId: "what-is-evolution" }],
+    });
+    const provider = scripted("teacher", (purpose) => (purpose === "answer" ? reply : "decline"));
+    const d: SessionDeps = { ...deps(provider), clarify: true };
+    let state = await setProfile(startSession(), PROFILE, d);
+    state = await say(state, "What is evolution?", d);
+    expect(state.clarification.asked).toBe(0);
+    expect(state.linking.contradictions).toBe(0);
+    expect(state.records.at(-1)?.outcome.status).toBe("answered");
+    expect(state.records.at(-1)?.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-evolution" }]);
+  });
+
+  it("the same word about a certified subject is still a question — 'what does Eevee evolve into' linked to none", async () => {
+    const reply = JSON.stringify({
+      asked: [{ phrase: "what does it evolve into", entityId: "eevee", fieldId: "none" }],
+      rosters: [],
+      claims: [],
+    });
+    const provider = scripted("hedger", (purpose) => (purpose === "answer" ? reply : "decline"));
+    const d: SessionDeps = { ...deps(provider), clarify: true };
+    let state = await setProfile(startSession(), PROFILE, d);
+    state = await say(state, "what does Eevee evolve into?", d);
+    expect(state.linking.contradictions).toBe(1);
+    expect(state.phase.kind).toBe("clarifying");
   });
 });

@@ -728,8 +728,8 @@ async function drive(
    * forwarded so the answer step can certify it instead of re-asking the
    * model. Only the immediate needs-scope → granted hop carries one: the
    * moment a question or a card intervenes, the words may change, and a
-   * stale draft must not answer them. `routed` marks a draft a deterministic
-   * route composed (the deflected profile): its ask was about an entity, not
+   * stale draft must not answer them. `routed` marks a draft a nominated
+   * route's executor composed (a profile, a listing): its ask was about an entity, not
    * scope, so there is no vague wording for the ladder to interpret — the
    * pack's own question outranks the model (hard-won lesson 1; observed
    * live 2026-08-30: the ladder read "tell me about Pikachu" and proposed
@@ -1220,42 +1220,18 @@ function previousSubjects(world: SessionWorld, state: SessionState, ask: string)
   return certified.length === 0 ? undefined : certified.slice(0, 12);
 }
 
-/**
- * The profile a specific-entity ask earns when the model deflects it to a
- * curriculum lesson.
- *
- * Observed live (2026-08-30, gemini-3.5-flash-lite): "tell me about Pikachu"
- * decoded to `explanation:what-is-pokemon` — the generic lesson, committed
- * grantless as taught, and the retry deflected identically. The discovery
- * prompt already forbids "a lesson that is merely adjacent"; a small model
- * ignores the sentence, so the driver reads the ask deterministically
- * instead: when the trainer named exactly one certified species and the
- * whole draft is lessons, the ask was about the entity, and the entity's
- * certified profile — types, the six base stats, the dex number — is the
- * on-target answer. Facts only, kernel-derived and kernel-verified; the
- * route composes a shape, never a value. One entity exactly: zero named
- * means the lesson may well be the ask ("what is a Pokémon?"), two means
- * the ask is a comparison the profile cannot speak for.
- *
- * Word-bounded with the hyphen fold ("Mr. Mime" finds mr-mime), the same
- * discipline as {@link eligibilityClaims} and the retrieval front door —
- * deterministic, so its misses are measurable (lesson 6), and it can only
- * *widen* what the kernel certifies, never bind scope or assert a value.
- */
-export function deflectedProfileClaims(world: SessionWorld, ask: string, proposed: readonly Claim[]): readonly Claim[] {
-  if (proposed.length === 0 || !proposed.every((claim) => claim.kind === "explanation")) return [];
-  // The records-boundary lesson is not a deflection — it is the answer to
-  // "how tall is Onix?" (epic #145, R3), and the profile would be exactly the
-  // substitution it exists to prevent.
-  const boundary = world.pack.recordsBoundary?.lessonId;
-  if (boundary !== undefined && proposed.some((claim) => claim.kind === "explanation" && claim.blockId === boundary)) return [];
-  const haystack = ` ${ask.toLowerCase()} `;
-  const names = (id: string): boolean =>
-    new RegExp(`\\b${id.split("-").join("[\\s-]?")}\\b`).test(haystack);
-  const named = world.registry.speciesIds.filter((id) => names(id));
-  if (named.length !== 1) return [];
-  return profileClaims(named[0]!);
-}
+// The deflected-profile dispatch stood here from 2026-08-30 to 2026-09-06:
+// when the trainer named exactly one species and the model's whole reply
+// was lessons, the driver replaced the lesson with the species' nine-fact
+// profile and sent it through scope. It was the substitution class by
+// construction — true facts nobody asked for, chosen by the driver from the
+// ask's words — and the second dispatch door R3b deleted (docs/routing.md,
+// step 5). What it guarded against is now the model's to route and the
+// linking's to hold: the profile survives as the `profile` nomination the
+// model may make ({@link executeRoute}), a null link teaches the records'
+// boundary, and a lesson the model composed for a named species is the
+// lesson it composed — certified-true, and the bank's oracle scores it as
+// the miss it is rather than the driver hiding it behind a profile.
 
 /**
  * Lessons that rode in as padding, trimmed (porch round four, 2026-09-01:
@@ -1307,8 +1283,9 @@ function correctMatchupDirections(world: SessionWorld, ask: string, claims: read
   return { claims: corrected, flips };
 }
 
-/** One species' certified profile — the shape both the deflection door and a
- * nominated profile route compose. */
+/** One species' certified profile — the shape the nominated `profile` route
+ * composes (the deflection door that also composed it is gone; see the note
+ * above {@link trimPaddedLessons}). */
 function profileClaims(entityId: string): readonly Claim[] {
   return [
     { kind: "fact", entityId, factId: "types" },
@@ -1323,9 +1300,9 @@ function profileClaims(entityId: string): readonly Claim[] {
   ];
 }
 
-/** Whether a clause names any certified species — the same word-bounded,
- * hyphen-folded reading as {@link deflectedProfileClaims}, shared so the two
- * doors cannot drift. */
+/** Whether a clause names any certified species — word-bounded, with the
+ * hyphen fold ("Mr. Mime" finds mr-mime), the one reading every door that
+ * asks "is a species named?" shares so they cannot drift. */
 function namesCertifiedEntity(registry: CertifiedRegistry, clause: string): boolean {
   const haystack = ` ${clause.toLowerCase()} `;
   return registry.speciesIds.some((id) =>
@@ -1423,8 +1400,8 @@ async function teachOrDiscover(
   rosters: Pick<ManifestDraft, "rosters">["rosters"];
   /** The follow-ups that passed the guard, riding with the draft (R3b step 4). */
   suggestions?: readonly string[];
-  /** True when a deterministic route composed the claims (the deflected
-   * profile) — the ladder is then skipped for the scope they require. */
+  /** True when a nominated route's executor composed the claims (a profile,
+   * a listing) — the ladder is then skipped for the scope they require. */
   routed?: boolean;
 }> {
   const { world, provider } = deps;
@@ -1567,13 +1544,9 @@ async function teachOrDiscover(
       return { state: spentFolded, result: "off-domain", claims: [], rosters: [] };
     }
   }
-  // A lesson-only draft for an ask that named one specific species is the
-  // deflection this route exists for: the profile replaces the lesson and
-  // goes through scope like any personalized answer would have.
-  const profile = deflectedProfileClaims(world, askWords, draft.claims);
-  if (profile.length > 0) {
-    return { state: spentFolded, result: "needs-scope", claims: profile, rosters: [], ...carry, routed: true };
-  }
+  // (A lesson-only draft for an ask naming one species was, until R3b step
+  // 5, replaced here by the species' profile. It is taught as the lesson the
+  // model composed now; the profile is the model's to nominate above.)
   // Under lessonsOnly, anything that reads the registry — a fact, a game
   // rule, any roster — is the caller's to answer, not this path's to commit:
   // the kernel would refuse it across the version boundary by name.
@@ -1923,15 +1896,23 @@ function applyLinking(
   // carrying one with the door shut is read as the claims beside it.
   if (deps.clarify === true && decode.clarify !== undefined) {
     const options = validOptions(world.pack, world.registry, decode.clarify.options);
-    if (options.length > 0) {
+    // A question needs a choice: two typed options at least. Found by the
+    // step 5 baseline leg (2026-09-06, strong model): 15 of 25 nominated
+    // questions carried one option — "Which field do you mean?" over the
+    // reserved none alone, "did you mean Move type?" — a hedge worded as a
+    // question, which the truthful trainer could only decline twice. With
+    // one option there is nothing to pick; the reply is read as the claims
+    // and the mapping beside it, where a null link already knows what to do.
+    if (options.length >= 2) {
       const question = usableQuestion(decode.clarify.question)
         ? decode.clarify.question.trim()
         : `When you said "${decode.clarify.about}", which did you mean — ${options.map((option) => option.label).join(", ")}?`;
       return clarify(state, deps, { about: decode.clarify.about, text: question, options, source: "the model's nomination" });
     }
-    // No typed option survived: the model said "ambiguous" and named nothing
-    // a pick could bind to. The claims beside it stand as they would have;
-    // a reply with nothing beside it is the honest pass, naming the phrase.
+    // No choice survived: the model said "ambiguous" and named nothing (or
+    // one thing) a pick could bind to. The claims beside it stand as they
+    // would have; a reply with nothing beside it is the honest pass, naming
+    // the phrase.
     if (decode.draft.claims.length === 0 && decode.route === undefined && decode.asked.every((entry) => entry.fieldId !== null)) {
       return {
         state: note(
@@ -2669,9 +2650,9 @@ type Groomed =
  * settled exchange it earns instead. The schema linking first (R3b), then
  * the doors' guards: a nomination composes, a gated advisory ask gets the
  * pack's rule appended, a matchup's direction is held to the ask's word
- * order, a wrong-set catalogue is dropped, padding lessons are trimmed, a
- * lesson-only deflection becomes the entity's profile. Every step here is
- * deterministic and counted; the kernel still verifies whatever leaves.
+ * order, a wrong-set catalogue is dropped, padding lessons are trimmed.
+ * Every step here is deterministic and counted; the kernel still verifies
+ * whatever leaves.
  * Shared by the first reply and the feedback retry so the two are groomed
  * identically — a retry that skipped a guard would be a second door.
  */
@@ -2744,16 +2725,9 @@ function groom(
   }
   const groomed = { ...decoded, rosters: rightSet.rosters, claims: trimPaddedLessons(world, ask, rightSet.claims) };
   if (directed.flips > 0) state = { ...state, flips: state.flips + directed.flips };
-  // The lesson deflection has the same backstop here as at discovery: a
-  // scoped answer that is all lessons for an ask naming one species gets
-  // the entity's profile instead — the model can deflect at either hop.
-  const profile = deflectedProfileClaims(world, ask, groomed.claims);
-  const draft =
-    profile.length > 0
-      ? { ...groomed, claims: profile, rosters: [] }
-      : routed.length === 0
-        ? groomed
-        : { ...groomed, claims: [...groomed.claims, ...routed] };
+  // (The deflected-profile backstop that stood here too is gone — R3b step
+  // 5. A lesson the model composed at this hop is the lesson it composed.)
+  const draft = routed.length === 0 ? groomed : { ...groomed, claims: [...groomed.claims, ...routed] };
   // Last, the follow-ups (R3b step 4): guarded onto whatever shape the
   // guards settled on, so a next step rides with every certified answer.
   const suggested = withSuggestions(world, state, deps, decode, draft);

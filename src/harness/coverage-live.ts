@@ -92,6 +92,11 @@ export interface CoverageArgs {
   /** The verifier-in-the-loop retry (docs/routing.md, R3b): a denial at the
    * answer stage is carried back to the model once. Recorded. */
   feedback: boolean;
+  /** The model may ask its own clarifying question (R3b step 3); the truthful
+   * trainer answers from the entry's oracle. Recorded. */
+  clarify: boolean;
+  /** The model may offer follow-up suggestions (R3b step 4). Recorded. */
+  suggest: boolean;
   model?: string;
   limit?: number;
   ids?: readonly string[];
@@ -122,6 +127,8 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     repair: boolean;
     profile: boolean;
     feedback: boolean;
+    clarify: boolean;
+    suggest: boolean;
     model?: string;
     limit?: number;
     ids?: string[];
@@ -133,7 +140,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     source?: string;
     help: boolean;
     errors: string[];
-  } = { live: false, render: false, weak: false, dialogues: false, adversarial: false, center: false, grounded: false, retrieval: false, gatedGrammar: false, repair: false, profile: false, feedback: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
+  } = { live: false, render: false, weak: false, dialogues: false, adversarial: false, center: false, grounded: false, retrieval: false, gatedGrammar: false, repair: false, profile: false, feedback: false, clarify: false, suggest: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
 
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index];
@@ -174,6 +181,12 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
         break;
       case "--feedback":
         args.feedback = true;
+        break;
+      case "--clarify":
+        args.clarify = true;
+        break;
+      case "--suggest":
+        args.suggest = true;
         break;
       case "--phrasings":
         args.phrasings = true;
@@ -267,6 +280,11 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
   if (args.repair && args.phrasings) {
     args.errors.push("--repair is not threaded through the robustness pass; run it on the coverage or dialogue banks");
   }
+  for (const [flag, on] of [["--profile", args.profile], ["--feedback", args.feedback], ["--clarify", args.clarify], ["--suggest", args.suggest]] as const) {
+    if (on && (args.phrasings || args.dialogues)) {
+      args.errors.push(`${flag} is threaded through the single-turn coverage run only; the robustness and dialogue banks do not carry it`);
+    }
+  }
   if (args.grounded && args.retrieval) {
     args.errors.push("--grounded (whole registry) and --retrieval (only what each question needs) are different grounding modes; pick one");
   }
@@ -288,6 +306,8 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     repair: args.repair,
     profile: args.profile,
     feedback: args.feedback,
+    clarify: args.clarify,
+    suggest: args.suggest,
     phrasings: args.phrasings,
     repetitions: args.repetitions,
     out: args.out,
@@ -334,6 +354,11 @@ const USAGE = [
   "                      as the live page's form does (epic #145, R2) — no pack question owed. Recorded.",
   "  --feedback          the verifier-in-the-loop retry (docs/routing.md, R3b): a denial at the answer stage,",
   "                      other than the repair's class, is carried back to the model once by name. Counted apart.",
+  "  --clarify           the model may ask its own clarifying question (R3b step 3); the truthful trainer answers",
+  "                      it from the entry's oracle, or says no option is right. Asked/picked/ignored are counted.",
+  "  --suggest           the model may offer follow-up suggestions (R3b step 4); shown and dropped are counted.",
+  "                      The live page runs with --profile --feedback --clarify --suggest; a leg comparing to it",
+  "                      needs all four.",
   "  --render [PATH]     render a filed coverage artifact (a file, or a directory to take the newest",
   "                      coverage artifact from; default runs/coverage/). Reads no clock, no key, no network.",
   "  --page PATH         with --render, write the page there instead of printing it.",
@@ -527,6 +552,8 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
         `  repair:        ${args.repair ? "yes — an all-fact-mismatch denial is stripped and re-verified once" : "no — a mis-recalled value stays a denial"}`,
         `  profile:       ${args.profile ? "yes — version, region and badges set on the panel before the opener" : "no — the trainer answers the pack's questions in prose"}`,
         `  feedback:      ${args.feedback ? "yes — a named denial is carried back to the model once" : "no — the first denial files"}`,
+        `  clarify:       ${args.clarify ? "yes — the model may ask its own question; the trainer answers from the oracle" : "no — the pack's questions only"}`,
+        `  suggest:       ${args.suggest ? "yes — the model may offer follow-ups, shown uncertified" : "no — answers end where the certificate ends"}`,
         `  model:         ${model}`,
         `  artifact:      filed under ${args.out}/`,
         `  add --live to run it against the model and bill your key.`,
@@ -560,7 +587,16 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
   } else {
     const runPass = options.runPass ?? runBank;
     for (let pass = 0; pass < args.repetitions; pass++) {
-      const sampled = await runPass(world, entries, provider, options.clock, pass, args.grounded, args.retrieval, args.gatedGrammar, args.repair, args.profile, args.feedback);
+      const sampled = await runPass(world, entries, provider, options.clock, pass, {
+        grounded: args.grounded,
+        retrieval: args.retrieval,
+        gatedGrammar: args.gatedGrammar,
+        repair: args.repair,
+        profile: args.profile,
+        feedback: args.feedback,
+        clarify: args.clarify,
+        suggest: args.suggest,
+      });
       runs.push(...sampled);
       if (sampled.some((run) => run.score.enforcementEscalation === true)) {
         // The repetition discipline: a broken enforcement zero stops the run
@@ -586,6 +622,8 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
     repair: args.repair,
     profile: args.profile,
     feedback: args.feedback,
+    clarify: args.clarify,
+    suggest: args.suggest,
     repetitions: args.repetitions,
     ...(args.dispositions === undefined ? {} : { dispositions: args.dispositions }),
     stoppedEarly,

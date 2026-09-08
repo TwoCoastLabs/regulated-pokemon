@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { BankRun, IntentRobustness } from "./bank-run.js";
+import type { Ceremony } from "./ceremony.js";
 import { coverageMap, renderCoverage, renderRobustness, repetitionSummary, robustnessSummary } from "./coverage.js";
 import type { Disposition, FunnelStage } from "./playability.js";
 
@@ -250,5 +251,45 @@ describe("the gated-advisory line", () => {
     expect(md).toContain("Gated questions answered usefully or refused by name: 67%");
     const without = renderCoverage(coverageMap([run("ans-1", "answerable", { kind: "resolved" }, true)]));
     expect(without).not.toContain("Gated questions");
+  });
+});
+
+describe("the two R3b doors are reported when they were open, and not as zeros when they were shut", () => {
+  const withDoors: BankRun[] = [
+    { ...run("ans-1", "answerable", { kind: "resolved" }, true), clarified: { asked: 1, picked: 1, ignored: 0, capped: 0 }, suggestions: { shown: 2, dropped: 1 } },
+    { ...run("ans-2", "answerable", { kind: "abstained-answer" }, false), clarified: { asked: 1, picked: 0, ignored: 2, capped: 0 }, suggestions: { shown: 0, dropped: 0 } },
+    { ...run("data-1", "needs-data", { kind: "abstained-answer" }, true), clarified: { asked: 0, picked: 0, ignored: 0, capped: 0 }, suggestions: { shown: 0, dropped: 0 } },
+  ];
+
+  it("sums the clarification gauge and the suggestion counts over the runs that carry them", () => {
+    const map = coverageMap(withDoors);
+    expect(map.clarification).toEqual({ runs: 3, asked: 2, picked: 1, ignored: 2, capped: 0 });
+    expect(map.suggestions).toEqual({ runs: 3, shown: 2, answersWith: 1, dropped: 1 });
+  });
+
+  it("renders each as its own line naming its condition", () => {
+    const md = renderCoverage(coverageMap(withDoors));
+    expect(md).toContain("**Clarification (door open on 3 run(s)):** the model asked 2 question(s) — 1 answered from the oracle, 2 held no right option");
+    expect(md).toContain("**Suggestions (door open on 3 run(s)):** 2 shown on 1 certified answer(s), 1 dropped");
+  });
+
+  it("omits both when no run carried them — a shut door is not a zero", () => {
+    const map = coverageMap(RUNS);
+    expect(map.clarification).toBeUndefined();
+    expect(map.suggestions).toBeUndefined();
+    const md = renderCoverage(map);
+    expect(md).not.toContain("Clarification (door open");
+    expect(md).not.toContain("Suggestions (door open");
+  });
+
+  it("carries the model's questions in the ceremony line, apart from the pack's, and reads an older ceremony as zero", () => {
+    const withCeremony: BankRun[] = [
+      { ...run("ans-1", "answerable", { kind: "resolved" }, true), ceremony: { questions: 1, clarifications: 2, scopeCards: 0, actCards: 0 } },
+      // Filed before the model could ask: no field at all.
+      { ...run("ans-2", "answerable", { kind: "resolved" }, true), ceremony: { questions: 1, scopeCards: 1, actCards: 0 } as Ceremony },
+    ];
+    const map = coverageMap(withCeremony);
+    expect(map.ceremony).toEqual({ questions: 2, clarifications: 2, scopeCards: 1, actCards: 0, resolved: 2 });
+    expect(renderCoverage(map)).toContain("2 clarifying question(s), 2 advisor question(s), 1 scope card(s)");
   });
 });

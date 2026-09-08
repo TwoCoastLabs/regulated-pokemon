@@ -280,8 +280,9 @@ is covered by offline tests with scripted models:
   unapproved, superseded); the profile and answer routes; contradiction
   → question
 - the social register, the switch-back and contradiction re-ask, the
-  drift door, the scope-statement acknowledgment, the listing cue door
-  and its bareness reading, the records boundary, the deflected profile
+  drift door, the scope-statement acknowledgment, the catalogue bareness
+  reading, the records boundary (the listing cue door and the deflected
+  profile are gone — R3b step 5; their executors survive as nominations)
 - decoding (shape only — a well-formed lie passes through to the kernel
   on purpose), the fold of self-comparisons, the claim budget
 - the route executors and their guards; the wrong-set, direction and
