@@ -187,6 +187,48 @@ verifier at inference time, while this project holds a served verdict to be
 terminal (recovery.md: no re-litigation), so the verifier's leverage here is
 at training and evaluation time rather than in a retry loop.
 
+### Transactional neuro-symbolic systems
+
+The closest published cousin in a *transactional* setting is VA-NSF (Qin et
+al., "Neuro-symbolic constraint verification for LLM-driven internet finance
+transaction execution", Scientific Reports, 2026, accepted manuscript): a
+neural actor parses a payment instruction into a typed, schema-grounded AST
+under grammar-constrained decoding, a type-checker grounds every reference
+against live master data, an Answer Set Programming verifier evaluates the
+AST against integrity constraints, and a commit carries a formal approval
+certificate recording the rule-set version while a refusal carries a
+structured violation report (rule id, field path, observed value,
+threshold). The first half of that pipeline is this design's first half
+almost line for line — mechanisms 1, 3 and 4 above — and the paper reaches
+the thesis independently: under noisy input "the safety guarantee is
+preserved while availability degrades," which is *enforcement is structural,
+usefulness is empirical* in other words. Its measured result that structured
+violation reports beat generic natural-language feedback by 18.7 points is
+the same asymmetry the strip-assertion repair of channel 2 relies on: a
+deterministic component that knows *which* value was wrong can do more than
+a model told to try again.
+
+The departures are the second half, and each is load-bearing here. First,
+VA-NSF's repair is the loop [recovery.md](recovery.md) refuses: the violation
+report is fed back to the model for up to three attempts, and the paper's
+own menu of repairs for an over-threshold transfer — reduce the amount,
+*split it into sub-threshold payments*, or add an approver — is the oracle
+hazard stated as a feature. A loop rewarded for passing the gate learns to
+structure. This design recovers content through named channels under caps
+and treats an authorisation denial as terminal. Second, VA-NSF executes the
+moment the verifier is satisfied; nothing binds the repaired transaction to
+what the person asked for, so a reduced amount ships certified and wrong.
+Here the person's confirmation binds to the digest of the exact artifact
+they saw, and the act path re-verifies the whole chain at execution.
+Third, the approver is a field the model fills from the instruction and the
+type-checker confirms only that the user exists — the prompt self-certifies
+the approval. Here authority is a channel: a value that can bind is minted
+only by the kernel from the transport it arrived on, never by the proposer
+from text. The paper is candid about its residual risk being the
+translation from policy text to encoded rules, and about its evidence
+stopping at eighty rules and a curated benchmark; both are the honest
+boundary this note's §3 also draws.
+
 ### Prompt injection as an authority problem
 
 The channel discipline of mechanism 2 belongs to the capability-security

@@ -35,6 +35,23 @@ Four reasons, each load-bearing:
 4. **No LLM in enforcement paths.** A model reasoning about violations sits
    exactly where that rule keeps the path clean.
 
+**An external data point (2026-09).** A peer-reviewed transaction agent now
+builds the loop this note refuses: VA-NSF (Qin et al., Scientific Reports,
+2026; see [landscape.md](landscape.md) §2) hands its solver's violation
+report back to the model for up to three attempts and reports that structured
+reports repair 91.8% of violating transactions against 60.6% for blind
+regeneration. The number is real and the mechanism is the one channel 2
+below uses deterministically. But the paper's own list of what the model may
+do when a transfer exceeds the approval threshold — "reduce the amount, split
+the transaction into multiple sub-threshold payments, or add an approval
+step" — is reason 1 above stated as a capability: the cheapest repair that
+passes the gate is the one that structures around it, and a loop scored on
+"passed within K attempts" cannot tell the two apart. Nor does anything in
+that loop bind the repaired transaction to what the person asked for before
+it executes. Both are why this design routes repair through named channels
+with caps, keeps the person's confirmation bound to the artifact they saw,
+and holds an authorisation denial terminal.
+
 ## The four channels, and what each may recover
 
 The useful question is not "may we retry?" but "**through which channel** does
