@@ -207,8 +207,16 @@ export function aliasContradiction(
   for (const entry of asked) {
     const linked = entry.fieldId === null ? undefined : pack.dictionary.find((field) => field.id === entry.fieldId);
     const subjects = subjectsOf(registry, entry.entityId);
+    // Aliases are written with "it" standing for the subject ("what level
+    // does it evolve"); a phrase naming the subject in that position ("At
+    // what level does Charmander evolve?") is read both as said and with the
+    // subject's name replaced by "it", so the alias evidence for the linked
+    // field is not lost to the name sitting in the middle of it. Found live
+    // (2026-09-11): the evidence for the model's correct link was missed
+    // that way, and a bare "evolve" alone made the check ask.
+    const readings = phraseReadings(entry.phrase, entry.entityId);
     const evidence = pack.dictionary.filter(
-      (field) => subjects.has(field.subject) && field.aliases.some((alias) => carries(entry.phrase, alias)),
+      (field) => subjects.has(field.subject) && field.aliases.some((alias) => readings.some((reading) => carries(reading, alias))),
     );
     if (evidence.length === 0) continue;
     if (linked !== undefined && evidence.some((field) => field.id === linked.id)) continue;
@@ -244,6 +252,18 @@ function subjectsOf(registry: CertifiedRegistry, entityId: string): ReadonlySet<
   if (registry.itemIds.includes(id)) return new Set(["item"]);
   if (registry.typeNames.has(id)) return new Set(["type"]);
   return new Set();
+}
+
+/** The phrase as said, and — when it names its subject — with the subject's
+ * id (hyphens as spaces, any case) replaced by "it". Ids only: a certified
+ * entity has no display name apart from its slug. */
+function phraseReadings(phrase: string, entityId: string): readonly string[] {
+  const words = entityId.toLowerCase().trim().replace(/-/g, " ");
+  if (words.length === 0 || words === NO_FIELD) return [phrase];
+  const escaped = words.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "[\\s-]+");
+  const pattern = new RegExp(`(^|[^a-z0-9])${escaped}(?:'s)?([^a-z0-9]|$)`, "i");
+  const substituted = phrase.replace(pattern, (_match, before: string, after: string) => `${before}it${after}`);
+  return substituted === phrase ? [phrase] : [phrase, substituted];
 }
 
 /** Whether a phrase carries an alias, word-bounded on letters and digits. */

@@ -76,6 +76,30 @@ describe("matchPick — one match is a pick, none or several is not", () => {
     expect(matchPick(world.pack, world.registry, [speed, attack], "Onix")).toBeUndefined();
   });
 
+  it("binds the exact label of one option even when the other option's alias sits inside it (live, 2026-09-11)", () => {
+    // "At what level does Charmander evolve?" drew How it evolves or Evolves
+    // into; the trainer said "How it evolves" and was asked again, because
+    // "evolves" is an alias of Evolves into and every tier counted alike.
+    const methods = { kind: "field", label: "How it evolves", fieldId: "evolution-methods" } as const;
+    const into = { kind: "field", label: "Evolves into", fieldId: "evolves-to" } as const;
+    expect(matchPick(world.pack, world.registry, [methods, into], "How it evolves")).toBe(methods);
+    expect(matchPick(world.pack, world.registry, [methods, into], "Evolves into")).toBe(into);
+    expect(matchPick(world.pack, world.registry, [methods, into], "how it evolves, please")).toBe(methods);
+  });
+
+  it("reads evidence by tier — a label outranks a name, a name outranks an alias — and ties only inside a tier", () => {
+    const defense = { kind: "field", label: "Defense", fieldId: "base-defense" } as const;
+    const special = { kind: "field", label: "Special Defense", fieldId: "base-special-defense" } as const;
+    // "Special Defense" carries both labels; the label tier ties, so no pick.
+    expect(matchPick(world.pack, world.registry, [defense, special], "Special Defense")).toBeUndefined();
+    // "defense" is the label of one and inside the other's label: one label match wins the tier.
+    expect(matchPick(world.pack, world.registry, [defense, special], "defense")).toBe(defense);
+    // An alias shared with the other option's words says nothing: "def" is an
+    // alias of Defense and sits inside Special Defense's "sp. def", so it is
+    // ignored for this question, and "sp def" picks by the discriminating one.
+    expect(matchPick(world.pack, world.registry, [defense, special], "sp def")).toBe(special);
+  });
+
   it("is no pick when the reply names two options, or none, or nothing", () => {
     expect(matchPick(world.pack, world.registry, [speed, attack], "speed and attack")).toBeUndefined();
     expect(matchPick(world.pack, world.registry, [speed, attack], "what's its HP?")).toBeUndefined();

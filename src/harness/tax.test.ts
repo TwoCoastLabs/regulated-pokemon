@@ -12,8 +12,8 @@ import type { Disposition } from "./playability.js";
 import { emptyUsage } from "./provider.js";
 import { fraction, governanceTax, renderTax } from "./tax.js";
 
-function governed(entryId: string, disposition: Disposition, pass: boolean, repetition = 0): BankRun {
-  return { entryId, disposition, opening: "q", repetition, stage: { kind: pass ? "resolved" : "abstained-answer" }, score: { pass, reason: "" }, turns: 1, detail: "" };
+function governed(entryId: string, disposition: Disposition, pass: boolean, repetition = 0, extra: Partial<BankRun> = {}): BankRun {
+  return { entryId, disposition, opening: "q", repetition, stage: { kind: pass ? "resolved" : "abstained-answer" }, score: { pass, reason: "" }, turns: 1, detail: "", ...extra };
 }
 
 function raw(entryId: string, disposition: Disposition, apparent: boolean, verified: boolean, extra: Partial<RawBankRun> = {}): RawBankRun {
@@ -129,6 +129,22 @@ describe("an entry the raw grammar cannot express is left out of the comparison,
     expect(md).toContain("2 answerable entries expect a lesson or a game-rule constant");
     expect(md).toContain("governed passed 1/2 (50%) of them stably");
     expect(md).toContain("| 2 (governed 1 stably) |");
+  });
+});
+
+describe("the gate's own share is read from the governed records", () => {
+  it("counts denied samples and the refused drafts the oracle reads as answers, per row and in the line", () => {
+    const denied = { stage: { kind: "denied", article: "IA-2", rule: "fact-mismatch" } as const };
+    const tax = governanceTax(
+      [
+        governed("a1", "answerable", false, 0, { ...denied, deniedDraftOnTarget: true }),
+        governed("a2", "answerable", false, 0, { ...denied, deniedDraftOnTarget: false }),
+        governed("a3", "answerable", false, 0),
+      ],
+      [raw("a1", "answerable", true, false), raw("a2", "answerable", true, false), raw("a3", "answerable", false, false)],
+    );
+    expect(tax.rows[0]!.gateRemoved).toEqual({ denied: 2, onTarget: 1 });
+    expect(renderTax(tax)).toContain("the kernel denied 2 governed sample(s); 1/2 (50%) of those refused drafts would have read as an answer");
   });
 });
 

@@ -2287,6 +2287,111 @@ describe("R3b step 3: clarification — the model may ask, the trainer's pick bi
     expect(state.records[0]?.manifest?.claims.map((claim) => (claim.kind === "fact" ? claim.factId : claim.kind))).toEqual(["base-speed"]);
   });
 
+  it("an alias contradiction the reply already answers both ways is a union, not a question (2026-09-11)", async () => {
+    // "how fast" linked to Attack carries Speed's words — but the reply
+    // certifies both facts, so both are within the ask and no one is asked.
+    const both = JSON.stringify({
+      asked: [{ phrase: "how fast", entityId: "pikachu", fieldId: "base-attack" }],
+      rosters: [],
+      claims: [
+        { kind: "fact", entityId: "pikachu", factId: "base-attack" },
+        { kind: "fact", entityId: "pikachu", factId: "base-speed" },
+      ],
+    });
+    const d = withClarify(scripted("union", (purpose) => (purpose === "scope" ? "decline" : both)));
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    expect(state.phase.kind).toBe("gathering");
+    expect(state.records[0]?.manifest?.claims.map((claim) => (claim.kind === "fact" ? claim.factId : claim.kind)).sort()).toEqual(["base-attack", "base-speed"]);
+    expect(state.linking).toMatchObject({ unions: 1, contradictions: 0, offTargetDropped: 0 });
+    expect(state.usage.calls).toBe(1);
+  });
+
+  it("with the feedback round open, a contradiction is carried back once before anyone is asked — and the union on the retry answers it", async () => {
+    const contradicting = JSON.stringify({
+      asked: [{ phrase: "how fast", entityId: "pikachu", fieldId: "base-attack" }],
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "pikachu", factId: "base-attack" }],
+    });
+    // The retry keeps the model's reading of the phrase and adds the other
+    // fact — the union then answers both readings.
+    const bothReadings = JSON.stringify({
+      asked: [{ phrase: "how fast", entityId: "pikachu", fieldId: "base-attack" }],
+      rosters: [],
+      claims: [
+        { kind: "fact", entityId: "pikachu", factId: "base-attack" },
+        { kind: "fact", entityId: "pikachu", factId: "base-speed" },
+      ],
+    });
+    const feedbackSeen: string[] = [];
+    let calls = 0;
+    const provider = new ScriptedProvider("carried-back", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      calls += 1;
+      if (request.prompt.includes("driver/ambiguous-field")) feedbackSeen.push(request.prompt);
+      return calls === 1 ? contradicting : bothReadings;
+    });
+    const d: SessionDeps = { ...withClarify(provider), feedback: true };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    expect(feedbackSeen).toHaveLength(1);
+    expect(feedbackSeen[0]).toContain("carries the words of Speed");
+    expect(state.phase.kind).toBe("gathering");
+    expect(state.records[0]?.manifest?.claims.map((claim) => (claim.kind === "fact" ? claim.factId : claim.kind)).sort()).toEqual(["base-attack", "base-speed"]);
+    expect(state.feedbackRetries).toBe(1);
+    expect(state.feedbackDenials).toEqual(["driver/ambiguous-field"]);
+    expect(state.linking).toMatchObject({ unions: 1, contradictions: 0 });
+  });
+
+  it("a contradiction that survives the carried-back round is then asked — one model call before one trainer question", async () => {
+    const contradicting = JSON.stringify({
+      asked: [{ phrase: "how fast", entityId: "pikachu", fieldId: "base-attack" }],
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "pikachu", factId: "base-attack" }],
+    });
+    const d: SessionDeps = { ...withClarify(scripted("stubborn", (purpose) => (purpose === "scope" ? "decline" : contradicting))), feedback: true };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    expect(state.usage.calls).toBe(2);
+    expect(state.phase.kind).toBe("clarifying");
+    expect(state.linking).toMatchObject({ unions: 0, contradictions: 1 });
+    expect(state.feedbackRetries).toBe(1);
+  });
+
+  it("a refused nomination beside an off-ask claim is carried back, not passed (live, 2026-09-11: 'How many PP does Psychic have?')", async () => {
+    const refusedAndOff = JSON.stringify({
+      asked: [{ phrase: "how many pp", entityId: "psychic", fieldId: "move-pp" }],
+      rosters: [],
+      // The listing door refuses an ask naming a certified subject; the one
+      // claim beside it is about a field the mapping did not link.
+      claims: [{ kind: "route", routeId: "listing" }, { kind: "fact", entityId: "psychic", factId: "move-power" }],
+    });
+    const answered = JSON.stringify({
+      asked: [{ phrase: "how many pp", entityId: "psychic", fieldId: "move-pp" }],
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "psychic", factId: "move-pp" }],
+    });
+    let calls = 0;
+    const provider = new ScriptedProvider("refused-route", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      calls += 1;
+      return calls === 1 ? refusedAndOff : answered;
+    });
+    const d: SessionDeps = { ...deps(provider), feedback: true };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "How many PP does Psychic have?", d);
+    expect(state.records[0]?.manifest?.claims.map((claim) => (claim.kind === "fact" ? claim.factId : claim.kind))).toEqual(["move-pp"]);
+    expect(state.feedbackRetries).toBe(1);
+    expect(state.feedbackDenials).toEqual(["driver/refused-route", "driver/off-ask"]);
+    // Without the round, the same reply is the honest pass it always was.
+    calls = 0;
+    const closed = deps(provider);
+    let plain = await setProfile(startSession(), PROFILE_SCOPE, closed);
+    plain = await say(plain, "How many PP does Psychic have?", closed);
+    expect(plain.records).toHaveLength(0);
+    expect(plain.notes.at(-1)?.detail).toContain("dropped every claim (1) as off the asked fields");
+  });
+
   it("the pack's scope question is phrased by the model, armed for the same dimension, with the vocabulary's values as options", async () => {
     const phrased = "To look up how fast Pikachu is I need to know which game you're on — which version are you playing?";
     const provider = new ScriptedProvider("phrasing", (request) => {

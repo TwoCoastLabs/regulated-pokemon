@@ -1325,6 +1325,46 @@ function checkDictionary(dictionary: readonly DictionaryEntry[], registry: Certi
 }
 
 /** One dictionary entry by field id, or nothing. */
+/**
+ * One word a trainer could say that names two fields of the same subject:
+ * an alias of `field` that is carried, word-bounded, by the name or an alias
+ * of `within` (or equals one of its aliases). Not an error in the pack — a
+ * bare "defense" *is* what people say — but every collision is a question
+ * the driver may have to ask, and a pack's count of them is a number a
+ * knowledge steward owns and ratchets down (docs/generalization.md §4).
+ */
+export interface DictionaryCollision {
+  field: string;
+  alias: string;
+  within: string;
+  /** The colliding name or alias of `within`, as written. */
+  carrier: string;
+}
+
+/**
+ * The dictionary's alias collisions, by structure alone — no domain word in
+ * the check, so it lints a Pokédex and a drug label alike. Found while
+ * reading the first governance-tax legs (2026-09-11): "evolves", an alias of
+ * one field, sits inside "How it evolves", the name of another, and the
+ * exact label of an option read as ambiguous.
+ */
+export function dictionaryCollisions(dictionary: readonly DictionaryEntry[]): readonly DictionaryCollision[] {
+  const normalise = (text: string): string => text.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const carries = (hay: string, needle: string): boolean => needle.length > 0 && ` ${hay} `.includes(` ${needle} `);
+  const found: DictionaryCollision[] = [];
+  for (const field of dictionary) {
+    for (const within of dictionary) {
+      if (within.id === field.id || within.subject !== field.subject) continue;
+      for (const alias of field.aliases) {
+        const word = normalise(alias);
+        const carriers = [within.name, ...within.aliases].filter((carrier) => carries(normalise(carrier), word));
+        for (const carrier of carriers) found.push({ field: field.id, alias, within: within.id, carrier });
+      }
+    }
+  }
+  return found;
+}
+
 export function dictionaryEntry(pack: AccordPack, id: string): DictionaryEntry | undefined {
   return pack.dictionary.find((entry) => entry.id === id);
 }
