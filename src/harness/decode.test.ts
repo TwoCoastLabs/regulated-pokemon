@@ -287,7 +287,8 @@ describe("decodeAnswer", () => {
   it.each([
     ["not a JSON object", "nope", "not a JSON object"],
     ["a JSON array", "[]", "not a JSON object"],
-    ["missing claims", JSON.stringify({ rosters: [] }), "missing rosters or claims"],
+    ["missing claims", JSON.stringify({ rosters: [] }), "missing claims"],
+    ["rosters that are not a list", JSON.stringify({ rosters: 3, claims: [] }), "rosters is not a list"],
     // An empty answer is an abstention, never a certificate: compiled, its
     // page would carry nothing but the provenance footer and still say
     // "checked & certified" — the dogfooding finding behind this row.
