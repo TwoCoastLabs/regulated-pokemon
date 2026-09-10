@@ -373,12 +373,17 @@ function asClaim(value: unknown): Claim | null {
 export function decodeAnswer(text: string, context: ManifestContext, transactionId: string): AnswerDecode {
   const parsed = parse(text);
   if (!isObject(parsed)) return { ok: false, reason: "answer was not a JSON object" };
-  if (!Array.isArray(parsed.rosters) || !Array.isArray(parsed.claims)) {
-    return { ok: false, reason: "answer is missing rosters or claims" };
-  }
+  if (!Array.isArray(parsed.claims)) return { ok: false, reason: "answer is missing claims" };
+  // A reply with no rosters key names no roster — the same as an empty
+  // list. Found by the governance-tax leg (weak model, decoding free,
+  // 2026-09-11): 200 of 231 unusable raw replies were answers that simply
+  // omitted the key; a claim citing a roster it never named still fails
+  // below, where it is read. (Structured output always emits the key.)
+  const rosterList: unknown = parsed.rosters ?? [];
+  if (!Array.isArray(rosterList)) return { ok: false, reason: "rosters is not a list" };
 
   const rosters = [];
-  for (const entry of parsed.rosters.slice(0, MAX_ANSWER_ROSTERS)) {
+  for (const entry of rosterList.slice(0, MAX_ANSWER_ROSTERS)) {
     if (!isObject(entry) || !isString(entry.id) || !isObject(entry.criteria) || !Array.isArray(entry.criteria.all)) {
       return { ok: false, reason: "a roster is malformed" };
     }

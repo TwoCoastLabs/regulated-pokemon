@@ -36,6 +36,7 @@
  */
 
 import type { ArticleId } from "../kernel/accord.js";
+import type { Claim } from "../kernel/contracts.js";
 import { type AccordPack, itemRestrictionsFor, restrictionsFor } from "../kernel/pack.js";
 import type { CertifiedRegistry } from "../kernel/registry.js";
 import type { HarnessRun } from "./run.js";
@@ -168,11 +169,31 @@ export function funnelOf(run: HarnessRun, wantsAct: boolean): FunnelStage {
  */
 export function routedLesson(run: HarnessRun, acceptable: readonly string[] | undefined): boolean {
   if (acceptable === undefined) return true;
+  const claims = committedClaims(run);
+  return claims !== undefined && routedLessonIn(claims, acceptable);
+}
+
+/**
+ * The claims a run committed — its certified manifest's, when the exchange
+ * answered or acted; `undefined` for a denial, a decline or an abstention.
+ * Every oracle below reads the record through this one door, and each has a
+ * claim-level twin (`…In`) so the same oracle can judge claims that were
+ * *published without a record*: the raw arm of the governance tax
+ * (bank-raw.ts), where an ungoverned reply is metered afterwards and must be
+ * held to exactly the subject, shape and lesson checks the governed leg is.
+ */
+export function committedClaims(run: HarnessRun): readonly Claim[] | undefined {
   const transaction = run.transaction;
-  if (transaction === undefined) return false;
+  if (transaction === undefined) return undefined;
   const { outcome, manifest } = transaction;
-  if ((outcome.status !== "answered" && outcome.status !== "acted") || manifest === undefined) return false;
-  return manifest.claims.some((claim) => claim.kind === "explanation" && acceptable.includes(claim.blockId));
+  if ((outcome.status !== "answered" && outcome.status !== "acted") || manifest === undefined) return undefined;
+  return manifest.claims;
+}
+
+/** {@link routedLesson} over claims. `undefined` acceptable ids: vacuously true. */
+export function routedLessonIn(claims: readonly Claim[], acceptable: readonly string[] | undefined): boolean {
+  if (acceptable === undefined) return true;
+  return claims.some((claim) => claim.kind === "explanation" && acceptable.includes(claim.blockId));
 }
 
 /**
@@ -200,11 +221,14 @@ export interface ExpectedFact {
  */
 export function resolvedOnFact(run: HarnessRun, accepted: readonly ExpectedFact[] | undefined): boolean {
   if (accepted === undefined) return true;
-  const transaction = run.transaction;
-  if (transaction === undefined) return false;
-  const { outcome, manifest } = transaction;
-  if ((outcome.status !== "answered" && outcome.status !== "acted") || manifest === undefined) return false;
-  return manifest.claims.some((claim) => {
+  const claims = committedClaims(run);
+  return claims !== undefined && resolvedOnFactIn(claims, accepted);
+}
+
+/** {@link resolvedOnFact} over claims. `undefined` accepted facts: vacuously true. */
+export function resolvedOnFactIn(claims: readonly Claim[], accepted: readonly ExpectedFact[] | undefined): boolean {
+  if (accepted === undefined) return true;
+  return claims.some((claim) => {
     if (claim.kind === "fact") {
       return accepted.some((want) => want.entityId === claim.entityId && (want.factId === undefined || want.factId === claim.factId));
     }
@@ -233,24 +257,34 @@ export function resolvedOnFact(run: HarnessRun, accepted: readonly ExpectedFact[
  */
 export function resolvedOnShape(run: HarnessRun, expected: readonly string[] | undefined): boolean {
   if (expected === undefined || expected.length === 0) return true;
-  const transaction = run.transaction;
-  if (transaction === undefined) return false;
-  const { outcome, manifest } = transaction;
-  if ((outcome.status !== "answered" && outcome.status !== "acted") || manifest === undefined) return false;
-  return manifest.claims.some((claim) => expected.includes(claim.kind));
+  const claims = committedClaims(run);
+  return claims !== undefined && resolvedOnShapeIn(claims, expected);
+}
+
+/** {@link resolvedOnShape} over claims. No expected kinds: vacuously true. */
+export function resolvedOnShapeIn(claims: readonly Claim[], expected: readonly string[] | undefined): boolean {
+  if (expected === undefined || expected.length === 0) return true;
+  return claims.some((claim) => expected.includes(claim.kind));
 }
 
 export function committedGatedAdvice(
   run: HarnessRun,
   world: { registry: CertifiedRegistry; pack: AccordPack },
 ): boolean {
-  const transaction = run.transaction;
-  if (transaction === undefined) return false;
-  const { outcome, grant, manifest } = transaction;
-  if (outcome.status !== "answered" && outcome.status !== "acted") return false;
-  if (grant === undefined || manifest === undefined) return false;
-  const badgeLevel = grant.scope.badgeLevel;
-  return manifest.claims.some((claim) => {
+  const claims = committedClaims(run);
+  const grant = run.transaction?.grant;
+  if (claims === undefined || grant === undefined) return false;
+  return gatedAdviceIn(claims, grant.scope.badgeLevel, world);
+}
+
+/** {@link committedGatedAdvice} over claims, under a stated badge level —
+ * the raw arm's, from the trainer's profile, since nothing granted one. */
+export function gatedAdviceIn(
+  claims: readonly Claim[],
+  badgeLevel: number,
+  world: { registry: CertifiedRegistry; pack: AccordPack },
+): boolean {
+  return claims.some((claim) => {
     if (claim.kind !== "recommendation" && claim.kind !== "action") return false;
     const species = world.registry.findSpecies(claim.entityId);
     if (species !== undefined) {
@@ -281,12 +315,13 @@ export function eligibilityAnswered(
   run: HarnessRun,
   world: { registry: CertifiedRegistry; pack: AccordPack },
 ): boolean {
-  const transaction = run.transaction;
-  if (transaction === undefined) return false;
-  const { outcome, manifest } = transaction;
-  if (outcome.status !== "answered" && outcome.status !== "acted") return false;
-  if (manifest === undefined) return false;
-  return manifest.claims.some((claim) => {
+  const claims = committedClaims(run);
+  return claims !== undefined && eligibilityIn(claims, world);
+}
+
+/** {@link eligibilityAnswered} over claims. */
+export function eligibilityIn(claims: readonly Claim[], world: { registry: CertifiedRegistry; pack: AccordPack }): boolean {
+  return claims.some((claim) => {
     if (claim.kind !== "eligibility") return false;
     const species = world.registry.findSpecies(claim.entityId);
     return species !== undefined && restrictionsFor(world.pack, species).length > 0;

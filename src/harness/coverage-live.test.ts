@@ -13,7 +13,7 @@ import { readBank } from "./bank.js";
 import { phrasingsOf, type RecordedBankRun } from "./bank-run.js";
 import { type CoverageArtifact, latestCoverageArtifact, renderCoverageArtifact } from "./coverage-artifact.js";
 import { type CoverageFs, type CoverageOptions, parseCoverageArgs, runCoverage } from "./coverage-live.js";
-import { DEFAULT_STRONG_MODEL } from "./models.js";
+import { DEFAULT_STRONG_MODEL, RAW_PERSONA } from "./models.js";
 import { emptyUsage, ScriptedProvider } from "./provider.js";
 
 const world = demoWorld();
@@ -173,6 +173,62 @@ describe("the live page's configuration runs as one leg", () => {
     expect(page).toContain("**feedback**");
     expect(page).toContain("**clarify**");
     expect(page).toContain("**suggest**");
+  });
+});
+
+describe("the raw arm rides beside the governed leg (docs/generalization.md §11, the governance tax)", () => {
+  it("parses --raw, states it in the plan, and refuses it on the banks that do not carry it", () => {
+    expect(parseCoverageArgs(["--raw"]).raw).toBe(true);
+    expect(parseCoverageArgs(["--raw", "--phrasings"]).errors.join("\n")).toContain("--raw");
+    expect(parseCoverageArgs(["--raw", "--dialogues"]).errors.join("\n")).toContain("--raw");
+  });
+
+  it("runs the same entries ungoverned after the governed passes, files them whole, and renders the tax from the artifact", async () => {
+    const plan = await runCoverage(options(["--ids", "ans-fact-speed-pikachu", "--raw"]));
+    expect(plan.lines.join("\n")).toContain("raw arm:       yes");
+
+    const purposes: string[] = [];
+    const providers: { system: string | undefined; structured: boolean | undefined }[] = [];
+    const opts = options(["--live", "--ids", "ans-fact-speed-pikachu,data-ability-pikachu", "--raw", "--repetitions", "2"], {
+      makeProvider: ({ system, structured }) =>
+        (providers.push({ system, structured }), new ScriptedProvider("coverage:raw", (request) => {
+          purposes.push(request.purpose);
+          if (request.purpose === "raw") return request.prompt.includes("Speed") ? pikachuSpeed() : JSON.stringify({ rosters: [], claims: [] });
+          return request.purpose === "answer" ? pikachuSpeed() : "decline";
+        })),
+    });
+    const result = await runCoverage(opts);
+    expect(result.exitCode).toBe(0);
+    // The governed leg's provider carries the default persona and the
+    // enforced grammar; the raw arm's its own plain persona, told nothing
+    // about verification, with the grammar asked for and never enforced.
+    expect(providers).toEqual([{ system: undefined, structured: undefined }, { system: RAW_PERSONA, structured: false }]);
+    // Two governed passes first, then two raw passes over the same two entries.
+    expect(purposes.filter((purpose) => purpose === "raw")).toHaveLength(4);
+    const lastGoverned = purposes.lastIndexOf("answer");
+    expect(purposes.indexOf("raw")).toBeGreaterThan(lastGoverned);
+
+    const { artifact } = filedArtifact(opts.written);
+    expect(artifact.raw?.runs).toHaveLength(4);
+    expect(artifact.raw?.structuredOutput).toBe(false);
+    expect(artifact.raw?.runs.map((run) => run.repetition).sort()).toEqual([0, 0, 1, 1]);
+    expect(artifact.raw?.tax.repetitions).toBe(2);
+    const answerable = artifact.raw?.tax.rows.find((row) => row.disposition === "answerable");
+    expect(answerable).toMatchObject({ entries: 1, rawApparent: { stable: 1 }, rawVerified: { stable: 1 } });
+    const needsData = artifact.raw?.tax.rows.find((row) => row.disposition === "needs-data");
+    expect(needsData).toMatchObject({ entries: 1, rawApparent: { stable: 1 } });
+    const page = renderCoverageArtifact(artifact);
+    expect(page).toContain("**raw**");
+    expect(page).toContain("## The governance tax");
+    expect(page).toContain("N=2");
+  });
+
+  it("files no raw arm and renders no tax when --raw was not paid for", async () => {
+    const opts = options(["--live", "--ids", "ans-fact-speed-pikachu"], { makeProvider: scripted(pikachuSpeed()) });
+    await runCoverage(opts);
+    const { artifact } = filedArtifact(opts.written);
+    expect(artifact.raw).toBeUndefined();
+    expect(renderCoverageArtifact(artifact)).not.toContain("governance tax");
   });
 });
 

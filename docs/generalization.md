@@ -1000,13 +1000,24 @@ product has to reach both, and neither may be traded for the other.
   raw, zero violations, honest disposition above a declared floor, and at
   most one question per resolved answer on average — each margin set from
   the first governed-versus-raw leg on the realistic bank and tightened
-  only, the way the coverage thresholds ratchet. As of 2026-09-10 the
-  governed side is measured (findings, R3b step 5: 103/137 (75%) overall,
-  65/79 (82%) answerable, 0 of 137 escalations, 19 model questions on 137
-  entries (14%), N=1, strong model) and the raw side of the realistic bank
-  is not; the control arm exists only on the 8-scenario smoke set. The
-  first governed-versus-raw leg on the realistic bank, at N=3 on both
-  models, is what turns the bar from a sentence into numbers.
+  only, the way the coverage thresholds ratchet. Measured for the first
+  time on 2026-09-11 (findings, "The governance tax, measured"), the
+  tax is small and it buys truth: on the 57 answerable entries both arms
+  can express, the strong default at N=3 has a governed stable core of
+  44/57 (77%) against the same model ungoverned at 51/57 (89%) as it
+  appeared and 27/57 (47%) true (text facts excused) — 7 entries of
+  apparent usefulness paid, 1.6× the true rate bought; the weak model
+  35/57 (61%) against 36/57 (63%) apparent and 14/57 (25%) true. The
+  other three numbers on those legs: 0 of 411 escalations on each model;
+  honest disposition 29/45 (64%) and 27/45 (60%) stably on the entries
+  that must not resolve; 0.07 and 0.18 advisor questions per resolution.
+  The bar, then, is written from that leg: governed answerable stable
+  core within 15 points of the raw arm's apparent rate and above its
+  verified rate, on every model; and the backlog is the entries where the
+  raw arm is right and the governed leg is not — 8 on the strong model
+  and 2 on the weak, named in the finding. The comparison is product
+  against chatbot, not pipeline with and without the gate; the
+  kernel-only ablation (the same pipeline, the gate as a meter) is owed.
 - **The falsifier is named.** The usefulness half fails if the governance
   tax stops shrinking under operator-owned fixes and only a stronger model
   moves it — usefulness would then have come from model capability after

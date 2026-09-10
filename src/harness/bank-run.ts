@@ -16,7 +16,7 @@
  * from the record, exactly as replay reads.
  */
 
-import type { ClarificationOption, ScopeDimension, TrainerScope } from "../kernel/contracts.js";
+import type { Claim, ClarificationOption, ScopeDimension, TrainerScope } from "../kernel/contracts.js";
 import { deriveScope } from "../kernel/scope.js";
 import type { ModelProvider } from "./provider.js";
 import type { DemoWorld } from "../demo/script.js";
@@ -273,12 +273,19 @@ export function scoreOracle(oracle: DispositionOracle, run: HarnessRun, world: D
  * answer the question accepts through another route. */
 function answeredThroughOtherKind(run: HarnessRun, expected: readonly ClaimKind[] | undefined): boolean {
   const manifest = run.transaction?.manifest;
-  if (manifest === undefined || expected === undefined) return false;
+  if (manifest === undefined) return false;
+  return answeredThroughOtherKindIn(manifest.claims, expected);
+}
+
+/** {@link answeredThroughOtherKind} over claims — shared with the raw arm
+ * (bank-raw.ts), which holds published claims to the same oracle. */
+export function answeredThroughOtherKindIn(claims: readonly Claim[], expected: readonly ClaimKind[] | undefined): boolean {
+  if (expected === undefined) return false;
   // `treats` is excluded: it now has its own subject oracle inside
   // resolvedOnFact (the itemId must match an accepted entity), so letting it
   // ride the escape hatch would waive exactly the discipline it just gained —
   // a verdict about the wrong item would pass on shape alone.
-  return manifest.claims.some((claim) => claim.kind !== "fact" && claim.kind !== "treats" && expected.includes(claim.kind));
+  return claims.some((claim) => claim.kind !== "fact" && claim.kind !== "treats" && expected.includes(claim.kind));
 }
 
 /** Drive the session to a settled state, answering as the trainer would. The
