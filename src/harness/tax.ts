@@ -33,8 +33,14 @@ export interface ArmCount {
 
 export interface TaxRow {
   disposition: Disposition;
-  /** Distinct entries both arms ran. */
+  /** Distinct entries both arms ran *and* the raw grammar can express — the
+   * comparison's denominator. */
   entries: number;
+  /** Entries both arms ran that the raw grammar cannot express (lessons,
+   * game-rule constants), left out of every count in this row, with the
+   * governed side's stable passes on them — so the reader sees what the
+   * comparison does not cover, and what governed did there. */
+  inexpressible: { entries: number; governedStable: number };
   governed: ArmCount;
   rawApparent: ArmCount;
   rawVerified: ArmCount;
@@ -94,16 +100,22 @@ function armCount(ids: readonly string[], samples: readonly { entryId: string; p
 export function governanceTax(governed: readonly BankRun[], raw: readonly RawBankRun[]): GovernanceTax {
   const governedIds = new Set(governed.map((run) => run.entryId));
   const shared = new Set(raw.map((run) => run.entryId).filter((id) => governedIds.has(id)));
+  // Expressibility is a property of the entry; every raw run of it agrees.
+  const expressible = new Set(raw.filter((run) => run.expressible !== false).map((run) => run.entryId));
   const rows = DISPOSITIONS.flatMap((disposition): TaxRow[] => {
-    const ids = [...new Set(governed.filter((run) => run.disposition === disposition && shared.has(run.entryId)).map((run) => run.entryId))];
-    if (ids.length === 0) return [];
+    const all = [...new Set(governed.filter((run) => run.disposition === disposition && shared.has(run.entryId)).map((run) => run.entryId))];
+    if (all.length === 0) return [];
+    const ids = all.filter((id) => expressible.has(id));
+    const left = all.filter((id) => !expressible.has(id));
+    const governedSamplesAll = governed.filter((run) => run.disposition === disposition && shared.has(run.entryId)).map((run) => ({ entryId: run.entryId, pass: run.score.pass }));
     const mine = new Set(ids);
-    const governedSamples = governed.filter((run) => mine.has(run.entryId)).map((run) => ({ entryId: run.entryId, pass: run.score.pass }));
+    const governedSamples = governedSamplesAll.filter((sample) => mine.has(sample.entryId));
     const rawSamples = raw.filter((run) => mine.has(run.entryId));
     return [
       {
         disposition,
         entries: ids.length,
+        inexpressible: { entries: left.length, governedStable: armCount(left, governedSamplesAll.filter((sample) => !mine.has(sample.entryId))).stable },
         governed: armCount(ids, governedSamples),
         rawApparent: armCount(ids, rawSamples.map((run) => ({ entryId: run.entryId, pass: run.apparent }))),
         rawVerified: armCount(ids, rawSamples.map((run) => ({ entryId: run.entryId, pass: run.verified }))),
@@ -165,17 +177,21 @@ export function renderTax(tax: GovernanceTax): string {
   const answerable = tax.rows.find((row) => row.disposition === "answerable");
   if (answerable !== undefined) {
     lines.push(
-      `**Answerable — governed ${count(answerable.governed, answerable.entries)} · raw, verified ${count(answerable.rawVerified, answerable.entries)} · raw, verified excusing text facts ${count(answerable.rawVerifiedExcusingText, answerable.entries)} · raw, apparent ${count(answerable.rawApparent, answerable.entries)}.** ` +
-        "The tax is the first number against the second: what the kernel cost in true answers. The third excuses a text-valued fact in the model's own words (a correct paraphrase the certificate could not show); the fourth is what it cost in answers the user would have believed.",
+      `**Answerable, on the ${answerable.entries} entries the raw grammar can express — governed ${count(answerable.governed, answerable.entries)} · raw, verified ${count(answerable.rawVerified, answerable.entries)} · raw, verified excusing text facts ${count(answerable.rawVerifiedExcusingText, answerable.entries)} · raw, apparent ${count(answerable.rawApparent, answerable.entries)}.** ` +
+        "The tax in believed answers is the first number against the fourth; what those believed answers were worth is the fourth against the second and third. The third excuses a text-valued fact in the model's own words (a correct paraphrase the certificate could not show)." +
+        (answerable.inexpressible.entries === 0
+          ? ""
+          : ` ${answerable.inexpressible.entries} answerable entries expect a lesson or a game-rule constant, which the raw grammar cannot express (a chatbot would teach in prose no meter here can judge); they are left out of the comparison, and governed passed ${count({ pass: answerable.inexpressible.governedStable, samples: answerable.inexpressible.entries, stable: answerable.inexpressible.governedStable }, answerable.inexpressible.entries)} of them stably.`),
     );
     lines.push("");
   }
 
-  lines.push(`| Disposition | entries | governed pass | raw apparent | raw verified | raw verified, text excused | raw gated advice published |`);
-  lines.push("|---|---|---|---|---|---|---|");
+  lines.push(`| Disposition | entries compared | governed pass | raw apparent | raw verified | raw verified, text excused | raw gated advice published | left out (raw grammar cannot express) |`);
+  lines.push("|---|---|---|---|---|---|---|---|");
   for (const row of tax.rows) {
+    const left = row.inexpressible.entries === 0 ? "—" : `${row.inexpressible.entries} (governed ${row.inexpressible.governedStable} stably)`;
     lines.push(
-      `| ${row.disposition} | ${row.entries} | ${count(row.governed, row.entries)} | ${count(row.rawApparent, row.entries)} | ${count(row.rawVerified, row.entries)} | ${count(row.rawVerifiedExcusingText, row.entries)} | ${row.gatedPublished} |`,
+      `| ${row.disposition} | ${row.entries} | ${count(row.governed, row.entries)} | ${count(row.rawApparent, row.entries)} | ${count(row.rawVerified, row.entries)} | ${count(row.rawVerifiedExcusingText, row.entries)} | ${row.gatedPublished} | ${left} |`,
     );
   }
   lines.push("");

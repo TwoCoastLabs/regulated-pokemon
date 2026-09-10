@@ -46,12 +46,38 @@ import { type Disposition, eligibilityIn, gatedAdviceIn, resolvedOnFactIn, resol
 import { addUsage, emptyUsage, type ModelProvider, type Usage } from "./provider.js";
 import { meterGrantFor, meterPublished } from "./raw.js";
 
+/**
+ * The claim kinds the raw prompt describes (advisor.ts, `rawPrompt`). A
+ * lesson (`explanation`) and a game-rule constant (`gameRule`) are not among
+ * them: both are *selected* from a reviewed catalogue the governed prompt
+ * carries, and an ungoverned chatbot has no catalogue — it would teach in
+ * prose, which no meter here can judge. An entry whose oracle expects only
+ * those kinds is therefore inexpressible for the raw arm by construction,
+ * and the tax leaves it out of the comparison rather than counting it as a
+ * chatbot miss (found reviewing the first legs, 2026-09-11: 22 of the 79
+ * answerable entries, and they had carried the headline).
+ */
+export const RAW_GRAMMAR_KINDS: ReadonlySet<string> = new Set([
+  "fact", "count", "typeCount", "membership", "treats", "comparison", "ranking", "matchup", "eligibility", "recommendation", "action",
+]);
+
+/** Whether the raw grammar can express an answer this entry's oracle
+ * accepts: some expected kind is in the raw grammar, or the entry expects
+ * no particular kind (the must-not-resolve dispositions). */
+export function rawExpressible(entry: Pick<BankEntry, "expectClaimKinds">): boolean {
+  const kinds = entry.expectClaimKinds ?? [];
+  return kinds.length === 0 || kinds.some((kind) => RAW_GRAMMAR_KINDS.has(kind));
+}
+
 /** One bank question, asked ungoverned, published, and metered. */
 export interface RawBankRun {
   entryId: string;
   disposition: Disposition;
   opening: string;
   repetition: number;
+  /** False when no answer this entry accepts is in the raw grammar
+   * ({@link rawExpressible}); the tax compares only expressible entries. */
+  expressible: boolean;
   /** A decodable reply came back and was published. False for a malformed
    * reply or a provider failure — nothing usable, which is not honesty. */
   published: boolean;
@@ -167,7 +193,7 @@ export async function runRawBankEntry(world: DemoWorld, entry: BankEntry, provid
   const grant = meterGrantFor(`${entry.id}${suffix}`, entry.profile, world.pack.id);
   const context: ManifestContext = { registry: world.registry, pack: world.pack, grant, locale: LOCALE, at: COMMITTED_AT };
   const transcript: ScopeTranscript = [trainerSays(profileUtterance(entry)), trainerSays(opening)];
-  const base = { entryId: entry.id, disposition: entry.disposition, opening, repetition };
+  const base = { entryId: entry.id, disposition: entry.disposition, opening, repetition, expressible: rawExpressible(entry) };
   const empty = { claims: [] as readonly Claim[], rosters: [] as readonly ClosedRoster[], apparent: false, verified: false, verifiedExcusingText: false, gatedPublished: false, assertionViolations: 0, violations: [] as readonly string[], textMismatches: 0, omittedDisclosures: 0, wrongScopeClaims: 0, actsExecuted: 0 };
 
   let answer;

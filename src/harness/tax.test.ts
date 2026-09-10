@@ -22,6 +22,7 @@ function raw(entryId: string, disposition: Disposition, apparent: boolean, verif
     disposition,
     opening: "q",
     repetition: 0,
+    expressible: true,
     published: true,
     claims: [],
     rosters: [],
@@ -112,6 +113,25 @@ describe("the text-excused reading sits beside verified, never instead of it", (
   });
 });
 
+describe("an entry the raw grammar cannot express is left out of the comparison, and said so", () => {
+  it("removes it from every count in its row and reports governed's stable passes on it", () => {
+    const tax = governanceTax(
+      [governed("a1", "answerable", true), governed("lesson", "answerable", true), governed("rule", "answerable", false)],
+      [raw("a1", "answerable", true, true), raw("lesson", "answerable", false, false, { expressible: false, published: true, claims: [] }), raw("rule", "answerable", false, false, { expressible: false })],
+    );
+    const row = tax.rows[0]!;
+    expect(row.entries).toBe(1);
+    expect(row.governed).toEqual({ pass: 1, samples: 1, stable: 1 });
+    expect(row.rawApparent.samples).toBe(1);
+    expect(row.inexpressible).toEqual({ entries: 2, governedStable: 1 });
+    const md = renderTax(tax);
+    expect(md).toContain("on the 1 entries the raw grammar can express");
+    expect(md).toContain("2 answerable entries expect a lesson or a game-rule constant");
+    expect(md).toContain("governed passed 1/2 (50%) of them stably");
+    expect(md).toContain("| 2 (governed 1 stably) |");
+  });
+});
+
 describe("renderTax — a count and a percentage together, never either alone", () => {
   it("formats fractions with the percentage beside the count, and a zero denominator without one", () => {
     expect(fraction(65, 79)).toBe("65/79 (82%)");
@@ -122,8 +142,8 @@ describe("renderTax — a count and a percentage together, never either alone", 
   it("renders the headline, the table and the raw ledger at N=1", () => {
     const md = renderTax(governanceTax([governed("a1", "answerable", true), governed("a2", "answerable", false)], [raw("a1", "answerable", true, true), raw("a2", "answerable", true, true)]));
     expect(md).toContain("## The governance tax");
-    expect(md).toContain("**Answerable — governed 1/2 (50%) · raw, verified 2/2 (100%) · raw, verified excusing text facts 2/2 (100%) · raw, apparent 2/2 (100%).**");
-    expect(md).toContain("| answerable | 2 | 1/2 (50%) | 2/2 (100%) | 2/2 (100%) | 2/2 (100%) | 0 |");
+    expect(md).toContain("**Answerable, on the 2 entries the raw grammar can express — governed 1/2 (50%) · raw, verified 2/2 (100%) · raw, verified excusing text facts 2/2 (100%) · raw, apparent 2/2 (100%).**");
+    expect(md).toContain("| answerable | 2 | 1/2 (50%) | 2/2 (100%) | 2/2 (100%) | 2/2 (100%) | 0 | — |");
     expect(md).toContain("**Raw arm, enforcement side");
     expect(md).toContain("**Raw arm cost:** 2 call(s)");
     expect(md).not.toContain("N=");

@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 
 import { demoWorld } from "../demo/files.js";
 import { readBank } from "./bank.js";
-import { profileUtterance, runRawBankEntry, scoreRaw } from "./bank-raw.js";
+import { profileUtterance, rawExpressible, runRawBankEntry, scoreRaw } from "./bank-raw.js";
 import { FailingProvider, ScriptedProvider } from "./provider.js";
 
 const world = demoWorld();
@@ -122,6 +122,28 @@ describe("runRawBankEntry — the same question, no kernel", () => {
   it("stamps the repetition into the ids so a repeated pass files apart", async () => {
     const run = await runRawBankEntry(world, entry("ans-fact-speed-pikachu"), scripted(reply([])), 2);
     expect(run.repetition).toBe(2);
+  });
+});
+
+describe("rawExpressible — what the raw grammar can answer at all", () => {
+  it("is false for an entry that expects only a lesson or a game-rule constant, true otherwise", () => {
+    expect(rawExpressible({ expectClaimKinds: ["explanation"] })).toBe(false);
+    expect(rawExpressible({ expectClaimKinds: ["gameRule"] })).toBe(false);
+    expect(rawExpressible({ expectClaimKinds: ["fact"] })).toBe(true);
+    expect(rawExpressible({ expectClaimKinds: ["explanation", "fact"] })).toBe(true);
+    expect(rawExpressible({})).toBe(true);
+    // The bank as shipped: the lesson and rule entries are exactly the ones
+    // the raw prompt never describes.
+    const left = bank.entries.filter((candidate) => candidate.disposition === "answerable" && !rawExpressible(candidate));
+    expect(left.length).toBeGreaterThan(0);
+    expect(left.every((candidate) => candidate.expectClaimKinds!.every((kind) => kind === "explanation" || kind === "gameRule"))).toBe(true);
+  });
+
+  it("stamps every raw run with it", async () => {
+    const lesson = bank.entries.find((candidate) => candidate.expectClaimKinds?.length === 1 && candidate.expectClaimKinds[0] === "explanation")!;
+    const run = await runRawBankEntry(world, lesson, scripted(reply([])));
+    expect(run.expressible).toBe(false);
+    expect((await runRawBankEntry(world, entry("ans-fact-speed-pikachu"), scripted(reply([])))).expressible).toBe(true);
   });
 });
 

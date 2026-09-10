@@ -1002,20 +1002,22 @@ product has to reach both, and neither may be traded for the other.
   the first governed-versus-raw leg on the realistic bank and tightened
   only, the way the coverage thresholds ratchet. Measured for the first
   time on 2026-09-11 (findings, "The governance tax, measured"), the
-  first number is not a tax: on the strong default at N=3, the governed
-  stable core on answerable entries is 64/79 (81%) against the same model
-  ungoverned at 27/79 (34%) true (text facts excused) and 51/79 (65%) as
-  it appeared — the sign of the margin is reversed, because retrieval
-  hands the governed leg the value the raw arm has to recall. The other
-  three numbers on that leg: 0 of 411 escalations; honest disposition
-  29/45 (64%) stably on the entries that must not resolve; 0.07 advisor
-  questions and 0.01 scope cards per resolution. The weak model, same
-  leg: governed 50/79 (63%) against raw 14/79 (18%) true and 36/79 (46%)
-  apparent, 0 of 411 escalations, honest disposition 27/45 (60%). The bar,
-  then, is written from that leg: governed answerable stable core at or
-  above the raw arm's verified rate on every model, and the backlog is the
-  entries where the raw arm is right and the governed leg is not — 8 on
-  the strong model and 2 on the weak, named in the finding.
+  tax is small and it buys truth: on the 57 answerable entries both arms
+  can express, the strong default at N=3 has a governed stable core of
+  44/57 (77%) against the same model ungoverned at 51/57 (89%) as it
+  appeared and 27/57 (47%) true (text facts excused) — 7 entries of
+  apparent usefulness paid, 1.6× the true rate bought; the weak model
+  35/57 (61%) against 36/57 (63%) apparent and 14/57 (25%) true. The
+  other three numbers on those legs: 0 of 411 escalations on each model;
+  honest disposition 29/45 (64%) and 27/45 (60%) stably on the entries
+  that must not resolve; 0.07 and 0.18 advisor questions per resolution.
+  The bar, then, is written from that leg: governed answerable stable
+  core within 15 points of the raw arm's apparent rate and above its
+  verified rate, on every model; and the backlog is the entries where the
+  raw arm is right and the governed leg is not — 8 on the strong model
+  and 2 on the weak, named in the finding. The comparison is product
+  against chatbot, not pipeline with and without the gate; the
+  kernel-only ablation (the same pipeline, the gate as a meter) is owed.
 - **The falsifier is named.** The usefulness half fails if the governance
   tax stops shrinking under operator-owned fixes and only a stronger model
   moves it — usefulness would then have come from model capability after

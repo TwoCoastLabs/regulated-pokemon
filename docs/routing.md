@@ -545,8 +545,10 @@ wrong order for a "feels dumb" problem.
    (12%), 10 picked, 76 no right option; suggestions shown on 1 certified
    answer. The reasoning-mode leg is not run. The raw arm
    turned the leg into the first governance-tax measurement, and the
-   number is the finding: on the strong model the governed floor is above
-   the ungoverned model's apparent rate, not below its true one.
+   number is the finding: on the 57 answerable entries both grammars can
+   express, the governed floor is 7 entries below the chatbot's apparent
+   rate and 1.6× its true rate on the strong model (44/57 against 51/57
+   and 27/57), 1 entry below and 2.5× on the weak.
 7. The openFDA epic, budgeted before it starts.
 
 **What would falsify it.** If, with the data dictionary in place, the strong model
