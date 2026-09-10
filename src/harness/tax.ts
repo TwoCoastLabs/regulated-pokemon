@@ -144,7 +144,8 @@ export function renderTax(tax: GovernanceTax): string {
     "The raw arm asks each question once with no kernel: the reply is published as it came, then metered by the same verifier the governed leg is gated with. " +
       "**Apparent** is the bank's oracle reading the published reply as an answer to *this* question, true or not — what a chatbot user perceives. " +
       "**Verified** is apparent with nothing false in it — the comparator, since every governed resolution is certified-true. " +
-      "On the dispositions that must not resolve, both readings are the one honesty check: nothing the disposition forbids was published." +
+      "On the dispositions that must not resolve, both readings are the one honesty check: nothing the disposition forbids was published. " +
+      "The raw arm runs under a plain persona told nothing about verification, with the claim grammar asked for in the prompt and never enforced at decode, so its answers are what an untimid chatbot gives; its harm counts below are therefore a measurement, not the floor the scenario corpus's control arm reports." +
       (stable ? ` With N=${tax.repetitions}, every cell is the stable core — entries that passed in every repetition.` : ""),
   );
   lines.push("");

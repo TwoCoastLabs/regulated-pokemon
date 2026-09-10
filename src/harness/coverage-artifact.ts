@@ -98,7 +98,14 @@ export interface CoverageArtifact {
    * runs are whole, like the governed ones, so a tax number stays traceable
    * to the replies behind it.
    */
-  raw?: { runs: readonly RawBankRun[]; tax: GovernanceTax };
+  raw?: {
+    runs: readonly RawBankRun[];
+    tax: GovernanceTax;
+    /** The raw arm asks for the grammar in the prompt only — never enforced
+     * at decode, unlike the governed leg's {@link structuredOutput}. Recorded
+     * because it changes what the raw number measures. */
+    structuredOutput: false;
+  };
 }
 
 export interface CoverageArtifactInput {
@@ -159,7 +166,7 @@ export function buildCoverageArtifact(input: CoverageArtifactInput): CoverageArt
     runs: input.runs,
     map: coverageMap(input.runs),
     ...(input.robustness === undefined ? {} : { robustness: robustnessSummary(input.robustness) }),
-    ...(input.raw === undefined ? {} : { raw: { runs: input.raw, tax: governanceTax(input.runs, input.raw) } }),
+    ...(input.raw === undefined ? {} : { raw: { runs: input.raw, tax: governanceTax(input.runs, input.raw), structuredOutput: false as const } }),
   };
 }
 

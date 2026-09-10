@@ -394,6 +394,11 @@ function rawPrompt(asks: readonly string[], tools: readonly string[], items = fa
     "trainer exactly as you state it — nothing recomputes or checks it first.",
     "",
     'Reply with one JSON object, {"rosters": [...], "claims": [...]}, and nothing else.',
+    // A chatbot can say "I can't help with that"; in a claim grammar the
+    // equivalent has to be offered, or the model pads with the cheapest
+    // valid claim — the first governance-tax probe (2026-09-10) answered
+    // "What's the weather like today?" with a bare type count.
+    'If none of these claims answers what was asked, reply {"rosters": [], "claims": []} — an empty answer is allowed.',
     "",
     "A roster is a declarative set you name and then cite by id:",
     '  {"id": "<your-id>", "criteria": {"all": [<criterion>, ...]}}',

@@ -50,7 +50,7 @@ import { runDialogues } from "./dialogue-run.js";
 import { ADVERSARIAL_BANK_PATH, readDialogues } from "./dialogues.js";
 import { centerWorld, demoWorld } from "../demo/files.js";
 import type { Env } from "./live.js";
-import { DEFAULT_STRONG_MODEL, DEFAULT_WEAK_MODEL, HONEST_PERSONA } from "./models.js";
+import { DEFAULT_STRONG_MODEL, DEFAULT_WEAK_MODEL, HONEST_PERSONA, RAW_PERSONA } from "./models.js";
 import { OpenRouterProvider } from "./openrouter.js";
 import { type Disposition, DISPOSITIONS } from "./playability.js";
 import type { ModelProvider } from "./provider.js";
@@ -410,8 +410,12 @@ export interface CoverageOptions {
   /** A fresh, strictly increasing per-entry clock, injected so ids and digests
    * never collide between questions and a test can pin them. */
   clock: () => () => string;
-  /** Injected so the live path is exercised without a network or a key. */
-  makeProvider?: (config: { model: string; apiKey: string }) => ModelProvider;
+  /** Injected so the live path is exercised without a network or a key.
+   * `system` names the persona: the honest one for the governed leg, the
+   * plain one for the raw arm ({@link RAW_PERSONA}); `structured` is whether
+   * the answer grammar is enforced at decode time — on for the governed leg
+   * (the measured default, findings §4), off for the raw arm. */
+  makeProvider?: (config: { model: string; apiKey: string; system?: string; structured?: boolean }) => ModelProvider;
   /** The per-pass runner, injected because the one outcome the early-stop
    * exists for — an enforcement escalation — is unreachable through the real
    * spine while the kernel works, and the stop must be tested anyway. */
@@ -587,8 +591,8 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
   }
   const makeProvider =
     options.makeProvider ??
-    (({ model: slug, apiKey: key }: { model: string; apiKey: string }): ModelProvider =>
-      new OpenRouterProvider({ id: `coverage:${slug}`, model: slug, apiKey: key, system: HONEST_PERSONA, structured: true }));
+    (({ model: slug, apiKey: key, system, structured }: { model: string; apiKey: string; system?: string; structured?: boolean }): ModelProvider =>
+      new OpenRouterProvider({ id: `coverage:${slug}`, model: slug, apiKey: key, system: system ?? HONEST_PERSONA, structured: structured ?? true }));
   const provider = makeProvider({ model, apiKey });
   const world = args.center ? centerWorld() : demoWorld();
 
@@ -627,8 +631,17 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
       // the same number of passes. Nothing stops it early: a raw reply that
       // publishes gated advice is the arm's finding, not a broken zero.
       const runRawPass = options.runRawPass ?? runRawBank;
+      // Its own provider: the same model under the plain persona, told
+      // nothing about verification (see RAW_PERSONA for why), and with the
+      // grammar asked for in the prompt only — strict schema decoding is a
+      // governed-leg lever (findings §4), and on the strong default it turns
+      // an ungoverned reply into the cheapest valid claim or a looping string
+      // (the first governance-tax probes, 2026-09-10: half the replies hit the
+      // token cap; with decoding free, the same questions drew a chatbot's
+      // answers, fabrications included). A malformed reply counts as unusable.
+      const rawProvider = makeProvider({ model, apiKey, system: RAW_PERSONA, structured: false });
       raw = [];
-      for (let pass = 0; pass < args.repetitions; pass++) raw.push(...(await runRawPass(world, entries, provider, pass)));
+      for (let pass = 0; pass < args.repetitions; pass++) raw.push(...(await runRawPass(world, entries, rawProvider, pass)));
     }
   }
 

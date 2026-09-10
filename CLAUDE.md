@@ -50,6 +50,12 @@ public, it doesn't go in the repo at all.
   the PR gate; a weekly workflow runs it and opens an issue.
 - Live-model harnesses (Phase 7+) are separate, explicitly billable scripts;
   they never run in CI and always write run artifacts.
+- **The governance tax:** `npm run coverage:map -- --live --raw ...` runs the
+  raw arm beside the governed leg — the same entries, the same model, no
+  kernel, the reply published as-is and metered afterwards — and the
+  artifact carries governed beside raw per disposition. This is the
+  usefulness north star's number; a usefulness leg without it reports a
+  count, not the tax.
 - **Debug a conversation without a browser:** `npm run session:trace --
   "message" [/confirm|/reject|/act|/decline|/retry] ...` drives the real live
   session (model from `.env`, billable pennies) and prints every phase,
