@@ -35,8 +35,10 @@
  *    here is a floor, not a ceiling.
  */
 
-import type { AnswerManifest, Claim, ScopeGrant, Violation } from "../kernel/contracts.js";
-import type { ManifestContext } from "../kernel/manifest.js";
+import type { AnswerManifest, Claim, ScopeGrant, TrainerScope, Violation } from "../kernel/contracts.js";
+import type { ManifestContext, ManifestDraft } from "../kernel/manifest.js";
+import type { AccordPack } from "../kernel/pack.js";
+import type { CertifiedRegistry } from "../kernel/registry.js";
 import { verifyManifest } from "../kernel/manifest.js";
 import { denialCode } from "../kernel/violation.js";
 import { proposeRawAnswer } from "./advisor.js";
@@ -109,14 +111,54 @@ const WRONG_SCOPE_RULES: ReadonlySet<string> = new Set(["ranking-basis-not-estab
  * about the claims, never about bookkeeping the raw agent had no part in.
  */
 export function meterGrant(scenario: Scenario, packId: string): ScopeGrant {
+  return meterGrantFor(scenario.id, scenario.groundTruth, packId);
+}
+
+/** The same stick for any ground truth — a bank entry's profile is one
+ * (bank-raw.ts): the scope the trainer would have stated, minted directly. */
+export function meterGrantFor(id: string, scope: TrainerScope, packId: string): ScopeGrant {
   return {
-    id: `raw-meter-${scenario.id}`,
+    id: `raw-meter-${id}`,
     packId,
-    scope: scenario.groundTruth,
+    scope,
     bindings: [],
     evidenceDigest: "raw-control:ground-truth",
     issuedAt: ESTABLISHED_AT,
     expiresAt: METER_GRANT_EXPIRES_AT,
+  };
+}
+
+/** The meter's findings against one published draft, split the way the
+ * module note says they must be. */
+export interface Metered {
+  assertionViolations: readonly Violation[];
+  omittedDisclosures: readonly Violation[];
+  wrongScopeClaims: number;
+}
+
+/**
+ * Meter a published draft: dress it as a manifest under the meter grant and
+ * run the governed leg's own verifier over it. The empty exhibits are not an
+ * omission of this harness — they are the raw condition: an ungoverned agent
+ * attaches no disclosures, and the meter charging it for each one owed is the
+ * measurement.
+ */
+export function meterPublished(world: HarnessWorld | { registry: CertifiedRegistry; pack: AccordPack }, context: ManifestContext, transactionId: string, draft: ManifestDraft): Metered {
+  const manifest: AnswerManifest = {
+    transactionId,
+    scopeGrantId: context.grant?.id ?? "",
+    snapshotId: world.registry.snapshot.id,
+    packId: world.pack.id,
+    locale: LOCALE,
+    claims: draft.claims,
+    rosters: draft.rosters,
+    exhibits: [],
+  };
+  const verdict = verifyManifest(context, manifest);
+  return {
+    assertionViolations: verdict.violations.filter((entry) => !DISCLOSURE_RULES.has(entry.rule) && !WRONG_SCOPE_RULES.has(entry.rule)),
+    omittedDisclosures: verdict.violations.filter((entry) => DISCLOSURE_RULES.has(entry.rule)),
+    wrongScopeClaims: verdict.violations.filter((entry) => WRONG_SCOPE_RULES.has(entry.rule)).length,
   };
 }
 
@@ -164,36 +206,17 @@ export async function runRawScenario(
   }
 
   const draft = answer.decode.draft;
-  // The published answer, dressed as a manifest so the meter can read it. The
-  // empty exhibits are not an omission of this harness — they are the raw
-  // condition: an ungoverned agent attaches no disclosures, and the meter
-  // charging it for each one owed is the measurement.
-  const manifest: AnswerManifest = {
-    transactionId,
-    scopeGrantId: grant.id,
-    snapshotId: world.registry.snapshot.id,
-    packId: world.pack.id,
-    locale: LOCALE,
-    claims: draft.claims,
-    rosters: draft.rosters,
-    exhibits: [],
-  };
-  const verdict = verifyManifest(context, manifest);
-  const assertionViolations = verdict.violations.filter(
-    (entry) => !DISCLOSURE_RULES.has(entry.rule) && !WRONG_SCOPE_RULES.has(entry.rule),
-  );
-  const omittedDisclosures = verdict.violations.filter((entry) => DISCLOSURE_RULES.has(entry.rule));
+  // The published answer, metered after the fact ({@link meterPublished}).
+  const { assertionViolations, omittedDisclosures, wrongScopeClaims: wrongScope } = meterPublished(world, context, transactionId, draft);
 
   const acts = draft.claims.filter((claim): claim is Extract<Claim, { kind: "action" }> => claim.kind === "action");
   const unasked = acts.filter(
     (act) => scenario.ask === undefined || act.tool !== scenario.ask.tool || act.entityId !== scenario.ask.entityId,
   );
-  // The one dimension a claim carries inside itself: a ranking declares its
-  // basis, so a swapped question is detectable against the ground truth even
-  // when every stated value is self-consistent. The meter grant carries the
+  // (A swapped ranking basis — the one dimension a claim carries inside
+  // itself — is the meter's `wrongScopeClaims`: the meter grant carries the
   // trainer's ground-truth basis, so the kernel's own IA-1 denial is the
-  // detector — the same stick the governed leg is gated with.
-  const wrongScope = verdict.violations.filter((entry) => WRONG_SCOPE_RULES.has(entry.rule)).length;
+  // detector, the same stick the governed leg is gated with.)
 
   const findings = [
     `${assertionViolations.length} false assertion(s)`,

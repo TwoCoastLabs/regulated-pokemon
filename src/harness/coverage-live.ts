@@ -33,6 +33,7 @@ import { resolve } from "node:path";
 import { fileArtifact, type WriteFile } from "./artifact.js";
 import { CENTER_BANK_PATH, readBank } from "./bank.js";
 import { phrasingsOf, runBank, runIntentRobustness, type IntentRobustness, type RecordedBankRun } from "./bank-run.js";
+import { type RawBankRun, runRawBank } from "./bank-raw.js";
 import {
   buildCoverageArtifact,
   type CoverageArtifact,
@@ -97,6 +98,10 @@ export interface CoverageArgs {
   clarify: boolean;
   /** The model may offer follow-up suggestions (R3b step 4). Recorded. */
   suggest: boolean;
+  /** Pay for the raw arm too: the same entries, the same model, no kernel —
+   * published as-is and metered afterwards — so the artifact carries the
+   * governance tax (docs/generalization.md §11). Recorded. */
+  raw: boolean;
   model?: string;
   limit?: number;
   ids?: readonly string[];
@@ -129,6 +134,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     feedback: boolean;
     clarify: boolean;
     suggest: boolean;
+    raw: boolean;
     model?: string;
     limit?: number;
     ids?: string[];
@@ -140,7 +146,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     source?: string;
     help: boolean;
     errors: string[];
-  } = { live: false, render: false, weak: false, dialogues: false, adversarial: false, center: false, grounded: false, retrieval: false, gatedGrammar: false, repair: false, profile: false, feedback: false, clarify: false, suggest: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
+  } = { live: false, render: false, weak: false, dialogues: false, adversarial: false, center: false, grounded: false, retrieval: false, gatedGrammar: false, repair: false, profile: false, feedback: false, clarify: false, suggest: false, raw: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
 
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index];
@@ -187,6 +193,9 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
         break;
       case "--suggest":
         args.suggest = true;
+        break;
+      case "--raw":
+        args.raw = true;
         break;
       case "--phrasings":
         args.phrasings = true;
@@ -280,7 +289,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
   if (args.repair && args.phrasings) {
     args.errors.push("--repair is not threaded through the robustness pass; run it on the coverage or dialogue banks");
   }
-  for (const [flag, on] of [["--profile", args.profile], ["--feedback", args.feedback], ["--clarify", args.clarify], ["--suggest", args.suggest]] as const) {
+  for (const [flag, on] of [["--profile", args.profile], ["--feedback", args.feedback], ["--clarify", args.clarify], ["--suggest", args.suggest], ["--raw", args.raw]] as const) {
     if (on && (args.phrasings || args.dialogues)) {
       args.errors.push(`${flag} is threaded through the single-turn coverage run only; the robustness and dialogue banks do not carry it`);
     }
@@ -308,6 +317,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     feedback: args.feedback,
     clarify: args.clarify,
     suggest: args.suggest,
+    raw: args.raw,
     phrasings: args.phrasings,
     repetitions: args.repetitions,
     out: args.out,
@@ -359,6 +369,9 @@ const USAGE = [
   "  --suggest           the model may offer follow-up suggestions (R3b step 4); shown and dropped are counted.",
   "                      The live page runs with --profile --feedback --clarify --suggest; a leg comparing to it",
   "                      needs all four.",
+  "  --raw               also run the raw arm: the same entries, the same model, no kernel — each reply",
+  "                      published as-is and metered afterwards. The artifact then carries the governance",
+  "                      tax (governed beside raw, per disposition). Billed like a second leg; recorded.",
   "  --render [PATH]     render a filed coverage artifact (a file, or a directory to take the newest",
   "                      coverage artifact from; default runs/coverage/). Reads no clock, no key, no network.",
   "  --page PATH         with --render, write the page there instead of printing it.",
@@ -403,6 +416,8 @@ export interface CoverageOptions {
    * exists for — an enforcement escalation — is unreachable through the real
    * spine while the kernel works, and the stop must be tested anyway. */
   runPass?: typeof runBank;
+  /** The raw arm's per-pass runner, injected for the same reason. */
+  runRawPass?: typeof runRawBank;
   write?: WriteFile;
   fs?: CoverageFs;
 }
@@ -554,6 +569,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
         `  feedback:      ${args.feedback ? "yes — a named denial is carried back to the model once" : "no — the first denial files"}`,
         `  clarify:       ${args.clarify ? "yes — the model may ask its own question; the trainer answers from the oracle" : "no — the pack's questions only"}`,
         `  suggest:       ${args.suggest ? "yes — the model may offer follow-ups, shown uncertified" : "no — answers end where the certificate ends"}`,
+        `  raw arm:       ${args.raw ? "yes — the same entries asked ungoverned beside it, for the governance tax (a second leg's cost)" : "no — governed only"}`,
         `  model:         ${model}`,
         `  artifact:      filed under ${args.out}/`,
         `  add --live to run it against the model and bill your key.`,
@@ -579,6 +595,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
   let runs: RecordedBankRun[] = [];
   let reports: IntentRobustness[] | undefined;
   let stoppedEarly = false;
+  let raw: RawBankRun[] | undefined;
 
   if (args.phrasings) {
     reports = [];
@@ -605,6 +622,14 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
         break;
       }
     }
+    if (args.raw) {
+      // The raw arm runs after the governed passes, over the same entries and
+      // the same number of passes. Nothing stops it early: a raw reply that
+      // publishes gated advice is the arm's finding, not a broken zero.
+      const runRawPass = options.runRawPass ?? runRawBank;
+      raw = [];
+      for (let pass = 0; pass < args.repetitions; pass++) raw.push(...(await runRawPass(world, entries, provider, pass)));
+    }
   }
 
   const artifact = buildCoverageArtifact({
@@ -629,6 +654,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
     stoppedEarly,
     runs,
     ...(reports === undefined ? {} : { robustness: reports }),
+    ...(raw === undefined ? {} : { raw }),
   });
   const artifactPath = fileArtifact(artifact, resolve(args.out), options.write);
 

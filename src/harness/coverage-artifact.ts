@@ -18,8 +18,10 @@ import type { AccordPack } from "../kernel/pack.js";
 import type { CertifiedRegistry } from "../kernel/registry.js";
 import type { ArtifactWorld } from "./artifact.js";
 import type { IntentRobustness, RecordedBankRun } from "./bank-run.js";
+import type { RawBankRun } from "./bank-raw.js";
 import { type CoverageMap, coverageMap, renderCoverage, renderRobustness, type RobustnessSummary, robustnessSummary } from "./coverage.js";
 import type { Disposition } from "./playability.js";
+import { type GovernanceTax, governanceTax, renderTax } from "./tax.js";
 
 export const COVERAGE_ARTIFACT_SCHEMA_VERSION = 1;
 
@@ -89,6 +91,14 @@ export interface CoverageArtifact {
   map: CoverageMap;
   /** The robustness reading, when the run iterated phrasings. */
   robustness?: RobustnessSummary;
+  /**
+   * The raw arm, when the run paid for it (`--raw`): the same entries asked
+   * ungoverned, each reply published and metered, and the governance tax
+   * computed once here from the two arms (docs/generalization.md §11). The
+   * runs are whole, like the governed ones, so a tax number stays traceable
+   * to the replies behind it.
+   */
+  raw?: { runs: readonly RawBankRun[]; tax: GovernanceTax };
 }
 
 export interface CoverageArtifactInput {
@@ -116,6 +126,8 @@ export interface CoverageArtifactInput {
   runs: readonly RecordedBankRun[];
   /** The per-intent reports, when the run was a robustness pass. */
   robustness?: readonly IntentRobustness[];
+  /** The raw arm's runs, when one was paid for. */
+  raw?: readonly RawBankRun[];
 }
 
 export function buildCoverageArtifact(input: CoverageArtifactInput): CoverageArtifact {
@@ -147,6 +159,7 @@ export function buildCoverageArtifact(input: CoverageArtifactInput): CoverageArt
     runs: input.runs,
     map: coverageMap(input.runs),
     ...(input.robustness === undefined ? {} : { robustness: robustnessSummary(input.robustness) }),
+    ...(input.raw === undefined ? {} : { raw: { runs: input.raw, tax: governanceTax(input.runs, input.raw) } }),
   };
 }
 
@@ -167,7 +180,7 @@ export function renderCoverageArtifact(artifact: CoverageArtifact): string {
     "<!-- Generated from a coverage artifact; do not hand-edit. Regenerate with `npm run coverage:map`. -->",
     "",
     `Generated from a **${artifact.label}** run started \`${artifact.startedAt}\` on \`${artifact.model.slug}\`, ` +
-      `${artifact.retrieval ? "**grounded by retrieval** (only the facts each question needs)" : artifact.grounded ? "**grounded** (the whole certified registry)" : "ungrounded (the proposer answered from its own knowledge)"}${artifact.gatedGrammar ? ", **gated grammar** (the schema narrowed to each question's nominated kinds)" : ""}${artifact.repair ? ", **repair** (strip-assertion resubmit on fact-mismatch denials)" : ""}${artifact.profile === true ? ", **profile** (scope set on the panel before the opener)" : ""}${artifact.feedback === true ? ", **feedback** (a named denial carried back to the model once)" : ""}${artifact.clarify === true ? ", **clarify** (the model may ask its own question)" : ""}${artifact.suggest === true ? ", **suggest** (the model may offer follow-ups)" : ""}, ` +
+      `${artifact.retrieval ? "**grounded by retrieval** (only the facts each question needs)" : artifact.grounded ? "**grounded** (the whole certified registry)" : "ungrounded (the proposer answered from its own knowledge)"}${artifact.gatedGrammar ? ", **gated grammar** (the schema narrowed to each question's nominated kinds)" : ""}${artifact.repair ? ", **repair** (strip-assertion resubmit on fact-mismatch denials)" : ""}${artifact.profile === true ? ", **profile** (scope set on the panel before the opener)" : ""}${artifact.feedback === true ? ", **feedback** (a named denial carried back to the model once)" : ""}${artifact.clarify === true ? ", **clarify** (the model may ask its own question)" : ""}${artifact.suggest === true ? ", **suggest** (the model may offer follow-ups)" : ""}${artifact.raw === undefined ? "" : ", **raw** (the same model ungoverned beside it, for the governance tax)"}, ` +
       `${artifact.repetitions} repetition(s)${artifact.stoppedEarly ? " — **stopped early** on an enforcement escalation; the runs below are fewer than requested" : ""}; ${scope}.`,
     "",
     "## Provenance",
@@ -182,8 +195,9 @@ export function renderCoverageArtifact(artifact: CoverageArtifact): string {
     artifact.robustness === undefined
       ? renderCoverage(artifact.map, `Coverage map — ${artifact.model.slug}`)
       : renderRobustness(artifact.robustness, `Phrasing robustness — ${artifact.model.slug}`);
+  const tax = artifact.raw === undefined ? "" : `\n${renderTax(artifact.raw.tax)}`;
 
-  return `${header.join("\n")}${body}`;
+  return `${header.join("\n")}${body}${tax}`;
 }
 
 /**
