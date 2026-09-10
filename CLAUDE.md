@@ -2,8 +2,17 @@
 
 ## What this is
 
-A demonstration that provable factuality and compliance for AI agents come
-from architecture, not model capability. The canon is
+A demonstration of a two-sided hypothesis: **a governed agent can be both
+provably compliant and useful enough to ship, and the two come from
+different places.** Compliance comes from architecture — no model output
+crosses a commit boundary unverified, so violations are zero on every
+model, with no error budget. Usefulness comes from layers the operator owns
+— retrieval, grammar, data, dialogue, and the model as a replaceable input —
+and the claim is that the governance tax on usefulness can be driven to a
+product-grade floor by those layers alone, without weakening a single check.
+Both are north stars; neither may be traded for the other (the measured
+form of each is in [docs/generalization.md](docs/generalization.md) §11,
+"The north stars"). The canon is
 [docs/the-indigo-accord.md](docs/the-indigo-accord.md); the design is
 [docs/architecture.md](docs/architecture.md), and the mechanism of one live
 turn — which steps call a model, which never do, and what each prompt holds —
@@ -114,6 +123,16 @@ public, it doesn't go in the repo at all.
   (fabrications, wrong-scope commits, unauthorized actions) are hard zeros
   on every run. Usefulness (resolution rate, prompts-to-answer, abstention)
   is empirical, per-model, sample-bounded — never blend the two.
+- **Usefulness is a north star with a bar, not a number to admire.** Every
+  usefulness leg reports the *governance tax* — the governed stable core
+  beside the same model's raw (ungoverned) resolution on the same entries —
+  and the honest-disposition rate on entries that must not resolve. A
+  direction that lifts usefulness only by weakening a check is wrong, not
+  the check.
+- **Report a metric as count and percentage together** — `65/79 (82%)`, never
+  `82%` alone and never `65` alone — wherever a denominator exists, so a
+  reader never does the mental math and a percentage can never hide a
+  small sample. Enforcement zeros state their denominator too (`0 of 96`).
 - Never hide provider failures inside semantic rates; count them separately
   and fail loudly if every call failed.
 
