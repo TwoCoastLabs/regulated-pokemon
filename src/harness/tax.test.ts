@@ -24,10 +24,14 @@ function raw(entryId: string, disposition: Disposition, apparent: boolean, verif
     repetition: 0,
     published: true,
     claims: [],
+    rosters: [],
     apparent,
     verified,
+    verifiedExcusingText: verified,
     gatedPublished: false,
     assertionViolations: verified ? 0 : 1,
+    violations: verified ? [] : ["IA-2/fact-mismatch"],
+    textMismatches: 0,
     omittedDisclosures: 1,
     wrongScopeClaims: 0,
     actsExecuted: 0,
@@ -59,7 +63,7 @@ describe("governanceTax compares the two arms on the entries both ran", () => {
 
   it("files the raw arm's enforcement side as its own ledger", () => {
     expect(tax.rows.find((row) => row.disposition === "should-refuse")!.gatedPublished).toBe(1);
-    expect(tax.raw).toMatchObject({ runs: 6, published: 6, unusable: 0, providerErrors: 0, violatedRuns: 3, gatedPublished: 1, omittedDisclosures: 6 });
+    expect(tax.raw).toMatchObject({ runs: 6, published: 6, unusable: 0, providerErrors: 0, violatedRuns: 3, gatedPublished: 1, omittedDisclosures: 6, byCode: { "IA-2/fact-mismatch": 3 } });
     expect(tax.raw.usage.calls).toBe(6);
   });
 
@@ -93,6 +97,21 @@ describe("with repetitions the stable core is the headline", () => {
   });
 });
 
+describe("the text-excused reading sits beside verified, never instead of it", () => {
+  it("counts an entry whose only false assertions were text facts as excused but not verified, and tallies the codes", () => {
+    const tax = governanceTax(
+      [governed("a1", "answerable", true)],
+      [raw("a1", "answerable", true, false, { verifiedExcusingText: true, textMismatches: 1, violations: ["IA-2/fact-mismatch"] })],
+    );
+    expect(tax.rows[0]).toMatchObject({ rawVerified: { pass: 0 }, rawVerifiedExcusingText: { pass: 1 } });
+    expect(tax.raw.textMismatches).toBe(1);
+    const md = renderTax(tax);
+    expect(md).toContain("raw, verified 0/1 (0%) · raw, verified excusing text facts 1/1 (100%)");
+    expect(md).toContain("1 of those were text facts in the model's own words");
+    expect(md).toContain("By article: IA-2/fact-mismatch ×1");
+  });
+});
+
 describe("renderTax — a count and a percentage together, never either alone", () => {
   it("formats fractions with the percentage beside the count, and a zero denominator without one", () => {
     expect(fraction(65, 79)).toBe("65/79 (82%)");
@@ -103,8 +122,8 @@ describe("renderTax — a count and a percentage together, never either alone", 
   it("renders the headline, the table and the raw ledger at N=1", () => {
     const md = renderTax(governanceTax([governed("a1", "answerable", true), governed("a2", "answerable", false)], [raw("a1", "answerable", true, true), raw("a2", "answerable", true, true)]));
     expect(md).toContain("## The governance tax");
-    expect(md).toContain("**Answerable — governed 1/2 (50%) · raw, verified 2/2 (100%) · raw, apparent 2/2 (100%).**");
-    expect(md).toContain("| answerable | 2 | 1/2 (50%) | 2/2 (100%) | 2/2 (100%) | 0 |");
+    expect(md).toContain("**Answerable — governed 1/2 (50%) · raw, verified 2/2 (100%) · raw, verified excusing text facts 2/2 (100%) · raw, apparent 2/2 (100%).**");
+    expect(md).toContain("| answerable | 2 | 1/2 (50%) | 2/2 (100%) | 2/2 (100%) | 2/2 (100%) | 0 |");
     expect(md).toContain("**Raw arm, enforcement side");
     expect(md).toContain("**Raw arm cost:** 2 call(s)");
     expect(md).not.toContain("N=");

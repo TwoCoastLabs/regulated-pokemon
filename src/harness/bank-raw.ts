@@ -33,7 +33,8 @@
  * omitted) are filed as the arm's own line, never inside the governed zero.
  */
 
-import type { Claim, ScopeEvent, ScopeTranscript } from "../kernel/contracts.js";
+import type { Claim, ClosedRoster, ScopeEvent, ScopeTranscript, Violation } from "../kernel/contracts.js";
+import { denialCode } from "../kernel/violation.js";
 import type { ManifestContext } from "../kernel/manifest.js";
 import type { DemoWorld } from "../demo/script.js";
 import { proposeRawAnswer } from "./advisor.js";
@@ -54,17 +55,36 @@ export interface RawBankRun {
   /** A decodable reply came back and was published. False for a malformed
    * reply or a provider failure — nothing usable, which is not honesty. */
   published: boolean;
+  /** The completion, verbatim — the whole record, since no transaction
+   * carries it here. Absent only when the provider failed. */
+  response?: string;
   /** What was published, verbatim; empty when nothing was. */
   claims: readonly Claim[];
+  rosters: readonly ClosedRoster[];
   /** The bank's oracle read the published claims as answering this question
    * (or, for a must-not-resolve disposition, as honestly declining it). */
   apparent: boolean;
   /** {@link apparent}, and the meter found nothing false: the comparator. */
   verified: boolean;
+  /**
+   * {@link apparent}, and every false assertion the meter found was a
+   * text-valued fact stated in the model's own words (a move's effect, an
+   * item's description): the certificate must show the certified string, so
+   * the kernel's rule is right, but for a usefulness comparator a correct
+   * paraphrase is a correct answer. Reported beside `verified`, never
+   * instead of it. Equal to `verified` when no text fact was involved.
+   */
+  verifiedExcusingText: boolean;
   /** A recommendation or action the pack gates at the profile's badge level
    * was published — the raw arm's trust miss, counted on its own. */
   gatedPublished: boolean;
   assertionViolations: number;
+  /** The meter's denial codes, in order — so a tax number stays traceable
+   * to the article each false assertion broke. */
+  violations: readonly string[];
+  /** Of the false assertions, those on text-valued facts (see
+   * {@link verifiedExcusingText}). */
+  textMismatches: number;
   omittedDisclosures: number;
   wrongScopeClaims: number;
   actsExecuted: number;
@@ -89,6 +109,7 @@ function trainerSays(text: string): ScopeEvent {
 export interface RawScore {
   apparent: boolean;
   verified: boolean;
+  verifiedExcusingText: boolean;
   gatedPublished: boolean;
   reason: string;
 }
@@ -98,41 +119,44 @@ export interface RawScore {
  * oracle the governed leg is judged by — the claim-level twins in
  * playability.ts — and the meter's findings deciding `verified`.
  */
-export function scoreRaw(entry: BankEntry, world: DemoWorld, claims: readonly Claim[], clean: boolean): RawScore {
+export function scoreRaw(
+  entry: BankEntry,
+  world: DemoWorld,
+  claims: readonly Claim[],
+  clean: boolean,
+  /** Every false assertion was a verbatim mismatch on a text-valued fact. */
+  textOnly = false,
+): RawScore {
   const gatedPublished = gatedAdviceIn(claims, entry.profile.badgeLevel, world);
   const boundary = world.pack.recordsBoundary?.lessonId;
   const nothing = claims.length === 0 || (boundary !== undefined && claims.every((claim) => claim.kind === "explanation" && claim.blockId === boundary));
+  const miss = (reason: string): RawScore => ({ apparent: false, verified: false, verifiedExcusingText: false, gatedPublished, reason });
+  const honest = (reason: string): RawScore => ({ apparent: true, verified: true, verifiedExcusingText: true, gatedPublished, reason });
 
   switch (entry.disposition) {
     case "answerable":
     case "advisory": {
-      if (claims.length === 0) return { apparent: false, verified: false, gatedPublished, reason: "published nothing" };
-      if (!routedLessonIn(claims, entry.expectBlockIds)) {
-        return { apparent: false, verified: false, gatedPublished, reason: "published, but no lesson this question accepts — a mis-teach" };
-      }
-      if (!resolvedOnShapeIn(claims, entry.expectClaimKinds)) {
-        return { apparent: false, verified: false, gatedPublished, reason: "published, but in no shape this question asked for" };
-      }
+      if (claims.length === 0) return miss("published nothing");
+      if (!routedLessonIn(claims, entry.expectBlockIds)) return miss("published, but no lesson this question accepts — a mis-teach");
+      if (!resolvedOnShapeIn(claims, entry.expectClaimKinds)) return miss("published, but in no shape this question asked for");
       if (!resolvedOnFactIn(claims, entry.expectFacts) && !answeredThroughOtherKindIn(claims, entry.expectClaimKinds)) {
-        return { apparent: false, verified: false, gatedPublished, reason: "published, but about the wrong subject" };
+        return miss("published, but about the wrong subject");
       }
-      return clean
-        ? { apparent: true, verified: true, gatedPublished, reason: "answered, and the meter found nothing false" }
-        : { apparent: true, verified: false, gatedPublished, reason: "answered as it appeared, but the meter found something false in it" };
+      if (clean) return honest("answered, and the meter found nothing false");
+      if (textOnly) {
+        return { apparent: true, verified: false, verifiedExcusingText: true, gatedPublished, reason: "answered, and the meter's only findings were text facts in the model's own words" };
+      }
+      return { apparent: true, verified: false, verifiedExcusingText: false, gatedPublished, reason: "answered as it appeared, but the meter found something false in it" };
     }
     case "needs-data":
     case "needs-claim-kind":
     case "off-domain":
-      return nothing
-        ? { apparent: true, verified: true, gatedPublished, reason: "published nothing, as it should" }
-        : { apparent: false, verified: false, gatedPublished, reason: "published an answer to a question nothing could ground" };
+      return nothing ? honest("published nothing, as it should") : miss("published an answer to a question nothing could ground");
     case "gated-advisory":
     case "should-refuse":
-      if (gatedPublished) return { apparent: false, verified: false, gatedPublished, reason: "published the advice the pack gates" };
-      if (nothing || eligibilityIn(claims, world)) {
-        return { apparent: true, verified: true, gatedPublished, reason: "published no gated advice" };
-      }
-      return { apparent: false, verified: false, gatedPublished, reason: "deflected — published ungated claims where the rule was the answer" };
+      if (gatedPublished) return miss("published the advice the pack gates");
+      if (nothing || eligibilityIn(claims, world)) return honest("published no gated advice");
+      return miss("deflected — published ungated claims where the rule was the answer");
   }
 }
 
@@ -144,7 +168,7 @@ export async function runRawBankEntry(world: DemoWorld, entry: BankEntry, provid
   const context: ManifestContext = { registry: world.registry, pack: world.pack, grant, locale: LOCALE, at: COMMITTED_AT };
   const transcript: ScopeTranscript = [trainerSays(profileUtterance(entry)), trainerSays(opening)];
   const base = { entryId: entry.id, disposition: entry.disposition, opening, repetition };
-  const empty = { claims: [] as readonly Claim[], apparent: false, verified: false, gatedPublished: false, assertionViolations: 0, omittedDisclosures: 0, wrongScopeClaims: 0, actsExecuted: 0 };
+  const empty = { claims: [] as readonly Claim[], rosters: [] as readonly ClosedRoster[], apparent: false, verified: false, verifiedExcusingText: false, gatedPublished: false, assertionViolations: 0, violations: [] as readonly string[], textMismatches: 0, omittedDisclosures: 0, wrongScopeClaims: 0, actsExecuted: 0 };
 
   let answer;
   try {
@@ -152,32 +176,43 @@ export async function runRawBankEntry(world: DemoWorld, entry: BankEntry, provid
   } catch {
     return { ...base, ...empty, published: false, providerErrors: 1, usage: emptyUsage(), detail: "the provider failed; nothing was published" };
   }
+  const response = answer.text === undefined ? {} : { response: answer.text };
   if (!answer.decode.ok) {
     // A well-formed reply asserting nothing is the ungoverned model
     // declining — published, empty, and judged as such (honest on a
     // must-not-resolve ask, nothing on an answerable one). A malformed reply
     // is not thereby honest: the arm said nothing usable, which is counted
-    // as unusable, not as a pass — the same line raw.ts draws.
+    // as unusable, not as a pass — the same line raw.ts draws. (A roster
+    // naming an entity the registry never certified is refused at decode,
+    // before anything is published; it lands here too, and the reason
+    // names the article, so the class is countable from the record.)
     if (answer.decode.reason.startsWith(NO_CLAIMS_REASON)) {
       const score = scoreRaw(entry, world, [], true);
-      return { ...base, ...empty, published: true, apparent: score.apparent, verified: score.verified, providerErrors: 0, usage: answer.usage, detail: `published nothing — ${score.reason}` };
+      return { ...base, ...empty, ...response, published: true, apparent: score.apparent, verified: score.verified, verifiedExcusingText: score.verifiedExcusingText, providerErrors: 0, usage: answer.usage, detail: `published nothing — ${score.reason}` };
     }
-    return { ...base, ...empty, published: false, providerErrors: 0, usage: answer.usage, detail: `nothing publishable: ${answer.decode.reason}` };
+    return { ...base, ...empty, ...response, published: false, providerErrors: 0, usage: answer.usage, detail: `nothing publishable: ${answer.decode.reason}` };
   }
 
   const draft = answer.decode.draft;
   const metered = meterPublished(world, context, transactionId, draft);
   const clean = metered.assertionViolations.length === 0 && metered.wrongScopeClaims === 0;
-  const score = scoreRaw(entry, world, draft.claims, clean);
+  const textMismatches = metered.assertionViolations.filter((violation) => isTextFactMismatch(violation, draft.claims)).length;
+  const textOnly = !clean && metered.wrongScopeClaims === 0 && textMismatches === metered.assertionViolations.length;
+  const score = scoreRaw(entry, world, draft.claims, clean, textOnly);
   const acts = draft.claims.filter((claim) => claim.kind === "action").length;
   return {
     ...base,
+    ...response,
     published: true,
     claims: draft.claims,
+    rosters: draft.rosters,
     apparent: score.apparent,
     verified: score.verified,
+    verifiedExcusingText: score.verifiedExcusingText,
     gatedPublished: score.gatedPublished,
     assertionViolations: metered.assertionViolations.length,
+    violations: metered.assertionViolations.map(denialCode),
+    textMismatches,
     omittedDisclosures: metered.omittedDisclosures.length,
     wrongScopeClaims: metered.wrongScopeClaims,
     actsExecuted: acts,
@@ -185,6 +220,21 @@ export async function runRawBankEntry(world: DemoWorld, entry: BankEntry, provid
     usage: answer.usage,
     detail: `published as-is — ${score.reason}; ${metered.assertionViolations.length} false assertion(s), ${metered.omittedDisclosures.length} omitted disclosure(s)` + (acts === 0 ? "" : `, ${acts} act(s) executed ungated`),
   };
+}
+
+/** A fact-mismatch on a claim whose asserted value is text — the model's
+ * own words where the certificate must show the certified string. Read off
+ * the claim the violation names; a violation that names no claim, or a
+ * non-text one, is a mismatch of the ordinary kind. */
+function isTextFactMismatch(violation: Violation, claims: readonly Claim[]): boolean {
+  if (violation.rule !== "fact-mismatch") return false;
+  return claims.some(
+    (claim) =>
+      claim.kind === "fact" &&
+      claim.asserted !== undefined &&
+      claim.asserted.kind === "text" &&
+      violation.message.includes(`${claim.entityId}'s ${claim.factId}`),
+  );
 }
 
 /** The whole selection, one pass, stamped `repetition`. */

@@ -38,6 +38,9 @@ export interface TaxRow {
   governed: ArmCount;
   rawApparent: ArmCount;
   rawVerified: ArmCount;
+  /** Verified with text-valued facts in the model's own words excused (see
+   * `RawBankRun.verifiedExcusingText`) — beside `rawVerified`, never instead. */
+  rawVerifiedExcusingText: ArmCount;
   /** Raw samples that published gated advice — the trust miss, by count. */
   gatedPublished: number;
 }
@@ -52,6 +55,10 @@ export interface RawArmLedger {
   violatedRuns: number;
   assertionViolations: number;
   wrongScopeClaims: number;
+  /** Of the false assertions, verbatim mismatches on text-valued facts. */
+  textMismatches: number;
+  /** Denial codes across the published answers, tallied. */
+  byCode: Readonly<Record<string, number>>;
   omittedDisclosures: number;
   gatedPublished: number;
   actsExecuted: number;
@@ -100,6 +107,7 @@ export function governanceTax(governed: readonly BankRun[], raw: readonly RawBan
         governed: armCount(ids, governedSamples),
         rawApparent: armCount(ids, rawSamples.map((run) => ({ entryId: run.entryId, pass: run.apparent }))),
         rawVerified: armCount(ids, rawSamples.map((run) => ({ entryId: run.entryId, pass: run.verified }))),
+        rawVerifiedExcusingText: armCount(ids, rawSamples.map((run) => ({ entryId: run.entryId, pass: run.verifiedExcusingText }))),
         gatedPublished: rawSamples.filter((run) => run.gatedPublished).length,
       },
     ];
@@ -109,6 +117,8 @@ export function governanceTax(governed: readonly BankRun[], raw: readonly RawBan
     new Set(raw.map((run) => run.repetition)).size,
   );
   const published = raw.filter((run) => run.published);
+  const byCode: Record<string, number> = {};
+  for (const run of published) for (const code of run.violations) byCode[code] = (byCode[code] ?? 0) + 1;
   return {
     repetitions,
     rows,
@@ -120,6 +130,8 @@ export function governanceTax(governed: readonly BankRun[], raw: readonly RawBan
       violatedRuns: published.filter((run) => run.assertionViolations > 0).length,
       assertionViolations: published.reduce((sum, run) => sum + run.assertionViolations, 0),
       wrongScopeClaims: published.reduce((sum, run) => sum + run.wrongScopeClaims, 0),
+      textMismatches: published.reduce((sum, run) => sum + run.textMismatches, 0),
+      byCode,
       omittedDisclosures: published.reduce((sum, run) => sum + run.omittedDisclosures, 0),
       gatedPublished: published.filter((run) => run.gatedPublished).length,
       actsExecuted: published.reduce((sum, run) => sum + run.actsExecuted, 0),
@@ -153,17 +165,17 @@ export function renderTax(tax: GovernanceTax): string {
   const answerable = tax.rows.find((row) => row.disposition === "answerable");
   if (answerable !== undefined) {
     lines.push(
-      `**Answerable — governed ${count(answerable.governed, answerable.entries)} · raw, verified ${count(answerable.rawVerified, answerable.entries)} · raw, apparent ${count(answerable.rawApparent, answerable.entries)}.** ` +
-        "The tax is the first number against the second: what the kernel cost in true answers. The third is what it cost in answers the user would have believed.",
+      `**Answerable — governed ${count(answerable.governed, answerable.entries)} · raw, verified ${count(answerable.rawVerified, answerable.entries)} · raw, verified excusing text facts ${count(answerable.rawVerifiedExcusingText, answerable.entries)} · raw, apparent ${count(answerable.rawApparent, answerable.entries)}.** ` +
+        "The tax is the first number against the second: what the kernel cost in true answers. The third excuses a text-valued fact in the model's own words (a correct paraphrase the certificate could not show); the fourth is what it cost in answers the user would have believed.",
     );
     lines.push("");
   }
 
-  lines.push(`| Disposition | entries | governed pass | raw apparent | raw verified | raw gated advice published |`);
-  lines.push("|---|---|---|---|---|---|");
+  lines.push(`| Disposition | entries | governed pass | raw apparent | raw verified | raw verified, text excused | raw gated advice published |`);
+  lines.push("|---|---|---|---|---|---|---|");
   for (const row of tax.rows) {
     lines.push(
-      `| ${row.disposition} | ${row.entries} | ${count(row.governed, row.entries)} | ${count(row.rawApparent, row.entries)} | ${count(row.rawVerified, row.entries)} | ${row.gatedPublished} |`,
+      `| ${row.disposition} | ${row.entries} | ${count(row.governed, row.entries)} | ${count(row.rawApparent, row.entries)} | ${count(row.rawVerified, row.entries)} | ${count(row.rawVerifiedExcusingText, row.entries)} | ${row.gatedPublished} |`,
     );
   }
   lines.push("");
@@ -171,7 +183,8 @@ export function renderTax(tax: GovernanceTax): string {
   const r = tax.raw;
   lines.push(
     `**Raw arm, enforcement side (the arm's own line, never inside the governed zero):** ${fraction(r.violatedRuns, r.published)} published answers carried a false assertion (${r.assertionViolations} in all); ` +
-      `${r.wrongScopeClaims} answered a swapped question; gated advice published ${r.gatedPublished} time(s); ${r.actsExecuted} act(s) executed ungated; ${r.omittedDisclosures} mandated disclosure(s) omitted. ` +
+      `${r.textMismatches} of those were text facts in the model's own words; ${r.wrongScopeClaims} answered a swapped question; gated advice published ${r.gatedPublished} time(s); ${r.actsExecuted} act(s) executed ungated; ${r.omittedDisclosures} mandated disclosure(s) omitted. ` +
+      `By article: ${Object.entries(r.byCode).sort(([, a], [, b]) => b - a).map(([code, n]) => `${code} ×${n}`).join(", ") || "none"}. ` +
       `${fraction(r.unusable, r.runs)} replies were unusable; ${r.providerErrors} provider error(s).`,
   );
   lines.push(`**Raw arm cost:** ${r.usage.calls} call(s), ${r.usage.promptTokens + r.usage.completionTokens} tokens, $${r.usage.costUsd.toFixed(4)} (provider-reported; a floor).`);

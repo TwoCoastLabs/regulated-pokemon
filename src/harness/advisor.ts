@@ -497,6 +497,9 @@ export async function proposeScope(input: ScopeStepInput): Promise<ScopeStep> {
 export interface AnswerStep {
   usage: Usage;
   decode: AnswerDecode;
+  /** The completion, verbatim — set by the raw step, whose record has no
+   * transaction to carry it (the governed record keeps its own). */
+  text?: string;
 }
 
 export interface AnswerStepInput {
@@ -621,9 +624,9 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
   // from a malformed one; name it, in fixed wording, so the class is
   // countable from notes and artifacts (no silent caps — docs/scale.md, S1).
   if (!decode.ok && completion.finishReason === "length") {
-    return { usage: completion.usage, decode: { ok: false, reason: `${decode.reason} — the completion hit the token cap (truncated)` } };
+    return { usage: completion.usage, decode: { ok: false, reason: `${decode.reason} — the completion hit the token cap (truncated)` }, text: completion.text };
   }
-  return { usage: completion.usage, decode };
+  return { usage: completion.usage, decode, text: completion.text };
 }
 
 export interface PhraseStepInput {
@@ -753,9 +756,9 @@ export async function proposeRawAnswer(input: RawStepInput): Promise<AnswerStep>
   // from a malformed one; name it, in fixed wording, so the class is
   // countable from notes and artifacts (no silent caps — docs/scale.md, S1).
   if (!decode.ok && completion.finishReason === "length") {
-    return { usage: completion.usage, decode: { ok: false, reason: `${decode.reason} — the completion hit the token cap (truncated)` } };
+    return { usage: completion.usage, decode: { ok: false, reason: `${decode.reason} — the completion hit the token cap (truncated)` }, text: completion.text };
   }
-  return { usage: completion.usage, decode };
+  return { usage: completion.usage, decode, text: completion.text };
 }
 
 /** The digest a truthful trainer names when confirming a proposal it agrees

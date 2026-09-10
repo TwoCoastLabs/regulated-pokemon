@@ -57,6 +57,31 @@ describe("runRawBankEntry — the same question, no kernel", () => {
     expect(run).toMatchObject({ published: true, apparent: true, verified: false, assertionViolations: 1 });
   });
 
+  it("keeps the whole record — the verbatim reply, the rosters, the codes — so a tax number stays traceable", async () => {
+    const text = reply([{ kind: "fact", entityId: "pikachu", factId: "base-speed", asserted: { ...speed(), value: speed().value + 1 } }]);
+    const run = await runRawBankEntry(world, entry("ans-fact-speed-pikachu"), scripted(text));
+    expect(run.response).toBe(text);
+    expect(run.rosters).toEqual([]);
+    expect(run.violations).toEqual(["IA-2/fact-mismatch"]);
+    expect(run.textMismatches).toBe(0);
+    expect(run.verifiedExcusingText).toBe(false);
+  });
+
+  it("excuses a text fact in the model's own words — beside verified, never instead of it", async () => {
+    const effectEntry = bank.entries.find((candidate) => candidate.expectFacts?.some((fact) => fact.factId === "move-effect"));
+    if (effectEntry === undefined) throw new Error("the bank carries no move-effect entry");
+    const fact = effectEntry.expectFacts!.find((want) => want.factId === "move-effect")!;
+    const run = await runRawBankEntry(world, effectEntry, scripted(reply([{ kind: "fact", entityId: fact.entityId, factId: "move-effect", asserted: { kind: "text", value: "A paraphrase in the model's own words." } }])));
+    expect(run).toMatchObject({ apparent: true, verified: false, verifiedExcusingText: true, textMismatches: 1, assertionViolations: 1 });
+    expect(run.detail).toContain("text facts");
+    // A text fact beside a false number is not excused: the number is false.
+    const mixed = await runRawBankEntry(world, effectEntry, scripted(reply([
+      { kind: "fact", entityId: fact.entityId, factId: "move-effect", asserted: { kind: "text", value: "A paraphrase." } },
+      { kind: "fact", entityId: "pikachu", factId: "base-speed", asserted: { ...speed(), value: speed().value + 1 } },
+    ])));
+    expect(mixed.verifiedExcusingText).toBe(false);
+  });
+
   it("publishes a true fact about the wrong subject: neither reading holds — the same subject oracle the governed leg faces", async () => {
     const onix = world.registry.resolve("onix", "base-speed");
     if (!onix.ok) throw new Error("onix base-speed did not resolve");
