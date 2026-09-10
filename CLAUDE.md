@@ -34,6 +34,14 @@ to other projects (this is a standalone, from-first-principles work), no
 "temporary" content that would need scrubbing. If something shouldn't be
 public, it doesn't go in the repo at all.
 
+## Describing work
+
+**Start from the goal.** A proposal of work, a PR description, or a findings
+entry opens with what it is trying to achieve in the project's own terms
+(which north star, which question it answers, why now), then how it works in
+plain words, and only then the mechanism — files, functions, flags, numbers.
+A term coined during the work is defined before it is used.
+
 ## Commands
 
 - Node 22 (`nvm use`).
