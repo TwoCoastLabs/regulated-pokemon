@@ -535,6 +535,18 @@ wrong order for a "feels dumb" problem.
 6. **Both-model legs**, N=3 on the strong model, plus the reasoning-mode
    leg as an experiment; findings filed with `feedbackRetries` beside
    `repairs`; the gate at 0.
+   *2026-09-11 — run, with the raw arm beside each leg (findings, "The
+   governance tax, measured").* Strong, N=3: band 103–107, stable core
+   96/137 (70%), answerable 64/79 (81%) stably, 0 of 411 escalations; the
+   model nominated a clarification on 23 of 411 runs (6%), 4 picked, 38
+   options held no right answer; suggestions shown on 46 certified
+   answers. Weak, N=3: band 81–90, stable core 77/137 (56%), answerable
+   50/79 (63%) stably, 0 of 411 escalations; nominated on 48 of 411 runs
+   (12%), 10 picked, 76 no right option; suggestions shown on 1 certified
+   answer. The reasoning-mode leg is not run. The raw arm
+   turned the leg into the first governance-tax measurement, and the
+   number is the finding: on the strong model the governed floor is above
+   the ungoverned model's apparent rate, not below its true one.
 7. The openFDA epic, budgeted before it starts.
 
 **What would falsify it.** If, with the data dictionary in place, the strong model

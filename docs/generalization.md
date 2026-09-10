@@ -1000,13 +1000,22 @@ product has to reach both, and neither may be traded for the other.
   raw, zero violations, honest disposition above a declared floor, and at
   most one question per resolved answer on average — each margin set from
   the first governed-versus-raw leg on the realistic bank and tightened
-  only, the way the coverage thresholds ratchet. As of 2026-09-10 the
-  governed side is measured (findings, R3b step 5: 103/137 (75%) overall,
-  65/79 (82%) answerable, 0 of 137 escalations, 19 model questions on 137
-  entries (14%), N=1, strong model) and the raw side of the realistic bank
-  is not; the control arm exists only on the 8-scenario smoke set. The
-  first governed-versus-raw leg on the realistic bank, at N=3 on both
-  models, is what turns the bar from a sentence into numbers.
+  only, the way the coverage thresholds ratchet. Measured for the first
+  time on 2026-09-11 (findings, "The governance tax, measured"), the
+  first number is not a tax: on the strong default at N=3, the governed
+  stable core on answerable entries is 64/79 (81%) against the same model
+  ungoverned at 27/79 (34%) true (text facts excused) and 51/79 (65%) as
+  it appeared — the sign of the margin is reversed, because retrieval
+  hands the governed leg the value the raw arm has to recall. The other
+  three numbers on that leg: 0 of 411 escalations; honest disposition
+  29/45 (64%) stably on the entries that must not resolve; 0.07 advisor
+  questions and 0.01 scope cards per resolution. The weak model, same
+  leg: governed 50/79 (63%) against raw 14/79 (18%) true and 36/79 (46%)
+  apparent, 0 of 411 escalations, honest disposition 27/45 (60%). The bar,
+  then, is written from that leg: governed answerable stable core at or
+  above the raw arm's verified rate on every model, and the backlog is the
+  entries where the raw arm is right and the governed leg is not — 8 on
+  the strong model and 2 on the weak, named in the finding.
 - **The falsifier is named.** The usefulness half fails if the governance
   tax stops shrinking under operator-owned fixes and only a stronger model
   moves it — usefulness would then have come from model capability after
