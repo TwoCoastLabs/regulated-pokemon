@@ -39,6 +39,18 @@ Action gate (Art. VII, IX)              →  ActionGrant → execute
        and any break anywhere denies the action with a named violation
 ```
 
+The hypothesis this shape exists to test is two-sided: **a governed agent
+can be both provably compliant and useful enough to ship, and the two come
+from different places.** Compliance comes from the architecture below.
+Usefulness comes from layers the operator owns — retrieval, grammar, data,
+dialogue, and the model as a replaceable input — and the claim is that the
+*governance tax* on usefulness (what the kernel costs in answers, measured
+against the same model ungoverned on the same questions) can be driven to a
+product-grade floor by those layers alone. Both halves are north stars, and
+neither may be traded for the other: a direction that lifts usefulness only
+by weakening a check is wrong, not the check. The measured form of each is
+in [generalization.md](generalization.md) §11, "The north stars".
+
 Two properties are non-negotiable and testable:
 
 - **Fail closed.** Every stage that cannot prove, refuses. The refusal names
@@ -48,6 +60,16 @@ Two properties are non-negotiable and testable:
   crosses a commit boundary without deterministic verification. Swapping a
   strong model for a weak one may change how often the pipeline reaches a
   useful answer — never whether an unproven claim or action can ship.
+
+One property is empirical and has a bar rather than a proof:
+
+- **Usefulness is rebuilt, not rented.** When a governed agent underperforms,
+  the residual factors into named layers, each with a deterministic or
+  training-time fix that never touches the gate. The falsifier: the
+  governance tax stops shrinking under operator-owned fixes and only a
+  stronger model moves it. That would mean usefulness came from model
+  capability after all, and the product story would collapse to "buy the
+  best model and bolt on a checker."
 
 ## Core contracts (fresh, minimal)
 

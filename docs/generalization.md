@@ -969,6 +969,52 @@ two. This maps onto reliability practice enterprises already run (floors,
 error budgets, hard invariants) — the governed agent drops into existing
 operational muscle rather than demanding new kinds of trust.
 
+### The north stars
+
+The project's hypothesis is two-sided ([architecture.md](architecture.md),
+"The shape"): a governed agent can be both provably compliant and useful
+enough to ship, and the two come from different places. The SLO framing
+above is how each half is measured, and both are north stars — a marketable
+product has to reach both, and neither may be traded for the other.
+
+- **Compliance is a zero with a denominator.** Committed violations,
+  wrong-scope commits, unconsented acts and omitted disclosures, stated as
+  `0 of N` per artifact on every model, with no error budget and no
+  majority vote. It is proven by the control arm (findings §14: the same
+  models, ungoverned, fabricate; governed, they cannot) and re-verified per
+  leg. It moves nothing, ever, and is not a target.
+- **Usefulness is a governance tax, driven toward a floor.** The number a
+  buyer actually asks for is not "how many questions does it answer?" but
+  "what does the kernel cost me in answers?" The control arm supplies the
+  comparator for free: the same model, the same questions, no kernel. So the
+  usefulness north star is a ratio — the governed stable core on answerable
+  entries beside the raw resolution on the same entries — reported with
+  three companions, all read from the record: the *honest-disposition rate*
+  on entries that must not resolve (needs-data, advisory beyond the pack,
+  gated, off-domain: an honest abstention is a pass, a certified
+  non-sequitur is a miss), *ceremony per resolved answer* (the pack's
+  questions and the model's, apart), and *cost per exchange*. Every number
+  carries its count and its percentage together.
+- **The bar is written before it is chased, and it ratchets.** "Marketable"
+  is stated as: governed answerable resolution within a declared margin of
+  raw, zero violations, honest disposition above a declared floor, and at
+  most one question per resolved answer on average — each margin set from
+  the first governed-versus-raw leg on the realistic bank and tightened
+  only, the way the coverage thresholds ratchet. As of 2026-09-10 the
+  governed side is measured (findings, R3b step 5: 103/137 (75%) overall,
+  65/79 (82%) answerable, 0 of 137 escalations, 19 model questions on 137
+  entries (14%), N=1, strong model) and the raw side of the realistic bank
+  is not; the control arm exists only on the 8-scenario smoke set. The
+  first governed-versus-raw leg on the realistic bank, at N=3 on both
+  models, is what turns the bar from a sentence into numbers.
+- **The falsifier is named.** The usefulness half fails if the governance
+  tax stops shrinking under operator-owned fixes and only a stronger model
+  moves it — usefulness would then have come from model capability after
+  all. And the guard against chasing the star badly is lesson 4 of
+  [lessons.md](lessons.md): a direction that lifts usefulness only by
+  weakening a check, or by searching against the gate until something
+  survives, is wrong — not the check.
+
 ### The procurement consequence
 
 Because usefulness is rebuilt from layers the operator owns, model choice

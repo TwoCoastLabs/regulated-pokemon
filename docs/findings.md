@@ -4,7 +4,7 @@ A running log of claims this project can defend, each with the measurement
 behind it. Written for a reader who will ask "how do you know that?", and kept
 next to the code so an answer is always reachable.
 
-Two rules for anything added here:
+Three rules for anything added here:
 
 1. **A claim without a number is a note, not a finding.** If it cannot be tied
    to a run, it belongs in prose somewhere else.
@@ -13,6 +13,12 @@ Two rules for anything added here:
    available. Numbers from superseded runs are recorded in the commit that
    reported them; those are cited as such rather than dressed up as
    artifact-backed. Sample sizes are small and said so.
+3. **A metric is a count and a percentage together** — `65/79 (82%)`, never
+   `82%` alone and never `65` alone — wherever a denominator exists. A reader
+   should never do the mental math, and a percentage should never be able to
+   hide a small sample. Enforcement zeros state their denominator too
+   (`0 of 96`). Entries written before 2026-09-10 predate the rule and keep
+   their original form; a number quoted forward from one is restated in both.
 
 Scope caveat that applies to every usefulness number below: the corpus is
 small — **two scenarios** through row 4, **seven** from row 5, **eight** from
