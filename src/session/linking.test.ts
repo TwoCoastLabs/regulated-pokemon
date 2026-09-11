@@ -170,6 +170,23 @@ describe("aliasContradiction — R3, the dictionary's words can only make the sy
     expect(aliasContradiction(world.pack, world.registry, [{ phrase: "how fast is Pikchu", entityId: "pikchu", fieldId: "base-attack" }])).toBeUndefined();
   });
 
+  it("reads the phrase with its subject's name as 'it' too, so the aliases written that way count (live, 2026-09-11)", () => {
+    // "At what level does Charmander evolve?" linked to How it evolves: the
+    // alias "what level does it evolve" is there once Charmander reads as
+    // "it", and the bare "evolve" of Evolves into is then not a contradiction.
+    expect(aliasContradiction(world.pack, world.registry, [{ phrase: "At what level does Charmander evolve?", entityId: "charmander", fieldId: "evolution-methods" }])).toBeUndefined();
+    // "What stone evolves Eevee into Vaporeon?" literally says "evolves …
+    // into"; it stopped reading as a contradiction when the steward gave How
+    // it evolves the aliases "what stone" / "which stone" (2026-09-11) — the
+    // data layer's fix, beside the driver's.
+    expect(aliasContradiction(world.pack, world.registry, [{ phrase: "What stone evolves Eevee into Vaporeon?", entityId: "eevee", fieldId: "evolution-methods" }])).toBeUndefined();
+    // A hyphenated id reads either way; the possessive is absorbed.
+    expect(aliasContradiction(world.pack, world.registry, [{ phrase: "how fast is Mr. Mime", entityId: "mr-mime", fieldId: "base-speed" }])).toBeUndefined();
+    // With no alias of the linked field in either reading, the check still asks.
+    const found = aliasContradiction(world.pack, world.registry, [{ phrase: "what's Charmander's defense", entityId: "charmander", fieldId: "base-special-defense" }]);
+    expect(found?.suggested.map((field) => field.id)).toEqual(["base-defense"]);
+  });
+
   it("matches word-bounded, so 'type' inside 'typing' is one alias, not two", () => {
     expect(aliasContradiction(world.pack, world.registry, [{ phrase: "its typing", entityId: "pikachu", fieldId: "types" }])).toBeUndefined();
     expect(aliasContradiction(world.pack, world.registry, [{ phrase: "hyper", entityId: "pikachu", fieldId: "base-speed" }])).toBeUndefined();

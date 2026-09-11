@@ -24,7 +24,7 @@
  */
 
 import type { ClarificationOption, ScopeDimension } from "../kernel/contracts.js";
-import type { AccordPack } from "../kernel/pack.js";
+import type { AccordPack, DictionaryEntry } from "../kernel/pack.js";
 import type { CertifiedRegistry } from "../kernel/registry.js";
 
 /** How many times the advisor may ask about one ask before it gives up —
@@ -66,11 +66,21 @@ export function validOptions(
 }
 
 /**
- * The trainer's reply, read against the options. A reply is a pick when it
- * matches exactly one option — by the option's label (whole, or as a
- * word-bounded phrase of the reply), by an alias of the field an option
- * names, or by the name of the subject one names. Two matches is not a pick:
- * the reply named both readings, and the driver asks again.
+ * The trainer's reply, read against the options, by tiers of evidence.
+ *
+ * A reply can match an option four ways, and they are not equal evidence:
+ * the option's own label (what a click would have said); the field's or
+ * subject's name; an alias of the field; a certified subject the model never
+ * listed. A pick binds when the *strongest tier that matches anything*
+ * matches exactly one option. Only a tie inside that tier, or no match at
+ * any tier, is ambiguous — and then the driver asks again.
+ *
+ * Found live (2026-09-11): "How it evolves" — the exact label of one option
+ * — was read as ambiguous because the other option's alias "evolves" sits
+ * inside it, and every tier had counted alike. Aliases are also read
+ * *discriminatingly*: an alias that is carried by another offered option's
+ * label, name or aliases says nothing about the choice and is ignored for
+ * this question (computed per question, so it holds for any dictionary).
  */
 export function matchPick(
   pack: AccordPack,
@@ -80,16 +90,35 @@ export function matchPick(
 ): ClarificationOption | undefined {
   const said = normalise(reply);
   if (said.length === 0) return undefined;
-  const matched = options.filter((option) => {
-    if (carries(said, normalise(option.label))) return true;
-    if (option.kind === "field") {
-      const field = option.fieldId === null ? undefined : pack.dictionary.find((entry) => entry.id === option.fieldId);
-      return field !== undefined && (carries(said, normalise(field.name)) || field.aliases.some((alias) => carries(said, normalise(alias))));
-    }
-    return carries(said, normalise(option.entityId.replace(/-/g, " ")));
-  });
-  if (matched.length === 1) return matched[0];
-  if (matched.length > 1) return undefined;
+  const fieldOf = (option: ClarificationOption): DictionaryEntry | undefined =>
+    option.kind === "field" && option.fieldId !== null ? pack.dictionary.find((entry) => entry.id === option.fieldId) : undefined;
+  const nameOf = (option: ClarificationOption): string | undefined =>
+    option.kind === "field" ? fieldOf(option)?.name : option.entityId.replace(/-/g, " ");
+  /** Every word an option answers to — for deciding which aliases discriminate. */
+  const wordsOf = (option: ClarificationOption): readonly string[] =>
+    [option.label, nameOf(option) ?? "", ...(fieldOf(option)?.aliases ?? [])].map(normalise).filter((word) => word.length > 0);
+
+  const tiers: ((option: ClarificationOption) => boolean)[] = [
+    (option) => carries(said, normalise(option.label)),
+    (option) => {
+      const name = nameOf(option);
+      return name !== undefined && carries(said, normalise(name));
+    },
+    (option) => {
+      const field = fieldOf(option);
+      if (field === undefined) return false;
+      const others = options.filter((other) => other !== option).flatMap(wordsOf);
+      return field.aliases
+        .map(normalise)
+        .filter((alias) => !others.some((word) => carries(word, alias)))
+        .some((alias) => carries(said, alias));
+    },
+  ];
+  for (const tier of tiers) {
+    const matched = options.filter(tier);
+    if (matched.length === 1) return matched[0];
+    if (matched.length > 1) return undefined;
+  }
   // A question about *which subject*, answered with a certified subject the
   // model did not list, is still answered — the options were the model's
   // guesses at the candidates, and the trainer's own word outranks a guess

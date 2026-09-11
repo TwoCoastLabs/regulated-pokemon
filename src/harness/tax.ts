@@ -49,6 +49,14 @@ export interface TaxRow {
   rawVerifiedExcusingText: ArmCount;
   /** Raw samples that published gated advice — the trust miss, by count. */
   gatedPublished: number;
+  /**
+   * The kernel-only half of the tax, read from the governed records: samples
+   * the kernel denied, and how many of those refused drafts the oracle reads
+   * as an answer to the question — believed answers the gate itself removed,
+   * every one carrying something the certified world contradicts. The rest
+   * of the governed shortfall is the model abstaining, not the gate.
+   */
+  gateRemoved: { denied: number; onTarget: number };
 }
 
 export interface RawArmLedger {
@@ -121,6 +129,10 @@ export function governanceTax(governed: readonly BankRun[], raw: readonly RawBan
         rawVerified: armCount(ids, rawSamples.map((run) => ({ entryId: run.entryId, pass: run.verified }))),
         rawVerifiedExcusingText: armCount(ids, rawSamples.map((run) => ({ entryId: run.entryId, pass: run.verifiedExcusingText }))),
         gatedPublished: rawSamples.filter((run) => run.gatedPublished).length,
+        gateRemoved: {
+          denied: governed.filter((run) => mine.has(run.entryId) && run.stage.kind === "denied").length,
+          onTarget: governed.filter((run) => mine.has(run.entryId) && run.deniedDraftOnTarget === true).length,
+        },
       },
     ];
   });
@@ -194,6 +206,13 @@ export function renderTax(tax: GovernanceTax): string {
       `| ${row.disposition} | ${row.entries} | ${count(row.governed, row.entries)} | ${count(row.rawApparent, row.entries)} | ${count(row.rawVerified, row.entries)} | ${count(row.rawVerifiedExcusingText, row.entries)} | ${row.gatedPublished} | ${left} |`,
     );
   }
+  lines.push("");
+
+  const removed = tax.rows.reduce((sum, row) => sum + row.gateRemoved.onTarget, 0);
+  const denied = tax.rows.reduce((sum, row) => sum + row.gateRemoved.denied, 0);
+  lines.push(
+    `**The gate's own share, from the governed records:** the kernel denied ${denied} governed sample(s); ${fraction(removed, denied)} of those refused drafts would have read as an answer to the question had they been published — believed answers the gate removed, each carrying something the certified world contradicts. Every other governed miss is the model abstaining or answering off the ask, not the gate.`,
+  );
   lines.push("");
 
   const r = tax.raw;

@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
 import { harnessWorld } from "./corpus.js";
 import { ScriptedProvider } from "./provider.js";
 import { type BankEntry, readBank } from "./bank.js";
-import { NO_HONEST_PICK, phrasingsOf, runBank, runBankEntry, runIntentRobustness, truthfulPick } from "./bank-run.js";
+import { draftOnTarget, NO_HONEST_PICK, phrasingsOf, runBank, runBankEntry, runIntentRobustness, truthfulPick } from "./bank-run.js";
 
 const world = harnessWorld();
 const bank = readBank();
@@ -565,5 +565,17 @@ describe("R3b step 4 in the bank: suggestions are offered, shown and counted, ne
     const run = await runBankEntry(world, entry("ans-fact-speed-pikachu"), provider, clock(), undefined, 0, { profile: true });
     expect(prompts[0]).not.toContain('"kind": "suggest"');
     expect(run.suggestions).toBeUndefined();
+  });
+});
+
+describe("draftOnTarget — the gate's own removals, read from a refused draft", () => {
+  it("reads a denied draft by the entry's oracle: on-target facts count, wrong subject or shape or a must-not-resolve entry does not", () => {
+    const speed = bank.entries.find((entry) => entry.id === "ans-fact-speed-pikachu")!;
+    expect(draftOnTarget(speed, [{ kind: "fact", entityId: "pikachu", factId: "base-speed", asserted: { kind: "number", value: 1 } }])).toBe(true);
+    expect(draftOnTarget(speed, [{ kind: "fact", entityId: "onix", factId: "base-speed", asserted: { kind: "number", value: 1 } }])).toBe(false);
+    expect(draftOnTarget(speed, [{ kind: "explanation", blockId: "what-is-badge" }])).toBe(false);
+    expect(draftOnTarget(speed, [])).toBe(false);
+    const needsData = bank.entries.find((entry) => entry.disposition === "needs-data")!;
+    expect(draftOnTarget(needsData, [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }])).toBe(false);
   });
 });

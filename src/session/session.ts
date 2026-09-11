@@ -60,7 +60,7 @@ import { type AnswerStep, phraseQuestion, proposalDigest, proposeAnswer, propose
 import { type AnswerDecode, NO_CLAIMS_REASON } from "../harness/decode.js";
 import { MAX_ANSWER_CLAIMS, type NominableRoute } from "../harness/schema.js";
 import { addUsage, emptyUsage, type ModelProvider, type Usage } from "../harness/provider.js";
-import { aliasContradiction, freshLinks, linkClaims } from "./linking.js";
+import { aliasContradiction, fieldsOfClaim, freshLinks, linkClaims } from "./linking.js";
 import { canonicalId, certifies, MAX_CLARIFICATIONS, matchPick, scopeOptions, validOptions } from "./clarify.js";
 
 /** The certified world the session runs against — the same two values the
@@ -250,7 +250,18 @@ export interface SessionState {
    * link; `contradictions` the alias cross-checks that turned into a
    * question. Findings read these the way they read the listing gauge.
    */
-  linking: { mapped: number; unlinked: number; offTargetDropped: number; contradictions: number; staleDropped: number };
+  linking: {
+    mapped: number;
+    unlinked: number;
+    offTargetDropped: number;
+    /** Alias contradictions the trainer was asked about (or told about, with the door shut). */
+    contradictions: number;
+    staleDropped: number;
+    /** Alias contradictions answered by union — the reply covered the other
+     * reading too, so nothing was asked (found live 2026-09-11; the levers
+     * that keep the question rare, in docs/findings.md). */
+    unions: number;
+  };
   /**
    * Clarification's gauge (R3b step 3): `asked` counts the advisor's own
    * questions recorded (model-nominated and contradiction-born alike);
@@ -350,7 +361,7 @@ export function startSession(idPrefix?: string): SessionState {
     flips: 0,
     feedbackRetries: 0,
     feedbackDenials: [],
-    linking: { mapped: 0, unlinked: 0, offTargetDropped: 0, contradictions: 0, staleDropped: 0 },
+    linking: { mapped: 0, unlinked: 0, offTargetDropped: 0, contradictions: 0, staleDropped: 0, unions: 0 },
     clarification: { asked: 0, picked: 0, ignored: 0, capped: 0, phrased: 0, unphrased: 0 },
     suggestions: { offered: 0, kept: 0, dropped: 0, taken: 0, deadEnded: 0 },
     listingActivations: { consulted: 0, served: 0, stoodDown: 0, guardDropped: 0 },
@@ -1953,7 +1964,37 @@ function applyLinking(
 
   // The dictionary's words cross-check the model's link, never a pick the
   // trainer made themselves.
-  const contradiction = bound?.kind === "field" ? undefined : aliasContradiction(world.pack, world.registry, asked);
+  let contradiction = bound?.kind === "field" ? undefined : aliasContradiction(world.pack, world.registry, asked);
+  // Before a question, two cheaper moves (2026-09-11, the levers that keep
+  // the fallback rare). *Union*: the phrase carries another field's words,
+  // but the reply already answers that reading too — every claim is
+  // certified, so answering both is never wrong, and the suggested field is
+  // within the ask by the dictionary's own evidence; the mapping is widened
+  // to it and no one is asked. *Feedback*: with the round open, the
+  // contradiction is carried back once in fixed wording — one model call
+  // before one trainer question — and read again by this same step.
+  let widened = asked;
+  if (contradiction !== undefined) {
+    const suggestedIds = new Set(contradiction.suggested.map((field) => field.id));
+    const covered = decode.draft.claims.some((claim) => fieldsOfClaim(claim, decode.draft.rosters).some((field) => suggestedIds.has(field)));
+    if (covered) {
+      const about = asked.find((entry) => entry.phrase === contradiction?.phrase);
+      widened = [...asked, ...contradiction.suggested.map((field) => ({ phrase: contradiction!.phrase, entityId: about?.entityId ?? subject, fieldId: field.id }))];
+      gauge.unions += 1;
+      contradiction = undefined;
+    } else if (retryable && deps.feedback === true) {
+      const linkedName = contradiction.linked?.name ?? "no field";
+      const names = contradiction.suggested.map((field) => field.name).join(" or ");
+      return {
+        state: { ...state, linking: gauge },
+        claims: [],
+        verdict: "retry",
+        feedback: [
+          `driver/ambiguous-field: "${contradiction.phrase}" was read as ${linkedName} but carries the words of ${names} — answer every reading the records hold, each as its own claim, and link the phrase to each field it may mean`,
+        ],
+      };
+    }
+  }
   if (contradiction !== undefined) {
     gauge.contradictions += 1;
     const names = contradiction.suggested.map((field) => field.name).join(" or ");
@@ -1994,7 +2035,7 @@ function applyLinking(
     };
   }
 
-  const held = linkClaims(asked, decode.draft.claims, decode.draft.rosters);
+  const held = linkClaims(widened, decode.draft.claims, decode.draft.rosters);
   gauge.offTargetDropped += held.dropped;
   const linked = { ...held, claims: holdToSubject(world, held.claims, bound, gauge) };
   let next: SessionState = { ...state, linking: gauge };
@@ -2007,7 +2048,12 @@ function applyLinking(
   // lesson that answers it; found live (2026-09-05): every count and listing
   // ask drew a boundary note beside its certified answer. Counted, silent.
   const unavailable = asked.flatMap((entry) => (entry.fieldId === null ? [{ entityId: entry.entityId, asked: entry.phrase }] : []));
-  const answersRemain = linked.claims.length > 0 || decode.route !== undefined;
+  // A nomination the executor refuses is no answer (found live 2026-09-11:
+  // "How many PP does Psychic have?" came back as a refused route beside one
+  // off-ask claim, and the emptied reply was passed instead of carried back).
+  const routeRefused = decode.route !== undefined && executeRoute(world, state, decode.route) === undefined;
+  const routeStands = decode.route !== undefined && !routeRefused;
+  const answersRemain = linked.claims.length > 0 || routeStands;
   // The boundary is about a certified subject: "how tall is Onix?" is
   // asking the records for something they do not hold. A null link on a
   // subject the records never certified — the weather, "this" — is the
@@ -2062,7 +2108,7 @@ function applyLinking(
     );
   }
 
-  if (linked.claims.length === 0 && decode.route === undefined) {
+  if (linked.claims.length === 0 && !routeStands) {
     // The driver emptied a reply the model meant as an answer — every claim
     // dropped as off the ask or about no subject — and until now threw the
     // signal away, the way the kernel's denials once were. Found live
@@ -2073,9 +2119,12 @@ function applyLinking(
     // reply read by exactly this step with the door shut; a reply the model
     // itself left empty (no claim at all) is not carried back — it said
     // nothing, and there is nothing to correct.
-    const emptied = decode.draft.claims.length > 0 && !aboutRecords;
+    const emptied = (decode.draft.claims.length > 0 || routeRefused) && !aboutRecords;
     if (retryable && emptied) {
       const reasons = [
+        ...(routeRefused && decode.route !== undefined
+          ? [`driver/refused-route: the nomination "${decode.route.routeId}" was refused — answer the ask directly, as claims about the subject asked`]
+          : []),
         ...(decode.draft.claims.some((claim) => "entityId" in claim && canonicalId(claim.entityId) === NO_FIELD)
           ? [`driver/no-subject: a claim named "${NO_FIELD}" as its subject — a claim needs a certified subject, or none should be made`]
           : []),

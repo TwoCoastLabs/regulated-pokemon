@@ -11,7 +11,7 @@ import { ACCORD_ARTICLES } from "./accord.js";
 import { digestText } from "./digest.js";
 import { formatCarriesLocale } from "./format.js";
 import { readPack } from "./files.js";
-import { type AccordPack, blockFor, loadPack, MAX_BADGE_LEVEL, restrictionsFor } from "./pack.js";
+import { type AccordPack, blockFor, dictionaryCollisions, loadPack, MAX_BADGE_LEVEL, restrictionsFor } from "./pack.js";
 import { denialCode } from "./violation.js";
 import { kantoPack, kantoRegistry, PACK_PATH } from "../testing/fixtures.js";
 
@@ -82,6 +82,37 @@ describe("the shipped pack holds up", () => {
         expect(formatCarriesLocale(formatId, locale), `${formatId} cannot render ${locale}`).toBe(true);
       }
     }
+  });
+});
+
+describe("the dictionary lint — words that name two fields of one subject", () => {
+  it("finds an alias carried by another field's name or alias, same subject only, by structure alone", () => {
+    const dictionary = [
+      { id: "a", subject: "species", name: "How it evolves", description: "", aliases: ["how does it evolve"] },
+      { id: "b", subject: "species", name: "Evolves into", description: "", aliases: ["evolve", "evolves"] },
+      { id: "c", subject: "move", name: "Power", description: "", aliases: ["evolves"] },
+    ] as const;
+    const found = dictionaryCollisions(dictionary);
+    expect(found).toEqual([
+      { field: "b", alias: "evolve", within: "a", carrier: "how does it evolve" },
+      { field: "b", alias: "evolves", within: "a", carrier: "How it evolves" },
+    ]);
+    // Word-bounded: "type" inside "typing" is no collision.
+    expect(dictionaryCollisions([
+      { id: "x", subject: "species", name: "Types", description: "", aliases: ["type"] },
+      { id: "y", subject: "species", name: "Typing", description: "", aliases: ["typing"] },
+    ])).toEqual([]);
+  });
+
+  it("pins the shipped packs' collision counts — a number the steward ratchets down, never up", () => {
+    // Each is a word a trainer could say that names two fields, so each is a
+    // question the driver may have to ask. The matcher and the alias check
+    // read evidence discriminatingly, so a collision is a cost, not a bug;
+    // the count is pinned so a new alias cannot add one unnoticed.
+    const shipped = dictionaryCollisions(pack.dictionary);
+    expect(shipped.length).toBeLessThanOrEqual(28);
+    const byField = new Set(shipped.map((entry) => `${entry.field}→${entry.within}`));
+    expect(byField.has("evolves-to→evolution-methods")).toBe(true);
   });
 });
 

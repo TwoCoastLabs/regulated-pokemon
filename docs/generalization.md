@@ -347,6 +347,23 @@ consequence: an audit request is a query over filed artifacts, and a
 regulator-facing number is rendered *from* a record, never recomputed — the
 same discipline the demo's results page enforces on itself.
 
+### The dictionary lint: a pack's ambiguity as a number with an owner
+
+The data dictionary's aliases are the one place a pack's words reach the
+driver, and two fields of one subject can share a word — "defense" is an
+alias of Defense and sits inside "Special Defense"; "evolves" is an alias
+of Evolves into and sits inside "How it evolves". Each such collision is a
+word a trainer could say that names two fields, so each is a question the
+driver may one day have to ask. `dictionaryCollisions` (kernel/pack.ts)
+lists them by structure alone — no domain word in the check — so the same
+lint reads a Pokédex and a drug label, and a port runs it on its first
+draft dictionary before a trainer is ever asked anything. The shipped
+pack's count is pinned by test and ratchets down only; each fix is the
+steward's (a discriminating alias added, a bare word retired), and the
+matcher and the alias cross-check read evidence discriminatingly so a
+collision left in place costs at most a question, never a wrong binding
+(findings, 2026-09-11).
+
 ## 5. What does not carry (the honest ceilings)
 
 - **Deterministic language understanding does not scale linguistically.**
@@ -1003,21 +1020,27 @@ product has to reach both, and neither may be traded for the other.
   only, the way the coverage thresholds ratchet. Measured for the first
   time on 2026-09-11 (findings, "The governance tax, measured"), the
   tax is small and it buys truth: on the 57 answerable entries both arms
-  can express, the strong default at N=3 has a governed stable core of
+  can express, the strong default at N=3 had a governed stable core of
   44/57 (77%) against the same model ungoverned at 51/57 (89%) as it
   appeared and 27/57 (47%) true (text facts excused) — 7 entries of
   apparent usefulness paid, 1.6× the true rate bought; the weak model
-  35/57 (61%) against 36/57 (63%) apparent and 14/57 (25%) true. The
-  other three numbers on those legs: 0 of 411 escalations on each model;
-  honest disposition 29/45 (64%) and 27/45 (60%) stably on the entries
-  that must not resolve; 0.07 and 0.18 advisor questions per resolution.
-  The bar, then, is written from that leg: governed answerable stable
-  core within 15 points of the raw arm's apparent rate and above its
-  verified rate, on every model; and the backlog is the entries where the
-  raw arm is right and the governed leg is not — 8 on the strong model
-  and 2 on the weak, named in the finding. The comparison is product
-  against chatbot, not pipeline with and without the gate; the
-  kernel-only ablation (the same pipeline, the gate as a meter) is owed.
+  35/57 (61%) against 36/57 (63%) apparent and 14/57 (25%) true. One
+  slice later (findings, "The clarification fallback, made rare"), the
+  backlog those legs named was worked and the same legs re-run: strong
+  47/57 (82%) against 51/57 (89%) apparent, the named tax down from 8 to
+  4, every pass at 114/137; weak 36/57 (63%) against 34/57 (60%), the tax
+  down from 2 to 0. The other numbers: 0 of 411 escalations on each model
+  on every leg; honest disposition 29/45 (64%) and 27/45 (60%) stably on
+  the entries that must not resolve; advisor questions per resolution
+  0.04 and 0.18. The bar, then, is written from those legs: governed
+  answerable stable core within 15 points of the raw arm's apparent rate
+  and above its verified rate, on every model, the stable core never
+  falling out of its band; and the backlog is the entries where the raw
+  arm is right and the governed leg is not — 4 on the strong model, none
+  on the weak, named in the finding. The comparison is product against
+  chatbot, not pipeline with and without the gate; the gate's own share
+  is read from the records instead — the refused drafts the oracle would
+  have called answers: 3 of 411 strong-model samples.
 - **The falsifier is named.** The usefulness half fails if the governance
   tax stops shrinking under operator-owned fixes and only a stronger model
   moves it — usefulness would then have come from model capability after

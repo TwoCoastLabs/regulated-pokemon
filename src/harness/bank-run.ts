@@ -41,8 +41,11 @@ import {
   type FunnelStage,
   funnelOf,
   resolvedOnFact,
+  resolvedOnFactIn,
   resolvedOnShape,
+  resolvedOnShapeIn,
   routedLesson,
+  routedLessonIn,
   scoreDisposition,
 } from "./playability.js";
 import type { HarnessRun, RunStatus } from "./run.js";
@@ -85,6 +88,15 @@ export interface BankRun {
   /** Field-bearing claims the schema linking dropped as off the asked fields
    * (R3b) — the substitution class, as a per-entry number. */
   offTargetDropped?: number;
+  /**
+   * For a run the kernel denied: whether the refused draft, read by the
+   * entry's own oracle, would have counted as an answer to this question
+   * had it been published — the gate's own removal of a believed answer,
+   * which is the kernel-only half of the governance tax (tax.ts,
+   * `gateRemoved`). Read from the record's refused draft (IA-10); absent
+   * when the run was not denied or kept no draft.
+   */
+  deniedDraftOnTarget?: boolean;
   /** The advisor's own questions on this run (R3b step 3), from the driver's
    * gauge, and how the truthful trainer fared: `picked` when an option held
    * the entry's truth, `ignored` when none did — the model asked a question
@@ -268,6 +280,19 @@ export function scoreOracle(oracle: DispositionOracle, run: HarnessRun, world: D
   return score;
 }
 
+/** Whether a draft's claims answer this entry by its own oracle — lesson,
+ * shape and subject, the same checks a resolution faces — regardless of
+ * truth, which is the kernel's to judge and which it already has. */
+export function draftOnTarget(entry: BankEntry, claims: readonly Claim[]): boolean {
+  if (claims.length === 0) return false;
+  if (entry.disposition !== "answerable" && entry.disposition !== "advisory") return false;
+  return (
+    routedLessonIn(claims, entry.expectBlockIds) &&
+    resolvedOnShapeIn(claims, entry.expectClaimKinds) &&
+    (resolvedOnFactIn(claims, entry.expectFacts) || answeredThroughOtherKindIn(claims, entry.expectClaimKinds))
+  );
+}
+
 /** Whether the certificate carries a claim of an expected kind other than
  * `fact` — the escape hatch that keeps the subject check from failing an
  * answer the question accepts through another route. */
@@ -417,6 +442,7 @@ export async function runBankEntry(
   const { asked, picked, ignored, capped } = state.clarification;
   const shown = run.transaction?.manifest?.suggestions?.length ?? 0;
   const stage = funnelOf(run, wantsAct(entry));
+  const refused = stage.kind === "denied" ? run.transaction?.refused?.claims : undefined;
   return {
     entryId: entry.id,
     disposition: entry.disposition,
@@ -433,6 +459,7 @@ export async function runBankEntry(
     ...(state.folds > 0 ? { folded: true } : {}),
     ...(state.feedbackRetries > 0 ? { feedbackRetried: true, firstAttemptDenials: state.feedbackDenials } : {}),
     ...(state.linking.offTargetDropped > 0 ? { offTargetDropped: state.linking.offTargetDropped } : {}),
+    ...(refused === undefined ? {} : { deniedDraftOnTarget: draftOnTarget(entry, refused) }),
     ...(options.clarify === true ? { clarified: { asked, picked, ignored, capped } } : {}),
     ...(options.suggest === true ? { suggestions: { shown, dropped: state.suggestions.dropped } } : {}),
     detail: run.detail,
