@@ -548,7 +548,11 @@ wrong order for a "feels dumb" problem.
    number is the finding: on the 57 answerable entries both grammars can
    express, the governed floor is 7 entries below the chatbot's apparent
    rate and 1.6× its true rate on the strong model (44/57 against 51/57
-   and 27/57), 1 entry below and 2.5× on the weak.
+   and 27/57), 1 entry below and 2.5× on the weak. *Re-run 2026-09-11*
+   after the clarification levers (findings, "The clarification fallback,
+   made rare"): strong 47/57, every pass 114/137, the named tax 8 → 4,
+   model questions 23 → 13; weak 36/57, the named tax 2 → 0; 0 of 411
+   escalations on both.
 7. The openFDA epic, budgeted before it starts.
 
 **What would falsify it.** If, with the data dictionary in place, the strong model

@@ -4652,3 +4652,140 @@ weak model's is the gated row); ceremony 0.07 and 0.18 advisor questions
 per resolution, 0.01 and 0.00 scope cards. Enforcement, as always, is the
 line that did not move: the models that published gated advice 27 and 24
 times ungoverned committed it 0 times governed, in the same artifacts.
+
+### The clarification fallback, made rare: the tax's backlog worked, and the lint that came out of it (2026-09-11)
+
+**Goal.** The governance tax named the usefulness backlog: 8 entries on the
+strong model and 2 on the weak where a plain chatbot is right and the
+governed system is not. Two of the strong model's eight died in the
+clarification ladder three times in three, and the design question behind
+them was whether a confirm-and-clarify fallback scales: it does only if it
+fires on real ambiguity and rarely, and the levers that keep it rare have
+to be structural, not hand-tuned. This slice built those levers, then
+re-ran the same four legs to read them against the bar.
+
+**What was found, live, before anything changed.** "At what level does
+Charmander evolve?" drew "How it evolves or Evolves into?"; the trainer
+answered with the exact label "How it evolves" and the driver read it as
+ambiguous — because "evolves" is an alias of the other option and every
+kind of evidence had counted alike. The alias cross-check had asked in the
+first place because the aliases written with "it" for the subject ("what
+level does it evolve") were not found around "Charmander" in the middle.
+"How many PP does Psychic have?" came back as a refused listing nomination
+beside one off-ask claim; the reply was emptied and passed as honest,
+because the retry that carries an emptied reply back treated the refused
+nomination as an answer still standing. Each is deterministic and ours.
+
+**The levers, all structural, no domain word.** (1) The pick matcher reads
+evidence by tier — label, then name, then alias — and binds on the
+strongest tier that matches exactly one option; an alias counts only when
+it discriminates among the options offered (computed per question, so it
+holds for any dictionary). (2) The alias check reads the phrase with the
+subject's id replaced by "it" as well. (3) Union before asking: when the
+reply already answers the other reading, the mapping is widened to it and
+no one is asked — every claim is certified, so both is never wrong.
+(4) Feedback before asking: a contradiction is carried back once in fixed
+wording (`driver/ambiguous-field`), one model call before one trainer
+question; and a refused nomination beside an emptied reply is carried back
+(`driver/refused-route`). (5) **A dictionary lint**, `dictionaryCollisions`
+in the kernel's pack module: every alias of a field carried, word-bounded,
+by the name or an alias of another field of the same subject — a word a
+trainer could say that names two fields, so a question the driver may have
+to ask. Structure only, so it lints a Pokédex and a drug label alike; the
+shipped pack carries 28 (8 of them the bare "defense"/"def"/"atk" family,
+17 the "evolve"/"evolves"/"evolution" family), pinned by test and ratcheted
+down only. The steward's first fix under it: "what stone" and "which
+stone" as aliases of How it evolves — the Eevee ask's gap, closed in data.
+Live, before the legs: Charmander and PP answered in one call each.
+
+**The legs.** The same configuration as the tax run (retrieval, gated
+grammar, repair, profile, feedback, clarify, suggest, raw arm), N=3, both
+models. Artifacts `runs/coverage/2026-09-11T04-05-05-263Z-coverage.json`
+(strong) and `runs/coverage/2026-09-11T00-00-12-734Z-coverage.json` (weak).
+Cost: strong $0.29 governed (755 calls) + $0.06 raw; weak about $0.06.
+
+| strong `qwen/qwen3-235b-a22b-2507`, N=3 | before (2026-09-10) | after |
+|---|---|---|
+| passes per repetition / band | 103, 107, 106 / 103–107 | **114, 114, 114 / 114–114** |
+| stable core, all dispositions | 96/137 (70%) | **104/137 (76%)** |
+| answerable, comparable 57, governed stable | 44/57 (77%) | **47/57 (82%)** |
+| answerable, raw apparent / raw true (text excused) | 51/57 (89%) / 27/57 (47%) | 51/57 (89%) / 22/57 (39%) |
+| the tax, named (chatbot right, governed stably not) | 8 | **4** |
+| advisory governed stable | 3/13 (23%) | 4/13 (31%) |
+| gated-advisory governed stable | 8/11 (73%) | **10/11 (91%)** |
+| off-domain governed stable | 8/10 (80%) | 10/10 (100%) |
+| needs-data governed stable | 13/23 (57%) | 12/23 (52%) |
+| escalations | 0 of 411 | **0 of 411** |
+| model questions asked / picked / no right option / capped | 23 / 4 / 38 / 0 | **13 / 2 / 22 / 1** |
+| advisor questions per resolution | 0.07 | **0.04** |
+| contradictions carried back (`driver/ambiguous-field`) | — | 5 |
+| refused nominations carried back (`driver/refused-route`) | — | 1 |
+
+The delta clears the band on both ends — the worst pass after (114) is
+above the best pass before (107) — so it is a result, not dice. Sixteen
+entries became stably right and eight stopped being, and the sixteen
+include the traced ones: `data-evolve-level-charmander` and
+`data-evo-item-eevee` (abstained 3/3 → resolved 3/3), `ans-move-effect-recover`.
+`ans-move-pp-psychic` is now 2/3, its one miss a reply that was carried
+back for a refused route and an off-ask claim and still came back empty.
+Of the 8 lost, 5 are needs-data or advisory churn the flaky list has
+carried before; none is a traced signature.
+
+| weak `mistralai/mistral-nemo`, N=3 | before | after |
+|---|---|---|
+| passes per repetition / band | 87, 90, 81 / 81–90 | 89, 90, 89 / 89–90 |
+| stable core | 77/137 (56%) | 79/137 (58%) |
+| answerable, comparable 57, governed stable | 35/57 (61%) | 36/57 (63%) |
+| answerable, raw apparent / raw true | 36/57 (63%) / 14/57 (25%) | 34/57 (60%) / 14/57 (25%) |
+| the tax, named | 2 | **0** |
+| escalations | 0 of 411 | 0 of 411 |
+| model questions asked / picked / no right option / capped | 48 / 10 / 76 / 3 | 48 / 7 / 82 / 1 |
+
+The weak model moved inside its band, as expected: the traced signatures
+were the strong model's. Its two named tax entries are gone (one by the
+union, one by churn), and its band narrowed from 9 to 1.
+
+**The gate's own share, read from the records for the first time.** Of
+411 strong-model samples the kernel denied 14; 3 of those refused drafts
+would have read as an answer to the question had they been published
+(2 answerable, 1 advisory), every one carrying something the certified
+world contradicts. So the kernel itself removed 3 believed answers in 411;
+every other governed miss is the model abstaining or answering off the
+ask. On the weak model, 3 of 9 answerable denials would have read as
+answers. This is the kernel-only half of the tax the previous finding
+owed, without a bypass dial: the refused draft is already in the record
+(IA-10), and the bank now reads it.
+
+**The tax that remains, named.** Strong: `data-evolve-pikachu` ("What does
+Pikachu evolve into?" — abstained 3/3; the chatbot says "Raichu"),
+`ans-move-pp-psychic` (2/3), and the two advisory asks
+`kind-best-team-elite` and `kind-evolve-order` (the model abstains or
+gives prose where a recommendation was possible — the shape class named
+in R3b step 5, twice now). Weak: none.
+
+*Model errors* (counted apart): the remaining four above; the 25
+`driver/no-subject` and 37 `driver/off-ask` first attempts the feedback
+round corrected; the raw arm's drop from 27 to 22 true answers on the same
+questions with no change to the raw arm — the ungoverned model's own run-
+to-run variance, which is itself a reading of how much a chatbot's truth
+rate moves on dice. *Harness factors*: (a) **fixed** — the four driver
+lessons above, each pinned to its traced conversation by test. (b) **Named**
+— the union counter (`linking.unions`) lives in the driver's gauge and is
+not yet in the record, so how often the union fired on these legs is not
+a number this artifact carries; the step trail (issue #158) is where the
+driver's steps become per-exchange record. (c) **Named** — the before and
+after are two runs, not one artifact, so the comparison rests on the band
+rule (cleared) rather than on paired samples. (d) **Data, owned** — the
+lint's 28 collisions are a steward's backlog: the bare-word aliases
+("defense", "atk", "evolve") are what people say, and each costs at most a
+question the levers above now make rare.
+
+**The honest reading.** The fallback still exists and still fires — 13
+times in 411 on the strong model, once capped — but it fires less than half
+as often as before and binds when answered. The usefulness bar moved by
+the amount the backlog said it could: 3 of the 7 taxed entries on the
+strong model and both on the weak, with the strong model's floor up 8
+entries and every pass identical at 114. Enforcement did not move. And
+the one transferable artefact of the slice is the lint: a pack's alias
+collisions are now a number with an owner, in any domain, before a
+trainer ever has to be asked.
