@@ -62,6 +62,7 @@ import { MAX_ANSWER_CLAIMS, type NominableRoute } from "../harness/schema.js";
 import { addUsage, emptyUsage, type ModelProvider, type Usage } from "../harness/provider.js";
 import { aliasContradiction, fieldsOfClaim, freshLinks, linkClaims } from "./linking.js";
 import { canonicalId, certifies, MAX_CLARIFICATIONS, matchPick, scopeOptions, validOptions } from "./clarify.js";
+import { closeLedger, type DriverStep, type ExchangeLedger, ledgerOf, step as ledgerStep } from "./ledger.js";
 
 /** The certified world the session runs against — the same two values the
  * harness calls `HarnessWorld`, named here so the browser bundle never
@@ -285,6 +286,13 @@ export interface SessionState {
   /** Ladder proposals spent on the current ask; a fresh utterance resets it. */
   ladderTurns: number;
   /**
+   * The driver's ledger (ledger.ts, issue #158): every deterministic step of
+   * the open exchange in fixed wording, and the closed exchanges' ledgers
+   * in order. Beside the kernel's records, never inside them.
+   */
+  steps: readonly DriverStep[];
+  exchanges: readonly ExchangeLedger[];
+  /**
    * The option the trainer picked on the current exchange's clarification,
    * when they picked one. Applied at linking: a field pick holds every claim
    * to that field (or, for none, teaches the records' boundary); a subject
@@ -367,11 +375,34 @@ export function startSession(idPrefix?: string): SessionState {
     listingActivations: { consulted: 0, served: 0, stoodDown: 0, guardDropped: 0 },
     nominationRetries: 0,
     ladderTurns: 0,
+    steps: [],
+    exchanges: [],
   };
 }
 
 function note(state: SessionState, at: string, text: string, tone: SessionNote["tone"], detail?: string): SessionState {
-  return { ...state, notes: [...state.notes, { at, text, tone, ...(detail === undefined ? {} : { detail }) }] };
+  // Every note is a step: the detail register is already the fixed wording.
+  const noted = ledgerStep(state, at, "driver", `note/${tone}`, detail ?? text);
+  return { ...noted, notes: [...state.notes, { at, text, tone, ...(detail === undefined ? {} : { detail }) }] };
+}
+
+/** The open exchange's opening words — the trainer's first utterance since
+ * the exchange began — for closing its ledger. */
+function openingOf(state: SessionState): string {
+  const first = state.transcript.slice(state.askStart).find((event) => event.kind === "utterance" && event.source === "trainer");
+  return first?.kind === "utterance" ? first.text : "";
+}
+
+/** One line on what a reply carried, for the ledger's model lane. */
+function describeReply(step: AnswerStep): string {
+  if (!step.decode.ok) return `no usable reply: ${step.decode.reason}`;
+  const { draft, asked, route, clarify: asks, suggestions } = step.decode;
+  const parts = [`${draft.claims.length} claim(s)`, `${asked.length} link(s)`];
+  if (draft.rosters.length > 0) parts.push(`${draft.rosters.length} roster(s)`);
+  if (route !== undefined) parts.push(`nominated ${route.routeId}`);
+  if (asks !== undefined) parts.push("asked a clarification");
+  if ((suggestions?.length ?? 0) > 0) parts.push(`${suggestions?.length} suggestion(s)`);
+  return parts.join(", ");
 }
 
 /**
@@ -475,18 +506,28 @@ function ask(world: SessionWorld, state: SessionState, at: string, dimension: Sc
           "unanswering reply while a question was armed — question restated",
         )
       : state;
+  const asked = repeat ? reminded : ledgerStep(reminded, at, "driver", "scope/asked", `the pack's question about ${dimension} was armed`);
   return {
-    ...reminded,
+    ...asked,
     phase: { kind: "asking", dimension, question, options: scopeOptions(world.pack, dimension) },
     transcript: repeat
-      ? reminded.transcript
-      : [...reminded.transcript, { kind: "question", at, source: "advisor", dimension, text: question }],
+      ? asked.transcript
+      : [...asked.transcript, { kind: "question", at, source: "advisor", dimension, text: question }],
   };
 }
 
 /** File a settled exchange and open the next one, with the default demands. */
 function file(state: SessionState, record: Transaction, page?: DomElement): SessionState {
-  const { pending: _pending, required: _required, bound: _bound, ...rest } = state;
+  const filed = ledgerStep(
+    state,
+    record.committedAt,
+    "kernel",
+    `record/${record.outcome.status}`,
+    record.outcome.status === "denied"
+      ? `denied: ${record.outcome.violations.map(denialCode).join(", ")}`
+      : `${record.outcome.status}: ${record.manifest?.claims.length ?? 0} claim(s) certified`,
+  );
+  const { pending: _pending, required: _required, bound: _bound, ...rest } = closeLedger(filed, openingOf(state), record.outcome.status, record.id);
   return {
     ...rest,
     records: [...state.records, record],
@@ -516,12 +557,21 @@ export async function say(state: SessionState, text: string, deps: SessionDeps):
   // ask like any other, and nothing downstream treats it differently.
   const offered = state.records[state.records.length - 1]?.manifest?.suggestions ?? [];
   const taken = offered.some((suggestion) => suggestion.trim().toLowerCase() === text.trim().toLowerCase());
-  const next = {
-    ...state,
-    transcript: [...state.transcript, utterance],
-    ladderTurns: 0,
-    ...(taken ? { suggestions: { ...state.suggestions, taken: state.suggestions.taken + 1 } } : {}),
-  };
+  // A fresh ask closes the previous exchange's ledger (an exchange that
+  // filed a record closed its own); the words are the first step of the new.
+  const opened = state.phase.kind === "gathering" ? closeLedger(state, openingOf(state), "passed") : state;
+  const next = ledgerStep(
+    {
+      ...opened,
+      transcript: [...state.transcript, utterance],
+      ladderTurns: 0,
+      ...(taken ? { suggestions: { ...state.suggestions, taken: state.suggestions.taken + 1 } } : {}),
+    },
+    utterance.at,
+    "trainer",
+    taken ? "trainer/took-suggestion" : "trainer/said",
+    text,
+  );
   // Social closes and the confidence question get their own words, before any
   // machinery runs (porch round five, 2026-09-01: "thanks!" and "are you
   // sure?" each re-ran the ladder and drew a stale card). Recorded like every
@@ -617,7 +667,7 @@ const TRUST_CLAUSE =
  */
 export async function setProfile(state: SessionState, scope: ScopeCandidate, deps: SessionDeps): Promise<SessionState> {
   const event: ScopeEvent = { kind: "profile", at: deps.now(), source: "trainer", scope };
-  const next = { ...state, transcript: [...state.transcript, event] };
+  const next = ledgerStep({ ...state, transcript: [...state.transcript, event] }, event.at, "trainer", "trainer/profile", `profile set: ${Object.entries(scope).map(([key, value]) => `${key}=${String(value)}`).join(", ")}`);
   if (state.phase.kind === "asking" || state.phase.kind === "confirming-scope") return drive(next, deps);
   // A profile set while the advisor's own question waits is scope, not the
   // pick: acknowledged, and the question stays armed.
@@ -663,7 +713,8 @@ export async function decideScope(
     candidateDigest: proposalDigest(proposal),
     decision,
   };
-  return drive({ ...state, transcript: [...state.transcript, confirmation] }, deps);
+  const decided = ledgerStep(state, confirmation.at, "trainer", `trainer/card-${decision}ed`, `the interpretation card was ${decision}ed`);
+  return drive({ ...decided, transcript: [...state.transcript, confirmation] }, deps);
 }
 
 /**
@@ -695,6 +746,7 @@ export function decideAct(state: SessionState, decision: "confirm" | "decline", 
   }
 
   const moment = deps.now();
+  state = ledgerStep(state, moment, "trainer", `trainer/consent-${decision}ed`, decision === "confirm" ? "consent given on the attested page" : "consent declined");
   const record = runTransaction({
     id: pending.transactionId,
     registry: deps.world.registry,
@@ -766,12 +818,18 @@ async function drive(
     const clarification = state.phase.clarification;
     const pick = matchPick(world.pack, world.registry, clarification.options, lastSaid.text);
     if (pick !== undefined) {
-      state = {
-        ...state,
-        bound: pick,
-        phase: { kind: "gathering" },
-        clarification: { ...state.clarification, picked: state.clarification.picked + 1 },
-      };
+      state = ledgerStep(
+        {
+          ...state,
+          bound: pick,
+          phase: { kind: "gathering" },
+          clarification: { ...state.clarification, picked: state.clarification.picked + 1 },
+        },
+        lastSaid.at,
+        "trainer",
+        "clarify/picked",
+        `the reply picked "${pick.label}" (${pick.kind === "field" ? (pick.fieldId ?? "no field") : pick.entityId}) — bound for this exchange`,
+      );
     } else if (looksLikeFreshAsk(world.registry, lastSaid.text)) {
       // Drift over the advisor's own question — reopened here, before scope
       // is read, because a granted scope would otherwise carry the new ask
@@ -792,6 +850,7 @@ async function drive(
   if (outcome.status === "refused") {
     // The record of the refusal is the seam's, reached through its own door.
     const at = deps.now();
+    state = ledgerStep(state, at, "kernel", "scope/refused", `scope refused: ${outcome.violations.map(denialCode).join(", ")}`);
     const record = runTransaction({
       id: nextTransactionId(state),
       registry: world.registry,
@@ -809,6 +868,13 @@ async function drive(
   }
 
   if (outcome.status === "granted") {
+    state = ledgerStep(
+      state,
+      deps.now(),
+      "kernel",
+      "scope/granted",
+      `scope granted: ${outcome.grant.bindings.map((binding) => `${binding.dimension}=${String(binding.value)}`).join(", ") || "from the defaults"}`,
+    );
     // A grant honestly established over a version these records do not
     // certify. The kernel would refuse every registry-derived answer by name
     // (IA-2/scope-version-mismatch) — correct, and a dead end for a trainer
@@ -1054,9 +1120,10 @@ async function drive(
     );
   }
 
+  const carded = ledgerStep(spent, step.event.at, "model", "scope/card", `the model proposed an interpretation card: ${Object.entries(step.event.candidate).map(([key, value]) => `${key}=${String(value)}`).join(", ")}`);
   return {
-    ...spent,
-    transcript: [...spent.transcript, step.event],
+    ...carded,
+    transcript: [...carded.transcript, step.event],
     phase: { kind: "confirming-scope", proposal: step.event },
   };
 }
@@ -1461,11 +1528,17 @@ async function teachOrDiscover(
     return { state: { ...state, providerErrors: state.providerErrors + 1 }, result: "unusable", claims: [], rosters: [] };
   }
 
-  let spent = {
-    ...state,
-    usage: addUsage(state.usage, stepUsage),
-    nominationRetries: state.nominationRetries + (retried ? 1 : 0),
-  };
+  let spent = ledgerStep(
+    {
+      ...state,
+      usage: addUsage(state.usage, stepUsage),
+      nominationRetries: state.nominationRetries + (retried ? 1 : 0),
+    },
+    deps.now(),
+    "model",
+    "model/discovery",
+    `${describeReply(step)}${retried ? " — after a refused nomination, re-asked with the route door shut" : ""}`,
+  );
   if (refusedListing) spent = tallyListing(spent, "stoodDown");
   if (!step.decode.ok) {
     // A well-formed reply with no claims is the model's own signal that nothing
@@ -1948,7 +2021,8 @@ function applyLinking(
   const bound = state.bound;
   if (decode.asked.length === 0 && bound?.kind !== "field") {
     gauge.unlinked += 1;
-    return { state: { ...state, linking: gauge }, claims: holdToSubject(world, decode.draft.claims, bound, gauge), verdict: "proceed" };
+    const unlinked = ledgerStep({ ...state, linking: gauge }, deps.now(), "driver", "linking/unlinked", "the reply linked nothing — its claims stand as they are");
+    return { state: unlinked, claims: holdToSubject(world, decode.draft.claims, bound, gauge), verdict: "proceed" };
   }
   if (decode.asked.length > 0) gauge.mapped += 1;
 
@@ -1958,6 +2032,7 @@ function applyLinking(
     events.flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : [])).join(" ");
   const fresh = freshLinks(decode.asked, trainerWords(state.transcript.slice(state.askStart)), trainerWords(state.transcript.slice(0, state.askStart)));
   gauge.staleDropped += fresh.stale;
+  if (fresh.stale > 0) state = ledgerStep(state, deps.now(), "driver", "linking/stale-dropped", `${fresh.stale} link(s) about an earlier exchange dropped`, fresh.stale);
   const subject = fresh.asked.map((entry) => canonicalId(entry.entityId)).find((id) => certifies(world.registry, id)) ?? fresh.asked[0]?.entityId ?? "";
   const asked =
     bound?.kind === "field" ? [{ phrase: bound.label, entityId: subject, fieldId: bound.fieldId }] : fresh.asked;
@@ -1981,12 +2056,13 @@ function applyLinking(
       const about = asked.find((entry) => entry.phrase === contradiction?.phrase);
       widened = [...asked, ...contradiction.suggested.map((field) => ({ phrase: contradiction!.phrase, entityId: about?.entityId ?? subject, fieldId: field.id }))];
       gauge.unions += 1;
+      state = ledgerStep(state, deps.now(), "driver", "linking/union", `"${contradiction.phrase}" carries the words of ${contradiction.suggested.map((field) => field.name).join(" or ")}, and the reply answers that reading too — both kept, no question`);
       contradiction = undefined;
     } else if (retryable && deps.feedback === true) {
       const linkedName = contradiction.linked?.name ?? "no field";
       const names = contradiction.suggested.map((field) => field.name).join(" or ");
       return {
-        state: { ...state, linking: gauge },
+        state: ledgerStep({ ...state, linking: gauge }, deps.now(), "driver", "linking/carried-back", `"${contradiction.phrase}" was read as ${linkedName} but carries the words of ${names} — carried back to the model once`),
         claims: [],
         verdict: "retry",
         feedback: [
@@ -1998,6 +2074,7 @@ function applyLinking(
   if (contradiction !== undefined) {
     gauge.contradictions += 1;
     const names = contradiction.suggested.map((field) => field.name).join(" or ");
+    state = ledgerStep(state, deps.now(), "driver", "linking/contradiction", `"${contradiction.phrase}" was read as ${contradiction.linked?.name ?? "no field"} but carries the words of ${names}`);
     if (deps.clarify === true) {
       // The question with the fields as typed options (R3b step 3): the
       // pick binds, where the stock line could only send the trainer away
@@ -2039,6 +2116,8 @@ function applyLinking(
   gauge.offTargetDropped += held.dropped;
   const linked = { ...held, claims: holdToSubject(world, held.claims, bound, gauge) };
   let next: SessionState = { ...state, linking: gauge };
+  if (held.dropped > 0) next = ledgerStep(next, deps.now(), "driver", "linking/off-ask-dropped", `${held.dropped} claim(s) dropped as off the asked fields or subject`, held.dropped);
+  if (linked.claims.length < held.claims.length) next = ledgerStep(next, deps.now(), "driver", "linking/held-to-pick", `${held.claims.length - linked.claims.length} claim(s) dropped as off the subject the trainer picked`, held.claims.length - linked.claims.length);
 
   // What the model said it could not certify (the R3a abstention, now read
   // from the mapping): reported in the trainer's own phrase, never a claim —
@@ -2133,7 +2212,8 @@ function applyLinking(
           : []),
         "If a reviewed lesson squarely answers the question, teach that lesson; if a certified subject and field answer it, name them and link the field; otherwise reply with no claims at all.",
       ];
-      return { state: next, claims: [], verdict: "retry", feedback: reasons };
+      const codes = reasons.filter((line) => line.startsWith("driver/")).map((line) => line.split(":")[0]!);
+      return { state: ledgerStep(next, deps.now(), "driver", "reply/carried-back", `the reply was emptied (${codes.join(", ")}) — carried back to the model once`), claims: [], verdict: "retry", feedback: reasons };
     }
     if (unavailable.length > 0) return { state: next, claims: [], verdict: aboutRecords ? "boundary" : "off-domain" };
     if (asked.length === 0) {
@@ -2250,7 +2330,7 @@ function clarify(
     text: question.text,
     options: question.options,
   };
-  const { bound: _bound, ...rest } = state;
+  const { bound: _bound, ...rest } = ledgerStep(state, event.at, "driver", "clarify/asked", `asked which was meant by "${question.about}" — options ${question.options.map((option) => option.label).join(" / ")} (${question.source})`);
   return {
     state: {
       ...rest,
@@ -2302,6 +2382,7 @@ function unansweredClarification(state: SessionState, deps: SessionDeps, clarifi
 function teachRecordsBoundary(state: SessionState, deps: SessionDeps, transactionId: string, establishedAt: string): SessionState {
   const lessonId = deps.world.pack.recordsBoundary?.lessonId;
   if (lessonId === undefined) return closeExchange(state);
+  state = ledgerStep(state, deps.now(), "driver", "boundary/taught", "the ask named what the records do not hold — the records-boundary lesson taught");
   return commit(state, deps, {
     transactionId,
     establishedAt,
@@ -2546,12 +2627,18 @@ async function answer(
     }
   }
 
-  let withUsage = {
-    ...state,
-    usage: addUsage(state.usage, step.usage),
-    folds: state.folds + (step.decode.ok ? step.decode.folds : 0),
-    nominationRetries: state.nominationRetries + (stepRetried ? 1 : 0),
-  };
+  let withUsage = ledgerStep(
+    {
+      ...state,
+      usage: addUsage(state.usage, step.usage),
+      folds: state.folds + (step.decode.ok ? step.decode.folds : 0),
+      nominationRetries: state.nominationRetries + (stepRetried ? 1 : 0),
+    },
+    deps.now(),
+    "model",
+    "model/answer",
+    `${describeReply(step)}${stepRetried ? " — after a refused nomination, re-asked with the route door shut" : ""}`,
+  );
   if (stepRefusedListing) withUsage = tallyListing(withUsage, "stoodDown");
 
   // Keyed on the exchange's opening ask: later utterances answer the pack's
@@ -2635,6 +2722,7 @@ async function answer(
   if (reuse?.routed !== true && deps.feedback === true && !carriedBack && feedbackEligible(ran.record)) {
     const violations = ran.record.outcome.status === "denied" ? ran.record.outcome.violations : [];
     const codes = violations.map(denialCode);
+    withUsage = ledgerStep(withUsage, deps.now(), "kernel", "verdict/denied", `the kernel denied the draft: ${codes.join(", ")} — carried back to the model once`);
     let again: AnswerStep | undefined;
     try {
       again = await proposeAnswer({
@@ -2755,6 +2843,15 @@ function groom(
   // A nomination at the scoped hop composes here too — same door, same
   // validation, same kernel downstream; an invalid one is simply ignored.
   const nominated = decode.route !== undefined ? executeRoute(world, state, decode.route) : undefined;
+  if (decode.route !== undefined) {
+    state = ledgerStep(
+      state,
+      deps.now(),
+      "driver",
+      nominated !== undefined ? "route/served" : "route/refused",
+      nominated !== undefined ? `the ${decode.route.routeId} route composed ${nominated.claims.length} claim(s)` : `the ${decode.route.routeId} nomination was refused by its guard`,
+    );
+  }
   if (decode.route?.routeId === "listing") {
     state = tallyListing(state, nominated !== undefined ? "served" : "stoodDown");
   }
@@ -2766,13 +2863,19 @@ function groom(
   const routed = eligibilityClaims(world, ask, decoded.claims);
   const directed = correctMatchupDirections(world, ask, decoded.claims);
   const rightSet = dropWrongSetClaims(world, openingWords, { claims: directed.claims, rosters: decoded.rosters });
-  if (rightSet.claims.length < directed.claims.length) state = tallyListing(state, "guardDropped");
+  if (directed.flips > 0) state = ledgerStep(state, deps.now(), "driver", "guard/direction-flipped", `${directed.flips} matchup direction(s) held to the ask's word order`, directed.flips);
+  if (rightSet.claims.length < directed.claims.length) {
+    state = tallyListing(state, "guardDropped");
+    state = ledgerStep(state, deps.now(), "driver", "guard/wrong-set-dropped", `${directed.claims.length - rightSet.claims.length} catalogue claim(s) about the wrong set dropped`, directed.claims.length - rightSet.claims.length);
+  }
   if (rightSet.claims.length === 0 && directed.claims.length > 0) {
     // The guard emptied the draft: everything it carried was the wrong
     // set. An honest pass, never an empty certificate.
     return honestPass(state, "the wrong-set guard removed every claim the draft carried — nothing was committed");
   }
   const groomed = { ...decoded, rosters: rightSet.rosters, claims: trimPaddedLessons(world, ask, rightSet.claims) };
+  if (groomed.claims.length < rightSet.claims.length) state = ledgerStep(state, deps.now(), "driver", "guard/padding-trimmed", `${rightSet.claims.length - groomed.claims.length} padding lesson(s) trimmed`, rightSet.claims.length - groomed.claims.length);
+  if (routed.length > 0) state = ledgerStep(state, deps.now(), "driver", "guard/eligibility-appended", `the pack's rule appended to a gated advisory ask: ${routed.length} claim(s)`, routed.length);
   if (directed.flips > 0) state = { ...state, flips: state.flips + directed.flips };
   // (The deflected-profile backstop that stood here too is gone — R3b step
   // 5. A lesson the model composed at this hop is the lesson it composed.)
@@ -2878,8 +2981,9 @@ function fileProbe(
   ran: Probe,
 ): SessionState {
   const { transactionId, establishedAt } = exchange;
-  if (ran.repaired) state = { ...state, repairs: state.repairs + 1 };
+  if (ran.repaired) state = ledgerStep({ ...state, repairs: state.repairs + 1 }, deps.now(), "driver", "repair/strip-assertion", "a mis-recalled value was stripped and the gate run once more — the certified value read");
   const { record, committedAt, renderedAt, planned } = ran;
+  if (record.outcome.status === "declined") state = ledgerStep(state, deps.now(), "driver", "act/consent-requested", "the page carries an act — attested, held for the trainer's consent");
   switch (record.outcome.status) {
     case "answered": {
       // No acts proposed: the probe is the exchange's record. The certified

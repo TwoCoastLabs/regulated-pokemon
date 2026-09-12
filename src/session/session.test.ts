@@ -2017,6 +2017,81 @@ it("a failed teaching attempt falls to the question and moves the failure counte
   expect(state.providerErrors).toBeGreaterThan(0);
 });
 
+describe("the driver's ledger — every step of an exchange, in fixed wording, beside the record (issue #158)", () => {
+  const PROFILE_SCOPE = { version: "red-blue", region: "kanto", badgeLevel: 8 } as const;
+  const codes = (steps: readonly { code: string }[]) => steps.map((entry) => entry.code);
+
+  it("records a plain answered exchange end to end and closes it on the record", async () => {
+    const provider = scripted("ledger", (purpose) => (purpose === "scope" ? "decline" : thunderboltAnswer()));
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    expect(codes(state.steps)).toEqual(["trainer/profile", "note/social"]);
+    state = await say(state, "What is Thunderbolt's power?", d);
+    // The profile's acknowledgment closed as a passed exchange at the fresh ask.
+    expect(state.exchanges.map((exchange) => exchange.outcome)).toEqual(["passed", "answered"]);
+    const answered = state.exchanges[1]!;
+    expect(answered.opening).toBe("What is Thunderbolt's power?");
+    expect(answered.transactionId).toBe("session-1");
+    // The scripted reply links nothing, and the trail says so.
+    expect(codes(answered.steps)).toEqual(["trainer/said", "scope/granted", "model/answer", "linking/unlinked", "record/answered"]);
+    expect(answered.steps.map((entry) => entry.lane)).toEqual(["trainer", "kernel", "model", "driver", "kernel"]);
+    expect(answered.steps[4]!.text).toContain("1 claim(s) certified");
+    expect(state.steps).toEqual([]);
+  });
+
+  it("is deterministic: the same scripted conversation twice writes the same ledger", async () => {
+    const provider = scripted("ledger", (purpose) => (purpose === "scope" ? "decline" : thunderboltAnswer()));
+    const run = async () => {
+      const d = deps(provider);
+      const state = await say(await setProfile(startSession(), PROFILE_SCOPE, d), "What is Thunderbolt's power?", d);
+      return state.exchanges.map((exchange) => ({ ...exchange, steps: exchange.steps.map(({ at: _at, ...rest }) => rest) }));
+    };
+    expect(await run()).toEqual(await run());
+  });
+
+  it("carries the linking checks, a refused nomination, a clarification and the pick as steps", async () => {
+    const contradicting = JSON.stringify({
+      asked: [{ phrase: "how fast", entityId: "pikachu", fieldId: "base-attack" }],
+      rosters: [],
+      claims: [{ kind: "route", routeId: "listing" }, { kind: "fact", entityId: "pikachu", factId: "base-attack" }],
+    });
+    const speed = JSON.stringify({
+      asked: [{ phrase: "how fast", entityId: "pikachu", fieldId: "base-speed" }],
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }, { kind: "fact", entityId: "pikachu", factId: "base-hp" }],
+    });
+    let calls = 0;
+    const provider = new ScriptedProvider("ledger", (request) => (request.purpose !== "answer" ? "decline" : (calls += 1) === 1 ? contradicting : speed));
+    const d: SessionDeps = { ...deps(provider), clarify: true };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    expect(state.phase.kind).toBe("clarifying");
+    expect(codes(state.steps)).toEqual(["trainer/said", "scope/granted", "model/answer", "linking/contradiction", "clarify/asked"]);
+    state = await say(state, "Speed", d);
+    const trail = state.exchanges.at(-1)!;
+    expect(trail.outcome).toBe("answered");
+    expect(codes(trail.steps)).toEqual([
+      "trainer/said", "scope/granted", "model/answer", "linking/contradiction", "clarify/asked",
+      "trainer/said", "clarify/picked", "scope/granted", "model/answer", "linking/off-ask-dropped", "record/answered",
+    ]);
+    expect(trail.steps.find((entry) => entry.code === "linking/off-ask-dropped")?.count).toBe(1);
+    expect(trail.steps.find((entry) => entry.code === "clarify/picked")?.text).toContain("Speed");
+  });
+
+  it("closes an abstention as passed when the next ask opens, with the pass on its trail", async () => {
+    const provider = scripted("ledger", (purpose) => (purpose === "scope" ? "decline" : JSON.stringify({ rosters: [], claims: [] })));
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "What's the weather like?", d);
+    expect(state.records).toHaveLength(0);
+    expect(state.steps.map((entry) => entry.code)).toContain("note/abstention");
+    state = await say(state, "What is Thunderbolt's power?", d);
+    const passed = state.exchanges.find((exchange) => exchange.opening === "What's the weather like?")!;
+    expect(passed.outcome).toBe("passed");
+    expect(passed).not.toHaveProperty("transactionId");
+  });
+});
+
 describe("R3b step 3: clarification — the model may ask, the trainer's pick binds", () => {
   const PROFILE_SCOPE = { version: "red-blue", region: "kanto", badgeLevel: 8 } as const;
   const withClarify = (provider: ModelProvider): SessionDeps => ({ ...deps(provider), clarify: true });

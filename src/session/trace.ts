@@ -29,6 +29,7 @@ import {
   type SessionState,
   startSession,
 } from "./session.js";
+import { allSteps } from "./ledger.js";
 
 /** The inputs a trace understands: visitor words, or one of these commands
  * standing in for the page's buttons. */
@@ -192,6 +193,13 @@ function narrate(before: SessionState, after: SessionState): string[] {
   const calls = after.usage.calls - before.usage.calls;
   const cost = after.usage.costUsd - before.usage.costUsd;
   if (calls > 0) lines.push(`  [model] ${calls} call${calls === 1 ? "" : "s"}, $${cost.toFixed(4)}`);
+
+  // The driver's ledger, this turn's steps (session/ledger.ts): the trail a
+  // reader follows to see how the answer was made, in fixed wording.
+  const stepsBefore = allSteps(before).length;
+  for (const entry of allSteps(after).slice(stepsBefore)) {
+    lines.push(`  [step · ${entry.lane} · ${entry.code}] ${entry.text}`);
+  }
 
   if (after.repairs > before.repairs) {
     // The mis-recall on the books, in the visitor's view: the answer that
