@@ -23,6 +23,7 @@ import { resolveScope, type ScopeContext } from "../kernel/scope.js";
 import { runTransaction, type Transaction, type TransactionOutcome } from "../kernel/transaction.js";
 import { renderAnswer } from "../render/reference.js";
 import { proposeAnswer, proposeScope } from "./advisor.js";
+import type { ExchangeLedger } from "../session/ledger.js";
 import { addUsage, emptyUsage, type ModelProvider, type Usage } from "./provider.js";
 import { respondToArtifact, respondToProposal } from "./trainer.js";
 import {
@@ -71,6 +72,13 @@ export interface HarnessRun {
   grantScope?: TrainerScope;
   /** What the model tried to assert, kept even when the answer was denied. */
   proposedClaims?: readonly Claim[];
+  /**
+   * The driver's ledger for the exchanges this run drove (session/ledger.ts,
+   * issue #158): every deterministic step in fixed wording, per exchange,
+   * beside the kernel's record. Present for runs driven through the session
+   * spine; the scenario corpus's harness runs carry none.
+   */
+  exchanges?: readonly ExchangeLedger[];
 }
 
 /** How many times the model may take a fresh run at establishing scope before

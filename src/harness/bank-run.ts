@@ -30,6 +30,7 @@ import {
   startSession,
 } from "../session/session.js";
 import { candidateIsTrue } from "./trainer.js";
+import { ledgerOf } from "../session/ledger.js";
 import type { BankEntry, ClaimKind } from "./bank.js";
 import { type Ceremony, ceremonyOf } from "./ceremony.js";
 import {
@@ -357,6 +358,7 @@ async function play(entry: BankEntry, opening: string, deps: SessionDeps, profil
  * record-shape and friction branches are testable without a live session. */
 export function asRun(entry: BankEntry, state: SessionState, world: DemoWorld, repetition = 0): HarnessRun {
   const record = state.records.at(-1);
+  const opening = state.transcript.slice(state.askStart).find((event) => event.kind === "utterance" && event.source === "trainer");
   const base = {
     scenarioId: entry.id,
     providerId: "bank",
@@ -365,6 +367,9 @@ export function asRun(entry: BankEntry, state: SessionState, world: DemoWorld, r
     turns: state.usage.calls,
     providerErrors: state.providerErrors,
     usage: state.usage,
+    // The driver's steps, per exchange — the open one filed as `open` so an
+    // abstention's trail is in the record too.
+    exchanges: ledgerOf(state, opening?.kind === "utterance" ? opening.text : ""),
   };
 
   if (record !== undefined) {

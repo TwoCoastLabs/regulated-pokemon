@@ -299,6 +299,11 @@ is covered by offline tests with scripted models:
   register's closure on the page (each mark held to the manifest by
   equality, inside the one labelled unit)
 - replay: a filed transaction re-verifies byte for byte with no model
+- the driver's ledger (`src/session/ledger.ts`, issue #158): every step
+  above, as the driver took it, recorded per exchange in fixed wording —
+  lane, code, one line — beside the kernel's record and never inside it;
+  a filed bank run carries it, the tracer prints it, and a scripted
+  conversation writes the same ledger twice
 
 And the nondeterministic list is §3's six rows. That asymmetry is the
 architecture: usefulness lives in the amber nodes and is measured;

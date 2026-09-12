@@ -579,3 +579,15 @@ describe("draftOnTarget — the gate's own removals, read from a refused draft",
     expect(draftOnTarget(needsData, [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }])).toBe(false);
   });
 });
+
+describe("the bank files the driver's ledger with each run (issue #158)", () => {
+  const scripted = (answer: string) => new ScriptedProvider("bank:ledger", (request) => (request.purpose === "answer" ? answer : "decline"));
+  it("carries the exchanges' steps on the run, the open one as open when nothing was filed", async () => {
+    const answered = await runBankEntry(world, entry("ans-fact-speed-pikachu"), scripted(pikachuSpeed()), clock(), undefined, 0, { profile: true });
+    const filed = answered.run.exchanges!.find((exchange) => exchange.transactionId !== undefined)!;
+    expect(filed.outcome).toBe("answered");
+    expect(filed.steps.map((step) => step.code)).toContain("record/answered");
+    const passed = await runBankEntry(world, entry("off-weather"), scripted(JSON.stringify({ rosters: [], claims: [] })), clock(), undefined, 0, { profile: true });
+    expect(passed.run.exchanges!.at(-1)!.outcome).toBe("open");
+  });
+});

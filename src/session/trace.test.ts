@@ -75,6 +75,9 @@ describe("runTrace narrates what the session did", () => {
     expect(text).toContain("claim: ranking electric-kanto by base-speed (highest)");
     expect(text).toContain("scope: ");
     expect(text).toContain("1 record(s)");
+    // The driver's ledger rides along, one line per step (issue #158).
+    expect(text).toContain("[step · trainer · trainer/said]");
+    expect(text).toContain("[step · kernel · record/answered]");
   });
 
   it("traces the fall to the pack's own question", async () => {
