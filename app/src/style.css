@@ -19,6 +19,9 @@
   --seal-tint: #f7e9e7;
   --ledger: #22684a;
   --ledger-tint: #e3efe8;
+  /* The model's lane on the trail: amber, as the docs draw the nondeterministic nodes. */
+  --model: #8a5a0f;
+  --model-tint: #f6ecd8;
   --line: #cbd2e0;
   --certificate: #fbf9f4;
   --certificate-line: #d8d2c2;
@@ -1787,8 +1790,222 @@ body {
   font-size: 0.78rem;
 }
 
+.dev-unplaced {
+  border-top: 1px dashed var(--line);
+  margin-top: 0.5rem;
+}
+
 .live-note-say {
   margin: 0 0 0.25rem;
+}
+
+/* --- the step trail (issue #158) ------------------------------------------
+   One vertical trail per exchange; each step a card on its lane. The lane is
+   the left rule's colour: trainer grey, driver indigo, kernel green (red when
+   it refused), model amber. Read from the ledger and the record, never
+   narrated — so the chrome only colours; it never rephrases. */
+
+.console-heading {
+  margin: 6px 0 0;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.trails {
+  display: grid;
+  gap: 12px;
+}
+
+.trail {
+  display: grid;
+  gap: 6px;
+}
+
+.trail-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.trail-index {
+  color: var(--muted);
+}
+
+.trail-opening {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.trail-outcome {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--indigo-tint);
+  color: var(--indigo);
+}
+
+.trail-outcome.answered,
+.trail-outcome.acted {
+  background: var(--ledger-tint);
+  color: var(--ledger);
+}
+
+.trail-outcome.denied {
+  background: var(--seal-tint);
+  color: var(--seal);
+}
+
+.trail-outcome.open,
+.trail-outcome.passed,
+.trail-outcome.declined,
+.trail-outcome.clarifying {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.trail-id {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.trail-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 10px;
+  display: grid;
+  gap: 4px;
+  border-left: 1px solid var(--line);
+}
+
+.trail-step {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 8px;
+  align-items: baseline;
+  padding: 5px 8px 5px 10px;
+  border-left: 3px solid var(--muted);
+  border-radius: 0 4px 4px 0;
+  background: var(--card);
+  font-size: 12px;
+}
+
+.trail-step.lane-driver {
+  border-left-color: var(--indigo);
+}
+
+.trail-step.lane-model {
+  border-left-color: var(--model);
+  background: var(--model-tint);
+}
+
+.trail-step.lane-kernel {
+  border-left-color: var(--ledger);
+}
+
+.trail-step.tone-ok {
+  background: var(--ledger-tint);
+}
+
+.trail-step.tone-refused {
+  border-left-color: var(--seal);
+  background: var(--seal-tint);
+}
+
+.trail-step.tone-open {
+  border-left-style: dashed;
+}
+
+.trail-lane {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.lane-driver .trail-lane {
+  color: var(--indigo);
+}
+
+.lane-model .trail-lane {
+  color: var(--model);
+}
+
+.lane-kernel .trail-lane {
+  color: var(--ledger);
+}
+
+.tone-refused .trail-lane {
+  color: var(--seal);
+}
+
+.trail-code {
+  font-size: 11px;
+  color: var(--muted);
+  justify-self: end;
+}
+
+.trail-text {
+  grid-column: 1 / -1;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.trail-count {
+  margin-left: 6px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.trail-lines {
+  grid-column: 1 / -1;
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 8px;
+  font-size: 11px;
+  color: var(--muted);
+  display: grid;
+  gap: 2px;
+}
+
+.trail-denials {
+  grid-column: 1 / -1;
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.trail-denials li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 8px;
+}
+
+.trail-denial-message {
+  overflow-wrap: anywhere;
+}
+
+.trail-step .dev-call {
+  grid-column: 1 / -1;
+  border-top: 1px dashed var(--line);
+  margin-top: 4px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .trail-step {
+    animation: rise 0.25s ease both;
+  }
 }
 
 /* The suggestion register (R3b step 4): the Advisor's own follow-ups on the

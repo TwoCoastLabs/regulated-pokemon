@@ -52,8 +52,10 @@ import {
 import { agentReport, createDevTrace, type DevTrace, type DevTraceMeta, type ModelCallTrace } from "../../src/session/devtrace.js";
 import { adaptArtifact } from "../../src/ui/artifact-dom.js";
 import { plainCandidate, plainStage, plainViolation } from "../../src/ui/plain.js";
+import { trailsOfSession, withCalls } from "../../src/ui/trail.js";
 import { violationView } from "../../src/ui/viewmodel.js";
 import { browserFactory } from "./mount.js";
+import { DevCall, Trails } from "./trail.js";
 import { demoWorld } from "./world.js";
 
 /** Strictly increasing, because the kernel orders the moments it records and
@@ -332,6 +334,13 @@ function LiveConsole(props: { state: SessionState; setup: LiveSetup }) {
           ))}
         </ul>
       )}
+      {/* The step trail (issue #158): every move of every exchange, on its
+          lane, in the ledger's fixed wording — how the answer that shipped
+          is the one that shipped. Read from the driver's ledger and the
+          filed records; nothing here is narrated. */}
+      <h4 class="console-heading">How each answer was made</h4>
+      <Trails trails={trailsOfSession(state)} who="you" empty="No exchange has begun yet — each step lands here as the driver takes it." />
+      <h4 class="console-heading">The filed records</h4>
       {state.records.length === 0 ? (
         <p class="fine">No exchange has settled yet — records appear here as they are filed.</p>
       ) : (
@@ -973,39 +982,12 @@ function mirrorToDevSink(event: object): void {
   }
 }
 
-function DevCall(props: { call: ModelCallTrace }) {
-  const { call } = props;
-  const usage = call.usage;
-  return (
-    <details class="dev-call">
-      <summary class="mono">
-        #{call.seq} {call.purpose}
-        {call.schema !== undefined ? ` (${call.schema})` : ""} · {Math.round(call.latencyMs)}ms
-        {usage !== undefined ? ` · ${usage.promptTokens}→${usage.completionTokens} tok · $${usage.costUsd.toFixed(4)}` : ""}
-        {call.error !== undefined ? " · FAILED" : ""}
-      </summary>
-      <p class="dev-label">prompt</p>
-      <pre class="dev-text">{call.prompt}</pre>
-      {call.response !== undefined && (
-        <>
-          <p class="dev-label">response</p>
-          <pre class="dev-text">{call.response}</pre>
-        </>
-      )}
-      {call.error !== undefined && (
-        <>
-          <p class="dev-label">error</p>
-          <pre class="dev-text">{call.error}</pre>
-        </>
-      )}
-    </details>
-  );
-}
-
 /**
- * The dev view: every model call the tap recorded, and the whole session as
- * one copyable report. The report is `agentReport` — self-describing JSON
- * built to be pasted into a conversation with a debugging agent whole.
+ * The dev view: the step trail with every model call the tap recorded
+ * disclosed under the step it preceded (prompt, reply, latency), and the
+ * whole session as one copyable report. The report is `agentReport` —
+ * self-describing JSON built to be pasted into a conversation with a
+ * debugging agent whole.
  */
 function DevPanel(props: {
   meta: DevTraceMeta;
@@ -1018,6 +1000,10 @@ function DevPanel(props: {
 }) {
   const [copied, setCopied] = useState<string | null>(null);
   const report = () => JSON.stringify(agentReport(props.meta, props.state, props.calls), null, 2);
+  // Calls attach to the trail by time: each under the first step recorded
+  // after it began. One in flight, or one that failed before any step could
+  // be written, has no step yet and is listed after the trail instead.
+  const placed = withCalls(trailsOfSession(props.state), props.calls);
 
   const copy = () => {
     void navigator.clipboard
@@ -1056,10 +1042,18 @@ function DevPanel(props: {
           <input type="checkbox" checked={props.gated} onChange={(event) => props.onGated(event.currentTarget.checked)} /> gated grammar
         </label>
       </div>
-      {props.calls.length === 0 ? (
-        <p class="fine">No model calls yet — say something to the Advisor and each call lands here with its prompt, response and latency.</p>
-      ) : (
-        props.calls.map((call) => <DevCall call={call} />)
+      <Trails
+        trails={placed.trails}
+        who="you"
+        empty="No steps yet — say something to the Advisor and every step lands here on its lane, with each model call's prompt, response and latency under the step it preceded."
+      />
+      {placed.unplaced.length > 0 && (
+        <div class="dev-unplaced">
+          <p class="dev-label">since the last recorded step</p>
+          {placed.unplaced.map((call) => (
+            <DevCall call={call} />
+          ))}
+        </div>
       )}
       <p class="fine">
         While this view is open, every call and every settled exchange is also streamed to the dev server's trace file

@@ -6,12 +6,14 @@
  */
 import type { HarnessArtifact } from "../../src/harness/artifact.js";
 import type { HarnessRun } from "../../src/harness/run.js";
+import { trailsOfRun } from "../../src/ui/trail.js";
 import {
   describeClaim,
   scopePins,
   stageViews,
   type ViolationView,
 } from "../../src/ui/viewmodel.js";
+import { Trails } from "./trail.js";
 
 export function Stamp(props: { violation: ViolationView }) {
   const { violation } = props;
@@ -42,6 +44,15 @@ export function Console(props: { artifact: HarnessArtifact; run: HarnessRun }) {
 
   return (
     <aside class="console" aria-label="Compliance console">
+      {/* The step trail (issue #158): the exchange as the steps that made it,
+          on their lanes. A run driven through the session spine carries the
+          driver's ledger; the scenario corpus's runs carry only the record,
+          and their trail is reconstructed from it and says so. */}
+      <section key={`trail-${transaction?.id ?? run.scenarioId + run.providerId + String(run.repetition)}`}>
+        <h2>How it was made</h2>
+        <Trails trails={trailsOfRun(run)} who="trainer" empty={`No steps to show — ${run.detail}.`} />
+      </section>
+
       <section>
         <h2>Scope</h2>
         {scope === undefined ? (

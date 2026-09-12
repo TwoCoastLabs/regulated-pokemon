@@ -572,6 +572,14 @@ defaults from the number rather than from taste.
 *Gate:* the ceremony instrument is in the results page; the defaults are
 stated with their number.
 
+*Instrument (landed 2026-09-12, issue #158):* the driver's ledger records
+every step of every exchange in fixed wording, and the step trail draws it
+in the live page and beside the run ledger — so each piece of ceremony is a
+named step on the exchange it cost, and a removal is a step that stops
+appearing. First live reading of one porch round: 4 model calls for one
+answer, of which 2 were ceremony (a nomination refused and re-asked, then a
+comparison-basis card).
+
 ## Sequencing
 
 R1 immediately — one commit. R2 next: the largest experience gain for the
