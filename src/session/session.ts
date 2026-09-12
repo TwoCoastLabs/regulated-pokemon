@@ -1120,7 +1120,11 @@ async function drive(
     );
   }
 
-  const carded = ledgerStep(spent, step.event.at, "model", "scope/card", `the model proposed an interpretation card: ${Object.entries(step.event.candidate).map(([key, value]) => `${key}=${String(value)}`).join(", ")}`);
+  // Stamped now, not with the event: the event's moment was taken before the
+  // model was called, and a ledger step dated before its own call would read
+  // as if the call came after it (the trail places calls under the first
+  // step recorded after they began).
+  const carded = ledgerStep(spent, deps.now(), "model", "scope/card", `the model proposed an interpretation card: ${Object.entries(step.event.candidate).map(([key, value]) => `${key}=${String(value)}`).join(", ")}`);
   return {
     ...carded,
     transcript: [...carded.transcript, step.event],

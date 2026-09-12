@@ -304,6 +304,12 @@ is covered by offline tests with scripted models:
   lane, code, one line — beside the kernel's record and never inside it;
   a filed bank run carries it, the tracer prints it, and a scripted
   conversation writes the same ledger twice
+- the step trail (`src/ui/trail.ts`, issue #158): the ledger and the
+  record projected into one laned sequence per exchange, drawn in the live
+  page's console and dev view (each model call's prompt and reply under the
+  step it preceded) and beside the run ledger's console — reconstructed
+  from the record alone, and labelled so, for runs filed before the ledger
+  existed; every filed run in `runs/` renders without a missing step
 
 And the nondeterministic list is §3's six rows. That asymmetry is the
 architecture: usefulness lives in the amber nodes and is measured;

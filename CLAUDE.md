@@ -92,6 +92,11 @@ A term coined during the work is defined before it is used.
   the visitor as the trainer (`src/session/`, driven bring-your-own-key: the
   visitor's OpenRouter key stays in tab memory, goes only to openrouter.ai,
   and bills them); every settled exchange files a replayable `Transaction`.
+  Its console and dev view draw the **step trail** (`src/ui/trail.ts`): every
+  move of every exchange on its lane — trainer, driver, kernel, model — read
+  from the driver's ledger and the record, never narrated; the run ledger
+  draws the same trail beside its console. Dogfood a porch round from the
+  trail before reaching for the trace file.
   All four go through tested, coverage-counted code below `app/`; the app
   itself still ships with no model and no key — a key exists only when a
   visitor types theirs, and CI exercises the session driver with scripted
