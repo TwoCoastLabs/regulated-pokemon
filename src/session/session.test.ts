@@ -1539,6 +1539,28 @@ describe("R2: the trainer's profile is scope set once, not asked for", () => {
     expect(state.phase.kind === "asking" && state.phase.dimension).toBe("version");
   });
 
+  it("a profile set again mid-session supersedes the first: the next answer certifies under the new game, and nothing is asked", async () => {
+    // The trainer switches games between two asks. The kernel's rule (a
+    // later profile outranks everything before it on its dimensions) means
+    // the page may offer "change" after "set" without a question or a card;
+    // pinned here so the live page's affordance rests on a driver-level fact.
+    const provider = scripted("scripted:honest", (purpose) => (purpose === "scope" ? "decline" : thunderboltAnswer()));
+    const d = deps(provider);
+    let state = await setProfile(startSession(), { version: "red-blue", region: "kanto", badgeLevel: 8 }, d);
+    state = await say(state, "What is Thunderbolt's power?", d);
+    expect(state.records[0]?.grant?.scope).toMatchObject({ version: "red-blue", badgeLevel: 8 });
+    state = await setProfile(state, { version: "yellow", region: "kanto", badgeLevel: 2 }, d);
+    expect(state.notes[state.notes.length - 1]?.text).toContain("Yellow");
+    state = await say(state, "What is Thunderbolt's power?", d);
+    expect(state.transcript.filter((event) => event.kind === "question")).toHaveLength(0);
+    expect(state.transcript.filter((event) => event.kind === "proposal")).toHaveLength(0);
+    const record = state.records[state.records.length - 1]!;
+    expect(record.grant?.scope).toMatchObject({ version: "yellow", region: "kanto", badgeLevel: 2 });
+    // The first profile is on the record as superseded, by name — not silently gone.
+    expect(record.derivation.ignored.some((match) => match.blockedBy === "superseded" && match.value === "red-blue")).toBe(true);
+    expect(verifyReplay(world, record).allowed).toBe(true);
+  });
+
   it("an unapproved profile value binds nothing — the pack's question still stands", async () => {
     const provider = scripted("mute", () => "decline");
     const d = deps(provider);

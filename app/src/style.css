@@ -1714,18 +1714,65 @@ body {
   font-style: italic;
 }
 
-/* The trainer's profile panel (epic #145, R2): typed scope set once. */
+/* The trainer's profile panel (epic #145, R2): typed scope, open until set,
+   then one line with a "change". */
 .live-profile {
   margin: 0 0 12px;
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--card);
+  display: grid;
+  gap: 8px;
 }
 
-.live-profile summary {
-  cursor: pointer;
+.live-profile-title {
+  margin: 0;
   font-weight: 600;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.live-profile .fine {
+  margin: 0;
+}
+
+.live-profile-set {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  font-size: 13px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.live-profile-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--indigo);
+}
+
+.live-profile-change {
+  font: inherit;
+  font-size: 12px;
+  padding: 1px 8px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--indigo);
+  cursor: pointer;
+}
+
+.live-profile-change:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .live-profile-fields {
