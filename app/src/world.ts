@@ -6,7 +6,9 @@
  * kernel logic; the only thing this file supplies is delivery.
  */
 import type { ManifestContext } from "../../src/kernel/manifest.js";
+import { blockFor, curriculumRule } from "../../src/kernel/pack.js";
 import { type DemoWorld, loadDemoWorld, sabotageWorld } from "../../src/demo/script.js";
+import type { ClaimSource } from "../../src/ui/claims.js";
 
 const bundled = import.meta.glob("../../data/**/*.json", { eager: true, import: "default" });
 
@@ -24,6 +26,30 @@ let world: DemoWorld | undefined;
 export function demoWorld(): DemoWorld {
   world ??= loadDemoWorld(datum("snapshots/kanto-red-blue.json"), datum("accord-pack/v2.json"));
   return world;
+}
+
+let source: ClaimSource | undefined;
+
+/** The world as the claim view reads it: the registry's `resolve` for a
+ * ranking's field, the pack's curriculum for a lesson's text. Only for a
+ * record certified against this snapshot — `claimSourceFor` checks. */
+export function claimSource(): ClaimSource {
+  const { registry, pack } = demoWorld();
+  source ??= {
+    resolve: (entityId, factId) => registry.resolve(entityId, factId),
+    lesson: (blockId, locale) => {
+      const rule = curriculumRule(pack, blockId);
+      return rule === undefined ? undefined : blockFor(rule, locale)?.text;
+    },
+  };
+  return source;
+}
+
+/** The bundled world's source when a filed record was certified against
+ * the same snapshot, else nothing — a ranking's field from another snapshot
+ * would be a different world's numbers. */
+export function claimSourceFor(snapshotId: string): ClaimSource | undefined {
+  return snapshotId === demoWorld().registry.snapshot.id ? claimSource() : undefined;
 }
 
 let cached: ManifestContext | undefined;

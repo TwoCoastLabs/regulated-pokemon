@@ -52,6 +52,7 @@ import {
 import { agentReport, createDevTrace, type DevTrace, type DevTraceMeta, type ModelCallTrace } from "../../src/session/devtrace.js";
 import { adaptArtifact } from "../../src/ui/artifact-dom.js";
 import { plainCandidate, plainStage, plainViolation } from "../../src/ui/plain.js";
+import { claimSource } from "./world.js";
 import { type SentBack, sentBack, trailsOfSession, withCalls } from "../../src/ui/trail.js";
 import { violationView } from "../../src/ui/viewmodel.js";
 import { browserFactory } from "./mount.js";
@@ -384,7 +385,7 @@ function LiveConsole(props: { state: SessionState; setup: LiveSetup }) {
           is the one that shipped. Read from the driver's ledger and the
           filed records; nothing here is narrated. */}
       <h4 class="console-heading">How each answer was made</h4>
-      <Trails trails={trailsOfSession(state)} who="you" empty="No exchange has begun yet — each step lands here as the driver takes it." />
+      <Trails trails={trailsOfSession(state, claimSource())} who="you" empty="No exchange has begun yet — each step lands here as the driver takes it." />
       <h4 class="console-heading">The filed records</h4>
       {state.records.length === 0 ? (
         <p class="fine">No exchange has settled yet — records appear here as they are filed.</p>
@@ -1082,7 +1083,7 @@ function DevPanel(props: {
   // Calls attach to the trail by time: each under the first step recorded
   // after it began. One in flight, or one that failed before any step could
   // be written, has no step yet and is listed after the trail instead.
-  const placed = withCalls(trailsOfSession(props.state), props.calls);
+  const placed = withCalls(trailsOfSession(props.state, claimSource()), props.calls);
 
   const copy = () => {
     void navigator.clipboard

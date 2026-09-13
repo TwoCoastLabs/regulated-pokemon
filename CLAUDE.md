@@ -101,8 +101,12 @@ A term coined during the work is defined before it is used.
   never narrated; the run ledger draws the same trail beside its console. A
   round sent back to the model (a nomination the driver refused, a denial
   the kernel carried back) is its own steps on the trail, with the refuser's
-  own words, and the chat says so under the answer that came after. Dogfood
-  a porch round from the trail before reaching for the trace file.
+  own words, and the chat says so under the answer that came after. The
+  filing step opens onto the certified manifest (`src/ui/claims.ts`): each
+  claim's scale in the record's own numbers ("1 of 9", "42 members", "2
+  values") and the lines it was formed from — the ranked field, the set's
+  members, the two values compared. Dogfood a porch round from the trail
+  before reaching for the trace file.
   All four go through tested, coverage-counted code below `app/`; the app
   itself still ships with no model and no key — a key exists only when a
   visitor types theirs, and CI exercises the session driver with scripted

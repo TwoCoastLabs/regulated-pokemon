@@ -30,6 +30,7 @@ import type { Transaction } from "../kernel/transaction.js";
 import type { HarnessRun } from "../harness/run.js";
 import type { ModelCallTrace } from "../session/devtrace.js";
 import { type ExchangeLedger, type ExchangeOutcome, type Ledgered, ledgerOf, type StepLane } from "../session/ledger.js";
+import { type ClaimSource, type ManifestView, manifestView } from "./claims.js";
 import { describeClaim, violationView, type ViolationView } from "./viewmodel.js";
 
 /** How the chrome colours a step: what it means, not who took it. */
@@ -49,6 +50,9 @@ export interface TrailStep {
   violations: readonly ViolationView[];
   /** Model calls that began after the previous step and before this one. */
   calls: readonly ModelCallTrace[];
+  /** On the step that certified an answer: each claim's scale and what it
+   * was formed from, and every roster the record carries (`ui/claims.ts`). */
+  manifest?: ManifestView;
 }
 
 export interface Trail {
@@ -120,13 +124,17 @@ function denialCode(violation: { article: string; rule: string }): string {
  * refusal — the ledger's own text names the codes; the record carries the
  * message and the expected/actual pair a reader wants beside them.
  */
-export function trailFromLedger(ledger: ExchangeLedger, records: readonly Transaction[]): Trail {
+export function trailFromLedger(ledger: ExchangeLedger, records: readonly Transaction[], source?: ClaimSource): Trail {
   const record = ledger.transactionId === undefined ? undefined : records.find((entry) => entry.id === ledger.transactionId);
+  // The certified manifest opens under the filing step: the one step that
+  // says "N claim(s) certified" is the one that shows how each was formed.
+  const certified = record?.manifest === undefined ? undefined : manifestView(record.manifest, source);
   const steps: TrailStep[] = ledger.steps.map((step) => {
     const violations =
       record !== undefined && record.outcome.status === "denied" && (step.code === "record/denied" || step.code === "scope/refused")
         ? record.outcome.violations.map(violationView)
         : [];
+    const filing = step.code === `record/${record?.outcome.status ?? ""}` && step.code !== "record/denied";
     return {
       at: step.at,
       lane: step.lane,
@@ -139,6 +147,7 @@ export function trailFromLedger(ledger: ExchangeLedger, records: readonly Transa
       lines: step.lines ?? [],
       violations,
       calls: [],
+      ...(filing && certified !== undefined ? { manifest: certified } : {}),
     };
   });
   return {
@@ -214,12 +223,13 @@ function transcriptSteps(transcript: ScopeTranscript): TrailStep[] {
  * for the filing) — the record keeps no finer clock, and the trail does not
  * invent one.
  */
-export function trailFromRecord(transaction: Transaction, proposedClaims?: readonly Claim[]): Trail {
+export function trailFromRecord(transaction: Transaction, proposedClaims?: readonly Claim[], source?: ClaimSource): Trail {
   const steps: TrailStep[] = transcriptSteps(transaction.transcript);
-  const add = (at: string, lane: StepLane, code: string, text: string, extra: Partial<Pick<TrailStep, "lines" | "violations" | "count">> = {}): void => {
+  const add = (at: string, lane: StepLane, code: string, text: string, extra: Partial<Pick<TrailStep, "lines" | "violations" | "count" | "manifest">> = {}): void => {
     steps.push({ at, lane, code, text, tone: toneOf(code), lines: [], violations: [], calls: [], ...extra });
   };
   const draft = transaction.manifest?.claims ?? transaction.refused?.claims ?? proposedClaims;
+  const certified = transaction.manifest === undefined ? undefined : manifestView(transaction.manifest, source);
   // The trainer's consent sits between the page and the act — before the
   // action stage when one ruled, else after the last stage that did.
   let consented = false;
@@ -262,7 +272,7 @@ export function trailFromRecord(transaction: Transaction, proposedClaims?: reado
           entry.verdict.allowed
             ? `the answer stage allowed the draft: ${transaction.manifest?.claims.length ?? 0} claim(s) certified`
             : `the answer stage denied the draft: ${codes}`,
-          { violations },
+          { violations, ...(entry.verdict.allowed && certified !== undefined ? { manifest: certified } : {}) },
         );
         break;
       case "render":
@@ -329,12 +339,12 @@ export function trailFromRecord(transaction: Transaction, proposedClaims?: reado
  * one trail reconstructed from its transaction, else — a run that never
  * reached the seam — its transcript and the one line on why it stopped.
  */
-export function trailsOfRun(run: HarnessRun): readonly Trail[] {
+export function trailsOfRun(run: HarnessRun, source?: ClaimSource): readonly Trail[] {
   if (run.exchanges !== undefined && run.exchanges.length > 0) {
     const records = run.transaction === undefined ? [] : [run.transaction];
-    return run.exchanges.map((ledger) => trailFromLedger(ledger, records));
+    return run.exchanges.map((ledger) => trailFromLedger(ledger, records, source));
   }
-  if (run.transaction !== undefined) return [trailFromRecord(run.transaction, run.proposedClaims)];
+  if (run.transaction !== undefined) return [trailFromRecord(run.transaction, run.proposedClaims, source)];
   const steps = transcriptSteps(run.transcript);
   const last = steps[steps.length - 1];
   steps.push({ at: last?.at ?? "", lane: "driver", code: "note/abstention", text: run.detail, tone: "open", lines: [], violations: [], calls: [] });
@@ -343,8 +353,8 @@ export function trailsOfRun(run: HarnessRun): readonly Trail[] {
 }
 
 /** A live session's trails: every closed exchange and the open one. */
-export function trailsOfSession(state: Ledgered & { records: readonly Transaction[] }): readonly Trail[] {
-  return ledgerOf(state, "").map((ledger) => trailFromLedger(ledger, state.records));
+export function trailsOfSession(state: Ledgered & { records: readonly Transaction[] }, source?: ClaimSource): readonly Trail[] {
+  return ledgerOf(state, "").map((ledger) => trailFromLedger(ledger, state.records, source));
 }
 
 /** The steps on which a reply was sent back for another: the kernel's
