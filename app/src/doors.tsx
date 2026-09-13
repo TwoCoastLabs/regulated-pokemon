@@ -23,10 +23,10 @@ function chipsOf(doors: DoorState, previous: DoorState | undefined): Chip[] {
   const changed = (now: string, before: string | undefined, open: boolean): Chip["tone"] =>
     before !== undefined && before !== now ? (open ? "opened" : "withdrawn") : open ? "open" : "closed";
 
-  const reference = { retrieval: "rows this question needs", grounded: "the whole registry", none: "no certified rows" }[doors.reference];
+  const reference = { retrieval: "rows for this ask", grounded: "the whole registry", none: "no rows" }[doors.reference];
   chips.push({ label: "certified rows", state: reference, tone: changed(doors.reference, previous?.reference, doors.reference !== "none") });
 
-  const grammar = doors.fillerKinds === undefined ? "every claim kind" : doors.fillerKinds.length === 0 ? "aggregates gated out" : `aggregates: ${doors.fillerKinds.join(", ")}`;
+  const grammar = doors.fillerKinds === undefined ? "every claim kind" : doors.fillerKinds.length === 0 ? "no aggregates" : `aggregates: ${doors.fillerKinds.join(", ")}`;
   const grammarBefore = previous === undefined ? undefined : previous.fillerKinds === undefined ? "every claim kind" : previous.fillerKinds.join(",");
   chips.push({ label: "grammar", state: grammar, tone: changed(doors.fillerKinds === undefined ? "every claim kind" : doors.fillerKinds.join(","), grammarBefore, true) });
 
@@ -45,13 +45,35 @@ function chipsOf(doors: DoorState, previous: DoorState | undefined): Chip[] {
   chips.push({ label: "clarify", state: doors.clarify ? "may ask" : "must answer", tone: changed(String(doors.clarify), previous === undefined ? undefined : String(previous.clarify), doors.clarify) });
   chips.push({ label: "suggest", state: doors.suggest ? "may suggest" : "no suggestions", tone: changed(String(doors.suggest), previous === undefined ? undefined : String(previous.suggest), doors.suggest) });
 
-  const fed = doors.feedback.length;
+  // Reasons, not lines: the feedback block carries the named refusals
+  // (`driver/…`, `IA-n/…`) and one closing instruction; only the named
+  // ones are reasons, and the count says so.
+  const fed = doors.feedback.filter((line) => /^(driver\/|IA-\d)/.test(line)).length;
   chips.push({
     label: "feedback",
     state: fed === 0 ? "nothing fed back" : `${fed} reason${fed === 1 ? "" : "s"} fed back`,
     tone: fed === 0 ? "closed" : "fed-back",
   });
   return chips;
+}
+
+/** A caption split over two lines when it would crowd its neighbour —
+ * balanced on a word boundary, so "the whole registry" reads as two short
+ * lines rather than running under the next door. */
+function captionLines(text: string): [string] | [string, string] {
+  if (text.length <= 13) return [text];
+  const words = text.split(" ");
+  let best = 1;
+  let gap = Infinity;
+  for (let cut = 1; cut < words.length; cut += 1) {
+    const left = words.slice(0, cut).join(" ").length;
+    const right = words.slice(cut).join(" ").length;
+    if (Math.abs(left - right) < gap) {
+      gap = Math.abs(left - right);
+      best = cut;
+    }
+  }
+  return words.length === 1 ? [text] : [words.slice(0, best).join(" "), words.slice(best).join(" ")];
 }
 
 /**
@@ -64,11 +86,11 @@ function chipsOf(doors: DoorState, previous: DoorState | undefined): Chip[] {
  */
 export function DoorRow(props: { doors: DoorState; previous?: DoorState; taken?: string }) {
   const chips = chipsOf(props.doors, props.previous);
-  const slot = 96;
+  const slot = 100;
   const width = chips.length * slot + 12;
   return (
     <figure class="door-row">
-      <svg viewBox={`0 0 ${width} 92`} role="img" aria-label={chips.map((chip) => `${chip.label}: ${chip.state}`).join("; ")}>
+      <svg viewBox={`0 0 ${width} 102`} role="img" aria-label={chips.map((chip) => `${chip.label}: ${chip.state}`).join("; ")}>
         {chips.map((chip, index) => {
           const x = 6 + index * slot;
           const isDoor = chip.label.startsWith("door: ");
@@ -103,9 +125,11 @@ export function DoorRow(props: { doors: DoorState; previous?: DoorState; taken?:
               <text x={cx} y={62} text-anchor="middle" font-size="10" font-weight="600" fill={stroke}>
                 {name}
               </text>
-              <text x={cx} y={76} text-anchor="middle" font-size="9" fill="currentColor">
-                {taken ? "taken" : chip.state}
-              </text>
+              {captionLines(taken ? "taken" : chip.state).map((line, row) => (
+                <text x={cx} y={76 + row * 11} text-anchor="middle" font-size="9" fill="currentColor">
+                  {line}
+                </text>
+              ))}
             </g>
           );
         })}
