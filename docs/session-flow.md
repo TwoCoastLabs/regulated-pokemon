@@ -298,6 +298,15 @@ is covered by offline tests with scripted models:
   certified id; the driver's drop and the kernel's refusal), and the
   register's closure on the page (each mark held to the manifest by
   equality, inside the one labelled unit)
+- a listing as one sentence (`listing` unit, `src/kernel/render.ts`): the
+  membership claims a listing composes — one per member, each verified on
+  its own — are shown as one bound sentence, "By the official records, the
+  certified catalogue includes Bulbasaur, Ivysaur, and Venusaur", the set
+  named by its certified criteria, the polarity bound through the pack's
+  `includes` presentation, the members one `list-oxford` slot compared by
+  equality (a member dropped from the page is `IA-6/slot-value-mismatch`
+  by name); a lone membership keeps its own sentence. Found by dogfood
+  (2026-09-13): eleven "is a member of all-species" lines for one list
 - replay: a filed transaction re-verifies byte for byte with no model
 - the driver's ledger (`src/session/ledger.ts`, issue #158): every step
   above, as the driver took it, recorded per exchange in fixed wording —

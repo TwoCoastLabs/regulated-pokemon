@@ -283,6 +283,7 @@ export const TEMPLATE_SLOTS: Readonly<Record<string, readonly string[]>> = {
   fact: ["entity", "fact", "value"],
   count: ["count", "set"],
   membership: ["entity", "membership", "set"],
+  listing: ["set", "membership", "members"],
   treats: ["item", "condition", "verdict"],
   comparison: ["left", "right", "fact", "leftvalue", "rightvalue", "gap", "leader"],
   selection: ["entity", "set", "basis"],
