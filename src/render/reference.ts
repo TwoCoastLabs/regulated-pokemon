@@ -45,6 +45,9 @@ const LEAD_IN: Record<RenderUnitKind, string | undefined> = {
   fact: "lead-in.fact",
   count: "lead-in.count",
   membership: "lead-in.membership",
+  // A listing is several memberships in one sentence; with no template it
+  // falls back to the membership lead-in over its bound slots.
+  listing: "lead-in.membership",
   // The Center kinds ship with sentence templates in their own pack; with no
   // template and no catalogued lead-in they render bare bound slots, which is
   // ugly and safe — the pack that owns them is where their words live.

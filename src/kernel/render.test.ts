@@ -518,6 +518,9 @@ describe("the approved sentence (epic #94, slice 4)", () => {
         SPEED,
         { kind: "count", rosterId: roster.id },
         { kind: "membership", rosterId: roster.id, entityId: "pikachu", asserted: false },
+        // Two memberships over one set with one polarity plan as a listing.
+        { kind: "membership", rosterId: roster.id, entityId: roster.memberIds[0]!, asserted: true },
+        { kind: "membership", rosterId: roster.id, entityId: roster.memberIds[1]!, asserted: true },
         { kind: "ranking", rosterId: roster.id, basis: "base-speed", direction: "highest" },
         { kind: "matchup", subject: { kind: "species", entityId: "pikachu" }, direction: "weak-to" },
         { kind: "eligibility", entityId: "mewtwo" },
@@ -606,6 +609,72 @@ function rewriteText(node: DomElement, from: string, to: string): DomElement {
       : { ...child, children: child.children.map(walk) };
   return walk(node) as DomElement;
 }
+
+describe("a listing is one sentence, not one per member (dogfood 2026-09-13: eleven 'is a member of all-species' lines)", () => {
+  function electric(): ClosedRoster {
+    const built = buildRoster(world.registry, "electric-species", { all: [{ kind: "has-type", type: "electric" }] });
+    if (!built.ok) throw new Error("the electric roster does not build");
+    return built.value;
+  }
+  function members(rosterId: string, ids: readonly string[], asserted = true): Claim[] {
+    return ids.map((entityId) => ({ kind: "membership", rosterId, entityId, asserted }));
+  }
+  function planned(claims: readonly Claim[], rosters: readonly ClosedRoster[]) {
+    const compiled = compileManifest(world, { transactionId: "txn-render", claims, rosters });
+    if (!compiled.ok) throw new Error(compiled.violations.map(denialCode).join(", "));
+    const plan = planRender(world, compiled.value);
+    if (!plan.ok) throw new Error(plan.violations.map(denialCode).join(", "));
+    return { manifest: compiled.value, plan: plan.value };
+  }
+
+  it("gathers memberships over one set into one unit — the members one bound list, the polarity bound — and leaves a lone membership its own sentence", () => {
+    const roster = electric();
+    const { plan } = planned(
+      [...members(roster.id, ["pikachu", "raichu", "magnemite"]), { kind: "count", rosterId: roster.id }, ...members(roster.id, ["charmander"], false)],
+      [roster],
+    );
+    const listed = plan.units.find((unit) => unit.kind === "listing");
+    expect(listed?.id).toBe("listing:electric-species:true");
+    expect(listed?.slots.map((slot) => [slot.name, slot.formatId, slot.expected])).toEqual([
+      ["set", "plain-text", "the Pokémon of type electric"],
+      ["membership", "includes", "includes"],
+      ["members", "list-oxford", "Pikachu, Raichu, and Magnemite"],
+    ]);
+    expect(listed?.sentence).toEqual({
+      templateId: "sentence.listing",
+      expected: "By the official records, the Pokémon of type electric includes Pikachu, Raichu, and Magnemite .",
+    });
+    // The lone negative membership keeps its own sentence; the listing stands
+    // where its first member stood, ahead of the count.
+    expect(plan.units.filter((unit) => unit.kind === "membership").map((unit) => unit.id)).toEqual(["membership:electric-species:charmander"]);
+    expect(plan.units.findIndex((unit) => unit.kind === "listing")).toBeLessThan(plan.units.findIndex((unit) => unit.kind === "count"));
+    // Three claims, one unit: no member's sentence survives on its own.
+    expect(plan.units.filter((unit) => unit.id.startsWith("membership:electric-species:") && unit.id !== "membership:electric-species:charmander")).toEqual([]);
+  });
+
+  it("signs the reference renderer's page, and denies a member dropped from the list by name", () => {
+    const roster = electric();
+    const { manifest, plan } = planned(members(roster.id, ["pikachu", "raichu", "magnemite"]), [roster]);
+    const artifact = renderAnswer(world.pack, plan);
+    const attested = attestRender(world, manifest, artifact, RENDERED_AT);
+    expect(attested.ok, JSON.stringify(!attested.ok && attested.violations)).toBe(true);
+    const shortened = rewriteText(artifact, "Pikachu, Raichu, and Magnemite", "Pikachu and Raichu");
+    const sworn = attestRender(world, manifest, shortened, RENDERED_AT);
+    const verdict = verifyRender(world, manifest, shortened, sworn.ok ? sworn.value : { transactionId: "txn-render", artifactDigest: "sha256:x", renderedAt: RENDERED_AT, units: [] });
+    expect(verdict.allowed).toBe(false);
+    expect(verdict.violations.map(denialCode)).toContain("IA-6/slot-value-mismatch");
+  });
+
+  it("names the whole catalogue as the certified catalogue, never by its roster id", () => {
+    const built = buildRoster(world.registry, "all-species", { all: [] });
+    if (!built.ok) throw new Error("the catalogue roster does not build");
+    const roster = built.value;
+    const { plan } = planned([...members(roster.id, ["bulbasaur", "ivysaur"]), { kind: "count", rosterId: roster.id }], [roster]);
+    expect(plan.units.find((unit) => unit.kind === "listing")?.slots.find((slot) => slot.name === "set")?.expected).toBe("the certified catalogue");
+    expect(plan.units.find((unit) => unit.kind === "count")?.slots.find((slot) => slot.name === "set")?.expected).toBe("certified Pokémon");
+    expect(plan.units.some((unit) => unit.slots.some((slot) => slot.expected === "all-species"))).toBe(false);
+  });
+});
 
 describe("the suggestion register (R3b step 4): the model's words, attributed and held to the record", () => {
   const SUGGESTIONS = ["What is it weak to?", "How does it evolve?"];

@@ -77,6 +77,8 @@ export type RenderUnitKind =
   | "fact"
   | "count"
   | "membership"
+  /** Several membership claims over one set, shown as one sentence. */
+  | "listing"
   | "treats"
   | "comparison"
   | "selection"
@@ -165,7 +167,39 @@ export function planRender(context: ManifestContext, manifest: AnswerManifest): 
   const violations: Violation[] = [];
   const claimUnits: Array<{ unit: RenderUnit; mentions: readonly string[] }> = [];
 
+  // A listing is one sentence, not one per member (found by dogfood,
+  // 2026-09-13: "give me a list of species" read as eleven "By the official
+  // records, X is a member of all-species" lines). Membership claims over
+  // one set with one polarity are gathered into a `listing` unit placed
+  // where the first of them stood; a lone membership keeps its own sentence.
+  // Every member is still a bound value — the list is one slot whose string
+  // is the members in claim order, compared by equality like any other.
+  const listings = new Map<string, Array<Extract<Claim, { kind: "membership" }>>>();
   for (const claim of manifest.claims) {
+    if (claim.kind !== "membership") continue;
+    const key = `${claim.rosterId}:${String(claim.asserted)}`;
+    const group = listings.get(key) ?? [];
+    if (!group.some((entry) => entry.entityId === claim.entityId)) group.push(claim);
+    listings.set(key, group);
+  }
+  const listed = new Set<string>();
+
+  for (const claim of manifest.claims) {
+    if (claim.kind === "membership") {
+      const key = `${claim.rosterId}:${String(claim.asserted)}`;
+      const group = listings.get(key) ?? [];
+      if (group.length >= 2) {
+        if (listed.has(key)) continue;
+        listed.add(key);
+        const built = unitForListing(context, manifest, claim.rosterId, claim.asserted, group.map((entry) => entry.entityId));
+        if (!built.ok) {
+          violations.push(...built.violations);
+          continue;
+        }
+        claimUnits.push(built.value);
+        continue;
+      }
+    }
     const built = unitForClaim(context, manifest, claim);
     if (!built.ok) {
       violations.push(...built.violations);
@@ -297,6 +331,54 @@ function slots(...resolved: ReadonlyArray<Resolution<RenderSlot>>): Resolution<r
 }
 
 /**
+ * The set a listing or a count is about, read plainly: the certified
+ * criteria, never the model's internal roster id (which the trainer never
+ * chose and reads as noise — "all-species").
+ */
+function setLabel(rosterId: string, rosters: readonly ClosedRoster[], form: "count" | "listing"): string {
+  const roster = rosters.find((entry) => entry.id === rosterId);
+  if (roster === undefined || roster.criteria.all.length === 0) return form === "count" ? "certified Pokémon" : "the certified catalogue";
+  return form === "count" ? `Pokémon ${describeCriteria(roster.criteria)}` : `the Pokémon ${describeCriteria(roster.criteria)}`;
+}
+
+/**
+ * Several membership claims over one set, as one unit: the set, the bound
+ * polarity ("includes" / "does not include"), and the members as one list
+ * slot — each name through the same `entity-name` presentation a lone
+ * membership uses, the list through `list-oxford`, so the verifier
+ * recomputes the whole string and compares by equality; a member dropped
+ * from the page, or added to it, is a slot mismatch by name.
+ */
+function unitForListing(
+  context: ManifestContext,
+  manifest: AnswerManifest,
+  rosterId: string,
+  asserted: boolean,
+  entityIds: readonly string[],
+): Resolution<{ unit: RenderUnit; mentions: readonly string[] }> {
+  const locale = manifest.locale;
+  const names: string[] = [];
+  for (const entityId of entityIds) {
+    const shown = formatValue("entity-name", locale, entity(entityId));
+    if (!shown.ok) return shown;
+    names.push(shown.value);
+  }
+  const resolved = slots(
+    slot(context, locale, "set", entity(setLabel(rosterId, manifest.rosters, "listing")), "plain-text"),
+    slot(context, locale, "membership", { kind: "boolean", value: asserted }, "includes"),
+    slot(context, locale, "members", { kind: "list", value: names }, "list-oxford"),
+  );
+  if (!resolved.ok) return resolved;
+  return {
+    ok: true,
+    value: {
+      unit: { id: `listing:${rosterId}:${String(asserted)}`, kind: "listing", slots: resolved.value, article: "IA-6" },
+      mentions: [...entityIds, ...definedBy(rosterId, manifest.rosters)],
+    },
+  };
+}
+
+/**
  * One claim as a display unit, plus the entities it puts on screen.
  *
  * Every value that carries meaning is a slot, including the ones that look like
@@ -350,13 +432,9 @@ function unitForClaim(
         // roster id (which the trainer never chose and reads as noise).
         const roster = manifest.rosters.find((entry) => entry.id === claim.rosterId);
         const shown = roster?.cardinality ?? claim.reported ?? 0;
-        const label =
-          roster === undefined || roster.criteria.all.length === 0
-            ? "certified Pokémon"
-            : `Pokémon ${describeCriteria(roster.criteria)}`;
         const resolved = slots(
           slot(context, locale, "count", { kind: "number", value: shown }),
-          slot(context, locale, "set", entity(label), "plain-text"),
+          slot(context, locale, "set", entity(setLabel(claim.rosterId, manifest.rosters, "count")), "plain-text"),
         );
         if (!resolved.ok) return resolved;
         return {

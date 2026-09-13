@@ -12,6 +12,7 @@
     "formats": [
       "entity-name",
       "eligibility-verdict",
+      "includes",
       "integer",
       "list-oxford",
       "member-of",
@@ -129,6 +130,14 @@
         "text": {
           "en-US": "By the official records, {entity} {membership} {set}.",
           "en-GB": "By the official records, {entity} {membership} {set}."
+        }
+      },
+      {
+        "id": "sentence.listing",
+        "kind": "listing",
+        "text": {
+          "en-US": "By the official records, {set} {membership} {members}.",
+          "en-GB": "By the official records, {set} {membership} {members}."
         }
       },
       {

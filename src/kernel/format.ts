@@ -42,6 +42,7 @@ export type FormatId =
   | "yes-no"
   | "no-value"
   | "member-of"
+  | "includes"
   | "matchup-direction"
   | "eligibility-verdict";
 
@@ -144,6 +145,17 @@ const FORMATTERS: Readonly<Record<FormatId, Formatter>> = {
     render: {
       "en-US": (value) => (value ? "is a member of" : "is not a member of"),
       "en-GB": (value) => (value ? "is a member of" : "is not a member of"),
+    },
+  },
+  // The set-first polarity, for a listing: "the certified catalogue includes
+  // Bulbasaur, Ivysaur, and Venusaur" binds the verb the same way member-of
+  // does, so a page cannot turn a list of members into a list of exclusions
+  // by changing one word the verifier does not read.
+  includes: {
+    accepts: "boolean",
+    render: {
+      "en-US": (value) => (value ? "includes" : "does not include"),
+      "en-GB": (value) => (value ? "includes" : "does not include"),
     },
   },
   // Same reason as member-of: "ground and psychic" beside "Gengar" is equally
