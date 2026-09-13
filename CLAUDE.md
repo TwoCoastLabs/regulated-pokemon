@@ -100,8 +100,12 @@ A term coined during the work is defined before it is used.
   driver, kernel, model — read from the driver's ledger and the record,
   never narrated; the run ledger draws the same trail beside its console. A
   round sent back to the model (a nomination the driver refused, a denial
-  the kernel carried back) is its own steps on the trail, with the refuser's
-  own words, and the chat says so under the answer that came after. The
+  the kernel carried back) is its own steps on the trail, in plain words,
+  saying whether the model was told; the chat says so under the answer
+  that came after. Every answer-step call declares the **doors** its prompt
+  held open (`DoorState`), and the dev view draws them as a strip under the
+  call, marking what changed since the call before — a door withdrawn, a
+  reason fed back — with a legend that draws the trick once. The
   filing step opens onto the certified manifest (`src/ui/claims.ts`): each
   claim's scale in the record's own numbers ("1 of 9", "42 members", "2
   values") and the lines it was formed from — the ranked field, the set's

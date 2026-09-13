@@ -2123,17 +2123,21 @@ describe("the driver's ledger — every step of an exchange, in fixed wording, b
     state = await say(state, "what is a Pokemon", d);
     const trail = state.exchanges.at(-1)!;
     expect(trail.outcome).toBe("answered");
-    expect(codes(trail.steps)).toEqual(["trainer/said", "scope/granted", "model/nominated", "route/refused", "model/answer", "linking/unlinked", "record/answered"]);
+    expect(codes(trail.steps)).toEqual(["trainer/said", "scope/granted", "model/nominated", "route/withdrawn", "model/answer", "linking/unlinked", "record/answered"]);
     const nominated = trail.steps.find((entry) => entry.code === "model/nominated")!;
     expect(nominated.lane).toBe("model");
     expect(nominated.text).toContain("nominated listing");
+    expect(nominated.text).toContain('asked to use the "listing" door');
     expect(nominated.lines).toEqual(["listing(subject=catalogue, n=1)"]);
-    const refused = trail.steps.find((entry) => entry.code === "route/refused")!;
+    const refused = trail.steps.find((entry) => entry.code === "route/withdrawn")!;
     expect(refused.lane).toBe("driver");
-    expect(refused.text).toContain("an enumeration of one is not an enumeration (n = 1)");
-    expect(refused.text).toContain("the model asked once more");
+    // Plain words: what the question lacked, that the door was withdrawn,
+    // and that the model was told nothing — a reader outside the code can
+    // follow it, and the silence is stated rather than left to be guessed.
+    expect(refused.text).toContain("a list of one is not a list (the model asked for n = 1)");
+    expect(refused.text).toContain("nothing about the refusal was sent to it");
     const answer = trail.steps.find((entry) => entry.code === "model/answer")!;
-    expect(answer.text).toContain("the reply with the route door shut");
+    expect(answer.text).toContain("the door withdrawn; nothing was fed back");
     // The nomination and the refusal were stamped after the first call and
     // before the second; the answer after the second.
     expect(nominated.at > started[0]! && nominated.at < started[1]!).toBe(true);
@@ -2164,7 +2168,7 @@ describe("the driver's ledger — every step of an exchange, in fixed wording, b
     expect(denied.lines![0]).toMatch(/^IA-3\/fabricated-entity: /);
     expect(denied.lines![0]).toContain('"gym-badge"');
     expect(trail.steps[at + 1]!.lane).toBe("model");
-    expect(trail.steps[at + 1]!.text).toContain("the reply to the carry-back");
+    expect(trail.steps[at + 1]!.text).toContain("1 reason was fed back to the model");
   });
 
   it("a reply the driver emptied is carried back with the driver's reasons on the step, and the retry's reply after it", async () => {
@@ -2190,6 +2194,7 @@ describe("the driver's ledger — every step of an exchange, in fixed wording, b
     expect(at).toBeGreaterThan(-1);
     expect(sequence[at + 1]).toBe("model/retry");
     expect(trail.steps[at]!.lines?.map((line) => line.split(":")[0])).toEqual(["driver/refused-route", "driver/off-ask"]);
+    expect(trail.steps[at + 1]!.text).toContain("2 reasons were fed back to the model");
   });
 
   it("closes an abstention as passed when the next ask opens, with the pass on its trail", async () => {

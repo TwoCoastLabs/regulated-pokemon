@@ -12,6 +12,11 @@
 import type { ModelCallTrace } from "../../src/session/devtrace.js";
 import type { ClaimView, ManifestView, RosterView } from "../../src/ui/claims.js";
 import { laneLabel, type Trail, type TrailStep } from "../../src/ui/trail.js";
+import { DoorStrip } from "./doors.js";
+
+/** The call before a given one, by sequence number — so a call's door
+ * strip can mark what the driver changed since the last call. */
+export type PreviousCall = (seq: number) => ModelCallTrace | undefined;
 
 /**
  * The certified manifest under the filing step, disclosed progressively:
@@ -86,9 +91,12 @@ export function ManifestDetails(props: { view: ManifestView }) {
 }
 
 /** One model call as the tap saw it: prompt, reply, latency, cost. */
-export function DevCall(props: { call: ModelCallTrace }) {
+export function DevCall(props: { call: ModelCallTrace; previous?: ModelCallTrace }) {
   const { call } = props;
   const usage = call.usage;
+  // The call before, only when it declared doors too: a scope call before
+  // an answer call is not a change of doors, it is a different step.
+  const previous = props.previous?.doors;
   return (
     <details class="dev-call">
       <summary class="mono">
@@ -97,6 +105,7 @@ export function DevCall(props: { call: ModelCallTrace }) {
         {usage !== undefined ? ` · ${usage.promptTokens}→${usage.completionTokens} tok · $${usage.costUsd.toFixed(4)}` : ""}
         {call.error !== undefined ? " · FAILED" : ""}
       </summary>
+      {call.doors !== undefined && <DoorStrip doors={call.doors} {...(previous === undefined ? {} : { previous })} />}
       <p class="dev-label">prompt</p>
       <pre class="dev-text">{call.prompt}</pre>
       {call.response !== undefined && (
@@ -123,7 +132,7 @@ function lane(step: TrailStep, who: Who): string {
   return step.lane === "trainer" && who === "you" ? "you" : laneLabel(step.lane);
 }
 
-function Step(props: { step: TrailStep; who: Who }) {
+function Step(props: { step: TrailStep; who: Who; previousCall?: PreviousCall }) {
   const { step } = props;
   return (
     <li class={`trail-step lane-${step.lane} tone-${step.tone}`}>
@@ -165,14 +174,15 @@ function Step(props: { step: TrailStep; who: Who }) {
         </ul>
       )}
       {step.manifest !== undefined && <ManifestDetails view={step.manifest} />}
-      {step.calls.map((call) => (
-        <DevCall call={call} />
-      ))}
+      {step.calls.map((call) => {
+        const previous = props.previousCall?.(call.seq - 1);
+        return <DevCall call={call} {...(previous === undefined ? {} : { previous })} />;
+      })}
     </li>
   );
 }
 
-export function TrailView(props: { trail: Trail; index: number; who: Who }) {
+export function TrailView(props: { trail: Trail; index: number; who: Who; previousCall?: PreviousCall }) {
   const { trail } = props;
   return (
     <section class={`trail outcome-${trail.outcome}`} aria-label={`exchange ${props.index + 1}`}>
@@ -187,7 +197,7 @@ export function TrailView(props: { trail: Trail; index: number; who: Who }) {
       )}
       <ol class="trail-steps">
         {trail.steps.map((step) => (
-          <Step step={step} who={props.who} />
+          <Step step={step} who={props.who} {...(props.previousCall === undefined ? {} : { previousCall: props.previousCall })} />
         ))}
       </ol>
     </section>
@@ -195,12 +205,12 @@ export function TrailView(props: { trail: Trail; index: number; who: Who }) {
 }
 
 /** Every trail in order, or the one line on why there is none yet. */
-export function Trails(props: { trails: readonly Trail[]; who: Who; empty: string }) {
+export function Trails(props: { trails: readonly Trail[]; who: Who; empty: string; previousCall?: PreviousCall }) {
   if (props.trails.length === 0) return <p class="fine">{props.empty}</p>;
   return (
     <div class="trails">
       {props.trails.map((trail, index) => (
-        <TrailView trail={trail} index={index} who={props.who} />
+        <TrailView trail={trail} index={index} who={props.who} {...(props.previousCall === undefined ? {} : { previousCall: props.previousCall })} />
       ))}
     </div>
   );

@@ -58,6 +58,7 @@ describe("tone and lane", () => {
     expect(toneOf("scope/refused")).toBe("refused");
     expect(toneOf("note/error")).toBe("refused");
     expect(toneOf("model/retry-failed")).toBe("refused");
+    expect(toneOf("route/withdrawn")).toBe("refused");
     expect(toneOf("model/retry")).toBe("plain");
     expect(toneOf("any/new-thing-denied")).toBe("plain");
     expect(toneOf("record/answered")).toBe("ok");
@@ -103,12 +104,13 @@ describe("a trail from the driver's ledger", () => {
       transactionId: "session-1",
       steps: [
         { at: "t1", lane: "trainer", code: "trainer/said", text: "what's a gym badge?" },
-        { at: "t2", lane: "model", code: "model/nominated", text: "0 claim(s), 0 link(s), nominated listing — the whole reply was a nomination of the listing route", lines: ["listing(subject=catalogue, n=1)"] },
-        { at: "t3", lane: "driver", code: "route/refused", text: "the listing nomination was refused by its guard: an enumeration of one is not an enumeration (n = 1) — the route door shut, the model asked once more" },
-        { at: "t4", lane: "model", code: "model/answer", text: "1 claim(s), 0 link(s) — the reply with the route door shut" },
+        { at: "t2", lane: "model", code: "model/nominated", text: '0 claim(s), 0 link(s), nominated listing — instead of answering, the model asked to use the "listing" door', lines: ["listing(subject=catalogue, n=1)"] },
+        { at: "t3", lane: "driver", code: "route/withdrawn", text: 'the "listing" door was refused: a list of one is not a list — the door was withdrawn for one call and the model asked again; nothing about the refusal was sent to it' },
+        { at: "t4", lane: "model", code: "model/answer", text: "1 claim(s), 0 link(s) — the reply with the door withdrawn; nothing was fed back" },
         { at: "t5", lane: "kernel", code: "verdict/denied", text: "the kernel denied the draft: IA-3/fabricated-entity — carried back to the model once", lines: ['IA-3/fabricated-entity: "gym-badge" is not certified'] },
-        { at: "t6", lane: "model", code: "model/retry", text: "1 claim(s), 0 link(s) — the reply to the carry-back" },
-        { at: "t7", lane: "kernel", code: "record/answered", text: "answered: 1 claim(s) certified" },
+        { at: "t6", lane: "model", code: "model/retry", text: "1 claim(s), 0 link(s) — the reply after 1 reason was fed back to the model" },
+        { at: "t7", lane: "driver", code: "route/refused", text: 'the "profile" door was refused: "x" is not a species the records certify — the claims beside it stand on their own' },
+        { at: "t8", lane: "kernel", code: "record/answered", text: "answered: 1 claim(s) certified" },
       ],
     };
     const trail = trailFromLedger(retried, []);
@@ -116,10 +118,14 @@ describe("a trail from the driver's ledger", () => {
     expect(trail.steps[4]!.lines).toEqual(['IA-3/fabricated-entity: "gym-badge" is not certified']);
     expect(trail.steps[4]!.tone).toBe("refused");
     expect(trail.steps[2]!.tone).toBe("refused");
+    expect(trail.steps[6]!.tone).toBe("refused");
     expect(trail.steps[0]!.lines).toEqual([]);
+    // Each round says whether the model was told: withdrawn in silence, fed
+    // back by name, or not re-asked at all.
     expect(sentBack(retried)).toEqual([
-      { by: "driver", code: "route/refused", text: retried.steps[2]!.text, reasons: [] },
-      { by: "kernel", code: "verdict/denied", text: retried.steps[4]!.text, reasons: ['IA-3/fabricated-entity: "gym-badge" is not certified'] },
+      { by: "driver", code: "route/withdrawn", text: retried.steps[2]!.text, mode: "withdrawn", reasons: [] },
+      { by: "kernel", code: "verdict/denied", text: retried.steps[4]!.text, mode: "fed-back", reasons: ['IA-3/fabricated-entity: "gym-badge" is not certified'] },
+      { by: "driver", code: "route/refused", text: retried.steps[6]!.text, mode: "stood", reasons: [] },
     ]);
     expect(sentBack(ledger)).toEqual([]);
   });

@@ -63,6 +63,21 @@ describe("proposeAnswer", () => {
     expect(step.decode.ok).toBe(true);
   });
 
+  it("declares the doors each call held open on the request, as the driver decided them", async () => {
+    const hints: unknown[] = [];
+    const provider = new ScriptedProvider("m", (request) => {
+      hints.push(request.hint.doors);
+      return JSON.stringify({ rosters: [], claims: [{ kind: "recommendation", entityId: "pikachu" }] });
+    });
+    const transcript = [{ kind: "utterance", at: AT, source: "trainer", text: "how many electric ones are there?" }] as const;
+    const routes = [{ id: "listing", description: "list a set", args: {} }];
+    await proposeAnswer({ provider, context, scenarioId: "s", transactionId: "txn-1", transcript: [...transcript], retrieval: true, gatedGrammar: true, routes, clarify: true, suggest: true });
+    await proposeAnswer({ provider, context, scenarioId: "s", transactionId: "txn-1", transcript: [...transcript], feedback: ["driver/refused-route: the listing door was refused"] });
+    expect(hints[0]).toEqual({ reference: "retrieval", fillerKinds: ["count"], routes: ["listing"], clarify: true, suggest: true, feedback: [] });
+    // The bare retry: no rows, an ungated grammar, no doors, the refusal fed back.
+    expect(hints[1]).toEqual({ reference: "none", routes: [], clarify: false, suggest: false, feedback: ["driver/refused-route: the listing door was refused"] });
+  });
+
   it("reports an unusable answer rather than inventing one", async () => {
     const provider = new ScriptedProvider("m", () => "not json");
     const step = await proposeAnswer({ provider, context, scenarioId: "s", transactionId: "txn-1", transcript: [] });

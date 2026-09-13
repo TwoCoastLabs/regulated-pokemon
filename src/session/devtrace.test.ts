@@ -107,3 +107,16 @@ describe("the agent report", () => {
     expect(JSON.parse(JSON.stringify(report))).toEqual(report);
   });
 });
+
+describe("the doors a call held open ride on the trace", () => {
+  it("copies the request's door state when the step declared one, and records none when it did not", async () => {
+    const { now, elapsedMs } = clocks();
+    const trace = createDevTrace({ now, elapsedMs });
+    const provider = trace.tap(new ScriptedProvider("m", () => "ok"));
+    const doors = { reference: "retrieval" as const, routes: ["listing"], clarify: true, suggest: false, feedback: [] };
+    await provider.complete({ ...REQUEST, purpose: "answer", hint: { ...REQUEST.hint, doors } });
+    await provider.complete(REQUEST);
+    expect(trace.calls[0]!.doors).toEqual(doors);
+    expect(trace.calls[1]).not.toHaveProperty("doors");
+  });
+});
