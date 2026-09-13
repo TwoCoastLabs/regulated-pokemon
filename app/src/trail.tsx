@@ -12,7 +12,7 @@
 import type { ModelCallTrace } from "../../src/session/devtrace.js";
 import type { ClaimView, ManifestView, RosterView } from "../../src/ui/claims.js";
 import { laneLabel, type Trail, type TrailStep } from "../../src/ui/trail.js";
-import { DoorStrip } from "./doors.js";
+import { DoorRow } from "./doors.js";
 
 /** The call before a given one, by sequence number — so a call's door
  * strip can mark what the driver changed since the last call. */
@@ -91,13 +91,19 @@ export function ManifestDetails(props: { view: ManifestView }) {
 }
 
 /** One model call as the tap saw it: prompt, reply, latency, cost. */
-export function DevCall(props: { call: ModelCallTrace; previous?: ModelCallTrace }) {
+export function DevCall(props: { call: ModelCallTrace; previous?: ModelCallTrace; taken?: string }) {
   const { call } = props;
   const usage = call.usage;
   // The call before, only when it declared doors too: a scope call before
   // an answer call is not a change of doors, it is a different step.
   const previous = props.previous?.doors;
   return (
+    <div class="dev-call-block">
+      {/* The doors sit above the fold: the turn-by-turn change is the point,
+          and it must be visible without opening the prompt. */}
+      {call.doors !== undefined && (
+        <DoorRow doors={call.doors} {...(previous === undefined ? {} : { previous })} {...(props.taken === undefined ? {} : { taken: props.taken })} />
+      )}
     <details class="dev-call">
       <summary class="mono">
         #{call.seq} {call.purpose}
@@ -105,7 +111,6 @@ export function DevCall(props: { call: ModelCallTrace; previous?: ModelCallTrace
         {usage !== undefined ? ` · ${usage.promptTokens}→${usage.completionTokens} tok · $${usage.costUsd.toFixed(4)}` : ""}
         {call.error !== undefined ? " · FAILED" : ""}
       </summary>
-      {call.doors !== undefined && <DoorStrip doors={call.doors} {...(previous === undefined ? {} : { previous })} />}
       <p class="dev-label">prompt</p>
       <pre class="dev-text">{call.prompt}</pre>
       {call.response !== undefined && (
@@ -121,6 +126,7 @@ export function DevCall(props: { call: ModelCallTrace; previous?: ModelCallTrace
         </>
       )}
     </details>
+    </div>
   );
 }
 
@@ -176,7 +182,11 @@ function Step(props: { step: TrailStep; who: Who; previousCall?: PreviousCall })
       {step.manifest !== undefined && <ManifestDetails view={step.manifest} />}
       {step.calls.map((call) => {
         const previous = props.previousCall?.(call.seq - 1);
-        return <DevCall call={call} {...(previous === undefined ? {} : { previous })} />;
+        // The door the model took on this call, read off the nomination
+        // step's first line (`listing(subject=…, n=…)`) — the reply that
+        // followed this call is the step it sits under.
+        const taken = step.code === "model/nominated" ? step.lines[0]?.split("(")[0] : undefined;
+        return <DevCall call={call} {...(previous === undefined ? {} : { previous })} {...(taken === undefined ? {} : { taken })} />;
       })}
     </li>
   );

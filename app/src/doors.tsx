@@ -54,6 +54,78 @@ function chipsOf(doors: DoorState, previous: DoorState | undefined): Chip[] {
   return chips;
 }
 
+/**
+ * The doors one call held open, drawn: one door glyph per offer, open or
+ * shut, and — against the call before — a door withdrawn (shut, struck
+ * through, red), a door opened (green), reasons fed back (amber). `taken`
+ * marks the door the model walked through on this call, when the reply
+ * named one. A row per call, so a reader watches the doors change turn by
+ * turn instead of reading it off two strips.
+ */
+export function DoorRow(props: { doors: DoorState; previous?: DoorState; taken?: string }) {
+  const chips = chipsOf(props.doors, props.previous);
+  const slot = 96;
+  const width = chips.length * slot + 12;
+  return (
+    <figure class="door-row">
+      <svg viewBox={`0 0 ${width} 92`} role="img" aria-label={chips.map((chip) => `${chip.label}: ${chip.state}`).join("; ")}>
+        {chips.map((chip, index) => {
+          const x = 6 + index * slot;
+          const isDoor = chip.label.startsWith("door: ");
+          const name = isDoor ? chip.label.slice("door: ".length) : chip.label;
+          const open = chip.tone === "open" || chip.tone === "opened" || chip.tone === "fed-back";
+          const taken = isDoor && props.taken === name;
+          const stroke =
+            chip.tone === "withdrawn" ? "var(--seal)" : chip.tone === "opened" ? "var(--ledger)" : chip.tone === "fed-back" || taken ? "var(--model)" : open ? "var(--indigo)" : "var(--muted)";
+          const leafFill = taken ? "var(--model-tint)" : chip.tone === "withdrawn" ? "var(--seal-tint)" : chip.tone === "opened" ? "var(--ledger-tint)" : chip.tone === "fed-back" ? "var(--model-tint)" : open ? "var(--indigo-tint)" : "var(--line)";
+          const cx = x + slot / 2;
+          return (
+            <g>
+              {/* the frame */}
+              <rect x={cx - 14} y={6} width={28} height={40} rx={2} fill="none" stroke={stroke} stroke-width={1.4} />
+              {open ? (
+                // the leaf swung out: an open door
+                <path d={`M ${cx - 10} 10 L ${cx + 10} 3 L ${cx + 10} 43 L ${cx - 10} 46 Z`} fill={leafFill} stroke={stroke} stroke-width={1.2} />
+              ) : (
+                // the leaf in its frame: a shut door
+                <rect x={cx - 10} y={10} width={20} height={32} fill={leafFill} stroke={stroke} stroke-width={1.2} />
+              )}
+              <circle cx={open ? cx + 6 : cx + 6} cy={27} r={1.6} fill={stroke} />
+              {chip.tone === "withdrawn" && (
+                <g stroke="var(--seal)" stroke-width={2}>
+                  <line x1={cx - 18} y1={2} x2={cx + 18} y2={50} />
+                  <line x1={cx + 18} y1={2} x2={cx - 18} y2={50} />
+                </g>
+              )}
+              {taken && (
+                <path d={`M ${cx - 30} 27 L ${cx - 18} 27`} stroke="var(--model)" stroke-width={2} marker-end="url(#door-row-arrow)" />
+              )}
+              <text x={cx} y={62} text-anchor="middle" font-size="10" font-weight="600" fill={stroke}>
+                {name}
+              </text>
+              <text x={cx} y={76} text-anchor="middle" font-size="9" fill="currentColor">
+                {taken ? "taken" : chip.state}
+              </text>
+            </g>
+          );
+        })}
+        <defs>
+          <marker id="door-row-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--model)" />
+          </marker>
+        </defs>
+      </svg>
+      {props.doors.feedback.length > 0 && (
+        <ul class="door-feedback-lines mono">
+          {props.doors.feedback.map((line) => (
+            <li>{line}</li>
+          ))}
+        </ul>
+      )}
+    </figure>
+  );
+}
+
 /** The doors one call held open, as a row of chips; with the call before,
  * each change is marked — withdrawn, opened, fed back. */
 export function DoorStrip(props: { doors: DoorState; previous?: DoorState }) {
@@ -151,8 +223,9 @@ export function DoorLegend() {
         </svg>
         <figcaption class="fine">
           A door is an offer the driver writes into the prompt; the model may take it or write claims. What a door
-          composes still faces the kernel whole. Under each call below, the strip shows which doors that call held open
-          and what changed since the call before.
+          composes still faces the kernel whole. Under each call below, a row of doors shows which offers that call held
+          open — an open leaf is offered, a shut one is not, a struck-through red one was withdrawn since the call before,
+          an amber one is the door the model took, or a reason fed back.
         </figcaption>
       </figure>
     </details>

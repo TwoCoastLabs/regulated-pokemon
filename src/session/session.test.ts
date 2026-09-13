@@ -2128,7 +2128,13 @@ describe("the driver's ledger — every step of an exchange, in fixed wording, b
     expect(nominated.lane).toBe("model");
     expect(nominated.text).toContain("nominated listing");
     expect(nominated.text).toContain('asked to use the "listing" door');
-    expect(nominated.lines).toEqual(["listing(subject=catalogue, n=1)"]);
+    // The door and its arguments, then what each argument means — a reader
+    // outside the code learns what `n` and `subject` are from the trail.
+    expect(nominated.lines).toEqual([
+      "listing(subject=catalogue, n=1)",
+      "subject = catalogue — which set to list: the whole certified catalogue",
+      "n = 1 — how many members to list",
+    ]);
     const refused = trail.steps.find((entry) => entry.code === "route/withdrawn")!;
     expect(refused.lane).toBe("driver");
     // Plain words: what the question lacked, that the door was withdrawn,

@@ -1197,10 +1197,6 @@ async function withRouteFallback(
   // the model was asked again" as three moves on three lanes, and the dev
   // view's first call lands under the nomination, the second under the
   // answer — not both under one step with a suffix.
-  const args = Object.entries(nomination)
-    .filter(([key]) => key !== "routeId" && key !== "kind")
-    .map(([key, value]) => `${key}=${String(value)}`)
-    .join(", ");
   // Wording for a reader who does not know the code: a "door" is an offer
   // in the prompt to have the driver compose from the records instead of
   // the model writing claims; the model asked for one, the driver's check
@@ -1214,7 +1210,7 @@ async function withRouteFallback(
     "model/nominated",
     `${describeReply(first)} — instead of answering, the model asked to use the "${nomination.routeId}" door`,
     undefined,
-    [`${nomination.routeId}(${args})`],
+    explainNomination(nomination),
   );
   stepped = ledgerStep(
     stepped,
@@ -1922,6 +1918,39 @@ export const SESSION_ROUTES: readonly NominableRoute[] = [
     args: { entityId: { type: "string" } },
   },
 ];
+
+/**
+ * What each door's arguments mean, for the ledger — a reader sees
+ * "subject = catalogue — which set to list: the whole certified catalogue"
+ * rather than a bare `subject=catalogue`. Driver-side only: the model's
+ * schema carries the enum and nothing more, so a meaning added here changes
+ * no prompt and no measured behaviour.
+ */
+const ROUTE_ARG_MEANING: Readonly<Record<string, Readonly<Record<string, (value: unknown) => string>>>> = {
+  listing: {
+    subject: (value) =>
+      value === "catalogue"
+        ? "which set to list: the whole certified catalogue"
+        : value === "prior-roster"
+          ? "which set to list: the set the previous answer showed"
+          : "which set to list (not a set this door knows)",
+    n: () => "how many members to list",
+  },
+  profile: {
+    entityId: () => "the one creature whose certified facts to compile",
+  },
+};
+
+/** The nomination as the ledger carries it: the door and its arguments on
+ * one line, then one line per argument saying what it means. */
+function explainNomination(route: { routeId: string; [arg: string]: unknown }): string[] {
+  const args = Object.entries(route).filter(([key]) => key !== "routeId" && key !== "kind");
+  const meanings = ROUTE_ARG_MEANING[route.routeId] ?? {};
+  return [
+    `${route.routeId}(${args.map(([key, value]) => `${key}=${String(value)}`).join(", ")})`,
+    ...args.map(([key, value]) => `${key} = ${String(value)} — ${meanings[key]?.(value) ?? "an argument this door does not take"}`),
+  ];
+}
 
 /** A nomination executed, or refused with the guard's reason in fixed wording
  * — the reason is the ledger's, so a trail says why a door stayed shut. */
