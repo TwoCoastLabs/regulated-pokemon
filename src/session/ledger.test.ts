@@ -11,12 +11,17 @@ import { allSteps, closeLedger, type Ledgered, ledgerOf, step } from "./ledger.j
 const empty: Ledgered = { steps: [], exchanges: [] };
 
 describe("the ledger", () => {
-  it("appends steps in order, with a count when one is given", () => {
+  it("appends steps in order, with a count when one is given, and the refuser's lines when a step carries them", () => {
     const one = step(empty, "t1", "trainer", "trainer/said", "how fast is Pikachu?");
     const two = step(one, "t2", "driver", "linking/off-ask-dropped", "1 claim(s) dropped", 1);
-    expect(two.steps).toEqual([
+    const three = step(two, "t3", "kernel", "verdict/denied", "the kernel denied the draft: IA-3/fabricated-entity", undefined, ['IA-3/fabricated-entity: "gym-badge" is not certified']);
+    // Empty lines are no lines: the step stays the one line it was.
+    const four = step(three, "t4", "driver", "route/refused", "refused", undefined, []);
+    expect(four.steps).toEqual([
       { at: "t1", lane: "trainer", code: "trainer/said", text: "how fast is Pikachu?" },
       { at: "t2", lane: "driver", code: "linking/off-ask-dropped", text: "1 claim(s) dropped", count: 1 },
+      { at: "t3", lane: "kernel", code: "verdict/denied", text: "the kernel denied the draft: IA-3/fabricated-entity", lines: ['IA-3/fabricated-entity: "gym-badge" is not certified'] },
+      { at: "t4", lane: "driver", code: "route/refused", text: "refused" },
     ]);
   });
 

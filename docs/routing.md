@@ -578,7 +578,14 @@ in the live page and beside the run ledger — so each piece of ceremony is a
 named step on the exchange it cost, and a removal is a step that stops
 appearing. First live reading of one porch round: 4 model calls for one
 answer, of which 2 were ceremony (a nomination refused and re-asked, then a
-comparison-basis card).
+comparison-basis card). Second reading (2026-09-13, "tell me about this
+game"): 2 model calls for one answer, 1 of them ceremony — the whole first
+reply was a listing nomination the guard refused ("the ask names no single
+type and is not a bare catalogue ask"), and the reply with the door shut
+taught twelve lessons. The refusal had been a suffix on one step; it is now
+three steps on three lanes with the guard's reason, and the chat says so
+under the answer — a dogfooder reads the round from the page, not the
+trace file.
 
 ## Sequencing
 

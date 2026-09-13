@@ -29,6 +29,10 @@ export interface DriverStep {
   text: string;
   /** A count the step carries, when it is one (claims dropped, links stale). */
   count?: number;
+  /** Further lines in the refuser's own words — the kernel's denial messages
+   * behind a `verdict/denied`, the driver's reasons behind a carry-back — so
+   * a reader sees *why* without opening the record or the trace. */
+  lines?: readonly string[];
 }
 
 export type ExchangeOutcome = "answered" | "acted" | "denied" | "declined" | "clarifying" | "passed" | "open";
@@ -51,8 +55,8 @@ export interface Ledgered {
 }
 
 /** Append one step to the open exchange. */
-export function step<S extends Ledgered>(state: S, at: string, lane: StepLane, code: string, text: string, count?: number): S {
-  const entry: DriverStep = { at, lane, code, text, ...(count === undefined ? {} : { count }) };
+export function step<S extends Ledgered>(state: S, at: string, lane: StepLane, code: string, text: string, count?: number, lines?: readonly string[]): S {
+  const entry: DriverStep = { at, lane, code, text, ...(count === undefined ? {} : { count }), ...(lines === undefined || lines.length === 0 ? {} : { lines }) };
   return { ...state, steps: [...state.steps, entry] };
 }
 

@@ -22,7 +22,7 @@ import type { Transaction } from "../kernel/transaction.js";
 import type { ModelCallTrace } from "../session/devtrace.js";
 import type { ExchangeLedger } from "../session/ledger.js";
 import { say, type SessionDeps, setProfile, startSession } from "../session/session.js";
-import { laneLabel, toneOf, trailFromLedger, trailFromRecord, trailsOfRun, trailsOfSession, withCalls, type Trail } from "./trail.js";
+import { laneLabel, sentBack, toneOf, trailFromLedger, trailFromRecord, trailsOfRun, trailsOfSession, withCalls, type Trail } from "./trail.js";
 
 const AT = "2026-01-01T00:00:00Z";
 
@@ -57,6 +57,8 @@ describe("tone and lane", () => {
     expect(toneOf("record/denied")).toBe("refused");
     expect(toneOf("scope/refused")).toBe("refused");
     expect(toneOf("note/error")).toBe("refused");
+    expect(toneOf("model/retry-failed")).toBe("refused");
+    expect(toneOf("model/retry")).toBe("plain");
     expect(toneOf("any/new-thing-denied")).toBe("plain");
     expect(toneOf("record/answered")).toBe("ok");
     expect(toneOf("note/abstention")).toBe("open");
@@ -92,6 +94,34 @@ describe("a trail from the driver's ledger", () => {
       { code: "IA-3/fabricated-entity", articleTitle: expect.any(String), analog: expect.any(String), message: violation.message, expected: violation.expected, actual: violation.actual },
     ]);
     expect(trail.steps[0]!.violations).toEqual([]);
+  });
+
+  it("carries a step's own lines through, and reads the rounds an exchange sent back from them", () => {
+    const retried: ExchangeLedger = {
+      opening: "what's a gym badge?",
+      outcome: "answered",
+      transactionId: "session-1",
+      steps: [
+        { at: "t1", lane: "trainer", code: "trainer/said", text: "what's a gym badge?" },
+        { at: "t2", lane: "model", code: "model/nominated", text: "0 claim(s), 0 link(s), nominated listing — the whole reply was a nomination of the listing route", lines: ["listing(subject=catalogue, n=1)"] },
+        { at: "t3", lane: "driver", code: "route/refused", text: "the listing nomination was refused by its guard: an enumeration of one is not an enumeration (n = 1) — the route door shut, the model asked once more" },
+        { at: "t4", lane: "model", code: "model/answer", text: "1 claim(s), 0 link(s) — the reply with the route door shut" },
+        { at: "t5", lane: "kernel", code: "verdict/denied", text: "the kernel denied the draft: IA-3/fabricated-entity — carried back to the model once", lines: ['IA-3/fabricated-entity: "gym-badge" is not certified'] },
+        { at: "t6", lane: "model", code: "model/retry", text: "1 claim(s), 0 link(s) — the reply to the carry-back" },
+        { at: "t7", lane: "kernel", code: "record/answered", text: "answered: 1 claim(s) certified" },
+      ],
+    };
+    const trail = trailFromLedger(retried, []);
+    expect(trail.steps[1]!.lines).toEqual(["listing(subject=catalogue, n=1)"]);
+    expect(trail.steps[4]!.lines).toEqual(['IA-3/fabricated-entity: "gym-badge" is not certified']);
+    expect(trail.steps[4]!.tone).toBe("refused");
+    expect(trail.steps[2]!.tone).toBe("refused");
+    expect(trail.steps[0]!.lines).toEqual([]);
+    expect(sentBack(retried)).toEqual([
+      { by: "driver", code: "route/refused", text: retried.steps[2]!.text, reasons: [] },
+      { by: "kernel", code: "verdict/denied", text: retried.steps[4]!.text, reasons: ['IA-3/fabricated-entity: "gym-badge" is not certified'] },
+    ]);
+    expect(sentBack(ledger)).toEqual([]);
   });
 
   it("attaches nothing when the record is not among those given, or the exchange filed none", () => {

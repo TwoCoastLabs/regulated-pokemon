@@ -2078,6 +2078,98 @@ describe("the driver's ledger — every step of an exchange, in fixed wording, b
     expect(trail.steps.find((entry) => entry.code === "clarify/picked")?.text).toContain("Speed");
   });
 
+  it("a nomination the driver refused is three steps — nominated, refused with the guard's reason, answered with the door shut — stamped between the calls", async () => {
+    // The porch's "tell me about this game" (dogfood, 2026-09-13): the whole
+    // first reply was a listing nomination, the driver refused it, and the
+    // second reply taught the lesson. The trail read both calls under one
+    // step with a suffix; it now reads three moves on three lanes.
+    let calls = 0;
+    const started: string[] = [];
+    const provider = new ScriptedProvider("one-member", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      calls += 1;
+      started.push(new Date(1_700_000_000_000 + calls * 1000).toISOString());
+      return calls === 1
+        ? JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "listing", subject: "catalogue", n: 1 }] })
+        : JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-pokemon" }] });
+    });
+    // A clock that reads one second past the last model call, so the stamps
+    // say which call each step followed.
+    let ticks = 0;
+    const d: SessionDeps = { ...deps(provider), now: () => new Date(1_700_000_000_000 + calls * 1000 + ++ticks).toISOString() };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "what is a Pokemon", d);
+    const trail = state.exchanges.at(-1)!;
+    expect(trail.outcome).toBe("answered");
+    expect(codes(trail.steps)).toEqual(["trainer/said", "scope/granted", "model/nominated", "route/refused", "model/answer", "linking/unlinked", "record/answered"]);
+    const nominated = trail.steps.find((entry) => entry.code === "model/nominated")!;
+    expect(nominated.lane).toBe("model");
+    expect(nominated.text).toContain("nominated listing");
+    expect(nominated.lines).toEqual(["listing(subject=catalogue, n=1)"]);
+    const refused = trail.steps.find((entry) => entry.code === "route/refused")!;
+    expect(refused.lane).toBe("driver");
+    expect(refused.text).toContain("an enumeration of one is not an enumeration (n = 1)");
+    expect(refused.text).toContain("the model asked once more");
+    const answer = trail.steps.find((entry) => entry.code === "model/answer")!;
+    expect(answer.text).toContain("the reply with the route door shut");
+    // The nomination and the refusal were stamped after the first call and
+    // before the second; the answer after the second.
+    expect(nominated.at > started[0]! && nominated.at < started[1]!).toBe(true);
+    expect(refused.at > started[0]! && refused.at < started[1]!).toBe(true);
+    expect(answer.at > started[1]!).toBe(true);
+    expect(state.nominationRetries).toBe(1);
+  });
+
+  it("a denial the kernel carried back is on the ledger in the kernel's own words, with the retry's reply as the step after it", async () => {
+    const fabricated = JSON.stringify({ rosters: [], claims: [{ kind: "fact", entityId: "gym-badge", factId: "types" }] });
+    const lesson = JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-badge" }] });
+    const provider = new ScriptedProvider("correcting", (request) =>
+      request.purpose !== "answer" ? "decline" : request.prompt.includes("refused by the verifier") ? lesson : fabricated,
+    );
+    const d: SessionDeps = { ...deps(provider), feedback: true };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "what's a gym badge?", d);
+    const trail = state.exchanges.at(-1)!;
+    expect(trail.outcome).toBe("answered");
+    const sequence = codes(trail.steps);
+    const at = sequence.indexOf("verdict/denied");
+    expect(at).toBeGreaterThan(sequence.indexOf("model/answer"));
+    expect(sequence[at + 1]).toBe("model/retry");
+    const denied = trail.steps[at]!;
+    expect(denied.lane).toBe("kernel");
+    expect(denied.text).toContain("IA-3/fabricated-entity");
+    expect(denied.lines).toHaveLength(1);
+    expect(denied.lines![0]).toMatch(/^IA-3\/fabricated-entity: /);
+    expect(denied.lines![0]).toContain('"gym-badge"');
+    expect(trail.steps[at + 1]!.lane).toBe("model");
+    expect(trail.steps[at + 1]!.text).toContain("the reply to the carry-back");
+  });
+
+  it("a reply the driver emptied is carried back with the driver's reasons on the step, and the retry's reply after it", async () => {
+    const offAsk = JSON.stringify({
+      asked: [{ phrase: "how many pp", entityId: "psychic", fieldId: "move-pp" }],
+      rosters: [],
+      claims: [{ kind: "route", routeId: "listing" }, { kind: "fact", entityId: "psychic", factId: "move-power" }],
+    });
+    const answered = JSON.stringify({
+      asked: [{ phrase: "how many pp", entityId: "psychic", fieldId: "move-pp" }],
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "psychic", factId: "move-pp" }],
+    });
+    let calls = 0;
+    const provider = new ScriptedProvider("refused-route", (request) => (request.purpose !== "answer" ? "decline" : (calls += 1) === 1 ? offAsk : answered));
+    const d: SessionDeps = { ...deps(provider), feedback: true };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "How many PP does Psychic have?", d);
+    const trail = state.exchanges.at(-1)!;
+    expect(trail.outcome).toBe("answered");
+    const sequence = codes(trail.steps);
+    const at = sequence.indexOf("reply/carried-back");
+    expect(at).toBeGreaterThan(-1);
+    expect(sequence[at + 1]).toBe("model/retry");
+    expect(trail.steps[at]!.lines?.map((line) => line.split(":")[0])).toEqual(["driver/refused-route", "driver/off-ask"]);
+  });
+
   it("closes an abstention as passed when the next ask opens, with the pass on its trail", async () => {
     const provider = scripted("ledger", (purpose) => (purpose === "scope" ? "decline" : JSON.stringify({ rosters: [], claims: [] })));
     const d = deps(provider);
