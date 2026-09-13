@@ -676,6 +676,58 @@ describe("a listing is one sentence, not one per member (dogfood 2026-09-13: ele
   });
 });
 
+describe("a profile is one card of labelled values, not one sentence per fact (dogfood 2026-09-13: nine 'certify Charmander's X as Y' lines)", () => {
+  const CHARMANDER: Claim[] = [
+    { kind: "fact", entityId: "charmander", factId: "types" },
+    { kind: "fact", entityId: "charmander", factId: "pokedex-number" },
+    { kind: "fact", entityId: "charmander", factId: "base-speed" },
+  ];
+  function planned(claims: readonly Claim[]) {
+    const compiled = compileManifest(world, { transactionId: "txn-render", claims, rosters: [] });
+    if (!compiled.ok) throw new Error(compiled.violations.map(denialCode).join(", "));
+    const plan = planRender(world, compiled.value);
+    if (!plan.ok) throw new Error(plan.violations.map(denialCode).join(", "));
+    return { manifest: compiled.value, plan: plan.value };
+  }
+
+  it("gathers facts about one entity into one unit — the entity, then a label and a bound value per fact, labels from the dictionary", () => {
+    const { plan } = planned([...CHARMANDER, SPEED]);
+    const profile = plan.units.find((unit) => unit.kind === "profile");
+    expect(profile?.id).toBe("profile:charmander");
+    expect(profile?.sentence).toBeUndefined();
+    expect(profile?.slots.map((slot) => [slot.name, slot.expected])).toEqual([
+      ["entity", "Charmander"],
+      ["fact:types", "Type"],
+      ["value:types", "fire"],
+      ["fact:pokedex-number", "Pokédex number"],
+      ["value:pokedex-number", "4"],
+      ["fact:base-speed", "Speed"],
+      ["value:base-speed", "65"],
+    ]);
+    // Pikachu's lone fact keeps its own sentence; no charmander sentence survives on its own.
+    expect(plan.units.filter((unit) => unit.kind === "fact").map((unit) => unit.id)).toEqual(["fact:pikachu:base-speed"]);
+  });
+
+  it("signs the reference renderer's card, and denies a value moved under another label or changed", () => {
+    const { manifest, plan } = planned(CHARMANDER);
+    const artifact = renderAnswer(world.pack, plan);
+    const attested = attestRender(world, manifest, artifact, RENDERED_AT);
+    expect(attested.ok, JSON.stringify(!attested.ok && attested.violations)).toBe(true);
+    const affidavit = attested.ok ? attested.value : { transactionId: "txn-render", artifactDigest: "sha256:x", renderedAt: RENDERED_AT, units: [] };
+    const faster = rewriteText(artifact, "65", "165");
+    expect(verifyRender(world, manifest, faster, affidavit).violations.map(denialCode)).toContain("IA-6/slot-value-mismatch");
+    // The card's words are the lead-in and the slots: a label rewritten is a slot mismatch, not prose.
+    const relabelled = rewriteText(artifact, "Speed", "Top speed");
+    expect(verifyRender(world, manifest, relabelled, affidavit).violations.map(denialCode)).toContain("IA-6/slot-value-mismatch");
+  });
+
+  it("does not group a fact repeated twice, nor two entities' facts into one card", () => {
+    const { plan } = planned([SPEED, SPEED, { kind: "fact", entityId: "charmander", factId: "types" }]);
+    expect(plan.units.filter((unit) => unit.kind === "profile")).toEqual([]);
+    expect(plan.units.filter((unit) => unit.kind === "fact").map((unit) => unit.id)).toEqual(["fact:pikachu:base-speed", "fact:charmander:types"]);
+  });
+});
+
 describe("the suggestion register (R3b step 4): the model's words, attributed and held to the record", () => {
   const SUGGESTIONS = ["What is it weak to?", "How does it evolve?"];
 

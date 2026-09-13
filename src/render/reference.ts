@@ -32,7 +32,7 @@ import {
   UNIT_ATTRIBUTE,
 } from "../kernel/dom.js";
 import { type AccordPack, blockFor, copyFor, templateFor } from "../kernel/pack.js";
-import type { RenderPlan, RenderUnit, RenderUnitKind } from "../kernel/render.js";
+import type { RenderPlan, RenderSlot, RenderUnit, RenderUnitKind } from "../kernel/render.js";
 
 /**
  * Which catalogued string introduces each kind of unit.
@@ -48,6 +48,9 @@ const LEAD_IN: Record<RenderUnitKind, string | undefined> = {
   // A listing is several memberships in one sentence; with no template it
   // falls back to the membership lead-in over its bound slots.
   listing: "lead-in.membership",
+  // A profile is several facts about one entity, introduced once and laid
+  // out as a labelled list — see `profileCard`.
+  profile: "lead-in.profile",
   // The Center kinds ship with sentence templates in their own pack; with no
   // template and no catalogued lead-in they render bare bound slots, which is
   // ugly and safe — the pack that owns them is where their words live.
@@ -103,11 +106,13 @@ function card(pack: AccordPack, plan: RenderPlan, unit: RenderUnit, disclosures:
   const tag = unit.kind === "provenance" ? "footer" : "section";
   return element(tag, { [UNIT_ATTRIBUTE]: unit.id }, [
     ...block(pack, plan, unit),
-    ...(unit.sentence !== undefined
-      ? [sentence(pack, plan, unit)]
-      : unit.slots.length === 0
-        ? []
-        : [element("p", {}, [...leadIn(pack, plan, unit), ...slots(unit)])]),
+    ...(unit.kind === "profile"
+      ? profileCard(pack, plan, unit)
+      : unit.sentence !== undefined
+        ? [sentence(pack, plan, unit)]
+        : unit.slots.length === 0
+          ? []
+          : [element("p", {}, [...leadIn(pack, plan, unit), ...slots(unit)])]),
     ...disclosures.map((disclosure) =>
       element("aside", { [UNIT_ATTRIBUTE]: disclosure.id }, [
         ...block(pack, plan, disclosure),
@@ -141,6 +146,34 @@ function suggestionRegister(pack: AccordPack, plan: RenderPlan, unit: RenderUnit
       ),
     ),
   ]);
+}
+
+/**
+ * A profile: the lead-in and the entity on one line, then the facts as a
+ * definition list — each label and each value in its own marked span, the
+ * pairs matched by the fact id the plan put in the slot names. Layout is the
+ * renderer's; every word in it is a catalogued lead-in or a bound slot.
+ */
+function profileCard(pack: AccordPack, plan: RenderPlan, unit: RenderUnit): DomNode[] {
+  const byName = new Map(unit.slots.map((slot) => [slot.name, slot]));
+  const mark = (slot: RenderSlot): DomElement => element("span", { [SLOT_ATTRIBUTE]: slot.name }, [text(slot.expected)]);
+  const entity = byName.get("entity");
+  const facts = unit.slots.filter((slot) => slot.name.startsWith("fact:")).map((slot) => slot.name.slice("fact:".length));
+  return [
+    element("p", {}, [...leadIn(pack, plan, unit), ...(entity === undefined ? [] : [mark(entity)])]),
+    element(
+      "dl",
+      {},
+      facts.flatMap((factId) => {
+        const label = byName.get(`fact:${factId}`);
+        const value = byName.get(`value:${factId}`);
+        return [
+          element("dt", {}, label === undefined ? [] : [mark(label)]),
+          element("dd", {}, value === undefined ? [] : [mark(value)]),
+        ];
+      }),
+    ),
+  ];
 }
 
 /**

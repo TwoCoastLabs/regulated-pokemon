@@ -68,7 +68,7 @@ import {
 } from "./dom.js";
 import { formatForValue, type FormatId, formatValue } from "./format.js";
 import { type ManifestContext, verifyManifest } from "./manifest.js";
-import { approvesFormat, blockFor, copyFor, curriculumRule, type ExhibitSlotSource, gameRule, templateFor, templatePlaceholders } from "./pack.js";
+import { approvesFormat, blockFor, copyFor, curriculumRule, dictionaryEntry, type ExhibitSlotSource, gameRule, templateFor, templatePlaceholders } from "./pack.js";
 import { describeCriteria } from "./roster.js";
 import { verdictOf, violation } from "./violation.js";
 
@@ -79,6 +79,8 @@ export type RenderUnitKind =
   | "membership"
   /** Several membership claims over one set, shown as one sentence. */
   | "listing"
+  /** Several fact claims about one entity, shown as one card of labelled values. */
+  | "profile"
   | "treats"
   | "comparison"
   | "selection"
@@ -174,9 +176,12 @@ export function planRender(context: ManifestContext, manifest: AnswerManifest): 
   // where the first of them stood; a lone membership keeps its own sentence.
   // Every member is still a bound value — the list is one slot whose string
   // is the members in claim order, compared by equality like any other.
+  // Both groupings are pack policy (`presentation.grouping`, pack v3): a
+  // record pinned to an earlier pack replays one sentence per claim.
+  const grouping = context.pack.presentation.grouping;
   const listings = new Map<string, Array<Extract<Claim, { kind: "membership" }>>>();
   for (const claim of manifest.claims) {
-    if (claim.kind !== "membership") continue;
+    if (claim.kind !== "membership" || !grouping.includes("listing")) continue;
     const key = `${claim.rosterId}:${String(claim.asserted)}`;
     const group = listings.get(key) ?? [];
     if (!group.some((entry) => entry.entityId === claim.entityId)) group.push(claim);
@@ -184,7 +189,35 @@ export function planRender(context: ManifestContext, manifest: AnswerManifest): 
   }
   const listed = new Set<string>();
 
+  // The same move for facts (dogfood, 2026-09-13: "tell me about Charmander"
+  // read as nine "The official records certify Charmander's X as Y" lines):
+  // fact claims about one entity are gathered into a `profile` unit — one
+  // card of labelled values, each value still its own bound slot — placed
+  // where the first of them stood; a lone fact keeps its sentence.
+  const profiles = new Map<string, Array<Extract<Claim, { kind: "fact" }>>>();
   for (const claim of manifest.claims) {
+    if (claim.kind !== "fact" || !grouping.includes("profile")) continue;
+    const group = profiles.get(claim.entityId) ?? [];
+    if (!group.some((entry) => entry.factId === claim.factId)) group.push(claim);
+    profiles.set(claim.entityId, group);
+  }
+  const profiled = new Set<string>();
+
+  for (const claim of manifest.claims) {
+    if (claim.kind === "fact") {
+      const group = profiles.get(claim.entityId) ?? [];
+      if (group.length >= 2) {
+        if (profiled.has(claim.entityId)) continue;
+        profiled.add(claim.entityId);
+        const built = unitForProfile(context, manifest, claim.entityId, group);
+        if (!built.ok) {
+          violations.push(...built.violations);
+          continue;
+        }
+        claimUnits.push(built.value);
+        continue;
+      }
+    }
     if (claim.kind === "membership") {
       const key = `${claim.rosterId}:${String(claim.asserted)}`;
       const group = listings.get(key) ?? [];
@@ -339,6 +372,40 @@ function setLabel(rosterId: string, rosters: readonly ClosedRoster[], form: "cou
   const roster = rosters.find((entry) => entry.id === rosterId);
   if (roster === undefined || roster.criteria.all.length === 0) return form === "count" ? "certified Pokémon" : "the certified catalogue";
   return form === "count" ? `Pokémon ${describeCriteria(roster.criteria)}` : `the Pokémon ${describeCriteria(roster.criteria)}`;
+}
+
+/**
+ * Several fact claims about one entity, as one unit: the entity, then for
+ * each fact a label slot (the pack dictionary's everyday name for the field
+ * — "Speed", "Pokédex number" — falling back to the fact id) and a value
+ * slot through the value's own presentation. No sentence template: the
+ * card is a labelled list, and every label and value is a mark the
+ * verifier recomputes and compares by equality, exactly as a lone fact's
+ * value is. The slot names carry the fact id, so a page cannot show one
+ * fact's value under another fact's label.
+ */
+function unitForProfile(
+  context: ManifestContext,
+  manifest: AnswerManifest,
+  entityId: string,
+  facts: ReadonlyArray<Extract<Claim, { kind: "fact" }>>,
+): Resolution<{ unit: RenderUnit; mentions: readonly string[] }> {
+  const locale = manifest.locale;
+  const resolved = slots(
+    slot(context, locale, "entity", entity(entityId), "entity-name"),
+    ...facts.flatMap((fact) => [
+      slot(context, locale, `fact:${fact.factId}`, entity(dictionaryEntry(context.pack, fact.factId)?.name ?? fact.factId), "plain-text"),
+      slot(context, locale, `value:${fact.factId}`, fact.asserted ?? { kind: "absent" }),
+    ]),
+  );
+  if (!resolved.ok) return resolved;
+  return {
+    ok: true,
+    value: {
+      unit: { id: `profile:${entityId}`, kind: "profile", slots: resolved.value, article: "IA-6" },
+      mentions: [entityId],
+    },
+  };
 }
 
 /**

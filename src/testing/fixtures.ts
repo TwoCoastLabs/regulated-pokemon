@@ -16,7 +16,7 @@ import type { SnapshotDocument } from "../kernel/snapshot-format.js";
 import { AccordError } from "../kernel/violation.js";
 
 export const SNAPSHOT_PATH = resolve(import.meta.dirname, "../../data/snapshots/kanto-red-blue.json");
-export const PACK_PATH = resolve(import.meta.dirname, "../../data/accord-pack/v2.json");
+export const PACK_PATH = resolve(import.meta.dirname, "../../data/accord-pack/v3.json");
 
 let cached: CertifiedRegistry | undefined;
 let cachedPack: AccordPack | undefined;
@@ -130,7 +130,7 @@ export function centerRegistry(): CertifiedRegistry {
   return centerCache;
 }
 
-export const CENTER_PACK_PATH = resolve(import.meta.dirname, "../../data/accord-pack/center-v2.json");
+export const CENTER_PACK_PATH = resolve(import.meta.dirname, "../../data/accord-pack/center-v3.json");
 
 let centerPackCache: AccordPack | undefined;
 

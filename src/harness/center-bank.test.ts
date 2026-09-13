@@ -106,7 +106,7 @@ describe("--center runs the real machinery, scripted and key-free", () => {
       world?: { packId?: string; snapshotId?: string };
       runs?: { entryId: string; stage: { kind: string }; score: { pass: boolean }; run: { detail: string } }[];
     };
-    expect(artifact.world?.packId).toBe("pokemon-center-v2");
+    expect(artifact.world?.packId).toBe("pokemon-center-v3");
     expect(artifact.world?.snapshotId).toBe("kanto-center");
     const byId = new Map((artifact.runs ?? []).map((run) => [run.entryId, run]));
     expect(byId.get("treats-antidote-burn")?.stage.kind).toBe("resolved");

@@ -34,7 +34,7 @@ const PINNED_SITES = 77;
 describe("the domain-word gate", () => {
   const words = domainWords(
     [json("data/snapshots/kanto-red-blue.json") as never, json("data/snapshots/kanto-center.json") as never],
-    [json("data/accord-pack/v2.json") as never, json("data/accord-pack/center-v2.json") as never],
+    [json("data/accord-pack/v3.json") as never, json("data/accord-pack/center-v3.json") as never],
   );
 
   it("derives the domain's words from the data, never from a hand list", () => {

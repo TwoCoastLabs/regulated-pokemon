@@ -47,7 +47,7 @@ export const LOCALE = "en-US";
 
 const DATA = resolve(import.meta.dirname, "../../data");
 const SNAPSHOT_PATH = resolve(DATA, "snapshots/kanto-red-blue.json");
-const PACK_PATH = resolve(DATA, "accord-pack/v2.json");
+const PACK_PATH = resolve(DATA, "accord-pack/v3.json");
 
 let cached: HarnessWorld | undefined;
 

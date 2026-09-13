@@ -47,6 +47,15 @@ describe("adaptArtifact", () => {
     expect(() => adaptArtifact(sabotaged, recorder)).not.toThrow();
   });
 
+  it("mounts a profile card's definition list — the reference renderer's own tags", () => {
+    const profile = element("article", {}, [
+      element("section", { "data-unit": "profile:charmander" }, [
+        element("dl", {}, [element("dt", {}, [element("span", { "data-slot": "fact:types" }, [text("Type")])]), element("dd", {}, [element("span", { "data-slot": "value:types" }, [text("fire")])])]),
+      ]),
+    ]);
+    expect(() => adaptArtifact(profile, recorder)).not.toThrow();
+  });
+
   it("refuses a tag a certified artifact may not carry, by name", () => {
     const hostile = element("article", {}, [element("script", {}, [text("alert(1)")])]);
     expect(() => adaptArtifact(hostile, recorder)).toThrow(/refusing to mount <script>/);

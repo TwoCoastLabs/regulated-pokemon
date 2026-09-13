@@ -307,6 +307,15 @@ is covered by offline tests with scripted models:
   equality (a member dropped from the page is `IA-6/slot-value-mismatch`
   by name); a lone membership keeps its own sentence. Found by dogfood
   (2026-09-13): eleven "is a member of all-species" lines for one list
+- a profile as one card (`profile` unit): fact claims about one entity are
+  shown as the entity and a labelled list — each label the pack
+  dictionary's everyday name for the field ("Speed", "Pokédex number"),
+  each value its own bound slot, the pair tied by the fact id in the slot
+  names so a value cannot sit under another fact's label; a lone fact keeps
+  its sentence. Same dogfood: nine "certify Charmander's X as Y" lines.
+  Both groupings are pack policy (`presentation.grouping`, shipped as
+  `indigo-accord-v3`): 23 filed pages were planned one sentence per claim
+  under v2 and replay that way under their pin
 - replay: a filed transaction re-verifies byte for byte with no model
 - the driver's ledger (`src/session/ledger.ts`, issue #158): every step
   above, as the driver took it, recorded per exchange in fixed wording —
