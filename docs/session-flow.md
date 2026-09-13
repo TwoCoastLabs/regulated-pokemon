@@ -312,14 +312,27 @@ is covered by offline tests with scripted models:
   labelled so, for runs filed before the ledger existed; every filed run
   in `runs/` renders without a missing step
 - a round sent back (the nomination the driver refused and re-asked with
-  the door shut, the denial the kernel carried back, the reply the driver
-  emptied): three steps on three lanes — the reply, the refusal in the
-  refuser's own words (`route/refused`, `verdict/denied` with the kernel's
+  the door withdrawn, the denial the kernel carried back, the reply the
+  driver emptied): three steps on three lanes — the reply, the refusal in
+  plain words (`route/withdrawn`, `verdict/denied` with the kernel's
   messages, `reply/carried-back` with the driver's reasons), the reply that
-  came after (`model/retry`, or `model/retry-failed` when the provider
-  dropped the round) — stamped between the calls, so the dev view's first
-  call lands under the first reply and the second under the second; the
-  chat says the same under the answer, read from the ledger
+  came after (`model/retry` naming how many reasons were fed back, or
+  `model/retry-failed` when the provider dropped the round) — stamped
+  between the calls, so the dev view's first call lands under the first
+  reply and the second under the second; each round says whether the model
+  was told (fed back by name, withdrawn in silence, or not re-asked at all),
+  and the chat says the same under the answer, read from the ledger
+- the doors, as data (`DoorState` on the request, `src/harness/provider.ts`):
+  every answer-step call declares what its prompt held open beyond the
+  question — the certified rows carried, the grammar's gated kinds, the
+  routes offered, leave to clarify and to suggest, the lines fed back — and
+  the trace records it, so the dev view draws a strip of doors under each
+  call and marks what the driver changed since the call before (a door
+  withdrawn, a reason fed back) without parsing the prompt; a legend draws
+  the trick once — the prompt assembled from the question and the doors,
+  the model answering with claims or by naming a door, the driver's check
+  composing from the records or withdrawing the door and asking again in
+  silence, the kernel denying by name and the reason fed back once
 - the claim view (`src/ui/claims.ts`): under the step that certified an
   answer, each claim's scale in the record's own numbers — a ranking is
   "1 of N" with N the roster's cardinality, a count is "N members", a

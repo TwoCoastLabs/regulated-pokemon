@@ -108,7 +108,7 @@ const OPEN_CODES: ReadonlySet<string> = new Set([
 /** The tone a code carries. Refusals are read by suffix so a new denial
  * code the ledger grows is coloured right before anyone lists it here. */
 export function toneOf(code: string): StepTone {
-  if (code.endsWith("/denied") || code.endsWith("/refused") || code.endsWith("failed") || code === "note/error") return "refused";
+  if (code.endsWith("/denied") || code.endsWith("/refused") || code.endsWith("/withdrawn") || code.endsWith("failed") || code === "note/error") return "refused";
   if (OK_CODES.has(code)) return "ok";
   if (OPEN_CODES.has(code)) return "open";
   return "plain";
@@ -361,16 +361,28 @@ export function trailsOfSession(state: Ledgered & { records: readonly Transactio
  * denial carried back, the driver's refusals carried back, a nomination
  * refused with the door then shut. Every one of these cost one more model
  * call, and the reply that shipped is the one that came after. */
-const SENT_BACK_CODES: ReadonlySet<string> = new Set(["verdict/denied", "reply/carried-back", "linking/carried-back", "route/refused"]);
+const SENT_BACK_CODES: ReadonlySet<string> = new Set(["verdict/denied", "reply/carried-back", "linking/carried-back", "route/withdrawn", "route/refused"]);
 
-/** One round the exchange sent back: who refused, in what words. */
+/** What the model learned from a refusal: the reasons went into its next
+ * prompt (`fed-back`), a door was removed for one call and nothing said
+ * (`withdrawn`), or nothing was re-asked at all — the rest of the reply
+ * stood on its own (`stood`). */
+export type SentBackMode = "fed-back" | "withdrawn" | "stood";
+
+/** One round the exchange sent back: who refused, in what words, and
+ * whether the model was told. */
 export interface SentBack {
   /** `kernel` for a verdict the kernel gave; `driver` for the driver's own guards. */
   by: "kernel" | "driver";
   code: string;
   text: string;
+  mode: SentBackMode;
   /** The refuser's reasons, `<code>: <message>` where the step carries them. */
   reasons: readonly string[];
+}
+
+function modeOf(code: string): SentBackMode {
+  return code === "route/withdrawn" ? "withdrawn" : code === "route/refused" ? "stood" : "fed-back";
 }
 
 /**
@@ -384,7 +396,7 @@ export interface SentBack {
 export function sentBack(ledger: ExchangeLedger): readonly SentBack[] {
   return ledger.steps.flatMap((step) =>
     SENT_BACK_CODES.has(step.code)
-      ? [{ by: step.lane === "kernel" ? ("kernel" as const) : ("driver" as const), code: step.code, text: step.text, reasons: step.lines ?? [] }]
+      ? [{ by: step.lane === "kernel" ? ("kernel" as const) : ("driver" as const), code: step.code, text: step.text, mode: modeOf(step.code), reasons: step.lines ?? [] }]
       : [],
   );
 }

@@ -12,6 +12,11 @@
 import type { ModelCallTrace } from "../../src/session/devtrace.js";
 import type { ClaimView, ManifestView, RosterView } from "../../src/ui/claims.js";
 import { laneLabel, type Trail, type TrailStep } from "../../src/ui/trail.js";
+import { DoorRow } from "./doors.js";
+
+/** The call before a given one, by sequence number — so a call's door
+ * strip can mark what the driver changed since the last call. */
+export type PreviousCall = (seq: number) => ModelCallTrace | undefined;
 
 /**
  * The certified manifest under the filing step, disclosed progressively:
@@ -86,10 +91,19 @@ export function ManifestDetails(props: { view: ManifestView }) {
 }
 
 /** One model call as the tap saw it: prompt, reply, latency, cost. */
-export function DevCall(props: { call: ModelCallTrace }) {
+export function DevCall(props: { call: ModelCallTrace; previous?: ModelCallTrace; taken?: string }) {
   const { call } = props;
   const usage = call.usage;
+  // The call before, only when it declared doors too: a scope call before
+  // an answer call is not a change of doors, it is a different step.
+  const previous = props.previous?.doors;
   return (
+    <div class="dev-call-block">
+      {/* The doors sit above the fold: the turn-by-turn change is the point,
+          and it must be visible without opening the prompt. */}
+      {call.doors !== undefined && (
+        <DoorRow doors={call.doors} {...(previous === undefined ? {} : { previous })} {...(props.taken === undefined ? {} : { taken: props.taken })} />
+      )}
     <details class="dev-call">
       <summary class="mono">
         #{call.seq} {call.purpose}
@@ -112,6 +126,7 @@ export function DevCall(props: { call: ModelCallTrace }) {
         </>
       )}
     </details>
+    </div>
   );
 }
 
@@ -123,7 +138,7 @@ function lane(step: TrailStep, who: Who): string {
   return step.lane === "trainer" && who === "you" ? "you" : laneLabel(step.lane);
 }
 
-function Step(props: { step: TrailStep; who: Who }) {
+function Step(props: { step: TrailStep; who: Who; previousCall?: PreviousCall }) {
   const { step } = props;
   return (
     <li class={`trail-step lane-${step.lane} tone-${step.tone}`}>
@@ -165,14 +180,19 @@ function Step(props: { step: TrailStep; who: Who }) {
         </ul>
       )}
       {step.manifest !== undefined && <ManifestDetails view={step.manifest} />}
-      {step.calls.map((call) => (
-        <DevCall call={call} />
-      ))}
+      {step.calls.map((call) => {
+        const previous = props.previousCall?.(call.seq - 1);
+        // The door the model took on this call, read off the nomination
+        // step's first line (`listing(subject=…, n=…)`) — the reply that
+        // followed this call is the step it sits under.
+        const taken = step.code === "model/nominated" ? step.lines[0]?.split("(")[0] : undefined;
+        return <DevCall call={call} {...(previous === undefined ? {} : { previous })} {...(taken === undefined ? {} : { taken })} />;
+      })}
     </li>
   );
 }
 
-export function TrailView(props: { trail: Trail; index: number; who: Who }) {
+export function TrailView(props: { trail: Trail; index: number; who: Who; previousCall?: PreviousCall }) {
   const { trail } = props;
   return (
     <section class={`trail outcome-${trail.outcome}`} aria-label={`exchange ${props.index + 1}`}>
@@ -187,7 +207,7 @@ export function TrailView(props: { trail: Trail; index: number; who: Who }) {
       )}
       <ol class="trail-steps">
         {trail.steps.map((step) => (
-          <Step step={step} who={props.who} />
+          <Step step={step} who={props.who} {...(props.previousCall === undefined ? {} : { previousCall: props.previousCall })} />
         ))}
       </ol>
     </section>
@@ -195,12 +215,12 @@ export function TrailView(props: { trail: Trail; index: number; who: Who }) {
 }
 
 /** Every trail in order, or the one line on why there is none yet. */
-export function Trails(props: { trails: readonly Trail[]; who: Who; empty: string }) {
+export function Trails(props: { trails: readonly Trail[]; who: Who; empty: string; previousCall?: PreviousCall }) {
   if (props.trails.length === 0) return <p class="fine">{props.empty}</p>;
   return (
     <div class="trails">
       {props.trails.map((trail, index) => (
-        <TrailView trail={trail} index={index} who={props.who} />
+        <TrailView trail={trail} index={index} who={props.who} {...(props.previousCall === undefined ? {} : { previousCall: props.previousCall })} />
       ))}
     </div>
   );

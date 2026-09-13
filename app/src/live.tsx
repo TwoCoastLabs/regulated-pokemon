@@ -56,6 +56,7 @@ import { claimSource } from "./world.js";
 import { type SentBack, sentBack, trailsOfSession, withCalls } from "../../src/ui/trail.js";
 import { violationView } from "../../src/ui/viewmodel.js";
 import { browserFactory } from "./mount.js";
+import { DoorLegend } from "./doors.js";
 import { DevCall, Trails } from "./trail.js";
 import { demoWorld } from "./world.js";
 
@@ -235,17 +236,26 @@ function SentBackNote(props: { rounds: readonly SentBack[] }) {
   const byKernel = rounds.some((round) => round.by === "kernel");
   const byDriver = rounds.some((round) => round.by === "driver");
   const who = byKernel && byDriver ? "by the League and by the driver" : byKernel ? "by the League" : "by the driver";
+  // Whether the Advisor was told: the difference between a reason fed back
+  // and a door withdrawn in silence is the one a reader most often asks.
+  const told = (mode: SentBack["mode"]): string =>
+    mode === "fed-back"
+      ? "The reasons were sent to the Advisor, and it was asked again."
+      : mode === "withdrawn"
+        ? "The option was withdrawn and the Advisor asked again — it was not told why."
+        : "Nothing was re-asked; the rest of the reply stood on its own.";
   return (
     <details class="live-sent-back">
       <summary>
-        {rounds.length === 1 ? "One draft was sent back" : `${rounds.length} drafts were sent back`} {who} before this answer — the
-        Advisor was asked again, and this is what came after.
+        {rounds.length === 1 ? "One refusal" : `${rounds.length} refusals`} {who} before this answer — open to see what was
+        refused, and whether the Advisor was told.
       </summary>
       <ul>
         {rounds.map((round) => (
           <li>
             <span class="live-sent-back-who">{round.by === "kernel" ? "League" : "driver"}</span>
             <span>{round.text}</span>
+            <span class={`live-sent-back-mode mode-${round.mode}`}>{told(round.mode)}</span>
             {round.reasons.length > 0 && (
               <ul class="mono">
                 {round.reasons.map((reason) => (
@@ -1118,6 +1128,9 @@ function DevPanel(props: {
   // after it began. One in flight, or one that failed before any step could
   // be written, has no step yet and is listed after the trail instead.
   const placed = withCalls(trailsOfSession(props.state, claimSource()), props.calls);
+  // The call before each, by sequence, so a door strip can mark the change.
+  const bySeq = new Map(props.calls.map((call) => [call.seq, call] as const));
+  const previousCall = (seq: number) => bySeq.get(seq);
 
   const copy = () => {
     void navigator.clipboard
@@ -1156,17 +1169,20 @@ function DevPanel(props: {
           <input type="checkbox" checked={props.gated} onChange={(event) => props.onGated(event.currentTarget.checked)} /> gated grammar
         </label>
       </div>
+      <DoorLegend />
       <Trails
         trails={placed.trails}
         who="you"
+        previousCall={previousCall}
         empty="No steps yet — say something to the Advisor and every step lands here on its lane, with each model call's prompt, response and latency under the step it preceded."
       />
       {placed.unplaced.length > 0 && (
         <div class="dev-unplaced">
           <p class="dev-label">since the last recorded step</p>
-          {placed.unplaced.map((call) => (
-            <DevCall call={call} />
-          ))}
+          {placed.unplaced.map((call) => {
+            const previous = previousCall(call.seq - 1);
+            return <DevCall call={call} {...(previous === undefined ? {} : { previous })} />;
+          })}
         </div>
       )}
       <p class="fine">

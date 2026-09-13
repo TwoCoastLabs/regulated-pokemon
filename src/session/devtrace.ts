@@ -15,7 +15,7 @@
  * coverage-counted code like everything else the app leans on.
  */
 
-import type { Completion, CompletionRequest, ModelProvider, Usage } from "../harness/provider.js";
+import type { Completion, CompletionRequest, DoorState, ModelProvider, Usage } from "../harness/provider.js";
 import { ledgerOf } from "./ledger.js";
 import type { SessionState } from "./session.js";
 
@@ -32,6 +32,9 @@ export interface ModelCallTrace {
   prompt: string;
   /** The response-grammar name, when the step offered one. */
   schema?: string;
+  /** The doors the call held open, when the step declared them (the answer
+   * step does) — how the prompt was adjusted, as data beside the prompt. */
+  doors?: DoorState;
   /** The completion text, verbatim; absent exactly when the call failed. */
   response?: string;
   /** The provider failure, when there was one. The error is rethrown — the
@@ -81,6 +84,7 @@ export function createDevTrace(deps: DevTraceDeps): DevTrace {
           purpose: request.purpose,
           prompt: request.prompt,
           ...(request.schema === undefined ? {} : { schema: request.schema.name }),
+          ...(request.hint.doors === undefined ? {} : { doors: request.hint.doors }),
         };
         try {
           const completion = await provider.complete(request);

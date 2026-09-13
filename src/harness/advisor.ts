@@ -599,7 +599,20 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
       input.clarify === true,
       input.suggest === true,
     ),
-    hint: { scenarioId, ...(context.grant === undefined ? {} : { scope: context.grant.scope }) },
+    hint: {
+      scenarioId,
+      ...(context.grant === undefined ? {} : { scope: context.grant.scope }),
+      // The doors this call held open, declared here where they are decided,
+      // so a trace shows the prompt's adjustment between two calls as data.
+      doors: {
+        reference: input.retrieval ? "retrieval" : input.grounded ? "grounded" : "none",
+        ...(fillerKinds === undefined ? {} : { fillerKinds: [...fillerKinds].sort() }),
+        routes: (input.routes ?? []).map((route) => route.id),
+        clarify: input.clarify === true,
+        suggest: input.suggest === true,
+        feedback: input.feedback ?? [],
+      },
+    },
     // The same contract the prose describes, in a form a provider can enforce.
     // Whether it is enforced is the provider's business, not the advisor's.
     schema: {

@@ -31,6 +31,32 @@ export type Purpose = "scope" | "answer" | "raw" | "phrase";
  * it, so a test fixture never has to reverse-engineer the wording the advisor
  * happened to choose.
  */
+/**
+ * The doors an answer-step prompt held open for this one call — what the
+ * driver offered the model beyond the question, declared at the request so a
+ * trace can show how the prompt was adjusted between two calls without
+ * parsing the prompt. Every entry is the driver's decision; none is the
+ * model's. Recorded, never read by anything downstream.
+ */
+export interface DoorState {
+  /** The certified rows the prompt carried: the ones this question needs
+   * (`retrieval`), the whole registry (`grounded`), or none. */
+  reference: "retrieval" | "grounded" | "none";
+  /** The aggregate claim kinds the grammar admitted — gated to the ones the
+   * question nominates; absent when the grammar was not gated (every kind). */
+  fillerKinds?: readonly string[];
+  /** The deterministic routes the model could nominate instead of composing,
+   * by id — empty when the door was shut (or withdrawn for this call). */
+  routes: readonly string[];
+  /** Whether the model could ask a clarifying question with typed options. */
+  clarify: boolean;
+  /** Whether the model could offer follow-up suggestions. */
+  suggest: boolean;
+  /** Lines carried back from the previous reply to these words, in the
+   * driver's fixed wording — empty on a first call. */
+  feedback: readonly string[];
+}
+
 export interface RequestHint {
   scenarioId: string;
   /** Scope step: the dimensions still unestablished, and the trainer wording
@@ -39,6 +65,8 @@ export interface RequestHint {
   unmatched?: readonly string[];
   /** Answer step: the scope the trainer established and the model may answer under. */
   scope?: TrainerScope;
+  /** Answer step: the doors this call held open ({@link DoorState}). */
+  doors?: DoorState;
 }
 
 export interface CompletionRequest {

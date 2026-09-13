@@ -396,6 +396,12 @@ function openingOf(state: SessionState): string {
 /** The ledger's one line for a carried-back round the provider dropped. */
 const RETRY_FAILED = "the provider failed on the carried-back round — the first reply stands";
 
+/** "N reason(s) were fed back to the model" — the retry step's suffix, so a
+ * reader sees the difference from a door withdrawn in silence. */
+function fedBack(count: number): string {
+  return `${count} reason${count === 1 ? "" : "s"} ${count === 1 ? "was" : "were"} fed back to the model`;
+}
+
 /** One line on what a reply carried, for the ledger's model lane. */
 function describeReply(step: AnswerStep): string {
   if (!step.decode.ok) return `no usable reply: ${step.decode.reason}`;
@@ -1191,25 +1197,27 @@ async function withRouteFallback(
   // the model was asked again" as three moves on three lanes, and the dev
   // view's first call lands under the nomination, the second under the
   // answer — not both under one step with a suffix.
-  const args = Object.entries(nomination)
-    .filter(([key]) => key !== "routeId" && key !== "kind")
-    .map(([key, value]) => `${key}=${String(value)}`)
-    .join(", ");
+  // Wording for a reader who does not know the code: a "door" is an offer
+  // in the prompt to have the driver compose from the records instead of
+  // the model writing claims; the model asked for one, the driver's check
+  // on it failed, so the offer was removed for one call. Nothing about the
+  // refusal is fed back — the reply the model would have written without
+  // the offer is the one that goes through (measured: the R1 bank run).
   let stepped = ledgerStep(
     state,
     deps.now(),
     "model",
     "model/nominated",
-    `${describeReply(first)} — the whole reply was a nomination of the ${nomination.routeId} route`,
+    `${describeReply(first)} — instead of answering, the model asked to use the "${nomination.routeId}" door`,
     undefined,
-    [`${nomination.routeId}(${args})`],
+    explainNomination(nomination),
   );
   stepped = ledgerStep(
     stepped,
     deps.now(),
     "driver",
-    "route/refused",
-    `the ${nomination.routeId} nomination was refused by its guard: ${executed.reason} — the route door shut, the model asked once more`,
+    "route/withdrawn",
+    `the "${nomination.routeId}" door was refused: ${executed.reason} — the door was withdrawn for one call and the model asked again; nothing about the refusal was sent to it`,
   );
   const again = await call(undefined);
   return { state: stepped, step: again, usage: addUsage(first.usage, again.usage), retried: true, refusedListing: nomination.routeId === "listing" };
@@ -1567,7 +1575,7 @@ async function teachOrDiscover(
     deps.now(),
     "model",
     "model/discovery",
-    `${describeReply(step)}${retried ? " — the reply with the route door shut" : ""}`,
+    `${describeReply(step)}${retried ? " — the reply with the door withdrawn; nothing was fed back" : ""}`,
   );
   if (refusedListing) spent = tallyListing(spent, "stoodDown");
   if (!step.decode.ok) {
@@ -1622,7 +1630,7 @@ async function teachOrDiscover(
         deps.now(),
         "model",
         "model/retry",
-        `${describeReply(again)} — the reply to the carry-back`,
+        `${describeReply(again)} — the reply after ${fedBack((linked.feedback ?? []).filter((line) => line.startsWith("driver/")).length)}`,
       );
       if (!again.decode.ok) {
         return { state: spentFolded, result: again.decode.reason === NO_CLAIMS_REASON ? "off-domain" : "unusable", claims: [], rosters: [] };
@@ -1659,11 +1667,11 @@ async function teachOrDiscover(
         deps.now(),
         "driver",
         "route/served",
-        `the ${decode.route.routeId} route composed ${composed.claims.length} claim(s)`,
+        `the "${decode.route.routeId}" door composed ${composed.claims.length} claim(s) from the records`,
       );
       return { state: tallied, result: "needs-scope", claims: composed.claims, rosters: composed.rosters, ...carry, routed: true };
     }
-    spentFolded = ledgerStep(spentFolded, deps.now(), "driver", "route/refused", `the ${decode.route.routeId} nomination was refused by its guard: ${composed.reason}`);
+    spentFolded = ledgerStep(spentFolded, deps.now(), "driver", "route/refused", `the "${decode.route.routeId}" door was refused: ${composed.reason} — the claims beside it stand on their own`);
     if (isListing) spentFolded = tallyListing(spentFolded, "stoodDown");
     // A refused nomination with nothing beside it is the empty reply it
     // always was — off-domain, never an empty record.
@@ -1911,6 +1919,39 @@ export const SESSION_ROUTES: readonly NominableRoute[] = [
   },
 ];
 
+/**
+ * What each door's arguments mean, for the ledger — a reader sees
+ * "subject = catalogue — which set to list: the whole certified catalogue"
+ * rather than a bare `subject=catalogue`. Driver-side only: the model's
+ * schema carries the enum and nothing more, so a meaning added here changes
+ * no prompt and no measured behaviour.
+ */
+const ROUTE_ARG_MEANING: Readonly<Record<string, Readonly<Record<string, (value: unknown) => string>>>> = {
+  listing: {
+    subject: (value) =>
+      value === "catalogue"
+        ? "which set to list: the whole certified catalogue"
+        : value === "prior-roster"
+          ? "which set to list: the set the previous answer showed"
+          : "which set to list (not a set this door knows)",
+    n: () => "how many members to list",
+  },
+  profile: {
+    entityId: () => "the one creature whose certified facts to compile",
+  },
+};
+
+/** The nomination as the ledger carries it: the door and its arguments on
+ * one line, then one line per argument saying what it means. */
+function explainNomination(route: { routeId: string; [arg: string]: unknown }): string[] {
+  const args = Object.entries(route).filter(([key]) => key !== "routeId" && key !== "kind");
+  const meanings = ROUTE_ARG_MEANING[route.routeId] ?? {};
+  return [
+    `${route.routeId}(${args.map(([key, value]) => `${key}=${String(value)}`).join(", ")})`,
+    ...args.map(([key, value]) => `${key} = ${String(value)} — ${meanings[key]?.(value) ?? "an argument this door does not take"}`),
+  ];
+}
+
 /** A nomination executed, or refused with the guard's reason in fixed wording
  * — the reason is the ledger's, so a trail says why a door stayed shut. */
 type RouteResult = ({ ok: true } & Pick<ManifestDraft, "claims" | "rosters">) | { ok: false; reason: string };
@@ -1942,10 +1983,12 @@ function executeRoute(
   // (docs/routing.md); a refused nomination earns the retry with the door
   // closed, never a wrong-shape certificate.
   if (route.routeId === "listing") {
-    if (namesCertifiedSubject(world.registry, currentAsk)) return refuse("the ask names a certified subject — a listing answers a set, not one thing");
+    // Reasons are written for a reader outside the code: what the question
+    // has or lacks, never the guard's own name for it.
+    if (namesCertifiedSubject(world.registry, currentAsk)) return refuse("the question is about one named thing, and a listing answers a set");
     const haystack = ` ${currentAsk.toLowerCase()} `;
     const typesNamed = [...world.registry.typeNames].filter((type) => new RegExp(`\\b${type}\\b`).test(haystack));
-    if (typesNamed.length !== 1 && !bareCatalogueAsk(world, currentAsk)) return refuse("the ask names no single type and is not a bare catalogue ask — there is no set to list");
+    if (typesNamed.length !== 1 && !bareCatalogueAsk(world, currentAsk)) return refuse("the question names no set to list — no type, and not a plain ask to list the catalogue");
     // Subject-correct by construction: the set comes from the ask's own
     // qualifiers, never from the nomination's say-so — a catalogue-subject
     // nomination for "show me all the fire types" mints the fire roster, and
@@ -1964,25 +2007,25 @@ function executeRoute(
     // The bareness reading cannot see it (the ask is lexically bare); the
     // nomination's own argument can. Refused, so the route-door-closed retry
     // asks the model for the answer it meant.
-    if (typeof route.n === "number" && Number.isFinite(route.n) && route.n < 2) return refuse(`an enumeration of one is not an enumeration (n = ${route.n})`);
+    if (typeof route.n === "number" && Number.isFinite(route.n) && route.n < 2) return refuse(`a list of one is not a list (the model asked for n = ${route.n})`);
     const n = typeof route.n === "number" && Number.isFinite(route.n) && route.n > 0 ? route.n : 10;
     const listed = composeListing(roster, n);
-    if (listed === undefined) return refuse("no set to list — the ask qualifies none, and no roster was shown before");
+    if (listed === undefined) return refuse("there is no set to list — the question defines none, and no earlier answer showed one");
     return { ok: true, ...listed };
   }
   if (route.routeId === "profile") {
     const raw = typeof route.entityId === "string" ? route.entityId.toLowerCase().trim().replace(/\s+/g, "-") : "";
-    if (!world.registry.speciesIds.includes(raw)) return refuse(`"${raw}" is not a certified species id`);
+    if (!world.registry.speciesIds.includes(raw)) return refuse(`"${raw}" is not a species the records certify`);
     // A profile carries no learnset: an ask that names a move is asking
     // about the move, and the species' nine facts cannot answer it.
     const moveHaystack = ` ${currentAsk.toLowerCase()} `;
     const namesMove = world.registry.moveIds.some((id) =>
       new RegExp(`\\b${id.split("-").join("[\\s-]?")}\\b`).test(moveHaystack),
     );
-    if (namesMove) return refuse("the ask names a move — a profile carries no learnset");
+    if (namesMove) return refuse("the question is about a move, and a profile holds a creature's facts, not its moves");
     return { ok: true, claims: profileClaims(raw), rosters: [] };
   }
-  return refuse(`no route is named "${route.routeId}"`);
+  return refuse(`there is no "${route.routeId}" door`);
 }
 
 /**
@@ -2694,7 +2737,7 @@ async function answer(
     deps.now(),
     "model",
     "model/answer",
-    `${describeReply(step)}${stepRetried ? " — the reply with the route door shut" : ""}`,
+    `${describeReply(step)}${stepRetried ? " — the reply with the door withdrawn; nothing was fed back" : ""}`,
   );
   if (stepRefusedListing) withUsage = tallyListing(withUsage, "stoodDown");
 
@@ -2745,7 +2788,7 @@ async function answer(
         deps.now(),
         "model",
         "model/retry",
-        `${describeReply(again)} — the reply to the carry-back`,
+        `${describeReply(again)} — the reply after ${fedBack(groomed.feedback.filter((line) => line.startsWith("driver/")).length)}`,
       );
       groomed = groom(world, withUsage, deps, again, currentAsk, openingWords, exchange, false);
     }
@@ -2830,7 +2873,7 @@ async function answer(
         deps.now(),
         "model",
         "model/retry",
-        `${describeReply(again)} — the reply to the carry-back`,
+        `${describeReply(again)} — the reply after ${fedBack(codes.length)}`,
       );
       const regroomed = groom(world, withUsage, deps, again, currentAsk, openingWords, exchange, false);
       if (regroomed.kind === "settled") return regroomed.state;
@@ -2924,8 +2967,8 @@ function groom(
       "driver",
       nominated.ok ? "route/served" : "route/refused",
       nominated.ok
-        ? `the ${decode.route.routeId} route composed ${nominated.claims.length} claim(s)`
-        : `the ${decode.route.routeId} nomination was refused by its guard: ${nominated.reason}`,
+        ? `the "${decode.route.routeId}" door composed ${nominated.claims.length} claim(s) from the records`
+        : `the "${decode.route.routeId}" door was refused: ${nominated.reason}${decode.draft.claims.length === 0 ? " — and the reply carried nothing else" : " — the claims beside it stand on their own"}`,
     );
   }
   if (nominated !== undefined && !nominated.ok && decode.draft.claims.length === 0) {

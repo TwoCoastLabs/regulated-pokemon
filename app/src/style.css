@@ -1297,6 +1297,141 @@ body {
   overflow-wrap: anywhere;
 }
 
+.live-sent-back-mode {
+  display: block;
+  margin-top: 2px;
+  font-style: italic;
+}
+
+.live-sent-back-mode.mode-withdrawn {
+  color: var(--seal);
+}
+
+.live-sent-back-mode.mode-fed-back {
+  color: var(--model);
+}
+
+/* --- the doors: the strip under a call, and the legend ------------------- */
+
+.door-strip {
+  list-style: none;
+  margin: 4px 0 6px;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 10.5px;
+}
+
+.door {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 1px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  background: var(--card);
+}
+
+.door-label {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 9px;
+}
+
+.door-open {
+  border-color: var(--indigo);
+  color: var(--indigo);
+}
+
+.door-opened {
+  border-color: var(--ledger);
+  color: var(--ledger);
+  background: var(--ledger-tint);
+}
+
+.door-withdrawn {
+  border-color: var(--seal);
+  color: var(--seal);
+  background: var(--seal-tint);
+  text-decoration: line-through;
+}
+
+.door-fed-back {
+  border-color: var(--model);
+  color: var(--model);
+  background: var(--model-tint);
+}
+
+.door-feedback-lines {
+  flex-basis: 100%;
+  list-style: none;
+  margin: 0;
+  display: grid;
+  gap: 2px;
+  padding: 2px 0 0 8px;
+  border-left: 2px solid var(--model);
+  color: var(--model);
+  font-size: 10.5px;
+  overflow-wrap: anywhere;
+}
+
+/* The door row under a call: one glyph per offer, drawn to the tokens so
+   an open door reads indigo, a withdrawn one red, a taken one amber. */
+.dev-call-block {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+}
+
+.door-row {
+  margin: 4px 0 2px;
+  padding: 4px 6px 2px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  overflow-x: auto;
+}
+
+.door-row svg {
+  display: block;
+  width: 100%;
+  max-width: 700px;
+  height: auto;
+}
+
+.door-legend {
+  margin: 0 0 8px;
+  font-size: 12px;
+}
+
+.door-legend > summary {
+  cursor: pointer;
+  color: var(--indigo);
+  font-weight: 600;
+}
+
+.door-legend figure {
+  margin: 6px 0 0;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--ink);
+}
+
+.door-legend svg {
+  display: block;
+  width: 100%;
+  max-width: 780px;
+  height: auto;
+}
+
+.door-legend figcaption {
+  margin-top: 6px;
+}
+
 .live-sent-back-who {
   display: inline-block;
   margin-right: 6px;
