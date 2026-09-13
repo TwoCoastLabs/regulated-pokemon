@@ -429,6 +429,12 @@ export function Live() {
   // The trainer's profile panel (epic #145, R2): typed scope set once, recorded
   // on the trainer channel as a profile event — no version question, no card.
   const [profileDraft, setProfileDraft] = useState({ version: "red-blue", region: "kanto", badgeLevel: 0 });
+  // The profile form is open until a profile is on the record, then folds
+  // to one line with a "change" — a later profile supersedes the earlier on
+  // the record (kernel/scope.ts), so changing games mid-session costs no
+  // question and no card. Found by dogfood (2026-09-13): a fold the visitor
+  // had to open first, and a form that stayed after it was used.
+  const [editingProfile, setEditingProfile] = useState(false);
   const [busy, setBusy] = useState(false);
   /** The message currently on its way through the driver, echoed immediately
    * so the visitor's words never vanish while the model is consulted. */
@@ -691,6 +697,10 @@ export function Live() {
   const items = chatItems(state);
   const phase = state.phase;
   const cost = state.usage;
+  // The profile on the record, latest first — what the next answer will be
+  // certified under, read from the transcript rather than from the form.
+  const profile = [...state.transcript].reverse().find((event) => event.kind === "profile");
+  const profileOpen = profile === undefined || editingProfile;
 
   return (
     <div class="live">
@@ -719,9 +729,9 @@ export function Live() {
         <div class="live-chat">
           {items.length === 0 && inFlight === null && (
             <p class="live-hint">
-              Tell the Advisor about your game, then ask away — it needs your version, region and badge count before
-              the League will certify anything. Try: “I'm playing Red and Blue, travelling around the Kanto region,
-              and I have 8 badges. Which of the Electric ones is the quickest?”
+              Set your game below — version, region, badges — then ask away; the League certifies answers for that
+              game and no other. You can also just say it: “I'm playing Red and Blue, travelling around the Kanto
+              region, and I have 8 badges. Which of the Electric ones is the quickest?”
             </p>
           )}
           {items.map((item, index) => {
@@ -836,7 +846,12 @@ export function Live() {
                           message a novice has to parse. */}
                       <p class="live-note-say">
                         {item.note.text}
-                        {latest && !busy && (
+                        {/* "try again" re-runs the exchange without the ask
+                            being retyped — for a provider failure, which is
+                            the one pause a retry can change. On a social
+                            note (a profile acknowledged) it read as a
+                            question mark; found by dogfood, 2026-09-13. */}
+                        {latest && !busy && item.note.tone === "error" && (
                           <button type="button" class="live-retry" onClick={() => run((s) => retry(s, deps))}>
                             try again
                           </button>
@@ -946,8 +961,23 @@ export function Live() {
         )}
       </div>
 
-      <details class="live-profile">
-        <summary>Your game — set it once, and the Advisor never has to ask</summary>
+      {!profileOpen && profile?.kind === "profile" ? (
+        <p class="live-profile-set">
+          <span class="live-profile-label">Your game</span> {plainCandidate(profile.scope)}
+          <button type="button" class="quiet live-profile-change" disabled={busy || phase.kind === "confirming-act"} onClick={() => setEditingProfile(true)}>
+            change
+          </button>
+        </p>
+      ) : (
+      <section class="live-profile" aria-label="Your game">
+        <p class="live-profile-title">
+          Your game
+          {profile !== undefined && (
+            <button type="button" class="quiet live-profile-change" onClick={() => setEditingProfile(false)}>
+              keep it
+            </button>
+          )}
+        </p>
         <p class="fine">
           Version, region and badges are scope: they decide what the League may tell you. Set them here and they go
           on the record as your own setting — typed, checked against the approved list, and never a guess.
@@ -985,12 +1015,16 @@ export function Live() {
           <button
             type="button"
             disabled={busy || phase.kind === "confirming-act"}
-            onClick={() => run((previous) => (deps === null ? previous : setProfile(previous, { ...profileDraft }, deps)))}
+            onClick={() => {
+              setEditingProfile(false);
+              run((previous) => (deps === null ? previous : setProfile(previous, { ...profileDraft }, deps)));
+            }}
           >
-            Set profile
+            {profile === undefined ? "Set my game" : "Change my game"}
           </button>
         </div>
-      </details>
+      </section>
+      )}
 
       <form
         class="live-composer"
