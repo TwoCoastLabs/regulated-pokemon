@@ -23,7 +23,7 @@
  * anywhere else. Either way it is the same driver, the same session module,
  * the same kernel — the modes differ in one URL and who pays.
  */
-import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { useEffect, useMemo, useState } from "preact/hooks";
 
 import { proposalDigest } from "../../src/harness/advisor.js";
 import {
@@ -52,7 +52,7 @@ import {
 import { agentReport, createDevTrace, type DevTrace, type DevTraceMeta, type ModelCallTrace } from "../../src/session/devtrace.js";
 import { adaptArtifact } from "../../src/ui/artifact-dom.js";
 import { plainCandidate, plainStage, plainViolation } from "../../src/ui/plain.js";
-import { trailsOfSession, withCalls } from "../../src/ui/trail.js";
+import { type SentBack, sentBack, trailsOfSession, withCalls } from "../../src/ui/trail.js";
 import { violationView } from "../../src/ui/viewmodel.js";
 import { browserFactory } from "./mount.js";
 import { DevCall, Trails } from "./trail.js";
@@ -220,7 +220,51 @@ function Role(props: { who: "you" | "advisor" }) {
   return <span class={`live-role ${props.who}`}>{props.who === "you" ? "You" : "Advisor"}</span>;
 }
 
-function RecordItem(props: { record: Transaction; page: DomElement | undefined; onSuggest?: (text: string) => void }) {
+/**
+ * The rounds an exchange sent back before the reply the visitor sees — the
+ * kernel's denial carried back, the driver's refusals, a nomination refused
+ * — read from the driver's ledger. Without this, a visitor who saw two model
+ * calls for one answer had to guess whether the first went wrong; now the
+ * chat says it, in the refuser's own words under a fold, and the trail
+ * beside it shows the same rounds on their lanes.
+ */
+function SentBackNote(props: { rounds: readonly SentBack[] }) {
+  const { rounds } = props;
+  if (rounds.length === 0) return null;
+  const byKernel = rounds.some((round) => round.by === "kernel");
+  const byDriver = rounds.some((round) => round.by === "driver");
+  const who = byKernel && byDriver ? "by the League and by the driver" : byKernel ? "by the League" : "by the driver";
+  return (
+    <details class="live-sent-back">
+      <summary>
+        {rounds.length === 1 ? "One draft was sent back" : `${rounds.length} drafts were sent back`} {who} before this answer — the
+        Advisor was asked again, and this is what came after.
+      </summary>
+      <ul>
+        {rounds.map((round) => (
+          <li>
+            <span class="live-sent-back-who">{round.by === "kernel" ? "League" : "driver"}</span>
+            <span>{round.text}</span>
+            {round.reasons.length > 0 && (
+              <ul class="mono">
+                {round.reasons.map((reason) => (
+                  <li>{reason}</li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
+function RecordItem(props: {
+  record: Transaction;
+  page: DomElement | undefined;
+  rounds: readonly SentBack[];
+  onSuggest?: (text: string) => void;
+}) {
   const { record, page } = props;
   const outcome = record.outcome;
   if (outcome.status === "denied") {
@@ -228,6 +272,7 @@ function RecordItem(props: { record: Transaction; page: DomElement | undefined; 
     return (
       <div class="live-item advisor">
         <Role who="advisor" />
+        <SentBackNote rounds={props.rounds} />
         <div class="live-denial">
           <p class="live-denial-lead">The League stepped in {plainStage(outcome.stage)}.</p>
           <ul>
@@ -249,6 +294,7 @@ function RecordItem(props: { record: Transaction; page: DomElement | undefined; 
   return (
     <div class="live-item advisor">
       <Role who="advisor" />
+      <SentBackNote rounds={props.rounds} />
       {page !== undefined && <Page artifact={page} {...(props.onSuggest === undefined ? {} : { onSuggest: props.onSuggest })} />}
       {/* The certified badge already carries the reassurance for a plain
           answer; only an act or a decline needs a word about what happened. */}
@@ -316,8 +362,7 @@ function LiveConsole(props: { state: SessionState; setup: LiveSetup }) {
   const { state, setup } = props;
   const cost = state.usage;
   return (
-    <aside class="live-console" aria-label="Compliance console">
-      <h3>The compliance console</h3>
+    <section class="live-console" aria-label="Compliance console">
       <p class="fine">The same session, in the League's own words. Everything here is read from the filed records.</p>
       <p class="console-line mono">
         {setup.model} · {setup.persona} persona · {cost.calls} call{cost.calls === 1 ? "" : "s"} · $
@@ -358,9 +403,17 @@ function LiveConsole(props: { state: SessionState; setup: LiveSetup }) {
         The download carries the transcript and every filed record against the named snapshot and pack — enough for
         anyone to re-execute each exchange and reproduce these verdicts bit-for-bit.
       </p>
-    </aside>
+    </section>
   );
 }
+
+/** Which of the two machinery views the side pane shows. */
+type Pane = "dev" | "console";
+
+/** The dev-trace sink is a dev-server middleware; only the dev build mirrors
+ * to it, and there it always does — a bug found with the console tab up is
+ * still a bug with a trace. A build never sends the request at all. */
+const MIRROR_TO_DEV_SINK = import.meta.env.DEV;
 
 // --- the page ---------------------------------------------------------------
 
@@ -381,13 +434,14 @@ export function Live() {
    * so the visitor's words never vanish while the model is consulted. */
   const [inFlight, setInFlight] = useState<string | null>(null);
   const [trouble, setTrouble] = useState<string | null>(null);
-  const [console_, setConsole] = useState(false);
-  // The dev view: the tap on the model seam, rendered. ?dev=1 opens it from
-  // the URL; the button toggles it live. While it is on, every model call and
-  // every settled step is mirrored to the dev server's trace sink (a no-op
-  // that swallows silently anywhere else), so a debugging agent can tail the
-  // session without anything being copied by hand.
-  const [dev, setDev] = useState(() => new URLSearchParams(window.location.search).get("dev") !== null);
+  // The machinery beside the chat: two views on one side pane, switched by
+  // tab. The dev view (the step trail with every model call disclosed under
+  // its step) is the default — the page is dogfooded far more than it is
+  // demoed, and a dogfooder wants the calls in view before the first ask.
+  // The compliance console is the same trail without the calls, plus the
+  // filed records. One button hides the pane for a plain chat.
+  const [machinery, setMachinery] = useState(true);
+  const [pane, setPane] = useState<Pane>("dev");
   // The two recall doors, dogfoodable per session (docs/scale.md, S1): both
   // change only what the model is asked, never what may commit, so flipping
   // them mid-session is safe — the next exchange simply walks the other door.
@@ -398,10 +452,6 @@ export function Live() {
   // different system from the one the numbers describe.
   const [retrievalOn, setRetrievalOn] = useState(true);
   const [gatedOn, setGatedOn] = useState(true);
-  const devRef = useRef(dev);
-  useEffect(() => {
-    devRef.current = dev;
-  }, [dev]);
   const clock = useMemo(makeClock, []);
 
   useEffect(() => {
@@ -464,7 +514,7 @@ export function Live() {
         now: clock,
         elapsedMs: () => performance.now(),
         onCall: (call) => {
-          if (devRef.current) mirrorToDevSink({ type: "model-call", ...call });
+          if (MIRROR_TO_DEV_SINK) mirrorToDevSink({ type: "model-call", ...call });
         },
       });
       setSetup({ provider, model, persona, mode, trace });
@@ -480,7 +530,7 @@ export function Live() {
     void Promise.resolve(step(state))
       .then((next) => {
         setState(next);
-        if (devRef.current && setup !== null && meta !== null) {
+        if (MIRROR_TO_DEV_SINK && setup !== null && meta !== null) {
           mirrorToDevSink({
             type: "report",
             doors: { retrieval: retrievalOn, gatedGrammar: gatedOn },
@@ -494,7 +544,7 @@ export function Live() {
         // The failing step still reaches the trace: without this, an error
         // that escapes to the banner leaves the sink with the model call but
         // no step context, and a debugger reading the file sees a cliff.
-        if (devRef.current) mirrorToDevSink({ type: "step-error", message });
+        if (MIRROR_TO_DEV_SINK) mirrorToDevSink({ type: "step-error", message });
       })
       .finally(() => {
         setBusy(false);
@@ -656,36 +706,16 @@ export function Live() {
         <ModelLatency calls={setup.trace.calls} />
         <button
           type="button"
-          class={`console-toggle${console_ ? " current" : ""}`}
-          aria-pressed={console_}
-          onClick={() => setConsole(!console_)}
+          class={`console-toggle${machinery ? " current" : ""}`}
+          aria-pressed={machinery}
+          title="the step trail, every model call, and the filed records — beside the chat"
+          onClick={() => setMachinery(!machinery)}
         >
-          {console_ ? "Hide the machinery" : "Show the machinery"}
-        </button>
-        <button
-          type="button"
-          class={`console-toggle${dev ? " current" : ""}`}
-          aria-pressed={dev}
-          title="model calls, prompts, latency — the debugging view (?dev=1 opens it)"
-          onClick={() => setDev(!dev)}
-        >
-          {dev ? "Hide dev view" : "Dev view"}
+          {machinery ? "Hide the machinery" : "Show the machinery"}
         </button>
       </div>
 
-      {dev && meta !== null && (
-        <DevPanel
-          meta={meta}
-          state={state}
-          calls={setup.trace.calls}
-          retrieval={retrievalOn}
-          gated={gatedOn}
-          onRetrieval={setRetrievalOn}
-          onGated={setGatedOn}
-        />
-      )}
-
-      <div class={`live-panes${console_ ? " with-console" : ""}`}>
+      <div class={`live-panes${machinery ? " with-console" : ""}`}>
         <div class="live-chat">
           {items.length === 0 && inFlight === null && (
             <p class="live-hint">
@@ -822,8 +852,19 @@ export function Live() {
                     </div>
                   </div>
                 );
-              case "record":
-                return <RecordItem record={item.record} page={item.page} {...(latest && !busy ? { onSuggest: pick } : {})} />;
+              case "record": {
+                // The rounds this exchange sent back, from the ledger the
+                // driver closed on this record.
+                const exchange = state.exchanges.find((entry) => entry.transactionId === item.record.id);
+                return (
+                  <RecordItem
+                    record={item.record}
+                    page={item.page}
+                    rounds={exchange === undefined ? [] : sentBack(exchange)}
+                    {...(latest && !busy ? { onSuggest: pick } : {})}
+                  />
+                );
+              }
               default:
                 return null;
             }
@@ -864,7 +905,45 @@ export function Live() {
           {trouble !== null && <p class="refusal-banner">{trouble}</p>}
         </div>
 
-        {console_ && <LiveConsole state={state} setup={setup} />}
+        {machinery && (
+          <aside class="live-side" aria-label="The machinery">
+            <div class="pane-tabs" role="tablist">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={pane === "dev"}
+                class={`pane-tab${pane === "dev" ? " current" : ""}`}
+                title="the step trail with each model call's prompt, reply and latency under the step it preceded"
+                onClick={() => setPane("dev")}
+              >
+                Dev view
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={pane === "console"}
+                class={`pane-tab${pane === "console" ? " current" : ""}`}
+                title="the same session in the League's own words — the trail, the filed records, the download"
+                onClick={() => setPane("console")}
+              >
+                Compliance console
+              </button>
+            </div>
+            {pane === "dev" && meta !== null ? (
+              <DevPanel
+                meta={meta}
+                state={state}
+                calls={setup.trace.calls}
+                retrieval={retrievalOn}
+                gated={gatedOn}
+                onRetrieval={setRetrievalOn}
+                onGated={setGatedOn}
+              />
+            ) : (
+              <LiveConsole state={state} setup={setup} />
+            )}
+          </aside>
+        )}
       </div>
 
       <details class="live-profile">
@@ -1056,9 +1135,9 @@ function DevPanel(props: {
         </div>
       )}
       <p class="fine">
-        While this view is open, every call and every settled exchange is also streamed to the dev server's trace file
-        (<span class="mono">.dev-trace.jsonl</span>) — on the dev server an agent reads it live; anywhere else the
-        stream is a silent no-op.
+        On the dev server, every call and every settled exchange is also streamed to its trace file (
+        <span class="mono">.dev-trace.jsonl</span>) whichever tab is up, so an agent can read the session live; a build
+        never sends it.
       </p>
     </section>
   );

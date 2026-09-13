@@ -1218,7 +1218,7 @@ body {
 
 /* With the machinery shown, the page widens to seat both registers. */
 .live:has(.live-panes.with-console) {
-  max-width: 1360px;
+  max-width: 1480px;
 }
 
 .live-panes {
@@ -1228,7 +1228,83 @@ body {
 }
 
 .live-panes.with-console {
-  grid-template-columns: minmax(420px, 1.4fr) minmax(320px, 1fr);
+  grid-template-columns: minmax(420px, 1fr) minmax(380px, 1fr);
+}
+
+/* The side pane: two views, one tab strip. It keeps to the viewport and
+   scrolls on its own, so a long chat never carries the trail off screen. */
+.live-side {
+  display: grid;
+  gap: 0;
+  align-content: start;
+  position: sticky;
+  top: 12px;
+  max-height: calc(100vh - 24px);
+  overflow: auto;
+}
+
+.pane-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+.pane-tab {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  margin-bottom: -1px;
+  border: 1px solid transparent;
+  border-bottom: 1px solid var(--line);
+  border-radius: 4px 4px 0 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.pane-tab.current {
+  color: var(--indigo);
+  border-color: var(--line);
+  border-bottom-color: var(--card);
+  background: var(--card);
+}
+
+.pane-tab:focus-visible {
+  outline: 2px solid var(--indigo);
+  outline-offset: -2px;
+}
+
+/* A round the exchange sent back, told in the chat under a fold. */
+.live-sent-back {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.live-sent-back summary {
+  cursor: pointer;
+}
+
+.live-sent-back ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
+.live-sent-back ul ul {
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.live-sent-back-who {
+  display: inline-block;
+  margin-right: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--indigo);
 }
 
 .live-persona {
@@ -1744,12 +1820,18 @@ body {
 /* --- the dev view (dogfooding: model calls, prompts, latency) ------------- */
 
 .dev-panel {
-  margin: 0.75rem 0;
+  margin: 0;
   padding: 0.75rem 1rem;
   border: 1px dashed var(--indigo);
-  border-radius: 8px;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
   background: var(--indigo-tint);
   font-size: 0.85rem;
+}
+
+.live-side .live-console {
+  border-top: none;
+  border-radius: 0 0 6px 6px;
 }
 
 .dev-head {

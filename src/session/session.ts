@@ -393,6 +393,9 @@ function openingOf(state: SessionState): string {
   return first?.kind === "utterance" ? first.text : "";
 }
 
+/** The ledger's one line for a carried-back round the provider dropped. */
+const RETRY_FAILED = "the provider failed on the carried-back round — the first reply stands";
+
 /** One line on what a reply carried, for the ledger's model lane. */
 function describeReply(step: AnswerStep): string {
   if (!step.decode.ok) return `no usable reply: ${step.decode.reason}`;
@@ -1170,23 +1173,46 @@ async function withRouteFallback(
   state: SessionState,
   deps: SessionDeps,
   call: (routes: readonly NominableRoute[] | undefined) => Promise<AnswerStep>,
-): Promise<{ step: AnswerStep; usage: Usage; retried: boolean; refusedListing: boolean }> {
+): Promise<{ state: SessionState; step: AnswerStep; usage: Usage; retried: boolean; refusedListing: boolean }> {
   const first = await call(SESSION_ROUTES);
+  const decode = first.decode;
   // A clarification beside the refused nomination is something the reply
   // carried (R3b step 3): the model asked, and the question goes through —
   // found live 2026-09-05, when the listing nomination beside a clarify cost
   // a second call for the same question.
-  const asksInstead = first.decode.ok && first.decode.clarify !== undefined && deps.clarify === true;
-  const refused =
-    first.decode.ok &&
-    first.decode.route !== undefined &&
-    first.decode.draft.claims.length === 0 &&
-    !asksInstead &&
-    executeRoute(world, state, first.decode.route) === undefined;
-  if (!refused) return { step: first, usage: first.usage, retried: false, refusedListing: false };
-  const refusedListing = first.decode.ok && first.decode.route?.routeId === "listing";
+  const asksInstead = decode.ok && decode.clarify !== undefined && deps.clarify === true;
+  const nomination = decode.ok && decode.route !== undefined && decode.draft.claims.length === 0 && !asksInstead ? decode.route : undefined;
+  const executed = nomination === undefined ? undefined : executeRoute(world, state, nomination);
+  if (nomination === undefined || executed === undefined || executed.ok) {
+    return { state, step: first, usage: first.usage, retried: false, refusedListing: false };
+  }
+  // The nomination and its refusal are steps of their own, stamped between
+  // the two calls: a trail reads "the model nominated, the driver refused,
+  // the model was asked again" as three moves on three lanes, and the dev
+  // view's first call lands under the nomination, the second under the
+  // answer — not both under one step with a suffix.
+  const args = Object.entries(nomination)
+    .filter(([key]) => key !== "routeId" && key !== "kind")
+    .map(([key, value]) => `${key}=${String(value)}`)
+    .join(", ");
+  let stepped = ledgerStep(
+    state,
+    deps.now(),
+    "model",
+    "model/nominated",
+    `${describeReply(first)} — the whole reply was a nomination of the ${nomination.routeId} route`,
+    undefined,
+    [`${nomination.routeId}(${args})`],
+  );
+  stepped = ledgerStep(
+    stepped,
+    deps.now(),
+    "driver",
+    "route/refused",
+    `the ${nomination.routeId} nomination was refused by its guard: ${executed.reason} — the route door shut, the model asked once more`,
+  );
   const again = await call(undefined);
-  return { step: again, usage: addUsage(first.usage, again.usage), retried: true, refusedListing };
+  return { state: stepped, step: again, usage: addUsage(first.usage, again.usage), retried: true, refusedListing: nomination.routeId === "listing" };
 }
 
 /**
@@ -1508,7 +1534,7 @@ async function teachOrDiscover(
   let retried = false;
   let refusedListing = false;
   try {
-    ({ step, usage: stepUsage, retried, refusedListing } = await withRouteFallback(world, state, deps, (routes) =>
+    ({ state, step, usage: stepUsage, retried, refusedListing } = await withRouteFallback(world, state, deps, (routes) =>
       proposeAnswer({
         provider,
         context: bare,
@@ -1541,7 +1567,7 @@ async function teachOrDiscover(
     deps.now(),
     "model",
     "model/discovery",
-    `${describeReply(step)}${retried ? " — after a refused nomination, re-asked with the route door shut" : ""}`,
+    `${describeReply(step)}${retried ? " — the reply with the route door shut" : ""}`,
   );
   if (refusedListing) spent = tallyListing(spent, "stoodDown");
   if (!step.decode.ok) {
@@ -1583,7 +1609,7 @@ async function teachOrDiscover(
         ...(deps.suggest === undefined ? {} : { suggest: deps.suggest }),
       });
     } catch {
-      spentFolded = { ...spentFolded, providerErrors: spentFolded.providerErrors + 1 };
+      spentFolded = ledgerStep({ ...spentFolded, providerErrors: spentFolded.providerErrors + 1 }, deps.now(), "model", "model/retry-failed", RETRY_FAILED);
     }
     spentFolded = {
       ...spentFolded,
@@ -1591,7 +1617,13 @@ async function teachOrDiscover(
       feedbackDenials: [...spentFolded.feedbackDenials, ...(linked.feedback ?? []).filter((line) => line.startsWith("driver/")).map((line) => line.split(":")[0]!)],
     };
     if (again !== undefined) {
-      spentFolded = { ...spentFolded, usage: addUsage(spentFolded.usage, again.usage), folds: spentFolded.folds + (again.decode.ok ? again.decode.folds : 0) };
+      spentFolded = ledgerStep(
+        { ...spentFolded, usage: addUsage(spentFolded.usage, again.usage), folds: spentFolded.folds + (again.decode.ok ? again.decode.folds : 0) },
+        deps.now(),
+        "model",
+        "model/retry",
+        `${describeReply(again)} — the reply to the carry-back`,
+      );
       if (!again.decode.ok) {
         return { state: spentFolded, result: again.decode.reason === NO_CLAIMS_REASON ? "off-domain" : "unusable", claims: [], rosters: [] };
       }
@@ -1621,10 +1653,17 @@ async function teachOrDiscover(
   if (decode.route !== undefined) {
     const composed = executeRoute(world, state, decode.route);
     const isListing = decode.route.routeId === "listing";
-    if (composed !== undefined) {
-      const tallied = isListing ? tallyListing(spentFolded, "served") : spentFolded;
+    if (composed.ok) {
+      const tallied = ledgerStep(
+        isListing ? tallyListing(spentFolded, "served") : spentFolded,
+        deps.now(),
+        "driver",
+        "route/served",
+        `the ${decode.route.routeId} route composed ${composed.claims.length} claim(s)`,
+      );
       return { state: tallied, result: "needs-scope", claims: composed.claims, rosters: composed.rosters, ...carry, routed: true };
     }
+    spentFolded = ledgerStep(spentFolded, deps.now(), "driver", "route/refused", `the ${decode.route.routeId} nomination was refused by its guard: ${composed.reason}`);
     if (isListing) spentFolded = tallyListing(spentFolded, "stoodDown");
     // A refused nomination with nothing beside it is the empty reply it
     // always was — off-domain, never an empty record.
@@ -1872,17 +1911,22 @@ export const SESSION_ROUTES: readonly NominableRoute[] = [
   },
 ];
 
+/** A nomination executed, or refused with the guard's reason in fixed wording
+ * — the reason is the ledger's, so a trail says why a door stayed shut. */
+type RouteResult = ({ ok: true } & Pick<ManifestDraft, "claims" | "rosters">) | { ok: false; reason: string };
+
 /**
- * A nomination, validated and executed — or refused into undefined, which
- * sends the flow down exactly the path it would have taken with no
- * nomination at all. The model chose a door; every value still comes from
- * the registry or the record, and the kernel verifies the composition.
+ * A nomination, validated and executed — or refused, which sends the flow
+ * down exactly the path it would have taken with no nomination at all. The
+ * model chose a door; every value still comes from the registry or the
+ * record, and the kernel verifies the composition.
  */
 function executeRoute(
   world: SessionWorld,
   state: SessionState,
   route: { routeId: string; [arg: string]: unknown },
-): Pick<ManifestDraft, "claims" | "rosters"> | undefined {
+): RouteResult {
+  const refuse = (reason: string): RouteResult => ({ ok: false, reason });
   // The exchange's OPENING utterance is the ask; later ones answer the
   // pack's questions ("Red and Blue") and would unbare or requalify it.
   const opening = state.transcript
@@ -1898,10 +1942,10 @@ function executeRoute(
   // (docs/routing.md); a refused nomination earns the retry with the door
   // closed, never a wrong-shape certificate.
   if (route.routeId === "listing") {
-    if (namesCertifiedSubject(world.registry, currentAsk)) return undefined;
+    if (namesCertifiedSubject(world.registry, currentAsk)) return refuse("the ask names a certified subject — a listing answers a set, not one thing");
     const haystack = ` ${currentAsk.toLowerCase()} `;
     const typesNamed = [...world.registry.typeNames].filter((type) => new RegExp(`\\b${type}\\b`).test(haystack));
-    if (typesNamed.length !== 1 && !bareCatalogueAsk(world, currentAsk)) return undefined;
+    if (typesNamed.length !== 1 && !bareCatalogueAsk(world, currentAsk)) return refuse("the ask names no single type and is not a bare catalogue ask — there is no set to list");
     // Subject-correct by construction: the set comes from the ask's own
     // qualifiers, never from the nomination's say-so — a catalogue-subject
     // nomination for "show me all the fire types" mints the fire roster, and
@@ -1920,23 +1964,25 @@ function executeRoute(
     // The bareness reading cannot see it (the ask is lexically bare); the
     // nomination's own argument can. Refused, so the route-door-closed retry
     // asks the model for the answer it meant.
-    if (typeof route.n === "number" && Number.isFinite(route.n) && route.n < 2) return undefined;
+    if (typeof route.n === "number" && Number.isFinite(route.n) && route.n < 2) return refuse(`an enumeration of one is not an enumeration (n = ${route.n})`);
     const n = typeof route.n === "number" && Number.isFinite(route.n) && route.n > 0 ? route.n : 10;
-    return composeListing(roster, n);
+    const listed = composeListing(roster, n);
+    if (listed === undefined) return refuse("no set to list — the ask qualifies none, and no roster was shown before");
+    return { ok: true, ...listed };
   }
   if (route.routeId === "profile") {
     const raw = typeof route.entityId === "string" ? route.entityId.toLowerCase().trim().replace(/\s+/g, "-") : "";
-    if (!world.registry.speciesIds.includes(raw)) return undefined;
+    if (!world.registry.speciesIds.includes(raw)) return refuse(`"${raw}" is not a certified species id`);
     // A profile carries no learnset: an ask that names a move is asking
     // about the move, and the species' nine facts cannot answer it.
     const moveHaystack = ` ${currentAsk.toLowerCase()} `;
     const namesMove = world.registry.moveIds.some((id) =>
       new RegExp(`\\b${id.split("-").join("[\\s-]?")}\\b`).test(moveHaystack),
     );
-    if (namesMove) return undefined;
-    return { claims: profileClaims(raw), rosters: [] };
+    if (namesMove) return refuse("the ask names a move — a profile carries no learnset");
+    return { ok: true, claims: profileClaims(raw), rosters: [] };
   }
-  return undefined;
+  return refuse(`no route is named "${route.routeId}"`);
 }
 
 /**
@@ -2065,13 +2111,12 @@ function applyLinking(
     } else if (retryable && deps.feedback === true) {
       const linkedName = contradiction.linked?.name ?? "no field";
       const names = contradiction.suggested.map((field) => field.name).join(" or ");
+      const reason = `driver/ambiguous-field: "${contradiction.phrase}" was read as ${linkedName} but carries the words of ${names}`;
       return {
-        state: ledgerStep({ ...state, linking: gauge }, deps.now(), "driver", "linking/carried-back", `"${contradiction.phrase}" was read as ${linkedName} but carries the words of ${names} — carried back to the model once`),
+        state: ledgerStep({ ...state, linking: gauge }, deps.now(), "driver", "linking/carried-back", `"${contradiction.phrase}" was read as ${linkedName} but carries the words of ${names} — carried back to the model once`, undefined, [reason]),
         claims: [],
         verdict: "retry",
-        feedback: [
-          `driver/ambiguous-field: "${contradiction.phrase}" was read as ${linkedName} but carries the words of ${names} — answer every reading the records hold, each as its own claim, and link the phrase to each field it may mean`,
-        ],
+        feedback: [`${reason} — answer every reading the records hold, each as its own claim, and link the phrase to each field it may mean`],
       };
     }
   }
@@ -2134,7 +2179,7 @@ function applyLinking(
   // A nomination the executor refuses is no answer (found live 2026-09-11:
   // "How many PP does Psychic have?" came back as a refused route beside one
   // off-ask claim, and the emptied reply was passed instead of carried back).
-  const routeRefused = decode.route !== undefined && executeRoute(world, state, decode.route) === undefined;
+  const routeRefused = decode.route !== undefined && !executeRoute(world, state, decode.route).ok;
   const routeStands = decode.route !== undefined && !routeRefused;
   const answersRemain = linked.claims.length > 0 || routeStands;
   // The boundary is about a certified subject: "how tall is Onix?" is
@@ -2216,8 +2261,14 @@ function applyLinking(
           : []),
         "If a reviewed lesson squarely answers the question, teach that lesson; if a certified subject and field answer it, name them and link the field; otherwise reply with no claims at all.",
       ];
-      const codes = reasons.filter((line) => line.startsWith("driver/")).map((line) => line.split(":")[0]!);
-      return { state: ledgerStep(next, deps.now(), "driver", "reply/carried-back", `the reply was emptied (${codes.join(", ")}) — carried back to the model once`), claims: [], verdict: "retry", feedback: reasons };
+      const named = reasons.filter((line) => line.startsWith("driver/"));
+      const codes = named.map((line) => line.split(":")[0]!);
+      return {
+        state: ledgerStep(next, deps.now(), "driver", "reply/carried-back", `the reply was emptied (${codes.join(", ")}) — carried back to the model once`, undefined, named),
+        claims: [],
+        verdict: "retry",
+        feedback: reasons,
+      };
     }
     if (unavailable.length > 0) return { state: next, claims: [], verdict: aboutRecords ? "boundary" : "off-domain" };
     if (asked.length === 0) {
@@ -2616,7 +2667,9 @@ async function answer(
         ...(deps.suggest === undefined ? {} : { suggest: deps.suggest }),
         }),
       );
-      // Both calls' usage rides on the step; the retry is counted below.
+      // Both calls' usage rides on the step; the retry is counted below, and
+      // the nomination it answered is already on the ledger.
+      state = fallback.state;
       step = { ...fallback.step, usage: fallback.usage };
       stepRetried = fallback.retried;
       stepRefusedListing = fallback.refusedListing;
@@ -2641,7 +2694,7 @@ async function answer(
     deps.now(),
     "model",
     "model/answer",
-    `${describeReply(step)}${stepRetried ? " — after a refused nomination, re-asked with the route door shut" : ""}`,
+    `${describeReply(step)}${stepRetried ? " — the reply with the route door shut" : ""}`,
   );
   if (stepRefusedListing) withUsage = tallyListing(withUsage, "stoodDown");
 
@@ -2675,7 +2728,7 @@ async function answer(
         ...(deps.suggest === undefined ? {} : { suggest: deps.suggest }),
       });
     } catch {
-      withUsage = { ...withUsage, providerErrors: withUsage.providerErrors + 1 };
+      withUsage = ledgerStep({ ...withUsage, providerErrors: withUsage.providerErrors + 1 }, deps.now(), "model", "model/retry-failed", RETRY_FAILED);
     }
     withUsage = {
       ...withUsage,
@@ -2687,7 +2740,13 @@ async function answer(
       // The provider failed on the round: the first reply's honest reading stands.
       groomed = groom(world, withUsage, deps, step, currentAsk, openingWords, exchange, false);
     } else {
-      withUsage = { ...withUsage, usage: addUsage(withUsage.usage, again.usage), folds: withUsage.folds + (again.decode.ok ? again.decode.folds : 0) };
+      withUsage = ledgerStep(
+        { ...withUsage, usage: addUsage(withUsage.usage, again.usage), folds: withUsage.folds + (again.decode.ok ? again.decode.folds : 0) },
+        deps.now(),
+        "model",
+        "model/retry",
+        `${describeReply(again)} — the reply to the carry-back`,
+      );
       groomed = groom(world, withUsage, deps, again, currentAsk, openingWords, exchange, false);
     }
     if (groomed.kind === "retry") throw new Error("unreachable: an un-retryable groom asked to retry");
@@ -2726,7 +2785,17 @@ async function answer(
   if (reuse?.routed !== true && deps.feedback === true && !carriedBack && feedbackEligible(ran.record)) {
     const violations = ran.record.outcome.status === "denied" ? ran.record.outcome.violations : [];
     const codes = violations.map(denialCode);
-    withUsage = ledgerStep(withUsage, deps.now(), "kernel", "verdict/denied", `the kernel denied the draft: ${codes.join(", ")} — carried back to the model once`);
+    // The kernel's own messages ride on the step, so the trail shows what was
+    // sent back — "gym-badge" is not a certified species — not just a code.
+    withUsage = ledgerStep(
+      withUsage,
+      deps.now(),
+      "kernel",
+      "verdict/denied",
+      `the kernel denied the draft: ${codes.join(", ")} — carried back to the model once`,
+      undefined,
+      violations.map((item) => `${denialCode(item)}: ${item.message}`),
+    );
     let again: AnswerStep | undefined;
     try {
       again = await proposeAnswer({
@@ -2747,16 +2816,22 @@ async function answer(
     } catch {
       // The first denial is a complete, honest record; a provider that fails
       // on the retry files it as it stands, and the failure is counted.
-      withUsage = { ...withUsage, providerErrors: withUsage.providerErrors + 1 };
+      withUsage = ledgerStep({ ...withUsage, providerErrors: withUsage.providerErrors + 1 }, deps.now(), "model", "model/retry-failed", RETRY_FAILED);
     }
     if (again !== undefined) {
-      withUsage = {
-        ...withUsage,
-        usage: addUsage(withUsage.usage, again.usage),
-        folds: withUsage.folds + (again.decode.ok ? again.decode.folds : 0),
-        feedbackRetries: withUsage.feedbackRetries + 1,
-        feedbackDenials: [...withUsage.feedbackDenials, ...codes],
-      };
+      withUsage = ledgerStep(
+        {
+          ...withUsage,
+          usage: addUsage(withUsage.usage, again.usage),
+          folds: withUsage.folds + (again.decode.ok ? again.decode.folds : 0),
+          feedbackRetries: withUsage.feedbackRetries + 1,
+          feedbackDenials: [...withUsage.feedbackDenials, ...codes],
+        },
+        deps.now(),
+        "model",
+        "model/retry",
+        `${describeReply(again)} — the reply to the carry-back`,
+      );
       const regroomed = groom(world, withUsage, deps, again, currentAsk, openingWords, exchange, false);
       if (regroomed.kind === "settled") return regroomed.state;
       if (regroomed.kind === "retry") throw new Error("unreachable: an un-retryable groom asked to retry");
@@ -2839,27 +2914,30 @@ function groom(
   if (linked.verdict === "boundary") return { kind: "settled", state: teachRecordsBoundary(state, deps, transactionId, establishedAt) };
   const decode = { ...step.decode, draft: { ...step.decode.draft, claims: linked.claims } };
 
-  if (decode.route !== undefined && executeRoute(world, state, decode.route) === undefined && decode.draft.claims.length === 0) {
-    // A refused nomination with nothing beside it: the same honest pass an
-    // empty reply earns, with the countable line in the detail register.
-    return honestPass(state, "the model nominated a route the driver refused, and the reply carried nothing else — nothing was committed");
-  }
   // A nomination at the scoped hop composes here too — same door, same
   // validation, same kernel downstream; an invalid one is simply ignored.
   const nominated = decode.route !== undefined ? executeRoute(world, state, decode.route) : undefined;
-  if (decode.route !== undefined) {
+  if (decode.route !== undefined && nominated !== undefined) {
     state = ledgerStep(
       state,
       deps.now(),
       "driver",
-      nominated !== undefined ? "route/served" : "route/refused",
-      nominated !== undefined ? `the ${decode.route.routeId} route composed ${nominated.claims.length} claim(s)` : `the ${decode.route.routeId} nomination was refused by its guard`,
+      nominated.ok ? "route/served" : "route/refused",
+      nominated.ok
+        ? `the ${decode.route.routeId} route composed ${nominated.claims.length} claim(s)`
+        : `the ${decode.route.routeId} nomination was refused by its guard: ${nominated.reason}`,
     );
   }
-  if (decode.route?.routeId === "listing") {
-    state = tallyListing(state, nominated !== undefined ? "served" : "stoodDown");
+  if (nominated !== undefined && !nominated.ok && decode.draft.claims.length === 0) {
+    // A refused nomination with nothing beside it: the same honest pass an
+    // empty reply earns, with the countable line in the detail register.
+    return honestPass(state, "the model nominated a route the driver refused, and the reply carried nothing else — nothing was committed");
   }
-  const decoded = nominated !== undefined ? { ...decode.draft, claims: nominated.claims, rosters: nominated.rosters } : decode.draft;
+  const served = nominated?.ok === true ? nominated : undefined;
+  if (decode.route?.routeId === "listing") {
+    state = tallyListing(state, served !== undefined ? "served" : "stoodDown");
+  }
+  const decoded = served !== undefined ? { ...decode.draft, claims: served.claims, rosters: served.rosters } : decode.draft;
   // A model that deflected a gated advisory ask into adjacent facts gets the
   // on-target answer appended; one that addressed the species advice-wise —
   // including by proposing the gated advice the kernel will deny — is left

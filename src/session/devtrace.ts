@@ -16,6 +16,7 @@
  */
 
 import type { Completion, CompletionRequest, ModelProvider, Usage } from "../harness/provider.js";
+import { ledgerOf } from "./ledger.js";
 import type { SessionState } from "./session.js";
 
 /** One model call as the tap saw it: the request, what came back (or what
@@ -123,7 +124,8 @@ export function agentReport(meta: DevTraceMeta, state: SessionState, calls: read
     what:
       "A dogfooding trace of the Indigo Accord live session: every model call " +
       "(prompt, response, latency, usage), the recorded transcript, every filed " +
-      "transaction with its stage verdicts, and the driver's own notes. " +
+      "transaction with its stage verdicts, the driver's ledger (every step of " +
+      "every exchange, on its lane, in fixed wording) and the driver's own notes. " +
       "Records replay via replayTransaction against the named snapshot and pack.",
     meta,
     phase: state.phase.kind,
@@ -141,6 +143,9 @@ export function agentReport(meta: DevTraceMeta, state: SessionState, calls: read
     modelCalls: calls,
     transcript: state.transcript,
     records: state.records,
+    // The ledger, closed exchanges then the open one: an agent reading the
+    // trace file gets the same trail the page draws, steps and lines alike.
+    ledger: ledgerOf(state, ""),
     notes: state.notes,
   };
 }

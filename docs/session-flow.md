@@ -306,10 +306,20 @@ is covered by offline tests with scripted models:
   conversation writes the same ledger twice
 - the step trail (`src/ui/trail.ts`, issue #158): the ledger and the
   record projected into one laned sequence per exchange, drawn in the live
-  page's console and dev view (each model call's prompt and reply under the
-  step it preceded) and beside the run ledger's console — reconstructed
-  from the record alone, and labelled so, for runs filed before the ledger
-  existed; every filed run in `runs/` renders without a missing step
+  page's side pane — the dev view (each model call's prompt and reply under
+  the step it preceded) and the compliance console, on tabs — and beside
+  the run ledger's console — reconstructed from the record alone, and
+  labelled so, for runs filed before the ledger existed; every filed run
+  in `runs/` renders without a missing step
+- a round sent back (the nomination the driver refused and re-asked with
+  the door shut, the denial the kernel carried back, the reply the driver
+  emptied): three steps on three lanes — the reply, the refusal in the
+  refuser's own words (`route/refused`, `verdict/denied` with the kernel's
+  messages, `reply/carried-back` with the driver's reasons), the reply that
+  came after (`model/retry`, or `model/retry-failed` when the provider
+  dropped the round) — stamped between the calls, so the dev view's first
+  call lands under the first reply and the second under the second; the
+  chat says the same under the answer, read from the ledger
 
 And the nondeterministic list is §3's six rows. That asymmetry is the
 architecture: usefulness lives in the amber nodes and is measured;

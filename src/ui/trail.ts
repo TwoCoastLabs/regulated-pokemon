@@ -104,7 +104,7 @@ const OPEN_CODES: ReadonlySet<string> = new Set([
 /** The tone a code carries. Refusals are read by suffix so a new denial
  * code the ledger grows is coloured right before anyone lists it here. */
 export function toneOf(code: string): StepTone {
-  if (code.endsWith("/denied") || code.endsWith("/refused") || code === "note/error") return "refused";
+  if (code.endsWith("/denied") || code.endsWith("/refused") || code.endsWith("failed") || code === "note/error") return "refused";
   if (OK_CODES.has(code)) return "ok";
   if (OPEN_CODES.has(code)) return "open";
   return "plain";
@@ -134,7 +134,9 @@ export function trailFromLedger(ledger: ExchangeLedger, records: readonly Transa
       text: step.text,
       ...(step.count === undefined ? {} : { count: step.count }),
       tone: toneOf(step.code),
-      lines: [],
+      // The refuser's own words, when the step carries them — the kernel's
+      // messages behind a denial, the driver's reasons behind a carry-back.
+      lines: step.lines ?? [],
       violations,
       calls: [],
     };
@@ -343,6 +345,38 @@ export function trailsOfRun(run: HarnessRun): readonly Trail[] {
 /** A live session's trails: every closed exchange and the open one. */
 export function trailsOfSession(state: Ledgered & { records: readonly Transaction[] }): readonly Trail[] {
   return ledgerOf(state, "").map((ledger) => trailFromLedger(ledger, state.records));
+}
+
+/** The steps on which a reply was sent back for another: the kernel's
+ * denial carried back, the driver's refusals carried back, a nomination
+ * refused with the door then shut. Every one of these cost one more model
+ * call, and the reply that shipped is the one that came after. */
+const SENT_BACK_CODES: ReadonlySet<string> = new Set(["verdict/denied", "reply/carried-back", "linking/carried-back", "route/refused"]);
+
+/** One round the exchange sent back: who refused, in what words. */
+export interface SentBack {
+  /** `kernel` for a verdict the kernel gave; `driver` for the driver's own guards. */
+  by: "kernel" | "driver";
+  code: string;
+  text: string;
+  /** The refuser's reasons, `<code>: <message>` where the step carries them. */
+  reasons: readonly string[];
+}
+
+/**
+ * The rounds an exchange sent back before the reply that shipped — read from
+ * the ledger, so the chat can say "the first draft was refused, this is the
+ * second" in the player's register without narrating anything: a step is a
+ * sent-back round only if the driver recorded one, and the reasons are the
+ * refuser's own lines. A `route/refused` that ended the exchange on a pass
+ * (no retry followed) is still a refusal the trainer should see.
+ */
+export function sentBack(ledger: ExchangeLedger): readonly SentBack[] {
+  return ledger.steps.flatMap((step) =>
+    SENT_BACK_CODES.has(step.code)
+      ? [{ by: step.lane === "kernel" ? ("kernel" as const) : ("driver" as const), code: step.code, text: step.text, reasons: step.lines ?? [] }]
+      : [],
+  );
 }
 
 /**

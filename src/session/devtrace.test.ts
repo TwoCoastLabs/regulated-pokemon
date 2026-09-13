@@ -99,6 +99,9 @@ describe("the agent report", () => {
     expect(report.phase).toBe("gathering");
     expect(report.modelCalls).toHaveLength(1);
     expect(report.records).toEqual([]);
+    // The ledger rides on the report: an agent reading the trace file gets
+    // the same trail the page draws. Nothing said yet, so nothing on it.
+    expect(report.ledger).toEqual([]);
     expect(report.notes).toEqual([]);
     // The report must round-trip as JSON — it exists to be pasted.
     expect(JSON.parse(JSON.stringify(report))).toEqual(report);
