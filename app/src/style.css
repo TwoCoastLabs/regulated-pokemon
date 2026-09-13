@@ -2105,6 +2105,53 @@ body {
   gap: 2px;
 }
 
+/* The certified manifest under the filing step: a fold, then a fold per
+   claim, then the lines it was formed from. */
+.trail-claims {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  font-size: 11px;
+}
+
+.trail-claims > summary,
+.trail-claim > details > summary {
+  cursor: pointer;
+  color: var(--indigo);
+}
+
+.trail-claim-list {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0 0 0 10px;
+  display: grid;
+  gap: 3px;
+  border-left: 1px solid var(--line);
+}
+
+.trail-claim-summary {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.trail-scale {
+  margin-left: 8px;
+  padding: 0 6px;
+  border: 1px solid var(--indigo);
+  border-radius: 999px;
+  color: var(--indigo);
+  white-space: nowrap;
+}
+
+.trail-claim-lines {
+  list-style: none;
+  margin: 3px 0 2px;
+  padding: 0 0 0 12px;
+  display: grid;
+  gap: 2px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
 .trail-denials {
   grid-column: 1 / -1;
   list-style: none;

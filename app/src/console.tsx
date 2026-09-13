@@ -14,6 +14,7 @@ import {
   type ViolationView,
 } from "../../src/ui/viewmodel.js";
 import { Trails } from "./trail.js";
+import { claimSourceFor } from "./world.js";
 
 export function Stamp(props: { violation: ViolationView }) {
   const { violation } = props;
@@ -50,7 +51,7 @@ export function Console(props: { artifact: HarnessArtifact; run: HarnessRun }) {
           and their trail is reconstructed from it and says so. */}
       <section key={`trail-${transaction?.id ?? run.scenarioId + run.providerId + String(run.repetition)}`}>
         <h2>How it was made</h2>
-        <Trails trails={trailsOfRun(run)} who="trainer" empty={`No steps to show — ${run.detail}.`} />
+        <Trails trails={trailsOfRun(run, claimSourceFor(props.artifact.world.snapshotId))} who="trainer" empty={`No steps to show — ${run.detail}.`} />
       </section>
 
       <section>

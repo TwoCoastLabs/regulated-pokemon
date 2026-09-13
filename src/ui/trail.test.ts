@@ -266,6 +266,19 @@ describe("every filed run in runs/ renders a trail without a missing step (the i
         for (const step of trail.steps) expect(step.at.length).toBeGreaterThan(0);
         const ats = trail.steps.map((step) => step.at);
         expect([...ats].sort()).toEqual(ats);
+        // The step that certified an answer opens onto every claim and roster
+        // the manifest carries, each claim with its lines; a denied run has
+        // no manifest and no such step.
+        const opened = trail.steps.filter((step) => step.manifest !== undefined);
+        if (transaction.manifest === undefined) {
+          expect(opened).toHaveLength(0);
+        } else {
+          expect(opened, `${name} ${transaction.id}`).toHaveLength(1);
+          expect(opened[0]!.lane).toBe("kernel");
+          expect(opened[0]!.manifest!.claims).toHaveLength(transaction.manifest.claims.length);
+          expect(opened[0]!.manifest!.rosters).toHaveLength(transaction.manifest.rosters.length);
+          expect(opened[0]!.manifest!.claims.every((claim) => claim.lines.length >= 1)).toBe(true);
+        }
       }
     }
   });

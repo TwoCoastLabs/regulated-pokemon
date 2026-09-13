@@ -10,7 +10,80 @@
  * from the filed record, and labelled so).
  */
 import type { ModelCallTrace } from "../../src/session/devtrace.js";
+import type { ClaimView, ManifestView, RosterView } from "../../src/ui/claims.js";
 import { laneLabel, type Trail, type TrailStep } from "../../src/ui/trail.js";
+
+/**
+ * The certified manifest under the filing step, disclosed progressively:
+ * one fold for the whole answer (how many claims, how many rosters), one
+ * per claim (its line and its scale — "1 of 9"), and under each the lines
+ * it was formed from — the ranked field, the set's members, the two values
+ * compared. Read from the record via src/ui/claims.ts; nothing is computed
+ * here.
+ */
+function ClaimItem(props: { claim: ClaimView }) {
+  const { claim } = props;
+  const head = (
+    <>
+      <span class="trail-claim-summary mono">{claim.summary}</span>
+      {claim.scale !== undefined && (
+        <span class="trail-scale mono" title="the scale this claim worked at, in the record's own numbers">
+          {claim.scale}
+        </span>
+      )}
+    </>
+  );
+  if (claim.lines.length === 0) return <li class="trail-claim">{head}</li>;
+  return (
+    <li class="trail-claim">
+      <details>
+        <summary>{head}</summary>
+        <ul class="trail-claim-lines mono">
+          {claim.lines.map((line) => (
+            <li>{line}</li>
+          ))}
+        </ul>
+      </details>
+    </li>
+  );
+}
+
+function RosterItem(props: { roster: RosterView }) {
+  const { roster } = props;
+  return (
+    <li class="trail-claim">
+      <details>
+        <summary>
+          <span class="trail-claim-summary mono">roster {roster.id} — species {roster.criteria}</span>
+          <span class="trail-scale mono">{roster.scale}</span>
+        </summary>
+        <ul class="trail-claim-lines mono">
+          <li>{roster.members.join(", ")}</li>
+        </ul>
+      </details>
+    </li>
+  );
+}
+
+export function ManifestDetails(props: { view: ManifestView }) {
+  const { view } = props;
+  return (
+    <details class="trail-claims">
+      <summary class="mono">
+        {view.claims.length} claim{view.claims.length === 1 ? "" : "s"}
+        {view.rosters.length > 0 ? ` · ${view.rosters.length} roster${view.rosters.length === 1 ? "" : "s"}` : ""} — how each was formed
+      </summary>
+      <ul class="trail-claim-list">
+        {view.claims.map((claim) => (
+          <ClaimItem claim={claim} />
+        ))}
+        {view.rosters.map((roster) => (
+          <RosterItem roster={roster} />
+        ))}
+      </ul>
+    </details>
+  );
+}
 
 /** One model call as the tap saw it: prompt, reply, latency, cost. */
 export function DevCall(props: { call: ModelCallTrace }) {
@@ -91,6 +164,7 @@ function Step(props: { step: TrailStep; who: Who }) {
           ))}
         </ul>
       )}
+      {step.manifest !== undefined && <ManifestDetails view={step.manifest} />}
       {step.calls.map((call) => (
         <DevCall call={call} />
       ))}

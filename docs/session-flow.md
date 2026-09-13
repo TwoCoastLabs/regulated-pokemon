@@ -320,6 +320,16 @@ is covered by offline tests with scripted models:
   dropped the round) — stamped between the calls, so the dev view's first
   call lands under the first reply and the second under the second; the
   chat says the same under the answer, read from the ledger
+- the claim view (`src/ui/claims.ts`): under the step that certified an
+  answer, each claim's scale in the record's own numbers — a ranking is
+  "1 of N" with N the roster's cardinality, a count is "N members", a
+  comparison "2 values", a matchup "N types" — and the lines it was formed
+  from: the ranked field in the direction the kernel ranked it (re-resolved
+  from the registry when the page holds the same snapshot, else named as
+  the kernel's to re-resolve), the set's definition and members, the two
+  values and the lead, the finding, a lesson's size and opening; every
+  roster the record carries, as the closed set it is. Nothing is derived
+  that `compileManifest` did not derive first
 
 And the nondeterministic list is §3's six rows. That asymmetry is the
 architecture: usefulness lives in the amber nodes and is measured;
