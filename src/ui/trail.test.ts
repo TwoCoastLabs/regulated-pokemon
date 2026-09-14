@@ -59,6 +59,9 @@ describe("tone and lane", () => {
     expect(toneOf("note/error")).toBe("refused");
     expect(toneOf("model/retry-failed")).toBe("refused");
     expect(toneOf("route/withdrawn")).toBe("refused");
+    expect(toneOf("memory/followed")).toBe("ok");
+    expect(toneOf("memory/empty")).toBe("plain");
+    expect(toneOf("memory/departed")).toBe("plain");
     expect(toneOf("model/retry")).toBe("plain");
     expect(toneOf("any/new-thing-denied")).toBe("plain");
     expect(toneOf("record/answered")).toBe("ok");

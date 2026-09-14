@@ -73,6 +73,15 @@ A term coined during the work is defined before it is used.
   something, record it there *with its numbers* in the same change; a claim
   without a number is a note, not a finding. It is the evidence base for
   anything published externally, so provenance is stated even when it is weak.
+- **The precedent door:** `npm run precedents:promote -- <coverage
+  artifact.json>` turns a filed bank run into the operator's memory
+  ([docs/precedent.md](docs/precedent.md), epic #169): only runs the kernel
+  accepted *and* the oracle passed, values stripped, into
+  `data/precedents/<pack id>.v1.json`, which the live page, the tracer and
+  the banks read and nothing on the live path writes. Key-free and
+  deterministic; the diff is a reviewed PR. `coverage:map -- --precedents
+  nearest|fixed` runs the door as a lever (the fixed arm is the few-shot
+  control); `session:trace -- --no-memory` is the off arm on the porch.
 - **Results page:** `npm run harness:results` renders a filed run artifact as
   Markdown (newest in `runs/` by default; `-- <artifact.json>` for one,
   `-- --out docs/results.md` to file it). Pure and key-free — it only reads an
@@ -106,6 +115,12 @@ A term coined during the work is defined before it is used.
   held open (`DoorState`), and the dev view draws them as a strip under the
   call, marking what changed since the call before — a door withdrawn, a
   reason fed back — with a legend that draws the trick once. The
+  precedent door is one of them, with an **empty** state drawn apart from
+  shut (open, and nothing near enough to show: the activation ceiling,
+  visible), a panel under the call listing what was held (ids and kinds,
+  no values), and a **memory panel** showing the store as loaded and the
+  session's accepted exchanges a reviewer can mark for promotion — to a
+  file for a PR, never to the store the tab reads. The
   filing step opens onto the certified manifest (`src/ui/claims.ts`): each
   claim's scale in the record's own numbers ("1 of 9", "42 members", "2
   values") and the lines it was formed from — the ranked field, the set's

@@ -28,6 +28,16 @@ export const COVERAGE_ARTIFACT_SCHEMA_VERSION = 1;
 /** The two kinds of coverage run, doubling as the filename suffix. */
 export type CoverageLabel = "coverage" | "coverage-robustness";
 
+/** The precedent door as a run held it — recorded with the number, like every lever. */
+export interface PrecedentLever {
+  mode: "nearest" | "fixed";
+  store: string;
+  digest: string;
+  k: number;
+  threshold: number;
+  fixed?: readonly string[];
+}
+
 export interface CoverageModel {
   /** The provider id the runs carry (`coverage:<slug>`). */
   id: string;
@@ -73,6 +83,13 @@ export interface CoverageArtifact {
   clarify?: boolean;
   /** Set when the model could offer follow-up suggestions (R3b step 4). */
   suggest?: boolean;
+  /**
+   * The precedent door, when it was open (docs/precedent.md): which arm
+   * (`nearest` retrieves per ask, `fixed` holds the same few on every call),
+   * the store's path and digest, the levers, and the fixed ids when the
+   * arm was fixed — so a published number names the memory it ran with.
+   */
+  precedents?: PrecedentLever;
   /** Passes requested over the selected entries. The paid design runs the full
    * bank at 1 and the `should-refuse` slice at 3 — two artifacts, each honest
    * about which it is. */
@@ -127,6 +144,8 @@ export interface CoverageArtifactInput {
   clarify?: boolean;
   /** Set when the model could offer follow-up suggestions (R3b step 4). */
   suggest?: boolean;
+  /** The precedent door, when it was open (docs/precedent.md). */
+  precedents?: PrecedentLever;
   repetitions: number;
   dispositions?: readonly Disposition[];
   stoppedEarly: boolean;
@@ -160,6 +179,7 @@ export function buildCoverageArtifact(input: CoverageArtifactInput): CoverageArt
     ...(input.feedback === undefined ? {} : { feedback: input.feedback }),
     ...(input.clarify === undefined ? {} : { clarify: input.clarify }),
     ...(input.suggest === undefined ? {} : { suggest: input.suggest }),
+    ...(input.precedents === undefined ? {} : { precedents: input.precedents }),
     repetitions: input.repetitions,
     ...(input.dispositions === undefined ? {} : { dispositions: input.dispositions }),
     stoppedEarly: input.stoppedEarly,
@@ -187,7 +207,7 @@ export function renderCoverageArtifact(artifact: CoverageArtifact): string {
     "<!-- Generated from a coverage artifact; do not hand-edit. Regenerate with `npm run coverage:map`. -->",
     "",
     `Generated from a **${artifact.label}** run started \`${artifact.startedAt}\` on \`${artifact.model.slug}\`, ` +
-      `${artifact.retrieval ? "**grounded by retrieval** (only the facts each question needs)" : artifact.grounded ? "**grounded** (the whole certified registry)" : "ungrounded (the proposer answered from its own knowledge)"}${artifact.gatedGrammar ? ", **gated grammar** (the schema narrowed to each question's nominated kinds)" : ""}${artifact.repair ? ", **repair** (strip-assertion resubmit on fact-mismatch denials)" : ""}${artifact.profile === true ? ", **profile** (scope set on the panel before the opener)" : ""}${artifact.feedback === true ? ", **feedback** (a named denial carried back to the model once)" : ""}${artifact.clarify === true ? ", **clarify** (the model may ask its own question)" : ""}${artifact.suggest === true ? ", **suggest** (the model may offer follow-ups)" : ""}${artifact.raw === undefined ? "" : ", **raw** (the same model ungoverned beside it, for the governance tax)"}, ` +
+      `${artifact.retrieval ? "**grounded by retrieval** (only the facts each question needs)" : artifact.grounded ? "**grounded** (the whole certified registry)" : "ungrounded (the proposer answered from its own knowledge)"}${artifact.gatedGrammar ? ", **gated grammar** (the schema narrowed to each question's nominated kinds)" : ""}${artifact.repair ? ", **repair** (strip-assertion resubmit on fact-mismatch denials)" : ""}${artifact.profile === true ? ", **profile** (scope set on the panel before the opener)" : ""}${artifact.feedback === true ? ", **feedback** (a named denial carried back to the model once)" : ""}${artifact.clarify === true ? ", **clarify** (the model may ask its own question)" : ""}${artifact.suggest === true ? ", **suggest** (the model may offer follow-ups)" : ""}${artifact.precedents === undefined ? "" : `, **precedents: ${artifact.precedents.mode}** (${artifact.precedents.mode === "fixed" ? "the same few accepted exchanges shown on every call" : `the nearest accepted exchanges shown as examples, k=${artifact.precedents.k}, threshold ${artifact.precedents.threshold}`}; store \`${artifact.precedents.digest}\`)`}${artifact.raw === undefined ? "" : ", **raw** (the same model ungoverned beside it, for the governance tax)"}, ` +
       `${artifact.repetitions} repetition(s)${artifact.stoppedEarly ? " — **stopped early** on an enforcement escalation; the runs below are fewer than requested" : ""}; ${scope}.`,
     "",
     "## Provenance",

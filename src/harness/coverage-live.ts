@@ -32,12 +32,14 @@ import { resolve } from "node:path";
 
 import { fileArtifact, type WriteFile } from "./artifact.js";
 import { CENTER_BANK_PATH, readBank } from "./bank.js";
-import { phrasingsOf, runBank, runIntentRobustness, type IntentRobustness, type RecordedBankRun } from "./bank-run.js";
+import { type BankRunOptions, phrasingsOf, runBank, runIntentRobustness, type IntentRobustness, type RecordedBankRun } from "./bank-run.js";
+import { DEFAULT_PRECEDENT_LEVERS, defaultFixedIds, loadPrecedentStore, type PrecedentStore, precedentStoreDigest } from "../memory/precedent.js";
 import { type RawBankRun, runRawBank } from "./bank-raw.js";
 import {
   buildCoverageArtifact,
   type CoverageArtifact,
   latestCoverageArtifact,
+  type PrecedentLever,
   renderCoverageArtifact,
 } from "./coverage-artifact.js";
 import {
@@ -102,6 +104,14 @@ export interface CoverageArgs {
    * published as-is and metered afterwards — so the artifact carries the
    * governance tax (docs/generalization.md §11). Recorded. */
   raw: boolean;
+  /** The precedent door (docs/precedent.md): `nearest` retrieves the store's
+   * closest accepted exchanges per ask; `fixed` holds the same few on every
+   * call — the few-shot control arm. Off when absent. Recorded. */
+  precedents?: "nearest" | "fixed";
+  /** The store file; defaults to the world's own under data/precedents/. */
+  precedentStore?: string;
+  /** The fixed arm's ids, when named; otherwise chosen once from the store. */
+  fixedPrecedents?: readonly string[];
   model?: string;
   limit?: number;
   ids?: readonly string[];
@@ -135,6 +145,9 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     clarify: boolean;
     suggest: boolean;
     raw: boolean;
+    precedents?: "nearest" | "fixed";
+    precedentStore?: string;
+    fixedPrecedents?: string[];
     model?: string;
     limit?: number;
     ids?: string[];
@@ -196,6 +209,21 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
         break;
       case "--raw":
         args.raw = true;
+        break;
+      case "--precedents":
+        if (value !== "nearest" && value !== "fixed") args.errors.push(`--precedents needs "nearest" or "fixed", got ${value}`);
+        else args.precedents = value;
+        index++;
+        break;
+      case "--precedent-store":
+        if (value === undefined) args.errors.push("--precedent-store needs a path");
+        else args.precedentStore = value;
+        index++;
+        break;
+      case "--fixed-precedents":
+        if (value === undefined) args.errors.push("--fixed-precedents needs a comma-separated list of precedent ids");
+        else args.fixedPrecedents = value.split(",").map((id) => id.trim()).filter((id) => id !== "");
+        index++;
         break;
       case "--phrasings":
         args.phrasings = true;
@@ -289,10 +317,16 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
   if (args.repair && args.phrasings) {
     args.errors.push("--repair is not threaded through the robustness pass; run it on the coverage or dialogue banks");
   }
-  for (const [flag, on] of [["--profile", args.profile], ["--feedback", args.feedback], ["--clarify", args.clarify], ["--suggest", args.suggest], ["--raw", args.raw]] as const) {
+  for (const [flag, on] of [["--profile", args.profile], ["--feedback", args.feedback], ["--clarify", args.clarify], ["--suggest", args.suggest], ["--raw", args.raw], ["--precedents", args.precedents !== undefined]] as const) {
     if (on && (args.phrasings || args.dialogues)) {
       args.errors.push(`${flag} is threaded through the single-turn coverage run only; the robustness and dialogue banks do not carry it`);
     }
+  }
+  if (args.precedents === undefined && (args.precedentStore !== undefined || args.fixedPrecedents !== undefined)) {
+    args.errors.push("--precedent-store and --fixed-precedents only make sense with --precedents");
+  }
+  if (args.precedents === "nearest" && args.fixedPrecedents !== undefined) {
+    args.errors.push("--fixed-precedents names the fixed arm's examples; use --precedents fixed");
   }
   if (args.grounded && args.retrieval) {
     args.errors.push("--grounded (whole registry) and --retrieval (only what each question needs) are different grounding modes; pick one");
@@ -323,6 +357,9 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     out: args.out,
     help: args.help,
     errors: args.errors,
+    ...(args.precedents === undefined ? {} : { precedents: args.precedents }),
+    ...(args.precedentStore === undefined ? {} : { precedentStore: args.precedentStore }),
+    ...(args.fixedPrecedents === undefined ? {} : { fixedPrecedents: args.fixedPrecedents }),
     ...(args.model === undefined ? {} : { model: args.model }),
     ...(args.limit === undefined ? {} : { limit: args.limit }),
     ...(args.ids === undefined ? {} : { ids: args.ids }),
@@ -372,6 +409,12 @@ const USAGE = [
   "  --raw               also run the raw arm: the same entries, the same model, no kernel — each reply",
   "                      published as-is and metered afterwards. The artifact then carries the governance",
   "                      tax (governed beside raw, per disposition). Billed like a second leg; recorded.",
+  "  --precedents MODE   the precedent door (docs/precedent.md): 'nearest' shows each ask the store's closest",
+  "                      accepted exchanges as examples of which door to take; 'fixed' shows the same few on",
+  "                      every call (the few-shot control arm). A precedent made from the entry under test is",
+  "                      withheld. The store's digest and the levers are recorded with the number.",
+  "  --precedent-store P the store file (default: data/precedents/<pack id>.v1.json).",
+  "  --fixed-precedents  with --precedents fixed: the ids to hold (default: one lesson, one fact, one count).",
   "  --render [PATH]     render a filed coverage artifact (a file, or a directory to take the newest",
   "                      coverage artifact from; default runs/coverage/). Reads no clock, no key, no network.",
   "  --page PATH         with --render, write the page there instead of printing it.",
@@ -574,6 +617,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
         `  clarify:       ${args.clarify ? "yes — the model may ask its own question; the trainer answers from the oracle" : "no — the pack's questions only"}`,
         `  suggest:       ${args.suggest ? "yes — the model may offer follow-ups, shown uncertified" : "no — answers end where the certificate ends"}`,
         `  raw arm:       ${args.raw ? "yes — the same entries asked ungoverned beside it, for the governance tax (a second leg's cost)" : "no — governed only"}`,
+        `  precedents:    ${args.precedents === undefined ? "no — the door is shut" : args.precedents === "nearest" ? "nearest — the store's closest accepted exchanges shown per ask, the entry's own withheld" : "fixed — the same few accepted exchanges shown on every call"}`,
         `  model:         ${model}`,
         `  artifact:      filed under ${args.out}/`,
         `  add --live to run it against the model and bill your key.`,
@@ -601,6 +645,34 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
   let stoppedEarly = false;
   let raw: RawBankRun[] | undefined;
 
+  // The precedent door's store, loaded fail-closed against this world and
+  // pinned by digest in the artifact, so the number names the memory it
+  // ran with. A store that does not load refuses the run by name — a leg
+  // measured against a half-loaded memory would measure nothing.
+  let memory: { options: NonNullable<BankRunOptions["precedents"]>; lever: PrecedentLever } | undefined;
+  if (args.precedents !== undefined) {
+    const fs = options.fs ?? diskFs;
+    const path = args.precedentStore ?? resolve("data/precedents", `${world.pack.id}.v1.json`);
+    let store: PrecedentStore;
+    try {
+      store = loadPrecedentStore(JSON.parse(fs.readFile(path)), world);
+    } catch (error) {
+      return { lines: [`the precedent store at ${path} did not load: ${(error as Error).message}`], exitCode: 1 };
+    }
+    const fixed = args.precedents === "fixed" ? (args.fixedPrecedents ?? defaultFixedIds(store, world.registry.snapshot.id)) : undefined;
+    memory = {
+      options: { store, mode: args.precedents, levers: DEFAULT_PRECEDENT_LEVERS, ...(fixed === undefined ? {} : { fixed }) },
+      lever: {
+        mode: args.precedents,
+        store: path,
+        digest: precedentStoreDigest(store),
+        k: DEFAULT_PRECEDENT_LEVERS.k,
+        threshold: DEFAULT_PRECEDENT_LEVERS.threshold,
+        ...(fixed === undefined ? {} : { fixed }),
+      },
+    };
+  }
+
   if (args.phrasings) {
     reports = [];
     for (const entry of entries) reports.push(await runIntentRobustness(world, entry, provider, options.clock));
@@ -617,6 +689,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
         feedback: args.feedback,
         clarify: args.clarify,
         suggest: args.suggest,
+        ...(memory === undefined ? {} : { precedents: memory.options }),
       });
       runs.push(...sampled);
       if (sampled.some((run) => run.score.enforcementEscalation === true)) {
@@ -662,6 +735,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
     feedback: args.feedback,
     clarify: args.clarify,
     suggest: args.suggest,
+    ...(memory === undefined ? {} : { precedents: memory.lever }),
     repetitions: args.repetitions,
     ...(args.dispositions === undefined ? {} : { dispositions: args.dispositions }),
     stoppedEarly,

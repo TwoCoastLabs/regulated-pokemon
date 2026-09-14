@@ -52,6 +52,15 @@ export interface DoorState {
   clarify: boolean;
   /** Whether the model could offer follow-up suggestions. */
   suggest: boolean;
+  /**
+   * The precedents this call held — earlier accepted, on-target exchanges
+   * shown as worked examples of which door to take (docs/precedent.md).
+   * Held as data, not ids alone, so a trace shows what the model was shown
+   * without the store in hand: empty when the door was open and nothing
+   * scored above the threshold; absent when the door was shut, and on
+   * traces filed before the door existed.
+   */
+  precedents?: readonly { id: string; score: number; ask: string }[];
   /** Lines carried back from the previous reply to these words, in the
    * driver's fixed wording — empty on a first call. */
   feedback: readonly string[];

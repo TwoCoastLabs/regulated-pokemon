@@ -12,7 +12,9 @@
 import type { ModelCallTrace } from "../../src/session/devtrace.js";
 import type { ClaimView, ManifestView, RosterView } from "../../src/ui/claims.js";
 import { laneLabel, type Trail, type TrailStep } from "../../src/ui/trail.js";
+import { renderShape } from "../../src/memory/precedent.js";
 import { DoorRow } from "./doors.js";
+import { precedentById } from "./world.js";
 
 /** The call before a given one, by sequence number — so a call's door
  * strip can mark what the driver changed since the last call. */
@@ -90,6 +92,46 @@ export function ManifestDetails(props: { view: ManifestView }) {
   );
 }
 
+/**
+ * The precedents one call held (docs/precedent.md): one row per precedent —
+ * the ask in the trainer's own words, the overlap, the shape as it was
+ * shown, and where it came from — in the claim view's progressive style.
+ * Every row shows ids and kinds and no number, which is what makes "the
+ * model never sees a value" checkable by eye. The shape and the provenance
+ * come from the bundled store; a trace from another world shows the ask
+ * and the score alone.
+ */
+export function PrecedentPanel(props: { held: readonly { id: string; score: number; ask: string }[] }) {
+  if (props.held.length === 0) {
+    return <p class="precedent-empty fine">precedents: the door was open and no earlier ask scored above the threshold — the memory came up empty</p>;
+  }
+  return (
+    <details class="precedent-panel">
+      <summary class="fine">
+        {props.held.length} precedent{props.held.length === 1 ? "" : "s"} held — earlier accepted asks shown as examples of which door to take; ids and kinds, no values
+      </summary>
+      <ul class="precedent-rows">
+        {props.held.map((held) => {
+          const full = precedentById(held.id);
+          return (
+            <li>
+              <span class="mono">{held.id}</span> · overlap {held.score} · "{held.ask}"
+              {full !== undefined && (
+                <>
+                  <pre class="dev-text">{renderShape(full.shape)}</pre>
+                  <span class="fine">
+                    from {full.source.kind === "bank-run" ? `bank entry ${full.source.entryId ?? "?"}` : `session ${full.source.transactionId}`} · promoted by {full.promoted.by}, {full.promoted.at}
+                  </span>
+                </>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </details>
+  );
+}
+
 /** One model call as the tap saw it: prompt, reply, latency, cost. */
 export function DevCall(props: { call: ModelCallTrace; previous?: ModelCallTrace; taken?: string }) {
   const { call } = props;
@@ -104,6 +146,7 @@ export function DevCall(props: { call: ModelCallTrace; previous?: ModelCallTrace
       {call.doors !== undefined && (
         <DoorRow doors={call.doors} {...(previous === undefined ? {} : { previous })} {...(props.taken === undefined ? {} : { taken: props.taken })} />
       )}
+      {call.doors?.precedents !== undefined && <PrecedentPanel held={call.doors.precedents} />}
     <details class="dev-call">
       <summary class="mono">
         #{call.seq} {call.purpose}

@@ -8,6 +8,7 @@
 import type { ManifestContext } from "../../src/kernel/manifest.js";
 import { blockFor, curriculumRule } from "../../src/kernel/pack.js";
 import { type DemoWorld, loadDemoWorld, sabotageWorld } from "../../src/demo/script.js";
+import { loadPrecedentStore, type Precedent, type PrecedentStore } from "../../src/memory/precedent.js";
 import type { ClaimSource } from "../../src/ui/claims.js";
 
 const bundled = import.meta.glob("../../data/**/*.json", { eager: true, import: "default" });
@@ -26,6 +27,26 @@ let world: DemoWorld | undefined;
 export function demoWorld(): DemoWorld {
   world ??= loadDemoWorld(datum("snapshots/kanto-red-blue.json"), datum("accord-pack/v3.json"));
   return world;
+}
+
+let memory: PrecedentStore | null | undefined;
+
+/** The operator's precedent store for this world (docs/precedent.md) —
+ * the same vendored file the tracer and the banks read, bundled at build
+ * time and loaded fail-closed against the world; `undefined` when none is
+ * shipped. The live page reads it and never writes it. */
+export function precedentStore(): PrecedentStore | undefined {
+  if (memory === undefined) {
+    const { pack } = demoWorld();
+    const found = bundled[`../../data/precedents/${pack.id}.v1.json`];
+    memory = found === undefined ? null : loadPrecedentStore(found, demoWorld());
+  }
+  return memory ?? undefined;
+}
+
+/** One precedent by id, for the panel under a call that held it. */
+export function precedentById(id: string): Precedent | undefined {
+  return precedentStore()?.precedents.find((one) => one.id === id);
 }
 
 let source: ClaimSource | undefined;

@@ -15,7 +15,7 @@
  */
 import type { DoorState } from "../../src/harness/provider.js";
 
-type Chip = { label: string; state: string; tone: "open" | "closed" | "withdrawn" | "opened" | "fed-back" };
+type Chip = { label: string; state: string; tone: "open" | "closed" | "withdrawn" | "opened" | "fed-back" | "empty" };
 
 /** The chips for one call, each marked when it differs from the call before. */
 function chipsOf(doors: DoorState, previous: DoorState | undefined): Chip[] {
@@ -41,6 +41,16 @@ function chipsOf(doors: DoorState, previous: DoorState | undefined): Chip[] {
     });
   }
   if (routeIds.length === 0) chips.push({ label: "doors", state: "none offered", tone: "closed" });
+
+  // The precedent door (docs/precedent.md) has one state the others lack:
+  // empty — open, and nothing scored above the threshold. Drawn apart from
+  // shut on purpose: a front door that is open and never engages is the
+  // silent ceiling (lesson 6), and the strip is where it is seen.
+  const held = doors.precedents;
+  const heldBefore = previous?.precedents;
+  if (held === undefined) chips.push({ label: "precedents", state: "off", tone: "closed" });
+  else if (held.length === 0) chips.push({ label: "precedents", state: "empty", tone: "empty" });
+  else chips.push({ label: "precedents", state: `${held.length} held`, tone: heldBefore !== undefined && heldBefore.length === 0 ? "opened" : "open" });
 
   chips.push({ label: "clarify", state: doors.clarify ? "may ask" : "must answer", tone: changed(String(doors.clarify), previous === undefined ? undefined : String(previous.clarify), doors.clarify) });
   chips.push({ label: "suggest", state: doors.suggest ? "may suggest" : "no suggestions", tone: changed(String(doors.suggest), previous === undefined ? undefined : String(previous.suggest), doors.suggest) });
@@ -95,19 +105,21 @@ export function DoorRow(props: { doors: DoorState; previous?: DoorState; taken?:
           const x = 6 + index * slot;
           const isDoor = chip.label.startsWith("door: ");
           const name = isDoor ? chip.label.slice("door: ".length) : chip.label;
-          const open = chip.tone === "open" || chip.tone === "opened" || chip.tone === "fed-back";
+          const empty = chip.tone === "empty";
+          const open = chip.tone === "open" || chip.tone === "opened" || chip.tone === "fed-back" || empty;
           const taken = isDoor && props.taken === name;
           const stroke =
-            chip.tone === "withdrawn" ? "var(--seal)" : chip.tone === "opened" ? "var(--ledger)" : chip.tone === "fed-back" || taken ? "var(--model)" : open ? "var(--indigo)" : "var(--muted)";
-          const leafFill = taken ? "var(--model-tint)" : chip.tone === "withdrawn" ? "var(--seal-tint)" : chip.tone === "opened" ? "var(--ledger-tint)" : chip.tone === "fed-back" ? "var(--model-tint)" : open ? "var(--indigo-tint)" : "var(--line)";
+            chip.tone === "withdrawn" ? "var(--seal)" : chip.tone === "opened" ? "var(--ledger)" : chip.tone === "fed-back" || taken ? "var(--model)" : empty ? "var(--muted)" : open ? "var(--indigo)" : "var(--muted)";
+          const leafFill = taken ? "var(--model-tint)" : chip.tone === "withdrawn" ? "var(--seal-tint)" : chip.tone === "opened" ? "var(--ledger-tint)" : chip.tone === "fed-back" ? "var(--model-tint)" : empty ? "none" : open ? "var(--indigo-tint)" : "var(--line)";
           const cx = x + slot / 2;
           return (
             <g>
               {/* the frame */}
               <rect x={cx - 14} y={6} width={28} height={40} rx={2} fill="none" stroke={stroke} stroke-width={1.4} />
               {open ? (
-                // the leaf swung out: an open door
-                <path d={`M ${cx - 10} 10 L ${cx + 10} 3 L ${cx + 10} 43 L ${cx - 10} 46 Z`} fill={leafFill} stroke={stroke} stroke-width={1.2} />
+                // the leaf swung out: an open door — dashed when the door
+                // was open and nothing walked up to it (empty)
+                <path d={`M ${cx - 10} 10 L ${cx + 10} 3 L ${cx + 10} 43 L ${cx - 10} 46 Z`} fill={leafFill} stroke={stroke} stroke-width={1.2} {...(empty ? { "stroke-dasharray": "3 2" } : {})} />
               ) : (
                 // the leaf in its frame: a shut door
                 <rect x={cx - 10} y={10} width={20} height={32} fill={leafFill} stroke={stroke} stroke-width={1.2} />
@@ -157,7 +169,7 @@ export function DoorStrip(props: { doors: DoorState; previous?: DoorState }) {
   return (
     <ul class="door-strip" aria-label="the doors this call held open">
       {chips.map((chip) => (
-        <li class={`door door-${chip.tone}`} title={chip.tone === "withdrawn" ? "removed since the call before" : chip.tone === "opened" ? "added since the call before" : chip.tone === "fed-back" ? "carried back from the reply before" : undefined}>
+        <li class={`door door-${chip.tone}`} title={chip.tone === "withdrawn" ? "removed since the call before" : chip.tone === "opened" ? "added since the call before" : chip.tone === "fed-back" ? "carried back from the reply before" : chip.tone === "empty" ? "open, and nothing scored above the threshold" : undefined}>
           <span class="door-label">{chip.label}</span>
           <span class="door-state">{chip.state}</span>
         </li>
@@ -232,10 +244,11 @@ export function DoorLegend() {
           <g fill="currentColor" font-size="11" text-anchor="start">
             <text x="180" y="118">· certified rows (retrieval)</text>
             <text x="180" y="136">· grammar, gated to the ask</text>
-            <text x="180" y="154">· doors: listing · profile</text>
-            <text x="180" y="172">· leave to clarify · to suggest</text>
-            <text x="180" y="190">· feedback (on the one retry)</text>
-            <text x="180" y="214" font-style="italic">each an offer, none an order</text>
+            <text x="180" y="150">· doors: listing · profile</text>
+            <text x="180" y="166">· precedents: earlier accepted asks</text>
+            <text x="180" y="182">· leave to clarify · to suggest</text>
+            <text x="180" y="198">· feedback (on the one retry)</text>
+            <text x="180" y="218" font-style="italic">each an offer, none an order</text>
           </g>
           <g fill="currentColor" font-size="11" text-anchor="middle">
             <text x="620" y="60">verified by name</text>
@@ -249,7 +262,8 @@ export function DoorLegend() {
           A door is an offer the driver writes into the prompt; the model may take it or write claims. What a door
           composes still faces the kernel whole. Under each call below, a row of doors shows which offers that call held
           open — an open leaf is offered, a shut one is not, a struck-through red one was withdrawn since the call before,
-          an amber one is the door the model took, or a reason fed back.
+          an amber one is the door the model took, or a reason fed back. A dashed open leaf is the precedent door
+          open with nothing near enough to show: the memory was consulted and came up empty.
         </figcaption>
       </figure>
     </details>

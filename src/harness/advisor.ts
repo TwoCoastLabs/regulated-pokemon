@@ -21,6 +21,7 @@ import { candidateDigest } from "../kernel/scope.js";
 import { type AnswerDecode, decodeAnswer, decodeCandidate } from "./decode.js";
 import type { CompletionRequest, ModelProvider, Usage } from "./provider.js";
 import { certifiedReference, retrieveReference } from "./reference.js";
+import { type HeldPrecedent, renderShape } from "../memory/precedent.js";
 import { ANSWER_SCHEMA_NAME, answerSchema } from "./schema.js";
 import { nominateFillerKinds } from "./grammar-gate.js";
 import type { NominableRoute } from "./schema.js";
@@ -138,6 +139,7 @@ function answerPrompt(
   items = false, itemCategories: readonly string[] = [],
   clarify = false,
   suggest = false,
+  precedents: readonly HeldPrecedent[] = [],
 ): string {
   return [
     // Grounding, when on: the certified facts in front of the model so it reads
@@ -145,6 +147,21 @@ function answerPrompt(
     // follow are read in its light. Absent when ungrounded — the same prompt
     // otherwise, so the two are a clean before/after.
     ...(reference === undefined ? [] : [reference, ""]),
+    // The precedent door (docs/precedent.md): earlier asks the records
+    // answered, and the shape accepted for each — ids and kinds, never a
+    // value, so an old record can teach which door to take and nothing
+    // else. Between the rows and the ask, and absent when the door is shut
+    // or came up empty, so a run with it and a run without are the same
+    // clean before/after grounding was introduced under.
+    ...(precedents.length === 0
+      ? []
+      : [
+          "Earlier asks the records answered, and the shape that was accepted for each",
+          "(examples of which door to take — never of what a value is; every value",
+          "comes from the certified rows above or is checked against them):",
+          ...precedents.flatMap((held) => [`  - "${held.ask}"`, `      → ${renderShape(held.shape)}`]),
+          "",
+        ]),
     ...(scope === undefined
       ? [
           // The discovery call (epic #64, slice 2): scope is gathered *after*
@@ -560,6 +577,14 @@ export interface AnswerStepInput {
    * the driver and the kernel each hold what comes back to the
    * topic-not-value rule. */
   suggest?: boolean;
+  /**
+   * The precedents this call holds (docs/precedent.md): earlier accepted,
+   * on-target exchanges, retrieved by the caller and shown as worked
+   * examples of which door to take, ids and kinds only. Declared on the
+   * doors so the trace shows them; read by nothing downstream — the draft
+   * they influence faces the whole gate.
+   */
+  precedents?: readonly HeldPrecedent[];
 }
 
 /** Ask the model for the certified answer and decode it into a draft. Whether
@@ -598,6 +623,7 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
       [...new Set(context.registry.items.map((item) => item.category))].sort(),
       input.clarify === true,
       input.suggest === true,
+      input.precedents,
     ),
     hint: {
       scenarioId,
@@ -611,6 +637,9 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
         clarify: input.clarify === true,
         suggest: input.suggest === true,
         feedback: input.feedback ?? [],
+        // Held as data (id, score, ask), never the shape: the trace shows
+        // what was offered; the store shows what it said.
+        ...(input.precedents === undefined ? {} : { precedents: input.precedents.map(({ id, score, ask }) => ({ id, score, ask })) }),
       },
     },
     // The same contract the prose describes, in a form a provider can enforce.

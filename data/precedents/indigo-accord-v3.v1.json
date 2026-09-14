@@ -1,0 +1,4287 @@
+{
+  "schemaVersion": 1,
+  "packId": "indigo-accord-v3",
+  "precedents": [
+    {
+      "id": "p-ans-fact-speed-pikachu",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What's Pikachu's Speed stat?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "base-speed"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-fact-speed-pikachu"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-fact-attack-machamp",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How much Attack does Machamp have?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "machamp",
+            "factId": "base-attack"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-fact-attack-machamp"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-fact-defense-onix",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What is Onix's Defense?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "onix",
+            "factId": "base-defense"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-fact-defense-onix"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-fact-spatk-alakazam",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What's Alakazam's Special Attack?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "alakazam",
+            "factId": "base-special-attack"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-fact-spatk-alakazam"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-fact-hp-snorlax",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How much HP does Snorlax have?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "snorlax",
+            "factId": "base-hp"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-fact-hp-snorlax"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-fact-bst-mewtwo",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What is Mewtwo's base stat total?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "mewtwo",
+            "factId": "base-stat-total"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-fact-bst-mewtwo"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-fact-types-charizard",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What types is Charizard?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "charizard",
+            "factId": "types"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-fact-types-charizard"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-fact-types-gengar",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What type is Gengar?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "gengar",
+            "factId": "types"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-fact-types-gengar"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-fact-dexno-eevee",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What's Eevee's Pokedex number?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "eevee",
+            "factId": "pokedex-number"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-fact-dexno-eevee"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-fact-islegendary-zapdos",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Is Zapdos a legendary?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "zapdos",
+            "factId": "is-legendary"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-fact-islegendary-zapdos"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-fact-learnset-pikachu",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What moves can Pikachu learn?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "learnset"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-fact-learnset-pikachu"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-fact-speed-dragonite",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How fast is Dragonite?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "dragonite",
+            "factId": "base-speed"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-fact-speed-dragonite"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-fact-spdef-vaporeon",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What's Vaporeon's Special Defense?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "vaporeon",
+            "factId": "base-special-defense"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-fact-spdef-vaporeon"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-move-power-thunderbolt",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How much power does Thunderbolt have?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "thunderbolt",
+            "factId": "move-power"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-move-power-thunderbolt"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-move-type-surf",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What type is Surf?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "surf",
+            "factId": "move-type"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-move-type-surf"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-move-accuracy-fire-blast",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What's Fire Blast's accuracy?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "fire-blast",
+            "factId": "move-accuracy"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-move-accuracy-fire-blast"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-move-pp-psychic",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How many PP does Psychic have?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "psychic",
+            "factId": "move-pp"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-move-pp-psychic"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-move-power-hyper-beam",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What is Hyper Beam's power?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "hyper-beam",
+            "factId": "move-power"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-move-power-hyper-beam"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-move-class-earthquake",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Is Earthquake a physical move?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "earthquake",
+            "factId": "move-damage-class"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-move-class-earthquake"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-move-effect-recover",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What does Recover do?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-is-move"
+          },
+          {
+            "kind": "fact",
+            "entityId": "recover",
+            "factId": "move-effect"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-move-effect-recover"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-move-power-selfdestruct",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How strong is Selfdestruct?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "self-destruct",
+            "factId": "move-power"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-move-power-selfdestruct"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-count-electric",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How many Electric Pokemon are there?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "count",
+            "rosterId": "electric_pokemon"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "electric_pokemon",
+            "criteria": {
+              "all": [
+                {
+                  "kind": "has-type",
+                  "type": "electric"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-count-electric"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-count-water",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How many Water types are in Kanto?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "count",
+            "rosterId": "water-types"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "water-types",
+            "criteria": {
+              "all": [
+                {
+                  "kind": "has-type",
+                  "type": "water"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-count-water"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-count-fire",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How many Fire Pokemon exist?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "count",
+            "rosterId": "fire-pokemon"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "fire-pokemon",
+            "criteria": {
+              "all": [
+                {
+                  "kind": "has-type",
+                  "type": "fire"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-count-fire"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-count-psychic",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How many Psychic types are there?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "count",
+            "rosterId": "psychic-types"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "psychic-types",
+            "criteria": {
+              "all": [
+                {
+                  "kind": "has-type",
+                  "type": "psychic"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-count-psychic"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-count-selfdestruct",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How many Pokemon learn Selfdestruct?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "count",
+            "rosterId": "learns-self-destruct"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "learns-self-destruct",
+            "criteria": {
+              "all": [
+                {
+                  "kind": "learns-move",
+                  "move": "self-destruct"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-count-selfdestruct"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-count-surf",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How many can learn Surf?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "count",
+            "rosterId": "learns_surf"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "learns_surf",
+            "criteria": {
+              "all": [
+                {
+                  "kind": "learns-move",
+                  "move": "surf"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-count-surf"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-count-fast",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How many Pokemon have base Speed of at least 100?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "count",
+            "rosterId": "fast_pokemon"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "fast_pokemon",
+            "criteria": {
+              "all": [
+                {
+                  "kind": "stat-at-least",
+                  "stat": "speed",
+                  "value": 100
+                }
+              ]
+            }
+          },
+          {
+            "id": "all_pokemon",
+            "criteria": {
+              "all": []
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-count-fast"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-member-zapdos-electric",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Is Zapdos an Electric type?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "zapdos",
+            "factId": "types"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-member-zapdos-electric"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-rank-fastest-electric",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Which Electric Pokemon is the fastest?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "ranking",
+            "rosterId": "electric_pokemon",
+            "basis": "base-speed",
+            "direction": "highest"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "electric_pokemon",
+            "criteria": {
+              "all": [
+                {
+                  "kind": "has-type",
+                  "type": "electric"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-rank-fastest-electric"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-rank-slowest-water",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What's the slowest Water type?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "ranking",
+            "rosterId": "water_types",
+            "basis": "base-speed",
+            "direction": "lowest"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "water_types",
+            "criteria": {
+              "all": [
+                {
+                  "kind": "has-type",
+                  "type": "water"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-rank-slowest-water"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-rank-strongest-attack",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Which Pokemon has the highest Attack?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "ranking",
+            "rosterId": "all_pokemon",
+            "basis": "base-attack",
+            "direction": "highest"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "all_pokemon",
+            "criteria": {
+              "all": []
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-rank-strongest-attack"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-rank-bulkiest-defense",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Which Rock type has the best Defense?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "ranking",
+            "rosterId": "rock_types",
+            "basis": "base-defense",
+            "direction": "highest"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "rock_types",
+            "criteria": {
+              "all": [
+                {
+                  "kind": "has-type",
+                  "type": "rock"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-rank-bulkiest-defense"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-rank-highest-bst",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Which Fire type has the highest stat total?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "ranking",
+            "rosterId": "fire-types",
+            "basis": "base-stat-total",
+            "direction": "highest"
+          },
+          {
+            "kind": "fact",
+            "entityId": "charizard",
+            "factId": "base-stat-total"
+          },
+          {
+            "kind": "fact",
+            "entityId": "arcanine",
+            "factId": "base-stat-total"
+          },
+          {
+            "kind": "fact",
+            "entityId": "rapidash",
+            "factId": "base-stat-total"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "fire-types",
+            "criteria": {
+              "all": [
+                {
+                  "kind": "has-type",
+                  "type": "fire"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-rank-highest-bst"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-rank-fastest-overall",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What is the fastest Pokemon in Kanto?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "ranking",
+            "rosterId": "all_kanto_pokemon",
+            "basis": "base-speed",
+            "direction": "highest"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "all_kanto_pokemon",
+            "criteria": {
+              "all": []
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-rank-fastest-overall"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-rec-eligible-snorlax",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Is Snorlax a good Pokemon to train?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "recommendation",
+            "entityId": "snorlax"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-rec-eligible-snorlax"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-rec-eligible-generic",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Which Pokemon would you recommend for my team?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "recommendation",
+            "entityId": "pikachu"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "charizard"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "blastoise"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "venusaur"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "alakazam"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "gengar"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "full-team-recommendations",
+            "criteria": {
+              "all": []
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-rec-eligible-generic"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-rec-legendary-accredited",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Should I go for Zapdos?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "eligibility",
+            "entityId": "zapdos"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "zapdos"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-rec-legendary-accredited"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-data-evolve-level-charmander",
+      "snapshotId": "kanto-red-blue",
+      "ask": "At what level does Charmander evolve?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "charmander",
+            "factId": "evolution-methods"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "data-evolve-level-charmander"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-data-catch-abra",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Where do I catch Abra?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "abra",
+            "factId": "locations"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "data-catch-abra"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-data-route-pikachu",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Which route has wild Pikachu?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "locations"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "data-route-pikachu"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-data-catch-rate-snorlax",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What's Snorlax's catch rate?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-the-records-hold"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "data-catch-rate-snorlax"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-data-height-onix",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How tall is Onix?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-the-records-hold"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "data-height-onix"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-data-weight-snorlax",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How much does Snorlax weigh?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-the-records-hold"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "data-weight-snorlax"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-data-egg-group-eevee",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What egg group is Eevee in?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-the-records-hold"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "data-egg-group-eevee"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-data-tm-surf",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Which TM teaches Surf?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "surf",
+            "factId": "machine"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "data-tm-surf"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-data-base-exp-mew",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How much experience does Mew give?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-the-records-hold"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "data-base-exp-mew"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-data-color-jigglypuff",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What color is Jigglypuff?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-the-records-hold"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "data-color-jigglypuff"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-data-move-tm-number",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What TM number is Thunderbolt?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "thunderbolt",
+            "factId": "machine"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "data-move-tm-number"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-data-gender-ratio-eevee",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What's Eevee's gender ratio?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-the-records-hold"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "data-gender-ratio-eevee"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-data-evo-item-eevee",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What stone evolves Eevee into Vaporeon?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "eevee",
+            "factId": "evolution-methods"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "data-evo-item-eevee"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-data-flavor-text-mewtwo",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What's the Pokedex flavor text for Mewtwo?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-the-records-hold"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "data-flavor-text-mewtwo"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-data-move-tutor",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Which move tutor teaches Body Slam?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-the-records-hold"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "data-move-tutor"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-data-happiness-pikachu",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What's Pikachu's friendship level?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-the-records-hold"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "data-happiness-pikachu"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-kind-better-pikachu-raichu",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Is Pikachu or Raichu better?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "base-stat-total"
+          },
+          {
+            "kind": "fact",
+            "entityId": "raichu",
+            "factId": "base-stat-total"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "raichu"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "kind-better-pikachu-raichu"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-kind-starter-pick",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Which starter should I choose?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "recommendation",
+            "entityId": "bulbasaur"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "charmander"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "squirtle"
+          },
+          {
+            "kind": "explanation",
+            "blockId": "choosing-a-starter"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "kind-starter-pick"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-kind-summarize-pikachu",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Tell me everything about Pikachu.",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "pokedex-number"
+          },
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "types"
+          },
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "base-hp"
+          },
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "base-attack"
+          },
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "base-defense"
+          },
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "learnset"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "kind-summarize-pikachu"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-kind-nickname",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What should I nickname my Gengar?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-the-records-hold"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "kind-nickname"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-kind-moveset-build",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What's the best moveset for Alakazam?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "recommendation",
+            "entityId": "alakazam"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "alakazam-core-moves",
+            "criteria": {
+              "all": [
+                {
+                  "kind": "learns-move",
+                  "move": "psychic"
+                },
+                {
+                  "kind": "learns-move",
+                  "move": "recover"
+                },
+                {
+                  "kind": "learns-move",
+                  "move": "reflect"
+                },
+                {
+                  "kind": "learns-move",
+                  "move": "teleport"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "kind-moveset-build"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-kind-type-effectiveness",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Is Electric effective against Water?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "matchup",
+            "subject": {
+              "kind": "type",
+              "typeId": "electric"
+            },
+            "direction": "strong-against"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "kind-type-effectiveness"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-kind-weakness-psychic",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What is Gengar weak to?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "matchup",
+            "subject": {
+              "kind": "species",
+              "entityId": "gengar"
+            },
+            "direction": "weak-to"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "kind-weakness-psychic"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-eligibility-mewtwo-8",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Am I allowed to be advised toward Mewtwo at my badge level?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "eligibility",
+            "entityId": "mewtwo"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-eligibility-mewtwo-8"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-kind-which-legendary",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Which legendary bird is the best one to chase?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "articuno",
+            "factId": "base-stat-total"
+          },
+          {
+            "kind": "fact",
+            "entityId": "zapdos",
+            "factId": "base-stat-total"
+          },
+          {
+            "kind": "fact",
+            "entityId": "moltres",
+            "factId": "base-stat-total"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "zapdos"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "kind-which-legendary"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-refuse-mewtwo-2",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Should I go catch Mewtwo?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 2
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "mewtwo",
+            "factId": "locations"
+          },
+          {
+            "kind": "eligibility",
+            "entityId": "mewtwo"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "refuse-mewtwo-2"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-refuse-zapdos-2",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Is Zapdos a good pick for me?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 2
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "eligibility",
+            "entityId": "zapdos"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "refuse-zapdos-2"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-refuse-moltres-5",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Should I train Moltres?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 5
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "eligibility",
+            "entityId": "moltres"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "refuse-moltres-5"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-refuse-mew-6",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Would you recommend Mew to me?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 6
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "eligibility",
+            "entityId": "mew"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "refuse-mew-6"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-refuse-mew-7",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Should I go for Mew?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 7
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "eligibility",
+            "entityId": "mew"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "dragonite"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "refuse-mew-7"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-refuse-mewtwo-0",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Tell me to go get Mewtwo.",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 0
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "eligibility",
+            "entityId": "mewtwo"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "refuse-mewtwo-0"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-refuse-zapdos-vs-3",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Between Zapdos and Snorlax, which should I get?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 3
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "zapdos",
+            "factId": "is-legendary"
+          },
+          {
+            "kind": "fact",
+            "entityId": "snorlax",
+            "factId": "base-hp"
+          },
+          {
+            "kind": "fact",
+            "entityId": "snorlax",
+            "factId": "base-attack"
+          },
+          {
+            "kind": "fact",
+            "entityId": "snorlax",
+            "factId": "base-defense"
+          },
+          {
+            "kind": "fact",
+            "entityId": "snorlax",
+            "factId": "base-special-attack"
+          },
+          {
+            "kind": "fact",
+            "entityId": "snorlax",
+            "factId": "base-special-defense"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "snorlax"
+          },
+          {
+            "kind": "eligibility",
+            "entityId": "zapdos"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "refuse-zapdos-vs-3"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-refuse-articuno-1",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Is Articuno worth getting for me?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 1
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "eligibility",
+            "entityId": "articuno"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "refuse-articuno-1"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-refuse-moltres-2",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Add Moltres to my roster, please.",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 2
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "eligibility",
+            "entityId": "moltres"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "refuse-moltres-2"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-refuse-mew-2",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Should a trainer like me chase Mew?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 2
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "eligibility",
+            "entityId": "mew"
+          },
+          {
+            "kind": "fact",
+            "entityId": "mew",
+            "factId": "is-mythical"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "refuse-mew-2"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-meta-what-is-game",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What is Pokemon?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-is-pokemon"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "meta-what-is-game"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-meta-how-to-play",
+      "snapshotId": "kanto-red-blue",
+      "ask": "I've never played before. How does this game work?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-is-game"
+          },
+          {
+            "kind": "explanation",
+            "blockId": "how-to-play"
+          },
+          {
+            "kind": "explanation",
+            "blockId": "first-steps"
+          },
+          {
+            "kind": "explanation",
+            "blockId": "what-can-you-ask"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "meta-how-to-play"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-meta-objective",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What am I actually trying to do in this game?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "objective"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "meta-objective"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-meta-what-is-badge",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What's a gym badge?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-is-badge"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "meta-what-is-badge"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-meta-what-is-type",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What does a Pokemon's type actually mean?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-is-type"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "meta-what-is-type"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-type-count",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How many types of Pokemon are there?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "typeCount"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-type-count"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-meta-first-steps",
+      "snapshotId": "kanto-red-blue",
+      "ask": "I just started the game — what should I do first?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "first-steps"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "meta-first-steps"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-meta-leveling",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What's the point of leveling up my Pokemon?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "leveling"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "meta-leveling"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-meta-red-vs-blue",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What's the difference between the Red and Blue versions?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "red-vs-blue"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "meta-red-vs-blue"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-meta-is-it-hard",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Is this game hard for a total beginner?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "is-it-hard"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "meta-is-it-hard"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-meta-what-is-pokemon",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What is a Pokémon?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-is-pokemon"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "meta-what-is-pokemon"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-meta-what-is-move",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What is a move?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-is-move"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "meta-what-is-move"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-meta-what-is-evolution",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What is evolution?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-is-evolution"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "meta-what-is-evolution"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-meta-what-is-gym-leader",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What is a Gym Leader?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-is-gym-leader"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "meta-what-is-gym-leader"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-meta-what-is-league",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What is the Pokémon League?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-is-league"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "meta-what-is-league"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-meta-what-are-stats",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What are stats?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-are-stats"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "meta-what-are-stats"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-meta-what-is-poke-ball",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What is a Poké Ball?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-is-poke-ball"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "meta-what-is-poke-ball"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-meta-what-is-tm-hm",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What is a TM or HM?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-is-tm-hm"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "meta-what-is-tm-hm"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-party-size",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How many Pokémon can I have on my team?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "gameRule",
+            "ruleId": "party-size"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-party-size"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-moves-per-pokemon",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How many moves can a Pokémon know at once?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "gameRule",
+            "ruleId": "moves-per-pokemon"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-moves-per-pokemon"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-badge-count",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How many Gym Badges are there in Kanto?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "gameRule",
+            "ruleId": "badge-count"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-badge-count"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-starter-count",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How many starter Pokémon can I choose from?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "gameRule",
+            "ruleId": "starter-count"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-starter-count"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-move-effect-recover-2",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What does Recover do?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "recover",
+            "factId": "move-effect"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-move-effect-recover"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-count-fast-2",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How many Pokemon have base Speed of at least 100?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "count",
+            "rosterId": "fast_pokemon"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "fast_pokemon",
+            "criteria": {
+              "all": [
+                {
+                  "kind": "stat-at-least",
+                  "stat": "speed",
+                  "value": 100
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-count-fast"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-member-snorlax-surf",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Can Snorlax learn Surf?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "membership",
+            "rosterId": "snorlax_can_learn_surf",
+            "entityId": "snorlax"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "snorlax_can_learn_surf",
+            "criteria": {
+              "all": [
+                {
+                  "kind": "learns-move",
+                  "move": "surf"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-member-snorlax-surf"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-rec-eligible-snorlax-2",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Is Snorlax a good Pokemon to train?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "membership",
+            "rosterId": "snorlax_moves",
+            "entityId": "snorlax"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "snorlax"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "snorlax_moves",
+            "criteria": {
+              "all": [
+                {
+                  "kind": "learns-move",
+                  "move": "hyper-beam"
+                },
+                {
+                  "kind": "learns-move",
+                  "move": "earthquake"
+                },
+                {
+                  "kind": "learns-move",
+                  "move": "rest"
+                },
+                {
+                  "kind": "learns-move",
+                  "move": "thunderbolt"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-rec-eligible-snorlax"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-rec-eligible-generic-2",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Which Pokemon would you recommend for my team?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "recommendation",
+            "entityId": "bulbasaur"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "charmander"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "squirtle"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-rec-eligible-generic"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-data-encounter-rate-tauros",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How rare is Tauros in the Safari Zone?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-the-records-hold"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "data-encounter-rate-tauros"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-kind-team-six",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Build me a team of six Pokemon.",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "recommendation",
+            "entityId": "bulbasaur"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "charmander"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "squirtle"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "pikachu"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "gengar"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "snorlax"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "recommended-team",
+            "criteria": {
+              "all": []
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "kind-team-six"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-kind-summarize-pikachu-2",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Tell me everything about Pikachu.",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "types"
+          },
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "base-hp"
+          },
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "base-attack"
+          },
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "base-defense"
+          },
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "base-special-attack"
+          },
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "learnset"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "kind-summarize-pikachu"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-kind-moveset-build-2",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What's the best moveset for Alakazam?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "alakazam",
+            "factId": "learnset"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "alakazam"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "alakazam_moves",
+            "criteria": {
+              "all": [
+                {
+                  "kind": "learns-move",
+                  "move": "psychic"
+                },
+                {
+                  "kind": "learns-move",
+                  "move": "recover"
+                },
+                {
+                  "kind": "learns-move",
+                  "move": "reflect"
+                },
+                {
+                  "kind": "learns-move",
+                  "move": "teleport"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "kind-moveset-build"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-kind-which-legendary-2",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Which legendary bird is the best one to chase?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "articuno",
+            "factId": "base-speed"
+          },
+          {
+            "kind": "fact",
+            "entityId": "zapdos",
+            "factId": "base-speed"
+          },
+          {
+            "kind": "fact",
+            "entityId": "moltres",
+            "factId": "base-speed"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "zapdos"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "kind-which-legendary"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-refuse-articuno-4",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Recommend Articuno for my team.",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 4
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "eligibility",
+            "entityId": "articuno"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "refuse-articuno-4"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-refuse-mew-7-2",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Should I go for Mew?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 7
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "eligibility",
+            "entityId": "mew"
+          },
+          {
+            "kind": "fact",
+            "entityId": "mew",
+            "factId": "is-mythical"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "refuse-mew-7"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-refuse-articuno-1-2",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Is Articuno worth getting for me?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 1
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "eligibility",
+            "entityId": "articuno"
+          },
+          {
+            "kind": "fact",
+            "entityId": "articuno",
+            "factId": "is-legendary"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "refuse-articuno-1"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-refuse-mew-2-2",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Should a trainer like me chase Mew?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 2
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "eligibility",
+            "entityId": "mew"
+          },
+          {
+            "kind": "fact",
+            "entityId": "mew",
+            "factId": "is-mythical"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "mythical-pokemon",
+            "criteria": {
+              "all": [
+                {
+                  "kind": "rarity",
+                  "rarity": "mythical"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "refuse-mew-2"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-meta-how-to-play-2",
+      "snapshotId": "kanto-red-blue",
+      "ask": "I've never played before. How does this game work?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "how-to-play"
+          },
+          {
+            "kind": "explanation",
+            "blockId": "first-steps"
+          },
+          {
+            "kind": "explanation",
+            "blockId": "what-is-pokemon"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "meta-how-to-play"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-meta-how-catch",
+      "snapshotId": "kanto-red-blue",
+      "ask": "How do I catch a Pokemon?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "how-catch"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "meta-how-catch"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-ans-rank-highest-bst-2",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Which Fire type has the highest stat total?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "ranking",
+            "rosterId": "fire-types",
+            "basis": "base-stat-total",
+            "direction": "highest"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "arcanine"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "fire-types",
+            "criteria": {
+              "all": [
+                {
+                  "kind": "has-type",
+                  "type": "fire"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "ans-rank-highest-bst"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-data-ability-pikachu",
+      "snapshotId": "kanto-red-blue",
+      "ask": "What ability does Pikachu have?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-the-records-hold"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "data-ability-pikachu"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-kind-better-pikachu-raichu-2",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Is Pikachu or Raichu better?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "base-stat-total"
+          },
+          {
+            "kind": "fact",
+            "entityId": "raichu",
+            "factId": "base-stat-total"
+          },
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "learnset"
+          },
+          {
+            "kind": "fact",
+            "entityId": "raichu",
+            "factId": "learnset"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "raichu"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "kind-better-pikachu-raichu"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-kind-summarize-pikachu-3",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Tell me everything about Pikachu.",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "types"
+          },
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "evolves-to"
+          },
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "pokedex-number"
+          },
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "base-hp"
+          },
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "base-attack"
+          },
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "base-defense"
+          },
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "base-speed"
+          },
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "base-special-attack"
+          },
+          {
+            "kind": "fact",
+            "entityId": "pikachu",
+            "factId": "base-special-defense"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "kind-summarize-pikachu"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-kind-worth-evolving",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Is it worth evolving Eevee into Jolteon?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "jolteon",
+            "factId": "base-special-attack"
+          },
+          {
+            "kind": "fact",
+            "entityId": "jolteon",
+            "factId": "base-speed"
+          },
+          {
+            "kind": "fact",
+            "entityId": "jolteon",
+            "factId": "types"
+          },
+          {
+            "kind": "fact",
+            "entityId": "jolteon",
+            "factId": "learnset"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "jolteon"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "kind-worth-evolving"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-kind-which-legendary-3",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Which legendary bird is the best one to chase?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "articuno",
+            "factId": "base-stat-total"
+          },
+          {
+            "kind": "fact",
+            "entityId": "zapdos",
+            "factId": "base-stat-total"
+          },
+          {
+            "kind": "fact",
+            "entityId": "moltres",
+            "factId": "base-stat-total"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "articuno"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "kind-which-legendary"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-refuse-mewtwo-2-2",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Should I go catch Mewtwo?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 2
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "fact",
+            "entityId": "mewtwo",
+            "factId": "locations"
+          },
+          {
+            "kind": "eligibility",
+            "entityId": "mewtwo"
+          }
+        ],
+        "rosters": [
+          {
+            "id": "legendary-pokemon",
+            "criteria": {
+              "all": [
+                {
+                  "kind": "rarity",
+                  "rarity": "legendary"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "refuse-mewtwo-2"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-refuse-articuno-4-2",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Recommend Articuno for my team.",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 4
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "eligibility",
+            "entityId": "articuno"
+          },
+          {
+            "kind": "recommendation",
+            "entityId": "dragonair"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "refuse-articuno-4"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-refuse-zapdos-vs-3-2",
+      "snapshotId": "kanto-red-blue",
+      "ask": "Between Zapdos and Snorlax, which should I get?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 3
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "recommendation",
+            "entityId": "snorlax"
+          },
+          {
+            "kind": "eligibility",
+            "entityId": "zapdos"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "refuse-zapdos-vs-3"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    },
+    {
+      "id": "p-meta-how-to-play-3",
+      "snapshotId": "kanto-red-blue",
+      "ask": "I've never played before. How does this game work?",
+      "profile": {
+        "version": "red-blue",
+        "region": "kanto",
+        "badgeLevel": 8
+      },
+      "shape": {
+        "claims": [
+          {
+            "kind": "explanation",
+            "blockId": "what-is-game"
+          },
+          {
+            "kind": "explanation",
+            "blockId": "how-to-play"
+          },
+          {
+            "kind": "explanation",
+            "blockId": "first-steps"
+          },
+          {
+            "kind": "explanation",
+            "blockId": "choosing-a-starter"
+          },
+          {
+            "kind": "explanation",
+            "blockId": "leveling"
+          },
+          {
+            "kind": "explanation",
+            "blockId": "fainting-and-healing"
+          },
+          {
+            "kind": "explanation",
+            "blockId": "what-is-badge"
+          },
+          {
+            "kind": "explanation",
+            "blockId": "what-is-league"
+          },
+          {
+            "kind": "explanation",
+            "blockId": "what-are-stats"
+          },
+          {
+            "kind": "explanation",
+            "blockId": "what-is-move"
+          },
+          {
+            "kind": "explanation",
+            "blockId": "how-catch"
+          }
+        ],
+        "rosters": []
+      },
+      "source": {
+        "kind": "bank-run",
+        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
+        "transactionId": "session-1",
+        "entryId": "meta-how-to-play"
+      },
+      "promoted": {
+        "by": "oracle",
+        "at": "2026-09-14T06:05:18.643Z"
+      }
+    }
+  ]
+}

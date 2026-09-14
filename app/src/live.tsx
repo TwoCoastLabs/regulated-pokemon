@@ -57,8 +57,9 @@ import { type SentBack, sentBack, trailsOfSession, withCalls } from "../../src/u
 import { violationView } from "../../src/ui/viewmodel.js";
 import { browserFactory } from "./mount.js";
 import { DoorLegend } from "./doors.js";
+import { MemoryPanel } from "./memory.js";
 import { DevCall, Trails } from "./trail.js";
-import { demoWorld } from "./world.js";
+import { demoWorld, precedentStore } from "./world.js";
 
 /** Strictly increasing, because the kernel orders the moments it records and
  * a wall clock is allowed to repeat a millisecond. */
@@ -469,6 +470,10 @@ export function Live() {
   // different system from the one the numbers describe.
   const [retrievalOn, setRetrievalOn] = useState(true);
   const [gatedOn, setGatedOn] = useState(true);
+  // The precedent door (docs/precedent.md): on by default when the world
+  // ships a store. Like the two above it changes only what the model is
+  // asked, never what may commit.
+  const [memoryOn, setMemoryOn] = useState(true);
   const clock = useMemo(makeClock, []);
 
   useEffect(() => {
@@ -498,8 +503,9 @@ export function Live() {
       suggest: true,
       ...(retrievalOn ? { retrieval: true } : {}),
       ...(gatedOn ? { gatedGrammar: true } : {}),
+      ...(memoryOn && precedentStore() !== undefined ? { precedents: { store: precedentStore()! } } : {}),
     };
-  }, [setup, clock, retrievalOn, gatedOn]);
+  }, [setup, clock, retrievalOn, gatedOn, memoryOn]);
 
   const meta = useMemo<DevTraceMeta | null>(() => {
     if (setup === null) return null;
@@ -550,7 +556,7 @@ export function Live() {
         if (MIRROR_TO_DEV_SINK && setup !== null && meta !== null) {
           mirrorToDevSink({
             type: "report",
-            doors: { retrieval: retrievalOn, gatedGrammar: gatedOn },
+            doors: { retrieval: retrievalOn, gatedGrammar: gatedOn, precedents: memoryOn && precedentStore() !== undefined },
             ...(agentReport(meta, next, setup.trace.calls) as object),
           });
         }
@@ -964,6 +970,9 @@ export function Live() {
                 gated={gatedOn}
                 onRetrieval={setRetrievalOn}
                 onGated={setGatedOn}
+                memory={memoryOn}
+                onMemory={setMemoryOn}
+                now={clock}
               />
             ) : (
               <LiveConsole state={state} setup={setup} />
@@ -1121,6 +1130,9 @@ function DevPanel(props: {
   gated: boolean;
   onRetrieval: (on: boolean) => void;
   onGated: (on: boolean) => void;
+  memory: boolean;
+  onMemory: (on: boolean) => void;
+  now: () => string;
 }) {
   const [copied, setCopied] = useState<string | null>(null);
   const report = () => JSON.stringify(agentReport(props.meta, props.state, props.calls), null, 2);
@@ -1170,6 +1182,7 @@ function DevPanel(props: {
         </label>
       </div>
       <DoorLegend />
+      <MemoryPanel store={precedentStore()} state={props.state} on={props.memory} onToggle={props.onMemory} now={props.now} />
       <Trails
         trails={placed.trails}
         who="you"

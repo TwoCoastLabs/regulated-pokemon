@@ -219,3 +219,37 @@ describe("phraseQuestion — the pack's question in the model's words, or nothin
     expect((await phraseQuestion({ provider: prose, scenarioId: "t", transcript: [], need: "q?", options: ["a"] })).text).toBeNull();
   });
 });
+
+describe("the precedent door (docs/precedent.md)", () => {
+  it("writes the held precedents into the prompt as shapes with no value, and declares them on the doors as id, score and ask", async () => {
+    const hints: unknown[] = [];
+    const prompts: string[] = [];
+    const provider = new ScriptedProvider("m", (request) => {
+      hints.push(request.hint.doors);
+      prompts.push(request.prompt);
+      return JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-game" }] });
+    });
+    const transcript = [{ kind: "utterance", at: AT, source: "trainer", text: "tell me about this game" }] as const;
+    const held = [
+      { id: "p-game", score: 1, ask: "tell me about the game", shape: { claims: [{ kind: "explanation", blockId: "what-is-game" }], rosters: [] } },
+      { id: "p-speed", score: 0.4, ask: "what is pikachu's speed", shape: { claims: [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }], rosters: [] } },
+    ];
+    await proposeAnswer({ provider, context, scenarioId: "s", transactionId: "txn-1", transcript: [...transcript], retrieval: true, precedents: held });
+    await proposeAnswer({ provider, context, scenarioId: "s", transactionId: "txn-1", transcript: [...transcript], retrieval: true, precedents: [] });
+    await proposeAnswer({ provider, context, scenarioId: "s", transactionId: "txn-1", transcript: [...transcript], retrieval: true });
+
+    expect(hints[0]).toMatchObject({ precedents: [{ id: "p-game", score: 1, ask: "tell me about the game" }, { id: "p-speed", score: 0.4, ask: "what is pikachu's speed" }] });
+    expect(JSON.stringify(hints[0])).not.toContain("shape");
+    const section = prompts[0]!.slice(prompts[0]!.indexOf("Earlier asks the records answered"), prompts[0]!.indexOf("The trainer's own words:"));
+    expect(section).toContain('- "tell me about the game"');
+    expect(section).toContain('→ {"claims":[{"kind":"explanation","blockId":"what-is-game"}],"rosters":[]}');
+    expect(section).toContain('→ {"claims":[{"kind":"fact","entityId":"pikachu","factId":"base-speed"}],"rosters":[]}');
+    expect(section).not.toMatch(/asserted|reported|\b90\b/);
+    // The section sits after the certified rows and before the ask.
+    expect(prompts[0]!.indexOf("CERTIFIED REGISTRY")).toBeLessThan(prompts[0]!.indexOf("Earlier asks the records answered"));
+    // Empty is declared, not omitted; shut is omitted.
+    expect(hints[1]).toMatchObject({ precedents: [] });
+    expect(prompts[1]).not.toContain("Earlier asks the records answered");
+    expect((hints[2] as { precedents?: unknown }).precedents).toBeUndefined();
+  });
+});

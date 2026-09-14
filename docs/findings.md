@@ -4825,3 +4825,110 @@ entries and every pass identical at 114. Enforcement did not move. And
 the one transferable artefact of the slice is the lint: a pack's alias
 collisions are now a number with an owner, in any domain, before a
 trainer ever has to be asked.
+
+## 21. The precedent door: memory the operator owns (epic #169)
+
+### M0 — the class, from the records (2026-09-14)
+
+**Goal.** Epic #169 opens on a usefulness class the porch shows first and
+the bank names last: the model does not reach for what the records hold.
+Before building anything, the class had to be a number with a query behind
+it, so the memory slice (M1) has a baseline it can be read against and
+withdrawn against.
+
+**How it works.** `scripts/trace-class.ts` reads the dev trace the live
+page mirrors (`.dev-trace.jsonl`), takes every settled exchange whose
+latest trainer words match a pattern, and tallies from the report itself:
+model calls, whether a route nomination was refused first
+(`nominationRetries`), whether a denial was fed back (`feedbackRetries`),
+and whether the exchange ended in an abstention (a note toned `abstention`
+after the ask). Key-free, dependency-free; the number re-derives from the
+file.
+
+**The number.** `node --experimental-strip-types scripts/trace-class.ts
+.dev-trace.jsonl "about (the|this) game"`, over the trace of 2026-09-04 →
+2026-09-14 (packs v2 and v3, two models):
+
+| outcome | count |
+|---|---|
+| exchanges | 24 |
+| answered in one model call | 8/24 (33%) |
+| a listing nomination refused first, then asked again | 14/24 (58%) |
+| three calls | 5/24 (21%) |
+| a denial or an emptied reply fed back | 4/24 (17%) |
+| ended in an abstention | 3/24 (13%) |
+| `qwen/qwen3-235b-a22b-2507` | 21 exchanges, 3 abstained, 6 in one call |
+| `google/gemini-3.5-flash-lite` | 3 exchanges, 0 abstained, 2 in one call |
+
+The answer, when it came, was the same certified lesson (`what-is-game`)
+every time. The signature is first-call routing that will not settle: the
+model reaches for the `listing` door on a question that names no set,
+the driver refuses it, and the second call finds the lesson. Not content
+debt, not a retrieval gap, not a grammar gap — the lesson is in the
+catalogue the prompt carries.
+
+*Model errors:* every first-call nomination above is the model's own
+choice. *Harness factors:* (a) **named** — 24 exchanges over ten days of
+dogfood are a porch sample, not a bank; the bank's seven `meta-*` lesson
+entries are the measured home of the class, and the M1 legs read them.
+(b) **named** — the dev trace holds the dogfooder's own asks, so the
+phrasings are four wordings of one person's question.
+
+### M1 — the precedent door, built (2026-09-14)
+
+**Goal.** The design ([precedent.md](precedent.md)) asked for a form of
+agent memory with one property the architecture demands of every
+usefulness layer: the model never writes it, the verifier never reads it.
+This entry records what was built, what the first promotion produced, and
+the porch reading — the cheap arm of the measurement; the bank legs (three
+arms, N=3, both models) are the gate and are not yet run.
+
+**How it works.** A precedent is a filed exchange the kernel accepted and
+the bank's oracle passed on subject and shape, with every value stripped:
+the trainer's words and the *shape* of the accepted reply (kinds and ids).
+`src/memory/precedent.ts` holds the store's fail-closed loader (a claim
+kind the grammar lacks, a lesson or rule the pack does not carry, an
+entity or fact the records do not certify, a shape still carrying a value,
+a store built for another pack — each refused by name), the value-stripping
+`shapeOf`, deterministic lexical retrieval (token overlap above a
+threshold, top k, the row retriever's subject selection breaking ties, the
+hold-out rule enforced in the retriever), and the reading after the verdict
+(`followed`: canonical shape, roster names and claim order ignored).
+The driver consults the door once per exchange before its first answer
+call and holds the result on every call of the exchange, retries included;
+four ledger codes in fixed wording (`memory/held`, `memory/empty`,
+`memory/held-out`, `memory/followed` / `memory/departed`); `DoorState`
+gains `precedents` (id, score, ask), so the trace shows what was offered;
+the coverage artifact gains the store's path and digest and the levers,
+and each run its held ids and whether the accepted answer followed one.
+Promotion (`npm run precedents:promote -- <artifact>`) is key-free and
+deterministic; the live page reads the store and writes nothing. The dev
+view draws the door with an **empty** state apart from shut, a panel under
+each call listing what was held (ids and kinds, no values), and a memory
+panel with the store as loaded and the session's accepted exchanges a
+reviewer can mark for a promotion file. The verifier imports nothing from
+the module; every filed record replays without the store (1916/1916
+tests, the replay sweep included).
+
+**The first promotion.** From the 2026-09-11 strong-model artifact (411
+runs): 121 precedents; 156 runs already in the store (the same ask
+accepted in the same shape on another pass), 66 abstentions, 47 resolved
+runs the oracle did not pass, 14 denials, 6 without a certified manifest,
+1 declined act — every exclusion a count. By door: 41 facts, 34 lessons,
+15 eligibility rulings, 8 counts, 7 rankings, 7 recommendations, 4 game
+rules, 2 matchups, 2 memberships, 1 type count. Store digest
+`sha256:07f9b6e5…`, pinned by every run that holds it.
+
+**What the store holds for the porch ask, before any model ran.** Read
+from the retriever (`retrievePrecedents`, k=3, threshold 0.25): "tell me
+about the game" and "tell me about this game" hold the three
+`p-kind-summarize-pikachu*` precedents at exactly 0.25 — "Tell me
+everything about Pikachu.", accepted in three shapes — because the only
+carrying word they share is *tell*; "telll me about the game" and "I'm
+playing Red/blue; tell me about the game" hold nothing (nearest misses at
+0.2 and 0.22). The bank's own lesson entries ("I've never played before.
+How does this game work?", "What am I actually trying to do in this
+game?") are worded long enough that one shared word does not clear the
+threshold. So the shipped store offers the game ask its *neighbours by
+word*, which are profile shapes, and the porch reading below is a test of
+the deflection risk the design named before it is a test of the gain.

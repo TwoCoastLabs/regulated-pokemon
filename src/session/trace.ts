@@ -79,15 +79,24 @@ export interface TraceArgs {
    * realistic-inquiry setting the coverage maps measure. Off by default: the
    * frozen red-blue world stays the tracer's baseline. */
   center: boolean;
+  /** The precedent door (docs/precedent.md) — on by default when the world
+   * ships a store; `--no-memory` shuts it, the off arm of the porch reading. */
+  memory: boolean;
+  /** An explicit store file for the door — an arm of the porch reading;
+   * the world's own store under data/precedents/ otherwise. */
+  precedentStore?: string;
 }
 
 export function parseTraceArgs(argv: readonly string[]): TraceArgs {
   const modelFlag = argv.indexOf("--model");
   const model = modelFlag >= 0 ? argv[modelFlag + 1] : undefined;
+  const storeFlag = argv.indexOf("--precedent-store");
+  const precedentStore = storeFlag >= 0 ? argv[storeFlag + 1] : undefined;
   const grounding: TraceGrounding = argv.includes("--ungrounded") ? "none" : argv.includes("--grounded") ? "full" : "retrieval";
   return {
-    inputs: argv.filter((arg, index) => !arg.startsWith("--") && !(modelFlag >= 0 && index === modelFlag + 1)),
+    inputs: argv.filter((arg, index) => !arg.startsWith("--") && !(modelFlag >= 0 && index === modelFlag + 1) && !(storeFlag >= 0 && index === storeFlag + 1)),
     ...(model === undefined ? {} : { model }),
+    ...(precedentStore === undefined ? {} : { precedentStore }),
     weak: argv.includes("--weak"),
     adversarial: argv.includes("--adversarial"),
     grounding,
@@ -97,6 +106,7 @@ export function parseTraceArgs(argv: readonly string[]): TraceArgs {
     clarify: !argv.includes("--no-clarify"),
     suggest: !argv.includes("--no-suggest"),
     center: argv.includes("--center"),
+    memory: !argv.includes("--no-memory"),
   };
 }
 

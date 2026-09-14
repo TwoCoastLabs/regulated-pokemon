@@ -31,6 +31,7 @@ import {
 } from "../session/session.js";
 import { candidateIsTrue } from "./trainer.js";
 import { ledgerOf } from "../session/ledger.js";
+import { defaultFixedIds, type PrecedentLevers, type PrecedentStore } from "../memory/precedent.js";
 import type { BankEntry, ClaimKind } from "./bank.js";
 import { type Ceremony, ceremonyOf } from "./ceremony.js";
 import {
@@ -109,6 +110,14 @@ export interface BankRun {
    * the offenders the topic-not-value rule removed. Present when the suggest
    * door was open. */
   suggestions?: { shown: number; dropped: number };
+  /**
+   * The precedent door's reading (docs/precedent.md), present when the door
+   * was open: `held` is the precedents the exchange's calls carried, by id
+   * (empty: the door engaged nothing — the activation ceiling, per run);
+   * `followed` whether the accepted answer took a held example's shape,
+   * absent when nothing was held or no record was filed.
+   */
+  precedents?: { held: readonly string[]; followed?: boolean };
   /** One human line on how it ended, for the report's detail column. */
   detail: string;
 }
@@ -135,6 +144,14 @@ export interface BankRunOptions {
   /** The model may offer follow-up suggestions (R3b step 4); the bank's
    * trainer never takes one — what is measured is whether they are offered. */
   suggest?: boolean;
+  /**
+   * The precedent door (docs/precedent.md): the operator's store, held on
+   * every answer call as worked examples. `nearest` retrieves per ask;
+   * `fixed` holds the same few on every call (the few-shot control arm).
+   * The hold-out rule is applied per entry here: a precedent made from the
+   * entry under test, or worded as it, is never offered to it.
+   */
+  precedents?: { store: PrecedentStore; mode: "nearest" | "fixed"; levers?: PrecedentLevers; fixed?: readonly string[] };
 }
 
 /** A bank run still carrying the whole record behind its verdict — transcript,
@@ -441,6 +458,19 @@ export async function runBankEntry(
     feedback: options.feedback ?? false,
     ...(options.clarify === undefined ? {} : { clarify: options.clarify }),
     ...(options.suggest === undefined ? {} : { suggest: options.suggest }),
+    ...(options.precedents === undefined
+      ? {}
+      : {
+          precedents: {
+            store: options.precedents.store,
+            ...(options.precedents.levers === undefined ? {} : { levers: options.precedents.levers }),
+            // The hold-out rule, per entry: never the entry's own precedents,
+            // under any of its wordings — so a precedent can only ever teach
+            // a neighbour, never answer for itself.
+            holdOut: { entryId: entry.id, phrasings: phrasingsOf(entry) },
+            ...(options.precedents.mode === "fixed" ? { fixed: options.precedents.fixed ?? defaultFixedIds(options.precedents.store, world.registry.snapshot.id) } : {}),
+          },
+        }),
   };
   const state = await play(entry, opening, deps, options.profile ?? false);
   const run = asRun(entry, state, world, repetition);
@@ -467,6 +497,18 @@ export async function runBankEntry(
     ...(refused === undefined ? {} : { deniedDraftOnTarget: draftOnTarget(entry, refused) }),
     ...(options.clarify === true ? { clarified: { asked, picked, ignored, capped } } : {}),
     ...(options.suggest === true ? { suggestions: { shown, dropped: state.suggestions.dropped } } : {}),
+    // The door's reading per run (docs/precedent.md): which precedents the
+    // exchange held (empty: the door was open and engaged nothing), and
+    // whether the accepted answer took one's shape — absent when no record
+    // was filed, or the door was shut.
+    ...(options.precedents === undefined
+      ? {}
+      : {
+          precedents: {
+            held: state.memory.lastHeld,
+            ...(state.memory.lastHeld.length > 0 && state.memory.followed + state.memory.departed > 0 ? { followed: state.memory.followed > 0 } : {}),
+          },
+        }),
     detail: run.detail,
     run,
   };

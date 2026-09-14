@@ -215,6 +215,16 @@ In order:
    never policy. The block says: *cite these; do not answer from memory.*
    Grounding changes what the model is asked, never what may commit — the
    kernel recomputes every value regardless.
+1b. **The precedents** (when the door is on and engaged — the product
+   default when the world ships a store; [precedent.md](precedent.md)).
+   The nearest earlier asks the records answered, each with the shape
+   that was accepted for it — ids and kinds, never a value: `"tell me
+   about the game" → {"claims":[{"kind":"explanation","blockId":
+   "what-is-game"}],"rosters":[]}`. Worked examples of which door to
+   take. Retrieved once per exchange, deterministically, and held on
+   every call of the exchange, retries included; absent when nothing
+   scored above the threshold, so a call with and without are the same
+   clean before/after grounding was introduced under.
 2. **Scope status.** Discovery: "Scope is NOT established yet … a lesson
    can be certified right now; any other claim is read as intent … small
    talk gets no claims … when a built-in door fits, nominate it." Answer
@@ -298,6 +308,16 @@ is covered by offline tests with scripted models:
   certified id; the driver's drop and the kernel's refusal), and the
   register's closure on the page (each mark held to the manifest by
   equality, inside the one labelled unit)
+- the precedent door (`src/memory/precedent.ts`, [precedent.md](precedent.md)):
+  the store's loader (fail-closed on any id the world does not certify
+  and on any value a shape still carries), the value-stripping shape,
+  lexical retrieval with the hold-out rule (a precedent made from the
+  bank entry under test, or worded as it, is withheld and said so), the
+  four ledger steps (held, empty, held-out, followed/departed) and the
+  reading after the verdict by canonical shape; promotion from a filed
+  bank run (`npm run precedents:promote`) takes only kernel-accepted,
+  oracle-passed runs. The verifier imports nothing from it: a precedent
+  is prompt context, and the verdict never depends on it
 - a listing as one sentence (`listing` unit, `src/kernel/render.ts`): the
   membership claims a listing composes — one per member, each verified on
   its own — are shown as one bound sentence, "By the official records, the
