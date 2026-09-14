@@ -388,6 +388,15 @@ this game", "telll me about the game", "I'm playing Red/blue; tell me about
 the game"), ten times each, both models, *off* and *nearest*. Pennies; it
 is the porch's own number.
 
+*As run (2026-09-14, findings §21).* Five times each phrasing, both
+models, and a third arm the store's contents demanded: **plus** — the
+shipped bank-derived store plus one precedent for the game ask itself,
+promoted from a filed dogfood exchange (`session:trace -- --precedent-store
+<file>`). The bank-derived store holds the game ask only its neighbours by
+word (profile shapes for "Tell me everything about Pikachu."), so the
+*nearest* arm tests the deflection risk, and the *plus* arm tests what a
+precedent of the ask's own kind buys — the M2 review path, run by hand.
+
 Cost, from the last legs: about $0.30 per strong-model arm and $0.06 per
 weak-model arm, so under $1.20 for the six legs, roughly five hours of
 wall clock.

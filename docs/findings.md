@@ -4932,3 +4932,78 @@ game?") are worded long enough that one shared word does not clear the
 threshold. So the shipped store offers the game ask its *neighbours by
 word*, which are profile shapes, and the porch reading below is a test of
 the deflection risk the design named before it is a test of the gain.
+
+**The porch reading (2026-09-14).** `session:trace`, the four dogfood
+phrasings of the game ask ("tell me about the game", "tell me about this
+game", "telll me about the game", "I'm playing Red/blue; tell me about the
+game"), five times each, three arms — *off* (`--no-memory`), *nearest*
+(the shipped bank-derived store), *plus* (the shipped store plus one
+precedent for the game ask itself, promoted from the filed dogfood
+exchange of 2026-09-13T07:10 by hand: the M2 review path, run once) —
+on both models. 120 conversations, $0.025 in all (strong $0.019, weak
+$0.006), 0 provider errors, 0 abstentions, and every one of the 120
+records the same certified lesson (`what-is-game`; one *nearest* strong
+run added two more lessons beside it). Read from the traces:
+
+| strong `qwen/qwen3-235b-a22b-2507`, 20 per arm | off | nearest | plus |
+|---|---|---|---|
+| answered in one call | 0/20 (0%) | 0/20 (0%) | **3/20 (15%)** |
+| two calls | 13/20 (65%) | 16/20 (80%) | 17/20 (85%) |
+| three calls | 7/20 (35%) | 4/20 (20%) | **0/20 (0%)** |
+| a listing nominated first, refused | 20/20 (100%) | 20/20 (100%) | 17/20 (85%) |
+| door engaged (held) / empty | — | 10 / 10 | 20 / 0 |
+| accepted answer followed a held example / departed | — | 0 / 10 | **20 / 0** |
+| answer on the wrong subject (a profile shape) | 0/20 | 0/20 | 0/20 |
+
+| weak `mistralai/mistral-nemo`, 20 per arm | off | nearest | plus |
+|---|---|---|---|
+| answered in one call | 20/20 (100%) | 20/20 (100%) | 20/20 (100%) |
+| a listing nominated first | 0/20 | 0/20 | 0/20 |
+| door engaged (held) / empty | — | 10 / 10 | 20 / 0 |
+| followed / departed | — | 0 / 10 | 20 / 0 |
+
+**What it says.** Three things, each a number.
+
+1. **The class is the strong model's.** The weak model answers the game
+   ask in one call 20/20 on every arm; the strong default nominates the
+   `listing` door first 20/20 with the door shut and 20/20 with its
+   neighbours-by-word shown. The 33% one-call rate the dev trace showed
+   was that model's habit, and the porch's inconsistency is not a model
+   limit in the sense of capability — it is a route offered and taken on
+   an ask that names no set (docs/routing.md R3: the schema steers).
+2. **A precedent of the ask's own kind shapes the answer and shortens the
+   exchange; it does not stop the nomination.** With the game-ask
+   precedent held, every accepted answer took its shape (followed 20/20,
+   from departed 10/10 with only neighbours); the three-call exchanges —
+   a refused nomination, then an emptied reply carried back — went from
+   7/20 to 0/20, and one-call resolution from 0/20 to 3/20; but the
+   listing nomination still came first on 17/20. The example is read on
+   the second call, after the door was withdrawn. So the lever on the
+   class is the nomination itself, and the epic's M3 (carry the refusal
+   back by name, or shut the listing door on an ask that names no set)
+   is the slice that owns the rest of it.
+3. **Neighbours by word did no harm and no good.** The bank-derived store
+   offered the game ask three profile shapes ("Tell me everything about
+   Pikachu.", overlap 0.25) on the two plain phrasings and nothing on the
+   other two. No answer deflected into a profile (0/20 on either model);
+   no answer changed. The deflection risk the design named did not
+   materialize at this threshold, and the design's fixed-versus-nearest
+   question is still open on the bank: on the porch, what moved the
+   number was the *right* precedent, not any precedent.
+
+*Model errors:* the strong model's 57/60 first-call listing nominations
+on an ask that names no set — its own choice, the same one the trace
+showed. *Harness factors:* (a) **named** — 20 per cell is a porch sample;
+the bar the design set (the seven `meta-*` entries at ≥90% one-call, the
+stable core out of its band, N=3 both models, three arms in one artifact)
+is the bank legs, not run yet, at about $1.20. (b) **named** — the *plus*
+arm's precedent was promoted by the author from a dogfood record, not by
+the bank's oracle; it is the M2 path run by hand, and it is what the
+shipped store lacks for this ask because the bank words the lesson
+entries differently ("What is Pokemon?", "How does this game work?").
+(c) **named** — the store carries three shapes of one ask
+(`p-kind-summarize-pikachu`, `-2`, `-3`), which crowd k=3 for any ask
+sharing a word with it; one precedent per ask, shapes merged or the
+commonest kept, is the next tuning of promotion, and it is data, not
+code. (d) **named** — the fixed arm was not run on the porch; it is the
+bank legs' control.
