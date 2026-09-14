@@ -458,3 +458,57 @@ describe("renderCoverageArtifact names what stopped early and what was filtered"
     expect(page).toContain("3 repetition(s)");
   });
 });
+
+describe("the precedent door rides as a lever (docs/precedent.md)", () => {
+  const storeJson = JSON.stringify({
+    schemaVersion: 1,
+    packId: world.pack.id,
+    precedents: [
+      {
+        id: "p-attack",
+        snapshotId: world.registry.snapshot.id,
+        ask: "What's Pikachu's Attack stat?",
+        shape: { claims: [{ kind: "fact", entityId: "pikachu", factId: "base-attack" }], rosters: [] },
+        source: { kind: "bank-run", artifact: "a.json", transactionId: "t", entryId: "ans-fact-attack-pikachu" },
+        promoted: { by: "oracle", at: "t" },
+      },
+    ],
+  });
+  const memoryFs = (contents: string) => ({ readDir: () => [], readFile: () => contents, writeFile: () => undefined });
+
+  it("parses --precedents nearest|fixed and refuses the rest by name", () => {
+    expect(parseCoverageArgs(["--precedents", "nearest"]).precedents).toBe("nearest");
+    expect(parseCoverageArgs(["--precedents", "fixed", "--fixed-precedents", "a,b"]).fixedPrecedents).toEqual(["a", "b"]);
+    expect(parseCoverageArgs(["--precedents", "sometimes"]).errors[0]).toContain("nearest");
+    expect(parseCoverageArgs(["--precedent-store", "x.json"]).errors[0]).toContain("--precedents");
+    expect(parseCoverageArgs(["--precedents", "nearest", "--fixed-precedents", "a"]).errors[0]).toContain("fixed");
+    expect(parseCoverageArgs(["--precedents", "nearest", "--phrasings"]).errors[0]).toContain("single-turn");
+    expect(parseCoverageArgs([]).precedents).toBeUndefined();
+  });
+
+  it("states the door in the plan, loads the store fail-closed, pins its digest with the number, and records the reading per run", async () => {
+    const plan = await runCoverage(options(["--ids", "ans-fact-speed-pikachu", "--precedents", "nearest"]));
+    expect(plan.lines.join("\n")).toContain("precedents:    nearest");
+
+    const opts = options(["--live", "--ids", "ans-fact-speed-pikachu", "--precedents", "nearest", "--precedent-store", "memory.json"], {
+      makeProvider: scripted(pikachuSpeed()),
+      fs: memoryFs(storeJson),
+    });
+    const result = await runCoverage(opts);
+    expect(result.exitCode).toBe(0);
+    const { artifact } = filedArtifact(opts.written);
+    expect(artifact.precedents).toMatchObject({ mode: "nearest", store: "memory.json", k: 3, threshold: 0.25 });
+    expect(artifact.precedents?.digest).toMatch(/^sha256:/);
+    expect(artifact.runs[0]!.precedents).toEqual({ held: ["p-attack"], followed: false });
+    expect(renderCoverageArtifact(artifact)).toContain("**precedents: nearest**");
+
+    const broken = options(["--live", "--ids", "ans-fact-speed-pikachu", "--precedents", "fixed", "--precedent-store", "memory.json"], {
+      makeProvider: scripted(pikachuSpeed()),
+      fs: memoryFs(JSON.stringify({ schemaVersion: 1, packId: "another-pack", precedents: [] })),
+    });
+    const refused = await runCoverage(broken);
+    expect(refused.exitCode).toBe(1);
+    expect(refused.lines[0]).toContain("precedent-pack-mismatch");
+    expect(broken.written.size).toBe(0);
+  });
+});

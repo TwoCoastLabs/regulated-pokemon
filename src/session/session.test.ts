@@ -12,8 +12,10 @@
 import { describe, expect, it } from "vitest";
 
 import { harnessWorld } from "../harness/corpus.js";
-import { FailingProvider, type ModelProvider, ScriptedProvider } from "../harness/provider.js";
+import { type DoorState, FailingProvider, type ModelProvider, ScriptedProvider } from "../harness/provider.js";
+import type { Claim } from "../kernel/contracts.js";
 import { verifyReplay } from "../kernel/replay.js";
+import { type Precedent, type PrecedentStore, shapeOf } from "../memory/precedent.js";
 import {
   decideAct,
   decideScope,
@@ -22,6 +24,7 @@ import {
   retry,
   say,
   type SessionDeps,
+  type SessionState,
   setProfile,
   startSession,
 } from "./session.js";
@@ -3106,5 +3109,133 @@ describe("a lesson with a null link and no subject is taught, not questioned (fo
     state = await say(state, "what does Eevee evolve into?", d);
     expect(state.linking.contradictions).toBe(1);
     expect(state.phase.kind).toBe("clarifying");
+  });
+});
+
+describe("the precedent door: memory the operator owns (docs/precedent.md, epic #169 M1)", () => {
+  const SNAPSHOT = world.registry.snapshot.id;
+  const precedent = (id: string, ask: string, claims: readonly Claim[], entryId?: string): Precedent => ({
+    id,
+    snapshotId: SNAPSHOT,
+    ask,
+    shape: shapeOf({ claims, rosters: [] }),
+    source: { kind: "bank-run", artifact: "runs/coverage/test.json", transactionId: `txn-${id}`, ...(entryId === undefined ? {} : { entryId }) },
+    promoted: { by: "oracle", at: "2026-09-14T00:00:00.000Z" },
+  });
+  const GAME = precedent("p-game", "tell me about the game", [{ kind: "explanation", blockId: "what-is-game" }], "meta-what-is-game");
+  const SPEED = precedent("p-speed", "what is pikachu's speed", [{ kind: "fact", entityId: "pikachu", factId: "base-speed", asserted: { kind: "number", value: 90 } }]);
+  const store: PrecedentStore = { schemaVersion: 1, packId: world.pack.id, precedents: [GAME, SPEED] };
+  const lesson = (blockId: string) => JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId }] });
+  const codesOf = (state: SessionState): string[] => [...state.exchanges.flatMap((exchange) => exchange.steps), ...state.steps].map((step) => step.code);
+  const stepsOf = (state: SessionState) => [...state.exchanges.flatMap((exchange) => exchange.steps), ...state.steps];
+
+  function tapped(script: (purpose: string, call: number) => string): { provider: ModelProvider; hints: DoorState[]; prompts: string[] } {
+    const hints: DoorState[] = [];
+    const prompts: string[] = [];
+    let calls = 0;
+    const provider = new ScriptedProvider("scripted:memory", (request) => {
+      if (request.purpose === "answer") {
+        if (request.hint.doors !== undefined) hints.push(request.hint.doors);
+        prompts.push(request.prompt);
+        calls += 1;
+      }
+      return script(request.purpose, calls);
+    });
+    return { provider, hints, prompts };
+  }
+
+  it("holds the nearest precedents on the call, shows them as shapes with no value, and reads the accepted answer as having followed one", async () => {
+    const tap = tapped((purpose) => (purpose === "answer" ? lesson("what-is-game") : "decline"));
+    const state = await say(startSession(), "tell me about this game", { world, provider: tap.provider, now: clock(), precedents: { store } });
+
+    expect(state.records[0]?.outcome.status).toBe("answered");
+    // The door on the call: id, score and ask — never the shape.
+    expect(tap.hints[0]?.precedents).toEqual([{ id: "p-game", score: 1, ask: "tell me about the game" }]);
+    // The prompt: the section between the rows and the ask, ids and kinds only.
+    expect(tap.prompts[0]).toContain("Earlier asks the records answered, and the shape that was accepted for each");
+    expect(tap.prompts[0]).toContain('- "tell me about the game"');
+    const section = tap.prompts[0]!.slice(tap.prompts[0]!.indexOf("Earlier asks"), tap.prompts[0]!.indexOf("Scope is NOT"));
+    expect(section).toContain('{"claims":[{"kind":"explanation","blockId":"what-is-game"}],"rosters":[]}');
+    expect(section).not.toMatch(/asserted|reported|\d/);
+    // The ledger: held before the call, followed after the verdict, in fixed wording.
+    const codes = codesOf(state);
+    expect(codes.indexOf("memory/held")).toBeGreaterThan(-1);
+    expect(codes.indexOf("memory/held")).toBeLessThan(codes.indexOf("model/discovery"));
+    expect(codes).toContain("memory/followed");
+    const held = stepsOf(state).find((step) => step.code === "memory/held")!;
+    expect(held.lane).toBe("driver");
+    expect(held.count).toBe(1);
+    expect(held.lines).toEqual(['"tell me about the game" — overlap 1']);
+    expect(stepsOf(state).find((step) => step.code === "memory/followed")?.text).toBe('the accepted answer took the same shape as the example for "tell me about the game"');
+    expect(state.memory).toEqual({ held: 1, empty: 0, followed: 1, departed: 0, lastHeld: ["p-game"] });
+    // The precedent never reaches the record: it replays without the store.
+    expect(verifyReplay(world, state.records[0]!).allowed).toBe(true);
+  });
+
+  it("reads an accepted answer of another shape as having departed", async () => {
+    const tap = tapped((purpose) => (purpose === "answer" ? lesson("how-to-play") : "decline"));
+    const state = await say(startSession(), "tell me about the game", { world, provider: tap.provider, now: clock(), precedents: { store } });
+    expect(codesOf(state)).toContain("memory/departed");
+    expect(state.memory).toMatchObject({ held: 1, followed: 0, departed: 1 });
+  });
+
+  it("comes up empty when no earlier ask is near enough, says so, and holds nothing on the call", async () => {
+    const tap = tapped((purpose) => (purpose === "answer" ? JSON.stringify({ rosters: [], claims: [] }) : "decline"));
+    const state = await say(startSession(), "weather today", { world, provider: tap.provider, now: clock(), precedents: { store } });
+    const empty = stepsOf(state).find((step) => step.code === "memory/empty");
+    expect(empty?.text).toBe("no earlier ask shared a word with this one — nothing was shown");
+    // Open and empty, not shut: the door is declared with nothing in it.
+    expect(tap.hints[0]?.precedents).toEqual([]);
+    expect(tap.prompts[0]).not.toContain("Earlier asks the records answered");
+    expect(state.memory).toMatchObject({ held: 0, empty: 1, lastHeld: [] });
+    expect(codesOf(state)).not.toContain("memory/followed");
+  });
+
+  it("names the nearest miss when something shared a word but not enough", async () => {
+    const tap = tapped((purpose) => (purpose === "answer" ? JSON.stringify({ rosters: [], claims: [] }) : "decline"));
+    const state = await say(startSession(), "does pikachu run fast", { world, provider: tap.provider, now: clock(), precedents: { store } });
+    const empty = stepsOf(state).find((step) => step.code === "memory/empty");
+    expect(empty?.text).toBe("no earlier ask was near enough to show (best overlap 0.2, threshold 0.25)");
+    expect(empty?.lines).toEqual(['nearest: "what is pikachu\'s speed" — overlap 0.2']);
+  });
+
+  it("withholds a precedent made from the entry under test, and says so before coming up empty", async () => {
+    const tap = tapped((purpose) => (purpose === "answer" ? lesson("what-is-game") : "decline"));
+    const state = await say(startSession(), "tell me about the game", {
+      world,
+      provider: tap.provider,
+      now: clock(),
+      precedents: { store, holdOut: { entryId: "meta-what-is-game" } },
+    });
+    const codes = codesOf(state);
+    expect(codes.indexOf("memory/held-out")).toBeLessThan(codes.indexOf("memory/empty"));
+    const withheld = stepsOf(state).find((step) => step.code === "memory/held-out")!;
+    expect(withheld.text).toBe("1 precedent(s) were withheld: made from this same bank entry");
+    expect(withheld.lines).toEqual(["p-game — made from this same bank entry"]);
+    expect(tap.hints[0]?.precedents).toEqual([]);
+  });
+
+  it("the fixed arm holds the named precedents whatever the ask", async () => {
+    const tap = tapped((purpose) => (purpose === "answer" ? JSON.stringify({ rosters: [], claims: [] }) : "decline"));
+    const state = await say(startSession(), "what is the weather like", { world, provider: tap.provider, now: clock(), precedents: { store, fixed: ["p-speed", "p-game"] } });
+    expect(tap.hints[0]?.precedents?.map((held) => held.id)).toEqual(["p-speed", "p-game"]);
+    expect(stepsOf(state).find((step) => step.code === "memory/held")?.text).toBe("2 fixed example(s) were shown — the same on every call, whatever the ask; none carried a value");
+  });
+
+  it("keeps the precedents on the retry after a refused nomination — the prompt is otherwise identical between the two calls", async () => {
+    const nomination = JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "listing", subject: "catalogue", n: 1 }] });
+    const tap = tapped((purpose, call) => (purpose !== "answer" ? "decline" : call === 1 ? nomination : lesson("what-is-game")));
+    const state = await say(startSession(), "tell me about the game", { world, provider: tap.provider, now: clock(), precedents: { store } });
+    expect(tap.hints).toHaveLength(2);
+    expect(tap.hints[1]?.precedents).toEqual(tap.hints[0]?.precedents);
+    expect(codesOf(state).filter((code) => code === "memory/held")).toHaveLength(1);
+    expect(state.records[0]?.outcome.status).toBe("answered");
+  });
+
+  it("with the door shut, no memory step is written and no door is declared", async () => {
+    const tap = tapped((purpose) => (purpose === "answer" ? lesson("what-is-game") : "decline"));
+    const state = await say(startSession(), "tell me about the game", { world, provider: tap.provider, now: clock() });
+    expect(codesOf(state).some((code) => code.startsWith("memory/"))).toBe(false);
+    expect(tap.hints[0]?.precedents).toBeUndefined();
   });
 });

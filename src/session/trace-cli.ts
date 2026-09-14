@@ -26,6 +26,7 @@
 
 import { centerWorld, demoWorld } from "../demo/files.js";
 import { loadEnv } from "../harness/live.js";
+import { precedentStorePath, readPrecedentStore } from "../memory/files.js";
 import { ADVERSARY_PERSONA, DEFAULT_STRONG_MODEL, DEFAULT_WEAK_MODEL, HONEST_PERSONA } from "../harness/models.js";
 import { OpenRouterProvider } from "../harness/openrouter.js";
 import { parseTraceArgs, runTrace } from "./trace.js";
@@ -63,8 +64,12 @@ function makeClock(): () => string {
 const grounded = args.grounding === "full";
 const retrieval = args.grounding === "retrieval";
 const world = args.center ? centerWorld() : demoWorld();
+// The precedent door: the world's own store, when one is shipped and the
+// flag has not shut it. Loaded fail-closed; a store that does not load
+// stops the tracer by name rather than tracing against half a memory.
+const store = args.memory ? readPrecedentStore(args.precedentStore ?? precedentStorePath(world.pack.id), world) : undefined;
 console.log(
-  `[config] model ${model}, world ${world.registry.snapshot.id} + ${world.pack.id}, grounding ${args.grounding}, grammar ${args.gatedGrammar ? "gated" : "loose"}, repair ${args.repair ? "on" : "off"}, feedback ${args.feedback ? "on" : "off"}, clarify ${args.clarify ? "on" : "off"}, suggest ${args.suggest ? "on" : "off"}${args.adversarial ? ", adversarial" : ""}`,
+  `[config] model ${model}, world ${world.registry.snapshot.id} + ${world.pack.id}, grounding ${args.grounding}, grammar ${args.gatedGrammar ? "gated" : "loose"}, repair ${args.repair ? "on" : "off"}, feedback ${args.feedback ? "on" : "off"}, clarify ${args.clarify ? "on" : "off"}, suggest ${args.suggest ? "on" : "off"}, memory ${store === undefined ? (args.memory ? "off (no store shipped)" : "off") : `on (${store.precedents.length} precedents)`}${args.adversarial ? ", adversarial" : ""}`,
 );
 
 runTrace(args.inputs, {
@@ -78,6 +83,7 @@ runTrace(args.inputs, {
   feedback: args.feedback,
   clarify: args.clarify,
   suggest: args.suggest,
+  ...(store === undefined ? {} : { precedents: { store } }),
 }).then((result) => {
   for (const line of result.lines) console.log(line);
   process.exit(result.exitCode);

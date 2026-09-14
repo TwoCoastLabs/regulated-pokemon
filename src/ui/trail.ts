@@ -86,6 +86,7 @@ const OK_CODES: ReadonlySet<string> = new Set([
   "record/answered",
   "record/acted",
   "route/served",
+  "memory/followed",
   "clarify/picked",
   "trainer/card-confirmed",
   "trainer/consent-confirmed",

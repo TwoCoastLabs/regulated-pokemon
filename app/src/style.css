@@ -2381,3 +2381,76 @@ body {
 .exhibit-page.suggestions-live section.suggestions li[data-suggestion]:hover {
   background: var(--indigo-tint);
 }
+
+/* The precedent door (docs/precedent.md): the empty state — open, and
+   nothing scored above the threshold — drawn apart from shut. */
+.door-empty {
+  border-style: dashed;
+  border-color: var(--muted);
+  color: var(--muted);
+}
+
+.precedent-empty {
+  margin: 2px 0 4px;
+}
+
+.precedent-panel {
+  margin: 2px 0 6px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--indigo);
+  border-radius: 6px;
+  background: var(--card);
+}
+
+.precedent-panel > summary {
+  cursor: pointer;
+}
+
+.precedent-rows {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.precedent-rows pre {
+  margin: 2px 0;
+}
+
+/* The session's memory panel: the store as loaded, and the candidates a
+   reviewer marks for promotion — a file to download, never a write. */
+.memory-panel {
+  margin: 0 0 8px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  font-size: 12px;
+}
+
+.memory-panel > summary {
+  cursor: pointer;
+  color: var(--indigo);
+  font-weight: 600;
+}
+
+.memory-body {
+  display: grid;
+  gap: 4px;
+  padding-top: 4px;
+}
+
+.memory-candidates {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.memory-candidates pre {
+  margin: 2px 0 0;
+}

@@ -9,6 +9,8 @@
 import { describe, expect, it } from "vitest";
 
 import { harnessWorld } from "./corpus.js";
+import type { Claim } from "../kernel/contracts.js";
+import { type Precedent, type PrecedentStore, shapeOf } from "../memory/precedent.js";
 import { ScriptedProvider } from "./provider.js";
 import { type BankEntry, readBank } from "./bank.js";
 import { draftOnTarget, NO_HONEST_PICK, phrasingsOf, runBank, runBankEntry, runIntentRobustness, truthfulPick } from "./bank-run.js";
@@ -589,5 +591,45 @@ describe("the bank files the driver's ledger with each run (issue #158)", () => 
     expect(filed.steps.map((step) => step.code)).toContain("record/answered");
     const passed = await runBankEntry(world, entry("off-weather"), scripted(JSON.stringify({ rosters: [], claims: [] })), clock(), undefined, 0, { profile: true });
     expect(passed.run.exchanges!.at(-1)!.outcome).toBe("open");
+  });
+});
+
+describe("the precedent door on a bank run (docs/precedent.md)", () => {
+  const SNAPSHOT = world.registry.snapshot.id;
+  const precedent = (id: string, ask: string, claims: readonly Claim[], entryId: string): Precedent => ({
+    id,
+    snapshotId: SNAPSHOT,
+    ask,
+    shape: shapeOf({ claims, rosters: [] }),
+    source: { kind: "bank-run", artifact: "runs/coverage/test.json", transactionId: `txn-${id}`, entryId },
+    promoted: { by: "oracle", at: "2026-09-14T00:00:00.000Z" },
+  });
+  const store: PrecedentStore = {
+    schemaVersion: 1,
+    packId: world.pack.id,
+    precedents: [
+      precedent("p-own", "What's Pikachu's Speed stat?", [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }], "ans-fact-speed-pikachu"),
+      precedent("p-attack", "What's Pikachu's Attack stat?", [{ kind: "fact", entityId: "pikachu", factId: "base-attack" }], "ans-fact-attack-pikachu"),
+      precedent("p-game", "tell me about the game", [{ kind: "explanation", blockId: "what-is-game" }], "meta-what-is-game"),
+    ],
+  };
+
+  it("withholds the entry's own precedent, holds a neighbour's, and records what was held and whether it was followed", async () => {
+    const run = await runBankEntry(world, entry("ans-fact-speed-pikachu"), model(pikachuSpeed()), clock(), undefined, 0, { precedents: { store, mode: "nearest" } });
+    expect(run.stage).toEqual({ kind: "resolved" });
+    expect(run.precedents).toEqual({ held: ["p-attack"], followed: false });
+    const codes = run.run.exchanges!.flatMap((exchange) => exchange.steps.map((step) => step.code));
+    expect(codes).toContain("memory/held-out");
+    expect(codes).toContain("memory/departed");
+  });
+
+  it("the fixed arm holds the same few on every entry, chosen once from the store", async () => {
+    const run = await runBankEntry(world, entry("ans-fact-attack-machamp"), model(""), clock(), undefined, 0, { precedents: { store, mode: "fixed" } });
+    expect(run.precedents).toEqual({ held: ["p-game", "p-own"] });
+  });
+
+  it("with the door shut, the run carries no precedent reading", async () => {
+    const run = await runBankEntry(world, entry("ans-fact-speed-pikachu"), model(pikachuSpeed()), clock());
+    expect(run.precedents).toBeUndefined();
   });
 });

@@ -36,6 +36,7 @@ export const ROUTING_PATH: readonly string[] = [
   "src/harness/grammar-gate.ts",
   "src/harness/reference.ts",
   "src/harness/canonical.ts",
+  "src/memory/precedent.ts",
   "src/kernel/scope.ts",
   "src/kernel/scope-deps.ts",
 ];

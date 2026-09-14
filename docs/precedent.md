@@ -127,7 +127,7 @@ naming the snapshot it was accepted against:
 ```ts
 interface PrecedentStore {
   schemaVersion: 1;
-  packId: string;                 // the pack every precedent was accepted under
+  packId: string;                 // the pack every precedent validates under
   precedents: readonly Precedent[];
 }
 
@@ -165,6 +165,23 @@ every `*Id` field, and drops `asserted`, `reported`, `selectedEntityId`,
 "tell me about the species" → `{"kind": "route", "routeId": "profile", …}`
 is a legitimate precedent when the driver served it.
 
+*As built (2026-09-14, PR for M1).* Three readings of the above were
+settled in the code and are recorded here so the document and the module
+agree. **The pack id is the pack the store validates under**, not the pack
+each record was accepted under: the shapes carry ids, not policy, and the
+loader is the guard — the shipped store was promoted from the 2026-09-11
+strong-model artifact (pack v2) and validates under v3 (same lessons,
+same rules), each precedent's `source.artifact` pinning where it was
+accepted. **A served route is not promoted as a route shape**: promotion
+reads the certified manifest, which carries the composed claims, so a
+profile served by nomination enters as its nine fact claims — the shape
+the draft actually took — and the `followed` reading compares claims and
+rosters only. **The empty step names the best score** ("best overlap 0.2,
+threshold 0.25") so a dogfooder sees what the retriever almost offered;
+the held step's lines carry each precedent's overlap for the same reason,
+and the compliance console shows the same steps — the design's "never a
+score" applies to the panel's provenance rows, not to the ledger.
+
 ### Promotion
 
 Two sources, both reviewed acts, neither on the live path:
@@ -185,6 +202,19 @@ the driver emptied never enters. The store is a set of things that were
 right, and nothing about what was wrong — the line that keeps it memory
 and not search.
 
+*As built.* The first promotion, from
+`runs/coverage/2026-09-11T04-05-05-263Z-coverage.json` (the strong model,
+N=3, 411 runs): **121 precedents** written, and every exclusion counted —
+156 runs already in the store (the same ask accepted in the same shape on
+another pass), 66 abstentions, 47 resolved runs the oracle did not pass
+(off subject or off shape: the certified non-sequitur, excluded by
+construction), 14 denials, 6 with no certified manifest, 1 declined act.
+By door: 41 facts, 34 lessons, 15 eligibility rulings, 8 counts, 7
+rankings, 7 recommendations, 4 game rules, 2 matchups, 2 memberships, 1
+type count. The fixed arm's default exemplars are chosen once from the
+store in order — the first lesson, the first fact, the first count — and
+recorded in the artifact by id.
+
 ### Retrieval of precedents
 
 Deterministic and lexical, so a run replays: the ask and each precedent's
@@ -201,6 +231,38 @@ A second signal breaks the tie the words cannot: when the row retriever
 selected the same entity ids for the ask and for a precedent (a species
 named in both), that precedent ranks first among equals. This is the only
 place the two retrievers touch, and it is a preference, not a filter.
+
+**Is lexical retrieval scalable, and is an embedding tier the long-term
+answer?** Two different questions, and the honest answer to each is a
+number the door now reports.
+
+*Cost* scales fine. Retrieval is one token-set overlap per precedent — a
+few thousand precedents are a millisecond, and past that an inverted
+index over tokens (the same closed-vocabulary trick the row retriever
+uses) keeps it linear in the words of the ask, not the size of the store.
+The store itself stays small by construction: one accepted shape per
+distinct ask, values stripped, per pack version.
+
+*Recall* is the real ceiling, and it is lesson 6's: a lexical front door
+trades recall for specificity and never engages on a paraphrase or a
+misspelling — "telll me about the game" and "I'm playing Red/blue; tell
+me about the game" retrieved nothing on the porch while "tell me about
+the game" did. The door reports exactly this as its *empty* rate
+(`memory/empty`, and per run in the artifact), so the question "is the
+lexical tier enough?" is answered by a count, not an opinion.
+
+*The path to embeddings* is landscape.md H4 and scale.md S3, already
+laid: a semantic retriever over the *asks* (never the values) as the
+nominator, its nomination recorded in the run so replay reads it rather
+than recomputing it, and recall@k reported apart from what the model did
+with the shortlist. It moves one probabilistic component upstream of the
+gate, where §7 says such components belong, at two costs the doctrine
+names — it cannot run in CI (nondeterministic, billable), and a retrieval
+miss and a model miss must never be blended. The trigger for building it
+is the empty rate on real traffic, read from the record; the design
+choice for M1 is the deterministic tier first because it replays, and
+because the porch showed the number that moved was the *right* precedent
+being in the store, not the retriever finding it.
 
 A precedent whose `snapshotId` differs from the live world is never
 offered; a store whose `packId` differs is never loaded. A precedent whose
@@ -357,6 +419,15 @@ dogfood phrasings of the game ask ("tell me about the game", "tell me about
 this game", "telll me about the game", "I'm playing Red/blue; tell me about
 the game"), ten times each, both models, *off* and *nearest*. Pennies; it
 is the porch's own number.
+
+*As run (2026-09-14, findings §21).* Five times each phrasing, both
+models, and a third arm the store's contents demanded: **plus** — the
+shipped bank-derived store plus one precedent for the game ask itself,
+promoted from a filed dogfood exchange (`session:trace -- --precedent-store
+<file>`). The bank-derived store holds the game ask only its neighbours by
+word (profile shapes for "Tell me everything about Pikachu."), so the
+*nearest* arm tests the deflection risk, and the *plus* arm tests what a
+precedent of the ask's own kind buys — the M2 review path, run by hand.
 
 Cost, from the last legs: about $0.30 per strong-model arm and $0.06 per
 weak-model arm, so under $1.20 for the six legs, roughly five hours of

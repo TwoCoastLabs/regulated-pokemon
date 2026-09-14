@@ -60,6 +60,17 @@ import { type AnswerStep, phraseQuestion, proposalDigest, proposeAnswer, propose
 import { type AnswerDecode, NO_CLAIMS_REASON } from "../harness/decode.js";
 import { MAX_ANSWER_CLAIMS, type NominableRoute } from "../harness/schema.js";
 import { addUsage, emptyUsage, type ModelProvider, type Usage } from "../harness/provider.js";
+import { retrievalSelection } from "../harness/reference.js";
+import {
+  DEFAULT_PRECEDENT_LEVERS,
+  fixedPrecedents,
+  followed,
+  type HeldPrecedent,
+  type HoldOut,
+  type PrecedentLevers,
+  type PrecedentStore,
+  retrievePrecedents,
+} from "../memory/precedent.js";
 import { aliasContradiction, fieldsOfClaim, freshLinks, linkClaims } from "./linking.js";
 import { canonicalId, certifies, MAX_CLARIFICATIONS, matchPick, scopeOptions, validOptions } from "./clarify.js";
 import { closeLedger, type DriverStep, type ExchangeLedger, ledgerOf, step as ledgerStep } from "./ledger.js";
@@ -143,6 +154,29 @@ export interface SessionDeps {
    * their leg.
    */
   suggest?: boolean;
+  /**
+   * The precedent door (docs/precedent.md, epic #169 M1): the operator's
+   * store of earlier accepted, on-target exchanges. Before an exchange's
+   * first answer call the driver retrieves the nearest few for the ask and
+   * every call of the exchange holds them as worked examples of which door
+   * to take — ids and kinds, never a value. Nothing downstream reads them:
+   * the draft they influence faces the whole gate, and the verdict never
+   * depends on them. The store is read here and written nowhere on the
+   * live path. Off by default.
+   */
+  precedents?: SessionPrecedents;
+}
+
+/** What the session holds of the operator's memory. */
+export interface SessionPrecedents {
+  store: PrecedentStore;
+  levers?: PrecedentLevers;
+  /** What a bank run withholds, so a precedent never answers for the entry
+   * it was made from (the hold-out rule, enforced in the retriever). */
+  holdOut?: HoldOut;
+  /** The fixed arm of the measurement: these precedents on every call,
+   * whatever the ask — a few-shot effect read apart from a retrieval one. */
+  fixed?: readonly string[];
 }
 
 /** The advisor's own clarifying question, as recorded. */
@@ -283,6 +317,18 @@ export interface SessionState {
    * offered is a next step taken.
    */
   suggestions: { offered: number; kept: number; dropped: number; taken: number; deadEnded: number };
+  /**
+   * The precedent door's gauge (docs/precedent.md): `held` counts the
+   * exchanges whose calls held precedents, `empty` those where the door was
+   * open and nothing scored above the threshold — lesson 6's silent
+   * ceiling, as a number — `followed` the accepted answers that took a held
+   * example's shape and `departed` those that took none. `lastHeld` is the
+   * last exchange's held ids, for a harness to record per run.
+   */
+  memory: { held: number; empty: number; followed: number; departed: number; lastHeld: readonly string[] };
+  /** The precedents the open exchange's calls hold, when the door is on and
+   * engaged; cleared with the exchange, like `required`. */
+  heldPrecedents?: readonly HeldPrecedent[];
   /** Ladder proposals spent on the current ask; a fresh utterance resets it. */
   ladderTurns: number;
   /**
@@ -372,6 +418,7 @@ export function startSession(idPrefix?: string): SessionState {
     linking: { mapped: 0, unlinked: 0, offTargetDropped: 0, contradictions: 0, staleDropped: 0, unions: 0 },
     clarification: { asked: 0, picked: 0, ignored: 0, capped: 0, phrased: 0, unphrased: 0 },
     suggestions: { offered: 0, kept: 0, dropped: 0, taken: 0, deadEnded: 0 },
+    memory: { held: 0, empty: 0, followed: 0, departed: 0, lastHeld: [] },
     listingActivations: { consulted: 0, served: 0, stoodDown: 0, guardDropped: 0 },
     nominationRetries: 0,
     ladderTurns: 0,
@@ -553,7 +600,7 @@ function file(state: SessionState, record: Transaction, page?: DomElement): Sess
  * round twelve, 2026-09-01): a leaked narrowed `required` let the next ask
  * skip discovery and inherit the previous ask's scope demands. */
 function closeExchange(state: SessionState): SessionState {
-  const { pending: _pending, required: _required, bound: _bound, ...rest } = state;
+  const { pending: _pending, required: _required, bound: _bound, heldPrecedents: _held, ...rest } = state;
   return { ...rest, phase: { kind: "gathering" }, askStart: state.transcript.length, ladderTurns: 0 };
 }
 
@@ -1224,6 +1271,100 @@ async function withRouteFallback(
 }
 
 /**
+ * The precedent door, consulted once per exchange before its first answer
+ * call (docs/precedent.md). Deterministic: the store, the ask and the
+ * levers fix what is held, so a run replays. Three steps it can write, in
+ * fixed wording — held, empty (the door open and nothing near enough: the
+ * activation ceiling, as a line), held-out (a harness's own precedents
+ * withheld) — and the held precedents ride on the state for every call of
+ * the exchange, retries included, so the prompt is otherwise identical
+ * between a first call and a carried-back one.
+ */
+function consultMemory(state: SessionState, deps: SessionDeps, ask: string): SessionState {
+  const memory = deps.precedents;
+  if (memory === undefined) return state;
+  const snapshotId = deps.world.registry.snapshot.id;
+  const levers = memory.levers ?? DEFAULT_PRECEDENT_LEVERS;
+  if (memory.fixed !== undefined) {
+    const held = fixedPrecedents(memory.store, memory.fixed, snapshotId);
+    return held.length === 0
+      ? memoryEmpty(state, deps, "the fixed examples named none this world holds — nothing was shown", [])
+      : memoryHeld(state, deps, held, `${held.length} fixed example(s) were shown — the same on every call, whatever the ask; none carried a value`, held.map((one) => `"${one.ask}"`));
+  }
+  // The row retriever's own selection breaks ties: a precedent about the
+  // subject the ask names ranks first among equals.
+  const selection = retrievalSelection(deps.world.registry, ask);
+  const found = retrievePrecedents(memory.store, ask, {
+    snapshotId,
+    levers,
+    ...(memory.holdOut === undefined ? {} : { holdOut: memory.holdOut }),
+    entities: new Set([...selection.species, ...selection.moves, ...selection.items]),
+  });
+  let next = state;
+  if (found.withheld.length > 0) {
+    next = ledgerStep(
+      next,
+      deps.now(),
+      "driver",
+      "memory/held-out",
+      `${found.withheld.length} precedent(s) were withheld: ${found.withheld[0]!.reason}`,
+      found.withheld.length,
+      found.withheld.map((one) => `${one.id} — ${one.reason}`),
+    );
+  }
+  if (found.held.length === 0) {
+    const miss = found.nearestMiss;
+    return miss === undefined
+      ? memoryEmpty(next, deps, "no earlier ask shared a word with this one — nothing was shown", [])
+      : memoryEmpty(next, deps, `no earlier ask was near enough to show (best overlap ${miss.score}, threshold ${levers.threshold})`, [`nearest: "${miss.ask}" — overlap ${miss.score}`]);
+  }
+  return memoryHeld(
+    next,
+    deps,
+    found.held,
+    `${found.held.length} earlier answered ask(s) were shown as examples of which door to take; none carried a value`,
+    found.held.map((one) => `"${one.ask}" — overlap ${one.score}`),
+  );
+}
+
+function memoryHeld(state: SessionState, deps: SessionDeps, held: readonly HeldPrecedent[], text: string, lines: readonly string[]): SessionState {
+  const stepped = ledgerStep(state, deps.now(), "driver", "memory/held", text, held.length, lines);
+  return { ...stepped, memory: { ...state.memory, held: state.memory.held + 1, lastHeld: held.map((one) => one.id) }, heldPrecedents: held };
+}
+
+function memoryEmpty(state: SessionState, deps: SessionDeps, text: string, lines: readonly string[]): SessionState {
+  const stepped = ledgerStep(state, deps.now(), "driver", "memory/empty", text, undefined, lines);
+  return { ...stepped, memory: { ...state.memory, empty: state.memory.empty + 1, lastHeld: [] }, heldPrecedents: [] };
+}
+
+/** The precedents an answer call holds — the open exchange's, on every call.
+ * An empty list is passed as such: the door was open and engaged nothing,
+ * and the call declares that (docs/precedent.md, the empty state), where a
+ * shut door declares nothing. */
+function precedentArg(state: SessionState): { precedents?: readonly HeldPrecedent[] } {
+  return state.heldPrecedents === undefined ? {} : { precedents: state.heldPrecedents };
+}
+
+/**
+ * The reading after the verdict (docs/precedent.md): whether the accepted
+ * draft took a held example's shape — deterministic, by canonical shape,
+ * with roster names and claim order ignored. The memory's effect, visible
+ * per exchange; summed over a run, the number the fixed and nearest arms
+ * are read by. Written only for a draft the kernel accepted.
+ */
+function readMemory(state: SessionState, deps: SessionDeps, draft: ManifestDraft): SessionState {
+  const held = state.heldPrecedents;
+  if (held === undefined || held.length === 0) return state;
+  const match = followed(draft, held);
+  if (match === undefined) {
+    const stepped = ledgerStep(state, deps.now(), "driver", "memory/departed", "the accepted answer took a shape none of the examples showed");
+    return { ...stepped, memory: { ...state.memory, departed: state.memory.departed + 1 } };
+  }
+  const stepped = ledgerStep(state, deps.now(), "driver", "memory/followed", `the accepted answer took the same shape as the example for "${match.ask}"`, undefined, [match.id]);
+  return { ...stepped, memory: { ...state.memory, followed: state.memory.followed + 1 } };
+}
+
+/**
  * Advisory wording, stated as an explicit list rather than inferred. The gate
  * trades recall for specificity on purpose (a miss falls through to today's
  * behaviour, which is safe); what it may never do is fire on a plain factual
@@ -1536,6 +1677,8 @@ async function teachOrDiscover(
     .join(" ");
   const previously = anaphorContext(world, state, askWords);
   const about = previousSubjects(world, state, askWords);
+  // The precedent door, once per exchange, before the first call.
+  state = consultMemory(state, deps, askWords);
 
   let step: AnswerStep;
   let stepUsage: Usage;
@@ -1549,6 +1692,7 @@ async function teachOrDiscover(
         scenarioId: "session",
         transactionId,
         transcript: state.transcript.slice(state.askStart),
+        ...precedentArg(state),
         ...(previously === undefined ? {} : { previously }),
         ...(about === undefined ? {} : { previousSubjects: about }),
         ...(routes === undefined ? {} : { routes }),
@@ -1607,6 +1751,7 @@ async function teachOrDiscover(
         scenarioId: "session",
         transactionId,
         transcript: state.transcript.slice(state.askStart),
+        ...precedentArg(state),
         ...(previously === undefined ? {} : { previously }),
         ...(about === undefined ? {} : { previousSubjects: about }),
         feedback: linked.feedback ?? [],
@@ -2665,6 +2810,10 @@ async function answer(
     .slice(state.askStart)
     .find((event) => event.kind === "utterance" && event.source === "trainer");
 
+  // The precedent door, once per exchange: a reused draft was already
+  // proposed under the discovery call's precedents, which the exchange keeps.
+  if (reuse === undefined) state = consultMemory(state, deps, currentAsk);
+
   let step;
   let stepRetried = false;
   let stepRefusedListing = false;
@@ -2698,6 +2847,7 @@ async function answer(
           // The ask being answered, not the whole session: scope reads the full
           // transcript, but the answer should be responsive to the current words.
           transcript: state.transcript.slice(state.askStart),
+          ...precedentArg(state),
           ...(previously === undefined ? {} : { previously }),
           ...(about === undefined ? {} : { previousSubjects: about }),
         ...(about === undefined ? {} : { previousSubjects: about }),
@@ -2761,6 +2911,7 @@ async function answer(
         scenarioId: "session",
         transactionId,
         transcript: state.transcript.slice(state.askStart),
+        ...precedentArg(state),
         ...(previously === undefined ? {} : { previously }),
         ...(about === undefined ? {} : { previousSubjects: about }),
         feedback: groomed.feedback,
@@ -2847,6 +2998,7 @@ async function answer(
         scenarioId: "session",
         transactionId,
         transcript: state.transcript.slice(state.askStart),
+        ...precedentArg(state),
         ...(previously === undefined ? {} : { previously }),
         ...(about === undefined ? {} : { previousSubjects: about }),
         feedback: violations.map((item) => `${denialCode(item)}: ${item.message}`),
@@ -3107,6 +3259,8 @@ function fileProbe(
 ): SessionState {
   const { transactionId, establishedAt } = exchange;
   if (ran.repaired) state = ledgerStep({ ...state, repairs: state.repairs + 1 }, deps.now(), "driver", "repair/strip-assertion", "a mis-recalled value was stripped and the gate run once more — the certified value read");
+  // The memory's reading, for a draft the kernel accepted (docs/precedent.md).
+  if (ran.record.outcome.status === "answered" || ran.record.outcome.status === "declined") state = readMemory(state, deps, ran.planned);
   const { record, committedAt, renderedAt, planned } = ran;
   if (record.outcome.status === "declined") state = ledgerStep(state, deps.now(), "driver", "act/consent-requested", "the page carries an act — attested, held for the trainer's consent");
   switch (record.outcome.status) {
