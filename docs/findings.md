@@ -4892,8 +4892,12 @@ entity or fact the records do not certify, a shape still carrying a value,
 a store built for another pack — each refused by name), the value-stripping
 `shapeOf`, deterministic lexical retrieval (token overlap above a
 threshold, top k, the row retriever's subject selection breaking ties, the
-hold-out rule enforced in the retriever), and the reading after the verdict
-(`followed`: canonical shape, roster names and claim order ignored).
+hold-out rule enforced in the retriever — lexical on purpose and for now:
+it replays in CI, and the door's own *empty* rate is the number that says
+when a semantic tier is owed; [precedent.md](precedent.md), "Retrieval of
+precedents", states the ceiling and the path to embeddings), and the
+reading after the verdict (`followed`: canonical shape, roster names and
+claim order ignored).
 The driver consults the door once per exchange before its first answer
 call and holds the result on every call of the exchange, retries included;
 four ledger codes in fixed wording (`memory/held`, `memory/empty`,
@@ -4910,14 +4914,23 @@ reviewer can mark for a promotion file. The verifier imports nothing from
 the module; every filed record replays without the store (1916/1916
 tests, the replay sweep included).
 
-**The first promotion.** From the 2026-09-11 strong-model artifact (411
-runs): 121 precedents; 156 runs already in the store (the same ask
-accepted in the same shape on another pass), 66 abstentions, 47 resolved
-runs the oracle did not pass, 14 denials, 6 without a certified manifest,
-1 declined act — every exclusion a count. By door: 41 facts, 34 lessons,
-15 eligibility rulings, 8 counts, 7 rankings, 7 recommendations, 4 game
-rules, 2 matchups, 2 memberships, 1 type count. Store digest
-`sha256:07f9b6e5…`, pinned by every run that holds it.
+**The first promotion.** From the 2026-09-11 strong-model artifact, 411
+runs in, 121 precedents out (29%); the rest is accounted for, every
+exclusion a count:
+
+| of 411 runs | count | why |
+|---|---|---|
+| promoted | 121 (29%) | accepted by the kernel, passed by the oracle, a new ask-and-shape |
+| duplicates | 156 (38%) | the same ask accepted in the same shape on another of the three passes |
+| abstentions | 66 (16%) | no answer to promote |
+| passed the kernel, failed the oracle | 47 (11%) | true but off subject or off shape — the certified non-sequitur, excluded by construction |
+| denied | 14 (3%) | a wrong draft never enters |
+| no certified manifest / a declined act | 6 + 1 (2%) | nothing accepted on the record |
+
+By door, the 121 are 41 facts, 34 lessons, 15 eligibility rulings, 8
+counts, 7 rankings, 7 recommendations, 4 game rules, 2 matchups, 2
+memberships and 1 type count. Store digest `sha256:07f9b6e5…`, pinned by
+every run that holds it.
 
 **What the store holds for the porch ask, before any model ran.** Read
 from the retriever (`retrievePrecedents`, k=3, threshold 0.25): "tell me
@@ -4962,15 +4975,33 @@ run added two more lessons beside it). Read from the traces:
 | door engaged (held) / empty | — | 10 / 10 | 20 / 0 |
 | followed / departed | — | 0 / 10 | 20 / 0 |
 
+**The lift, in one table** — the strong model, the door shut against the
+door holding a precedent of the ask's own kind (*plus*); the *nearest*
+arm, with only neighbours by word, moved nothing and is left out:
+
+| strong model, 20 per arm | door shut | own precedent held | change |
+|---|---|---|---|
+| answered in one call | 0% | 15% | **+15 points** (0 → 3 of 20) |
+| needed three calls | 35% | 0% | **−35 points** (7 → 0 of 20) |
+| calls per answer | 2.35 | 1.85 | **−0.5 calls** (−21%) |
+| listing nominated first | 100% | 85% | −15 points (20 → 17 of 20) |
+| accepted answer took the example's shape | — | 100% | 20 of 20 |
+| wrong answer, abstention, or wrong subject | 0 | 0 | unchanged (0 of 60 across arms) |
+
+The weak model had nothing to lift: one call, 20 of 20, on every arm.
+
 **What it says.** Three things, each a number.
 
-1. **The class is the strong model's.** The weak model answers the game
-   ask in one call 20/20 on every arm; the strong default nominates the
-   `listing` door first 20/20 with the door shut and 20/20 with its
-   neighbours-by-word shown. The 33% one-call rate the dev trace showed
-   was that model's habit, and the porch's inconsistency is not a model
-   limit in the sense of capability — it is a route offered and taken on
-   an ask that names no set (docs/routing.md R3: the schema steers).
+1. **The inconsistency belongs to the default model, not to the ask.**
+   The same four phrasings, on the weak model, resolve in one call 20/20
+   on every arm — there is nothing missing from the records, the
+   grammar or the retrieval that a small model needs. On the strong
+   default the very same asks draw a `listing` nomination first 20/20 with
+   the door shut and 20/20 with neighbours shown: that model reaches for
+   a door on an ask that names no set, the driver refuses it, and only
+   the second call answers. The 33% one-call rate the dev trace showed
+   was this habit, and it is a routing behaviour of one model (docs/
+   routing.md R3: the schema steers) rather than a capability ceiling.
 2. **A precedent of the ask's own kind shapes the answer and shortens the
    exchange; it does not stop the nomination.** With the game-ask
    precedent held, every accepted answer took its shape (followed 20/20,

@@ -232,6 +232,38 @@ selected the same entity ids for the ask and for a precedent (a species
 named in both), that precedent ranks first among equals. This is the only
 place the two retrievers touch, and it is a preference, not a filter.
 
+**Is lexical retrieval scalable, and is an embedding tier the long-term
+answer?** Two different questions, and the honest answer to each is a
+number the door now reports.
+
+*Cost* scales fine. Retrieval is one token-set overlap per precedent — a
+few thousand precedents are a millisecond, and past that an inverted
+index over tokens (the same closed-vocabulary trick the row retriever
+uses) keeps it linear in the words of the ask, not the size of the store.
+The store itself stays small by construction: one accepted shape per
+distinct ask, values stripped, per pack version.
+
+*Recall* is the real ceiling, and it is lesson 6's: a lexical front door
+trades recall for specificity and never engages on a paraphrase or a
+misspelling — "telll me about the game" and "I'm playing Red/blue; tell
+me about the game" retrieved nothing on the porch while "tell me about
+the game" did. The door reports exactly this as its *empty* rate
+(`memory/empty`, and per run in the artifact), so the question "is the
+lexical tier enough?" is answered by a count, not an opinion.
+
+*The path to embeddings* is landscape.md H4 and scale.md S3, already
+laid: a semantic retriever over the *asks* (never the values) as the
+nominator, its nomination recorded in the run so replay reads it rather
+than recomputing it, and recall@k reported apart from what the model did
+with the shortlist. It moves one probabilistic component upstream of the
+gate, where §7 says such components belong, at two costs the doctrine
+names — it cannot run in CI (nondeterministic, billable), and a retrieval
+miss and a model miss must never be blended. The trigger for building it
+is the empty rate on real traffic, read from the record; the design
+choice for M1 is the deterministic tier first because it replays, and
+because the porch showed the number that moved was the *right* precedent
+being in the store, not the retriever finding it.
+
 A precedent whose `snapshotId` differs from the live world is never
 offered; a store whose `packId` differs is never loaded. A precedent whose
 `source.entryId` matches the entry under test, or whose `ask` equals any
