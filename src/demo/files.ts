@@ -17,7 +17,7 @@ import type { DemoWorld } from "./script.js";
 
 const DATA = resolve(import.meta.dirname, "../../data");
 export const SNAPSHOT_PATH = resolve(DATA, "snapshots/kanto-red-blue.json");
-export const PACK_PATH = resolve(DATA, "accord-pack/v2.json");
+export const PACK_PATH = resolve(DATA, "accord-pack/v3.json");
 
 let loaded: DemoWorld | undefined;
 
@@ -25,7 +25,7 @@ let loaded: DemoWorld | undefined;
 export const CENTER_SNAPSHOT_PATH = resolve(DATA, "snapshots/kanto-center.json");
 // v1 stays on the shelf: the filed Center records pin pokemon-center-v1 and
 // the replay sweep resolves by that pin. New runs speak v2 (the bag rules).
-export const CENTER_PACK_PATH = resolve(DATA, "accord-pack/center-v2.json");
+export const CENTER_PACK_PATH = resolve(DATA, "accord-pack/center-v3.json");
 
 let centerCached: DemoWorld | undefined;
 

@@ -491,6 +491,26 @@ body {
   border-bottom: 1px solid var(--indigo);
 }
 
+/* A profile is one entity's facts as a labelled list: the label plain, the
+   value the certified chip, two columns that read as a table. */
+.exhibit-page [data-unit^="profile:"] dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+  margin: 4px 0 0;
+}
+.exhibit-page [data-unit^="profile:"] dt {
+  margin: 0;
+}
+.exhibit-page [data-unit^="profile:"] dt [data-slot] {
+  font-weight: 400;
+  border-bottom: none;
+  color: #55503f;
+}
+.exhibit-page [data-unit^="profile:"] dd {
+  margin: 0;
+}
+
 /* A count is an answer to "how many": the cardinality is the number and reads
    as one, and the set beside it is a plain label, not another certified chip. */
 .exhibit-page [data-unit^="count:"] [data-slot="count"] {

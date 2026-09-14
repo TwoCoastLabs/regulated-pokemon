@@ -4254,6 +4254,42 @@ ask. And a suggestion taken that dead-ends — exchange closed, no record,
 nothing left open — is counted (`suggestions.deadEnded`), the worst next
 step there is, so the bank leg can read it.
 
+## 20. Presentation policy is versioned too: the profile card and pack v3
+
+**Claim.** A change to how certified claims are *grouped* on the page is a
+policy change with the same replay obligation as a rule change, and the
+evidence base proves it: 23 of 107 filed manifests carry two or more facts
+about one entity, and a planner that gathers those into one card re-derives
+a different page for every one of them.
+
+**What happened.** Dogfood (2026-09-13): "tell me about Charmander"
+certified nine facts and the page read as nine sentences of "The official
+records certify Charmander's X as Y"; "give me a list of species" read as
+eleven "is a member of all-species" lines. The fix is in the render plan —
+a `listing` unit (one bound sentence, the members one `list-oxford` slot)
+and a `profile` unit (the entity, then a labelled list, each label the
+dictionary's everyday name and each value its own bound slot). The first
+shipped ungated (PR #167) and got away with it: 0 of 107 filed manifests
+carry a multi-member listing. The second did not: with grouping on for
+every pack, the replay sweep (`src/harness/verify-runs.test.ts`) re-derived
+22 acted and advisory runs across 12 coverage artifacts to
+`IA-10/verdict-not-reproduced` — the recorded page has nine sentences, the
+new plan has one card, and the affidavit's units no longer match.
+
+**The fix.** Grouping is `presentation.grouping` in the pack, shipped as
+`indigo-accord-v3` (and `pokemon-center-v3`); v2 is restored to its filed
+form and stays on the shelf. A record pinned to v2 replays under v2 and
+plans one sentence per claim, as filed; a new session runs under v3 and
+plans the card. After the split: 107 of 107 filed manifests replay, the
+crucible is untouched, and the live page shows the card.
+
+**Provenance.** The replay failure list is the test's own output on the
+ungated change (22 runs named); the 23/107 and 0/107 counts are a scan of
+`runs/` for manifests with ≥ 2 facts on one entity and ≥ 2 memberships over
+one set. Lesson for the generalization note: *anything that decides what
+the trainer sees is policy*, grouping included, and the pack version is the
+only honest place for it.
+
 ## Appendix — how to reproduce
 
 ```sh

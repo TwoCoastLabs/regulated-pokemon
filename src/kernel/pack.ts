@@ -261,8 +261,21 @@ export interface Presentation {
    * presentation.
    */
   templates: readonly SentenceTemplate[];
+  /**
+   * Which claims the planner may gather into one unit: several memberships
+   * over one set as a `listing`, several facts about one entity as a
+   * `profile`. Presentation policy, so it lives here and is versioned with
+   * the pack: a record pinned to a pack without it replays one sentence
+   * per claim, exactly as it was filed (IA-10). Absent in a pack document
+   * means none.
+   */
+  grouping: readonly RenderGrouping[];
   display: DisplayPolicy;
 }
+
+/** The groupings a pack may approve. */
+export type RenderGrouping = "listing" | "profile";
+export const RENDER_GROUPINGS: readonly RenderGrouping[] = ["listing", "profile"];
 
 /** One approved sentence, for one unit kind, in every approved locale. */
 export interface SentenceTemplate {
@@ -651,7 +664,14 @@ export function loadPack(input: unknown, registry: CertifiedRegistry): Resolutio
   // driver nothing to hold the claims to — the measured control, not an
   // error. One that starts a dictionary must finish it: the checks below
   // refuse a partial one as incomplete.
-  const pack = { ...document, dictionary: document.dictionary ?? [] } as AccordPack;
+  // Likewise a pack without a grouping policy (every pack before v3, still
+  // governing filed pages that must replay one sentence per claim) groups
+  // nothing.
+  const pack = {
+    ...document,
+    dictionary: document.dictionary ?? [],
+    presentation: { ...document.presentation, grouping: document.presentation.grouping ?? [] },
+  } as AccordPack;
   const violations = [
     ...checkPresentation(pack.presentation),
     ...checkRules(pack, registry),
@@ -850,6 +870,20 @@ function checkActions(pack: AccordPack): Violation[] {
  */
 function checkPresentation(presentation: Presentation): Violation[] {
   const violations: Violation[] = [];
+
+  if (!Array.isArray(presentation.grouping)) {
+    violations.push(violation("IA-6", "pack-grouping-malformed", "the pack's grouping policy is not a list"));
+  } else {
+    for (const grouping of presentation.grouping) {
+      if (RENDER_GROUPINGS.includes(grouping)) continue;
+      violations.push(
+        violation("IA-6", "pack-grouping-unknown", `the pack approves a grouping "${String(grouping)}" this kernel does not plan`, {
+          expected: RENDER_GROUPINGS.join(", "),
+          actual: String(grouping),
+        }),
+      );
+    }
+  }
 
   if (presentation.locales.length === 0) {
     violations.push(

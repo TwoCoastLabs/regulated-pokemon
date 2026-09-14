@@ -48,6 +48,11 @@ const ALLOWED_TAGS: ReadonlySet<string> = new Set([
   "ul",
   "ol",
   "li",
+  // A profile card's labelled list (pack v3): the reference renderer's
+  // definition list, label and value each a marked span inside.
+  "dl",
+  "dt",
+  "dd",
   "strong",
   "em",
   "details",

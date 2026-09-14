@@ -165,8 +165,11 @@ it.
 
 Pack versions are kept, not overwritten: a record replays under the pack id
 it pinned (`data/accord-pack/v1.json` is frozen; sentences arrived in
-`v2.json`), and the replay sweep resolves packs by the record's pin — policy
-is versioned data, and IA-10 is why the versions stay on the shelf.
+`v2.json`; the grouping policy — a listing as one sentence, a profile as
+one card — in `v3.json`, because 23 filed pages were planned one sentence
+per claim and must replay that way), and the replay sweep resolves packs by
+the record's pin — policy is versioned data, and IA-10 is why the versions
+stay on the shelf.
 
 ## Non-goals
 

@@ -1,6 +1,6 @@
 {
   "packVersion": 7,
-  "id": "indigo-accord-v2",
+  "id": "indigo-accord-v3",
   "ceremony": {
     "proposalDirectAnswers": true
   },
@@ -12,6 +12,7 @@
     "formats": [
       "entity-name",
       "eligibility-verdict",
+      "includes",
       "integer",
       "list-oxford",
       "member-of",
@@ -33,6 +34,13 @@
         "text": {
           "en-US": "Every value below was checked by the League against the official records before this page could be shown.",
           "en-GB": "Every value below was checked by the League against the official records before this page could be shown."
+        }
+      },
+      {
+        "id": "lead-in.profile",
+        "text": {
+          "en-US": "The official records certify, about",
+          "en-GB": "The official records certify, about"
         }
       },
       {
@@ -132,6 +140,14 @@
         }
       },
       {
+        "id": "sentence.listing",
+        "kind": "listing",
+        "text": {
+          "en-US": "By the official records, {set} {membership} {members}.",
+          "en-GB": "By the official records, {set} {membership} {members}."
+        }
+      },
+      {
         "id": "sentence.selection",
         "kind": "selection",
         "text": {
@@ -172,6 +188,7 @@
         }
       }
     ],
+    "grouping": ["listing", "profile"],
     "display": {
       "minLegiblePx": 12,
       "minLegibleOpacity": 0.5,
