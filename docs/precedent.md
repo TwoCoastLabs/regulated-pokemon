@@ -214,20 +214,84 @@ cannot disagree about what "held out" means.
 `DoorState` gains one field:
 
 ```ts
-/** The precedents this call held, by id — empty when the door was shut or
- * nothing scored above the threshold. */
-precedents: readonly string[];
+/** The precedents this call held — empty when the door was shut or nothing
+ * scored above the threshold. Held as data, not ids alone, so the trace
+ * shows what the model was shown without the store in hand. */
+precedents: readonly { id: string; score: number; ask: string }[];
 ```
 
 so the call trace and the driver's ledger show, per call, which precedents
-the prompt carried; the dev view's door strip draws it as a door like the
-others, and a precedent withdrawn on a retry (feedback rounds keep the
-prompt otherwise identical, so precedents are kept) would show as
+the prompt carried, and a precedent withdrawn on a retry (feedback rounds
+keep the prompt otherwise identical, so precedents are kept) would show as
 withdrawn. The coverage artifact gains `precedents: { store: string;
 digest: string; k: number; threshold: number } | null` beside `retrieval`
-and `gatedGrammar`, so a published number names the store it ran with.
-The `Transaction` does not change: a precedent is prompt context, and the
-verdict never depended on it — which is the property replay proves.
+and `gatedGrammar`, so a published number names the store it ran with, and
+each run records the precedent ids it held, so the funnel can say how often
+the door engaged. The `Transaction` does not change: a precedent is prompt
+context, and the verdict never depended on it — which is the property
+replay proves.
+
+### The memory on the dev view
+
+Memory is the first usefulness layer whose *state* outlives one exchange,
+and a trace that showed only the prompt would hide the two things a
+dogfooder needs to see: whether the door engaged, and whether the model
+followed it. Both are read from the record, never narrated, in the shape
+the trail already has.
+
+**The door.** The door strip gains a seventh door, `precedents`, with the
+same four states the others draw — open (k held), shut (the lever off),
+withdrawn (removed for a call), and one state only this door has:
+**empty** — open, and nothing scored above the threshold. Empty is drawn
+differently from shut on purpose: a front door that is open and never
+engages is lesson 6's silent ceiling, and the strip is where it is seen.
+The caption carries the count ("3 held", "empty", "off").
+
+**The ledger.** Four driver-lane codes, fixed and countable like the rest:
+
+| code | text, in plain words | lines |
+|---|---|---|
+| `memory/held` | "3 earlier answered asks were shown as examples of which door to take; none carried a value" | one per precedent: its ask, verbatim, and its score |
+| `memory/empty` | "no earlier ask was near enough to show (best score 0.14, threshold 0.25)" | the nearest miss, so a dogfooder sees what the retriever almost offered |
+| `memory/held-out` | "2 precedents were withheld: they came from this same bank entry" | the withheld ids — harness runs only; the live page never sees this line |
+| `memory/followed` / `memory/departed` | "the accepted answer took the same shape as the example for 'tell me about the game'" / "the accepted answer took a shape none of the examples showed" | the matching precedent's id, or nothing |
+
+*Followed* and *departed* are computed deterministically after the
+verdict: the accepted draft's stripped shape (`shapeOf`) compared with each
+held precedent's shape. It is the memory's effect made visible per
+exchange, and summed over a run it is the number the fixed-versus-nearest
+arms are read by.
+
+**Under the call.** The dev view's model-call block, which already opens on
+the prompt and the doors, gains a precedent panel under the door strip, in
+the same progressive style as the claim view: one row per precedent held —
+the ask in the trainer's own words, the score, the stripped shape as it
+was shown, and its provenance (the bank entry or the session it came from,
+who promoted it, when). A row for a withheld precedent, greyed, with the
+reason. The panel is what makes "the model never sees a value" checkable
+by eye: every row shows ids and kinds, and no numbers.
+
+**The session's memory panel.** A small panel in the dev pane, beside the
+recall doors, showing the store as loaded: pack id, snapshot id, digest,
+count, k and threshold. Under it, the session's own **candidates**: the
+exchanges of this session the kernel accepted, each with a "mark on
+target" control that appends to a promotion file the reviewer takes to a
+pull request — never to the store the tab is reading. This is M2's review
+queue in its smallest form, and it is where the flywheel is watched
+turning: the store never changes under a running session, and the panel
+says so in words.
+
+**The compliance console.** The same steps in the League's words: "The
+advisor was shown three earlier questions the records had answered, as
+examples of how to answer, with no values in them", and for the
+follow/depart step, whether the answer took an example's shape. The console
+never shows a score.
+
+**What the run ledger shows.** A replayed artifact draws the same door and
+the same panel from the per-run precedent ids and the artifact's store
+digest, so a filed leg can be read precedent by precedent after the fact;
+the scoreboard adds one column per arm, *door engaged* (held / empty / off)
+as count and percentage, beside the stable core.
 
 ## Doctrine, checked line by line
 
@@ -282,6 +346,11 @@ Read from the record, count and percentage together:
    denominator, unchanged by construction and verified anyway.
 6. **Honest disposition** on the 45 must-not-resolve entries: a precedent
    must not teach the model to answer what the records do not hold.
+7. **Door engaged** (held / empty / off) and **followed / departed**, per
+   arm, from the per-run precedent ids and the ledger codes above. An
+   *empty* rate is the memory's activation ceiling (lesson 6) and is
+   reported whatever it is; a *nearest* arm that is mostly empty has not
+   been tested, only run.
 
 A second, cheaper reading on the live path: `session:trace` with the four
 dogfood phrasings of the game ask ("tell me about the game", "tell me about
@@ -323,8 +392,9 @@ have kept.
 
 M0 (the class, filed with its query) lands first as a findings entry. M1
 is this document: the store and loader, the promotion script, the
-retriever, the prompt section, the door on the trace, the artifact field,
-the three arms, the findings entry. M2 (the trainer's voice) adds the
+retriever, the prompt section, the door and the memory panel on the dev
+view, the ledger codes, the artifact field, the three arms, the findings
+entry. M2 (the trainer's voice) adds the
 second promotion source. M3 (the refusal fed back) reuses M1's artifact as
 its instrument. M4 (the porch bank) turns the `session:trace` reading into
 a band every driver PR states.
