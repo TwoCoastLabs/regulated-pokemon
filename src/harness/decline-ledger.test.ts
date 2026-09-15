@@ -17,8 +17,8 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { demoWorld } from "../demo/files.js";
-import type { CertifiedInstead, DemandLeg, MissRoute } from "./demand.js";
-import { MUST_NOT_RESOLVE, ROUTE_LAYER, classifyDeclineMiss, declineMisses, demandLedger, renderDemandLedger } from "./demand.js";
+import type { CertifiedInstead, DeclineLedgerLeg, MissRoute } from "./decline-ledger.js";
+import { MUST_NOT_RESOLVE, ROUTE_LAYER, classifyDeclineMiss, declineMisses, declineLedger, renderDeclineLedger } from "./decline-ledger.js";
 import type { CoverageArtifact } from "./coverage-artifact.js";
 import type { RecordedBankRun } from "./bank-run.js";
 
@@ -84,7 +84,7 @@ describe("naming the route a miss was built on", () => {
   it("cannot tell a decline from a lesson without a pack, and says so", () => {
     // No boundary lesson id means no way to know which lesson *is* the
     // refusal, so the lesson reads as topical — the conservative reading, and
-    // the reason demand-read refuses an artifact whose pack it cannot load.
+    // the reason decline-ledger-read refuses an artifact whose pack it cannot load.
     expect(classifyDeclineMiss("off-domain", instead({ kinds: ["explanation"], lessonIds: [BOUNDARY] }), undefined)).toBe<MissRoute>("topical-lesson");
   });
 });
@@ -113,8 +113,8 @@ describe("the ledger's shape", () => {
   });
 
   it("is byte-stable on the same input", () => {
-    const leg: DemandLeg = { leg: "a", model: "m", runs: [], boundaryLessonId: BOUNDARY };
-    expect(renderDemandLedger(demandLedger([leg]))).toEqual(renderDemandLedger(demandLedger([leg])));
+    const leg: DeclineLedgerLeg = { leg: "a", model: "m", runs: [], boundaryLessonId: BOUNDARY };
+    expect(renderDeclineLedger(declineLedger([leg]))).toEqual(renderDeclineLedger(declineLedger([leg])));
   });
 });
 
@@ -138,11 +138,11 @@ function artifact(file: string): CoverageArtifact {
 describe("the decline ledger over the six filed M3 legs", () => {
   const world = demoWorld();
   const boundaryLessonId = world.pack.recordsBoundary?.lessonId;
-  const legs: DemandLeg[] = M3_LEGS.map(({ name, file }) => {
+  const legs: DeclineLedgerLeg[] = M3_LEGS.map(({ name, file }) => {
     const filed = artifact(file);
     return { leg: name, model: filed.model.slug, runs: filed.runs as readonly RecordedBankRun[], boundaryLessonId };
   });
-  const ledger = demandLedger(legs);
+  const ledger = declineLedger(legs);
 
   it("runs against the pack the artifacts pinned", () => {
     expect(boundaryLessonId).toBe(BOUNDARY);
@@ -187,7 +187,7 @@ describe("the decline ledger over the six filed M3 legs", () => {
   });
 
   it("renders every count beside its denominator", () => {
-    const page = renderDemandLedger(ledger).join("\n");
+    const page = renderDeclineLedger(ledger).join("\n");
     expect(page).toContain("204/810 (25%)");
     // No bare percentage anywhere: every one is preceded by its two counts.
     for (const match of page.matchAll(/\((\d+)%\)/g)) {

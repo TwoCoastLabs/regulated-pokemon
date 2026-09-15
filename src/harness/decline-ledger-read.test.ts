@@ -4,19 +4,19 @@
  *
  * The whole command runs here — locating artifacts, naming each leg by the
  * levers it recorded, refusing a pack this build does not carry, printing or
- * filing — so the only thing left uncovered is demand-cli.ts's connection to a
+ * filing — so the only thing left uncovered is decline-ledger-cli.ts's connection to a
  * terminal. Key-free, and no temporary directory.
  */
 
 import { describe, expect, it } from "vitest";
 
 import type { CoverageArtifact } from "./coverage-artifact.js";
-import type { DemandFs } from "./demand-read.js";
-import { boundaryLessonFor, carriedBoundaries, coverageArtifactsIn, legName, parseDemandArgs, runDemand } from "./demand-read.js";
+import type { DeclineLedgerFs } from "./decline-ledger-read.js";
+import { boundaryLessonFor, carriedBoundaries, coverageArtifactsIn, legName, parseDeclineLedgerArgs, runDeclineLedger } from "./decline-ledger-read.js";
 
-function memFs(files: Record<string, string>): { fs: DemandFs; written: Record<string, string> } {
+function memFs(files: Record<string, string>): { fs: DeclineLedgerFs; written: Record<string, string> } {
   const written: Record<string, string> = {};
-  const fs: DemandFs = {
+  const fs: DeclineLedgerFs = {
     readDir: (directory) =>
       Object.keys(files)
         .filter((path) => path.startsWith(`${directory}/`))
@@ -69,16 +69,16 @@ function fakeArtifact(overrides: Partial<CoverageArtifact> = {}): CoverageArtifa
 
 describe("the command's arguments", () => {
   it("takes artifact paths and an output file", () => {
-    expect(parseDemandArgs(["a.json", "b.json", "--out", "docs/x.md"])).toEqual({ sources: ["a.json", "b.json"], out: "docs/x.md", help: false, errors: [] });
+    expect(parseDeclineLedgerArgs(["a.json", "b.json", "--out", "docs/x.md"])).toEqual({ sources: ["a.json", "b.json"], out: "docs/x.md", help: false, errors: [] });
   });
 
   it("names an unknown flag rather than ignoring it", () => {
-    expect(parseDemandArgs(["--nope"]).errors).toEqual(["unknown argument: --nope"]);
-    expect(parseDemandArgs(["--out"]).errors).toEqual(["--out needs a file path"]);
+    expect(parseDeclineLedgerArgs(["--nope"]).errors).toEqual(["unknown argument: --nope"]);
+    expect(parseDeclineLedgerArgs(["--out"]).errors).toEqual(["--out needs a file path"]);
   });
 
   it("prints usage on --help and exits clean", () => {
-    const result = runDemand({ argv: ["--help"], fs: memFs({}).fs, boundaries: BOUNDARIES });
+    const result = runDeclineLedger({ argv: ["--help"], fs: memFs({}).fs, boundaries: BOUNDARIES });
     expect(result.exitCode).toBe(0);
     expect(result.lines.join("\n")).toContain("The decline ledger");
   });
@@ -109,7 +109,7 @@ describe("finding the artifacts", () => {
   });
 
   it("says so when there is nothing to read", () => {
-    const result = runDemand({ argv: [], fs: memFs({}).fs, boundaries: BOUNDARIES });
+    const result = runDeclineLedger({ argv: [], fs: memFs({}).fs, boundaries: BOUNDARIES });
     expect(result.exitCode).toBe(1);
     expect(result.lines[0]).toContain("no coverage artifact found");
   });
@@ -118,14 +118,14 @@ describe("finding the artifacts", () => {
 describe("refusing what it cannot classify", () => {
   it("refuses an artifact whose pack this build does not carry, by name", () => {
     const files = { "x.json": JSON.stringify(fakeArtifact({ world: { snapshotId: "s", snapshotDigest: "d", sourceCommit: "c", packId: "some-other-pack" } } as Partial<CoverageArtifact>)) };
-    const result = runDemand({ argv: ["x.json"], fs: memFs(files).fs, boundaries: BOUNDARIES });
+    const result = runDeclineLedger({ argv: ["x.json"], fs: memFs(files).fs, boundaries: BOUNDARIES });
     expect(result.exitCode).toBe(1);
     expect(result.lines[0]).toContain("some-other-pack");
     expect(result.lines[0]).toContain("cannot be classified");
   });
 
   it("says which file would not parse", () => {
-    const result = runDemand({ argv: ["x.json"], fs: memFs({ "x.json": "{not json" }).fs, boundaries: BOUNDARIES });
+    const result = runDeclineLedger({ argv: ["x.json"], fs: memFs({ "x.json": "{not json" }).fs, boundaries: BOUNDARIES });
     expect(result.exitCode).toBe(1);
     expect(result.lines[0]).toContain("could not read a coverage artifact from x.json");
   });
@@ -144,7 +144,7 @@ describe("refusing what it cannot classify", () => {
 
 describe("the ledger it produces", () => {
   it("prints the miss it read, with the layer that owes the fix", () => {
-    const result = runDemand({ argv: ["x.json"], fs: memFs({ "x.json": JSON.stringify(fakeArtifact()) }).fs, boundaries: BOUNDARIES });
+    const result = runDeclineLedger({ argv: ["x.json"], fs: memFs({ "x.json": JSON.stringify(fakeArtifact()) }).fs, boundaries: BOUNDARIES });
     expect(result.exitCode).toBe(0);
     const page = result.lines.join("\n");
     expect(page).toContain("1/1 (100%)");
@@ -155,7 +155,7 @@ describe("the ledger it produces", () => {
 
   it("files the page instead of printing it, and says where from", () => {
     const { fs, written } = memFs({ "x.json": JSON.stringify(fakeArtifact()) });
-    const result = runDemand({ argv: ["x.json", "--out", "docs/ledger.md"], fs, boundaries: BOUNDARIES });
+    const result = runDeclineLedger({ argv: ["x.json", "--out", "docs/ledger.md"], fs, boundaries: BOUNDARIES });
     expect(result.exitCode).toBe(0);
     expect(result.lines[0]).toContain("docs/ledger.md");
     expect(result.lines[1]).toContain("x.json");
@@ -167,7 +167,7 @@ describe("the ledger it produces", () => {
     // The same discipline the results page keeps: a number on a page has to
     // lead back to the paid run that produced it, never to a hand edit.
     const { fs, written } = memFs({ "runs/coverage/x-coverage.json": JSON.stringify(fakeArtifact()) });
-    runDemand({ argv: ["--out", "docs/ledger.md"], fs, boundaries: BOUNDARIES });
+    runDeclineLedger({ argv: ["--out", "docs/ledger.md"], fs, boundaries: BOUNDARIES });
     expect(written["docs/ledger.md"]).toContain("`runs/coverage/x-coverage.json`");
   });
 });

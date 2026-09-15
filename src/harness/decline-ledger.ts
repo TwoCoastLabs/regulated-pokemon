@@ -1,23 +1,23 @@
 /**
  * The decline ledger — what the system answered when it should have declined,
- * and which layer owes the fix (epic #170, K1 and K2).
+ * and which layer owes the fix (epic #170, mostly K2).
  *
- * The flywheel's organizing rule is that abstentions are the demand signal: a
- * chatbot hides a content gap by inventing, the governed agent counts the gap
- * and routes it to an owner. That rule needs an instrument, and this is its
- * first half. The correct-decline rate — how often the system correctly
- * declines a question it should not answer — is the lowest of the usefulness
- * numbers on both models, and a rate alone says nothing about what to build.
- * This turns the rate back into a list: every sample on a question that must
- * not resolve, what the record certified instead, and the layer whose change
+ * The correct-decline rate — how often the system correctly declines a
+ * question it should not answer — is the lowest of the usefulness numbers on
+ * both models, and a rate alone says nothing about what to build. This turns
+ * the rate back into a list: every sample on a question that must not
+ * resolve, what the record certified instead, and the layer whose change
  * would make that wrong answer unrepresentable.
  *
- * Two things are recorded per miss, because two different things are true of
- * it and blending them would lose both. The **demand** is what the trainer
- * asked for and the world does not hold — a content debt, the signal a data
- * steward acts on. The **defect** is the wrong disposition itself: the system
- * answered a different question rather than saying it could not answer this
- * one. The demand is owed to the world; the defect is owed by a layer.
+ * It is worth being exact about which slice this is, because the names are
+ * close. K1's *demand* ledger is what was asked and **not answered** — the
+ * honest abstentions, which are the signal a data steward acts on, since the
+ * flywheel's organizing rule is that abstentions are the demand signal. This
+ * module is the other half: the questions that should have been declined and
+ * were **answered anyway**, each classified by the layer that owes the fix,
+ * which is K2. A question this system correctly declined every time is in the
+ * denominator here and is never listed as a row. Building the abstention side
+ * is what would make a demand ledger out of it, and it is not built.
  *
  * Classification is deterministic and reads only the filed record — the
  * manifest's claim kinds and ids, the pack's records-boundary lesson, the
@@ -255,7 +255,7 @@ export function declineMisses(
 }
 
 /** One question's standing in the ledger, across every leg read. */
-export interface DemandRow {
+export interface DeclineLedgerRow {
   readonly entryId: string;
   readonly opening: string;
   readonly disposition: Disposition;
@@ -269,7 +269,7 @@ export interface DemandRow {
   readonly instead: readonly { readonly shape: string; readonly count: number }[];
 }
 
-export interface DemandLedger {
+export interface DeclineLedger {
   /** Legs read, in the order given. */
   readonly legs: readonly { readonly leg: string; readonly model: string; readonly source: string | undefined; readonly samples: number; readonly misses: number }[];
   /** Samples on questions that must not resolve, across every leg. */
@@ -282,11 +282,11 @@ export interface DemandLedger {
   /** Per disposition, across every leg. */
   readonly byDisposition: readonly { readonly disposition: Disposition; readonly samples: number; readonly misses: number }[];
   /** One row per question that missed at least once, worst first. */
-  readonly rows: readonly DemandRow[];
+  readonly rows: readonly DeclineLedgerRow[];
 }
 
 /** One filed leg, as the ledger reads it. */
-export interface DemandLeg {
+export interface DeclineLedgerLeg {
   readonly leg: string;
   readonly model: string;
   readonly runs: readonly RecordedBankRun[];
@@ -311,7 +311,7 @@ function ranked<T extends string>(counts: ReadonlyMap<T, number>): readonly { ke
 }
 
 /** The ledger over any number of filed legs. Pure: same legs, same bytes. */
-export function demandLedger(legs: readonly DemandLeg[]): DemandLedger {
+export function declineLedger(legs: readonly DeclineLedgerLeg[]): DeclineLedger {
   const perLeg: { leg: string; model: string; source: string | undefined; samples: number; misses: number }[] = [];
   const routeCounts = new Map<MissRoute, number>();
   const layerCounts = new Map<MissLayer, number>();
@@ -379,17 +379,21 @@ function countAndPercent(count: number, total: number): string {
 }
 
 /** The ledger as Markdown — a reading, never a recomputation. */
-export function renderDemandLedger(ledger: DemandLedger): readonly string[] {
+export function renderDeclineLedger(ledger: DeclineLedger): readonly string[] {
   const lines: string[] = [
     "# The decline ledger",
     "",
     "Every sample on a question that must not receive a certified answer, and what the",
     "record certified when it answered anyway. Read from filed runs; nothing here is",
-    "measured or recomputed. The **demand** each row carries is a content debt owed to",
-    "the world; the **layer** is who owes the fix for the wrong disposition.",
+    "measured or recomputed. Each row is a **defect** — the system answered a different",
+    "question rather than saying it could not answer this one — and the **layer** is who",
+    "owes the fix. The questions it correctly declined are in the denominators below and",
+    "are not listed: counting those is the demand ledger (epic #170 K1), which is not",
+    "built.",
     "",
-    "Generated by `npm run demand` — do not hand-edit. Every number below traces to an",
-    "artifact named in the table that follows; the only way to change one is a new run.",
+    "Generated by `npm run decline-ledger` — do not hand-edit. Every number below",
+    "traces to an artifact named in the table that follows; the only way to change",
+    "one is a new run.",
     "",
     `**Answered when it should have declined: ${countAndPercent(ledger.misses, ledger.samples)}** across ${ledger.legs.length} filed leg(s).`,
     "",

@@ -5443,7 +5443,7 @@ listings (9 of 411 on the baseline leg) are where the offer's recall
 cost, bounded at zero by design, is actually read. (c) **named** — no
 arm here changes the prompt's wording; A is today's live page exactly.
 
-## 23. The decline ledger: the lessons door is open on every ask (epic #170, K1/K2)
+## 23. The decline ledger: the lessons door is open on every ask (epic #170, K2)
 
 **Goal.** The correct-decline rate — how often the system correctly
 declines a question it should not answer — is the lowest of the
@@ -5457,7 +5457,7 @@ certified answer, what the record certified when it answered anyway,
 and which layer owns it. Key-free: no model, no network, no spend, read
 from the six M3 legs already paid for.
 
-**How it works.** `src/harness/demand.ts` reads filed coverage
+**How it works.** `src/harness/decline-ledger.ts` reads filed coverage
 artifacts and takes every sample whose disposition must not resolve
 (`needs-data`, `needs-claim-kind`, `off-domain`, `gated-advisory`,
 `should-refuse`) and whose filed score is a fail at the `resolved`
@@ -5469,7 +5469,7 @@ the test being "if this layer changed, would the wrong answer stop
 being representable?". The filed score is read, never re-derived, so
 the ledger and the coverage map can never disagree about what a miss
 is; a miss the record does not decide is `reviewer`, counted and named.
-`npm run demand` renders it; `docs/decline-ledger.md` is the filed
+`npm run decline-ledger` renders it; `docs/decline-ledger.md` is the filed
 reading, every row traceable to its artifact.
 
 **The reading.** Six legs — three prompt arms (A legacy, B blocks, C
@@ -5541,8 +5541,14 @@ whose manifest is empty would read `unclassified`; none did. (c)
 **named** — this is a reading of six legs filed on 2026-09-15, before
 the offered door existed; a leg run with `--offered-doors` is not in it.
 
-**What it does not yet do.** K1's gate also asks for the ledger as a
-page of the app and through `harness:results`; neither is built. K2's
-gate asks for the owner role per class declared in the pack; the owners
-are in code here, not in pack data. Both are still owed before either
-slice is ticked.
+**What it does not yet do.** This is K2's half, not K1's, and the names
+are close enough to be worth separating. K1's *demand* ledger is what
+was asked and **not answered** — the honest abstentions, which are the
+signal a data steward acts on. What is built here is the opposite side:
+the questions that should have been declined and were **answered
+anyway**, each routed to the layer that owes the fix. A question this
+system correctly declined every time sits in the denominator above and
+is never listed as a row, so the content demand itself is still
+uncounted. Beyond that, K1's gate asks for a page of the app and a
+`harness:results` rendering, and K2's for the owner role per class
+declared in the pack rather than in code. Neither slice is ticked.

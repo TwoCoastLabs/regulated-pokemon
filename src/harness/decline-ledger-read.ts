@@ -1,7 +1,7 @@
 /**
  * Reading filed coverage artifacts into the decline ledger (epic #170, K1).
  *
- * The split is the one results.ts keeps: {@link demandLedger} is a pure
+ * The split is the one results.ts keeps: {@link declineLedger} is a pure
  * function of parsed legs, and this file locates artifacts on disk, names each
  * leg by the levers the artifact itself records, and renders. The filesystem
  * is injected, so the whole path runs in a test without a real run or a
@@ -20,17 +20,17 @@
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { type DemandLeg, demandLedger, renderDemandLedger } from "./demand.js";
+import { type DeclineLedgerLeg, declineLedger, renderDeclineLedger } from "./decline-ledger.js";
 import { centerWorld, demoWorld } from "../demo/files.js";
 import type { CoverageArtifact } from "./coverage-artifact.js";
 
-export interface DemandFs {
+export interface DeclineLedgerFs {
   readFile(path: string): string;
   readDir(path: string): readonly string[];
   writeFile(path: string, contents: string): void;
 }
 
-const diskFs: DemandFs = {
+const diskFs: DeclineLedgerFs = {
   readFile: (path) => readFileSync(path, "utf8"),
   readDir: (path) => readdirSync(path),
   writeFile: (path, contents) => writeFileSync(path, contents, "utf8"),
@@ -71,20 +71,20 @@ export function legName(artifact: CoverageArtifact): string {
   return `${levers.join(", ")}, N=${artifact.repetitions}`;
 }
 
-export interface DemandOptions {
+export interface DeclineLedgerOptions {
   argv: readonly string[];
-  fs?: DemandFs;
+  fs?: DeclineLedgerFs;
   /** The packs to classify against; defaults to the ones this build carries. */
   boundaries?: ReadonlyMap<string, string | undefined>;
 }
 
-export interface DemandResult {
+export interface DeclineLedgerResult {
   lines: readonly string[];
   exitCode: number;
 }
 
 const USAGE = [
-  "npm run demand -- [artifact.json ...] [--out <file>]",
+  "npm run decline-ledger -- [artifact.json ...] [--out <file>]",
   "",
   "  The decline ledger (epic #170, K1): every sample on a question that must not",
   "  receive a certified answer, what the record certified when it answered anyway,",
@@ -94,14 +94,14 @@ const USAGE = [
   "  --out <file>   write the ledger as Markdown instead of printing it",
 ].join("\n");
 
-interface DemandArgs {
+interface DeclineLedgerArgs {
   sources: readonly string[];
   out: string | undefined;
   help: boolean;
   errors: readonly string[];
 }
 
-export function parseDemandArgs(argv: readonly string[]): DemandArgs {
+export function parseDeclineLedgerArgs(argv: readonly string[]): DeclineLedgerArgs {
   const sources: string[] = [];
   const errors: string[] = [];
   let out: string | undefined;
@@ -126,7 +126,7 @@ export function parseDemandArgs(argv: readonly string[]): DemandArgs {
 
 /** Every coverage artifact in a directory, oldest first — a stable order, so
  * the ledger's leg table is the same bytes on every run. */
-export function coverageArtifactsIn(directory: string, fs: DemandFs): readonly string[] {
+export function coverageArtifactsIn(directory: string, fs: DeclineLedgerFs): readonly string[] {
   return fs
     .readDir(directory)
     .filter((name) => name.endsWith("-coverage.json"))
@@ -135,9 +135,9 @@ export function coverageArtifactsIn(directory: string, fs: DemandFs): readonly s
     .map((name) => join(directory, name));
 }
 
-export function runDemand(options: DemandOptions): DemandResult {
+export function runDeclineLedger(options: DeclineLedgerOptions): DeclineLedgerResult {
   const fs = options.fs ?? diskFs;
-  const args = parseDemandArgs(options.argv);
+  const args = parseDeclineLedgerArgs(options.argv);
   if (args.help) return { lines: [USAGE], exitCode: 0 };
   if (args.errors.length > 0) return { lines: [...args.errors, "", USAGE], exitCode: 1 };
 
@@ -145,7 +145,7 @@ export function runDemand(options: DemandOptions): DemandResult {
   if (paths.length === 0) return { lines: ["no coverage artifact found in runs/coverage; pass a path, or file a run first"], exitCode: 1 };
 
   const boundaries = options.boundaries ?? carriedBoundaries();
-  const legs: DemandLeg[] = [];
+  const legs: DeclineLedgerLeg[] = [];
   for (const path of paths) {
     let artifact: CoverageArtifact;
     try {
@@ -165,7 +165,7 @@ export function runDemand(options: DemandOptions): DemandResult {
     legs.push({ leg: legName(artifact), model: artifact.model.slug, runs: artifact.runs, boundaryLessonId: boundary, source: path });
   }
 
-  const page = renderDemandLedger(demandLedger(legs));
+  const page = renderDeclineLedger(declineLedger(legs));
   if (args.out === undefined) return { lines: page, exitCode: 0 };
   fs.writeFile(args.out, `${page.join("\n")}\n`);
   return { lines: [`decline ledger written to ${args.out}`, ...paths.map((path) => `  from ${path}`)], exitCode: 0 };
