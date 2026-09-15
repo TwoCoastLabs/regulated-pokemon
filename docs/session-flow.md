@@ -400,6 +400,14 @@ is covered by offline tests with scripted models:
   reply and the second under the second; each round says whether the model
   was told (fed back by name, withdrawn in silence, or not re-asked at all),
   and the chat says the same under the answer, read from the ledger
+- the ledger's codes are a closed registry (`LEDGER_CODES` in
+  `src/session/ledger.ts`): every code the driver can write, with how it
+  reads (plain, ok, refused, open) and, for a round that sent a reply
+  back, what the model learned from it. `DriverStep.code` is the
+  registry's key type, so a step with an unregistered code does not
+  compile, and the trail reads tone and mode from the entry — never from
+  the code's spelling. A code read from an older filed artifact that is
+  not in the registry reads plain
 - the doors, as data (`DoorState` on the request, `src/harness/provider.ts`):
   every answer-step call declares what its prompt held open beyond the
   question — the certified rows carried, the grammar's gated kinds, the

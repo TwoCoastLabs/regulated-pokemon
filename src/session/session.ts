@@ -820,7 +820,9 @@ export function decideAct(state: SessionState, decision: "confirm" | "decline", 
   }
 
   const moment = deps.now();
-  state = ledgerStep(state, moment, "trainer", `trainer/consent-${decision}ed`, decision === "confirm" ? "consent given on the attested page" : "consent declined");
+  // Spelled out, not templated: the registry caught `consent-declineed`
+  // (review of #174) — a code the suffix reading had accepted in silence.
+  state = ledgerStep(state, moment, "trainer", decision === "confirm" ? "trainer/consent-confirmed" : "trainer/consent-declined", decision === "confirm" ? "consent given on the attested page" : "consent declined");
   const record = runTransaction({
     id: pending.transactionId,
     registry: deps.world.registry,
