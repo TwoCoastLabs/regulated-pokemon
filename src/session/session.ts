@@ -56,7 +56,7 @@ import { buildRoster } from "../kernel/roster.js";
 import { runTransaction, type Transaction } from "../kernel/transaction.js";
 import { renderAnswer } from "../render/reference.js";
 import { denialCode } from "../kernel/violation.js";
-import { type AnswerStep, phraseQuestion, proposalDigest, proposeAnswer, proposeScope, usableQuestion } from "../harness/advisor.js";
+import { type AnswerStep, phraseQuestion, type PromptShape, proposalDigest, proposeAnswer, proposeScope, usableQuestion } from "../harness/advisor.js";
 import { type AnswerDecode, NO_CLAIMS_REASON } from "../harness/decode.js";
 import { MAX_ANSWER_CLAIMS, type NominableRoute } from "../harness/schema.js";
 import { addUsage, emptyUsage, type ModelProvider, type Usage } from "../harness/provider.js";
@@ -165,6 +165,24 @@ export interface SessionDeps {
    * live path. Off by default.
    */
   precedents?: SessionPrecedents;
+  /**
+   * Which answer prompt the calls build (docs/answer-prompt.md, epic #169
+   * M3): `legacy`, the prompt as it accreted, or `blocks`, the fixed block
+   * sequence — the task and the reply shape first, the question next,
+   * context only when present, each rule once. The same data and the same
+   * grammar under both; the gate is untouched. `legacy` when absent, until
+   * the measurement picks the default.
+   */
+  prompt?: PromptShape;
+  /**
+   * The refused nomination, fed back (docs/answer-prompt.md, M3): when the
+   * model's whole reply was a nomination the driver refused, the retry's
+   * prompt carries the refusal by name in the driver's fixed wording —
+   * the way a kernel denial is carried back — instead of the door being
+   * withdrawn in silence. Off by default: the silent withdrawal is the
+   * measured behaviour until the arm with the number becomes the default.
+   */
+  refusalFeedback?: boolean;
 }
 
 /** What the session holds of the operator's memory. */
@@ -1225,7 +1243,7 @@ async function withRouteFallback(
   world: SessionWorld,
   state: SessionState,
   deps: SessionDeps,
-  call: (routes: readonly NominableRoute[] | undefined) => Promise<AnswerStep>,
+  call: (routes: readonly NominableRoute[] | undefined, feedback?: readonly string[]) => Promise<AnswerStep>,
 ): Promise<{ state: SessionState; step: AnswerStep; usage: Usage; retried: boolean; refusedListing: boolean }> {
   const first = await call(SESSION_ROUTES);
   const decode = first.decode;
@@ -1259,15 +1277,37 @@ async function withRouteFallback(
     undefined,
     explainNomination(nomination),
   );
-  stepped = ledgerStep(
-    stepped,
-    deps.now(),
-    "driver",
-    "route/withdrawn",
-    `the "${nomination.routeId}" door was refused: ${executed.reason} — the door was withdrawn for one call and the model asked again; nothing about the refusal was sent to it`,
-  );
-  const again = await call(undefined);
+  // Two policies, one measured against the other (docs/answer-prompt.md,
+  // M3): withdrawn in silence, or the refusal carried back by name — one
+  // line in the driver's fixed wording, the same code the emptied-reply
+  // round uses for a refused route, so the record reads alike either way.
+  const fedBack = deps.refusalFeedback === true;
+  const reason = `driver/refused-route: the "${nomination.routeId}" door was refused — ${executed.reason}`;
+  stepped = fedBack
+    ? ledgerStep(
+        stepped,
+        deps.now(),
+        "driver",
+        "route/refused-back",
+        `the "${nomination.routeId}" door was refused: ${executed.reason} — the door was withdrawn for one call and the refusal was fed back to the model by name`,
+        undefined,
+        [reason],
+      )
+    : ledgerStep(
+        stepped,
+        deps.now(),
+        "driver",
+        "route/withdrawn",
+        `the "${nomination.routeId}" door was refused: ${executed.reason} — the door was withdrawn for one call and the model asked again; nothing about the refusal was sent to it`,
+      );
+  const again = await call(undefined, fedBack ? [reason, "Answer the question directly — as claims about what was asked, a lesson that squarely answers it, or no claims at all."] : undefined);
   return { state: stepped, step: again, usage: addUsage(first.usage, again.usage), retried: true, refusedListing: nomination.routeId === "listing" };
+}
+
+/** The model lane's suffix on a reply that followed a refused nomination:
+ * which of the two policies the round ran under, in plain words. */
+function afterNomination(deps: SessionDeps): string {
+  return deps.refusalFeedback === true ? " — the reply with the door withdrawn and the refusal fed back" : " — the reply with the door withdrawn; nothing was fed back";
 }
 
 /**
@@ -1685,7 +1725,7 @@ async function teachOrDiscover(
   let retried = false;
   let refusedListing = false;
   try {
-    ({ state, step, usage: stepUsage, retried, refusedListing } = await withRouteFallback(world, state, deps, (routes) =>
+    ({ state, step, usage: stepUsage, retried, refusedListing } = await withRouteFallback(world, state, deps, (routes, feedback) =>
       proposeAnswer({
         provider,
         context: bare,
@@ -1696,11 +1736,13 @@ async function teachOrDiscover(
         ...(previously === undefined ? {} : { previously }),
         ...(about === undefined ? {} : { previousSubjects: about }),
         ...(routes === undefined ? {} : { routes }),
+        ...(feedback === undefined ? {} : { feedback }),
         ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
         ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
         ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
         ...(deps.clarify === undefined ? {} : { clarify: deps.clarify }),
         ...(deps.suggest === undefined ? {} : { suggest: deps.suggest }),
+        ...(deps.prompt === undefined ? {} : { prompt: deps.prompt }),
       }),
     ));
   } catch {
@@ -1719,7 +1761,7 @@ async function teachOrDiscover(
     deps.now(),
     "model",
     "model/discovery",
-    `${describeReply(step)}${retried ? " — the reply with the door withdrawn; nothing was fed back" : ""}`,
+    `${describeReply(step)}${retried ? afterNomination(deps) : ""}`,
   );
   if (refusedListing) spent = tallyListing(spent, "stoodDown");
   if (!step.decode.ok) {
@@ -1760,6 +1802,7 @@ async function teachOrDiscover(
         ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
         ...(deps.clarify === undefined ? {} : { clarify: deps.clarify }),
         ...(deps.suggest === undefined ? {} : { suggest: deps.suggest }),
+        ...(deps.prompt === undefined ? {} : { prompt: deps.prompt }),
       });
     } catch {
       spentFolded = ledgerStep({ ...spentFolded, providerErrors: spentFolded.providerErrors + 1 }, deps.now(), "model", "model/retry-failed", RETRY_FAILED);
@@ -2838,7 +2881,7 @@ async function answer(
     };
   } else {
     try {
-      const fallback = await withRouteFallback(world, state, deps, (routes) =>
+      const fallback = await withRouteFallback(world, state, deps, (routes, feedback) =>
         proposeAnswer({
           provider,
           context,
@@ -2850,14 +2893,14 @@ async function answer(
           ...precedentArg(state),
           ...(previously === undefined ? {} : { previously }),
           ...(about === undefined ? {} : { previousSubjects: about }),
-        ...(about === undefined ? {} : { previousSubjects: about }),
           ...(routes === undefined ? {} : { routes }),
+          ...(feedback === undefined ? {} : { feedback }),
           ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
           ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
           ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
           ...(deps.clarify === undefined ? {} : { clarify: deps.clarify }),
           ...(deps.suggest === undefined ? {} : { suggest: deps.suggest }),
-        ...(deps.suggest === undefined ? {} : { suggest: deps.suggest }),
+          ...(deps.prompt === undefined ? {} : { prompt: deps.prompt }),
         }),
       );
       // Both calls' usage rides on the step; the retry is counted below, and
@@ -2887,7 +2930,7 @@ async function answer(
     deps.now(),
     "model",
     "model/answer",
-    `${describeReply(step)}${stepRetried ? " — the reply with the door withdrawn; nothing was fed back" : ""}`,
+    `${describeReply(step)}${stepRetried ? afterNomination(deps) : ""}`,
   );
   if (stepRefusedListing) withUsage = tallyListing(withUsage, "stoodDown");
 
@@ -2920,6 +2963,7 @@ async function answer(
         ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
         ...(deps.clarify === undefined ? {} : { clarify: deps.clarify }),
         ...(deps.suggest === undefined ? {} : { suggest: deps.suggest }),
+        ...(deps.prompt === undefined ? {} : { prompt: deps.prompt }),
       });
     } catch {
       withUsage = ledgerStep({ ...withUsage, providerErrors: withUsage.providerErrors + 1 }, deps.now(), "model", "model/retry-failed", RETRY_FAILED);
@@ -3007,6 +3051,7 @@ async function answer(
         ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
         ...(deps.clarify === undefined ? {} : { clarify: deps.clarify }),
         ...(deps.suggest === undefined ? {} : { suggest: deps.suggest }),
+        ...(deps.prompt === undefined ? {} : { prompt: deps.prompt }),
       });
     } catch {
       // The first denial is a complete, honest record; a provider that fails

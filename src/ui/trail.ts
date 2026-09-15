@@ -109,7 +109,7 @@ const OPEN_CODES: ReadonlySet<string> = new Set([
 /** The tone a code carries. Refusals are read by suffix so a new denial
  * code the ledger grows is coloured right before anyone lists it here. */
 export function toneOf(code: string): StepTone {
-  if (code.endsWith("/denied") || code.endsWith("/refused") || code.endsWith("/withdrawn") || code.endsWith("failed") || code === "note/error") return "refused";
+  if (code.endsWith("/denied") || code.endsWith("/refused") || code.endsWith("/refused-back") || code.endsWith("/withdrawn") || code.endsWith("failed") || code === "note/error") return "refused";
   if (OK_CODES.has(code)) return "ok";
   if (OPEN_CODES.has(code)) return "open";
   return "plain";
@@ -362,7 +362,7 @@ export function trailsOfSession(state: Ledgered & { records: readonly Transactio
  * denial carried back, the driver's refusals carried back, a nomination
  * refused with the door then shut. Every one of these cost one more model
  * call, and the reply that shipped is the one that came after. */
-const SENT_BACK_CODES: ReadonlySet<string> = new Set(["verdict/denied", "reply/carried-back", "linking/carried-back", "route/withdrawn", "route/refused"]);
+const SENT_BACK_CODES: ReadonlySet<string> = new Set(["verdict/denied", "reply/carried-back", "linking/carried-back", "route/withdrawn", "route/refused-back", "route/refused"]);
 
 /** What the model learned from a refusal: the reasons went into its next
  * prompt (`fed-back`), a door was removed for one call and nothing said

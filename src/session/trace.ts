@@ -15,6 +15,7 @@
  * point hands it a real one.
  */
 
+import type { PromptShape } from "../harness/advisor.js";
 import type { ScopeCandidate, ScopeEvent } from "../kernel/contracts.js";
 import type { Claim } from "../kernel/contracts.js";
 import type { Transaction } from "../kernel/transaction.js";
@@ -85,6 +86,12 @@ export interface TraceArgs {
   /** An explicit store file for the door — an arm of the porch reading;
    * the world's own store under data/precedents/ otherwise. */
   precedentStore?: string;
+  /** Which answer prompt to build (docs/answer-prompt.md): `legacy` by
+   * default; `--prompt blocks` the fixed block sequence. */
+  prompt: PromptShape;
+  /** The refused nomination carried back by name (docs/answer-prompt.md,
+   * M3) — off by default; `--refusal-feedback` turns it on. */
+  refusalFeedback: boolean;
 }
 
 export function parseTraceArgs(argv: readonly string[]): TraceArgs {
@@ -92,9 +99,12 @@ export function parseTraceArgs(argv: readonly string[]): TraceArgs {
   const model = modelFlag >= 0 ? argv[modelFlag + 1] : undefined;
   const storeFlag = argv.indexOf("--precedent-store");
   const precedentStore = storeFlag >= 0 ? argv[storeFlag + 1] : undefined;
+  const promptFlag = argv.indexOf("--prompt");
+  const prompt: PromptShape = promptFlag >= 0 && argv[promptFlag + 1] === "blocks" ? "blocks" : "legacy";
+  const valued = new Set([modelFlag, storeFlag, promptFlag].filter((index) => index >= 0).map((index) => index + 1));
   const grounding: TraceGrounding = argv.includes("--ungrounded") ? "none" : argv.includes("--grounded") ? "full" : "retrieval";
   return {
-    inputs: argv.filter((arg, index) => !arg.startsWith("--") && !(modelFlag >= 0 && index === modelFlag + 1) && !(storeFlag >= 0 && index === storeFlag + 1)),
+    inputs: argv.filter((arg, index) => !arg.startsWith("--") && !valued.has(index)),
     ...(model === undefined ? {} : { model }),
     ...(precedentStore === undefined ? {} : { precedentStore }),
     weak: argv.includes("--weak"),
@@ -107,6 +117,8 @@ export function parseTraceArgs(argv: readonly string[]): TraceArgs {
     suggest: !argv.includes("--no-suggest"),
     center: argv.includes("--center"),
     memory: !argv.includes("--no-memory"),
+    prompt,
+    refusalFeedback: argv.includes("--refusal-feedback"),
   };
 }
 

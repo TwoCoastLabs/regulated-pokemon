@@ -113,7 +113,8 @@ describe("a trail from the driver's ledger", () => {
         { at: "t5", lane: "kernel", code: "verdict/denied", text: "the kernel denied the draft: IA-3/fabricated-entity — carried back to the model once", lines: ['IA-3/fabricated-entity: "gym-badge" is not certified'] },
         { at: "t6", lane: "model", code: "model/retry", text: "1 claim(s), 0 link(s) — the reply after 1 reason was fed back to the model" },
         { at: "t7", lane: "driver", code: "route/refused", text: 'the "profile" door was refused: "x" is not a species the records certify — the claims beside it stand on their own' },
-        { at: "t8", lane: "kernel", code: "record/answered", text: "answered: 1 claim(s) certified" },
+        { at: "t8", lane: "driver", code: "route/refused-back", text: 'the "listing" door was refused: a list of one is not a list — the door was withdrawn for one call and the refusal was fed back to the model by name', lines: ['driver/refused-route: the "listing" door was refused — a list of one is not a list'] },
+        { at: "t9", lane: "kernel", code: "record/answered", text: "answered: 1 claim(s) certified" },
       ],
     };
     const trail = trailFromLedger(retried, []);
@@ -122,13 +123,16 @@ describe("a trail from the driver's ledger", () => {
     expect(trail.steps[4]!.tone).toBe("refused");
     expect(trail.steps[2]!.tone).toBe("refused");
     expect(trail.steps[6]!.tone).toBe("refused");
+    expect(trail.steps[7]!.tone).toBe("refused");
     expect(trail.steps[0]!.lines).toEqual([]);
     // Each round says whether the model was told: withdrawn in silence, fed
-    // back by name, or not re-asked at all.
+    // back by name (the kernel's denial, or the driver's refused nomination
+    // under the M3 policy), or not re-asked at all.
     expect(sentBack(retried)).toEqual([
       { by: "driver", code: "route/withdrawn", text: retried.steps[2]!.text, mode: "withdrawn", reasons: [] },
       { by: "kernel", code: "verdict/denied", text: retried.steps[4]!.text, mode: "fed-back", reasons: ['IA-3/fabricated-entity: "gym-badge" is not certified'] },
       { by: "driver", code: "route/refused", text: retried.steps[6]!.text, mode: "stood", reasons: [] },
+      { by: "driver", code: "route/refused-back", text: retried.steps[7]!.text, mode: "fed-back", reasons: ['driver/refused-route: the "listing" door was refused — a list of one is not a list'] },
     ]);
     expect(sentBack(ledger)).toEqual([]);
   });

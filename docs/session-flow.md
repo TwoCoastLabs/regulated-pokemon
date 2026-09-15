@@ -270,6 +270,46 @@ any policy threshold. The prompt describes a contract; the content the
 model asserts is still its own, so the usefulness number measures the
 model and the enforcement number measures the kernel.
 
+#### The block-sequenced prompt (`prompt: "blocks"`, since 2026-09-15)
+
+The same inputs, rebuilt as a fixed sequence of blocks
+([answer-prompt.md](answer-prompt.md)); a driver lever selects it
+(`SessionDeps.prompt`, `session:trace -- --prompt blocks`, `coverage:map --
+--prompt blocks`), and the call declares the blocks it emitted on the
+doors (`DoorState.blocks`), so a trace shows the prompt's structure as
+data. In order, each present only when it has content:
+
+1. **YOUR TASK** — what the reply is checked against, and its one JSON
+   shape.
+2. **THE QUESTION** — the trainer's own words (with the advisor's own
+   clarification in place, when there was one).
+3. **WHAT YOU KNOW** — the certified rows *only when retrieval selected
+   any* (the legacy prompt prints empty table headers), the precedents,
+   the earlier words, the previous answer's subjects, and the refused
+   reply's reasons — each its own block, absent when empty.
+4. **WHAT IS KNOWN ABOUT THE TRAINER** — one line: nothing yet (a lesson
+   can be certified now; any other claim says what to establish), or the
+   scope.
+5. **HOW TO DECIDE, IN ORDER** — five numbered cases, each rule once:
+   small talk → no claims; a question a door describes → one route claim
+   (only when doors are offered); a question a specific claim answers →
+   those claims, a lesson may stand beside; a question about what
+   something is → one lesson, and a character or the story → no claims;
+   a question you cannot read → one clarify entry (only when the door is
+   open). Then the linking rule, the claim-only-what-was-asked rule with
+   the budget, and the suggest line when that door is open.
+6. **THE DOORS** — the route catalogue, when offered.
+7. **THE SHAPES** — one line per shape, the JSON and the one rule that
+   governs it.
+8. **THE CLOSED LISTS** — lessons, rules, tools, categories, the data
+   dictionary.
+
+The rationale sentences and the three restatements of the lesson rule are
+deleted, not moved. On the porch ask with every door open the legacy
+prompt is 2,076 words with 35 negation clauses; the blocks prompt 1,497
+words with 20. The builder holds no word of the world (the domain-word
+gate covers it); the closed lists are data.
+
 ### The scope prompt (`scopePrompt`, call 2)
 
 Short by design: the trainer's lines, "Still unestablished: version,

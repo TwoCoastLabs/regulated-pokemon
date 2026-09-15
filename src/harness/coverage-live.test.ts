@@ -476,6 +476,63 @@ describe("the precedent door rides as a lever (docs/precedent.md)", () => {
   });
   const memoryFs = (contents: string) => ({ readDir: () => [], readFile: () => contents, writeFile: () => undefined });
 
+  it("parses --prompt legacy|blocks and --refusal-feedback, single-turn only, and refuses the rest by name", () => {
+    expect(parseCoverageArgs(["--prompt", "blocks"]).prompt).toBe("blocks");
+    expect(parseCoverageArgs(["--prompt", "legacy"]).prompt).toBe("legacy");
+    expect(parseCoverageArgs([]).prompt).toBeUndefined();
+    expect(parseCoverageArgs(["--prompt", "terse"]).errors[0]).toContain("blocks");
+    expect(parseCoverageArgs(["--refusal-feedback"]).refusalFeedback).toBe(true);
+    expect(parseCoverageArgs([]).refusalFeedback).toBe(false);
+    expect(parseCoverageArgs(["--prompt", "blocks", "--phrasings"]).errors[0]).toContain("single-turn");
+    expect(parseCoverageArgs(["--refusal-feedback", "--dialogues"]).errors[0]).toContain("single-turn");
+  });
+
+  it("threads the prompt shape and the fed-back refusal to the session, records both, and counts the nomination retry and the prompt tokens per run", async () => {
+    // Arm C of docs/answer-prompt.md: the blocks prompt, and a refused
+    // nomination carried back by name. A scripted model nominates the
+    // listing door first and answers on the retry.
+    const plan = await runCoverage(options(["--ids", "ans-fact-speed-pikachu", "--prompt", "blocks", "--refusal-feedback"]));
+    const planned = plan.lines.join("\n");
+    expect(planned).toContain("prompt:        blocks");
+    expect(planned).toContain("refusal:       fed back");
+
+    const prompts: string[] = [];
+    const opts = options(["--live", "--ids", "ans-fact-speed-pikachu", "--prompt", "blocks", "--refusal-feedback"], {
+      makeProvider: () =>
+        new ScriptedProvider("coverage:arm-c", (request) => {
+          if (request.purpose !== "answer") return "decline";
+          prompts.push(request.prompt);
+          return request.prompt.includes("driver/refused-route") || request.hint.doors?.routes.length === 0
+            ? pikachuSpeed()
+            : JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "listing", subject: "catalogue", n: 1 }] });
+        }),
+    });
+    const result = await runCoverage(opts);
+    expect(result.exitCode).toBe(0);
+    expect(prompts[0]!.startsWith("YOUR TASK\n")).toBe(true);
+    expect(prompts.some((prompt) => prompt.includes('driver/refused-route: the "listing" door was refused'))).toBe(true);
+
+    const { artifact } = filedArtifact(opts.written);
+    expect(artifact).toMatchObject({ prompt: "blocks", refusalFeedback: true });
+    expect(artifact.runs[0]!.nominationRetried).toBe(true);
+    expect(artifact.runs[0]!.promptTokens).toBeGreaterThan(0);
+    expect(artifact.map.nominationRetried).toEqual(["ans-fact-speed-pikachu"]);
+    expect(artifact.map.prompting?.calls).toBe(artifact.runs[0]!.turns);
+    const page = renderCoverageArtifact(artifact);
+    expect(page).toContain("**prompt: blocks**");
+    expect(page).toContain("**refusal fed back**");
+    expect(page).toContain("repeated the answer call after a refused nomination");
+    expect(page).toContain("Prompt tokens per model call");
+    // The default leg records neither lever: the legacy prompt, the door
+    // withdrawn in silence — and older artifacts read the same way.
+    const plain = options(["--live", "--ids", "ans-fact-speed-pikachu"], { makeProvider: scripted(pikachuSpeed()) });
+    await runCoverage(plain);
+    const filed = filedArtifact(plain.written).artifact;
+    expect(filed.prompt).toBeUndefined();
+    expect(filed.refusalFeedback).toBeUndefined();
+    expect(renderCoverageArtifact(filed)).not.toContain("**prompt:");
+  });
+
   it("parses --precedents nearest|fixed and refuses the rest by name", () => {
     expect(parseCoverageArgs(["--precedents", "nearest"]).precedents).toBe("nearest");
     expect(parseCoverageArgs(["--precedents", "fixed", "--fixed-precedents", "a,b"]).fixedPrecedents).toEqual(["a", "b"]);

@@ -30,6 +30,7 @@
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
+import type { PromptShape } from "./advisor.js";
 import { fileArtifact, type WriteFile } from "./artifact.js";
 import { CENTER_BANK_PATH, readBank } from "./bank.js";
 import { type BankRunOptions, phrasingsOf, runBank, runIntentRobustness, type IntentRobustness, type RecordedBankRun } from "./bank-run.js";
@@ -112,6 +113,12 @@ export interface CoverageArgs {
   precedentStore?: string;
   /** The fixed arm's ids, when named; otherwise chosen once from the store. */
   fixedPrecedents?: readonly string[];
+  /** Which answer prompt the calls build (docs/answer-prompt.md): `legacy`
+   * when absent — the prompt every filed artifact ran under. Recorded. */
+  prompt?: PromptShape;
+  /** The refused nomination carried back by name (docs/answer-prompt.md,
+   * M3) instead of the door withdrawn in silence. Recorded. */
+  refusalFeedback: boolean;
   model?: string;
   limit?: number;
   ids?: readonly string[];
@@ -148,6 +155,8 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     precedents?: "nearest" | "fixed";
     precedentStore?: string;
     fixedPrecedents?: string[];
+    prompt?: PromptShape;
+    refusalFeedback: boolean;
     model?: string;
     limit?: number;
     ids?: string[];
@@ -159,7 +168,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     source?: string;
     help: boolean;
     errors: string[];
-  } = { live: false, render: false, weak: false, dialogues: false, adversarial: false, center: false, grounded: false, retrieval: false, gatedGrammar: false, repair: false, profile: false, feedback: false, clarify: false, suggest: false, raw: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
+  } = { live: false, render: false, weak: false, dialogues: false, adversarial: false, center: false, grounded: false, retrieval: false, gatedGrammar: false, repair: false, profile: false, feedback: false, clarify: false, suggest: false, raw: false, refusalFeedback: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
 
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index];
@@ -224,6 +233,14 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
         if (value === undefined) args.errors.push("--fixed-precedents needs a comma-separated list of precedent ids");
         else args.fixedPrecedents = value.split(",").map((id) => id.trim()).filter((id) => id !== "");
         index++;
+        break;
+      case "--prompt":
+        if (value !== "legacy" && value !== "blocks") args.errors.push(`--prompt needs "legacy" or "blocks", got ${value}`);
+        else args.prompt = value;
+        index++;
+        break;
+      case "--refusal-feedback":
+        args.refusalFeedback = true;
         break;
       case "--phrasings":
         args.phrasings = true;
@@ -317,7 +334,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
   if (args.repair && args.phrasings) {
     args.errors.push("--repair is not threaded through the robustness pass; run it on the coverage or dialogue banks");
   }
-  for (const [flag, on] of [["--profile", args.profile], ["--feedback", args.feedback], ["--clarify", args.clarify], ["--suggest", args.suggest], ["--raw", args.raw], ["--precedents", args.precedents !== undefined]] as const) {
+  for (const [flag, on] of [["--profile", args.profile], ["--feedback", args.feedback], ["--clarify", args.clarify], ["--suggest", args.suggest], ["--raw", args.raw], ["--precedents", args.precedents !== undefined], ["--prompt", args.prompt !== undefined], ["--refusal-feedback", args.refusalFeedback]] as const) {
     if (on && (args.phrasings || args.dialogues)) {
       args.errors.push(`${flag} is threaded through the single-turn coverage run only; the robustness and dialogue banks do not carry it`);
     }
@@ -352,11 +369,13 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     clarify: args.clarify,
     suggest: args.suggest,
     raw: args.raw,
+    refusalFeedback: args.refusalFeedback,
     phrasings: args.phrasings,
     repetitions: args.repetitions,
     out: args.out,
     help: args.help,
     errors: args.errors,
+    ...(args.prompt === undefined ? {} : { prompt: args.prompt }),
     ...(args.precedents === undefined ? {} : { precedents: args.precedents }),
     ...(args.precedentStore === undefined ? {} : { precedentStore: args.precedentStore }),
     ...(args.fixedPrecedents === undefined ? {} : { fixedPrecedents: args.fixedPrecedents }),
@@ -415,6 +434,11 @@ const USAGE = [
   "                      withheld. The store's digest and the levers are recorded with the number.",
   "  --precedent-store P the store file (default: data/precedents/<pack id>.v1.json).",
   "  --fixed-precedents  with --precedents fixed: the ids to hold (default: one lesson, one fact, one count).",
+  "  --prompt SHAPE      the answer prompt (docs/answer-prompt.md): 'legacy' (the default, the prompt as it accreted)",
+  "                      or 'blocks' (the fixed block sequence — task and shape first, context only when present,",
+  "                      each rule once). Same data, same grammar, same gate; recorded in the artifact.",
+  "  --refusal-feedback  a nomination the driver refuses is carried back to the model by name on the retry,",
+  "                      instead of the door withdrawn in silence (M3). Recorded; the retries are counted either way.",
   "  --render [PATH]     render a filed coverage artifact (a file, or a directory to take the newest",
   "                      coverage artifact from; default runs/coverage/). Reads no clock, no key, no network.",
   "  --page PATH         with --render, write the page there instead of printing it.",
@@ -618,6 +642,8 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
         `  suggest:       ${args.suggest ? "yes — the model may offer follow-ups, shown uncertified" : "no — answers end where the certificate ends"}`,
         `  raw arm:       ${args.raw ? "yes — the same entries asked ungoverned beside it, for the governance tax (a second leg's cost)" : "no — governed only"}`,
         `  precedents:    ${args.precedents === undefined ? "no — the door is shut" : args.precedents === "nearest" ? "nearest — the store's closest accepted exchanges shown per ask, the entry's own withheld" : "fixed — the same few accepted exchanges shown on every call"}`,
+        `  prompt:        ${args.prompt === "blocks" ? "blocks — the fixed block sequence, each rule once" : "legacy — the prompt as it accreted"}`,
+        `  refusal:       ${args.refusalFeedback ? "fed back — a refused nomination is carried back to the model by name" : "withdrawn — a refused nomination's door is withdrawn for one call in silence"}`,
         `  model:         ${model}`,
         `  artifact:      filed under ${args.out}/`,
         `  add --live to run it against the model and bill your key.`,
@@ -690,6 +716,8 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
         clarify: args.clarify,
         suggest: args.suggest,
         ...(memory === undefined ? {} : { precedents: memory.options }),
+        ...(args.prompt === undefined ? {} : { prompt: args.prompt }),
+        refusalFeedback: args.refusalFeedback,
       });
       runs.push(...sampled);
       if (sampled.some((run) => run.score.enforcementEscalation === true)) {
@@ -736,6 +764,8 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
     clarify: args.clarify,
     suggest: args.suggest,
     ...(memory === undefined ? {} : { precedents: memory.lever }),
+    ...(args.prompt === undefined ? {} : { prompt: args.prompt }),
+    ...(args.refusalFeedback ? { refusalFeedback: true } : {}),
     repetitions: args.repetitions,
     ...(args.dispositions === undefined ? {} : { dispositions: args.dispositions }),
     stoppedEarly,

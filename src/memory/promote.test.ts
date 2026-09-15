@@ -68,20 +68,41 @@ describe("promoteFromRuns", () => {
     });
   });
 
-  it("merges into an existing store: same ask and shape is one precedent; a second shape for one entry is numbered", () => {
+  it("keeps one precedent per ask — the commonest accepted shape across the passes, the first seen on a tie", () => {
+    // The M1 porch reading (findings §21): three shapes of "Tell me
+    // everything about Pikachu." crowded k=3 for any ask sharing a word
+    // with it. One ask, one shape; the store teaches which door, not every
+    // way it was once taken.
+    const wide = run("ans-fact-speed-pikachu", "What's Pikachu's Speed stat?", [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }, { kind: "fact", entityId: "pikachu", factId: "types" }]);
+    const promotion = promoteFromRuns([wide, SPEED, { ...SPEED, opening: "what's pikachu's speed stat?" }], { artifact: "a.json", packId: world.pack.id, at: "t" });
+    expect(promotion.added).toEqual(["p-ans-fact-speed-pikachu"]);
+    expect(promotion.skipped).toEqual({ "the same ask accepted again (the commonest shape was kept)": 2 });
+    expect(promotion.store.precedents[0]?.shape.claims).toEqual([{ kind: "fact", entityId: "pikachu", factId: "base-speed" }]);
+    // A tie keeps the first seen, so the store replays from the artifact.
+    const tied = promoteFromRuns([wide, SPEED], { artifact: "a.json", packId: world.pack.id, at: "t" });
+    expect(tied.store.precedents[0]?.shape.claims).toHaveLength(2);
+  });
+
+  it("merges into an existing store: an ask already held is left as it is, and a second entry with the same ask is numbered", () => {
     const first = promoteFromRuns([SPEED], { artifact: "a.json", packId: world.pack.id, at: "t" });
     const again = promoteFromRuns(
       [
         SPEED,
-        { ...SPEED, opening: "what's pikachu's speed stat?" },
         run("ans-fact-speed-pikachu", "What's Pikachu's Speed stat?", [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }, { kind: "fact", entityId: "pikachu", factId: "types" }]),
+        run("ans-fact-types-pikachu", "What type is Pikachu?", [{ kind: "fact", entityId: "pikachu", factId: "types" }]),
       ],
       { artifact: "b.json", packId: world.pack.id, at: "t2", existing: first.store },
     );
-    expect(again.added).toEqual(["p-ans-fact-speed-pikachu-2"]);
-    expect(again.skipped).toEqual({ "already in the store (same ask, same shape)": 2 });
-    expect(again.store.precedents.map((one) => one.id)).toEqual(["p-ans-fact-speed-pikachu", "p-ans-fact-speed-pikachu-2"]);
+    expect(again.added).toEqual(["p-ans-fact-types-pikachu"]);
+    expect(again.skipped).toEqual({ "already in the store (same ask)": 2 });
+    expect(again.store.precedents.map((one) => one.id)).toEqual(["p-ans-fact-speed-pikachu", "p-ans-fact-types-pikachu"]);
     expect(again.store.precedents[0]?.source.artifact).toBe("a.json");
+    // Two entries worded alike: the second's id is numbered, never dropped.
+    const alike = promoteFromRuns(
+      [run("ans-one", "How fast is Pikachu?", [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }]), run("ans-two", "how fast is pikachu?", [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }])],
+      { artifact: "c.json", packId: world.pack.id, at: "t" },
+    );
+    expect(alike.added).toEqual(["p-ans-one"]);
   });
 
   it("promotes a session exchange the same way, without a profile when none was set", () => {

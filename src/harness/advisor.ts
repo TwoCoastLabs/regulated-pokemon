@@ -20,7 +20,7 @@ import { MOVE_FACT_IDS, SPECIES_FACT_IDS , ITEM_FACT_IDS, STATUS_CONDITIONS } fr
 import { candidateDigest } from "../kernel/scope.js";
 import { type AnswerDecode, decodeAnswer, decodeCandidate } from "./decode.js";
 import type { CompletionRequest, ModelProvider, Usage } from "./provider.js";
-import { certifiedReference, retrieveReference } from "./reference.js";
+import { certifiedReference, retrievalSelection, retrieveReference } from "./reference.js";
 import { type HeldPrecedent, renderShape } from "../memory/precedent.js";
 import { ANSWER_SCHEMA_NAME, answerSchema } from "./schema.js";
 import { nominateFillerKinds } from "./grammar-gate.js";
@@ -124,6 +124,245 @@ function dictionaryLines(dictionary: readonly DictionaryEntry[], items: boolean)
   });
 }
 
+/** The roster criteria over species, one line each — shared by both prompts
+ * so the grammar is described once. */
+const SPECIES_CRITERIA: readonly string[] = [
+  '{"kind": "has-type", "type": "<type-id>"}',
+  '{"kind": "learns-move", "move": "<move-id>"}',
+  '{"kind": "rarity", "rarity": "legendary" | "mythical"}',
+  '{"kind": "stat-at-least", "stat": "<stat-id>", "value": <number>}',
+  '{"kind": "stat-at-most", "stat": "<stat-id>", "value": <number>}',
+];
+
+/** The established scope on one line, as both prompts print it. */
+function scopeLine(scope: TrainerScope): string {
+  return `version=${scope.version} region=${scope.region} badges=${scope.badgeLevel}` + (scope.comparisonBasis === undefined ? "" : ` basis=${scope.comparisonBasis}`);
+}
+
+/** Which of the two answer prompts a call builds: `legacy` is the prompt as
+ * it accreted through the dogfood rounds (docs/session-flow.md §4); `blocks`
+ * the fixed block sequence of docs/answer-prompt.md. Same data, same
+ * grammar, same gate — the lever changes only how the contract is read. */
+export type PromptShape = "legacy" | "blocks";
+
+/** Everything the answer prompt is built from, gathered once so the two
+ * shapes read the same inputs. */
+interface AnswerPromptInput {
+  scope: TrainerScope | undefined;
+  asks: readonly string[];
+  previously: readonly string[] | undefined;
+  previousSubjects: readonly string[] | undefined;
+  routes: readonly NominableRoute[] | undefined;
+  tools: readonly string[];
+  lessons: readonly string[];
+  rules: readonly { id: string; label: string }[];
+  reference: string | undefined;
+  dictionary: readonly DictionaryEntry[];
+  feedback: readonly string[] | undefined;
+  items: boolean;
+  itemCategories: readonly string[];
+  clarify: boolean;
+  suggest: boolean;
+  precedents: readonly HeldPrecedent[];
+}
+
+/** One block of the restructured prompt: its id (recorded on the request
+ * hint, so a trace shows the prompt's structure as data) and its lines. A
+ * block with no lines is not emitted — the prompt never opens with nothing. */
+interface PromptBlock {
+  id: string;
+  lines: readonly string[];
+  /** The ids this block stands for, when it carries a group heading and the
+   * group's first part in one; `[id]` otherwise. */
+  ids?: readonly string[];
+}
+
+/**
+ * The answer prompt as a fixed sequence of blocks (docs/answer-prompt.md):
+ * the task and the reply's shape first, then the question, then whatever
+ * context this call has (and nothing when it has none), the trainer's
+ * status in one line, a five-way decision list that states each rule once,
+ * the doors when offered, the shapes, and the closed lists last, as
+ * reference. The same data feeds it as feeds the legacy prompt — the
+ * lists, the descriptions, the precedents — and the builder holds no word
+ * of the world. Structural, not tuned: no sentence here was reworded
+ * against one model's replies, and the lever is measured on both models.
+ */
+function answerPromptBlocks(input: AnswerPromptInput): { text: string; blocks: readonly string[] } {
+  const { scope, asks, routes, tools, lessons, rules, reference, dictionary, feedback, items, itemCategories, clarify, suggest, precedents } = input;
+  const linking = dictionary.length > 0;
+  const blocks: PromptBlock[] = [];
+  const add = (id: string, lines: readonly string[]): void => {
+    if (lines.length > 0) blocks.push({ id, lines });
+  };
+
+  add("task", [
+    "YOUR TASK",
+    "You answer a trainer's question with claims the system checks against certified records.",
+    "You name what to look up; the system reads every value. Reply with one JSON object and nothing else:",
+    linking ? '  {"asked": [...], "rosters": [...], "claims": [...]}' : '  {"rosters": [...], "claims": [...]}',
+  ]);
+
+  add("question", ["THE QUESTION", ...asks.map((line) => `  - ${line}`)]);
+
+  // What this call knows beyond the question — each part only when it has
+  // content, under one heading printed once.
+  const known: PromptBlock[] = [];
+  if (reference !== undefined) known.push({ id: "rows", lines: [reference] });
+  if (precedents.length > 0) {
+    known.push({
+      id: "precedents",
+      lines: [
+        "Earlier questions the records answered, and the shape accepted for each — examples of which door to take, never of a value:",
+        ...precedents.flatMap((held) => [`  - "${held.ask}"`, `      → ${renderShape(held.shape)}`]),
+      ],
+    });
+  }
+  if (input.previously !== undefined && input.previously.length > 0) {
+    known.push({ id: "earlier", lines: ["Earlier in this conversation the trainer said (context for the question, not itself the question):", ...input.previously.map((line) => `  - ${line}`)] });
+  }
+  if (input.previousSubjects !== undefined && input.previousSubjects.length > 0) {
+    known.push({
+      id: "previous",
+      lines: [`The previous answer the trainer is looking at was about: ${input.previousSubjects.join(", ")}.`, '"It", "this one" or "this species" in the question most likely means one of these; use that id.'],
+    });
+  }
+  if (feedback !== undefined && feedback.length > 0) {
+    known.push({
+      id: "refusal",
+      lines: ["Your previous reply to these words was refused, by name:", ...feedback.map((line) => `  - ${line}`), "Do not repeat what was refused; decide again from the list below."],
+    });
+  }
+  if (known.length > 0) {
+    // The heading and the first part share a block, so the heading is never
+    // followed by a blank line; later parts follow under it, one blank apart.
+    const [head, ...rest] = known as [PromptBlock, ...PromptBlock[]];
+    blocks.push({ id: "known", lines: ["WHAT YOU KNOW", ...head.lines], ids: ["known", head.id] });
+    for (const part of rest) blocks.push(part);
+  }
+
+  add("trainer", [
+    "WHAT IS KNOWN ABOUT THE TRAINER",
+    ...(scope === undefined
+      ? [
+          "  Nothing yet. A lesson can be certified now. Any other claim is not certified on this call: it tells",
+          "  the system what to establish about the trainer first, and only what that claim needs.",
+        ]
+      : [`  ${scopeLine(scope)}`]),
+  ]);
+
+  const specific = ["fact", "count", ...(items ? ["comparison"] : []), "ranking", "matchup", ...(items ? ["treats"] : []), "eligibility"];
+  const doorsOffered = routes !== undefined && routes.length > 0;
+  let step = 0;
+  const next = (): string => `  ${(step += 1)}.`;
+  add("decide", [
+    "HOW TO DECIDE, IN ORDER",
+    `${next()} Small talk, a greeting, or a question about you rather than the records ("hi", "are you working?", "thanks") → no claims.`,
+    ...(doorsOffered ? [`${next()} A question one of THE DOORS below describes → one route claim, and nothing else.`] : []),
+    `${next()} A question a ${specific.slice(0, -1).join(", ")} or ${specific.at(-1)} claim answers → those claims, the most specific kind that fits`,
+    '     (a "how many" is a count, a stat is a fact, a weakness is a matchup). A lesson may stand beside them.',
+    ...(lessons.length > 0
+      ? [
+          `${next()} A question about what something is or how the game works, that no claim above answers → the one lesson from the`,
+          "     catalogue that squarely answers it, not the lessons near it. A question about a character, the story, or anything",
+          "     no lesson squarely covers → no claims: the records certify species and the rules of the game, not people or plot.",
+        ]
+      : [`${next()} A question no claim above answers → no claims.`]),
+    ...(clarify && linking
+      ? [
+          `${next()} A question you genuinely cannot read — which field they mean, or which subject → one clarify entry with typed options,`,
+          "     and nothing else. Only for a real ambiguity, and never about the trainer's own game version, region or standing: the system",
+          "     asks those. If their words already pick one reading, answer it.",
+        ]
+      : []),
+    ...(linking
+      ? [
+          '  Before the claims, link each thing asked for in "asked", one entry per thing:',
+          `    {"phrase": "<their words for the thing>", "entityId": "<the subject's id>", "fieldId": "<field-id>" | "${NO_FIELD}"}`,
+          `  "${NO_FIELD}" is the honest link when the records certify no such field (a height, a weight, an ability, a cry, the story);`,
+          "  a field that merely resembles the ask is not. A fact, comparison, ranking or matchup claim about a field not linked is dropped.",
+        ]
+      : []),
+    "  Claim only what was asked; omit what you cannot support rather than guess. At most twelve claims and four rosters;",
+    "  never the same claim twice; cite only rosters you defined.",
+    ...(suggest ? ["  After the claims, for every answer, add one suggest entry: two or three questions the trainer might ask you next.", "  Not beside a clarify entry or an empty reply."] : []),
+  ]);
+
+  add(
+    "doors",
+    doorsOffered
+      ? [
+          "THE DOORS",
+          '  When one of these describes the question, reply with one nomination and nothing else — {"kind": "route", "routeId": "<id>", ...its arguments} — and the system composes the answer from the records.',
+          ...routes.map((route) => `  - ${route.id}: ${route.description}`),
+        ]
+      : [],
+  );
+
+  add("shapes", [
+    "THE SHAPES",
+    '  roster: {"id": "<your-id>", "criteria": {"all": [<criterion>, ...]}} — a set you name and then cite by id; a member is exactly what satisfies every criterion.',
+    '     {"criteria": {"all": []}} is every certified member — the set a catalogue-wide question ranges over.',
+    `  criterion: ${SPECIES_CRITERIA.join(" | ")}`,
+    ...(items
+      ? [
+          '  item criterion: {"kind": "item-category", "category": "<category-id>"} | {"kind": "treats-condition", "condition": "<condition>"} | {"kind": "cost-at-most", "value": <number>} | {"kind": "cost-at-least", "value": <number>}',
+          '     — one roster is one universe, species or items, never both. A "what all…" or "cheapest…" over items is an item roster plus a count or a ranking.',
+        ]
+      : []),
+    '  fact: {"kind": "fact", "entityId": "<id>", "factId": "<fact-id>"} — the system reads the certified value; add "asserted" only when you are certain of its exact certified form.',
+    '  count: {"kind": "count", "rosterId": "<id>"} — the system counts the set; state no number.',
+    '  typeCount: {"kind": "typeCount"} — how many types exist in this generation; the system counts them.',
+    ...(rules.length > 0
+      ? ['  gameRule: {"kind": "gameRule", "ruleId": "<rule-id>"} — a fixed rule of the game as a certified number, for a "how many" question about a rule; the system fills the number. It does not list what a trainer owns.']
+      : []),
+    '  membership: {"kind": "membership", "rosterId": "<id>", "entityId": "<id>", "asserted": <boolean>} — to list some members of a set, one per member you name, "asserted": true, with a count claim beside them.',
+    ...(items
+      ? [
+          `  treats: {"kind": "treats", "itemId": "<item-id>", "condition": "<condition>"} — does this item treat that condition; the system derives the certified yes or no, and a certified no is a real answer. A <condition> is one of: ${STATUS_CONDITIONS.join(", ")}.`,
+          '  comparison: {"kind": "comparison", "factId": "<numeric-fact-id>", "leftId": "<id>", "rightId": "<id>"} — one numeric fact on two different entities; the system derives both values, the gap and which leads. One entity\'s value is a fact claim.',
+        ]
+      : []),
+    '  ranking: {"kind": "ranking", "rosterId": "<id>", "basis": "<fact-id>", "direction": "highest"|"lowest"} — the system names the winner; name none.',
+    '  matchup: {"kind": "matchup", "subject": {"kind": "species", "entityId": "<id>"} | {"kind": "type", "typeId": "<type>"}, "direction": "weak-to"|"resists"|"immune-to"|"strong-against"} — the system reads the chart.',
+    '     Direction follows the question: "what beats X" asks what X is weak-to; "what does X beat" asks what X is strong-against. A species can be weak-to, resist or be immune-to; only a type can be strong-against.',
+    '  eligibility: {"kind": "eligibility", "entityId": "<species-id>"} — what the rules say about advising this trainer toward that species; the system derives the verdict, the rule and the thresholds. A useful answer for a restricted species, which you may pair with a recommendation of an eligible one.',
+    ...(lessons.length > 0 ? ['  explanation: {"kind": "explanation", "blockId": "<lesson-id>"} — a reviewed lesson from the catalogue, shown to the trainer word for word.'] : []),
+    '  recommendation: {"kind": "recommendation", "entityId": "<id>"}',
+    '  action: {"kind": "action", "tool": "<tool-id>", "entityId": "<species-id>"} — an act you propose; it runs only on the trainer\'s confirmation. Claim one only when they asked for it.',
+    ...(clarify && linking
+      ? [
+          '  clarify: {"kind": "clarify", "about": "<their words for the ambiguous thing>", "question": "<one short question in your own words, ending in ?>",',
+          `     "options": [{"kind": "field", "label": "<two or three words>", "fieldId": "<field-id>" | "${NO_FIELD}"} | {"kind": "entity", "label": "<its name>", "entityId": "<certified id>"}, ...]}`,
+          `     — two to four options, each a real reading of their words: a field of the dictionary ("${NO_FIELD}" for none of these) or a certified subject. The question states no fact and no number.`,
+        ]
+      : []),
+    ...(suggest
+      ? [
+          '  suggest: {"kind": "suggest", "asks": ["<a short question in the trainer\'s voice>", ...]} — questions about this subject or a related one, worded with "it" or "they": never a number and never a name from the records; one that states a value is dropped. Shown beside the answer as your suggestions, uncertified.',
+        ]
+      : []),
+  ]);
+
+  add("lists", [
+    "THE CLOSED LISTS",
+    ...(lessons.length === 0 ? [] : [`  A <lesson-id> is one of: ${lessons.join(", ")}. No other lesson exists.`]),
+    ...(rules.length === 0 ? [] : [`  A <rule-id> is one of, each with what it counts: ${rules.map((rule) => `${rule.id} (${rule.label})`).join(", ")}. No other rule exists.`]),
+    `  A <tool-id> is one of: ${tools.join(", ")}. No other tool exists.`,
+    ...(items ? [`  A <category-id> is one of: ${itemCategories.join(", ")}. No other category exists.`] : []),
+    ...(linking
+      ? ["  The data dictionary — every certified field, by id. A <field-id> and a <fact-id> are one of these; no other resolves.", ...dictionaryLines(dictionary, items)]
+      : [
+          "  A <fact-id> is one of these certified ids; no other resolves.",
+          `    about a species (entityId is a species id): ${SPECIES_FACT_IDS.join(", ")}`,
+          `    about a move (entityId is a move id): ${MOVE_FACT_IDS.join(", ")}`,
+          ...(items ? [`    about an item (entityId is an item id): ${ITEM_FACT_IDS.join(", ")}`] : []),
+        ]),
+  ]);
+
+  return { text: blocks.map((block) => block.lines.join("\n")).join("\n\n"), blocks: blocks.flatMap((block) => block.ids ?? [block.id]) };
+}
+
 function answerPrompt(
   scope: TrainerScope | undefined,
   asks: readonly string[],
@@ -185,11 +424,7 @@ function answerPrompt(
           "not people or plot, and an honest pass beats teaching the nearest thing.",
           ...(suggest ? ["A lesson you teach here also carries the suggested questions described below, like any answer."] : []),
         ]
-      : [
-          "Scope is established:",
-          `  version=${scope.version} region=${scope.region} badges=${scope.badgeLevel}` +
-            (scope.comparisonBasis === undefined ? "" : ` basis=${scope.comparisonBasis}`),
-        ]),
+      : ["Scope is established:", `  ${scopeLine(scope)}`]),
     "",
     ...(previously === undefined || previously.length === 0
       ? []
@@ -303,11 +538,7 @@ function answerPrompt(
     // model discovering {"all": []} on its own; the weak one never did).
     'An EMPTY criteria list means every certified member: {"criteria": {"all": []}} is the whole certified set — use it when a question ranges over all Pokémon rather than a named group, e.g. as the set a catalogue-wide ranking runs over.',
     "where each criterion is one of:",
-    '  {"kind": "has-type", "type": "<type-id>"}',
-    '  {"kind": "learns-move", "move": "<move-id>"}',
-    '  {"kind": "rarity", "rarity": "legendary" | "mythical"}',
-    '  {"kind": "stat-at-least", "stat": "<stat-id>", "value": <number>}',
-    '  {"kind": "stat-at-most", "stat": "<stat-id>", "value": <number>}',
+    ...SPECIES_CRITERIA.map((line) => `  ${line}`),
     ...(items
       ? [
           "…or an ITEM roster, whose criteria are ONLY these (never mixed with the species criteria above):",
@@ -585,6 +816,9 @@ export interface AnswerStepInput {
    * they influence faces the whole gate.
    */
   precedents?: readonly HeldPrecedent[];
+  /** Which prompt shape to build (docs/answer-prompt.md); `legacy` when
+   * absent. Recorded on the doors as the block list when `blocks`. */
+  prompt?: PromptShape;
 }
 
 /** Ask the model for the certified answer and decode it into a draft. Whether
@@ -593,38 +827,72 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
   const { provider, context, scenarioId, transactionId } = input;
   const trainerLines = trainerText(input.transcript);
   const question = trainerLines.join(" ");
+  const shape: PromptShape = input.prompt ?? "legacy";
   // Retrieval first: the rows this question needs, not the whole registry. Full
   // grounding is the fallback when retrieval is off but grounding is on.
+  // The blocks prompt emits no rows block when retrieval selected nothing:
+  // a block is present only when it has content (the legacy prompt prints
+  // the empty table headers, which is one of the six things its diagnosis
+  // named).
+  const selection = input.retrieval ? retrievalSelection(context.registry, question) : undefined;
+  const retrievedNothing = selection !== undefined && selection.species.size + selection.moves.size + selection.items.size === 0;
   const reference = input.retrieval
-    ? retrieveReference(context.registry, question)
+    ? shape === "blocks" && retrievedNothing
+      ? undefined
+      : retrieveReference(context.registry, question)
     : input.grounded
       ? certifiedReference(context.registry)
       : undefined;
   // Grammar gating: offer the three aggregate kinds only when the question
   // nominates them, so a ranking cannot decode as a count (§19).
   const fillerKinds = input.gatedGrammar ? nominateFillerKinds(question) : undefined;
+  const promptInput: AnswerPromptInput = {
+    scope: context.grant?.scope,
+    // The exchange with the advisor's own clarification in place, when
+    // there was one — otherwise exactly the trainer's lines.
+    asks: input.clarify === true ? exchangeLines(input.transcript) : trainerLines,
+    previously: input.previously,
+    previousSubjects: input.previousSubjects,
+    routes: input.routes,
+    tools: context.pack.actions.map((action) => action.id),
+    lessons: context.pack.curriculum.map((lesson) => lesson.id),
+    rules: context.pack.gameRules.map((rule) => ({ id: rule.id, label: rule.label })),
+    reference,
+    dictionary: context.pack.dictionary,
+    feedback: input.feedback,
+    items: context.registry.itemIds.length > 0,
+    itemCategories: [...new Set(context.registry.items.map((item) => item.category))].sort(),
+    clarify: input.clarify === true,
+    suggest: input.suggest === true,
+    precedents: input.precedents ?? [],
+  };
+  const built =
+    shape === "blocks"
+      ? answerPromptBlocks(promptInput)
+      : {
+          text: answerPrompt(
+            promptInput.scope,
+            promptInput.asks,
+            promptInput.previously,
+            promptInput.previousSubjects,
+            promptInput.routes,
+            promptInput.tools,
+            promptInput.lessons,
+            promptInput.rules,
+            promptInput.reference,
+            promptInput.dictionary,
+            promptInput.feedback,
+            promptInput.items,
+            promptInput.itemCategories,
+            promptInput.clarify,
+            promptInput.suggest,
+            promptInput.precedents,
+          ),
+          blocks: undefined,
+        };
   const request: CompletionRequest = {
     purpose: "answer",
-    prompt: answerPrompt(
-      context.grant?.scope,
-      // The exchange with the advisor's own clarification in place, when
-      // there was one — otherwise exactly the trainer's lines.
-      input.clarify === true ? exchangeLines(input.transcript) : trainerLines,
-      input.previously,
-      input.previousSubjects,
-      input.routes,
-      context.pack.actions.map((action) => action.id),
-      context.pack.curriculum.map((lesson) => lesson.id),
-      context.pack.gameRules.map((rule) => ({ id: rule.id, label: rule.label })),
-      reference,
-      context.pack.dictionary,
-      input.feedback,
-      context.registry.itemIds.length > 0,
-      [...new Set(context.registry.items.map((item) => item.category))].sort(),
-      input.clarify === true,
-      input.suggest === true,
-      input.precedents,
-    ),
+    prompt: built.text,
     hint: {
       scenarioId,
       ...(context.grant === undefined ? {} : { scope: context.grant.scope }),
@@ -640,6 +908,9 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
         // Held as data (id, score, ask), never the shape: the trace shows
         // what was offered; the store shows what it said.
         ...(input.precedents === undefined ? {} : { precedents: input.precedents.map(({ id, score, ask }) => ({ id, score, ask })) }),
+        // The blocks prompt's structure, as data: which blocks this call
+        // emitted, in order. Absent on the legacy prompt.
+        ...(built.blocks === undefined ? {} : { blocks: built.blocks }),
       },
     },
     // The same contract the prose describes, in a form a provider can enforce.

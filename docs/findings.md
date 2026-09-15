@@ -5038,3 +5038,171 @@ sharing a word with it; one precedent per ask, shapes merged or the
 commonest kept, is the next tuning of promotion, and it is data, not
 code. (d) **named** — the fixed arm was not run on the porch; it is the
 bank legs' control.
+
+### M3 — the prompt restructured, the refusal fed back: the porch cannot tell the arms apart (2026-09-15)
+
+**Goal.** The design ([answer-prompt.md](answer-prompt.md)) asked one
+question — is the strong model's first-call listing nomination on the
+opening asks the prompt's fault, and does a cleaner prompt fix it without
+tying the system to one model — under one rule: prompts are structural,
+never tuned; a change runs on both models, and one that helps one and
+hurts the other is withdrawn. This entry records what was built and the
+porch reading, the cheap arm of the pre-registered measurement. Its
+finding is about the instrument as much as the prompt: **at twenty
+conversations per cell the porch's own churn band is wider than any
+difference between the arms**, so the bank legs are the only reading that
+can decide, and the default stays where it was.
+
+**How it works.** The answer prompt is now a lever with two shapes:
+`legacy`, the prompt as it accreted (byte-identical to before), and
+`blocks`, a fixed sequence — the task and the reply shape first, the
+question next, context blocks only when they have content (no empty
+table headers), the trainer's status on one line, a five-way decision
+list stating each rule once, the doors when offered, the shapes, the
+closed lists last. On the opening ask with every door open: legacy 2,076
+words and 35 negation clauses; blocks 1,497 words and 20. The blocks a
+call emitted ride on the request (`DoorState.blocks`) and the dev view
+prints them under the call; a test lints the prompt (no empty block, no
+sentence twice) and pins its length on the fixture world, ratcheting
+down only. Beside it, the refused nomination can be carried back by name
+(`refusalFeedback`, ledger code `route/refused-back`, the reason in the
+emptied-reply round's own wording) instead of the door withdrawn in
+silence — arm C differs from B by that feedback block alone. Both levers
+thread through `session:trace` (`--prompt blocks`, `--refusal-feedback`)
+and `coverage:map`, and the artifact now carries per run whether the
+answer call was repeated after a refused nomination and the prompt
+tokens spent, with the map counting both. Promotion keeps one precedent
+per ask ([precedent.md](precedent.md), "Revised with M3"): the shipped
+store is re-promoted to 102 from 121. The verifier reads none of this;
+1928/1928 tests, coverage 95.07 / 88.25 / 96.82.
+
+**The porch reading, first pass (2026-09-15).** `session:trace`, the four
+phrasings of the opening ask ("tell me about the game", "tell me about
+this game", "telll me about the game", "I'm playing Red/blue; tell me
+about the game"), five each, three arms — A today's prompt with the door
+withdrawn in silence, B the blocks prompt with the door withdrawn, C the
+blocks prompt with the refusal fed back — the product's other levers as
+the live page runs them (retrieval, gated grammar, repair, feedback,
+clarify, suggest, the shipped store held nearest), both models. 120
+conversations, $0.028, 0 provider errors. Read from the traces:
+
+| strong `qwen/qwen3-235b-a22b-2507`, 20 per arm | A legacy, withdrawn | B blocks, withdrawn | C blocks, fed back |
+|---|---|---|---|
+| answered in one call | 11/20 (55%) | **15/20 (75%)** | 9/20 (45%) |
+| two calls | 6/20 (30%) | 5/20 (25%) | 11/20 (55%) |
+| three calls | 3/20 (15%) | 0/20 (0%) | 0/20 (0%) |
+| a listing nominated first, refused | 9/20 (45%) | 5/20 (25%) | 11/20 (55%) |
+| the record is the `what-is-game` lesson | 17/20 (85%) | 19/20 (95%) | 20/20 (100%) |
+| a scope card instead of a lesson (personalized claims proposed) | 3/20 (15%) | 0/20 (0%) | 0/20 (0%) |
+| abstained (an empty second reply) | 0/20 | 1/20 (5%) | 0/20 |
+| **more than one lesson in the answer** | **0/20** | **4/20 (20%)** | **5/20 (25%)** |
+| wrong subject (a value-shape record) | 0/20 | 0/20 | 0/20 |
+| calls per conversation | 1.60 | 1.25 | 1.55 |
+
+| weak `mistralai/mistral-nemo`, 20 per arm | A | B | C |
+|---|---|---|---|
+| answered in one call | 20/20 (100%) | 19/20 (95%) | 20/20 (100%) |
+| a listing nominated first | 0/20 | 1/20 (5%) | 0/20 |
+| the record is the `what-is-game` lesson, alone | 20/20 | 20/20 | 20/20 |
+
+The bold row is a class the blocks prompt opened: on "I'm playing
+Red/blue; tell me about the game" the strong model answered with a pile
+of lessons — twelve, the whole catalogue, in one certified answer — on
+5 of 5 repetitions under B and 5 of 5 under C, and 0 of 5 under the
+legacy prompt. Every lesson was certified (each is a reviewed block), so
+the kernel passed it; it is a usefulness regression the gate cannot see.
+Of the three legacy restatements of the lesson rule, one carried a rule
+the other two did not — *not a lesson that is merely adjacent* — and it
+was among the sentences deleted. It was restored as half a sentence in
+decision case 4 ("the one lesson that squarely answers it, not the
+lessons near it"; 1,497 words, 20 negations), and B and C were run again
+on both models.
+
+**The porch reading, second pass, the rule restored.** 80 conversations,
+$0.014, 0 provider errors:
+
+| strong, 20 per arm | B blocks, withdrawn | C blocks, fed back |
+|---|---|---|
+| answered in one call | 5/20 (25%) | 5/20 (25%) |
+| three calls | 0/20 (0%) | 1/20 (5%) |
+| a listing nominated first | 15/20 (75%) | 15/20 (75%) |
+| the record is the `what-is-game` lesson | 19/20 (95%) | 19/20 (95%) |
+| more than one lesson in the answer | 4/20 (20%) — four lessons each, no twelves | 5/20 (25%) — three of them twelve |
+| abstained | 1/20 (5%) | 1/20 (5%) |
+| calls per conversation | 1.75 | 1.85 |
+
+| weak, 20 per arm | B | C |
+|---|---|---|
+| answered in one call, the lesson alone | 20/20 (100%) | 20/20 (100%) |
+
+**The band, in one table** — the same arm read on different days or
+hours, nothing changed between readings but the clock (and, between the
+14th and the 15th, the store: 121 precedents to 102, one held instead of
+three):
+
+| strong model, one-call rate on the opening asks | reading 1 | reading 2 |
+|---|---|---|
+| A, today's prompt (M1's *nearest* arm, 2026-09-14 → this entry, 2026-09-15) | 0/20 (0%) | 11/20 (55%) |
+| B, the blocks prompt (first pass → second pass, one hour apart, half a sentence added) | 15/20 (75%) | 5/20 (25%) |
+| C, blocks with the refusal fed back (same) | 9/20 (45%) | 5/20 (25%) |
+| the weak model, any arm, both readings | 120/120 one call | — |
+
+**What it says.** Four things, each a number.
+
+1. **The porch cannot decide this.** The strong model's one-call rate on
+   the same prompt moved 0% → 55% across a day and 75% → 25% across an
+   hour; the largest difference between arms in any one reading (20
+   points, B over A) is smaller than the movement of a single arm
+   between readings (50 points). Lesson 5 (providers are nondeterministic
+   at temperature 0), now with a band on it: twenty conversations is one
+   draw. The pre-registered bank legs (three arms, N=3, 411 samples per
+   arm, both models, ~$1.20) are the instrument the design named, and
+   nothing here replaces them; the default stays `legacy` until they run.
+2. **The structural cleanup did not tie the system to a model — and did
+   not settle the strong model's routing either.** The weak model resolved
+   in one call with the lesson alone on 120 of 120 conversations across
+   every arm and both readings; the blocks prompt cost it nothing. On the
+   strong model the nomination went 45% → 25% in one reading and stood at
+   75% in the next. Whatever the strong model's first-call habit is, the
+   order and redundancy of the prompt is not its cause.
+3. **What the cleanup did move, both readings agree on:** the three-call
+   exchanges (a refused nomination, then an emptied reply carried back)
+   went from 3/20 under legacy to 0/20 and 0/20 (B) and 0/20, 1/20 (C);
+   and the scope card in place of a lesson — the strong model proposing
+   personalized claims to "tell me about this game", which stops the
+   exchange at a card — from 3/20 to 0 of 80 on the blocks prompt. The
+   decision list's "a lesson can be certified now" on one line does what
+   the paragraph did not.
+4. **Deleting a restatement can delete a rule.** The lesson pile is the
+   cost of stating the lesson rule once: the "merely adjacent" clause was
+   load-bearing on one phrasing for one model, and half a sentence
+   restoring it took the twelve-lesson answers from 5 of 5 to 0 of 5 on B
+   (four-lesson answers remain, 4 of 20) and 3 of 5 on C. A lint that
+   counts sentences cannot see which one carries a rule; only a run can.
+
+**Model errors:** the strong model's listing nominations on an ask that
+names no set (45%, 25%, 55%, 75%, 75% across the five strong cells —
+its own choice, on every prompt shape); the lesson pile on the
+"Red/blue" phrasing (10 of 10 first pass, 9 of 40 second pass), a
+certified answer that is not a good one; one empty second reply per
+blocks arm (2 of 80). **Harness factors:** (a) **named** — N=20 per cell
+is inside the band the entry measures; no arm-to-arm claim above the
+band is made. (b) **named** — the store changed between M1's reading and
+this one (one precedent per ask), so A's two readings differ in the
+memory held as well as the clock; the weak model's 120/120 says the
+store change moved nothing it could see. (c) **named** — the second pass
+ran B and C only; A was not re-read, so the band for A is the day-apart
+pair. (d) **fixed** — the tracer stops at a scope card (it has no
+`/confirm` in these runs), so a card counts as "no record" here; it is
+listed on its own row, not as an abstention.
+
+**What is next.** The levers are shipped and recorded; the default is
+untouched. The bank legs decide: arms A, B, C at N=3 on both models in
+one artifact per model, read as the design pre-registered (stable core
+and band; nominations on the seven `meta-*` entries; prompt tokens per
+call; the honest-disposition rate on the 45 must-not-resolve entries;
+0 of N escalations with the denominator). If B is inside A's band on
+both models, the tokens per call are the only reason to keep it; if the
+nomination survives B and C alike on the bank as it did on the porch,
+the habit is the strict schema's and the fix is the shortlist grammar
+(scale.md S4), a different slice.
