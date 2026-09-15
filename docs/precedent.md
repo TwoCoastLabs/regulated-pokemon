@@ -215,6 +215,19 @@ type count. The fixed arm's default exemplars are chosen once from the
 store in order — the first lesson, the first fact, the first count — and
 recorded in the artifact by id.
 
+*Revised with M3 (2026-09-15): one precedent per ask.* The M1 porch
+reading found three shapes of one ask (`p-kind-summarize-pikachu`, `-2`,
+`-3`) crowding k=3 for any ask that shared a word with it. Promotion now
+keeps **one precedent per distinct ask** (case-folded): the commonest
+accepted shape across the passes, the first seen on a tie, so the store
+replays from the artifact. Re-promoted from the same artifact with
+`--reset`: **102 precedents**, one per ask — 175 runs the same ask accepted
+again (the commonest shape kept), the other exclusions as before. By door:
+54 facts, 35 lessons, 23 recommendations, 13 eligibility rulings, 7 counts,
+6 rankings, 4 game rules, 2 matchups, 1 membership, 1 type count (a
+precedent may hold more than one claim). Digest `sha256:0bddc63f…`; the
+store teaches which door to take, not every way it was once taken.
+
 ### Retrieval of precedents
 
 Deterministic and lexical, so a run replays: the ask and each precedent's

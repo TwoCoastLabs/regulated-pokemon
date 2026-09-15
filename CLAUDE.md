@@ -82,6 +82,12 @@ A term coined during the work is defined before it is used.
   deterministic; the diff is a reviewed PR. `coverage:map -- --precedents
   nearest|fixed` runs the door as a lever (the fixed arm is the few-shot
   control); `session:trace -- --no-memory` is the off arm on the porch.
+- **The answer prompt is a lever too:** `--prompt blocks` (tracer and
+  `coverage:map`) builds the block-sequenced prompt of
+  [docs/answer-prompt.md](docs/answer-prompt.md) beside the legacy one, and
+  `--refusal-feedback` carries a refused nomination back to the model by
+  name instead of withdrawing the door in silence. Prompts are structural,
+  never tuned to one model: any prompt change runs on both models.
 - **Results page:** `npm run harness:results` renders a filed run artifact as
   Markdown (newest in `runs/` by default; `-- <artifact.json>` for one,
   `-- --out docs/results.md` to file it). Pure and key-free — it only reads an

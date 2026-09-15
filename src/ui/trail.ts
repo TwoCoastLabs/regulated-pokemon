@@ -29,12 +29,13 @@ import type { ScopeTranscript, Claim } from "../kernel/contracts.js";
 import type { Transaction } from "../kernel/transaction.js";
 import type { HarnessRun } from "../harness/run.js";
 import type { ModelCallTrace } from "../session/devtrace.js";
-import { type ExchangeLedger, type ExchangeOutcome, type Ledgered, ledgerOf, type StepLane } from "../session/ledger.js";
+import { type ExchangeLedger, type ExchangeOutcome, type Ledgered, ledgerOf, type SentBackMode, sentBackModeOf, type StepLane, type StepTone, toneOf } from "../session/ledger.js";
 import { type ClaimSource, type ManifestView, manifestView } from "./claims.js";
 import { describeClaim, violationView, type ViolationView } from "./viewmodel.js";
 
-/** How the chrome colours a step: what it means, not who took it. */
-export type StepTone = "plain" | "ok" | "refused" | "open";
+/** The tone and the sent-back mode are the ledger's registry's, re-exported
+ * so the app reads them from the trail it draws. */
+export { type SentBackMode, type StepTone, toneOf };
 
 export interface TrailStep {
   at: string;
@@ -78,41 +79,6 @@ export function laneLabel(lane: StepLane): string {
     case "model":
       return "model";
   }
-}
-
-const OK_CODES: ReadonlySet<string> = new Set([
-  "scope/granted",
-  "verdict/allowed",
-  "record/answered",
-  "record/acted",
-  "route/served",
-  "memory/followed",
-  "clarify/picked",
-  "trainer/card-confirmed",
-  "trainer/consent-confirmed",
-  "act/executed",
-]);
-
-const OPEN_CODES: ReadonlySet<string> = new Set([
-  "scope/asked",
-  "scope/card",
-  "clarify/asked",
-  "act/consent-requested",
-  "record/declined",
-  "record/clarifying",
-  "trainer/card-rejected",
-  "trainer/consent-declined",
-  "note/abstention",
-  "note/social",
-]);
-
-/** The tone a code carries. Refusals are read by suffix so a new denial
- * code the ledger grows is coloured right before anyone lists it here. */
-export function toneOf(code: string): StepTone {
-  if (code.endsWith("/denied") || code.endsWith("/refused") || code.endsWith("/withdrawn") || code.endsWith("failed") || code === "note/error") return "refused";
-  if (OK_CODES.has(code)) return "ok";
-  if (OPEN_CODES.has(code)) return "open";
-  return "plain";
 }
 
 function denialCode(violation: { article: string; rule: string }): string {
@@ -358,20 +324,10 @@ export function trailsOfSession(state: Ledgered & { records: readonly Transactio
   return ledgerOf(state, "").map((ledger) => trailFromLedger(ledger, state.records, source));
 }
 
-/** The steps on which a reply was sent back for another: the kernel's
- * denial carried back, the driver's refusals carried back, a nomination
- * refused with the door then shut. Every one of these cost one more model
- * call, and the reply that shipped is the one that came after. */
-const SENT_BACK_CODES: ReadonlySet<string> = new Set(["verdict/denied", "reply/carried-back", "linking/carried-back", "route/withdrawn", "route/refused"]);
-
-/** What the model learned from a refusal: the reasons went into its next
- * prompt (`fed-back`), a door was removed for one call and nothing said
- * (`withdrawn`), or nothing was re-asked at all — the rest of the reply
- * stood on its own (`stood`). */
-export type SentBackMode = "fed-back" | "withdrawn" | "stood";
-
 /** One round the exchange sent back: who refused, in what words, and
- * whether the model was told. */
+ * whether the model was told. Which codes are such rounds, and what the
+ * model learned, is the ledger registry's (`LEDGER_CODES`), not read from
+ * the code's spelling. */
 export interface SentBack {
   /** `kernel` for a verdict the kernel gave; `driver` for the driver's own guards. */
   by: "kernel" | "driver";
@@ -380,10 +336,6 @@ export interface SentBack {
   mode: SentBackMode;
   /** The refuser's reasons, `<code>: <message>` where the step carries them. */
   reasons: readonly string[];
-}
-
-function modeOf(code: string): SentBackMode {
-  return code === "route/withdrawn" ? "withdrawn" : code === "route/refused" ? "stood" : "fed-back";
 }
 
 /**
@@ -395,11 +347,10 @@ function modeOf(code: string): SentBackMode {
  * (no retry followed) is still a refusal the trainer should see.
  */
 export function sentBack(ledger: ExchangeLedger): readonly SentBack[] {
-  return ledger.steps.flatMap((step) =>
-    SENT_BACK_CODES.has(step.code)
-      ? [{ by: step.lane === "kernel" ? ("kernel" as const) : ("driver" as const), code: step.code, text: step.text, mode: modeOf(step.code), reasons: step.lines ?? [] }]
-      : [],
-  );
+  return ledger.steps.flatMap((step) => {
+    const mode = sentBackModeOf(step.code);
+    return mode === undefined ? [] : [{ by: step.lane === "kernel" ? ("kernel" as const) : ("driver" as const), code: step.code, text: step.text, mode, reasons: step.lines ?? [] }];
+  });
 }
 
 /**

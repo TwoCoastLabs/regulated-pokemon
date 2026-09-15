@@ -20,7 +20,7 @@ import type { HarnessArtifact } from "../harness/artifact.js";
 import type { HarnessRun } from "../harness/run.js";
 import type { Transaction } from "../kernel/transaction.js";
 import type { ModelCallTrace } from "../session/devtrace.js";
-import type { ExchangeLedger } from "../session/ledger.js";
+import { type ExchangeLedger, LEDGER_CODES } from "../session/ledger.js";
 import { say, type SessionDeps, setProfile, startSession } from "../session/session.js";
 import { laneLabel, sentBack, toneOf, trailFromLedger, trailFromRecord, trailsOfRun, trailsOfSession, withCalls, type Trail } from "./trail.js";
 
@@ -53,20 +53,40 @@ const denied: Transaction = {
 const codes = (trail: Trail) => trail.steps.map((step) => step.code);
 
 describe("tone and lane", () => {
-  it("reads refusals by suffix, and names the lanes the console's way", () => {
+  it("reads tones from the ledger's code registry, never from a code's spelling, and names the lanes the console's way", () => {
+    // The registry is the contract (review of #174): a code the driver can
+    // write is a key of LEDGER_CODES, so the compiler refuses an
+    // unregistered one, and the trail reads tone and sent-back mode from
+    // the entry. A code outside it — read from an older filed artifact —
+    // reads plain, whatever it ends in.
     expect(toneOf("record/denied")).toBe("refused");
     expect(toneOf("scope/refused")).toBe("refused");
     expect(toneOf("note/error")).toBe("refused");
     expect(toneOf("model/retry-failed")).toBe("refused");
     expect(toneOf("route/withdrawn")).toBe("refused");
+    expect(toneOf("route/refused-back")).toBe("refused");
     expect(toneOf("memory/followed")).toBe("ok");
     expect(toneOf("memory/empty")).toBe("plain");
     expect(toneOf("memory/departed")).toBe("plain");
     expect(toneOf("model/retry")).toBe("plain");
     expect(toneOf("any/new-thing-denied")).toBe("plain");
+    expect(toneOf("channel/rival")).toBe("plain");
     expect(toneOf("record/answered")).toBe("ok");
     expect(toneOf("note/abstention")).toBe("open");
     expect(toneOf("linking/off-ask-dropped")).toBe("plain");
+    // Every registered code has a tone, and only the sent-back rounds a mode.
+    for (const [code, entry] of Object.entries(LEDGER_CODES)) {
+      expect(["plain", "ok", "refused", "open"]).toContain(entry.tone);
+      expect(toneOf(code)).toBe(entry.tone);
+    }
+    expect(Object.entries(LEDGER_CODES).filter(([, entry]) => "sentBack" in entry).map(([code]) => code)).toEqual([
+      "route/refused",
+      "route/withdrawn",
+      "route/refused-back",
+      "linking/carried-back",
+      "reply/carried-back",
+      "verdict/denied",
+    ]);
     expect(["trainer", "driver", "kernel", "model"].map((lane) => laneLabel(lane as "trainer"))).toEqual(["trainer", "driver", "kernel", "model"]);
   });
 });
@@ -113,7 +133,8 @@ describe("a trail from the driver's ledger", () => {
         { at: "t5", lane: "kernel", code: "verdict/denied", text: "the kernel denied the draft: IA-3/fabricated-entity — carried back to the model once", lines: ['IA-3/fabricated-entity: "gym-badge" is not certified'] },
         { at: "t6", lane: "model", code: "model/retry", text: "1 claim(s), 0 link(s) — the reply after 1 reason was fed back to the model" },
         { at: "t7", lane: "driver", code: "route/refused", text: 'the "profile" door was refused: "x" is not a species the records certify — the claims beside it stand on their own' },
-        { at: "t8", lane: "kernel", code: "record/answered", text: "answered: 1 claim(s) certified" },
+        { at: "t8", lane: "driver", code: "route/refused-back", text: 'the "listing" door was refused: a list of one is not a list — the door was withdrawn for one call and the refusal was fed back to the model by name', lines: ['driver/refused-route: the "listing" door was refused — a list of one is not a list'] },
+        { at: "t9", lane: "kernel", code: "record/answered", text: "answered: 1 claim(s) certified" },
       ],
     };
     const trail = trailFromLedger(retried, []);
@@ -122,13 +143,16 @@ describe("a trail from the driver's ledger", () => {
     expect(trail.steps[4]!.tone).toBe("refused");
     expect(trail.steps[2]!.tone).toBe("refused");
     expect(trail.steps[6]!.tone).toBe("refused");
+    expect(trail.steps[7]!.tone).toBe("refused");
     expect(trail.steps[0]!.lines).toEqual([]);
     // Each round says whether the model was told: withdrawn in silence, fed
-    // back by name, or not re-asked at all.
+    // back by name (the kernel's denial, or the driver's refused nomination
+    // under the M3 policy), or not re-asked at all.
     expect(sentBack(retried)).toEqual([
       { by: "driver", code: "route/withdrawn", text: retried.steps[2]!.text, mode: "withdrawn", reasons: [] },
       { by: "kernel", code: "verdict/denied", text: retried.steps[4]!.text, mode: "fed-back", reasons: ['IA-3/fabricated-entity: "gym-badge" is not certified'] },
       { by: "driver", code: "route/refused", text: retried.steps[6]!.text, mode: "stood", reasons: [] },
+      { by: "driver", code: "route/refused-back", text: retried.steps[7]!.text, mode: "fed-back", reasons: ['driver/refused-route: the "listing" door was refused — a list of one is not a list'] },
     ]);
     expect(sentBack(ledger)).toEqual([]);
   });

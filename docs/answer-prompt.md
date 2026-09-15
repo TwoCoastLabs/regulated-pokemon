@@ -193,6 +193,47 @@ suggest, precedents *nearest* with the shipped store).
 - **The scope prompt** (call 2) is untouched; the raw arm's prompt is
   untouched (the tax measures the chatbot, not the prompt).
 
+*As built (2026-09-15, the M3 PR).* Four things differ from the mechanism
+above, each the smaller shape:
+
+- **The prompt is a lever, not a replacement.** `answerPromptBlocks` is
+  built beside the legacy builder and selected per call
+  (`AnswerStepInput.prompt`, `SessionDeps.prompt`, `session:trace --
+  --prompt blocks`, `coverage:map -- --prompt blocks`); the legacy prompt
+  is byte-identical to before, so arm A is exactly today's. The blocks a
+  call emitted ride on the doors (`DoorState.blocks`) and the dev view
+  prints them under the call. Block ids: `task`, `question`, `known`
+  (the group heading), `rows`, `precedents`, `earlier`, `previous`,
+  `refusal`, `trainer`, `decide`, `doors`, `shapes`, `lists`.
+- **The lint is one test, pinned.** No block empty, no sentence stated
+  twice, and the porch ask's word count on the fixture world pinned at
+  its measured value (1,418 on the harness world; 1,497 on the shipped
+  world, against the legacy 2,076), ratcheting down only — the same
+  discipline as the domain-word gate, in the same file as the builder's
+  other tests.
+- **One rule came back, once.** The first porch reading of the blocks
+  prompt (findings §21, M3) found the strong model answering "I'm playing
+  Red/blue; tell me about the game" with the whole lesson catalogue — up
+  to twelve lessons in one certified answer, 5 of 5 on both blocks arms,
+  0 of 5 on the legacy prompt. Of the three legacy restatements of the
+  lesson rule, one carried a rule the others did not: *not a lesson that
+  is merely adjacent*. It is restored as half a sentence in decision case
+  4 ("the one lesson that squarely answers it, not the lessons near it")
+  and measured again on both models; it is the rule stated once, not a
+  wording chased against a reply.
+- **The refusal fed back** is `SessionDeps.refusalFeedback` /
+  `--refusal-feedback`, ledger code `route/refused-back`, the reason in
+  the emptied-reply round's own wording (`driver/refused-route: the
+  "listing" door was refused — <the executor's reason>`) plus one fixed
+  line on what to do instead; the door stays withdrawn on the retry, so
+  arm C differs from B by the feedback block alone. The trail reads it
+  as fed back; the chat says the Advisor was told.
+- **Per run**, the artifact now carries `nominationRetried` and
+  `promptTokens`; the map counts the retries (count and percentage over
+  runs) and prices the prompt per call. Promotion keeps one precedent per
+  ask (precedent.md, "Revised with M3"); the shipped store is re-promoted
+  to 102.
+
 ## The measurement, pre-registered
 
 Read from the record, count and percentage together, per arm and model:

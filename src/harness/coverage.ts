@@ -57,6 +57,19 @@ export interface CoverageMap {
    * Optional: artifacts filed before the repair existed read unchanged. */
   repaired?: readonly string[];
   /**
+   * Runs whose answer call was repeated after the model's whole reply was a
+   * nomination the driver refused (docs/answer-prompt.md, M3) — the
+   * first-call routing habit, by entry, one item per run. Optional:
+   * artifacts filed before the field existed read unchanged.
+   */
+  nominationRetried?: readonly string[];
+  /**
+   * The prompt's cost across the runs, when the runs carry it: model calls
+   * made and prompt tokens consumed, so a prompt lever's tokens per call is
+   * read from the record rather than transcribed from a bill.
+   */
+  prompting?: { runs: number; calls: number; promptTokens: number };
+  /**
    * The trainer-facing ceremony across the runs, present when the runs carry
    * it (epic #94, slice 5): clarifying questions asked, scope cards ruled on,
    * act cards consented — beside calls/turn, so friction is priced in what
@@ -226,6 +239,15 @@ export function coverageMap(runs: readonly BankRun[]): CoverageMap {
           }),
           { runs: 0, shown: 0, answersWith: 0, dropped: 0 },
         );
+  const prompted = runs.filter((run) => run.promptTokens !== undefined);
+  const prompting =
+    prompted.length === 0
+      ? undefined
+      : {
+          runs: prompted.length,
+          calls: prompted.reduce((sum, run) => sum + run.turns, 0),
+          promptTokens: prompted.reduce((sum, run) => sum + (run.promptTokens ?? 0), 0),
+        };
   return {
     total: runs.length,
     pass: runs.filter((run) => run.score.pass).length,
@@ -237,6 +259,8 @@ export function coverageMap(runs: readonly BankRun[]): CoverageMap {
       .filter((run) => run.score.enforcementEscalation === true)
       .map((run) => run.entryId),
     repaired: runs.filter((run) => run.repaired === true).map((run) => run.entryId),
+    nominationRetried: runs.filter((run) => run.nominationRetried === true).map((run) => run.entryId),
+    ...(prompting === undefined ? {} : { prompting }),
     ...(ceremony === undefined ? {} : { ceremony }),
     ...(clarification === undefined ? {} : { clarification }),
     ...(suggestions === undefined ? {} : { suggestions }),
@@ -390,6 +414,26 @@ export function renderCoverage(map: CoverageMap, heading = "Playability coverage
       `**${repaired.length} outcome(s) followed a strip-assertion repair** — the model mis-recalled a value, ` +
         `the system stripped the assertion and the kernel read the certified one: ${named}. ` +
         "First-attempt, these were IA-2 denials; they are counted apart.",
+    );
+    lines.push("");
+  }
+
+  // The first-call routing habit (docs/answer-prompt.md, M3): how often the
+  // model's whole first reply was a nomination the driver refused, so the
+  // answer call was paid for twice — count and percentage, over the runs.
+  const nominated = map.nominationRetried ?? [];
+  if (nominated.length > 0) {
+    lines.push(
+      `**${nominated.length}/${map.total} (${pct(nominated.length / map.total)}) run(s) repeated the answer call after a refused nomination** — ` +
+        "the whole first reply asked for a door the question did not fit; the door was withdrawn for one call and the reply that came after is the one filed.",
+    );
+    lines.push("");
+  }
+  // The prompt's cost, per call, read from the runs.
+  if (map.prompting !== undefined && map.prompting.calls > 0) {
+    lines.push(
+      `**Prompt tokens per model call: ${Math.round(map.prompting.promptTokens / map.prompting.calls)}** — ` +
+        `${map.prompting.promptTokens} prompt tokens over ${map.prompting.calls} calls in ${map.prompting.runs} run(s).`,
     );
     lines.push("");
   }

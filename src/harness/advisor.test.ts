@@ -84,6 +84,113 @@ describe("proposeAnswer", () => {
     expect(step.decode.ok).toBe(false);
   });
 
+  describe("the block-sequenced prompt (docs/answer-prompt.md)", () => {
+    const routes = [
+      { id: "listing", description: "list a set", args: {} },
+      { id: "profile", description: "one creature's rundown", args: {} },
+    ];
+    const bare: ManifestContext = { registry: world.registry, pack: world.pack, locale: "en-US", at: AT };
+    /** Build one prompt and return it with the doors the request declared. */
+    async function build(text: string, input: Partial<Parameters<typeof proposeAnswer>[0]> = {}, ctx = bare, doorsOffered = true): Promise<{ prompt: string; doors: unknown }> {
+      let prompt = "";
+      let doors: unknown;
+      const provider = new ScriptedProvider("m", (request) => {
+        prompt = request.prompt;
+        doors = request.hint.doors;
+        return JSON.stringify({ asked: [], rosters: [], claims: [] });
+      });
+      const transcript = [{ kind: "utterance" as const, at: AT, source: "trainer" as const, text }];
+      await proposeAnswer({ provider, context: ctx, scenarioId: "s", transactionId: "txn-1", transcript, prompt: "blocks", retrieval: true, gatedGrammar: true, ...(doorsOffered ? { routes } : {}), clarify: true, suggest: true, precedents: [], ...input });
+      return { prompt, doors };
+    }
+    const headings = (prompt: string): string[] => prompt.split("\n").filter((line) => /^[A-Z][A-Z ,]+$/.test(line));
+
+    it("opens on the task and the reply's shape, puts the question before every rule, and closes on the lists", async () => {
+      const { prompt, doors } = await build("tell me about the game");
+      expect(prompt.startsWith("YOUR TASK\n")).toBe(true);
+      expect(prompt.split("\n")[3]).toBe('  {"asked": [...], "rosters": [...], "claims": [...]}');
+      expect(headings(prompt)).toEqual(["YOUR TASK", "THE QUESTION", "WHAT IS KNOWN ABOUT THE TRAINER", "HOW TO DECIDE, IN ORDER", "THE DOORS", "THE SHAPES", "THE CLOSED LISTS"]);
+      expect(prompt.indexOf("tell me about the game")).toBeLessThan(prompt.indexOf("HOW TO DECIDE"));
+      // The structure rides on the request as data.
+      expect(doors).toMatchObject({ blocks: ["task", "question", "trainer", "decide", "doors", "shapes", "lists"], routes: ["listing", "profile"], reference: "retrieval" });
+    });
+
+    it("emits a context block only when it has content: no rows when retrieval selected none, no doors when none are offered", async () => {
+      const empty = await build("tell me about the game");
+      expect(empty.prompt).not.toContain("WHAT YOU KNOW");
+      expect(empty.prompt).not.toContain("CERTIFIED REGISTRY");
+      const rows = await build("how fast is Pikachu?");
+      expect(rows.prompt).toContain("WHAT YOU KNOW\nCERTIFIED REGISTRY");
+      expect(rows.doors).toMatchObject({ blocks: ["task", "question", "known", "rows", "trainer", "decide", "doors", "shapes", "lists"] });
+      const shut = await build("tell me about the game", {}, bare, false);
+      expect(shut.prompt).not.toContain("THE DOORS");
+      expect(shut.prompt).not.toContain("route claim");
+      expect(shut.doors).toMatchObject({ blocks: ["task", "question", "trainer", "decide", "shapes", "lists"] });
+    });
+
+    it("carries the retry's refusal, the precedents and the earlier words under WHAT YOU KNOW, each as its own block", async () => {
+      const { prompt, doors } = await build(
+        "can you list ten?",
+        {
+          feedback: ['driver/refused-route: the "listing" door was refused — a list of one is not a list'],
+          precedents: [{ id: "p-game", score: 1, ask: "tell me about the game", shape: { claims: [{ kind: "explanation", blockId: "what-is-game" }], rosters: [] } }],
+          previously: ["what types are there?"],
+          previousSubjects: ["pikachu"],
+        },
+        bare,
+        false,
+      );
+      const known = prompt.slice(prompt.indexOf("WHAT YOU KNOW"), prompt.indexOf("WHAT IS KNOWN ABOUT THE TRAINER"));
+      expect(known).toContain('- "tell me about the game"');
+      expect(known).toContain('→ {"claims":[{"kind":"explanation","blockId":"what-is-game"}],"rosters":[]}');
+      expect(known).toContain("Earlier in this conversation the trainer said");
+      expect(known).toContain("was about: pikachu.");
+      expect(known).toContain("Your previous reply to these words was refused, by name:");
+      expect(known).toContain('driver/refused-route: the "listing" door was refused');
+      expect(doors).toMatchObject({ blocks: ["task", "question", "known", "precedents", "earlier", "previous", "refusal", "trainer", "decide", "shapes", "lists"] });
+    });
+
+    it("states the trainer's scope on one line once established", async () => {
+      const { prompt } = await build("how fast is Pikachu?", {}, context);
+      expect(prompt).toContain("WHAT IS KNOWN ABOUT THE TRAINER\n  version=red-blue region=kanto badges=8 basis=base-speed\n");
+      expect(prompt).not.toContain("Nothing yet");
+    });
+
+    it("lints itself: no block is empty, no sentence is stated twice, and the length is pinned, ratcheting down only", async () => {
+      // The diagnosis (docs/answer-prompt.md): the legacy prompt opened on
+      // empty headers, stated the lesson rule three ways, and ran to 2,076
+      // words on this ask. The pin is the fixture's own count, so a block
+      // that creeps back in fails the build by name.
+      const PINNED_WORDS = 1418;
+      const { prompt } = await build("tell me about the game");
+      const lines = prompt.split("\n");
+      for (const [index, line] of lines.entries()) {
+        if (/^[A-Z][A-Z ,]+$/.test(line)) expect(lines[index + 1] ?? "", `the block "${line}" is empty`).not.toMatch(/^\s*$/);
+      }
+      const sentences = prompt
+        .replace(/\s+/g, " ")
+        .split(/(?<=[.?!])\s+(?=[A-Z"])/)
+        .map((sentence) => sentence.trim())
+        .filter((sentence) => sentence.length > 30);
+      const seen = new Set<string>();
+      for (const sentence of sentences) {
+        expect(seen.has(sentence), `stated twice: ${sentence}`).toBe(false);
+        seen.add(sentence);
+      }
+      const words = prompt.trim().split(/\s+/).length;
+      expect(words, words > PINNED_WORDS ? `the blocks prompt grew to ${words} words (pinned ${PINNED_WORDS}) — a block crept back in` : `the blocks prompt dropped to ${words} words (pinned ${PINNED_WORDS}) — lower the pin in this change`).toBe(PINNED_WORDS);
+      // The legacy prompt is untouched by the lever, and longer.
+      let legacy = "";
+      const provider = new ScriptedProvider("m", (request) => {
+        legacy = request.prompt;
+        return JSON.stringify({ asked: [], rosters: [], claims: [] });
+      });
+      await proposeAnswer({ provider, context: bare, scenarioId: "s", transactionId: "txn-1", transcript: [{ kind: "utterance", at: AT, source: "trainer", text: "tell me about the game" }], retrieval: true, gatedGrammar: true, routes, clarify: true, suggest: true, precedents: [] });
+      expect(legacy.startsWith("CERTIFIED REGISTRY")).toBe(true);
+      expect(legacy.trim().split(/\s+/).length).toBeGreaterThan(words);
+    });
+  });
+
   it("names the token cap when an unusable completion was truncated", async () => {
     // The 43-second lesson (docs/scale.md, S1): a completion the provider cut
     // at max_tokens is a different failure from a malformed one, and the

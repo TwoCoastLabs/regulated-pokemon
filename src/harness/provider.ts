@@ -64,6 +64,13 @@ export interface DoorState {
   /** Lines carried back from the previous reply to these words, in the
    * driver's fixed wording — empty on a first call. */
   feedback: readonly string[];
+  /**
+   * The prompt's blocks, in the order emitted, when the call built the
+   * block-sequenced prompt (docs/answer-prompt.md) — the prompt's structure
+   * as data, so a trace shows which context blocks a call carried without
+   * parsing the prose. Absent on the legacy prompt.
+   */
+  blocks?: readonly string[];
 }
 
 export interface RequestHint {

@@ -19,6 +19,7 @@
 import type { Claim, ClarificationOption, ScopeDimension, TrainerScope } from "../kernel/contracts.js";
 import { deriveScope } from "../kernel/scope.js";
 import type { ModelProvider } from "./provider.js";
+import type { PromptShape } from "./advisor.js";
 import type { DemoWorld } from "../demo/script.js";
 import {
   decideAct,
@@ -118,6 +119,14 @@ export interface BankRun {
    * absent when nothing was held or no record was filed.
    */
   precedents?: { held: readonly string[]; followed?: boolean };
+  /** True when an answer call was repeated because the model's whole reply
+   * was a nomination the driver refused (docs/answer-prompt.md, M3) — the
+   * first-call routing habit, as a per-entry number; the artifact's
+   * `refusalFeedback` says whether the retry was told why. */
+  nominationRetried?: boolean;
+  /** Prompt tokens the run's model calls consumed, beside `turns` (the
+   * calls), so a prompt lever's cost per call is read from the record. */
+  promptTokens?: number;
   /** One human line on how it ended, for the report's detail column. */
   detail: string;
 }
@@ -152,6 +161,12 @@ export interface BankRunOptions {
    * entry under test, or worded as it, is never offered to it.
    */
   precedents?: { store: PrecedentStore; mode: "nearest" | "fixed"; levers?: PrecedentLevers; fixed?: readonly string[] };
+  /** Which answer prompt the calls build (docs/answer-prompt.md): the
+   * legacy prompt when absent. Recorded. */
+  prompt?: PromptShape;
+  /** The refused nomination carried back by name instead of the door
+   * withdrawn in silence (docs/answer-prompt.md, M3). Recorded. */
+  refusalFeedback?: boolean;
 }
 
 /** A bank run still carrying the whole record behind its verdict — transcript,
@@ -458,6 +473,8 @@ export async function runBankEntry(
     feedback: options.feedback ?? false,
     ...(options.clarify === undefined ? {} : { clarify: options.clarify }),
     ...(options.suggest === undefined ? {} : { suggest: options.suggest }),
+    ...(options.prompt === undefined ? {} : { prompt: options.prompt }),
+    ...(options.refusalFeedback === undefined ? {} : { refusalFeedback: options.refusalFeedback }),
     ...(options.precedents === undefined
       ? {}
       : {
@@ -493,6 +510,8 @@ export async function runBankEntry(
     ...(state.repairs > 0 ? { repaired: true } : {}),
     ...(state.folds > 0 ? { folded: true } : {}),
     ...(state.feedbackRetries > 0 ? { feedbackRetried: true, firstAttemptDenials: state.feedbackDenials } : {}),
+    ...(state.nominationRetries > 0 ? { nominationRetried: true } : {}),
+    promptTokens: state.usage.promptTokens,
     ...(state.linking.offTargetDropped > 0 ? { offTargetDropped: state.linking.offTargetDropped } : {}),
     ...(refused === undefined ? {} : { deniedDraftOnTarget: draftOnTarget(entry, refused) }),
     ...(options.clarify === true ? { clarified: { asked, picked, ignored, capped } } : {}),

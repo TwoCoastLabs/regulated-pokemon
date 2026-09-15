@@ -21,11 +21,107 @@
 
 export type StepLane = "trainer" | "driver" | "kernel" | "model";
 
+/** How a step reads: what it means, not who took it. */
+export type StepTone = "plain" | "ok" | "refused" | "open";
+
+/** What the model learned from a round the exchange sent back: the reasons
+ * went into its next prompt (`fed-back`), a door was removed for one call and
+ * nothing said (`withdrawn`), or nothing was re-asked at all — the rest of
+ * the reply stood on its own (`stood`). */
+export type SentBackMode = "fed-back" | "withdrawn" | "stood";
+
+/**
+ * The closed registry of step codes: every code the driver can write, with
+ * how it reads and — for the rounds that sent a reply back — whether the
+ * model was told. The registry is the contract: `DriverStep.code` is its
+ * key type, so a step with an unregistered code does not compile, and the
+ * trail reads tone and mode from here rather than from the code's spelling.
+ * A code read from an older filed artifact that is not here reads plain;
+ * nothing infers a meaning from a suffix.
+ */
+export const LEDGER_CODES = {
+  // the trainer's moves
+  "trainer/said": { tone: "plain" },
+  "trainer/took-suggestion": { tone: "plain" },
+  "trainer/profile": { tone: "plain" },
+  "trainer/card-confirmed": { tone: "ok" },
+  "trainer/card-rejected": { tone: "open" },
+  "trainer/consent-confirmed": { tone: "ok" },
+  "trainer/consent-declined": { tone: "open" },
+  // scope
+  "scope/granted": { tone: "ok" },
+  "scope/asked": { tone: "open" },
+  "scope/card": { tone: "open" },
+  "scope/refused": { tone: "refused" },
+  // the model's replies
+  "model/discovery": { tone: "plain" },
+  "model/answer": { tone: "plain" },
+  "model/nominated": { tone: "plain" },
+  "model/retry": { tone: "plain" },
+  "model/retry-failed": { tone: "refused" },
+  // the doors
+  "route/served": { tone: "ok" },
+  "route/refused": { tone: "refused", sentBack: "stood" },
+  "route/withdrawn": { tone: "refused", sentBack: "withdrawn" },
+  "route/refused-back": { tone: "refused", sentBack: "fed-back" },
+  "clarify/asked": { tone: "open" },
+  "clarify/picked": { tone: "ok" },
+  "memory/held": { tone: "plain" },
+  "memory/empty": { tone: "plain" },
+  "memory/held-out": { tone: "plain" },
+  "memory/followed": { tone: "ok" },
+  "memory/departed": { tone: "plain" },
+  // the driver's reading of a reply
+  "linking/unlinked": { tone: "plain" },
+  "linking/union": { tone: "plain" },
+  "linking/held-to-pick": { tone: "plain" },
+  "linking/contradiction": { tone: "plain" },
+  "linking/off-ask-dropped": { tone: "plain" },
+  "linking/stale-dropped": { tone: "plain" },
+  "linking/carried-back": { tone: "plain", sentBack: "fed-back" },
+  "reply/carried-back": { tone: "plain", sentBack: "fed-back" },
+  "guard/direction-flipped": { tone: "plain" },
+  "guard/eligibility-appended": { tone: "plain" },
+  "guard/padding-trimmed": { tone: "plain" },
+  "guard/wrong-set-dropped": { tone: "plain" },
+  "boundary/taught": { tone: "plain" },
+  "repair/strip-assertion": { tone: "plain" },
+  // the kernel's verdicts and the filing
+  "verdict/allowed": { tone: "ok" },
+  "verdict/denied": { tone: "refused", sentBack: "fed-back" },
+  "record/answered": { tone: "ok" },
+  "record/acted": { tone: "ok" },
+  "record/denied": { tone: "refused" },
+  "record/declined": { tone: "open" },
+  "record/clarifying": { tone: "open" },
+  // acts
+  "act/consent-requested": { tone: "open" },
+  "act/executed": { tone: "ok" },
+  // notes
+  "note/abstention": { tone: "open" },
+  "note/social": { tone: "open" },
+  "note/error": { tone: "refused" },
+} as const satisfies Record<string, { tone: StepTone; sentBack?: SentBackMode }>;
+
+export type LedgerCode = keyof typeof LEDGER_CODES;
+
+/** How a code reads. A code outside the registry — one read from an older
+ * filed artifact, or a channel step reconstructed from a record — is plain. */
+export function toneOf(code: string): StepTone {
+  return (LEDGER_CODES as Record<string, { tone: StepTone }>)[code]?.tone ?? "plain";
+}
+
+/** Whether a code is a round that sent a reply back, and what the model
+ * learned from it; undefined for every other code. */
+export function sentBackModeOf(code: string): SentBackMode | undefined {
+  return (LEDGER_CODES as Record<string, { sentBack?: SentBackMode }>)[code]?.sentBack;
+}
+
 export interface DriverStep {
   at: string;
   lane: StepLane;
-  /** Fixed wording, `<subject>/<what-happened>` — e.g. `linking/off-ask-dropped`. */
-  code: string;
+  /** Fixed wording, `<subject>/<what-happened>` — one of {@link LEDGER_CODES}. */
+  code: LedgerCode;
   text: string;
   /** A count the step carries, when it is one (claims dropped, links stale). */
   count?: number;
@@ -55,7 +151,7 @@ export interface Ledgered {
 }
 
 /** Append one step to the open exchange. */
-export function step<S extends Ledgered>(state: S, at: string, lane: StepLane, code: string, text: string, count?: number, lines?: readonly string[]): S {
+export function step<S extends Ledgered>(state: S, at: string, lane: StepLane, code: LedgerCode, text: string, count?: number, lines?: readonly string[]): S {
   const entry: DriverStep = { at, lane, code, text, ...(count === undefined ? {} : { count }), ...(lines === undefined || lines.length === 0 ? {} : { lines }) };
   return { ...state, steps: [...state.steps, entry] };
 }

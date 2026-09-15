@@ -21,6 +21,8 @@ function run(entryId: string, disposition: Disposition, stage: FunnelStage, pass
     score: { pass, reason: "", ...(extra.score ?? {}) },
     turns: extra.turns ?? 1,
     ...(extra.repaired === undefined ? {} : { repaired: extra.repaired }),
+    ...(extra.nominationRetried === undefined ? {} : { nominationRetried: extra.nominationRetried }),
+    ...(extra.promptTokens === undefined ? {} : { promptTokens: extra.promptTokens }),
     detail: extra.detail ?? "",
   };
 }
@@ -202,6 +204,28 @@ describe("post-repair outcomes are named apart (docs/recovery.md accounting)", (
     expect(page).toContain("strip-assertion repair");
     expect(page).toContain("`fixed-fact`");
     expect(page).not.toContain("`plain-fact`\`");
+  });
+
+  it("counts the runs that repeated the answer call after a refused nomination, and prices the prompt per call, from the runs that carry them", () => {
+    // The first-call routing habit (docs/answer-prompt.md, M3) and the prompt
+    // lever's cost, both read from the record: count and percentage over the
+    // runs, tokens over calls.
+    const map = coverageMap([
+      run("meta-game", "answerable", { kind: "resolved" }, true, { nominationRetried: true, turns: 2, promptTokens: 6000 }),
+      run("meta-game", "answerable", { kind: "resolved" }, true, { repetition: 1, turns: 1, promptTokens: 2500 }),
+      run("ans-1", "answerable", { kind: "resolved" }, true, { turns: 1, promptTokens: 3500 }),
+    ]);
+    expect(map.nominationRetried).toEqual(["meta-game"]);
+    expect(map.prompting).toEqual({ runs: 3, calls: 4, promptTokens: 12000 });
+    const page = renderCoverage(map);
+    expect(page).toContain("**1/3 (33%) run(s) repeated the answer call after a refused nomination**");
+    expect(page).toContain("**Prompt tokens per model call: 3000** — 12000 prompt tokens over 4 calls in 3 run(s).");
+    // Runs filed before the fields existed carry neither line.
+    const older = coverageMap(RUNS);
+    expect(older.nominationRetried).toEqual([]);
+    expect(older.prompting).toBeUndefined();
+    expect(renderCoverage(older)).not.toContain("refused nomination");
+    expect(renderCoverage(older)).not.toContain("Prompt tokens per model call");
   });
 
   it("an artifact filed before the repair existed renders without the line", () => {

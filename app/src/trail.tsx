@@ -147,6 +147,19 @@ export function DevCall(props: { call: ModelCallTrace; previous?: ModelCallTrace
         <DoorRow doors={call.doors} {...(previous === undefined ? {} : { previous })} {...(props.taken === undefined ? {} : { taken: props.taken })} />
       )}
       {call.doors?.precedents !== undefined && <PrecedentPanel held={call.doors.precedents} />}
+      {/* The blocks prompt's structure as data (docs/answer-prompt.md): which
+          blocks this call carried, in order — so a reader sees that a call
+          with no rows and no precedents opened on the task, not on nothing. */}
+      {call.doors?.blocks !== undefined && (
+        <p class="prompt-blocks fine">
+          prompt blocks: {call.doors.blocks.map((block, index) => (
+            <>
+              {index > 0 && " · "}
+              <span class="mono">{block}</span>
+            </>
+          ))}
+        </p>
+      )}
     <details class="dev-call">
       <summary class="mono">
         #{call.seq} {call.purpose}

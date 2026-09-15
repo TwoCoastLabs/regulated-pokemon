@@ -80,23 +80,29 @@ export function promoteExchange(input: {
 
 /**
  * Promote a filed bank run into a store — merged into `existing` when one
- * is given, so a second artifact adds what the first lacked. Two precedents
- * are one when they share an ask (case-folded) and a canonical shape; a
- * bank entry that was accepted in more than one shape keeps each, numbered.
+ * is given, so a second artifact adds what the first lacked. One precedent
+ * per distinct ask (case-folded): a bank entry accepted in more than one
+ * shape across the passes keeps the commonest, first-seen on a tie — the
+ * M1 porch reading found three shapes of one ask crowding the door's k for
+ * any ask that shared a word with it (findings §21), and the door teaches
+ * which door to take, not every way it was once taken. An ask the store
+ * already holds is left as it is.
  */
 export function promoteFromRuns(
   runs: readonly PromotableRun[],
   input: { artifact: string; packId: string; at: string; existing?: PrecedentStore },
 ): Promotion {
   const precedents: Precedent[] = [...(input.existing?.precedents ?? [])];
-  const known = new Set(precedents.map((one) => `${one.ask.trim().toLowerCase()}|${canonicalShape(one.shape)}`));
+  const known = new Set(precedents.map((one) => one.ask.trim().toLowerCase()));
   const ids = new Set(precedents.map((one) => one.id));
   const skipped: Record<string, number> = {};
-  const skip = (reason: string): void => {
-    skipped[reason] = (skipped[reason] ?? 0) + 1;
+  const skip = (reason: string, count = 1): void => {
+    skipped[reason] = (skipped[reason] ?? 0) + count;
   };
   const added: string[] = [];
 
+  // Every accepted, on-target shape per ask, in run order.
+  const byAsk = new Map<string, { candidate: Precedent; shape: string }[]>();
   for (const run of runs) {
     const transaction = run.run.transaction;
     if (run.stage.kind !== "resolved") {
@@ -119,17 +125,29 @@ export function promoteFromRuns(
       source: { kind: "bank-run", artifact: input.artifact, transactionId: transaction.id, entryId: run.entryId },
       promoted: { by: "oracle", at: input.at },
     });
-    const key = `${candidate.ask.trim().toLowerCase()}|${canonicalShape(candidate.shape)}`;
-    if (known.has(key)) {
-      skip("already in the store (same ask, same shape)");
+    const ask = candidate.ask.trim().toLowerCase();
+    if (known.has(ask)) {
+      skip("already in the store (same ask)");
       continue;
     }
-    // A stable id per entry; a second accepted shape for one entry is numbered.
-    let id = `p-${run.entryId}`;
-    for (let n = 2; ids.has(id); n += 1) id = `p-${run.entryId}-${n}`;
+    const shapes = byAsk.get(ask) ?? [];
+    shapes.push({ candidate, shape: canonicalShape(candidate.shape) });
+    byAsk.set(ask, shapes);
+  }
+
+  for (const [ask, shapes] of byAsk) {
+    // The commonest shape; the first seen breaks a tie, so the choice replays.
+    const counts = new Map<string, number>();
+    for (const one of shapes) counts.set(one.shape, (counts.get(one.shape) ?? 0) + 1);
+    const best = [...counts.entries()].reduce((top, entry) => (entry[1] > top[1] ? entry : top));
+    const chosen = shapes.find((one) => one.shape === best[0])!.candidate;
+    if (shapes.length > 1) skip("the same ask accepted again (the commonest shape was kept)", shapes.length - 1);
+    // A stable id per entry; a second entry with the same ask is numbered.
+    let id = `p-${chosen.id}`;
+    for (let n = 2; ids.has(id); n += 1) id = `p-${chosen.id}-${n}`;
     ids.add(id);
-    known.add(key);
-    precedents.push({ ...candidate, id });
+    known.add(ask);
+    precedents.push({ ...chosen, id });
     added.push(id);
   }
 

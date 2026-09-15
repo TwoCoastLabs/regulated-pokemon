@@ -16,6 +16,7 @@ import { type DoorState, FailingProvider, type ModelProvider, ScriptedProvider }
 import type { Claim } from "../kernel/contracts.js";
 import { verifyReplay } from "../kernel/replay.js";
 import { type Precedent, type PrecedentStore, shapeOf } from "../memory/precedent.js";
+import { sentBack } from "../ui/trail.js";
 import {
   decideAct,
   decideScope,
@@ -2153,6 +2154,74 @@ describe("the driver's ledger — every step of an exchange, in fixed wording, b
     expect(refused.at > started[0]! && refused.at < started[1]!).toBe(true);
     expect(answer.at > started[1]!).toBe(true);
     expect(state.nominationRetries).toBe(1);
+  });
+
+  it("with refusal feedback on, a refused nomination is carried back by name: the retry's prompt holds the reason, the step says the model was told", async () => {
+    // The M3 policy (docs/answer-prompt.md): the same three moves, but the
+    // driver's refusal rides on the retry's feedback block in fixed wording,
+    // the way a kernel denial does — and the record says so.
+    const prompts: string[] = [];
+    const doors: unknown[] = [];
+    const provider = new ScriptedProvider("told", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      prompts.push(request.prompt);
+      doors.push(request.hint.doors);
+      return request.prompt.includes("driver/refused-route")
+        ? JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-pokemon" }] })
+        : JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "listing", subject: "catalogue", n: 1 }] });
+    });
+    const d: SessionDeps = { ...deps(provider), refusalFeedback: true };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "what is a Pokemon", d);
+    const trail = state.exchanges.at(-1)!;
+    expect(trail.outcome).toBe("answered");
+    expect(codes(trail.steps)).toEqual(["trainer/said", "scope/granted", "model/nominated", "route/refused-back", "model/answer", "linking/unlinked", "record/answered"]);
+    const refused = trail.steps.find((entry) => entry.code === "route/refused-back")!;
+    expect(refused.lane).toBe("driver");
+    expect(refused.text).toContain("a list of one is not a list (the model asked for n = 1)");
+    expect(refused.text).toContain("the refusal was fed back to the model by name");
+    // The reason, in the driver's fixed wording, on the step and in the prompt.
+    expect(refused.lines).toEqual(['driver/refused-route: the "listing" door was refused — a list of one is not a list (the model asked for n = 1)']);
+    expect(prompts).toHaveLength(2);
+    expect(prompts[0]).not.toContain("driver/refused-route");
+    expect(prompts[1]).toContain('driver/refused-route: the "listing" door was refused — a list of one is not a list (the model asked for n = 1)');
+    // The door is still withdrawn on the retry; the doors record both — the
+    // reason, and the one fixed line on what to do instead.
+    expect(doors[0]).toMatchObject({ routes: ["listing", "profile"], feedback: [] });
+    expect(doors[1]).toMatchObject({ routes: [], feedback: [expect.stringContaining("driver/refused-route"), "Answer the question directly — as claims about what was asked, a lesson that squarely answers it, or no claims at all."] });
+    const answer = trail.steps.find((entry) => entry.code === "model/answer")!;
+    expect(answer.text).toContain("the door withdrawn and the refusal fed back");
+    expect(state.nominationRetries).toBe(1);
+    // The chat's sent-back reading: told, not silent.
+    expect(sentBack(trail).map((round) => round.mode)).toEqual(["fed-back"]);
+  });
+
+  it("the prompt lever builds the block-sequenced prompt on every answer call — discovery, answer and the carried-back retry alike", async () => {
+    const prompts: string[] = [];
+    const blocks: unknown[] = [];
+    const provider = new ScriptedProvider("blocks", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      prompts.push(request.prompt);
+      blocks.push(request.hint.doors?.blocks);
+      return JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-pokemon" }] });
+    });
+    const d: SessionDeps = { ...deps(provider), prompt: "blocks", retrieval: true, clarify: true, suggest: true };
+    // Discovery, grantless: the trainer block says nothing is known.
+    let state = await say(startSession(), "what is a Pokemon", d);
+    expect(state.exchanges.at(-1)?.outcome).toBe("answered");
+    expect(prompts[0]!.startsWith("YOUR TASK\n")).toBe(true);
+    expect(prompts[0]).toContain("THE QUESTION\n  - what is a Pokemon");
+    expect(prompts[0]).toContain("WHAT IS KNOWN ABOUT THE TRAINER\n  Nothing yet.");
+    // Retrieval selected nothing for these words, so no rows block was
+    // emitted and the prompt opened on the task, not on empty headers.
+    expect(prompts[0]).not.toContain("CERTIFIED REGISTRY");
+    expect(blocks[0]).toEqual(["task", "question", "trainer", "decide", "doors", "shapes", "lists"]);
+    // With scope set, the trainer block carries it on one line.
+    state = await setProfile(state, PROFILE_SCOPE, d);
+    await say(state, "how fast is Pikachu", d);
+    expect(prompts[1]).toContain("WHAT IS KNOWN ABOUT THE TRAINER\n  version=red-blue region=kanto badges=8");
+    expect(prompts[1]).toContain("CERTIFIED REGISTRY");
+    expect(blocks[1]).toEqual(["task", "question", "known", "rows", "trainer", "decide", "doors", "shapes", "lists"]);
   });
 
   it("a denial the kernel carried back is on the ledger in the kernel's own words, with the retry's reply as the step after it", async () => {

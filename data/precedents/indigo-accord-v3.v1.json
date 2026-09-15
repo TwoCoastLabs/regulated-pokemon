@@ -29,7 +29,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -59,7 +59,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -89,7 +89,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -119,7 +119,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -149,7 +149,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -179,7 +179,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -209,7 +209,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -239,7 +239,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -269,7 +269,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -299,7 +299,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -329,7 +329,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -359,7 +359,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -389,7 +389,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -419,7 +419,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -449,7 +449,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -479,7 +479,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -509,7 +509,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -539,7 +539,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -569,7 +569,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -583,10 +583,6 @@
       },
       "shape": {
         "claims": [
-          {
-            "kind": "explanation",
-            "blockId": "what-is-move"
-          },
           {
             "kind": "fact",
             "entityId": "recover",
@@ -603,7 +599,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -633,7 +629,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -674,7 +670,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -715,7 +711,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -756,7 +752,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -797,7 +793,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -838,7 +834,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -879,7 +875,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -910,12 +906,6 @@
                 }
               ]
             }
-          },
-          {
-            "id": "all_pokemon",
-            "criteria": {
-              "all": []
-            }
           }
         ]
       },
@@ -927,7 +917,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -957,7 +947,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1000,7 +990,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1043,7 +1033,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1081,7 +1071,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1124,7 +1114,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1182,7 +1172,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1220,7 +1210,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1249,7 +1239,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1305,7 +1295,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1338,7 +1328,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1368,7 +1358,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1398,7 +1388,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1428,7 +1418,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1457,7 +1447,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1486,7 +1476,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1515,7 +1505,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1544,7 +1534,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1574,7 +1564,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1603,7 +1593,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1632,7 +1622,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1662,7 +1652,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1691,7 +1681,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1721,7 +1711,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1750,7 +1740,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1779,7 +1769,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1808,7 +1798,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1847,7 +1837,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1888,7 +1878,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1943,7 +1933,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -1972,7 +1962,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2025,7 +2015,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2058,7 +2048,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2091,7 +2081,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2120,7 +2110,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2164,7 +2154,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2198,7 +2188,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2227,7 +2217,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2256,7 +2246,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2285,7 +2275,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2318,7 +2308,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2347,7 +2337,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2410,7 +2400,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2439,7 +2429,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2468,7 +2458,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2502,7 +2492,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2531,7 +2521,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2572,7 +2562,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2601,7 +2591,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2630,7 +2620,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2659,7 +2649,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2687,7 +2677,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2716,7 +2706,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2745,7 +2735,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2774,7 +2764,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2803,7 +2793,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2832,7 +2822,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2861,7 +2851,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2890,7 +2880,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2919,7 +2909,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2948,7 +2938,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -2977,7 +2967,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -3006,7 +2996,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -3035,7 +3025,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -3064,7 +3054,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -3093,7 +3083,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -3122,7 +3112,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -3151,79 +3141,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
-      }
-    },
-    {
-      "id": "p-ans-move-effect-recover-2",
-      "snapshotId": "kanto-red-blue",
-      "ask": "What does Recover do?",
-      "profile": {
-        "version": "red-blue",
-        "region": "kanto",
-        "badgeLevel": 8
-      },
-      "shape": {
-        "claims": [
-          {
-            "kind": "fact",
-            "entityId": "recover",
-            "factId": "move-effect"
-          }
-        ],
-        "rosters": []
-      },
-      "source": {
-        "kind": "bank-run",
-        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
-        "transactionId": "session-1",
-        "entryId": "ans-move-effect-recover"
-      },
-      "promoted": {
-        "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
-      }
-    },
-    {
-      "id": "p-ans-count-fast-2",
-      "snapshotId": "kanto-red-blue",
-      "ask": "How many Pokemon have base Speed of at least 100?",
-      "profile": {
-        "version": "red-blue",
-        "region": "kanto",
-        "badgeLevel": 8
-      },
-      "shape": {
-        "claims": [
-          {
-            "kind": "count",
-            "rosterId": "fast_pokemon"
-          }
-        ],
-        "rosters": [
-          {
-            "id": "fast_pokemon",
-            "criteria": {
-              "all": [
-                {
-                  "kind": "stat-at-least",
-                  "stat": "speed",
-                  "value": 100
-                }
-              ]
-            }
-          }
-        ]
-      },
-      "source": {
-        "kind": "bank-run",
-        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
-        "transactionId": "session-1",
-        "entryId": "ans-count-fast"
-      },
-      "promoted": {
-        "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -3265,102 +3183,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
-      }
-    },
-    {
-      "id": "p-ans-rec-eligible-snorlax-2",
-      "snapshotId": "kanto-red-blue",
-      "ask": "Is Snorlax a good Pokemon to train?",
-      "profile": {
-        "version": "red-blue",
-        "region": "kanto",
-        "badgeLevel": 8
-      },
-      "shape": {
-        "claims": [
-          {
-            "kind": "membership",
-            "rosterId": "snorlax_moves",
-            "entityId": "snorlax"
-          },
-          {
-            "kind": "recommendation",
-            "entityId": "snorlax"
-          }
-        ],
-        "rosters": [
-          {
-            "id": "snorlax_moves",
-            "criteria": {
-              "all": [
-                {
-                  "kind": "learns-move",
-                  "move": "hyper-beam"
-                },
-                {
-                  "kind": "learns-move",
-                  "move": "earthquake"
-                },
-                {
-                  "kind": "learns-move",
-                  "move": "rest"
-                },
-                {
-                  "kind": "learns-move",
-                  "move": "thunderbolt"
-                }
-              ]
-            }
-          }
-        ]
-      },
-      "source": {
-        "kind": "bank-run",
-        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
-        "transactionId": "session-1",
-        "entryId": "ans-rec-eligible-snorlax"
-      },
-      "promoted": {
-        "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
-      }
-    },
-    {
-      "id": "p-ans-rec-eligible-generic-2",
-      "snapshotId": "kanto-red-blue",
-      "ask": "Which Pokemon would you recommend for my team?",
-      "profile": {
-        "version": "red-blue",
-        "region": "kanto",
-        "badgeLevel": 8
-      },
-      "shape": {
-        "claims": [
-          {
-            "kind": "recommendation",
-            "entityId": "bulbasaur"
-          },
-          {
-            "kind": "recommendation",
-            "entityId": "charmander"
-          },
-          {
-            "kind": "recommendation",
-            "entityId": "squirtle"
-          }
-        ],
-        "rosters": []
-      },
-      "source": {
-        "kind": "bank-run",
-        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
-        "transactionId": "session-1",
-        "entryId": "ans-rec-eligible-generic"
-      },
-      "promoted": {
-        "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -3389,7 +3212,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -3445,164 +3268,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
-      }
-    },
-    {
-      "id": "p-kind-summarize-pikachu-2",
-      "snapshotId": "kanto-red-blue",
-      "ask": "Tell me everything about Pikachu.",
-      "profile": {
-        "version": "red-blue",
-        "region": "kanto",
-        "badgeLevel": 8
-      },
-      "shape": {
-        "claims": [
-          {
-            "kind": "fact",
-            "entityId": "pikachu",
-            "factId": "types"
-          },
-          {
-            "kind": "fact",
-            "entityId": "pikachu",
-            "factId": "base-hp"
-          },
-          {
-            "kind": "fact",
-            "entityId": "pikachu",
-            "factId": "base-attack"
-          },
-          {
-            "kind": "fact",
-            "entityId": "pikachu",
-            "factId": "base-defense"
-          },
-          {
-            "kind": "fact",
-            "entityId": "pikachu",
-            "factId": "base-special-attack"
-          },
-          {
-            "kind": "fact",
-            "entityId": "pikachu",
-            "factId": "learnset"
-          }
-        ],
-        "rosters": []
-      },
-      "source": {
-        "kind": "bank-run",
-        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
-        "transactionId": "session-1",
-        "entryId": "kind-summarize-pikachu"
-      },
-      "promoted": {
-        "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
-      }
-    },
-    {
-      "id": "p-kind-moveset-build-2",
-      "snapshotId": "kanto-red-blue",
-      "ask": "What's the best moveset for Alakazam?",
-      "profile": {
-        "version": "red-blue",
-        "region": "kanto",
-        "badgeLevel": 8
-      },
-      "shape": {
-        "claims": [
-          {
-            "kind": "fact",
-            "entityId": "alakazam",
-            "factId": "learnset"
-          },
-          {
-            "kind": "recommendation",
-            "entityId": "alakazam"
-          }
-        ],
-        "rosters": [
-          {
-            "id": "alakazam_moves",
-            "criteria": {
-              "all": [
-                {
-                  "kind": "learns-move",
-                  "move": "psychic"
-                },
-                {
-                  "kind": "learns-move",
-                  "move": "recover"
-                },
-                {
-                  "kind": "learns-move",
-                  "move": "reflect"
-                },
-                {
-                  "kind": "learns-move",
-                  "move": "teleport"
-                }
-              ]
-            }
-          }
-        ]
-      },
-      "source": {
-        "kind": "bank-run",
-        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
-        "transactionId": "session-1",
-        "entryId": "kind-moveset-build"
-      },
-      "promoted": {
-        "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
-      }
-    },
-    {
-      "id": "p-kind-which-legendary-2",
-      "snapshotId": "kanto-red-blue",
-      "ask": "Which legendary bird is the best one to chase?",
-      "profile": {
-        "version": "red-blue",
-        "region": "kanto",
-        "badgeLevel": 8
-      },
-      "shape": {
-        "claims": [
-          {
-            "kind": "fact",
-            "entityId": "articuno",
-            "factId": "base-speed"
-          },
-          {
-            "kind": "fact",
-            "entityId": "zapdos",
-            "factId": "base-speed"
-          },
-          {
-            "kind": "fact",
-            "entityId": "moltres",
-            "factId": "base-speed"
-          },
-          {
-            "kind": "recommendation",
-            "entityId": "zapdos"
-          }
-        ],
-        "rosters": []
-      },
-      "source": {
-        "kind": "bank-run",
-        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
-        "transactionId": "session-1",
-        "entryId": "kind-which-legendary"
-      },
-      "promoted": {
-        "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -3631,158 +3297,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
-      }
-    },
-    {
-      "id": "p-refuse-mew-7-2",
-      "snapshotId": "kanto-red-blue",
-      "ask": "Should I go for Mew?",
-      "profile": {
-        "version": "red-blue",
-        "region": "kanto",
-        "badgeLevel": 7
-      },
-      "shape": {
-        "claims": [
-          {
-            "kind": "eligibility",
-            "entityId": "mew"
-          },
-          {
-            "kind": "fact",
-            "entityId": "mew",
-            "factId": "is-mythical"
-          }
-        ],
-        "rosters": []
-      },
-      "source": {
-        "kind": "bank-run",
-        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
-        "transactionId": "session-1",
-        "entryId": "refuse-mew-7"
-      },
-      "promoted": {
-        "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
-      }
-    },
-    {
-      "id": "p-refuse-articuno-1-2",
-      "snapshotId": "kanto-red-blue",
-      "ask": "Is Articuno worth getting for me?",
-      "profile": {
-        "version": "red-blue",
-        "region": "kanto",
-        "badgeLevel": 1
-      },
-      "shape": {
-        "claims": [
-          {
-            "kind": "eligibility",
-            "entityId": "articuno"
-          },
-          {
-            "kind": "fact",
-            "entityId": "articuno",
-            "factId": "is-legendary"
-          }
-        ],
-        "rosters": []
-      },
-      "source": {
-        "kind": "bank-run",
-        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
-        "transactionId": "session-1",
-        "entryId": "refuse-articuno-1"
-      },
-      "promoted": {
-        "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
-      }
-    },
-    {
-      "id": "p-refuse-mew-2-2",
-      "snapshotId": "kanto-red-blue",
-      "ask": "Should a trainer like me chase Mew?",
-      "profile": {
-        "version": "red-blue",
-        "region": "kanto",
-        "badgeLevel": 2
-      },
-      "shape": {
-        "claims": [
-          {
-            "kind": "eligibility",
-            "entityId": "mew"
-          },
-          {
-            "kind": "fact",
-            "entityId": "mew",
-            "factId": "is-mythical"
-          }
-        ],
-        "rosters": [
-          {
-            "id": "mythical-pokemon",
-            "criteria": {
-              "all": [
-                {
-                  "kind": "rarity",
-                  "rarity": "mythical"
-                }
-              ]
-            }
-          }
-        ]
-      },
-      "source": {
-        "kind": "bank-run",
-        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
-        "transactionId": "session-1",
-        "entryId": "refuse-mew-2"
-      },
-      "promoted": {
-        "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
-      }
-    },
-    {
-      "id": "p-meta-how-to-play-2",
-      "snapshotId": "kanto-red-blue",
-      "ask": "I've never played before. How does this game work?",
-      "profile": {
-        "version": "red-blue",
-        "region": "kanto",
-        "badgeLevel": 8
-      },
-      "shape": {
-        "claims": [
-          {
-            "kind": "explanation",
-            "blockId": "how-to-play"
-          },
-          {
-            "kind": "explanation",
-            "blockId": "first-steps"
-          },
-          {
-            "kind": "explanation",
-            "blockId": "what-is-pokemon"
-          }
-        ],
-        "rosters": []
-      },
-      "source": {
-        "kind": "bank-run",
-        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
-        "transactionId": "session-1",
-        "entryId": "meta-how-to-play"
-      },
-      "promoted": {
-        "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -3811,54 +3326,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
-      }
-    },
-    {
-      "id": "p-ans-rank-highest-bst-2",
-      "snapshotId": "kanto-red-blue",
-      "ask": "Which Fire type has the highest stat total?",
-      "profile": {
-        "version": "red-blue",
-        "region": "kanto",
-        "badgeLevel": 8
-      },
-      "shape": {
-        "claims": [
-          {
-            "kind": "ranking",
-            "rosterId": "fire-types",
-            "basis": "base-stat-total",
-            "direction": "highest"
-          },
-          {
-            "kind": "recommendation",
-            "entityId": "arcanine"
-          }
-        ],
-        "rosters": [
-          {
-            "id": "fire-types",
-            "criteria": {
-              "all": [
-                {
-                  "kind": "has-type",
-                  "type": "fire"
-                }
-              ]
-            }
-          }
-        ]
-      },
-      "source": {
-        "kind": "bank-run",
-        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
-        "transactionId": "session-1",
-        "entryId": "ans-rank-highest-bst"
-      },
-      "promoted": {
-        "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -3887,126 +3355,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
-      }
-    },
-    {
-      "id": "p-kind-better-pikachu-raichu-2",
-      "snapshotId": "kanto-red-blue",
-      "ask": "Is Pikachu or Raichu better?",
-      "profile": {
-        "version": "red-blue",
-        "region": "kanto",
-        "badgeLevel": 8
-      },
-      "shape": {
-        "claims": [
-          {
-            "kind": "fact",
-            "entityId": "pikachu",
-            "factId": "base-stat-total"
-          },
-          {
-            "kind": "fact",
-            "entityId": "raichu",
-            "factId": "base-stat-total"
-          },
-          {
-            "kind": "fact",
-            "entityId": "pikachu",
-            "factId": "learnset"
-          },
-          {
-            "kind": "fact",
-            "entityId": "raichu",
-            "factId": "learnset"
-          },
-          {
-            "kind": "recommendation",
-            "entityId": "raichu"
-          }
-        ],
-        "rosters": []
-      },
-      "source": {
-        "kind": "bank-run",
-        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
-        "transactionId": "session-1",
-        "entryId": "kind-better-pikachu-raichu"
-      },
-      "promoted": {
-        "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
-      }
-    },
-    {
-      "id": "p-kind-summarize-pikachu-3",
-      "snapshotId": "kanto-red-blue",
-      "ask": "Tell me everything about Pikachu.",
-      "profile": {
-        "version": "red-blue",
-        "region": "kanto",
-        "badgeLevel": 8
-      },
-      "shape": {
-        "claims": [
-          {
-            "kind": "fact",
-            "entityId": "pikachu",
-            "factId": "types"
-          },
-          {
-            "kind": "fact",
-            "entityId": "pikachu",
-            "factId": "evolves-to"
-          },
-          {
-            "kind": "fact",
-            "entityId": "pikachu",
-            "factId": "pokedex-number"
-          },
-          {
-            "kind": "fact",
-            "entityId": "pikachu",
-            "factId": "base-hp"
-          },
-          {
-            "kind": "fact",
-            "entityId": "pikachu",
-            "factId": "base-attack"
-          },
-          {
-            "kind": "fact",
-            "entityId": "pikachu",
-            "factId": "base-defense"
-          },
-          {
-            "kind": "fact",
-            "entityId": "pikachu",
-            "factId": "base-speed"
-          },
-          {
-            "kind": "fact",
-            "entityId": "pikachu",
-            "factId": "base-special-attack"
-          },
-          {
-            "kind": "fact",
-            "entityId": "pikachu",
-            "factId": "base-special-defense"
-          }
-        ],
-        "rosters": []
-      },
-      "source": {
-        "kind": "bank-run",
-        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
-        "transactionId": "session-1",
-        "entryId": "kind-summarize-pikachu"
-      },
-      "promoted": {
-        "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     },
     {
@@ -4055,232 +3404,7 @@
       },
       "promoted": {
         "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
-      }
-    },
-    {
-      "id": "p-kind-which-legendary-3",
-      "snapshotId": "kanto-red-blue",
-      "ask": "Which legendary bird is the best one to chase?",
-      "profile": {
-        "version": "red-blue",
-        "region": "kanto",
-        "badgeLevel": 8
-      },
-      "shape": {
-        "claims": [
-          {
-            "kind": "fact",
-            "entityId": "articuno",
-            "factId": "base-stat-total"
-          },
-          {
-            "kind": "fact",
-            "entityId": "zapdos",
-            "factId": "base-stat-total"
-          },
-          {
-            "kind": "fact",
-            "entityId": "moltres",
-            "factId": "base-stat-total"
-          },
-          {
-            "kind": "recommendation",
-            "entityId": "articuno"
-          }
-        ],
-        "rosters": []
-      },
-      "source": {
-        "kind": "bank-run",
-        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
-        "transactionId": "session-1",
-        "entryId": "kind-which-legendary"
-      },
-      "promoted": {
-        "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
-      }
-    },
-    {
-      "id": "p-refuse-mewtwo-2-2",
-      "snapshotId": "kanto-red-blue",
-      "ask": "Should I go catch Mewtwo?",
-      "profile": {
-        "version": "red-blue",
-        "region": "kanto",
-        "badgeLevel": 2
-      },
-      "shape": {
-        "claims": [
-          {
-            "kind": "fact",
-            "entityId": "mewtwo",
-            "factId": "locations"
-          },
-          {
-            "kind": "eligibility",
-            "entityId": "mewtwo"
-          }
-        ],
-        "rosters": [
-          {
-            "id": "legendary-pokemon",
-            "criteria": {
-              "all": [
-                {
-                  "kind": "rarity",
-                  "rarity": "legendary"
-                }
-              ]
-            }
-          }
-        ]
-      },
-      "source": {
-        "kind": "bank-run",
-        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
-        "transactionId": "session-1",
-        "entryId": "refuse-mewtwo-2"
-      },
-      "promoted": {
-        "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
-      }
-    },
-    {
-      "id": "p-refuse-articuno-4-2",
-      "snapshotId": "kanto-red-blue",
-      "ask": "Recommend Articuno for my team.",
-      "profile": {
-        "version": "red-blue",
-        "region": "kanto",
-        "badgeLevel": 4
-      },
-      "shape": {
-        "claims": [
-          {
-            "kind": "eligibility",
-            "entityId": "articuno"
-          },
-          {
-            "kind": "recommendation",
-            "entityId": "dragonair"
-          }
-        ],
-        "rosters": []
-      },
-      "source": {
-        "kind": "bank-run",
-        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
-        "transactionId": "session-1",
-        "entryId": "refuse-articuno-4"
-      },
-      "promoted": {
-        "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
-      }
-    },
-    {
-      "id": "p-refuse-zapdos-vs-3-2",
-      "snapshotId": "kanto-red-blue",
-      "ask": "Between Zapdos and Snorlax, which should I get?",
-      "profile": {
-        "version": "red-blue",
-        "region": "kanto",
-        "badgeLevel": 3
-      },
-      "shape": {
-        "claims": [
-          {
-            "kind": "recommendation",
-            "entityId": "snorlax"
-          },
-          {
-            "kind": "eligibility",
-            "entityId": "zapdos"
-          }
-        ],
-        "rosters": []
-      },
-      "source": {
-        "kind": "bank-run",
-        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
-        "transactionId": "session-1",
-        "entryId": "refuse-zapdos-vs-3"
-      },
-      "promoted": {
-        "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
-      }
-    },
-    {
-      "id": "p-meta-how-to-play-3",
-      "snapshotId": "kanto-red-blue",
-      "ask": "I've never played before. How does this game work?",
-      "profile": {
-        "version": "red-blue",
-        "region": "kanto",
-        "badgeLevel": 8
-      },
-      "shape": {
-        "claims": [
-          {
-            "kind": "explanation",
-            "blockId": "what-is-game"
-          },
-          {
-            "kind": "explanation",
-            "blockId": "how-to-play"
-          },
-          {
-            "kind": "explanation",
-            "blockId": "first-steps"
-          },
-          {
-            "kind": "explanation",
-            "blockId": "choosing-a-starter"
-          },
-          {
-            "kind": "explanation",
-            "blockId": "leveling"
-          },
-          {
-            "kind": "explanation",
-            "blockId": "fainting-and-healing"
-          },
-          {
-            "kind": "explanation",
-            "blockId": "what-is-badge"
-          },
-          {
-            "kind": "explanation",
-            "blockId": "what-is-league"
-          },
-          {
-            "kind": "explanation",
-            "blockId": "what-are-stats"
-          },
-          {
-            "kind": "explanation",
-            "blockId": "what-is-move"
-          },
-          {
-            "kind": "explanation",
-            "blockId": "how-catch"
-          }
-        ],
-        "rosters": []
-      },
-      "source": {
-        "kind": "bank-run",
-        "artifact": "runs/coverage/2026-09-11T04-05-05-263Z-coverage.json",
-        "transactionId": "session-1",
-        "entryId": "meta-how-to-play"
-      },
-      "promoted": {
-        "by": "oracle",
-        "at": "2026-09-14T06:05:18.643Z"
+        "at": "2026-09-14T23:56:26.586Z"
       }
     }
   ]
