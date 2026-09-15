@@ -265,6 +265,23 @@ ask phrasings, five each, both models, arms A/B/C) for pennies: if B does
 not move the nomination on the porch, the diagnosis is wrong and the
 legs are not paid for.
 
+*As measured (2026-09-15, findings §21, "M3, the bank legs").* Six legs,
+2,466 samples, 0 of 2,466 escalations. The tuning check read against
+B: below A's band on the strong model (105–107 against 111–114 passes
+per repetition of 137) and above it on the weak (95–99 against 93–97),
+so **B is withdrawn as a default** and stays a lever. The loss is one
+class, a lesson taught where a pass was due — the legacy sentences
+"merely adjacent is worse than no claim" and "an honest pass beats
+teaching the nearest thing" carried a rule case 4 does not. The
+nomination survived A, B and C alike (203, 215, 255 of 411 on the strong
+model; B and C's first calls identical, so the spread is the metric's
+own band), which is the third case under "What would make this wrong":
+**the habit is the strict schema's**, and the shortlist grammar (scale.md
+S4) is the slice that owns it. C against B: no number; the silent
+withdrawal stays the default and the fed-back lever waits for M4's porch
+bank. Prompt tokens per call fell 10–14%, not half: the closed lists and
+the rows are the weight.
+
 ## What would make this wrong
 
 - **B moves the porch and not the bank.** Then item 3 was one ask's
