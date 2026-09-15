@@ -92,6 +92,10 @@ export interface TraceArgs {
   /** The refused nomination carried back by name (docs/answer-prompt.md,
    * M3) — off by default; `--refusal-feedback` turns it on. */
   refusalFeedback: boolean;
+  /** The offered door (docs/offered-door.md): the listing route in the
+   * grammar only when the driver would accept it — off by default;
+   * `--offered-doors` turns it on. */
+  offeredDoors: boolean;
 }
 
 export function parseTraceArgs(argv: readonly string[]): TraceArgs {
@@ -119,6 +123,7 @@ export function parseTraceArgs(argv: readonly string[]): TraceArgs {
     memory: !argv.includes("--no-memory"),
     prompt,
     refusalFeedback: argv.includes("--refusal-feedback"),
+    offeredDoors: argv.includes("--offered-doors"),
   };
 }
 
@@ -370,6 +375,7 @@ function summary(state: SessionState): string {
     `${state.notes.length} note(s), ${state.providerErrors} provider error(s), ` +
     `listing doors ${state.listingActivations.served}/${state.listingActivations.consulted} served` +
     (state.listingActivations.guardDropped > 0 ? ` (+${state.listingActivations.guardDropped} guard-dropped)` : "") +
+    (state.listingDoor.withheld + state.listingDoor.nominated > 0 ? ` (listing door ${state.listingDoor.withheld} withheld/${state.listingDoor.nominated} nominated)` : "") +
     `, linking ${state.linking.mapped} mapped/${state.linking.unlinked} unlinked` +
     (state.linking.offTargetDropped > 0 ? ` (${state.linking.offTargetDropped} off-target dropped)` : "") +
     (state.linking.contradictions > 0 ? ` (${state.linking.contradictions} contradiction(s) asked)` : "") +

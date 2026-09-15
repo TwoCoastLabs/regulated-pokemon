@@ -105,6 +105,24 @@ number.
 - **The domain-word gate** stays at its count: the checks are the
   executor's existing functions; the offer adds no literal.
 
+*As built (2026-09-15, the S4a PR).* As designed, with three small
+shapes: the executor's two ask-only checks are one function
+(`listingAskCheck`), called by the executor and by the offer, so the two
+cannot drift; a withheld door is a ledger step in the driver's fixed
+wording (`route/withheld`, registered with the other codes), so the
+trail, the tracer and the chat's sent-back reading all see it; and the
+session counts `listingDoor.withheld` and `listingDoor.nominated`, which
+the bank records per sample as `listingDoor: { offered, nominated,
+served }` and the map sums as the door's funnel, on every leg whether
+the lever is on or off. The lever is `SessionDeps.offeredDoors`,
+`session:trace -- --offered-doors`, `coverage:map -- --offered-doors`;
+the artifact records `offeredDoors`. The domain-word gate's count is
+unchanged. One reading the build surfaced: "what is a Pokemon" is the
+bare catalogue ask to the executor and is served when the nomination's
+`n` allows — the offer reuses that reading rather than second-guessing
+it, so the test ask for a withheld door is the porch's "tell me about
+the game".
+
 ## The measurement, pre-registered
 
 The porch reading first, for pennies (`session:trace`, the four opening

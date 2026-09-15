@@ -127,6 +127,14 @@ export interface BankRun {
   /** Prompt tokens the run's model calls consumed, beside `turns` (the
    * calls), so a prompt lever's cost per call is read from the record. */
   promptTokens?: number;
+  /**
+   * The listing door's funnel on this run (docs/offered-door.md): whether
+   * the door was in the first call's grammar, whether the model nominated
+   * it (served or refused), and whether a listing was served. Offered over
+   * nominated over served, per sample; absent on artifacts filed before
+   * the door was an offer.
+   */
+  listingDoor?: { offered: boolean; nominated: boolean; served: boolean };
   /** One human line on how it ended, for the report's detail column. */
   detail: string;
 }
@@ -167,6 +175,9 @@ export interface BankRunOptions {
   /** The refused nomination carried back by name instead of the door
    * withdrawn in silence (docs/answer-prompt.md, M3). Recorded. */
   refusalFeedback?: boolean;
+  /** The offered door (docs/offered-door.md): the listing route in the
+   * grammar only when the driver would accept it. Recorded. */
+  offeredDoors?: boolean;
 }
 
 /** A bank run still carrying the whole record behind its verdict — transcript,
@@ -475,6 +486,7 @@ export async function runBankEntry(
     ...(options.suggest === undefined ? {} : { suggest: options.suggest }),
     ...(options.prompt === undefined ? {} : { prompt: options.prompt }),
     ...(options.refusalFeedback === undefined ? {} : { refusalFeedback: options.refusalFeedback }),
+    ...(options.offeredDoors === undefined ? {} : { offeredDoors: options.offeredDoors }),
     ...(options.precedents === undefined
       ? {}
       : {
@@ -512,6 +524,7 @@ export async function runBankEntry(
     ...(state.feedbackRetries > 0 ? { feedbackRetried: true, firstAttemptDenials: state.feedbackDenials } : {}),
     ...(state.nominationRetries > 0 ? { nominationRetried: true } : {}),
     promptTokens: state.usage.promptTokens,
+    listingDoor: { offered: state.listingDoor.withheld === 0, nominated: state.listingDoor.nominated > 0, served: state.listingActivations.served > 0 },
     ...(state.linking.offTargetDropped > 0 ? { offTargetDropped: state.linking.offTargetDropped } : {}),
     ...(refused === undefined ? {} : { deniedDraftOnTarget: draftOnTarget(entry, refused) }),
     ...(options.clarify === true ? { clarified: { asked, picked, ignored, capped } } : {}),

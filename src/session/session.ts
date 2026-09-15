@@ -183,6 +183,16 @@ export interface SessionDeps {
    * measured behaviour until the arm with the number becomes the default.
    */
   refusalFeedback?: boolean;
+  /**
+   * The offered door (docs/offered-door.md, epic #118 S4a): the listing
+   * route is in the answer grammar only when the executor's ask-only
+   * checks would accept a nomination of it — the ask names no certified
+   * subject, and names one type or is the bare catalogue ask. The same
+   * check, moved from after the call to before it; the executor keeps
+   * every check it has. Off by default until the legs pick the default:
+   * every door is offered on every first call, as today.
+   */
+  offeredDoors?: boolean;
 }
 
 /** What the session holds of the operator's memory. */
@@ -279,6 +289,14 @@ export interface SessionState {
    * a bareness word is next proposed: the dial gets tuned on data.
    */
   listingActivations: { consulted: number; served: number; stoodDown: number; guardDropped: number };
+  /**
+   * The listing door as an offer (docs/offered-door.md): `withheld` counts
+   * the first calls the door was left out of the grammar on, because the
+   * executor's ask-only checks would refuse it; `nominated` the whole-reply
+   * listing nominations that arrived, served or refused. Offered over
+   * nominated over served is the door's funnel, per run.
+   */
+  listingDoor: { withheld: number; nominated: number };
   /** Answer-step calls repeated once with the route door closed, because
    * the model's whole reply was a nomination the driver refused — the
    * schema-steering misuse rate, as a number (see {@link withRouteFallback}). */
@@ -438,6 +456,7 @@ export function startSession(idPrefix?: string): SessionState {
     suggestions: { offered: 0, kept: 0, dropped: 0, taken: 0, deadEnded: 0 },
     memory: { held: 0, empty: 0, followed: 0, departed: 0, lastHeld: [] },
     listingActivations: { consulted: 0, served: 0, stoodDown: 0, guardDropped: 0 },
+    listingDoor: { withheld: 0, nominated: 0 },
     nominationRetries: 0,
     ladderTurns: 0,
     steps: [],
@@ -1247,7 +1266,20 @@ async function withRouteFallback(
   deps: SessionDeps,
   call: (routes: readonly NominableRoute[] | undefined, feedback?: readonly string[]) => Promise<AnswerStep>,
 ): Promise<{ state: SessionState; step: AnswerStep; usage: Usage; retried: boolean; refusedListing: boolean }> {
-  const first = await call(SESSION_ROUTES);
+  // The offered door (docs/offered-door.md): with the lever on, the listing
+  // door is in the grammar only when the executor's ask-only checks would
+  // accept it — recorded as a step, so the trail and the tally read it.
+  const withheld = deps.offeredDoors === true ? listingAskCheck(world, openingAskOf(state)) : undefined;
+  if (withheld !== undefined) {
+    state = ledgerStep(
+      { ...state, listingDoor: { ...state.listingDoor, withheld: state.listingDoor.withheld + 1 } },
+      deps.now(),
+      "driver",
+      "route/withheld",
+      `the "listing" door was not offered: ${withheld} — the driver would have refused a nomination of it, so the grammar left it out`,
+    );
+  }
+  const first = await call(withheld === undefined ? SESSION_ROUTES : SESSION_ROUTES.filter((route) => route.id !== "listing"));
   const decode = first.decode;
   // A clarification beside the refused nomination is something the reply
   // carried (R3b step 3): the model asked, and the question goes through —
@@ -1255,6 +1287,7 @@ async function withRouteFallback(
   // a second call for the same question.
   const asksInstead = decode.ok && decode.clarify !== undefined && deps.clarify === true;
   const nomination = decode.ok && decode.route !== undefined && decode.draft.claims.length === 0 && !asksInstead ? decode.route : undefined;
+  if (nomination?.routeId === "listing") state = { ...state, listingDoor: { ...state.listingDoor, nominated: state.listingDoor.nominated + 1 } };
   const executed = nomination === undefined ? undefined : executeRoute(world, state, nomination);
   if (nomination === undefined || executed === undefined || executed.ok) {
     return { state, step: first, usage: first.usage, retried: false, refusedListing: false };
@@ -2158,12 +2191,7 @@ function executeRoute(
   route: { routeId: string; [arg: string]: unknown },
 ): RouteResult {
   const refuse = (reason: string): RouteResult => ({ ok: false, reason });
-  // The exchange's OPENING utterance is the ask; later ones answer the
-  // pack's questions ("Red and Blue") and would unbare or requalify it.
-  const opening = state.transcript
-    .slice(state.askStart)
-    .find((event) => event.kind === "utterance" && event.source === "trainer");
-  const currentAsk = opening?.kind === "utterance" ? opening.text : "";
+  const currentAsk = openingAskOf(state);
   // The executors carry the cue doors' own guards. Found by the R1 bank run
   // (2026-09-04): under the provider-enforced schema the strong model
   // nominated the catalogue listing for "What's Pikachu's Speed stat?" and
@@ -2173,12 +2201,13 @@ function executeRoute(
   // (docs/routing.md); a refused nomination earns the retry with the door
   // closed, never a wrong-shape certificate.
   if (route.routeId === "listing") {
-    // Reasons are written for a reader outside the code: what the question
-    // has or lacks, never the guard's own name for it.
-    if (namesCertifiedSubject(world.registry, currentAsk)) return refuse("the question is about one named thing, and a listing answers a set");
+    // The ask-only checks, shared with the offer (docs/offered-door.md) so
+    // the two cannot drift: a nomination the offer withholds is exactly one
+    // the executor would refuse here.
+    const askOnly = listingAskCheck(world, currentAsk);
+    if (askOnly !== undefined) return refuse(askOnly);
     const haystack = ` ${currentAsk.toLowerCase()} `;
     const typesNamed = [...world.registry.typeNames].filter((type) => new RegExp(`\\b${type}\\b`).test(haystack));
-    if (typesNamed.length !== 1 && !bareCatalogueAsk(world, currentAsk)) return refuse("the question names no set to list — no type, and not a plain ask to list the catalogue");
     // Subject-correct by construction: the set comes from the ask's own
     // qualifiers, never from the nomination's say-so — a catalogue-subject
     // nomination for "show me all the fire types" mints the fire roster, and
@@ -2216,6 +2245,34 @@ function executeRoute(
     return { ok: true, claims: profileClaims(raw), rosters: [] };
   }
   return refuse(`there is no "${route.routeId}" door`);
+}
+
+/** The exchange's OPENING utterance is the ask; later ones answer the
+ * pack's questions ("Red and Blue") and would unbare or requalify it. */
+function openingAskOf(state: SessionState): string {
+  const opening = state.transcript
+    .slice(state.askStart)
+    .find((event) => event.kind === "utterance" && event.source === "trainer");
+  return opening?.kind === "utterance" ? opening.text : "";
+}
+
+/**
+ * The listing executor's checks that read the ask alone — the reason a
+ * nomination would be refused before any model has nominated, or
+ * undefined when the ask admits the door. Two checks, the executor's own
+ * (the M3 legs read 197 of 209 refused listing nominations on the strong
+ * model as decided by exactly these; docs/offered-door.md): the ask names
+ * a certified subject, so a listing answers the wrong shape; or it names
+ * no single type and is not the bare catalogue ask, so there is no set.
+ * Reasons are written for a reader outside the code: what the question
+ * has or lacks, never the guard's own name for it.
+ */
+function listingAskCheck(world: SessionWorld, ask: string): string | undefined {
+  if (namesCertifiedSubject(world.registry, ask)) return "the question is about one named thing, and a listing answers a set";
+  const haystack = ` ${ask.toLowerCase()} `;
+  const typesNamed = [...world.registry.typeNames].filter((type) => new RegExp(`\\b${type}\\b`).test(haystack));
+  if (typesNamed.length !== 1 && !bareCatalogueAsk(world, ask)) return "the question names no set to list — no type, and not a plain ask to list the catalogue";
+  return undefined;
 }
 
 /**

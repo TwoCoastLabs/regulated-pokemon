@@ -70,6 +70,14 @@ export interface CoverageMap {
    */
   prompting?: { runs: number; calls: number; promptTokens: number };
   /**
+   * The listing door's funnel across the runs that carry it
+   * (docs/offered-door.md): how many first calls had the door in the
+   * grammar, how many replies nominated it, how many listings were served.
+   * Offered over runs is the withheld rate's complement; nominated over
+   * offered is what the model does with an offer it is given.
+   */
+  listingDoor?: { runs: number; offered: number; nominated: number; served: number };
+  /**
    * The trainer-facing ceremony across the runs, present when the runs carry
    * it (epic #94, slice 5): clarifying questions asked, scope cards ruled on,
    * act cards consented — beside calls/turn, so friction is priced in what
@@ -248,6 +256,16 @@ export function coverageMap(runs: readonly BankRun[]): CoverageMap {
           calls: prompted.reduce((sum, run) => sum + run.turns, 0),
           promptTokens: prompted.reduce((sum, run) => sum + (run.promptTokens ?? 0), 0),
         };
+  const doored = runs.filter((run) => run.listingDoor !== undefined);
+  const listingDoor =
+    doored.length === 0
+      ? undefined
+      : {
+          runs: doored.length,
+          offered: doored.filter((run) => run.listingDoor?.offered === true).length,
+          nominated: doored.filter((run) => run.listingDoor?.nominated === true).length,
+          served: doored.filter((run) => run.listingDoor?.served === true).length,
+        };
   return {
     total: runs.length,
     pass: runs.filter((run) => run.score.pass).length,
@@ -261,6 +279,7 @@ export function coverageMap(runs: readonly BankRun[]): CoverageMap {
     repaired: runs.filter((run) => run.repaired === true).map((run) => run.entryId),
     nominationRetried: runs.filter((run) => run.nominationRetried === true).map((run) => run.entryId),
     ...(prompting === undefined ? {} : { prompting }),
+    ...(listingDoor === undefined ? {} : { listingDoor }),
     ...(ceremony === undefined ? {} : { ceremony }),
     ...(clarification === undefined ? {} : { clarification }),
     ...(suggestions === undefined ? {} : { suggestions }),
@@ -426,6 +445,16 @@ export function renderCoverage(map: CoverageMap, heading = "Playability coverage
     lines.push(
       `**${nominated.length}/${map.total} (${pct(nominated.length / map.total)}) run(s) repeated the answer call after a refused nomination** — ` +
         "the whole first reply asked for a door the question did not fit; the door was withdrawn for one call and the reply that came after is the one filed.",
+    );
+    lines.push("");
+  }
+  // The listing door's funnel (docs/offered-door.md): offered, nominated,
+  // served — count and percentage, so a withheld door is a number.
+  if (map.listingDoor !== undefined) {
+    const door = map.listingDoor;
+    lines.push(
+      `**The listing door: offered on ${door.offered}/${door.runs} (${pct(door.offered / door.runs)}) first calls, nominated on ${door.nominated}/${door.runs} (${pct(door.nominated / door.runs)}), served on ${door.served}/${door.runs} (${pct(door.served / door.runs)})** — ` +
+        "a door left out of the grammar is one the driver would have refused; a nomination is the model's whole first reply asking for it.",
     );
     lines.push("");
   }

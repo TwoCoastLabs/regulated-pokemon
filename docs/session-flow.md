@@ -56,6 +56,9 @@ sequenceDiagram
         D->>D: scope statement? listing follow-up? (deterministic)
         D->>M: proposeAnswer — answer hop (scope, retrieval block, gated grammar, routes)
         M-->>D: JSON: asked (phrase → field | none), rosters, claims, route?
+        opt the offered door is on and the ask admits no listing (offered-door.md)
+            D->>D: listing route left out of the grammar — the executor's ask-only checks, before the call
+        end
         opt reply was only a nomination the executor refused
             D->>M: proposeAnswer again, route door closed
             M-->>D: JSON

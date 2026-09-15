@@ -5353,3 +5353,92 @@ evidence either way. (c) **named** — one provider error in 2,466,
 counted and left in. (d) **named** — the bank does not carry the porch's
 "Red/blue" phrasing, so the lesson pile's 0 of 536 here is the restored
 rule on the bank's wordings, not on the one that found it.
+
+## 22. The offered door: a route is in the grammar only when the driver would accept it (epic #118 S4a)
+
+### The porch reading (2026-09-15)
+
+**Goal.** The slice the M3 legs pointed at ([offered-door.md](offered-door.md)):
+the strong model's first-call listing nomination on the opening asks is
+the reply format's, and 197 of the 209 refusals on the baseline leg were
+decided by two checks on the trainer's words the driver already runs —
+after the call. The offered door runs them before it: the listing route
+is in the grammar only when the executor would accept a nomination of
+it. This entry is the porch reading, the cheap arm the design put before
+the legs; the legs are the gate and are not yet run.
+
+**How it works.** `listingAskCheck` is the executor's two ask-only checks
+as one function — the ask names no certified subject; it names one type
+or is the bare catalogue ask — called by the executor as before and, with
+`SessionDeps.offeredDoors` on, by the driver before the first answer
+call: when it would refuse, the listing route is left out of the routes
+the call is handed, and a `route/withheld` step records the reason in the
+executor's own words. Nothing about the executor, the kernel or the
+prompt's wording changes. The bank records the door's funnel per sample
+(`listingDoor: { offered, nominated, served }`) on every leg, lever on or
+off, and the map sums it. 1931 tests; the domain-word gate at its count.
+
+**The reading.** `session:trace`, the four porch phrasings, five each,
+both models, the lever off (A: every door offered on every first call —
+today's behaviour) and on (D: the offered door); the product's other
+levers as the live page runs them. 80 conversations, $0.013, 0 provider
+errors:
+
+| strong `qwen/qwen3-235b-a22b-2507`, 20 per arm | A every door offered | D the offered door |
+|---|---|---|
+| listing door withheld before the call | 0/20 | 20/20 (100%) |
+| a listing nominated first, refused | 18/20 (90%) | 3/20 (15%) — all `profile`, entity "none" |
+| **answered in one call** | **2/20 (10%)** | **17/20 (85%)** |
+| two calls | 14/20 (70%) | 3/20 (15%) |
+| three calls | 4/20 (20%) | 0/20 (0%) |
+| the record is the `what-is-game` lesson | 16/20 (80%) | 20/20 (100%) |
+| abstained, or a scope card instead of a lesson | 3 + 1 of 20 (20%) | 0/20 (0%) |
+| more than one lesson in the answer | 4/20 (20%) | 1/20 (5%) |
+| wrong subject (a value-shape record) | 0/20 | 0/20 |
+| calls per conversation | 2.25 | 1.15 |
+
+| weak `mistralai/mistral-nemo`, 20 per arm | A | D |
+|---|---|---|
+| listing door withheld | 0/20 | 20/20 |
+| answered in one call, the lesson alone | 20/20 (100%) | 20/20 (100%) |
+| a listing nominated | 0/20 | 0/20 |
+
+**What it says.** Three things, each a number.
+
+1. **The door was the lever.** With the listing route out of the grammar
+   on asks it would have been refused on, the strong model's one-call
+   rate on the opening asks went from 2 of 20 to 17 of 20, calls per
+   conversation from 2.25 to 1.15, three-call exchanges from 4 to 0, and
+   the record was the right lesson on 20 of 20 against 16. The M3 porch's
+   two readings of the *prompt* moved this number 0 → 55% and 75% → 25%
+   by churn alone; the *door* moved it 10% → 85% in one reading, with the
+   weak model untouched at 20 of 20 on both arms — the shape a structural
+   lever has and a wording lever did not.
+2. **The nomination moved elsewhere, a little.** The design's first "what
+   would make this wrong": with `listing` withheld, the strong model
+   nominated `profile` with the entity "none" on 3 of 20 — all on the
+   "I'm playing Red/blue; tell me about the game" phrasing, refused by
+   the executor as today, the lesson taught on the second call. Three of
+   twenty, against eighteen; the profile door's own ask-only check (the
+   ask names no species) is the same shape of fix and is not made here.
+3. **The lesson pile is the model's, not the prompt's.** On the legacy
+   prompt today, the same "Red/blue" phrasing drew ten to twelve lessons
+   in one certified answer on 4 of 5 repetitions (0 of 5 in the M3
+   entry's first reading of the same arm, earlier the same day); under
+   the offered door 1 of 5.
+   The M3 entry attributed the pile to the blocks prompt's deleted
+   sentence; this reading says the pile is a strong-model habit on one
+   phrasing that any arm can draw, inside the same churn band.
+
+**Model errors:** the strong model's listing nominations on asks that
+name no set (18 of 20 when offered), its profile nomination for "none"
+(3 of 20 when the listing was withheld), the lesson pile on one phrasing
+(4 of 20 and 1 of 20). **Harness factors:** (a) **named** — N=20 per
+cell is a porch sample; the bank legs (A and D, N=3, both models, under
+$0.70) are the pre-registered gate, with the tuning check, served
+listings not fewer than 9, and the honest-disposition rate held. (b)
+**named** — the porch's four phrasings all fail the ask-only checks, so
+the withheld rate here is 100% by construction; the bank's served
+listings (9 of 411 on the baseline leg) are where the offer's recall
+cost, bounded at zero by design, is actually read. (c) **named** — no
+arm here changes the prompt's wording; A is today's live page exactly.

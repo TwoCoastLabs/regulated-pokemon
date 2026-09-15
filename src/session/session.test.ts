@@ -2196,6 +2196,57 @@ describe("the driver's ledger — every step of an exchange, in fixed wording, b
     expect(sentBack(trail).map((round) => round.mode)).toEqual(["fed-back"]);
   });
 
+  it("the offered door: the listing route is in the grammar only when the driver would accept it, and the withholding is a step with the executor's own reason", async () => {
+    // docs/offered-door.md (epic #118 S4a): the executor's two ask-only
+    // checks, run before the call. A vague opening ask and a one-thing ask
+    // get no listing door; the bare catalogue ask keeps it and is served.
+    const doors: { routes: readonly string[] }[] = [];
+    const provider = new ScriptedProvider("offered", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      doors.push({ routes: request.hint.doors?.routes ?? [] });
+      // A model that would nominate whenever the door is there.
+      return request.hint.doors?.routes.includes("listing")
+        ? JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "listing", subject: "catalogue", n: 5 }] })
+        : JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-pokemon" }] });
+    });
+    const d: SessionDeps = { ...deps(provider), offeredDoors: true };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    // The porch's opening ask names no set (the executor's own reading of
+    // it, on 83 of 209 refusals in the M3 legs): withheld, one call, the
+    // lesson. ("what is a Pokemon" reads as the bare catalogue ask to the
+    // executor and is served when n allows — the offer reuses that reading.)
+    state = await say(state, "tell me about the game", d);
+    let trail = state.exchanges.at(-1)!;
+    expect(trail.outcome).toBe("answered");
+    expect(codes(trail.steps)).toEqual(["trainer/said", "scope/granted", "route/withheld", "model/answer", "linking/unlinked", "record/answered"]);
+    const withheld = trail.steps.find((entry) => entry.code === "route/withheld")!;
+    expect(withheld.lane).toBe("driver");
+    expect(withheld.text).toContain("the question names no set to list — no type, and not a plain ask to list the catalogue");
+    expect(withheld.text).toContain("the grammar left it out");
+    expect(doors.at(-1)).toEqual({ routes: ["profile"] });
+    expect(state.nominationRetries).toBe(0);
+    expect(state.listingDoor).toEqual({ withheld: 1, nominated: 0 });
+    // One named thing: withheld with the other reason.
+    state = await say(state, "how fast is Pikachu?", d);
+    trail = state.exchanges.at(-1)!;
+    expect(trail.steps.find((entry) => entry.code === "route/withheld")?.text).toContain("the question is about one named thing, and a listing answers a set");
+    expect(doors.at(-1)).toEqual({ routes: ["profile"] });
+    // The bare catalogue ask: offered, nominated, served — the offer loses
+    // nothing the executor would have accepted.
+    state = await say(state, "tell me about the species", d);
+    trail = state.exchanges.at(-1)!;
+    expect(doors.at(-1)).toEqual({ routes: ["listing", "profile"] });
+    expect(codes(trail.steps)).not.toContain("route/withheld");
+    expect(codes(trail.steps)).toContain("route/served");
+    expect(state.records.at(-1)?.manifest?.claims.filter((claim) => claim.kind === "membership")).toHaveLength(5);
+    expect(state.listingDoor).toEqual({ withheld: 2, nominated: 1 });
+    // The lever off: every door on every first call, as today.
+    const off = await say(await setProfile(startSession(), PROFILE_SCOPE, deps(provider)), "tell me about the game", deps(provider));
+    expect(doors.at(-2)).toEqual({ routes: ["listing", "profile"] });
+    expect(codes(off.exchanges.at(-1)!.steps)).toContain("route/withdrawn");
+    expect(off.listingDoor).toEqual({ withheld: 0, nominated: 1 });
+  });
+
   it("the prompt lever builds the block-sequenced prompt on every answer call — discovery, answer and the carried-back retry alike", async () => {
     const prompts: string[] = [];
     const blocks: unknown[] = [];

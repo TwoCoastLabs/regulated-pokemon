@@ -88,6 +88,10 @@ A term coined during the work is defined before it is used.
   `--refusal-feedback` carries a refused nomination back to the model by
   name instead of withdrawing the door in silence. Prompts are structural,
   never tuned to one model: any prompt change runs on both models.
+  `--offered-doors` (both tools) puts the listing door in the grammar only
+  when the driver would accept a nomination of it
+  ([docs/offered-door.md](docs/offered-door.md)); the bank records the
+  door's funnel — offered, nominated, served — per sample either way.
 - **Results page:** `npm run harness:results` renders a filed run artifact as
   Markdown (newest in `runs/` by default; `-- <artifact.json>` for one,
   `-- --out docs/results.md` to file it). Pure and key-free — it only reads an
