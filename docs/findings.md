@@ -5442,3 +5442,107 @@ the withheld rate here is 100% by construction; the bank's served
 listings (9 of 411 on the baseline leg) are where the offer's recall
 cost, bounded at zero by design, is actually read. (c) **named** — no
 arm here changes the prompt's wording; A is today's live page exactly.
+
+## 23. The decline ledger: the lessons door is open on every ask (epic #170, K1/K2)
+
+**Goal.** The correct-decline rate — how often the system correctly
+declines a question it should not answer — is the lowest of the
+usefulness numbers on both models: 121/174 (70%) strong and 100/174
+(57%) weak on the M3 baseline arm (§21). A rate says nothing about what
+to build. The flywheel's organizing rule (epic #170) is that
+abstentions are the demand signal: the governed agent counts the gap
+and names the layer that owes the fix. This entry is that instrument's
+first reading — every sample on a question that must not receive a
+certified answer, what the record certified when it answered anyway,
+and which layer owns it. Key-free: no model, no network, no spend, read
+from the six M3 legs already paid for.
+
+**How it works.** `src/harness/demand.ts` reads filed coverage
+artifacts and takes every sample whose disposition must not resolve
+(`needs-data`, `needs-claim-kind`, `off-domain`, `gated-advisory`,
+`should-refuse`) and whose filed score is a fail at the `resolved`
+stage. `advisory` is deliberately not in that set: an advisory question
+is *expected* to resolve, so counting it would let a shape deflection
+read as a fabrication risk. Each miss is named by the **route** its
+manifest was built on and, from that, the **layer** that owes the fix —
+the test being "if this layer changed, would the wrong answer stop
+being representable?". The filed score is read, never re-derived, so
+the ledger and the coverage map can never disagree about what a miss
+is; a miss the record does not decide is `reviewer`, counted and named.
+`npm run demand` renders it; `docs/decline-ledger.md` is the filed
+reading, every row traceable to its artifact.
+
+**The reading.** Six legs — three prompt arms (A legacy, B blocks, C
+blocks with the refusal fed back) on each of the strong
+`qwen/qwen3-235b-a22b-2507` and weak `mistralai/mistral-nemo`, N=3, 45
+must-not-resolve entries each. 810 samples, **204 (25%) answered when
+they should have declined**, on 33 distinct questions.
+
+| route | share of the 204 | layer | the change that would retire it |
+|---|---|---|---|
+| topical lesson | 125 (61%) | grammar | a pack lesson on a subject the ask did not name |
+| neighbouring fact | 32 (16%) | retrieval | a real certified fact in place of the absent one |
+| gated dodge | 20 (10%) | policy | a gated ask answered out of ungated claims |
+| advice route | 15 (7%) | grammar | `eligibility`/`recommendation` where neither was asked for |
+| substituted set | 8 (4%) | grammar | a closed set built for a set the ask did not name |
+| boundary lesson, off-domain | 4 (2%) | reviewer | the honest refusal, on a question not about the game |
+
+Rolled up: grammar 148/204 (73%), retrieval 32/204 (16%), policy
+20/204 (10%), reviewer 4/204 (2%). **200 of 204 (98%) classified from
+the record**; the 4 left to a reviewer are one judgement, not four.
+
+**What it says.** Three things, each a number.
+
+1. **The lessons door is the offered door again, one route over.** The
+   pack's 24 lessons are an enum on the `explanation` route of every
+   answer call, so a topically adjacent lesson is representable on
+   every ask however far from what it covers — and 125 of 204 misses
+   (61%) are exactly that. "Who is the Pewter City gym leader?"
+   certified `what-is-gym-leader` on 16 of 18 samples. "What does an
+   Oran Berry do?" took a lesson on 13 of 18 — `what-is-pokemon` 7,
+   `what-is-badge` 4, `what-is-poke-ball` 2 — and "How long does it
+   take to finish the game?" on 13 of 18, spread over four lessons.
+   That spread is the point: there is no one bad lesson to delete, only
+   the whole catalogue standing open with the model landing wherever
+   the ask is nearest. Each answer is certified-true and answers a
+   different question. The records-boundary lesson — which, taught
+   alone, the scorer counts as the honest refusal it is — was the one
+   reached for in 4 of the 184 ungrounded-ask misses.
+2. **It is structural, not a model habit.** The topical-lesson share is
+   63/101 (62%) on the strong model and 62/103 (60%) on the weak one —
+   the same share on the capable model and on the deliberately weak
+   one. That is the signature #118 S4a's porch reading had and a
+   wording lever did not (§22): a lever that moves one model and not
+   the other is tuning; a miss both models make at the same rate is the
+   grammar's.
+3. **The demand is broad but the weight is concentrated.** 33 of the
+   45 must-not-resolve questions (73%) missed at least once, so this is
+   not a handful of bad entries — but the worst five carry 72 of the
+   204 misses (35%), so a first treatment has somewhere to aim. The
+   single worst, "Which move tutor teaches Body Slam?" (17 of 18), is
+   mostly not a lesson deflection at all: on 15 of those 17 the model
+   certified a real fact about the same move — `machine` (the TM) 10
+   times, `move-type` 4, `move-power` once — the retrieval class's
+   exemplar. The move is in the records; the tutor is not, and a
+   neighbouring column of the row it did find stood in.
+
+**Model errors:** none separable here — every sample in this entry
+committed a certified answer, so nothing was a provider failure.
+**Enforcement:** unchanged and not re-derived; every miss above is a
+*true* certificate on the wrong question, which is why the funnel
+counts it and the kernel does not. 0 escalations of 2,466 stands (§21).
+**Harness factors:** (a) **named** — the `boundary-lesson-off-domain`
+class, 4 of 204, is a live question about the oracle rather than a
+defect: the scorer fails every resolution on an off-domain ask,
+including one that teaches the records boundary and nothing else. It is
+left to a reviewer rather than counted either way. (b) **named** — the
+routes are read from the manifest's claim kinds and ids, so a miss
+whose manifest is empty would read `unclassified`; none did. (c)
+**named** — this is a reading of six legs filed on 2026-09-15, before
+the offered door existed; a leg run with `--offered-doors` is not in it.
+
+**What it does not yet do.** K1's gate also asks for the ledger as a
+page of the app and through `harness:results`; neither is built. K2's
+gate asks for the owner role per class declared in the pack; the owners
+are in code here, not in pack data. Both are still owed before either
+slice is ticked.

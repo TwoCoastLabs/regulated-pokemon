@@ -22,6 +22,7 @@
     "session:trace": "npm run build && node dist/session/trace-cli.js",
     "coverage:map": "npm run build && node dist/harness/coverage-cli.js",
     "harness:results": "npm run build && node dist/harness/results-cli.js",
+    "demand": "npm run build && node dist/harness/demand-cli.js",
     "precedents:promote": "npm run build && node dist/memory/promote-cli.js",
     "relay": "npm run app:build && npm run build && node dist/relay/serve.js",
     "snapshot:fetch": "node --experimental-strip-types scripts/fetch-snapshot.ts"

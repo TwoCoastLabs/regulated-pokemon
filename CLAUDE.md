@@ -102,6 +102,13 @@ name defines it in plain words the first time.
   when the driver would accept a nomination of it
   ([docs/offered-door.md](docs/offered-door.md)); the bank records the
   door's funnel — offered, nominated, served — per sample either way.
+- **The decline ledger:** `npm run demand -- <coverage artifact.json ...>`
+  reads filed runs and lists every sample on a question that must not receive
+  a certified answer which got one anyway, what the record certified instead,
+  and the layer that owes the fix ([docs/decline-ledger.md](docs/decline-ledger.md)
+  is the filed reading over the six M3 legs; epic #170 K1/K2, findings §23).
+  Key-free, deterministic, no spend — it is how the correct-decline rate turns
+  back into a list of things to build.
 - **Results page:** `npm run harness:results` renders a filed run artifact as
   Markdown (newest in `runs/` by default; `-- <artifact.json>` for one,
   `-- --out docs/results.md` to file it). Pure and key-free — it only reads an
