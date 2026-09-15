@@ -42,6 +42,16 @@ entry opens with what it is trying to achieve in the project's own terms
 plain words, and only then the mechanism — files, functions, flags, numbers.
 A term coined during the work is defined before it is used.
 
+**Use plain, concise terms.** Say what a number is, not what it is called
+internally, and avoid analogies and coined phrases in anything a reader
+has to act on. Two standing examples: the "honest-disposition rate" is
+the **correct-decline rate** — how often the system correctly declines a
+question it should not answer (a missing fact, restricted advice, an
+off-topic ask); "the weakest companion" is just **the lowest of the
+usefulness numbers**. Prefer the plain phrase in reports, PR text,
+findings prose and conversation; a doc that already uses the internal
+name defines it in plain words the first time.
+
 ## Commands
 
 - Node 22 (`nvm use`).
