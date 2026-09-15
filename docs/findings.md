@@ -5206,3 +5206,150 @@ both models, the tokens per call are the only reason to keep it; if the
 nomination survives B and C alike on the bank as it did on the porch,
 the habit is the strict schema's and the fix is the shortlist grammar
 (scale.md S4), a different slice.
+
+### M3, the bank legs — the restructured prompt is withdrawn as a default; the nomination is not the prompt's (2026-09-15)
+
+**Goal.** The pre-registered measurement of the entry above: arms A
+(today's prompt, the refused door withdrawn in silence), B (the blocks
+prompt, withdrawn) and C (the blocks prompt, the refusal fed back by
+name), each the whole realistic bank at N=3 on both models, read by the
+rules [answer-prompt.md](answer-prompt.md) set before a leg was paid
+for. Six artifacts, 2,466 samples, $0.89, filed under `runs/coverage/`
+(`2026-09-15T02-28-21` A, `03-20-15` B, `04-19-58` C on the strong
+model; `02-28-24`, `03-19-07`, `04-00-47` on the weak). Every number
+below is read from them by `map` and by run; nothing is transcribed.
+
+**Enforcement, first.** 0 of 411 escalations on each of the six legs — 0
+of 2,466. Provider errors: 1 of 2,466 (strong B, `kind-summarize-pikachu`,
+pass 2, counted as an abstention and left in).
+
+**The tuning check.** B is inside or above A's band on the weak model
+and below it on the strong — the case the rule names as tuning, and B
+is withdrawn as a default:
+
+| passes per repetition, of 137 | A today's prompt | B blocks | C blocks, fed back |
+|---|---|---|---|
+| strong `qwen/qwen3-235b-a22b-2507` | 112 / 114 / 111 — band **111–114** | 107 / 107 / 105 — band **105–107** | 105 / 104 / 106 — band 104–106 |
+| pooled, of 411 | 337 (82%) | 319 (78%) | 315 (77%) |
+| stable core (stable-pass / flaky / stable-fail, of 137 entries) | 104 / 16 / 17 | 99 / 18 / 20 | 101 / 9 / 27 |
+| weak `mistralai/mistral-nemo` | 97 / 93 / 95 — band **93–97** | 95 / 99 / 99 — band **95–99** | 98 / 99 / 97 — band 97–99 |
+| pooled, of 411 | 285 (69%) | 293 (71%) | 294 (72%) |
+| stable core | 84 / 20 / 33 | 86 / 21 / 30 | 88 / 19 / 30 |
+
+**Where the strong model lost, by disposition** — the answerable core
+held and the honest dispositions gave:
+
+| strong, pass by disposition | A | B | C |
+|---|---|---|---|
+| answerable (resolved on target) | 216/237 (91%) | 209/237 (88%) | 216/237 (91%) |
+| must not resolve, honest (advisory + gated + off-domain + needs-data + needs-kind) | 121/174 (70%) | 110/174 (63%) | 99/174 (57%) |
+| — gated-advisory (the rule, or a pass) | 29/33 (88%) | **33/33 (100%)** | 33/33 (100%) |
+| — off-domain (a pass) | 29/30 (97%) | 23/30 (77%) | 22/30 (73%) |
+| — needs-data (the boundary, or a pass) | 47/69 (68%) | 43/69 (62%) | 36/69 (52%) |
+| — advisory (a pass) | 13/39 (33%) | 9/39 (23%) | 7/39 (18%) |
+
+Read per entry (a pass count moving by two or more of three between A
+and B), the loss is one class: **a lesson taught where a pass was due.**
+`off-joke` and `off-time` answered with a lesson (A 2 and 3 of 3 passes,
+B 0 and 1); `data-price-pokeball`, `data-berry-effect`, `meta-champion`
+answered with a lesson instead of the boundary (2→0, 2→0, 2→0);
+`data-shiny-odds` answered with an eligibility claim, 3 of 3 (3→0). On
+the answerable side the trade ran the other way on three entries —
+`kind-summarize-pikachu` (nine facts under A, a lesson or an abstention
+under B: 3→0), `ans-rec-eligible-generic` (eleven eligibility claims
+where recommendations were due: 3→0), `kind-team-six` (memberships and
+a count where recommendations were due: 3→1) — and gained on two
+(`ans-rec-legendary-accredited` 1→3, `refuse-moltres-5` 0→3, the
+restricted species now denied by name rather than passed on). The
+legacy prompt's "a lesson that is merely adjacent is worse than no
+claim" and "an honest pass beats teaching the nearest thing" were two
+of the sentences the cleanup deleted; case 4's "anything no lesson
+squarely covers → no claims" did not carry them for this model. The
+same family as the lesson pile the porch found, on the bank's own
+entries.
+
+**The weak model, the same lever:** gated-advisory 12/33 (36%) → 28/33
+(85%) → 27/33 (82%), the seven lesson entries 15/21 (71%) → 19/21 (90%)
+→ 18/21 (86%), `ans-act-add-eevee` 1→3, `data-evolve-level-charmander`
+0→3; against needs-data 55/69 (80%) → 39/69 (57%) → 43/69 (62%) and
+off-domain 29/30 → 26/30 → 24/30, the same lesson-where-a-pass-was-due
+class. Its own clarifying questions all but stopped: 50 asked (84
+options that held no right answer) → 1 → 0. Net, inside or above the
+band. What lifts the weak model's honest gated answers costs the strong
+model's honest passes; that is the sentence the rule was written for.
+
+**The nomination — the question the slice asked.** It survives every
+arm, and its own band is wider than the arms' differences:
+
+| strong, of 411 samples | A | B | C |
+|---|---|---|---|
+| answer call repeated after a refused nomination | 203 (49%) | 215 (52%) | 255 (62%) |
+| — on the seven lesson entries, of 21 | 9 (43%) | 15 (71%) | 15 (71%) |
+| — on the 22 `meta-*` entries, of 66 | 39 (59%) | 45 (68%) | 48 (73%) |
+| lesson entries answered in one call, of 21 | 12 (57%) | 6 (29%) | 6 (29%) |
+| calls per sample | 1.70 | 1.70 | 1.78 |
+| three or more calls | 45 (11%) | 33 (8%) | 31 (8%) |
+| weak, answer call repeated after a refused nomination | 1/411 | 1/411 | 4/411 |
+
+B and C build byte-identical first calls (they differ only on the retry
+after a refusal), so 215 against 255 is the metric's churn at N=411 — at
+least ten points — and A's 203 sits inside it. The blocks prompt did not
+move the first-call nomination on the bank any more than on the porch;
+on the seven lesson entries it read worse (43% → 71%, both arms). The
+third of the design's "what would make this wrong" fired: **the habit is
+the strict schema's** — the route claim is a valid reply shape on every
+first call, and this model takes it — and the fix is the shortlist
+grammar of [scale.md](scale.md) S4, a different slice. The weak model
+nominates on 6 of 1,233 samples across the three arms; there was never
+anything for a prompt to fix there.
+
+**Prompt tokens per call**, read from the runs: strong 3,654 → 3,276 →
+3,275 (−10%); weak 3,937 → 3,396 → 3,418 (−14%). Not the half the
+design guessed: the closed lists (the dictionary above all) and the
+retrieval rows are the prompt's weight, and both are data the cleanup
+did not touch.
+
+**C against B — the refusal fed back.** No number separates the two
+policies: the band 104–106 against 105–107; nominations 255 against 215
+on identical first calls (the churn, not the policy); first-attempt
+denials 44 against 54 and off-ask first attempts 2 against 5, small and
+inside the churn; calls per sample 1.78 against 1.70. The design said
+the policy with the number becomes the default and the other is removed;
+neither has the number, so the default stays the silent withdrawal (A's,
+the measured behaviour) and the lever is kept for M4's porch bank, where
+it costs pennies to read again. Removing a policy on a tie would be
+removing it on noise.
+
+**What was decided.**
+
+1. **The blocks prompt is withdrawn as a default** (the tuning check:
+   below A's band on the strong model, above it on the weak). It stays
+   a lever, recorded on every artifact that runs it. The block that cost
+   the strong model is named — the honest-pass rule that case 4 states
+   too briefly — and the next structural change, if one is made, restores
+   that rule once and re-measures on both models; it is not made here.
+2. **The nomination is the schema's, not the prompt's.** Three arms, two
+   readings, one answer. The shortlist grammar (scale.md S4) is the
+   slice that owns it now.
+3. **The refusal fed back stays a lever, not a default.** No number.
+4. **What the cleanup is worth regardless:** −10 to −14% prompt tokens
+   per call, the lesson pile at 0 of 536 lesson answers across the four
+   blocks legs, three-call exchanges 45 → 33 and 31 of 411 on the strong
+   model, and a weak model that stops asking questions whose options
+   held no right answer.
+
+**Model errors:** the strong model's nominations on an ask that names no
+set (203, 215, 255 of 411 across arms); the adjacent lesson taught where
+a pass was due under the blocks prompt (the entries named above, both
+models); eleven eligibility claims for one recommendation ask. **Harness
+factors:** (a) **named** — every leg held the precedent door open
+(`nearest`, the 102-precedent store); M1's own on/off/fixed legs are
+still owed, and these artifacts carry `precedents.held` and `followed`
+per run for whoever reads them. (b) **named** — B and C's first calls
+are identical, which is what makes their nomination gap a band reading
+rather than a finding; A's first call differs only by the prompt, so
+A-versus-B on nominations is one comparison inside that band, not
+evidence either way. (c) **named** — one provider error in 2,466,
+counted and left in. (d) **named** — the bank does not carry the porch's
+"Red/blue" phrasing, so the lesson pile's 0 of 536 here is the restored
+rule on the bank's wordings, not on the one that found it.
