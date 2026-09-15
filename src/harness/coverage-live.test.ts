@@ -533,6 +533,41 @@ describe("the precedent door rides as a lever (docs/precedent.md)", () => {
     expect(renderCoverageArtifact(filed)).not.toContain("**prompt:");
   });
 
+  it("threads --offered-doors to the session, single-turn only, records it, and counts the door's funnel per sample", async () => {
+    expect(parseCoverageArgs(["--offered-doors"]).offeredDoors).toBe(true);
+    expect(parseCoverageArgs([]).offeredDoors).toBe(false);
+    expect(parseCoverageArgs(["--offered-doors", "--dialogues"]).errors[0]).toContain("single-turn");
+    const plan = await runCoverage(options(["--ids", "ans-fact-speed-pikachu", "--offered-doors"]));
+    expect(plan.lines.join("\n")).toContain("listing door:  offered only when the driver would accept it");
+
+    // "What's Pikachu's Speed stat?" names one thing: the door is withheld,
+    // and a model that would have nominated it answers instead.
+    const routes: (readonly string[])[] = [];
+    const opts = options(["--live", "--ids", "ans-fact-speed-pikachu", "--offered-doors"], {
+      makeProvider: () =>
+        new ScriptedProvider("coverage:offered", (request) => {
+          if (request.purpose !== "answer") return "decline";
+          routes.push(request.hint.doors?.routes ?? []);
+          return pikachuSpeed();
+        }),
+    });
+    const result = await runCoverage(opts);
+    expect(result.exitCode).toBe(0);
+    expect(routes[0]).toEqual(["profile"]);
+    const { artifact } = filedArtifact(opts.written);
+    expect(artifact.offeredDoors).toBe(true);
+    expect(artifact.runs[0]!.listingDoor).toEqual({ offered: false, nominated: false, served: false });
+    expect(artifact.map.listingDoor).toEqual({ runs: 1, offered: 0, nominated: 0, served: 0 });
+    expect(renderCoverageArtifact(artifact)).toContain("**offered door**");
+    expect(renderCoverageArtifact(artifact)).toContain("The listing door: offered on 0/1");
+    // Off: the door is offered, as today, and the run says so.
+    const plain = options(["--live", "--ids", "ans-fact-speed-pikachu"], { makeProvider: scripted(pikachuSpeed()) });
+    await runCoverage(plain);
+    const filed = filedArtifact(plain.written).artifact;
+    expect(filed.offeredDoors).toBeUndefined();
+    expect(filed.runs[0]!.listingDoor).toEqual({ offered: true, nominated: false, served: false });
+  });
+
   it("parses --precedents nearest|fixed and refuses the rest by name", () => {
     expect(parseCoverageArgs(["--precedents", "nearest"]).precedents).toBe("nearest");
     expect(parseCoverageArgs(["--precedents", "fixed", "--fixed-precedents", "a,b"]).fixedPrecedents).toEqual(["a", "b"]);

@@ -23,6 +23,7 @@ function run(entryId: string, disposition: Disposition, stage: FunnelStage, pass
     ...(extra.repaired === undefined ? {} : { repaired: extra.repaired }),
     ...(extra.nominationRetried === undefined ? {} : { nominationRetried: extra.nominationRetried }),
     ...(extra.promptTokens === undefined ? {} : { promptTokens: extra.promptTokens }),
+    ...(extra.listingDoor === undefined ? {} : { listingDoor: extra.listingDoor }),
     detail: extra.detail ?? "",
   };
 }
@@ -226,6 +227,19 @@ describe("post-repair outcomes are named apart (docs/recovery.md accounting)", (
     expect(older.prompting).toBeUndefined();
     expect(renderCoverage(older)).not.toContain("refused nomination");
     expect(renderCoverage(older)).not.toContain("Prompt tokens per model call");
+  });
+
+  it("reads the listing door's funnel — offered, nominated, served — from the runs that carry it", () => {
+    const map = coverageMap([
+      run("meta-game", "answerable", { kind: "resolved" }, true, { listingDoor: { offered: false, nominated: false, served: false } }),
+      run("ans-species", "answerable", { kind: "resolved" }, true, { listingDoor: { offered: true, nominated: true, served: true } }),
+      run("ans-fire", "answerable", { kind: "resolved" }, true, { listingDoor: { offered: true, nominated: false, served: false } }),
+      run("old", "answerable", { kind: "resolved" }, true),
+    ]);
+    expect(map.listingDoor).toEqual({ runs: 3, offered: 2, nominated: 1, served: 1 });
+    expect(renderCoverage(map)).toContain("**The listing door: offered on 2/3 (67%) first calls, nominated on 1/3 (33%), served on 1/3 (33%)**");
+    expect(coverageMap(RUNS).listingDoor).toBeUndefined();
+    expect(renderCoverage(coverageMap(RUNS))).not.toContain("The listing door");
   });
 
   it("an artifact filed before the repair existed renders without the line", () => {

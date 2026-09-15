@@ -64,6 +64,7 @@ export const LEDGER_CODES = {
   "route/refused": { tone: "refused", sentBack: "stood" },
   "route/withdrawn": { tone: "refused", sentBack: "withdrawn" },
   "route/refused-back": { tone: "refused", sentBack: "fed-back" },
+  "route/withheld": { tone: "plain" },
   "clarify/asked": { tone: "open" },
   "clarify/picked": { tone: "ok" },
   "memory/held": { tone: "plain" },

@@ -97,6 +97,9 @@ export interface CoverageArtifact {
   /** Set when a refused nomination was carried back to the model by name
    * rather than the door withdrawn in silence (docs/answer-prompt.md, M3). */
   refusalFeedback?: boolean;
+  /** Set when the listing door was offered only where the driver would
+   * accept it (docs/offered-door.md). */
+  offeredDoors?: boolean;
   /** Passes requested over the selected entries. The paid design runs the full
    * bank at 1 and the `should-refuse` slice at 3 — two artifacts, each honest
    * about which it is. */
@@ -157,6 +160,8 @@ export interface CoverageArtifactInput {
   prompt?: PromptShape;
   /** Set when a refused nomination was carried back by name (M3). */
   refusalFeedback?: boolean;
+  /** Set when the listing door was offered only where accepted (S4a). */
+  offeredDoors?: boolean;
   repetitions: number;
   dispositions?: readonly Disposition[];
   stoppedEarly: boolean;
@@ -193,6 +198,7 @@ export function buildCoverageArtifact(input: CoverageArtifactInput): CoverageArt
     ...(input.precedents === undefined ? {} : { precedents: input.precedents }),
     ...(input.prompt === undefined ? {} : { prompt: input.prompt }),
     ...(input.refusalFeedback === undefined ? {} : { refusalFeedback: input.refusalFeedback }),
+    ...(input.offeredDoors === undefined ? {} : { offeredDoors: input.offeredDoors }),
     repetitions: input.repetitions,
     ...(input.dispositions === undefined ? {} : { dispositions: input.dispositions }),
     stoppedEarly: input.stoppedEarly,
@@ -220,7 +226,7 @@ export function renderCoverageArtifact(artifact: CoverageArtifact): string {
     "<!-- Generated from a coverage artifact; do not hand-edit. Regenerate with `npm run coverage:map`. -->",
     "",
     `Generated from a **${artifact.label}** run started \`${artifact.startedAt}\` on \`${artifact.model.slug}\`, ` +
-      `${artifact.retrieval ? "**grounded by retrieval** (only the facts each question needs)" : artifact.grounded ? "**grounded** (the whole certified registry)" : "ungrounded (the proposer answered from its own knowledge)"}${artifact.gatedGrammar ? ", **gated grammar** (the schema narrowed to each question's nominated kinds)" : ""}${artifact.repair ? ", **repair** (strip-assertion resubmit on fact-mismatch denials)" : ""}${artifact.profile === true ? ", **profile** (scope set on the panel before the opener)" : ""}${artifact.feedback === true ? ", **feedback** (a named denial carried back to the model once)" : ""}${artifact.clarify === true ? ", **clarify** (the model may ask its own question)" : ""}${artifact.suggest === true ? ", **suggest** (the model may offer follow-ups)" : ""}${artifact.precedents === undefined ? "" : `, **precedents: ${artifact.precedents.mode}** (${artifact.precedents.mode === "fixed" ? "the same few accepted exchanges shown on every call" : `the nearest accepted exchanges shown as examples, k=${artifact.precedents.k}, threshold ${artifact.precedents.threshold}`}; store \`${artifact.precedents.digest}\`)`}${artifact.prompt === undefined ? "" : `, **prompt: ${artifact.prompt}** (${artifact.prompt === "blocks" ? "the fixed block sequence — task and shape first, context only when present, each rule once" : "the prompt as it accreted"})`}${artifact.refusalFeedback === true ? ", **refusal fed back** (a refused nomination carried back to the model by name)" : ""}${artifact.raw === undefined ? "" : ", **raw** (the same model ungoverned beside it, for the governance tax)"}, ` +
+      `${artifact.retrieval ? "**grounded by retrieval** (only the facts each question needs)" : artifact.grounded ? "**grounded** (the whole certified registry)" : "ungrounded (the proposer answered from its own knowledge)"}${artifact.gatedGrammar ? ", **gated grammar** (the schema narrowed to each question's nominated kinds)" : ""}${artifact.repair ? ", **repair** (strip-assertion resubmit on fact-mismatch denials)" : ""}${artifact.profile === true ? ", **profile** (scope set on the panel before the opener)" : ""}${artifact.feedback === true ? ", **feedback** (a named denial carried back to the model once)" : ""}${artifact.clarify === true ? ", **clarify** (the model may ask its own question)" : ""}${artifact.suggest === true ? ", **suggest** (the model may offer follow-ups)" : ""}${artifact.precedents === undefined ? "" : `, **precedents: ${artifact.precedents.mode}** (${artifact.precedents.mode === "fixed" ? "the same few accepted exchanges shown on every call" : `the nearest accepted exchanges shown as examples, k=${artifact.precedents.k}, threshold ${artifact.precedents.threshold}`}; store \`${artifact.precedents.digest}\`)`}${artifact.prompt === undefined ? "" : `, **prompt: ${artifact.prompt}** (${artifact.prompt === "blocks" ? "the fixed block sequence — task and shape first, context only when present, each rule once" : "the prompt as it accreted"})`}${artifact.refusalFeedback === true ? ", **refusal fed back** (a refused nomination carried back to the model by name)" : ""}${artifact.offeredDoors === true ? ", **offered door** (the listing route in the grammar only where the driver would accept it)" : ""}${artifact.raw === undefined ? "" : ", **raw** (the same model ungoverned beside it, for the governance tax)"}, ` +
       `${artifact.repetitions} repetition(s)${artifact.stoppedEarly ? " — **stopped early** on an enforcement escalation; the runs below are fewer than requested" : ""}; ${scope}.`,
     "",
     "## Provenance",
