@@ -163,6 +163,19 @@ matcher is the bottleneck. The gate below will say which it is — the
 "coverage is too narrow" case in "What would make this wrong" is exactly
 the signal that aliases are not enough.
 
+**Tested, 2026-09-17: a lexical index does not do it** (findings §24,
+"The BM25 matcher"). A hand-rolled BM25 over the lesson text, read on
+the same held-out set, gained one paraphrase (16 of 25 against 15) and
+offered a topical lesson on 37 of 45 questions that must not be
+answered, reopening the hole this door closed. The reason is structural:
+the fact questions the door must refuse are about the same *subjects* as
+the lessons; what separates them is the ask's *form* — "what is a…"
+against "who is the…" — and form is what a retriever discards as stop
+words. The alias phrasings encode form. A lexical index cannot replace
+them for this door. An embedding model, which captures form as well as
+topic, is a different hypothesis, not deterministic, and belongs behind
+S3 with the same two-sided reading to clear.
+
 ## Mechanism
 
 1. **Pack, new version.** Each `curriculum` entry gets a required
@@ -240,14 +253,17 @@ number as count and percentage.
    2,466 today). A miss turned into an honest refusal is the win. A miss
    turned into an abstention is a smaller win, counted separately.
 6. **Enforcement.** 0 of N escalations, both models, denominator stated.
-7. **Recall on phrasings the aliases were not written from** (added
+7. **Recall *and precision* on phrasings the aliases were not written from** (added
    2026-09-17, findings §24 "The activation ceiling"). The lesson door's
    paraphrase column on the activation gauge — the bank's reviewed
    `phrasings` of the 18 lesson questions, which are the held-out set and
    must never be the source of an alias — not below today's 15 of 25
    (60%) after any change, and the number to raise before the door is
    the default. Item 2 cannot read this: the bank runs the canonical
-   intents, which the aliases were written from.
+   intents, which the aliases were written from. The gauge reads the
+   other side too: the boundary alone offered on every must-not-answer
+   question, 45 of 45 and 32 of 32 today — a matcher is read on both or
+   on neither.
 
 Cost: about $0.30 per strong leg, $0.04 per weak leg; under $0.70 for
 the four, after the live check for about three cents.

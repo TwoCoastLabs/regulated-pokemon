@@ -40,7 +40,8 @@ import { AccordError, violation } from "../kernel/violation.js";
 import type { BankEntry, QuestionBank } from "./bank.js";
 import { type FillerKind, nominateFillerKinds } from "./grammar-gate.js";
 import { retrievalSelection } from "./reference.js";
-import { lessonAskCheck } from "../session/session.js";
+import { type LessonMatcherId, lessonOffer } from "../session/lesson-matcher.js";
+import { MUST_NOT_RESOLVE } from "./decline-ledger.js";
 
 // --- the scope-phrasing bank ------------------------------------------------
 
@@ -176,16 +177,39 @@ export function nominationReadings(bank: QuestionBank): DoorReading[] {
  * The canonical intents are the wordings the aliases were written from; the
  * paraphrases are the ones they were not, and that column is the number.
  */
-export function lessonReadings(world: { registry: CertifiedRegistry; pack: AccordPack }, bank: QuestionBank): DoorReading[] {
+export function lessonReadings(world: { registry: CertifiedRegistry; pack: AccordPack }, bank: QuestionBank, matcher: LessonMatcherId = "alias"): DoorReading[] {
   const boundary = world.pack.recordsBoundary?.lessonId;
   const readings: DoorReading[] = [];
   for (const entry of bank.entries) {
     const acceptable = entry.expectBlockIds ?? [];
     if (acceptable.length === 0 || !(entry.expectClaimKinds ?? []).includes("explanation")) continue;
     wordingsOf(entry).forEach((wording, index) => {
-      const offer = lessonAskCheck(world, wording);
+      const offer = lessonOffer(matcher, world, wording);
       const engaged = acceptable.some((id) => offer.offered.includes(id));
       const instead = offer.offered.filter((id) => id !== boundary);
+      readings.push({ entryId: entry.id, wording, canonical: index === 0, engaged, ...(engaged ? {} : { offered: instead }) });
+    });
+  }
+  return readings;
+}
+
+/**
+ * The lesson door's other half: for every entry that must not receive a
+ * certified answer, did the door offer the boundary lesson *alone*? Any
+ * concept or orientation lesson offered here is one the model may take in
+ * place of a decline — the decline ledger's largest class (§23). Recall
+ * above says what the door lets through; this says what it keeps out, and
+ * a matcher is read on both or on neither.
+ */
+export function lessonPrecisionReadings(world: { registry: CertifiedRegistry; pack: AccordPack }, bank: QuestionBank, matcher: LessonMatcherId = "alias"): DoorReading[] {
+  const boundary = world.pack.recordsBoundary?.lessonId;
+  const readings: DoorReading[] = [];
+  for (const entry of bank.entries) {
+    if (!MUST_NOT_RESOLVE.includes(entry.disposition)) continue;
+    wordingsOf(entry).forEach((wording, index) => {
+      const offer = lessonOffer(matcher, world, wording);
+      const instead = offer.offered.filter((id) => id !== boundary);
+      const engaged = instead.length === 0;
       readings.push({ entryId: entry.id, wording, canonical: index === 0, engaged, ...(engaged ? {} : { offered: instead }) });
     });
   }
@@ -245,14 +269,21 @@ export interface DoorRate {
 export interface ActivationReport {
   retrieval: DoorRate;
   nomination: DoorRate;
-  /** The lesson door; absent when the pack declares no lesson coverage,
-   * since a door that does not exist has no ceiling. */
+  /** Which matcher the lesson door ran for this report. */
+  lessonMatcher: LessonMatcherId;
+  /** The lesson door's recall — an acceptable lesson offered on a lesson
+   * question; absent when the pack declares no lesson coverage, since a
+   * door that does not exist has no ceiling. */
   lesson?: DoorRate;
+  /** The lesson door's precision — the boundary lesson alone offered on a
+   * question that must not receive a certified answer. */
+  lessonPrecision?: DoorRate;
   scope: Record<ScopeOutcome, number>;
   /** The readings behind every number, so a rate is never the only record. */
   retrievalMisses: readonly DoorReading[];
   nominationMisses: readonly DoorReading[];
   lessonMisses: readonly DoorReading[];
+  lessonPrecisionMisses: readonly DoorReading[];
   scopeReadings: readonly ScopeReading[];
 }
 
@@ -265,22 +296,31 @@ function rate(readings: readonly DoorReading[]): DoorRate {
   };
 }
 
-export function activationReport(registry: CertifiedRegistry, pack: AccordPack, bank: QuestionBank, scopeBank: ScopePhrasingBank): ActivationReport {
+export function activationReport(
+  registry: CertifiedRegistry,
+  pack: AccordPack,
+  bank: QuestionBank,
+  scopeBank: ScopePhrasingBank,
+  lessonMatcher: LessonMatcherId = "alias",
+): ActivationReport {
   const retrieval = retrievalReadings(registry, bank);
   const nomination = nominationReadings(bank);
   const declares = pack.curriculum.some((lesson) => lesson.covers !== undefined);
-  const lesson = declares ? lessonReadings({ registry, pack }, bank) : [];
+  const lesson = declares ? lessonReadings({ registry, pack }, bank, lessonMatcher) : [];
+  const precision = declares ? lessonPrecisionReadings({ registry, pack }, bank, lessonMatcher) : [];
   const scope = scopeReadings(pack, scopeBank);
   const counts: Record<ScopeOutcome, number> = { bound: 0, unbound: 0, "bound-wrong": 0, contradicted: 0, inert: 0 };
   for (const reading of scope) counts[reading.outcome] += 1;
   return {
     retrieval: rate(retrieval),
     nomination: rate(nomination),
-    ...(declares ? { lesson: rate(lesson) } : {}),
+    lessonMatcher,
+    ...(declares ? { lesson: rate(lesson), lessonPrecision: rate(precision) } : {}),
     scope: counts,
     retrievalMisses: retrieval.filter((reading) => !reading.engaged),
     nominationMisses: nomination.filter((reading) => !reading.engaged),
     lessonMisses: lesson.filter((reading) => !reading.engaged),
+    lessonPrecisionMisses: precision.filter((reading) => !reading.engaged),
     scopeReadings: scope,
   };
 }
@@ -297,7 +337,10 @@ export function renderActivation(report: ActivationReport): string {
   lines.push(`| Retrieval pulled an acceptable entity | ${pct(report.retrieval.canonical.engaged, report.retrieval.canonical.total)} | ${pct(report.retrieval.paraphrase.engaged, report.retrieval.paraphrase.total)} |`);
   lines.push(`| Grammar nominated the expected filler kind | ${pct(report.nomination.canonical.engaged, report.nomination.canonical.total)} | ${pct(report.nomination.paraphrase.engaged, report.nomination.paraphrase.total)} |`);
   if (report.lesson !== undefined) {
-    lines.push(`| Lesson door offered an acceptable lesson | ${pct(report.lesson.canonical.engaged, report.lesson.canonical.total)} | ${pct(report.lesson.paraphrase.engaged, report.lesson.paraphrase.total)} |`);
+    lines.push(`| Lesson door (${report.lessonMatcher}) offered an acceptable lesson | ${pct(report.lesson.canonical.engaged, report.lesson.canonical.total)} | ${pct(report.lesson.paraphrase.engaged, report.lesson.paraphrase.total)} |`);
+  }
+  if (report.lessonPrecision !== undefined) {
+    lines.push(`| Lesson door (${report.lessonMatcher}) offered the boundary alone on a must-not-answer | ${pct(report.lessonPrecision.canonical.engaged, report.lessonPrecision.canonical.total)} | ${pct(report.lessonPrecision.paraphrase.engaged, report.lessonPrecision.paraphrase.total)} |`);
   }
   lines.push("");
   const total = report.scopeReadings.length;
@@ -320,6 +363,14 @@ export function renderActivation(report: ActivationReport): string {
     lines.push("");
     for (const miss of report.lessonMisses) {
       lines.push(`- \`${miss.entryId}\`${miss.canonical ? " (canonical)" : ""}: “${miss.wording}” → ${(miss.offered ?? []).map((id) => `\`${id}\``).join(", ") || "boundary only"}`);
+    }
+    lines.push("");
+  }
+  if (report.lessonPrecisionMisses.length > 0) {
+    lines.push("Lesson door offered a lesson on a question that must not be answered:");
+    lines.push("");
+    for (const miss of report.lessonPrecisionMisses) {
+      lines.push(`- \`${miss.entryId}\`${miss.canonical ? " (canonical)" : ""}: “${miss.wording}” → ${(miss.offered ?? []).map((id) => `\`${id}\``).join(", ")}`);
     }
     lines.push("");
   }

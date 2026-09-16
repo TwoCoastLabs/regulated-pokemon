@@ -2351,6 +2351,25 @@ describe("the driver's ledger — every step of an exchange, in fixed wording, b
     expect(enums).toEqual([["what-the-records-hold"], ["what-the-records-hold"]]);
   });
 
+  it("the lesson door runs the matcher the session names — the BM25 index reads a misspelling the aliases cannot", async () => {
+    // src/session/lesson-matcher.ts: the index is a lever behind
+    // deps.lessonMatcher, read on the activation gauge (findings §24) and
+    // not threaded to the tools, since the gauge says it must not ship.
+    const seen: (readonly string[] | undefined)[] = [];
+    const provider = new ScriptedProvider("lesson-matcher", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      seen.push(request.hint.doors?.lessons);
+      return JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-the-records-hold" }] });
+    });
+    const alias: SessionDeps = { ...deps(provider), lessonDoor: true };
+    await say(await setProfile(startSession(), PROFILE_SCOPE, alias), "how do i cath a pokemon", alias);
+    expect(seen.at(-1)).toEqual(["what-the-records-hold"]);
+    const bm25: SessionDeps = { ...deps(provider), lessonDoor: true, lessonMatcher: "bm25" };
+    const state = await say(await setProfile(startSession(), PROFILE_SCOPE, bm25), "how do i cath a pokemon", bm25);
+    expect(seen.at(-1)).toContain("how-catch");
+    expect(state.exchanges.at(-1)!.steps.find((entry) => entry.code === "route/narrowed")?.text).toContain("how-catch");
+  });
+
   it("the lesson door on a pack that declares no coverage offers every lesson and says so on the trail", async () => {
     // The pre-door packs still govern filed records; with the lever on
     // against one, the door cannot narrow and the step names that, so a
