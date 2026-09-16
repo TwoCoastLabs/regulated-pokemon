@@ -188,6 +188,90 @@ describe("a pack that cannot be trusted is refused by name", () => {
     );
   });
 
+  describe("lesson coverage is all or none, and the boundary lesson is exactly one (docs/lesson-door.md)", () => {
+    type Mutable = { curriculum: { id: string; covers?: { aliases: string[]; scope: string } }[] };
+    const lessons = (draft: AccordPack) => (draft as unknown as Mutable).curriculum;
+
+    it("the shipped pack declares coverage on every lesson", () => {
+      expect(pack.curriculum.every((lesson) => lesson.covers !== undefined)).toBe(true);
+      expect(pack.curriculum.filter((lesson) => lesson.covers?.scope === "boundary").map((lesson) => lesson.id)).toEqual([
+        pack.recordsBoundary?.lessonId,
+      ]);
+    });
+
+    it("loads a pack with no coverage at all as the pre-door pack — filed records replay under one", () => {
+      const without = loadWith((draft) => {
+        for (const lesson of lessons(draft)) delete lesson.covers;
+      });
+      expect(without.ok).toBe(true);
+    });
+
+    it("refuses a half-declared catalogue", () => {
+      expect(denials(loadWith((draft) => delete lessons(draft)[0]!.covers))).toContain("IA-6/pack-lesson-coverage-malformed");
+    });
+
+    it("refuses a concept lesson with no aliases — it could never be offered", () => {
+      expect(
+        denials(
+          loadWith((draft) => {
+            const lesson = lessons(draft).find((entry) => entry.covers?.scope === "concept")!;
+            lesson.covers = { aliases: [], scope: "concept" };
+          }),
+        ),
+      ).toContain("IA-6/pack-lesson-coverage-malformed");
+      expect(
+        denials(
+          loadWith((draft) => {
+            const lesson = lessons(draft).find((entry) => entry.covers?.scope === "concept")!;
+            lesson.covers = { aliases: ["gym leader", " "], scope: "concept" };
+          }),
+        ),
+      ).toContain("IA-6/pack-lesson-coverage-malformed");
+    });
+
+    it("refuses an unknown scope", () => {
+      expect(
+        denials(
+          loadWith((draft) => {
+            lessons(draft)[0]!.covers = { aliases: ["x"], scope: "topical" };
+          }),
+        ),
+      ).toContain("IA-6/pack-lesson-coverage-malformed");
+    });
+
+    it("refuses the boundary lesson claiming concept coverage — it would stop being the refusal", () => {
+      // Declared as a concept: the boundary scope is then carried by nobody.
+      expect(
+        denials(
+          loadWith((draft) => {
+            const boundary = lessons(draft).find((entry) => entry.id === draft.recordsBoundary?.lessonId)!;
+            boundary.covers = { aliases: ["records"], scope: "concept" };
+          }),
+        ),
+      ).toContain("IA-6/pack-records-boundary-malformed");
+      // Kept as boundary but given aliases: offered as a topical answer.
+      expect(
+        denials(
+          loadWith((draft) => {
+            const boundary = lessons(draft).find((entry) => entry.id === draft.recordsBoundary?.lessonId)!;
+            boundary.covers = { aliases: ["records"], scope: "boundary" };
+          }),
+        ),
+      ).toContain("IA-6/pack-lesson-coverage-malformed");
+    });
+
+    it("refuses a second lesson carrying the boundary scope", () => {
+      expect(
+        denials(
+          loadWith((draft) => {
+            const other = lessons(draft).find((entry) => entry.covers?.scope === "concept")!;
+            other.covers = { aliases: [], scope: "boundary" };
+          }),
+        ),
+      ).toContain("IA-6/pack-records-boundary-malformed");
+    });
+  });
+
   describe("the data dictionary is pinned to the registry, both ways (docs/routing.md, R3b)", () => {
     type Mutable = { dictionary: { id: string; subject: string; name: string; description: string; aliases: string[] }[] };
 

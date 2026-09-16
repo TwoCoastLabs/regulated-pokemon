@@ -181,6 +181,41 @@ export interface CurriculumRule {
   id: string;
   article: ArticleId;
   block: DisclosureBlockRule;
+  /**
+   * What ask this lesson answers (docs/lesson-door.md). Read by the driver
+   * to decide which lessons an answer call may offer; never by the kernel,
+   * which verifies the lesson taught, not whether it was the right one to
+   * offer. Absent on every lesson of a pack filed before the lesson door
+   * existed — such a pack offers its whole catalogue, as it did when its
+   * records were filed. A pack that declares coverage on one lesson must
+   * declare it on all: a half-declared catalogue is refused at load.
+   */
+  covers?: LessonCoverage;
+}
+
+/**
+ * What a lesson is about, as reviewed pack data.
+ *
+ * `aliases` are the surface forms of the concept — "gym leader", "gym
+ * leaders". An ask containing one is an ask this lesson may answer. They
+ * are safe as bare words where a value alias is not (hard-won lesson 1):
+ * a match here offers a route, it mints nothing, so a wrong match widens
+ * the offer back toward the whole catalogue and can never certify a
+ * false claim.
+ *
+ * `scope` says how the lesson is offered. A `concept` lesson is about one
+ * thing and is offered when its alias is in the ask. An `orientation`
+ * lesson is about the game as a whole ("what is this game?") and is
+ * offered only when no concept lesson matched — they are the lessons an
+ * unanswerable ask is nearest to, and ordering them behind the concept
+ * lessons is what keeps "how long does the game take?" from drawing one.
+ * The `boundary` lesson is the records' honest refusal; it is always
+ * offered, declares no aliases, and is the one the pack's
+ * `recordsBoundary` names — exactly one lesson may carry this scope.
+ */
+export interface LessonCoverage {
+  aliases: readonly string[];
+  scope: "concept" | "orientation" | "boundary";
 }
 
 /**
@@ -679,9 +714,78 @@ export function loadPack(input: unknown, registry: CertifiedRegistry): Resolutio
     ...checkGameRules(pack.gameRules),
     ...checkVocabulary(pack.vocabulary),
     ...(document.dictionary === undefined ? [] : checkDictionary(pack.dictionary, registry)),
+    ...checkLessonCoverage(pack),
   ];
   if (violations.length > 0) return { ok: false, violations };
   return { ok: true, value: pack };
+}
+
+/**
+ * Lesson coverage (docs/lesson-door.md), when the pack declares any.
+ *
+ * All or none: a pack with no `covers` on any lesson is the pre-door pack
+ * and offers its whole catalogue, which is what its filed records replay
+ * under. A pack that declares coverage on some lessons and not others
+ * would leave the undeclared ones silently unofferable, so it is refused.
+ * Within a declared catalogue: a concept or orientation lesson needs at
+ * least one alias, each a non-empty string; the boundary lesson declares
+ * none; and exactly the lesson `recordsBoundary` names carries the
+ * `boundary` scope — a boundary lesson that could also be chosen as a
+ * topical answer would stop being the refusal, and the scorer's
+ * boundary-taught rule would start passing deflections.
+ */
+function checkLessonCoverage(pack: AccordPack): Violation[] {
+  const declared = pack.curriculum.filter((lesson) => lesson.covers !== undefined);
+  if (declared.length === 0) return [];
+  const violations: Violation[] = [];
+  const bad = (lessonId: string, message: string, actual?: string): Violation =>
+    violation("IA-6", "pack-lesson-coverage-malformed", `lesson "${lessonId}": ${message}`, actual === undefined ? undefined : { actual });
+  for (const lesson of pack.curriculum) {
+    const covers = lesson.covers;
+    if (covers === undefined) {
+      violations.push(bad(lesson.id, "declares no coverage while other lessons do — a half-declared catalogue"));
+      continue;
+    }
+    if (typeof covers !== "object" || covers === null || !Array.isArray(covers.aliases)) {
+      violations.push(bad(lesson.id, "coverage is not { aliases, scope }"));
+      continue;
+    }
+    if (covers.scope !== "concept" && covers.scope !== "orientation" && covers.scope !== "boundary") {
+      violations.push(bad(lesson.id, "scope is not concept, orientation or boundary", String(covers.scope)));
+      continue;
+    }
+    if (covers.aliases.some((alias) => typeof alias !== "string" || alias.trim().length === 0)) {
+      violations.push(bad(lesson.id, "an alias is empty or not a string"));
+    }
+    if (covers.scope === "boundary" && covers.aliases.length > 0) {
+      violations.push(bad(lesson.id, "the boundary lesson declares aliases — it would be offered as a topical answer", covers.aliases.join(", ")));
+    }
+    if (covers.scope !== "boundary" && covers.aliases.length === 0) {
+      violations.push(bad(lesson.id, "a concept or orientation lesson declares no aliases — it could never be offered"));
+    }
+  }
+  const boundaryScoped = pack.curriculum.filter((lesson) => lesson.covers?.scope === "boundary").map((lesson) => lesson.id);
+  const named = pack.recordsBoundary?.lessonId;
+  if (named === undefined) {
+    if (boundaryScoped.length > 0) {
+      violations.push(bad(boundaryScoped[0]!, "carries the boundary scope but the pack names no records boundary"));
+    }
+  } else if (boundaryScoped.length !== 1 || boundaryScoped[0] !== named) {
+    violations.push(
+      violation(
+        "IA-6",
+        "pack-records-boundary-malformed",
+        `the records boundary names "${named}" but the boundary scope is carried by ${boundaryScoped.length === 0 ? "no lesson" : boundaryScoped.map((id) => `"${id}"`).join(", ")}`,
+        { actual: boundaryScoped.join(", ") },
+      ),
+    );
+  }
+  return violations;
+}
+
+/** Whether the pack declares what each lesson answers (docs/lesson-door.md). */
+export function declaresLessonCoverage(pack: AccordPack): boolean {
+  return pack.curriculum.some((lesson) => lesson.covers !== undefined);
 }
 
 /**
