@@ -4,10 +4,26 @@
 
 **What if a Pokémon assistant were regulated like a bank?**
 
-This project is a working demonstration of a question that matters far beyond
-games: how do you make an AI agent *provably* factual and compliant — not
-"usually right", but architecturally unable to ship a wrong claim or an
-unauthorized action?
+This project is a reference architecture and falsification harness for a
+question that matters far beyond games: how do you make invalid commitments
+unreachable in a customer-facing or mission-critical AI agent, rather than
+merely less frequent?
+
+Within an explicitly declared **assurance envelope**, every governed claim
+must be supported by a versioned, certified knowledge base, every applicable
+policy obligation must be satisfied, and every consequential action must match
+what the user saw and authorized. The model may interpret and propose; it
+cannot create facts or authority. Success is **zero invalid commits**, together
+with a measured and improving stable resolution rate over representative
+in-scope demand. When proof is unavailable, the system asks, routes, or
+abstains — and records why.
+
+The guarantee is deliberately bounded. It proves conformance to the certified
+world and policy pack; source correctness, certification quality, schema
+completeness, software correctness, and anything outside the governed surface
+remain explicit parts of the assurance case, never assumptions hidden inside
+the word "truth." See [the assurance case](docs/assurance-case.md) for the
+boundary, scorecard, falsification criteria, and research sequence.
 
 Getting a Pokémon fact wrong is harmless. That is exactly why Pokémon is the
 right vehicle: we can invite you to attack the agent, run deliberately weak
@@ -23,23 +39,31 @@ a playful stand-in for a real rule from real regulated industries —
 suitability, restricted products, mandatory disclosures, complete-comparison
 claims, order confirmation, books-and-records.
 
+The first and cheapest deployment wedge is read-only knowledge work: the agent
+may state a certified fact or honestly abstain. That is the customer-facing
+problem regulated teams must solve before advice or agency is useful. The demo
+then extends the same proof chain to personalization, required disclosures and
+consequential actions.
+
 The agent ("the Advisor") must follow the Accord. Not by prompting it nicely —
 by an enforcement kernel that gates what the Advisor is allowed to *commit*:
 every regulated claim must resolve to a certified fact, every required
 disclosure must be verifiably visible in the final render, every consequential
 action must match exactly what the trainer saw and confirmed. The model may
-interpret, propose, and explain; it may not mint facts, choose scope
-silently, or act on anything unproven.
+interpret and propose; it may not mint facts, choose scope silently, or act on
+anything unproven.
 
 ## The thesis
 
 **Enforcement is structural; usefulness is empirical.** A stronger model gives
 better answers; it does not give guarantees. The demo runs the same harness
 over strong and deliberately weak models: the weak model gets *less useful*
-(more clarifying questions, more abstentions) while the safety properties —
-zero fabricated facts, zero wrong-scope commits, zero unauthorized actions —
-hold identically on both. That separation is the whole point, and it comes
-from engineering, not from model capability.
+(more clarifying questions, more abstentions) while the committed-side safety
+properties — zero unsupported governed claims, zero wrong-scope commits, zero
+unauthorized actions — hold identically on both. Relevance and domain coverage
+remain measured targets: a certified fact about the wrong subject or in answer
+to the wrong question is a miss, not a safety success. That separation is the
+whole point, and it comes from engineering, not from model capability.
 
 ## Status
 
@@ -65,8 +89,10 @@ Private, work in progress.
 - [x] Real models behind that same seam: an OpenRouter driver, a strong/weak/
       adversarial line-up, cost reported apart from both other metrics, and a
       filed run artifact (`npm run harness:live`)
-- [ ] Published two-model numbers and the results page generated from those
+- [x] Filed two-model numbers and generated the results page from those
       artifacts
+- [x] Explicit assurance envelope, correctness taxonomy, scorecard and
+      falsification criteria (`docs/assurance-case.md`)
 - [x] Demo UI: the filed run replayed as pages (chat, certified page,
       compliance console), and the crucible with buttons on it — every
       sabotage below runnable in the browser, against the real kernel

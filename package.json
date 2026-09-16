@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "description": "What if a Pokémon assistant were regulated like a bank? An enforcement-kernel demo of provably factual, compliant AI agents.",
+  "description": "What if a Pokémon assistant were regulated like a bank? A falsification harness for bounded, verifiable AI commitments.",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=22"

@@ -6,7 +6,8 @@ the art, and lists forward directions as hypotheses. Every number cites the
 findings section that filed it (§N is a top-level section of findings.md;
 "iteration N" is an entry in its §17 iteration log); the design itself is
 [architecture.md](architecture.md), the canon is
-[the-indigo-accord.md](the-indigo-accord.md), and the domain bridge is
+[the-indigo-accord.md](the-indigo-accord.md), the boundary of the guarantee is
+[the assurance case](assurance-case.md), and the domain bridge is
 [generalization.md](generalization.md). This note does not repeat them; it
 connects them.*
 
@@ -16,13 +17,15 @@ connects them.*
 
 ### The problem
 
-An AI agent that advises, discloses, and acts in a regulated setting has to be
-*provably* factual and compliant — not usually right, but architecturally
-unable to ship an unproven claim or an unauthorized act. Every mainstream
-approach to that problem is probabilistic: better models, better prompts,
-retrieval to ground the model, a classifier at the output to catch the rest.
-Each lowers a rate. None makes a class of error impossible, and a regulator
-does not accept a rate for a class of error the rulebook forbids outright.
+An AI agent that advises, discloses, and acts in a regulated setting has to
+make governed commitments that are provably supported and compliant within a
+declared assurance envelope — not usually right, but architecturally unable to
+ship an unproven claim or an unauthorized act inside that boundary. Every
+mainstream approach to that problem is probabilistic: better models, better
+prompts, retrieval to ground the model, a classifier at the output to catch
+the rest. Each lowers a rate. None makes a class of error impossible, and a
+regulator does not accept a rate for a class of error the rulebook forbids
+outright.
 
 The project's claim is that the missing piece is **architecture, not
 capability**: certain statements and actions must be impossible to *commit*
@@ -37,9 +40,10 @@ irreversibility consent, books and records.
 ### The thesis, in one sentence
 
 **Enforcement is structural; usefulness is empirical.** A stronger model
-answers more often; it does not change whether a wrong claim can ship. The
-evidence is the same harness run over strong and deliberately weak models,
-where enforcement zeros hold flat while usefulness moves
+answers more often; it does not change whether an unsupported governed claim
+can cross the commit boundary. The evidence is the same harness run over
+strong and deliberately weak models, where enforcement zeros hold flat while
+usefulness moves
 ([findings.md](findings.md), the timeline table, and iteration 22's per-entry churn:
 outcomes flip among *resolved / denied / abstained* and never once cross the
 gate).

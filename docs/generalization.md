@@ -1,11 +1,14 @@
 # Beyond Kanto: generalizing the architecture
 
 This project answers a question with a toy so the answer is checkable: **can an
-AI agent be useful and *architecturally* unable to ship a wrong claim or an
-unauthorized act?** The demo's two axes are the two halves of that sentence.
-Usefulness is empirical — measured per model, per corpus, with error bars
-(docs/findings.md). Non-fabrication is structural — enforced by construction
-and demonstrated by failure injection, not by a benchmark.
+AI agent be useful while an unsupported governed claim or unauthorized act is
+architecturally uncommittable inside a declared assurance envelope?** The
+demo's two axes are the two halves of that sentence. Usefulness is empirical —
+measured per model, per corpus, with error bars (docs/findings.md).
+Non-fabrication at the governed commit boundary is structural — enforced by
+construction and demonstrated by failure injection, not by a benchmark. The
+boundary, correctness taxonomy and falsification criteria are stated in
+[the assurance case](assurance-case.md).
 
 The toy is Pokémon. The intended reader works in wealth management, banking,
 healthcare, or safety-critical operations. This document is the bridge: an

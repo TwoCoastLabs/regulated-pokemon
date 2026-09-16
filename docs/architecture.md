@@ -51,7 +51,8 @@ neither may be traded for the other: a direction that lifts usefulness only
 by weakening a check is wrong, not the check. The measured form of each is
 in [generalization.md](generalization.md) §11, "The north stars".
 
-Two properties are non-negotiable and testable:
+Two properties are non-negotiable and testable inside the declared
+[assurance envelope](assurance-case.md):
 
 - **Fail closed.** Every stage that cannot prove, refuses. The refusal names
   its article (`IA-3/fabricated-entity`, `IA-6/exhibit-hidden-collapsed-details`, …).
