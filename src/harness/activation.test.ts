@@ -11,6 +11,9 @@ import { demoWorld } from "../demo/files.js";
 import {
   activationReport,
   lessonReadings,
+  LESSON_PARAPHRASES_PATH,
+  loadLessonParaphrases,
+  readLessonParaphrases,
   loadScopePhrasings,
   nominationReadings,
   readScopePhrasings,
@@ -101,7 +104,8 @@ describe("the doors, read one wording at a time", () => {
 });
 
 describe("the activation ceiling, pinned", () => {
-  const report = activationReport(world.registry, world.pack, bank, scopeBank);
+  const paraphrases = readLessonParaphrases(bank);
+  const report = activationReport(world.registry, world.pack, bank, scopeBank, "alias", paraphrases);
 
   // The numbers findings iteration 29 quotes.
   it("pins the filed numbers", () => {
@@ -119,6 +123,24 @@ describe("the activation ceiling, pinned", () => {
     expect(report.lesson).toEqual({ canonical: { engaged: 18, total: 18 }, paraphrase: { engaged: 15, total: 25 } });
     expect(report.lessonMisses).toHaveLength(10);
     expect(report.lessonMisses.every((miss) => !miss.canonical)).toBe(true);
+  });
+
+  it("pins the second held-out set: 72 fresh wordings, written before the widening of 2026-09-17", () => {
+    // The baseline the widening is read against. Pinned in the commit
+    // before the aliases changed, so the before and after are both in git.
+    expect(report.lessonHeldOut).toEqual({ engaged: 33, total: 72 });
+    expect(report.lessonHeldOutMisses).toHaveLength(39);
+    // One wording per entry carries a spelling mistake; the alias matcher
+    // has no tolerance for one, so each is a miss unless the mistake falls
+    // outside the matched phrase ("how do i catch pokemn" contains "how do
+    // i catch"; "what is a gym leadr" contains "what is a gym") — two do.
+    const typos = ["wat is pokemon", "how do i pley this game", "whats the objectve of the game", "what are badgs", "what do tyeps do", "how do i catch pokemn", "just startd, what now", "whats the point of levling", "red vs blu whats the diffrence", "is it hrad for beginners", "what is a pokmon", "what is a mvoe", "what is evoluton", "what is a gym leadr", "what is the pokemon leage", "what are stas", "what is a pokebal", "wat is a tm"];
+    const missed = new Set(report.lessonHeldOutMisses.map((miss) => miss.wording));
+    expect(typos.filter((text) => missed.has(text))).toHaveLength(16);
+    expect(renderActivation(report)).toContain("| Lesson door (alias) offered an acceptable lesson, second held-out set | — | 33/72 (46%) |");
+    // The index and the union on the same set, for the record.
+    expect(activationReport(world.registry, world.pack, bank, scopeBank, "bm25", paraphrases).lessonHeldOut).toEqual({ engaged: 38, total: 72 });
+    expect(activationReport(world.registry, world.pack, bank, scopeBank, "both", paraphrases).lessonHeldOut).toEqual({ engaged: 45, total: 72 });
   });
 
   it("pins the lesson door's other half: the boundary alone on every must-not-answer question, both wordings", () => {
@@ -172,7 +194,7 @@ describe("the activation ceiling, pinned", () => {
   });
 
   it("renders a report with no misses without the miss sections", () => {
-    const text = renderActivation({ ...report, retrievalMisses: [], nominationMisses: [], lessonMisses: [], lessonPrecisionMisses: [] });
+    const text = renderActivation({ ...report, retrievalMisses: [], nominationMisses: [], lessonMisses: [], lessonPrecisionMisses: [], lessonHeldOutMisses: [] });
     expect(text).not.toContain("Retrieval misses:");
     expect(text).not.toContain("Nomination misses:");
     expect(text).not.toContain("Lesson door misses");
@@ -184,6 +206,7 @@ describe("the activation ceiling, pinned", () => {
     const without = activationReport(world.registry, bare, bank, scopeBank);
     expect(without.lesson).toBeUndefined();
     expect(without.lessonPrecision).toBeUndefined();
+    expect(without.lessonHeldOut).toBeUndefined();
     expect(without.lessonMisses).toEqual([]);
     expect(without.lessonPrecisionMisses).toEqual([]);
     expect(renderActivation(without)).not.toContain("Lesson door");
@@ -199,6 +222,41 @@ describe("the activation ceiling, pinned", () => {
       expect(entry.expectBlockIds?.length).toBeGreaterThan(0);
     }
     expect(readings.filter((reading) => reading.canonical)).toHaveLength(18);
+  });
+});
+
+describe("the lesson-paraphrase loader refuses what would make the number lie", () => {
+  const good = JSON.parse(JSON.stringify(readLessonParaphrases(bank, LESSON_PARAPHRASES_PATH))) as { entries: { entryId: string; expectBlockIds: string[]; phrasings: string[] }[] };
+  const mutate = (change: (doc: typeof good) => void) => {
+    const draft = JSON.parse(JSON.stringify(good)) as typeof good;
+    change(draft);
+    return () => loadLessonParaphrases(draft, bank);
+  };
+
+  it("loads the shipped set: 18 entries, four wordings each", () => {
+    expect(good.entries).toHaveLength(18);
+    expect(good.entries.every((entry) => entry.phrasings.length === 4)).toBe(true);
+  });
+
+  it("refuses an entry the bank does not carry, and a duplicate", () => {
+    expect(mutate((doc) => (doc.entries[0]!.entryId = "no-such-entry"))).toThrow(/does not carry/);
+    expect(mutate((doc) => doc.entries.push({ ...doc.entries[0]! }))).toThrow(/more than once/);
+  });
+
+  it("refuses an oracle that drifts from the bank's", () => {
+    expect(mutate((doc) => (doc.entries[3]!.expectBlockIds = ["what-is-game"]))).toThrow(/expect lessons the bank does not/);
+  });
+
+  it("refuses a wording the bank already carries — held out means held out", () => {
+    const entry = bank.entries.find((candidate) => candidate.id === "meta-what-is-gym-leader")!;
+    expect(mutate((doc) => doc.entries.find((candidate) => candidate.entryId === entry.id)!.phrasings.push(entry.intent))).toThrow(/already a wording/);
+    expect(mutate((doc) => doc.entries.find((candidate) => candidate.entryId === entry.id)!.phrasings.push(entry.phrasings![0]!.toUpperCase()))).toThrow(/already a wording/);
+  });
+
+  it("refuses an empty wording and a wrong schema version", () => {
+    expect(mutate((doc) => (doc.entries[0]!.phrasings[0] = " "))).toThrow(/empty wording/);
+    expect(() => loadLessonParaphrases({ ...good, bankVersion: 2 }, bank)).toThrow(/schema version/);
+    expect(() => loadLessonParaphrases(null, bank)).toThrow(/not an object/);
   });
 });
 
