@@ -52,6 +52,15 @@ function chipsOf(doors: DoorState, previous: DoorState | undefined): Chip[] {
   else if (held.length === 0) chips.push({ label: "precedents", state: "empty", tone: "empty" });
   else chips.push({ label: "precedents", state: `${held.length} held`, tone: heldBefore !== undefined && heldBefore.length === 0 ? "opened" : "open" });
 
+  // The lesson door (docs/lesson-door.md): the lessons the explanation
+  // route could name. "the whole catalogue" is the door shut; a count is the
+  // catalogue narrowed to the ask, boundary lesson included; "boundary only"
+  // is an ask that named nothing a lesson explains.
+  const lessons = doors.lessons;
+  const lessonsState = lessons === undefined ? "the whole catalogue" : lessons.length === 1 ? "boundary only" : `${lessons.length} lessons`;
+  const lessonsBefore = previous === undefined ? undefined : previous.lessons === undefined ? "the whole catalogue" : previous.lessons.length === 1 ? "boundary only" : `${previous.lessons.length} lessons`;
+  chips.push({ label: "lessons", state: lessonsState, tone: lessons === undefined ? "closed" : changed(lessonsState, lessonsBefore, true) });
+
   chips.push({ label: "clarify", state: doors.clarify ? "may ask" : "must answer", tone: changed(String(doors.clarify), previous === undefined ? undefined : String(previous.clarify), doors.clarify) });
   chips.push({ label: "suggest", state: doors.suggest ? "may suggest" : "no suggestions", tone: changed(String(doors.suggest), previous === undefined ? undefined : String(previous.suggest), doors.suggest) });
 

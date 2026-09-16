@@ -533,6 +533,42 @@ describe("the precedent door rides as a lever (docs/precedent.md)", () => {
     expect(renderCoverageArtifact(filed)).not.toContain("**prompt:");
   });
 
+  it("threads --lesson-door to the session, single-turn only, records it, and counts the narrowed catalogue per sample", async () => {
+    expect(parseCoverageArgs(["--lesson-door"]).lessonDoor).toBe(true);
+    expect(parseCoverageArgs([]).lessonDoor).toBe(false);
+    expect(parseCoverageArgs(["--lesson-door", "--dialogues"]).errors[0]).toContain("single-turn");
+    const plan = await runCoverage(options(["--ids", "ans-fact-speed-pikachu", "--lesson-door"]));
+    expect(plan.lines.join("\n")).toContain("lesson door:   only the lessons the ask is about");
+
+    // "What's Pikachu's Speed stat?" names nothing a lesson explains: the
+    // explanation route carries the boundary lesson alone.
+    const lessons: (readonly string[] | undefined)[] = [];
+    const opts = options(["--live", "--ids", "ans-fact-speed-pikachu", "--lesson-door"], {
+      makeProvider: () =>
+        new ScriptedProvider("coverage:lesson-door", (request) => {
+          if (request.purpose !== "answer") return "decline";
+          lessons.push(request.hint.doors?.lessons);
+          return pikachuSpeed();
+        }),
+    });
+    const result = await runCoverage(opts);
+    expect(result.exitCode).toBe(0);
+    expect(lessons[0]).toEqual(["what-the-records-hold"]);
+    const { artifact } = filedArtifact(opts.written);
+    expect(artifact.lessonDoor).toBe(true);
+    expect(artifact.runs[0]!.lessonDoor).toEqual({ narrowed: true, offered: 1, withheld: 23 });
+    expect(artifact.map.lessonDoor).toEqual({ runs: 1, narrowed: 1, boundaryOnly: 1, offered: 1 });
+    expect(renderCoverageArtifact(artifact)).toContain("**lesson door**");
+    expect(renderCoverageArtifact(artifact)).toContain("The lesson door: the catalogue narrowed on 1/1");
+    // Off: the whole catalogue, nothing recorded, no door declared.
+    const plain = options(["--live", "--ids", "ans-fact-speed-pikachu"], { makeProvider: scripted(pikachuSpeed()) });
+    await runCoverage(plain);
+    const filed = filedArtifact(plain.written).artifact;
+    expect(filed.lessonDoor).toBeUndefined();
+    expect(filed.runs[0]!.lessonDoor).toBeUndefined();
+    expect(filed.map.lessonDoor).toBeUndefined();
+  });
+
   it("threads --offered-doors to the session, single-turn only, records it, and counts the door's funnel per sample", async () => {
     expect(parseCoverageArgs(["--offered-doors"]).offeredDoors).toBe(true);
     expect(parseCoverageArgs([]).offeredDoors).toBe(false);

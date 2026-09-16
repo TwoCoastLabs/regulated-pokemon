@@ -46,10 +46,10 @@ import type {
 } from "../kernel/contracts.js";
 import { type DomElement, walkArtifact } from "../kernel/dom.js";
 import { type ManifestContext, type ManifestDraft, MAX_SUGGESTIONS, suggestionProblem } from "../kernel/manifest.js";
-import type { AccordPack } from "../kernel/pack.js";
+import type { AccordPack, CurriculumRule } from "../kernel/pack.js";
 import { planRender } from "../kernel/render.js";
 import type { CertifiedRegistry } from "../kernel/registry.js";
-import { NO_FIELD, restrictionsFor } from "../kernel/pack.js";
+import { declaresLessonCoverage, NO_FIELD, restrictionsFor } from "../kernel/pack.js";
 import { clauseTexts, deriveScope, resolveScope, type ScopeContext, unmatchedClauses } from "../kernel/scope.js";
 import { requiredDimensionsFor } from "../kernel/scope-deps.js";
 import { buildRoster } from "../kernel/roster.js";
@@ -193,6 +193,15 @@ export interface SessionDeps {
    * every door is offered on every first call, as today.
    */
   offeredDoors?: boolean;
+  /**
+   * The lesson door (docs/lesson-door.md, epic #118 S4b): the explanation
+   * route carries only the lessons whose declared coverage the ask names,
+   * plus the records-boundary lesson, always — instead of the pack's whole
+   * catalogue on every call. Read from the pack's `covers` data; a pack
+   * that declares none offers everything, and the trail says so. Off by
+   * default until the legs pick the default.
+   */
+  lessonDoor?: boolean;
 }
 
 /** What the session holds of the operator's memory. */
@@ -297,6 +306,10 @@ export interface SessionState {
    * nominated over served is the door's funnel, per run.
    */
   listingDoor: { withheld: number; nominated: number };
+  /** The lesson door per exchange (docs/lesson-door.md): how many answer
+   * calls had the catalogue narrowed, how many lessons the last narrowed
+   * call offered (the boundary lesson included), and how many it withheld. */
+  lessonDoor: { narrowed: number; offered: number; withheld: number };
   /** Answer-step calls repeated once with the route door closed, because
    * the model's whole reply was a nomination the driver refused — the
    * schema-steering misuse rate, as a number (see {@link withRouteFallback}). */
@@ -457,6 +470,7 @@ export function startSession(idPrefix?: string): SessionState {
     memory: { held: 0, empty: 0, followed: 0, departed: 0, lastHeld: [] },
     listingActivations: { consulted: 0, served: 0, stoodDown: 0, guardDropped: 0 },
     listingDoor: { withheld: 0, nominated: 0 },
+    lessonDoor: { narrowed: 0, offered: 0, withheld: 0 },
     nominationRetries: 0,
     ladderTurns: 0,
     steps: [],
@@ -1264,7 +1278,7 @@ async function withRouteFallback(
   world: SessionWorld,
   state: SessionState,
   deps: SessionDeps,
-  call: (routes: readonly NominableRoute[] | undefined, feedback?: readonly string[]) => Promise<AnswerStep>,
+  call: (routes: readonly NominableRoute[] | undefined, feedback?: readonly string[], lessons?: readonly string[]) => Promise<AnswerStep>,
 ): Promise<{ state: SessionState; step: AnswerStep; usage: Usage; retried: boolean; refusedListing: boolean }> {
   // The offered door (docs/offered-door.md): with the lever on, the listing
   // door is in the grammar only when the executor's ask-only checks would
@@ -1279,7 +1293,28 @@ async function withRouteFallback(
       `the "listing" door was not offered: ${withheld} — the driver would have refused a nomination of it, so the grammar left it out`,
     );
   }
-  const first = await call(withheld === undefined ? SESSION_ROUTES : SESSION_ROUTES.filter((route) => route.id !== "listing"));
+  // The lesson door (docs/lesson-door.md): with the lever on, the
+  // explanation route carries only the lessons the ask is about, plus the
+  // records' boundary — recorded as a step whether or not anything was
+  // withheld, so a pack that declares no coverage is visible on the trail
+  // rather than a door that silently never closed.
+  const offer = deps.lessonDoor === true ? lessonAskCheck(world, openingAskOf(state)) : undefined;
+  if (offer !== undefined) {
+    state = ledgerStep(
+      {
+        ...state,
+        lessonDoor: { narrowed: state.lessonDoor.narrowed + (offer.withheld.length > 0 ? 1 : 0), offered: offer.offered.length, withheld: offer.withheld.length },
+      },
+      deps.now(),
+      "driver",
+      "route/narrowed",
+      offer.withheld.length === 0
+        ? `every lesson was offered: ${offer.reason}`
+        : `${offer.offered.length} of ${world.pack.curriculum.length} lessons offered (${offer.offered.map((id) => `"${id}"`).join(", ")}): ${offer.reason} — the other ${offer.withheld.length} were left out of the grammar`,
+    );
+  }
+  const lessons = offer?.offered;
+  const first = await call(withheld === undefined ? SESSION_ROUTES : SESSION_ROUTES.filter((route) => route.id !== "listing"), undefined, lessons);
   const decode = first.decode;
   // A clarification beside the refused nomination is something the reply
   // carried (R3b step 3): the model asked, and the question goes through —
@@ -1335,7 +1370,7 @@ async function withRouteFallback(
         "route/withdrawn",
         `the "${nomination.routeId}" door was refused: ${executed.reason} — the door was withdrawn for one call and the model asked again; nothing about the refusal was sent to it`,
       );
-  const again = await call(undefined, fedBack ? [reason, "Answer the question directly — as claims about what was asked, a lesson that squarely answers it, or no claims at all."] : undefined);
+  const again = await call(undefined, fedBack ? [reason, "Answer the question directly — as claims about what was asked, a lesson that squarely answers it, or no claims at all."] : undefined, lessons);
   return { state: stepped, step: again, usage: addUsage(first.usage, again.usage), retried: true, refusedListing: nomination.routeId === "listing" };
 }
 
@@ -1760,7 +1795,7 @@ async function teachOrDiscover(
   let retried = false;
   let refusedListing = false;
   try {
-    ({ state, step, usage: stepUsage, retried, refusedListing } = await withRouteFallback(world, state, deps, (routes, feedback) =>
+    ({ state, step, usage: stepUsage, retried, refusedListing } = await withRouteFallback(world, state, deps, (routes, feedback, lessons) =>
       proposeAnswer({
         provider,
         context: bare,
@@ -1772,6 +1807,7 @@ async function teachOrDiscover(
         ...(about === undefined ? {} : { previousSubjects: about }),
         ...(routes === undefined ? {} : { routes }),
         ...(feedback === undefined ? {} : { feedback }),
+        ...(lessons === undefined ? {} : { lessons }),
         ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
         ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
         ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
@@ -2273,6 +2309,65 @@ function listingAskCheck(world: SessionWorld, ask: string): string | undefined {
   const typesNamed = [...world.registry.typeNames].filter((type) => new RegExp(`\\b${type}\\b`).test(haystack));
   if (typesNamed.length !== 1 && !bareCatalogueAsk(world, ask)) return "the question names no set to list — no type, and not a plain ask to list the catalogue";
   return undefined;
+}
+
+/** The ask as the lesson aliases are written: lower case, accents folded,
+ * curly apostrophes straightened, whitespace collapsed. */
+function foldAsk(ask: string): string {
+  return ask
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** What the lesson door decided for one ask. */
+export interface LessonOffer {
+  /** The lesson ids the explanation route may carry, boundary included. */
+  readonly offered: readonly string[];
+  /** The lesson ids left out. */
+  readonly withheld: readonly string[];
+  /** Why, for a reader outside the code. */
+  readonly reason: string;
+}
+
+/**
+ * The lesson door's ask-only check (docs/lesson-door.md): which lessons
+ * this ask is about, read from the pack's declared coverage.
+ *
+ * A concept lesson is offered when one of its aliases is in the ask as a
+ * whole phrase. Orientation lessons are offered only when no concept
+ * lesson matched — they are about the game as a whole, and are what an
+ * unanswerable ask is nearest to. The boundary lesson is always offered.
+ * A pack that declares no coverage cannot narrow, and says so: every
+ * lesson is offered, exactly as before the door existed.
+ */
+function lessonAskCheck(world: SessionWorld, ask: string): LessonOffer {
+  const lessons = world.pack.curriculum;
+  if (!declaresLessonCoverage(world.pack)) {
+    return { offered: lessons.map((lesson) => lesson.id), withheld: [], reason: "the pack declares no lesson coverage — every lesson offered" };
+  }
+  const haystack = foldAsk(ask);
+  // An alias is a whole phrase: "what is a type" must not match inside
+  // "what is a typewriter", so both ends sit on a non-letter or the edge.
+  const escape = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const contains = (alias: string): boolean => new RegExp(`(^|[^a-z0-9])${escape(alias)}([^a-z0-9]|$)`).test(haystack);
+  const matched = (lesson: CurriculumRule): boolean => (lesson.covers?.aliases ?? []).some(contains);
+  const concept = lessons.filter((lesson) => lesson.covers?.scope === "concept" && matched(lesson));
+  const orientation = concept.length > 0 ? [] : lessons.filter((lesson) => lesson.covers?.scope === "orientation" && matched(lesson));
+  const boundary = lessons.filter((lesson) => lesson.covers?.scope === "boundary");
+  const offeredSet = new Set([...concept, ...orientation, ...boundary].map((lesson) => lesson.id));
+  const offered = lessons.filter((lesson) => offeredSet.has(lesson.id)).map((lesson) => lesson.id);
+  const withheld = lessons.filter((lesson) => !offeredSet.has(lesson.id)).map((lesson) => lesson.id);
+  const reason =
+    concept.length > 0
+      ? `the question is about ${concept.map((lesson) => `"${lesson.id}"`).join(", ")}; the other lessons are about something else`
+      : orientation.length > 0
+        ? `the question is about the game as a whole (${orientation.map((lesson) => `"${lesson.id}"`).join(", ")}); no lesson about one thing matched`
+        : "the question names nothing a lesson explains — only the records' boundary is offered";
+  return { offered, withheld, reason };
 }
 
 /**
@@ -2940,7 +3035,7 @@ async function answer(
     };
   } else {
     try {
-      const fallback = await withRouteFallback(world, state, deps, (routes, feedback) =>
+      const fallback = await withRouteFallback(world, state, deps, (routes, feedback, lessons) =>
         proposeAnswer({
           provider,
           context,
@@ -2954,6 +3049,7 @@ async function answer(
           ...(about === undefined ? {} : { previousSubjects: about }),
           ...(routes === undefined ? {} : { routes }),
           ...(feedback === undefined ? {} : { feedback }),
+          ...(lessons === undefined ? {} : { lessons }),
           ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
           ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
           ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),

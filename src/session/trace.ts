@@ -96,6 +96,10 @@ export interface TraceArgs {
    * grammar only when the driver would accept it — off by default;
    * `--offered-doors` turns it on. */
   offeredDoors: boolean;
+  /** The lesson door (docs/lesson-door.md): the explanation route carries
+   * only the lessons the ask is about, plus the boundary. Off by default;
+   * `--lesson-door` turns it on. */
+  lessonDoor: boolean;
 }
 
 export function parseTraceArgs(argv: readonly string[]): TraceArgs {
@@ -124,6 +128,7 @@ export function parseTraceArgs(argv: readonly string[]): TraceArgs {
     prompt,
     refusalFeedback: argv.includes("--refusal-feedback"),
     offeredDoors: argv.includes("--offered-doors"),
+    lessonDoor: argv.includes("--lesson-door"),
   };
 }
 

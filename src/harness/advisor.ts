@@ -799,6 +799,14 @@ export interface AnswerStepInput {
    * what changed between the two calls.
    */
   feedback?: readonly string[];
+  /**
+   * The lessons this call may offer (docs/lesson-door.md): the ids the
+   * driver decided the ask is about, boundary included. Both the prompt's
+   * lesson list and the grammar's `blockId` enum are built from it, so a
+   * lesson outside the ask is unrepresentable at decode. Absent for every
+   * path that has not opted in — the whole catalogue, as before.
+   */
+  lessons?: readonly string[];
   /** Whether the model may nominate a clarification with typed options
    * instead of answering (docs/routing.md, R3b step 3). Off for every path
    * that has not opted in; the driver validates and caps what comes back. */
@@ -846,6 +854,12 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
   // Grammar gating: offer the three aggregate kinds only when the question
   // nominates them, so a ranking cannot decode as a count (§19).
   const fillerKinds = input.gatedGrammar ? nominateFillerKinds(question) : undefined;
+  // The lesson door: the catalogue this call carries, in pack order. An id
+  // the pack does not hold is dropped rather than offered — the driver
+  // reads the same pack, so none should be, and a stale id could otherwise
+  // put an unreviewed lesson name in front of the model.
+  const offeredLessons =
+    input.lessons === undefined ? context.pack.curriculum : context.pack.curriculum.filter((lesson) => input.lessons!.includes(lesson.id));
   const promptInput: AnswerPromptInput = {
     scope: context.grant?.scope,
     // The exchange with the advisor's own clarification in place, when
@@ -855,7 +869,7 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
     previousSubjects: input.previousSubjects,
     routes: input.routes,
     tools: context.pack.actions.map((action) => action.id),
-    lessons: context.pack.curriculum.map((lesson) => lesson.id),
+    lessons: offeredLessons.map((lesson) => lesson.id),
     rules: context.pack.gameRules.map((rule) => ({ id: rule.id, label: rule.label })),
     reference,
     dictionary: context.pack.dictionary,
@@ -911,6 +925,9 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
         // The blocks prompt's structure, as data: which blocks this call
         // emitted, in order. Absent on the legacy prompt.
         ...(built.blocks === undefined ? {} : { blocks: built.blocks }),
+        // The lesson door: the lessons this call could name, when the
+        // driver narrowed them. Absent when the whole catalogue was open.
+        ...(input.lessons === undefined ? {} : { lessons: offeredLessons.map((lesson) => lesson.id) }),
       },
     },
     // The same contract the prose describes, in a form a provider can enforce.
@@ -918,7 +935,7 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
     schema: {
       name: ANSWER_SCHEMA_NAME,
       schema: answerSchema(
-        context.pack,
+        { ...context.pack, curriculum: offeredLessons },
         fillerKinds,
         context.registry.itemIds.length > 0,
         {
