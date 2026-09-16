@@ -121,6 +121,34 @@ describe("the activation ceiling, pinned", () => {
     expect(report.lessonMisses.every((miss) => !miss.canonical)).toBe(true);
   });
 
+  it("pins the lesson door's other half: the boundary alone on every must-not-answer question, both wordings", () => {
+    expect(report.lessonMatcher).toBe("alias");
+    expect(report.lessonPrecision).toEqual({ canonical: { engaged: 45, total: 45 }, paraphrase: { engaged: 32, total: 32 } });
+    expect(report.lessonPrecisionMisses).toEqual([]);
+  });
+
+  it("pins the BM25 matcher as the negative control: one more paraphrase, and the door reopened (findings §24)", () => {
+    // The hypothesis of 2026-09-17 — that a lexical index over the lesson
+    // text would lift recall on paraphrases — read once on the held-out
+    // set. It gains one paraphrase and offers a topical lesson on 37 of 45
+    // must-not-answer questions, including the ledger's worst entry. The
+    // discriminator is the ask's form, which the index discards as stop
+    // words; the alias matcher encodes it. Pinned so the same lesson is
+    // not bought again.
+    const bm25 = activationReport(world.registry, world.pack, bank, scopeBank, "bm25");
+    expect(bm25.lesson).toEqual({ canonical: { engaged: 12, total: 18 }, paraphrase: { engaged: 16, total: 25 } });
+    expect(bm25.lessonPrecision).toEqual({ canonical: { engaged: 8, total: 45 }, paraphrase: { engaged: 8, total: 32 } });
+    const reopened = bm25.lessonPrecisionMisses.find((miss) => miss.wording === "Who is the Pewter City gym leader?");
+    expect(reopened?.offered).toEqual(["what-is-gym-leader"]);
+    // The union: recall rises to 22 of 25 and precision is the index's.
+    const both = activationReport(world.registry, world.pack, bank, scopeBank, "both");
+    expect(both.lesson).toEqual({ canonical: { engaged: 14, total: 18 }, paraphrase: { engaged: 22, total: 25 } });
+    expect(both.lessonPrecision).toEqual({ canonical: { engaged: 8, total: 45 }, paraphrase: { engaged: 8, total: 32 } });
+    expect(renderActivation(bm25)).toContain("| Lesson door (bm25) offered an acceptable lesson | 12/18 (67%) | 16/25 (64%) |");
+    expect(renderActivation(bm25)).toContain("| Lesson door (bm25) offered the boundary alone on a must-not-answer | 8/45 (18%) | 8/32 (25%) |");
+    expect(renderActivation(bm25)).toContain("Lesson door offered a lesson on a question that must not be answered:");
+  });
+
   it("names what the lesson door offered instead, per miss", () => {
     const byWording = new Map(report.lessonMisses.map((miss) => [miss.wording, miss.offered]));
     // A typo that lands on another lesson's alias: the wrong lesson, not the boundary.
@@ -134,7 +162,8 @@ describe("the activation ceiling, pinned", () => {
   it("renders as Markdown from the data", () => {
     const text = renderActivation(report);
     expect(text).toContain("| Retrieval pulled an acceptable entity |");
-    expect(text).toContain("| Lesson door offered an acceptable lesson | 18/18 (100%) | 15/25 (60%) |");
+    expect(text).toContain("| Lesson door (alias) offered an acceptable lesson | 18/18 (100%) | 15/25 (60%) |");
+    expect(text).toContain("| Lesson door (alias) offered the boundary alone on a must-not-answer | 45/45 (100%) | 32/32 (100%) |");
     expect(text).toContain("Lesson door misses");
     expect(text).toContain("“what is a gym badg” → `what-is-gym-leader`");
     expect(text).toContain("“who are the gym leaders?” → boundary only");
@@ -143,17 +172,20 @@ describe("the activation ceiling, pinned", () => {
   });
 
   it("renders a report with no misses without the miss sections", () => {
-    const text = renderActivation({ ...report, retrievalMisses: [], nominationMisses: [], lessonMisses: [] });
+    const text = renderActivation({ ...report, retrievalMisses: [], nominationMisses: [], lessonMisses: [], lessonPrecisionMisses: [] });
     expect(text).not.toContain("Retrieval misses:");
     expect(text).not.toContain("Nomination misses:");
     expect(text).not.toContain("Lesson door misses");
+    expect(text).not.toContain("must not be answered");
   });
 
   it("has no lesson row for a pack that declares no coverage — a door that does not exist has no ceiling", () => {
     const bare = { ...world.pack, curriculum: world.pack.curriculum.map(({ covers: _covers, ...lesson }) => lesson) };
     const without = activationReport(world.registry, bare, bank, scopeBank);
     expect(without.lesson).toBeUndefined();
+    expect(without.lessonPrecision).toBeUndefined();
     expect(without.lessonMisses).toEqual([]);
+    expect(without.lessonPrecisionMisses).toEqual([]);
     expect(renderActivation(without)).not.toContain("Lesson door");
   });
 

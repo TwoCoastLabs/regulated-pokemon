@@ -44,6 +44,9 @@ or a PR is not here, that is a bug in this file.
 - **Lesson door.** The explanation route narrowed to the lessons the ask is
   about, plus the records-boundary lesson, read from each lesson's declared
   coverage in the pack. `--lesson-door`. [lesson-door.md](lesson-door.md)
+  The *matcher* is the step that decides which lessons an ask is about;
+  the shipped one is the alias matcher, and a BM25 index is kept as the
+  negative control (`src/session/lesson-matcher.ts`).
 - **Lesson (explanation).** A certified block of text from the pack's
   curriculum that explains a concept ("what is a Gym Leader?").
 - **Records-boundary lesson.** The lesson that says the records do not hold

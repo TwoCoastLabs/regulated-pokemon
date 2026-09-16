@@ -5763,3 +5763,106 @@ behind it.
 some lessons have none. (b) **named** — the gauge reads the matcher
 alone; whether the model, offered the right lesson, then takes it is
 the porch's and the bank's question, not this one's.
+
+### The BM25 matcher: a negative result (2026-09-17)
+
+**Goal.** The activation ceiling above said the alias matcher is the
+bottleneck on paraphrase: 15 of 25. The obvious hypothesis, and the one
+the design reserved room for, is that a retriever over the lesson text
+would lift that — seven of the ten misses were ordinary rephrasings and
+three were typos, both of which lexical retrieval is built for. The
+cheapest test of the hypothesis is a hand-rolled BM25, read on the same
+held-out set. This is that reading. Key-free; nothing billable.
+
+**How it works.** `src/session/lesson-matcher.ts` puts the door's
+matching step behind one interface with three implementations, the same
+policy (concept first, orientation only when no concept matched, boundary
+always) applied after each:
+
+- `alias`: the shipped matcher — a declared phrasing in the ask.
+- `bm25`: word-level BM25 over each lesson's text plus its id as a title
+  field, counted twice. Stop words are derived, not written: the words in
+  at least half the lessons, and the pack's own `interrogative` and
+  `conjunction` marker groups. A word of four letters or more that no
+  lesson contains is read as the one vocabulary word within a single edit
+  of it that shares its first letter ("cath" → "catch"). The score is
+  normalised to the share of the ask's distinctive content the lesson
+  explains; a lesson is offered at share ≥ 0.14, at most 3 beside the
+  boundary. The threshold was set from the canonical intents alone,
+  before the held-out set was read, as the strictest value that keeps
+  every intent the index can rank at all offered — 15 of 18.
+- `both`: the union.
+
+The activation gauge gained the door's second half: on every question
+that must not receive a certified answer (45 canonical, 32 paraphrases),
+did the door offer the boundary lesson *alone*? A lesson offered there
+is one the model may take in place of a decline — the ledger's largest
+class. Recall says what a matcher lets through; this says what it keeps
+out.
+
+**The reading**, held out on both sides:
+
+| matcher | recall, canonical | recall, paraphrases | precision, canonical | precision, paraphrases |
+|---|---:|---:|---:|---:|
+| alias | 18/18 (100%) | 15/25 (60%) | 45/45 (100%) | 32/32 (100%) |
+| bm25 | 12/18 (67%) | 16/25 (64%) | **8/45 (18%)** | **8/32 (25%)** |
+| both | 14/18 (78%) | 22/25 (88%) | 8/45 (18%) | 8/32 (25%) |
+
+And the index's operating curve, so the result is about the method and
+not the one threshold:
+
+| threshold | recall, paraphrases | recall, canonical | precision, canonical | precision, paraphrases |
+|---:|---:|---:|---:|---:|
+| 0.14 | 16/25 | 12/18 | 8/45 | 8/32 |
+| 0.30 | 13/25 | 11/18 | 21/45 | 11/32 |
+| 0.50 | 12/25 | 8/18 | 36/45 | 22/32 |
+| 0.70 | 4/25 | 7/18 | 41/45 | 27/32 |
+
+**What it says.**
+
+1. **The hypothesis is false for this door.** BM25 gains one paraphrase
+   over the aliases and offers a topical lesson on 37 of 45 must-not-
+   answer questions — "Who is the Pewter City gym leader?" draws
+   `what-is-gym-leader` again, the exact hole the door closed (§24, 16 of
+   18 to 0). At no threshold does it reach the alias matcher on either
+   axis: at 0.5 it is below on both. The union inherits the loss.
+2. **The reason is structural, and it is the finding.** The questions
+   that must not be answered are about the *same subjects* as the
+   lessons: Pikachu's ability and `what-is-pokemon`, the Elite Four and
+   `what-is-league`, a Poké Ball's price and `what-is-poke-ball`. Topic
+   does not separate them. What separates a lesson ask from a fact ask
+   is its *form* — "what is a…" against "who is the…", "how much does…"
+   — and form is exactly what a retriever discards as stop words. The
+   alias matcher's definitional phrasings encode form. That is why a
+   hand-written list beats an index here, and it would beat any lexical
+   index for the same reason.
+3. **Three canonical intents are beyond lexical reach at any threshold.**
+   "What is a Pokémon?" has no content word once "pokemon", in 20 of 24
+   lessons, is a stop word. "How does this game work?" and "What am I
+   trying to do?" share no word with the lessons that answer them. A
+   definitional lesson is identified by its title, not its body; the
+   body of "what is a Pokémon" uses the word no more distinctively than
+   any other lesson does.
+4. **What would be a different hypothesis.** An embedding model captures
+   form as well as topic, and might separate "what is a gym leader" from
+   "who is the Pewter gym leader" where BM25 cannot. That is not tested
+   here, would not be deterministic, and belongs behind the S3 seam,
+   metered on this same held-out set. The bar it has to clear is now a
+   number on both axes, not one.
+
+**Consequence.** The alias matcher stays the door's matcher and the
+default. The BM25 matcher stays in the tree as the negative control
+behind `SessionDeps.lessonMatcher`, pinned on the gauge so the same lesson
+is not bought twice; it is not threaded to the tracer or the bank, since
+the gauge says it must not ship. The seven paraphrase misses that were
+rephrasings are still data debt — aliases written from the lesson text
+and fresh wordings, never from the held-out set.
+
+**Model errors:** none — no model was called. **Harness factors:** (a)
+**named** — the held-out set is 25 paraphrases and 77 must-not-answer
+wordings over one bank; a larger bank could move either number. (b)
+**named** — the typo fold's first-letter rule and the four-letter floor
+are the only two constants besides the threshold and k, and each is
+stated in the code with its reason. (c) **named** — the corpus-derived
+stop list depends on the lesson count; a pack with many more lessons
+would derive a different one.

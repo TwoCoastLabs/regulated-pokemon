@@ -46,10 +46,11 @@ import type {
 } from "../kernel/contracts.js";
 import { type DomElement, walkArtifact } from "../kernel/dom.js";
 import { type ManifestContext, type ManifestDraft, MAX_SUGGESTIONS, suggestionProblem } from "../kernel/manifest.js";
-import type { AccordPack, CurriculumRule } from "../kernel/pack.js";
+import type { AccordPack } from "../kernel/pack.js";
 import { planRender } from "../kernel/render.js";
 import type { CertifiedRegistry } from "../kernel/registry.js";
-import { declaresLessonCoverage, NO_FIELD, restrictionsFor } from "../kernel/pack.js";
+import { NO_FIELD, restrictionsFor } from "../kernel/pack.js";
+import { type LessonMatcherId, type LessonOffer, lessonOffer } from "./lesson-matcher.js";
 import { clauseTexts, deriveScope, resolveScope, type ScopeContext, unmatchedClauses } from "../kernel/scope.js";
 import { requiredDimensionsFor } from "../kernel/scope-deps.js";
 import { buildRoster } from "../kernel/roster.js";
@@ -202,6 +203,10 @@ export interface SessionDeps {
    * default until the legs pick the default.
    */
   lessonDoor?: boolean;
+  /** Which matcher the lesson door runs (src/session/lesson-matcher.ts):
+   * the declared aliases, or the BM25 index over the lesson text. Read
+   * only with the door on. */
+  lessonMatcher?: LessonMatcherId;
 }
 
 /** What the session holds of the operator's memory. */
@@ -1298,7 +1303,7 @@ async function withRouteFallback(
   // records' boundary — recorded as a step whether or not anything was
   // withheld, so a pack that declares no coverage is visible on the trail
   // rather than a door that silently never closed.
-  const offer = deps.lessonDoor === true ? lessonAskCheck(world, openingAskOf(state)) : undefined;
+  const offer = deps.lessonDoor === true ? lessonAskCheck(world, openingAskOf(state), deps.lessonMatcher) : undefined;
   if (offer !== undefined) {
     state = ledgerStep(
       {
@@ -2312,63 +2317,16 @@ function listingAskCheck(world: SessionWorld, ask: string): string | undefined {
   return undefined;
 }
 
-/** The ask as the lesson aliases are written: lower case, accents folded,
- * curly apostrophes straightened, whitespace collapsed. */
-function foldAsk(ask: string): string {
-  return ask
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[\u2018\u2019]/g, "'")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-/** What the lesson door decided for one ask. */
-export interface LessonOffer {
-  /** The lesson ids the explanation route may carry, boundary included. */
-  readonly offered: readonly string[];
-  /** The lesson ids left out. */
-  readonly withheld: readonly string[];
-  /** Why, for a reader outside the code. */
-  readonly reason: string;
-}
-
 /**
  * The lesson door's ask-only check (docs/lesson-door.md): which lessons
- * this ask is about, read from the pack's declared coverage.
- *
- * A concept lesson is offered when one of its aliases is in the ask as a
- * whole phrase. Orientation lessons are offered only when no concept
- * lesson matched — they are about the game as a whole, and are what an
- * unanswerable ask is nearest to. The boundary lesson is always offered.
- * A pack that declares no coverage cannot narrow, and says so: every
- * lesson is offered, exactly as before the door existed.
+ * this ask is about, by the matcher the session runs — the declared aliases
+ * by default, or the BM25 index over the lesson text (`deps.lessonMatcher`).
+ * Both apply the same policy: concept lessons first, orientation lessons
+ * only when no concept matched, the boundary always; a pack that declares
+ * no coverage offers everything, and says so.
  */
-export function lessonAskCheck(world: SessionWorld, ask: string): LessonOffer {
-  const lessons = world.pack.curriculum;
-  if (!declaresLessonCoverage(world.pack)) {
-    return { offered: lessons.map((lesson) => lesson.id), withheld: [], reason: "the pack declares no lesson coverage — every lesson offered" };
-  }
-  const haystack = foldAsk(ask);
-  // An alias is a whole phrase: "what is a type" must not match inside
-  // "what is a typewriter", so both ends sit on a non-letter or the edge.
-  const escape = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const contains = (alias: string): boolean => new RegExp(`(^|[^a-z0-9])${escape(alias)}([^a-z0-9]|$)`).test(haystack);
-  const matched = (lesson: CurriculumRule): boolean => (lesson.covers?.aliases ?? []).some(contains);
-  const concept = lessons.filter((lesson) => lesson.covers?.scope === "concept" && matched(lesson));
-  const orientation = concept.length > 0 ? [] : lessons.filter((lesson) => lesson.covers?.scope === "orientation" && matched(lesson));
-  const boundary = lessons.filter((lesson) => lesson.covers?.scope === "boundary");
-  const offeredSet = new Set([...concept, ...orientation, ...boundary].map((lesson) => lesson.id));
-  const offered = lessons.filter((lesson) => offeredSet.has(lesson.id)).map((lesson) => lesson.id);
-  const withheld = lessons.filter((lesson) => !offeredSet.has(lesson.id)).map((lesson) => lesson.id);
-  const reason =
-    concept.length > 0
-      ? `the question is about ${concept.map((lesson) => `"${lesson.id}"`).join(", ")}; the other lessons are about something else`
-      : orientation.length > 0
-        ? `the question is about the game as a whole (${orientation.map((lesson) => `"${lesson.id}"`).join(", ")}); no lesson about one thing matched`
-        : "the question names nothing a lesson explains — only the records' boundary is offered";
-  return { offered, withheld, reason };
+export function lessonAskCheck(world: SessionWorld, ask: string, matcher: LessonMatcherId = "alias"): LessonOffer {
+  return lessonOffer(matcher, world, ask);
 }
 
 /**
@@ -2381,7 +2339,7 @@ export function lessonAskCheck(world: SessionWorld, ask: string): LessonOffer {
  * from the step already on the trail.
  */
 function lessonsArg(world: SessionWorld, state: SessionState, deps: SessionDeps): { lessons?: readonly string[] } {
-  return deps.lessonDoor === true ? { lessons: lessonAskCheck(world, openingAskOf(state)).offered } : {};
+  return deps.lessonDoor === true ? { lessons: lessonAskCheck(world, openingAskOf(state), deps.lessonMatcher).offered } : {};
 }
 
 /**
