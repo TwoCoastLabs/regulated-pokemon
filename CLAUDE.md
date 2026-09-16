@@ -119,8 +119,8 @@ name defines it in plain words the first time.
   misses are a pack lesson on the wrong subject; the fix is designed in
   [docs/lesson-door.md](docs/lesson-door.md) (offer a lesson only when the
   ask is about it, with each lesson's coverage declared in the pack). Built
-  behind `--lesson-door`; its bank gate is pre-registered there and not yet
-  run.
+  behind `--lesson-door`; the porch reading is findings §24 and the bank
+  gate, pre-registered there, is not yet run.
 - **Results page:** `npm run harness:results` renders a filed run artifact as
   Markdown (newest in `runs/` by default; `-- <artifact.json>` for one,
   `-- --out docs/results.md` to file it). Pure and key-free — it only reads an

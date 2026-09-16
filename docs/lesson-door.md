@@ -300,6 +300,16 @@ visible.
    when something was withheld — `route/narrowed` says "N of 24 lessons
    offered" or "every lesson was offered" with the reason either way, so
    a reader can tell a door that opened wide from a door that was off.
+5. **Every answer call in the exchange carries the set, not only the
+   first.** The design said "before the call". The first build narrowed
+   the first call only; the porch reading caught the carried-back retry
+   bringing the whole catalogue back, 3 of 50 on the strong model
+   (findings §24). The three retry sites now recompute the same offer.
+
+The porch reading is in findings §24: topical lessons on the five worst
+ledger entries from 13 of 25 to 0 of 25 (strong) and 8 of 25 to 0 of 25
+(weak); the openers and "What is a Gym Leader?" unchanged at 20 of 20 and
+5 of 5; calls and cost down on both models. The bank legs are still owed.
 
 ## Deliberately not built
 
