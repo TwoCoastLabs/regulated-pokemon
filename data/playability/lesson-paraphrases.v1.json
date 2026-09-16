@@ -1,0 +1,25 @@
+{
+  "bankVersion": 1,
+  "id": "lesson-paraphrases.v1",
+  "notes": "A second held-out set for the lesson door's activation gauge (docs/lesson-door.md, findings §24). Fresh wordings of the 18 lesson questions in data/playability/bank.v1.json, written on 2026-09-17 and committed BEFORE the alias widening of the same day, so the order is auditable in git. Each entry: three rewordings in different registers and one with a spelling mistake. Rule: no alias in any pack may be written from these wordings, or the number this set produces measures nothing. Reviewed by hand; a wording that is not a fair ask for its lesson is a bug in this file.",
+  "entries": [
+    { "entryId": "meta-what-is-game", "expectBlockIds": ["what-is-game", "how-to-play", "what-is-pokemon"], "phrasings": ["So what's this whole Pokemon thing about?", "Give me the basics of the game.", "I keep hearing about Pokemon — what is it exactly?", "wat is pokemon"] },
+    { "entryId": "meta-how-to-play", "expectBlockIds": ["how-to-play", "first-steps"], "phrasings": ["How do you actually play this?", "Walk me through how the game is played.", "I have no idea what to do in this game, how does it work?", "how do i pley this game"] },
+    { "entryId": "meta-objective", "expectBlockIds": ["objective"], "phrasings": ["What's the end goal here?", "What is the whole point of the game?", "What am I meant to be doing in Red?", "whats the objectve of the game"] },
+    { "entryId": "meta-what-is-badge", "expectBlockIds": ["what-is-badge"], "phrasings": ["What do badges do?", "Why do people care about gym badges?", "Explain badges to me.", "what are badgs"] },
+    { "entryId": "meta-what-is-type", "expectBlockIds": ["what-is-type"], "phrasings": ["How do types work?", "What's the deal with Pokemon types?", "Explain the type system.", "what do tyeps do"] },
+    { "entryId": "meta-how-catch", "expectBlockIds": ["how-catch"], "phrasings": ["How does catching work?", "What's the trick to catching a wild Pokemon?", "How do I add a wild Pokemon to my team?", "how do i catch pokemn"] },
+    { "entryId": "meta-first-steps", "expectBlockIds": ["first-steps"], "phrasings": ["Where do I begin?", "I'm brand new — what's the first thing to do?", "Any tips for someone who just turned the game on?", "just startd, what now"] },
+    { "entryId": "meta-leveling", "expectBlockIds": ["leveling"], "phrasings": ["Why should I level up my Pokemon?", "How does leveling work?", "What happens when a Pokemon gains a level?", "whats the point of levling"] },
+    { "entryId": "meta-red-vs-blue", "expectBlockIds": ["red-vs-blue"], "phrasings": ["Red or Blue — does it matter which I play?", "How do the two versions differ?", "Is there any difference between Red and Blue?", "red vs blu whats the diffrence"] },
+    { "entryId": "meta-is-it-hard", "expectBlockIds": ["is-it-hard"], "phrasings": ["Is this game difficult?", "How hard is it for a first-timer?", "Am I going to struggle with this game?", "is it hrad for beginners"] },
+    { "entryId": "meta-what-is-pokemon", "expectBlockIds": ["what-is-pokemon"], "phrasings": ["What exactly is a Pokemon?", "Define Pokemon for me.", "What counts as a Pokemon?", "what is a pokmon"] },
+    { "entryId": "meta-what-is-move", "expectBlockIds": ["what-is-move"], "phrasings": ["What does a move mean in this game?", "What are moves?", "Explain what a move is.", "what is a mvoe"] },
+    { "entryId": "meta-what-is-evolution", "expectBlockIds": ["what-is-evolution"], "phrasings": ["What does it mean when a Pokemon evolves?", "How does evolution work?", "Explain evolving.", "what is evoluton"] },
+    { "entryId": "meta-what-is-gym-leader", "expectBlockIds": ["what-is-gym-leader"], "phrasings": ["What does a gym leader do?", "Explain gym leaders.", "What's a gym leader, exactly?", "what is a gym leadr"] },
+    { "entryId": "meta-what-is-league", "expectBlockIds": ["what-is-league"], "phrasings": ["What's the Pokemon League?", "What is the league for?", "Explain the League to me.", "what is the pokemon leage"] },
+    { "entryId": "meta-what-are-stats", "expectBlockIds": ["what-are-stats"], "phrasings": ["What do the stats mean?", "Explain stats.", "What are a Pokemon's stats?", "what are stas"] },
+    { "entryId": "meta-what-is-poke-ball", "expectBlockIds": ["what-is-poke-ball"], "phrasings": ["What does a Poke Ball do?", "What are Poke Balls for?", "Explain Poke Balls.", "what is a pokebal"] },
+    { "entryId": "meta-what-is-tm-hm", "expectBlockIds": ["what-is-tm-hm"], "phrasings": ["What are TMs?", "What's an HM?", "What's the difference between a TM and an HM?", "wat is a tm"] }
+  ]
+}
