@@ -109,12 +109,11 @@ name defines it in plain words the first time.
   a certified answer which got one anyway, what the record certified instead,
   and the layer that owes the fix ([docs/decline-ledger.md](docs/decline-ledger.md)
   is the filed reading over the six M3 legs; epic #170 K2, findings §23).
-  Key-free, deterministic, no spend — it is how the correct-decline rate turns
-  back into a list of things to build. Its first reading named one class worth
-  61% of the misses and the design that answers it is
-  [docs/lesson-door.md](docs/lesson-door.md): a lesson is in the grammar only
-  when the ask is the one it answers, with the lesson's coverage declared as
-  pack data. Designed, not built; its gate is pre-registered there.
+  Key-free, deterministic, no spend. Its first reading found that 61% of the
+  misses are a pack lesson on the wrong subject; the fix is designed in
+  [docs/lesson-door.md](docs/lesson-door.md) (offer a lesson only when the
+  ask is about it, with each lesson's coverage declared in the pack). Not
+  built yet; the gate is pre-registered there.
 - **Results page:** `npm run harness:results` renders a filed run artifact as
   Markdown (newest in `runs/` by default; `-- <artifact.json>` for one,
   `-- --out docs/results.md` to file it). Pure and key-free — it only reads an
