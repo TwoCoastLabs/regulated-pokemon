@@ -27,7 +27,9 @@ boundary, scorecard, falsification criteria, and research sequence.
 The [knowledge-base scale note](docs/knowledge-scale.md) compares this
 384-record world with WebQSP, CWQ, GrailQA, and public banking, pharma, and
 telecom proxies, including the retrieval results that motivate a separate
-coverage target.
+coverage target. The repo uses a number of terms with a specific meaning
+(leg, arm, porch, door, crucible, governance tax); the
+[glossary](docs/glossary.md) defines them in a line each.
 
 Getting a Pokémon fact wrong is harmless. That is exactly why Pokémon is the
 right vehicle: we can invite you to attack the agent, run deliberately weak

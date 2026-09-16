@@ -27,6 +27,9 @@ complete and closed; epic #94 (realistic inquiries) and epic #118 (scale,
 [docs/scale.md](docs/scale.md)) stand behind the current plan, **epic #145**
 ([docs/routing.md](docs/routing.md): scope belongs to the profile, routing
 belongs to the model) — work from the epic, keep its checkboxes honest.
+Terms with a repo-specific meaning (leg, arm, porch, door, crucible, band,
+governance tax) are defined in [docs/glossary.md](docs/glossary.md); a
+term coined in new work goes there in the same change.
 
 ## Publication posture (read first)
 

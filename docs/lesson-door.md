@@ -11,11 +11,13 @@ list stop the model answering unanswerable questions with a nearby
 lesson, without losing the lesson answers that are correct today?**
 
 *Written 2026-09-16, from the decline ledger's first reading (findings
-§23). Nothing here is built.*
+§23). Nothing here is built. Terms like leg, arm, band and porch are
+defined in the [glossary](glossary.md).*
 
 ## The problem, in numbers
 
-The decline ledger reads the six M3 bank legs: 810 samples on questions
+The decline ledger reads the six M3 bank legs (a leg is one run of the
+test bank on one model with one configuration): 810 samples on questions
 the system must not answer, of which 204 were answered anyway.
 
 | what happened | share of the 204 | layer that owes the fix |
@@ -125,6 +127,41 @@ the offered set — back toward today's behaviour, never beyond it. The
 worst case is a miss this design failed to prevent, never a false
 certificate.
 
+## Could a search engine do this instead of alias lists?
+
+Yes, and the design is written so that it can.
+
+The job here is: given the trainer's question, decide which lessons it
+is about. The alias list is the smallest thing that does that job
+deterministically, with no index, no network and no model, so it can run
+in CI and in the browser. A real information-retrieval stack — BM25,
+embeddings, a hosted search service — does the same job better on
+paraphrases and misspellings, and would index the lesson text directly,
+making hand-written aliases unnecessary.
+
+What a search stack would replace: the matcher (`lessonAskCheck`'s
+"does the ask contain an alias").
+
+What it would not replace:
+
+- The rule that a route is offered only when the driver would accept it.
+  Whatever nominates the lessons, the grammar is still narrowed to that
+  set before the call.
+- `scope: concept | orientation` and "the boundary lesson is always
+  offered". Those are policy, not matching.
+- The record. Whatever chose the lessons, the choice must be written into
+  the transaction so replay reads it rather than recomputing it. A search
+  index changes; a filed record must not. That is the S3 seam
+  ([scale.md](scale.md), "the recorded nomination"), which this repo has
+  already named as the place a search provider plugs in, out of CI,
+  measured by recall@k.
+
+So the order is: aliases first, because they are free and deterministic
+and give a number; a search stack behind S3 when that number shows the
+matcher is the bottleneck. The gate below will say which it is — the
+"coverage is too narrow" case in "What would make this wrong" is exactly
+the signal that aliases are not enough.
+
 ## Mechanism
 
 1. **Pack, new version.** Each `curriculum` entry gets a required
@@ -181,8 +218,9 @@ No article coverage changes. `NOT_YET_COVERED` is untouched.
 
 ## The gate, pre-registered
 
-Porch first (`session:trace`, the four opening phrasings plus the five
-worst ledger entries, five each, both models, door on and off). Then two
+A cheap live check first: `session:trace` on the four opening phrasings
+plus the five worst ledger entries, five conversations each, both
+models, door on and off (the "porch reading"; a few cents). Then two
 bank legs per model at N=3, today's behaviour beside the door. Every
 number as count and percentage.
 
@@ -203,7 +241,7 @@ number as count and percentage.
 6. **Enforcement.** 0 of N escalations, both models, denominator stated.
 
 Cost: about $0.30 per strong leg, $0.04 per weak leg; under $0.70 for
-the four, after a porch reading for about three cents.
+the four, after the live check for about three cents.
 
 **Run beside S4a's unrun gate in the same window.** The same arm moved
 from 0% to 55% within a day (handover, 2026-09-16). Reading both doors
