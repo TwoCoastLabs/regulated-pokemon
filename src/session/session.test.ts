@@ -2312,6 +2312,45 @@ describe("the driver's ledger — every step of an exchange, in fixed wording, b
     expect(off.lessonDoor).toEqual({ narrowed: 0, offered: 0, withheld: 0 });
   });
 
+  it("the lesson door holds on the carried-back retry too — the whole catalogue does not come back with the feedback", async () => {
+    // Found on the porch (2026-09-16): the first call was narrowed, the
+    // off-ask retry was not, and the strong model certified the withheld
+    // lesson on the retry, 3 of 50. Every answer call in the exchange now
+    // carries the same set; this reads the retry's grammar directly.
+    const offAsk = JSON.stringify({
+      asked: [{ phrase: "how many pp", entityId: "psychic", fieldId: "move-pp" }],
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "psychic", factId: "move-power" }],
+    });
+    const lessons: (readonly string[] | undefined)[] = [];
+    const enums: (readonly string[] | undefined)[] = [];
+    let calls = 0;
+    const provider = new ScriptedProvider("lesson-door-retry", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      lessons.push(request.hint.doors?.lessons);
+      const claims = (request.schema?.schema as { properties: { claims: { items: { anyOf: { properties?: { kind?: { enum?: string[] }; blockId?: { enum?: string[] } } }[] } } } }).properties.claims.items.anyOf;
+      enums.push(claims.find((variant) => variant.properties?.kind?.enum?.[0] === "explanation")?.properties?.blockId?.enum);
+      return (calls += 1) === 1 ? offAsk : JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-the-records-hold" }] });
+    });
+    const d: SessionDeps = { ...deps(provider), feedback: true, lessonDoor: true };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "How many PP does Psychic have?", d);
+    const sequence = codes(state.exchanges.at(-1)!.steps);
+    expect(sequence.indexOf("reply/carried-back")).toBeGreaterThan(-1);
+    expect(sequence[sequence.indexOf("reply/carried-back") + 1]).toBe("model/retry");
+    expect(lessons).toEqual([["what-the-records-hold"], ["what-the-records-hold"]]);
+    expect(enums).toEqual([["what-the-records-hold"], ["what-the-records-hold"]]);
+
+    // The same round before any scope is set — the discovery path, which is
+    // the one the porch runs — carries the set on its retry too.
+    lessons.length = 0;
+    enums.length = 0;
+    calls = 0;
+    await say(startSession(), "How many PP does Psychic have?", d);
+    expect(lessons).toEqual([["what-the-records-hold"], ["what-the-records-hold"]]);
+    expect(enums).toEqual([["what-the-records-hold"], ["what-the-records-hold"]]);
+  });
+
   it("the lesson door on a pack that declares no coverage offers every lesson and says so on the trail", async () => {
     // The pre-door packs still govern filed records; with the lever on
     // against one, the door cannot narrow and the step names that, so a

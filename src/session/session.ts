@@ -1868,6 +1868,7 @@ async function teachOrDiscover(
         ...(previously === undefined ? {} : { previously }),
         ...(about === undefined ? {} : { previousSubjects: about }),
         feedback: linked.feedback ?? [],
+        ...lessonsArg(world, state, deps),
         ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
         ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
         ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
@@ -2368,6 +2369,19 @@ function lessonAskCheck(world: SessionWorld, ask: string): LessonOffer {
         ? `the question is about the game as a whole (${orientation.map((lesson) => `"${lesson.id}"`).join(", ")}); no lesson about one thing matched`
         : "the question names nothing a lesson explains — only the records' boundary is offered";
   return { offered, withheld, reason };
+}
+
+/**
+ * The lesson door's set for this exchange, as the argument every answer call
+ * takes — the first call, the nomination retry and each carried-back retry
+ * alike. Found on the porch (2026-09-16): with only the first call narrowed,
+ * the off-ask retry brought the whole catalogue back into the grammar and the
+ * strong model certified the withheld lesson on 3 of 50 conversations. The
+ * check is a pure function of the ask, so recomputing it here cannot differ
+ * from the step already on the trail.
+ */
+function lessonsArg(world: SessionWorld, state: SessionState, deps: SessionDeps): { lessons?: readonly string[] } {
+  return deps.lessonDoor === true ? { lessons: lessonAskCheck(world, openingAskOf(state)).offered } : {};
 }
 
 /**
@@ -3113,6 +3127,7 @@ async function answer(
         ...(previously === undefined ? {} : { previously }),
         ...(about === undefined ? {} : { previousSubjects: about }),
         feedback: groomed.feedback,
+        ...lessonsArg(world, state, deps),
         ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
         ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
         ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
@@ -3201,6 +3216,7 @@ async function answer(
         ...(previously === undefined ? {} : { previously }),
         ...(about === undefined ? {} : { previousSubjects: about }),
         feedback: violations.map((item) => `${denialCode(item)}: ${item.message}`),
+        ...lessonsArg(world, state, deps),
         ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
         ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
         ...(deps.gatedGrammar === undefined ? {} : { gatedGrammar: deps.gatedGrammar }),
