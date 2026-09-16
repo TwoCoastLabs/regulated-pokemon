@@ -8,7 +8,7 @@
     { "entryId": "meta-objective", "expectBlockIds": ["objective"], "phrasings": ["What's the end goal here?", "What is the whole point of the game?", "What am I meant to be doing in Red?", "whats the objectve of the game"] },
     { "entryId": "meta-what-is-badge", "expectBlockIds": ["what-is-badge"], "phrasings": ["What do badges do?", "Why do people care about gym badges?", "Explain badges to me.", "what are badgs"] },
     { "entryId": "meta-what-is-type", "expectBlockIds": ["what-is-type"], "phrasings": ["How do types work?", "What's the deal with Pokemon types?", "Explain the type system.", "what do tyeps do"] },
-    { "entryId": "meta-how-catch", "expectBlockIds": ["how-catch"], "phrasings": ["How does catching work?", "What's the trick to catching a wild Pokemon?", "How do I add a wild Pokemon to my team?", "how do i catch pokemn"] },
+    { "entryId": "meta-how-catch", "expectBlockIds": ["how-catch"], "phrasings": ["What do I have to do to catch something?", "What's the trick to catching a wild Pokemon?", "How do I add a wild Pokemon to my team?", "how do i catch pokemn"] },
     { "entryId": "meta-first-steps", "expectBlockIds": ["first-steps"], "phrasings": ["Where do I begin?", "I'm brand new — what's the first thing to do?", "Any tips for someone who just turned the game on?", "just startd, what now"] },
     { "entryId": "meta-leveling", "expectBlockIds": ["leveling"], "phrasings": ["Why should I level up my Pokemon?", "How does leveling work?", "What happens when a Pokemon gains a level?", "whats the point of levling"] },
     { "entryId": "meta-red-vs-blue", "expectBlockIds": ["red-vs-blue"], "phrasings": ["Red or Blue — does it matter which I play?", "How do the two versions differ?", "Is there any difference between Red and Blue?", "red vs blu whats the diffrence"] },
@@ -18,8 +18,8 @@
     { "entryId": "meta-what-is-evolution", "expectBlockIds": ["what-is-evolution"], "phrasings": ["What does it mean when a Pokemon evolves?", "How does evolution work?", "Explain evolving.", "what is evoluton"] },
     { "entryId": "meta-what-is-gym-leader", "expectBlockIds": ["what-is-gym-leader"], "phrasings": ["What does a gym leader do?", "Explain gym leaders.", "What's a gym leader, exactly?", "what is a gym leadr"] },
     { "entryId": "meta-what-is-league", "expectBlockIds": ["what-is-league"], "phrasings": ["What's the Pokemon League?", "What is the league for?", "Explain the League to me.", "what is the pokemon leage"] },
-    { "entryId": "meta-what-are-stats", "expectBlockIds": ["what-are-stats"], "phrasings": ["What do the stats mean?", "Explain stats.", "What are a Pokemon's stats?", "what are stas"] },
+    { "entryId": "meta-what-are-stats", "expectBlockIds": ["what-are-stats"], "phrasings": ["What are all those numbers on my Pokemon?", "Explain stats.", "What are a Pokemon's stats?", "what are stas"] },
     { "entryId": "meta-what-is-poke-ball", "expectBlockIds": ["what-is-poke-ball"], "phrasings": ["What does a Poke Ball do?", "What are Poke Balls for?", "Explain Poke Balls.", "what is a pokebal"] },
-    { "entryId": "meta-what-is-tm-hm", "expectBlockIds": ["what-is-tm-hm"], "phrasings": ["What are TMs?", "What's an HM?", "What's the difference between a TM and an HM?", "wat is a tm"] }
+    { "entryId": "meta-what-is-tm-hm", "expectBlockIds": ["what-is-tm-hm"], "phrasings": ["What are TMs?", "HM — what is that?", "What's the difference between a TM and an HM?", "wat is a tm"] }
   ]
 }
