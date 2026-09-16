@@ -14,7 +14,9 @@ Both are north stars; neither may be traded for the other (the measured
 form of each is in [docs/generalization.md](docs/generalization.md) §11,
 "The north stars"). The canon is
 [docs/the-indigo-accord.md](docs/the-indigo-accord.md); the design is
-[docs/architecture.md](docs/architecture.md), and the mechanism of one live
+[docs/architecture.md](docs/architecture.md); the boundary of every guarantee,
+its correctness taxonomy and its falsification criteria are
+[docs/assurance-case.md](docs/assurance-case.md); and the mechanism of one live
 turn — which steps call a model, which never do, and what each prompt holds —
 is [docs/session-flow.md](docs/session-flow.md); the strategy for carrying the
 design into real high-stakes domains (and operating a knowledge base under

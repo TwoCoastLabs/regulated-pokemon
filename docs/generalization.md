@@ -1,11 +1,14 @@
 # Beyond Kanto: generalizing the architecture
 
 This project answers a question with a toy so the answer is checkable: **can an
-AI agent be useful and *architecturally* unable to ship a wrong claim or an
-unauthorized act?** The demo's two axes are the two halves of that sentence.
-Usefulness is empirical — measured per model, per corpus, with error bars
-(docs/findings.md). Non-fabrication is structural — enforced by construction
-and demonstrated by failure injection, not by a benchmark.
+AI agent be useful while an unsupported governed claim or unauthorized act is
+architecturally uncommittable inside a declared assurance envelope?** The
+demo's two axes are the two halves of that sentence. Usefulness is empirical —
+measured per model, per corpus, with error bars (docs/findings.md).
+Non-fabrication at the governed commit boundary is structural — enforced by
+construction and demonstrated by failure injection, not by a benchmark. The
+boundary, correctness taxonomy and falsification criteria are stated in
+[the assurance case](assurance-case.md).
 
 The toy is Pokémon. The intended reader works in wealth management, banking,
 healthcare, or safety-critical operations. This document is the bridge: an
@@ -254,6 +257,13 @@ second; the alternative is a true fact about the wrong well read out to a
 crew at 2am.
 
 ## 4. Operating the knowledge base
+
+The comparative sizing evidence is in
+[knowledge-scale.md](knowledge-scale.md): the current 384-record world is
+contrasted with WebQSP/CWQ/GrailQA and with public banking, pharma, and telecom
+proxies. Its central warning applies throughout this section: entity count,
+schema breadth, relationship volume, query composition, and change rate are
+separate scale axes.
 
 The user-facing question — "who maintains the facts, and how do decisions stay
 defensible while the facts move?" — is answered in the demo by machinery that
