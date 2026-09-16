@@ -5866,3 +5866,98 @@ are the only two constants besides the threshold and k, and each is
 stated in the code with its reason. (c) **named** — the corpus-derived
 stop list depends on the lesson count; a pack with many more lessons
 would derive a different one.
+
+### The alias data debt, paid as forms and nouns (2026-09-17)
+
+**Goal.** The activation ceiling read the alias matcher at 15 of 25 on
+held-out paraphrases, and the BM25 reading said a lexical index could not
+replace it. So the aliases had to get better as *data*. The question this
+entry answers: how far can the deterministic matcher be raised by pack
+data alone, on phrasings the data was not written from — and what does it
+cost in precision?
+
+**How it works.** Not more strings. The first attempt expanded each
+lesson's phrasings into explicit aliases and produced 9,354 of them, a
+9,000-line pack diff nobody could review; the generator, not the file,
+would have been the artifact. So the pack carries the generator instead:
+
+- `lessonAskForms.concept`: 66 shared forms, written once for every
+  concept — "what is {a} {n}", "explain {n}", "how does {n} work", "who
+  are the {n}"; `{a}` is the article the noun takes.
+- `lessonAskForms.topics`: nine topic words an orientation form's `{t}`
+  stands for — "the game", "this game", "pokemon".
+- Per concept lesson, `covers.nouns`: its noun forms, 125 across 17
+  lessons ("gym leader", "gym leaders", "gym"). Per orientation lesson,
+  `covers.forms`: its own forms with `{t}`, 187 across five lessons.
+- The matcher expands forms over nouns and topics into the same
+  whole-phrase check as before; 9,353 phrasings, from a 441-line pack
+  diff a reviewer can read. Literal aliases survive beside them. The
+  loader refuses a concept form with no `{n}`, nouns on an orientation
+  lesson, forms on a concept lesson, and either on the boundary.
+
+**The method, since the author had seen the misses.** The first held-out
+set's ten misses were read before this work, so nothing written from
+memory of them counts. Two things make the reading honest anyway: a
+**second held-out set** of 72 fresh wordings (three rewordings and one
+misspelling per lesson question, `data/playability/lesson-paraphrases.v1.json`)
+was written and committed *before* the pack changed, with the baseline
+pinned in that commit; and the widening was done by uniform forms over
+every lesson's nouns, never by inserting a phrase. The loader refuses a
+wording the bank already carries, so held out stays held out. The caveat
+that remains: the same author wrote both the second set and the
+orientation families, an hour apart, and a set written by someone else —
+or by a model, for pennies — is the cleaner test.
+
+**The reading**, before and after, the alias matcher throughout:
+
+| | before | after iteration 1 | after iteration 2 |
+|---|---:|---:|---:|
+| recall, first held-out set (25) | 15 (60%) | 20 (80%) | 20 (80%) |
+| recall, second held-out set (72) | 33 (46%) | 48 (67%) | 48 (67%) |
+| precision, must-not-answer, canonical (45) | 45 (100%) | 43 (96%) | 44 (98%) |
+| precision, must-not-answer, paraphrases (32) | 32 (100%) | 31 (97%) | 32 (100%) |
+
+Iteration 1 was the forms as first written. Its three precision misses
+were each one form: "How long does it take to finish the game?" drew
+`objective` through `finish {t}` — the porch's fifth-worst entry, which
+the door had taken from 5 of 5 to 0 of 5, reopened by data; "Would
+Mewtwo be a good catch for me right now?" drew `how-catch` through
+`{n} for`; "Who are the Elite Four?" drew `what-is-league` through `who
+are the {n}`. Iteration 2 removed the forms that are not definitional
+phrasings — `{n} for`, `the {n} for`, and the bare verb-plus-topic forms
+`beat`/`finish`/`complete`/`win {t}` — and re-read. It is labelled as a
+second iteration because the precision set was no longer held out for
+that change. Recall did not move.
+
+**What it says.**
+
+1. **Data alone lifts recall by a third on both sets** — 60% to 80% on
+   the first, 46% to 67% on the second — at a cost of one precision
+   point, and the cost is a named trade rather than a leak. `who are the
+   {n}` is the form that reads "who are the gym leaders?" as the lesson
+   ask the bank says it is; it also reads "Who are the Elite Four?" that
+   way, and the records do not hold the Elite Four. Kept, with the number.
+2. **The residue is mostly spelling.** Of the second set's 24 remaining
+   misses, 14 are the one-typo wordings; of the first set's five, three.
+   A whole-phrase matcher cannot read a misspelling inside the phrase,
+   and no amount of data changes that. The other ten rephrasings
+   ("What's the trick to catching a wild Pokemon?", "How do the two
+   versions differ?", "What are all those numbers on my Pokemon?") are
+   real, and each would take a form or a noun the author did not think
+   of. That is the deterministic ceiling for this door, and it is where
+   the intent classifier starts.
+3. **The gauge's second half earned its place.** Without the precision
+   reading, iteration 1 would have shipped a form that reopened a ledger
+   entry the door had closed. A matcher is read on both sides or on
+   neither.
+
+**Consequence for the gate.** S4b's seventh item is now: recall not
+below 20 of 25 and 48 of 72, precision not below 44 of 45 and 32 of 32,
+after any change to forms or nouns. The bank legs are unblocked.
+
+**Model errors:** none — no model was called. **Harness factors:** (a)
+**named** — the second set's author caveat above. (b) **named** — nine
+topic words and 66 concept forms are choices; the reading is of this
+pack's data, and a second world would write its own. (c) **named** —
+`v4` was widened in place, not versioned, because no filed record pins
+it; the moment one does, the next change is a `v5`.

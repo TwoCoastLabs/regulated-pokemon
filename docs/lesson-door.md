@@ -180,9 +180,13 @@ S3 with the same two-sided reading to clear.
 
 1. **Pack, new version.** Each `curriculum` entry gets a required
    `covers` block:
-   - `aliases`: surface forms of the concept, e.g. for
-     `what-is-gym-leader`: "gym leader", "gym leaders", "leader of the
-     gym".
+   - `aliases`: literal phrasings, matched as whole phrases. Since
+     2026-09-17 these are joined by `nouns` on a concept lesson ("gym
+     leader", "gym leaders", "gym") and `forms` on an orientation lesson
+     ("is {t} hard"), expanded through the pack's shared
+     `lessonAskForms` ("what is {a} {n}", "explain {n}"; topics for
+     `{t}`) — so a form written once serves every lesson, and the pack
+     stays readable. See "As built", item 6.
    - `scope`: `concept` or `orientation`. Orientation lessons are the
      ones about the game as a whole (`what-is-game`, `how-to-play`,
      `objective`). They get separate handling because they can match
@@ -253,17 +257,15 @@ number as count and percentage.
    2,466 today). A miss turned into an honest refusal is the win. A miss
    turned into an abstention is a smaller win, counted separately.
 6. **Enforcement.** 0 of N escalations, both models, denominator stated.
-7. **Recall *and precision* on phrasings the aliases were not written from** (added
-   2026-09-17, findings §24 "The activation ceiling"). The lesson door's
-   paraphrase column on the activation gauge — the bank's reviewed
-   `phrasings` of the 18 lesson questions, which are the held-out set and
-   must never be the source of an alias — not below today's 15 of 25
-   (60%) after any change, and the number to raise before the door is
-   the default. Item 2 cannot read this: the bank runs the canonical
-   intents, which the aliases were written from. The gauge reads the
-   other side too: the boundary alone offered on every must-not-answer
-   question, 45 of 45 and 32 of 32 today — a matcher is read on both or
-   on neither.
+7. **Recall *and precision* on phrasings the coverage was not written
+   from** (added 2026-09-17, findings §24). Two held-out sets — the bank's
+   reviewed `phrasings` of the 18 lesson questions (25) and
+   `data/playability/lesson-paraphrases.v1.json` (72), neither ever the
+   source of a form or a noun — and the must-not-answer questions (45
+   canonical, 32 paraphrases). After the widening of 2026-09-17: recall
+   20 of 25 and 48 of 72, precision 44 of 45 and 32 of 32. Not below
+   those after any change to forms or nouns. Item 2 cannot read this: the
+   bank runs the canonical intents.
 
 Cost: about $0.30 per strong leg, $0.04 per weak leg; under $0.70 for
 the four, after the live check for about three cents.
@@ -330,10 +332,19 @@ visible.
    bringing the whole catalogue back, 3 of 50 on the strong model
    (findings §24). The three retry sites now recompute the same offer.
 
-The activation gauge reads the door's recall on the bank's reviewed
-paraphrases, which the aliases were not written from: 15 of 25 (60%) on
-2026-09-17, seven misses being phrasings and three being typos — the
-fork between more aliases and a real retriever, with its number.
+6. **Coverage is nouns and forms, not only strings.** The first
+   widening produced 9,354 explicit aliases and a pack nobody could
+   review. So the pack carries the generator: shared concept forms with
+   a noun slot, topic words for orientation forms, nouns per concept
+   lesson and forms per orientation lesson, expanded by the matcher. Same
+   phrasings, 441 lines. Findings §24, "The alias data debt".
+
+The activation gauge reads the door on both sides on phrasings the
+coverage was not written from. On 2026-09-17: 15 of 25 before the
+widening and 20 of 25 after on the first held-out set, 33 of 72 and 48
+of 72 on the second; precision 44 of 45 and 32 of 32. A lexical index
+(BM25) was read the same way and lost on both sides. The residue is
+mostly spelling, which is where the intent classifier starts.
 
 The porch reading is in findings §24: topical lessons on the five worst
 ledger entries from 13 of 25 to 0 of 25 (strong) and 8 of 25 to 0 of 25

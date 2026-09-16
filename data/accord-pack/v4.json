@@ -783,6 +783,32 @@
           "explain the game",
           "what game is this",
           "what is this"
+        ],
+        "forms": [
+          "about {t}",
+          "what is {t}",
+          "what's {t}",
+          "explain {t}",
+          "basics of {t}",
+          "the basics of {t}",
+          "what {t} is",
+          "what {t} is about",
+          "what {t} is all about",
+          "hearing about {t}",
+          "heard of {t}",
+          "{t} thing",
+          "the whole {t} thing",
+          "what is {t} exactly",
+          "tell me about {t}",
+          "introduce {t}",
+          "introduction to {t}",
+          "overview of {t}",
+          "what is {t} all about",
+          "what's {t} about",
+          "what {t} is like",
+          "the basics",
+          "basics",
+          "give me the basics"
         ]
       },
       "block": {
@@ -819,6 +845,22 @@
           "what are you able to",
           "what kind of questions",
           "what should i ask"
+        ],
+        "forms": [
+          "what can you ask",
+          "what can i ask",
+          "what can you tell me",
+          "what can you answer",
+          "what do you know",
+          "what questions",
+          "what can you do",
+          "what can you help",
+          "what are you able to",
+          "what kind of questions",
+          "what should i ask",
+          "what can i ask you",
+          "what do you cover",
+          "what topics"
         ]
       },
       "block": {
@@ -857,6 +899,37 @@
           "explain how to play",
           "basics of the game",
           "the basics"
+        ],
+        "forms": [
+          "how do you play {t}",
+          "how do i play {t}",
+          "how to play {t}",
+          "how is {t} played",
+          "how {t} is played",
+          "how {t} works",
+          "how does {t} work",
+          "how {t} work",
+          "play {t}",
+          "playing {t}",
+          "how do you actually play",
+          "how do i actually play",
+          "how do you play",
+          "how do i play",
+          "how to play",
+          "how is it played",
+          "how does it work",
+          "how does this work",
+          "how this works",
+          "how it works",
+          "walk me through",
+          "never played",
+          "how does the game work",
+          "how the game works",
+          "explain how to play",
+          "the rules",
+          "rules of {t}",
+          "gameplay",
+          "how {t} goes"
         ]
       },
       "block": {
@@ -901,6 +974,42 @@
           "how do you win",
           "what counts as winning",
           "what is winning"
+        ],
+        "forms": [
+          "goal of {t}",
+          "the goal of {t}",
+          "point of {t}",
+          "the point of {t}",
+          "objective of {t}",
+          "the objective of {t}",
+          "aim of {t}",
+          "the aim of {t}",
+          "end goal",
+          "the end goal",
+          "the goal",
+          "what is the goal",
+          "what's the goal",
+          "what is the point",
+          "what's the point",
+          "what is the objective",
+          "what's the objective",
+          "what am i meant to",
+          "what am i supposed to",
+          "meant to be doing",
+          "supposed to be doing",
+          "trying to do",
+          "trying to achieve",
+          "what am i doing",
+          "what should i be doing",
+          "what do i do in {t}",
+          "what do you do in {t}",
+          "how do i win",
+          "how do you win",
+          "how to win",
+          "what counts as winning",
+                                                  "purpose of {t}",
+          "the purpose of {t}",
+          "what is {t} for"
         ]
       },
       "block": {
@@ -949,6 +1058,12 @@
           "what are the badges for",
           "what is a badge for",
           "what are badges for"
+        ],
+        "nouns": [
+          "badge",
+          "badges",
+          "gym badge",
+          "gym badges"
         ]
       },
       "block": {
@@ -999,6 +1114,16 @@
           "how does the type system work",
           "type system",
           "type chart"
+        ],
+        "nouns": [
+          "type",
+          "types",
+          "typing",
+          "pokemon type",
+          "pokemon types",
+          "type system",
+          "types system",
+          "type chart"
         ]
       },
       "block": {
@@ -1041,6 +1166,13 @@
           "explain catching",
           "what is catching",
           "capture a pokemon"
+        ],
+        "nouns": [
+          "catching",
+          "catch",
+          "catches",
+          "capturing",
+          "capture"
         ]
       },
       "block": {
@@ -1084,6 +1216,51 @@
           "beginner tips",
           "tips for a beginner",
           "just picked up"
+        ],
+        "forms": [
+          "where do i begin",
+          "where do i start",
+          "where to begin",
+          "where to start",
+          "how do i begin",
+          "how do i start",
+          "how to begin",
+          "how to start",
+          "getting started",
+          "get started",
+          "start {t}",
+          "starting {t}",
+          "started {t}",
+          "begin {t}",
+          "beginning {t}",
+          "first thing",
+          "first things",
+          "first step",
+          "first steps",
+          "what should i do first",
+          "what do i do first",
+          "what to do first",
+          "just started",
+          "just starting",
+          "just begun",
+          "just began",
+          "brand new",
+          "new player",
+          "new to {t}",
+          "new at {t}",
+          "what now",
+          "what next",
+          "tips for",
+          "any tips",
+          "some tips",
+          "beginner tips",
+          "turned {t} on",
+          "turned on {t}",
+          "booted up {t}",
+          "picked up {t}",
+          "starting out",
+          "early game",
+          "the beginning"
         ]
       },
       "block": {
@@ -1126,6 +1303,12 @@
           "is there a wrong starter",
           "wrong starter",
           "first pokemon should i"
+        ],
+        "nouns": [
+          "starter",
+          "starters",
+          "starter pokemon",
+          "first pokemon"
         ]
       },
       "block": {
@@ -1174,6 +1357,21 @@
           "why level",
           "grinding",
           "grind"
+        ],
+        "nouns": [
+          "leveling",
+          "levelling",
+          "leveling up",
+          "levelling up",
+          "level up",
+          "levels",
+          "level",
+          "experience",
+          "experience points",
+          "xp",
+          "gaining levels",
+          "gaining a level",
+          "gains a level"
         ]
       },
       "block": {
@@ -1218,6 +1416,18 @@
           "rest my team",
           "heal my team",
           "heal my pokemon"
+        ],
+        "nouns": [
+          "fainting",
+          "faint",
+          "fainted",
+          "healing",
+          "heal",
+          "reviving",
+          "revive",
+          "pokemon center",
+          "pokemon centers",
+          "knocked out"
         ]
       },
       "block": {
@@ -1265,6 +1475,18 @@
           "how is blue different",
           "red different from blue",
           "blue different from red"
+        ],
+        "nouns": [
+          "red and blue",
+          "red or blue",
+          "the red and blue versions",
+          "the two versions",
+          "the versions",
+          "version differences",
+          "version exclusives",
+          "version exclusive",
+          "red vs blue",
+          "red versus blue"
         ]
       },
       "block": {
@@ -1301,6 +1523,13 @@
           "how do i trade",
           "how does trading work",
           "can i trade"
+        ],
+        "nouns": [
+          "trading",
+          "trade",
+          "trades",
+          "link cable",
+          "cable club"
         ]
       },
       "block": {
@@ -1339,6 +1568,11 @@
           "red, blue and yellow",
           "red, blue, and yellow",
           "red blue yellow"
+        ],
+        "nouns": [
+          "yellow",
+          "pokemon yellow",
+          "yellow version"
         ]
       },
       "block": {
@@ -1383,6 +1617,47 @@
           "is it tough",
           "is it beginner friendly",
           "beginner-friendly"
+        ],
+        "forms": [
+          "is {t} hard",
+          "is {t} difficult",
+          "is {t} tough",
+          "is {t} easy",
+          "how hard is {t}",
+          "how difficult is {t}",
+          "how tough is {t}",
+          "how easy is {t}",
+          "{t} hard",
+          "{t} difficult",
+          "difficulty of {t}",
+          "the difficulty",
+          "difficulty",
+          "difficult",
+          "hard for",
+          "easy for",
+          "too hard",
+          "too difficult",
+          "struggle",
+          "struggling",
+          "beginner friendly",
+          "beginner-friendly",
+          "for beginners",
+          "for a beginner",
+          "total beginner",
+          "complete beginner",
+          "first-timer",
+          "first timer",
+          "first time player",
+          "newbie",
+          "casual",
+          "forgiving",
+          "punishing",
+          "is it hard",
+          "is it difficult",
+          "is it tough",
+          "is it easy",
+          "how hard",
+          "how difficult"
         ]
       },
       "block": {
@@ -1424,6 +1699,9 @@
           "pokemon mean",
           "meaning of pokemon",
           "what counts as a pokemon"
+        ],
+        "nouns": [
+          "pokemon"
         ]
       },
       "block": {
@@ -1465,6 +1743,15 @@
           "what do moves do",
           "what does a move do",
           "how do moves work"
+        ],
+        "nouns": [
+          "move",
+          "moves",
+          "attack",
+          "attacks",
+          "pokemon move",
+          "pokemon moves",
+          "pokemon attacks"
         ]
       },
       "block": {
@@ -1507,6 +1794,14 @@
           "what happens when a pokemon evolves",
           "what happens when it evolves",
           "what is an evolution"
+        ],
+        "nouns": [
+          "evolution",
+          "evolutions",
+          "evolving",
+          "evolve",
+          "evolves",
+          "evolved"
         ]
       },
       "block": {
@@ -1557,6 +1852,16 @@
           "what does a gym do",
           "gym mean",
           "gyms mean"
+        ],
+        "nouns": [
+          "gym leader",
+          "gym leaders",
+          "gym",
+          "gyms",
+          "pokemon gym",
+          "pokemon gyms",
+          "leader of a gym",
+          "leaders of the gyms"
         ]
       },
       "block": {
@@ -1599,6 +1904,15 @@
           "what is the league for",
           "what happens at the league",
           "what is the elite four for"
+        ],
+        "nouns": [
+          "league",
+          "the league",
+          "pokemon league",
+          "the pokemon league",
+          "elite four",
+          "the elite four",
+          "champion"
         ]
       },
       "block": {
@@ -1650,6 +1964,22 @@
           "what does defense mean",
           "what does speed mean",
           "what does special mean"
+        ],
+        "nouns": [
+          "stat",
+          "stats",
+          "statistics",
+          "base stat",
+          "base stats",
+          "pokemon stats",
+          "the stats",
+          "the numbers",
+          "numbers",
+          "hp",
+          "attack stat",
+          "defense stat",
+          "speed stat",
+          "special stat"
         ]
       },
       "block": {
@@ -1700,6 +2030,14 @@
           "how do pokeballs work",
           "what is a ball",
           "what are balls"
+        ],
+        "nouns": [
+          "poke ball",
+          "poke balls",
+          "pokeball",
+          "pokeballs",
+          "ball",
+          "balls"
         ]
       },
       "block": {
@@ -1759,6 +2097,22 @@
           "technical machine",
           "hidden machine",
           "what is a machine"
+        ],
+        "nouns": [
+          "tm",
+          "tms",
+          "hm",
+          "hms",
+          "tm or hm",
+          "tm and hm",
+          "tms and hms",
+          "tms or hms",
+          "technical machine",
+          "technical machines",
+          "hidden machine",
+          "hidden machines",
+          "machine",
+          "machines"
         ]
       },
       "block": {
@@ -2230,6 +2584,87 @@
       ]
     }
   ],
+  "lessonAskForms": {
+    "concept": [
+      "what is {a} {n}",
+      "what is {n}",
+      "what's {a} {n}",
+      "what's {n}",
+      "what are {n}",
+      "what is the {n}",
+      "what's the {n}",
+      "what does {a} {n} do",
+      "what do {n} do",
+      "what does {n} do",
+      "what does the {n} do",
+      "what do the {n} do",
+      "what does {n} mean",
+      "what does {a} {n} mean",
+      "what do {n} mean",
+      "what does the {n} mean",
+      "{n} mean",
+      "{n} means",
+      "explain {n}",
+      "explain the {n}",
+      "explain {a} {n}",
+      "explain what {a} {n}",
+      "explain what {n}",
+      "define {n}",
+      "definition of {n}",
+      "meaning of {n}",
+      "how does {n} work",
+      "how do {n} work",
+      "how does {a} {n} work",
+      "how does the {n} work",
+      "how {n} work",
+      "how {n} works",
+      "who are the {n}",
+      "who are {n}",
+      "who is {a} {n}",
+      "what is a {n} for",
+      "what are {n} for",
+      "what's {a} {n} for",
+      "what is the {n} for",
+      "tell me about {n}",
+      "tell me about the {n}",
+      "why do i need {n}",
+      "why do i need {a} {n}",
+      "point of {n}",
+      "point of {a} {n}",
+      "point of the {n}",
+      "what's the deal with {n}",
+      "what is the deal with {n}",
+      "what counts as {a} {n}",
+      "what counts as {n}",
+      "what exactly is {a} {n}",
+      "what exactly are {n}",
+      "understand {n}",
+      "what {a} {n} is",
+      "what {n} are",
+      "what {n} is",
+          "what happens when {n}",
+      "what happens with {n}",
+      "what is {n} about",
+      "what are {n} about",
+      "what's {n} about",
+      "care about {n}",
+      "all about {n}",
+      "{n} explained",
+      "{n} 101",
+      "how {n} work in"
+    ],
+    "topics": [
+      "the game",
+      "this game",
+      "the whole game",
+      "pokemon",
+      "red",
+      "blue",
+      "red and blue",
+      "this",
+      "it"
+    ]
+  },
   "recordsBoundary": {
     "lessonId": "what-the-records-hold"
   }
