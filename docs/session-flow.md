@@ -59,6 +59,9 @@ sequenceDiagram
         opt the offered door is on and the ask admits no listing (offered-door.md)
             D->>D: listing route left out of the grammar — the executor's ask-only checks, before the call
         end
+        opt the lesson door is on (lesson-door.md)
+            D->>D: explanation route narrowed to the lessons the ask is about, plus the boundary — the pack's declared coverage, before the call
+        end
         opt reply was only a nomination the executor refused
             D->>M: proposeAnswer again, route door closed
             M-->>D: JSON

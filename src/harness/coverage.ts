@@ -78,6 +78,14 @@ export interface CoverageMap {
    */
   listingDoor?: { runs: number; offered: number; nominated: number; served: number };
   /**
+   * The lesson door's funnel (docs/lesson-door.md), present when the runs
+   * carry it: how many first calls had the catalogue narrowed, how many
+   * offered the boundary lesson alone (the ask named nothing a lesson
+   * explains), and the lessons offered summed over the runs — divided by
+   * runs, the mean catalogue size the model saw.
+   */
+  lessonDoor?: { runs: number; narrowed: number; boundaryOnly: number; offered: number };
+  /**
    * The trainer-facing ceremony across the runs, present when the runs carry
    * it (epic #94, slice 5): clarifying questions asked, scope cards ruled on,
    * act cards consented — beside calls/turn, so friction is priced in what
@@ -266,6 +274,16 @@ export function coverageMap(runs: readonly BankRun[]): CoverageMap {
           nominated: doored.filter((run) => run.listingDoor?.nominated === true).length,
           served: doored.filter((run) => run.listingDoor?.served === true).length,
         };
+  const lessoned = runs.filter((run) => run.lessonDoor !== undefined);
+  const lessonDoor =
+    lessoned.length === 0
+      ? undefined
+      : {
+          runs: lessoned.length,
+          narrowed: lessoned.filter((run) => run.lessonDoor?.narrowed === true).length,
+          boundaryOnly: lessoned.filter((run) => run.lessonDoor?.offered === 1).length,
+          offered: lessoned.reduce((sum, run) => sum + (run.lessonDoor?.offered ?? 0), 0),
+        };
   return {
     total: runs.length,
     pass: runs.filter((run) => run.score.pass).length,
@@ -280,6 +298,7 @@ export function coverageMap(runs: readonly BankRun[]): CoverageMap {
     nominationRetried: runs.filter((run) => run.nominationRetried === true).map((run) => run.entryId),
     ...(prompting === undefined ? {} : { prompting }),
     ...(listingDoor === undefined ? {} : { listingDoor }),
+    ...(lessonDoor === undefined ? {} : { lessonDoor }),
     ...(ceremony === undefined ? {} : { ceremony }),
     ...(clarification === undefined ? {} : { clarification }),
     ...(suggestions === undefined ? {} : { suggestions }),
@@ -455,6 +474,14 @@ export function renderCoverage(map: CoverageMap, heading = "Playability coverage
     lines.push(
       `**The listing door: offered on ${door.offered}/${door.runs} (${pct(door.offered / door.runs)}) first calls, nominated on ${door.nominated}/${door.runs} (${pct(door.nominated / door.runs)}), served on ${door.served}/${door.runs} (${pct(door.served / door.runs)})** — ` +
         "a door left out of the grammar is one the driver would have refused; a nomination is the model's whole first reply asking for it.",
+    );
+    lines.push("");
+  }
+  if (map.lessonDoor !== undefined) {
+    const door = map.lessonDoor;
+    lines.push(
+      `**The lesson door: the catalogue narrowed on ${door.narrowed}/${door.runs} (${pct(door.narrowed / door.runs)}) first calls, the boundary lesson alone on ${door.boundaryOnly}/${door.runs} (${pct(door.boundaryOnly / door.runs)}); ${(door.offered / door.runs).toFixed(1)} lessons offered per call on average** — ` +
+        "a lesson left out of the grammar is one the ask is not about; the boundary lesson is always in.",
     );
     lines.push("");
   }

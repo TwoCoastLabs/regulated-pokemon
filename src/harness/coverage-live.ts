@@ -122,6 +122,7 @@ export interface CoverageArgs {
   /** The offered door (docs/offered-door.md): the listing route in the
    * grammar only where the driver would accept it. Recorded. */
   offeredDoors: boolean;
+  lessonDoor: boolean;
   model?: string;
   limit?: number;
   ids?: readonly string[];
@@ -161,6 +162,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     prompt?: PromptShape;
     refusalFeedback: boolean;
     offeredDoors: boolean;
+  lessonDoor: boolean;
     model?: string;
     limit?: number;
     ids?: string[];
@@ -172,7 +174,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     source?: string;
     help: boolean;
     errors: string[];
-  } = { live: false, render: false, weak: false, dialogues: false, adversarial: false, center: false, grounded: false, retrieval: false, gatedGrammar: false, repair: false, profile: false, feedback: false, clarify: false, suggest: false, raw: false, refusalFeedback: false, offeredDoors: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
+  } = { live: false, render: false, weak: false, dialogues: false, adversarial: false, center: false, grounded: false, retrieval: false, gatedGrammar: false, repair: false, profile: false, feedback: false, clarify: false, suggest: false, raw: false, refusalFeedback: false, offeredDoors: false, lessonDoor: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
 
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index];
@@ -245,6 +247,9 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
         break;
       case "--refusal-feedback":
         args.refusalFeedback = true;
+        break;
+      case "--lesson-door":
+        args.lessonDoor = true;
         break;
       case "--offered-doors":
         args.offeredDoors = true;
@@ -341,7 +346,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
   if (args.repair && args.phrasings) {
     args.errors.push("--repair is not threaded through the robustness pass; run it on the coverage or dialogue banks");
   }
-  for (const [flag, on] of [["--profile", args.profile], ["--feedback", args.feedback], ["--clarify", args.clarify], ["--suggest", args.suggest], ["--raw", args.raw], ["--precedents", args.precedents !== undefined], ["--prompt", args.prompt !== undefined], ["--refusal-feedback", args.refusalFeedback], ["--offered-doors", args.offeredDoors]] as const) {
+  for (const [flag, on] of [["--profile", args.profile], ["--feedback", args.feedback], ["--clarify", args.clarify], ["--suggest", args.suggest], ["--raw", args.raw], ["--precedents", args.precedents !== undefined], ["--prompt", args.prompt !== undefined], ["--refusal-feedback", args.refusalFeedback], ["--offered-doors", args.offeredDoors], ["--lesson-door", args.lessonDoor]] as const) {
     if (on && (args.phrasings || args.dialogues)) {
       args.errors.push(`${flag} is threaded through the single-turn coverage run only; the robustness and dialogue banks do not carry it`);
     }
@@ -378,6 +383,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     raw: args.raw,
     refusalFeedback: args.refusalFeedback,
     offeredDoors: args.offeredDoors,
+    lessonDoor: args.lessonDoor,
     phrasings: args.phrasings,
     repetitions: args.repetitions,
     out: args.out,
@@ -448,6 +454,7 @@ const USAGE = [
   "  --refusal-feedback  a nomination the driver refuses is carried back to the model by name on the retry,",
   "                      instead of the door withdrawn in silence (M3). Recorded; the retries are counted either way.",
   "  --offered-doors     the listing door is in the answer grammar only when the driver would accept a nomination",
+  "  --lesson-door       the explanation route carries only the lessons the ask is about, plus the boundary",
   "                      of it — the executor's ask-only checks, run before the call (docs/offered-door.md).",
   "                      Recorded; offered / nominated / served are counted per sample either way.",
   "  --render [PATH]     render a filed coverage artifact (a file, or a directory to take the newest",
@@ -656,6 +663,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
         `  prompt:        ${args.prompt === "blocks" ? "blocks — the fixed block sequence, each rule once" : "legacy — the prompt as it accreted"}`,
         `  refusal:       ${args.refusalFeedback ? "fed back — a refused nomination is carried back to the model by name" : "withdrawn — a refused nomination's door is withdrawn for one call in silence"}`,
         `  listing door:  ${args.offeredDoors ? "offered only when the driver would accept it — the executor's ask-only checks, before the call" : "offered on every first call"}`,
+        `  lesson door:   ${args.lessonDoor ? "only the lessons the ask is about, plus the boundary — the pack's declared coverage, before the call" : "the whole catalogue on every call"}`,
         `  model:         ${model}`,
         `  artifact:      filed under ${args.out}/`,
         `  add --live to run it against the model and bill your key.`,
@@ -731,6 +739,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
         ...(args.prompt === undefined ? {} : { prompt: args.prompt }),
         refusalFeedback: args.refusalFeedback,
         offeredDoors: args.offeredDoors,
+    lessonDoor: args.lessonDoor,
       });
       runs.push(...sampled);
       if (sampled.some((run) => run.score.enforcementEscalation === true)) {
@@ -780,6 +789,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
     ...(args.prompt === undefined ? {} : { prompt: args.prompt }),
     ...(args.refusalFeedback ? { refusalFeedback: true } : {}),
     ...(args.offeredDoors ? { offeredDoors: true } : {}),
+    ...(args.lessonDoor ? { lessonDoor: true } : {}),
     repetitions: args.repetitions,
     ...(args.dispositions === undefined ? {} : { dispositions: args.dispositions }),
     stoppedEarly,

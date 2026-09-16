@@ -67,6 +67,9 @@ describe("tone and lane", () => {
     expect(toneOf("route/refused-back")).toBe("refused");
     expect(toneOf("memory/followed")).toBe("ok");
     expect(toneOf("memory/empty")).toBe("plain");
+    // The doors narrowed before a call are the driver's offer, not a refusal.
+    expect(toneOf("route/withheld")).toBe("plain");
+    expect(toneOf("route/narrowed")).toBe("plain");
     expect(toneOf("memory/departed")).toBe("plain");
     expect(toneOf("model/retry")).toBe("plain");
     expect(toneOf("any/new-thing-denied")).toBe("plain");

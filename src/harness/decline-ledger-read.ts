@@ -18,11 +18,14 @@
  */
 
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 import { type DeclineLedgerLeg, declineLedger, renderDeclineLedger } from "./decline-ledger.js";
 import { centerWorld, demoWorld } from "../demo/files.js";
+import { loadPack } from "../kernel/pack.js";
 import type { CoverageArtifact } from "./coverage-artifact.js";
+
+const PACKS_DIR = resolve(import.meta.dirname, "../../data/accord-pack");
 
 export interface DeclineLedgerFs {
   readFile(path: string): string;
@@ -47,11 +50,25 @@ export function boundaryLessonFor(packId: string, worlds: ReadonlyMap<string, st
   return worlds.has(packId) ? worlds.get(packId) : "unknown";
 }
 
-/** The packs this build carries, by id, each with its boundary lesson. */
+/**
+ * Every pack version the tree carries, by id, each with its boundary lesson.
+ *
+ * The whole shelf, not just the current pack of each world: a filed
+ * artifact pins the pack it ran under, and the M3 legs pin `indigo-accord-v3`
+ * while the live path has moved on. Each pack file is loaded against the
+ * first carried registry that accepts it (a pack belongs with its world),
+ * the same way the replay sweep builds its shelf; a pack no registry accepts
+ * is thrown loudly rather than skipped.
+ */
 export function carriedBoundaries(): ReadonlyMap<string, string | undefined> {
   const carried = new Map<string, string | undefined>();
-  for (const world of [demoWorld(), centerWorld()]) {
-    carried.set(world.pack.id, world.pack.recordsBoundary?.lessonId);
+  const registries = [demoWorld().registry, centerWorld().registry];
+  for (const entry of readdirSync(PACKS_DIR)) {
+    if (!entry.endsWith(".json")) continue;
+    const parsed: unknown = JSON.parse(readFileSync(join(PACKS_DIR, entry), "utf8"));
+    const loaded = registries.map((registry) => loadPack(parsed, registry)).find((attempt) => attempt.ok);
+    if (loaded === undefined || !loaded.ok) throw new Error(`pack ${entry} does not load against any carried world`);
+    carried.set(loaded.value.id, loaded.value.recordsBoundary?.lessonId);
   }
   return carried;
 }

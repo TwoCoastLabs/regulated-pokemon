@@ -5552,3 +5552,133 @@ is never listed as a row, so the content demand itself is still
 uncounted. Beyond that, K1's gate asks for a page of the app and a
 `harness:results` rendering, and K2's for the owner role per class
 declared in the pack rather than in code. Neither slice is ticked.
+
+## 24. The lesson door: a lesson is offered only when the ask is about it (epic #118 S4b)
+
+### The porch reading (2026-09-16)
+
+**Goal.** The decline ledger (§23) said 125 of 204 wrong answers on
+must-not-resolve questions were a pack lesson on a subject the ask did
+not name, and that both models did it at the same rate. The lesson door
+([lesson-door.md](lesson-door.md)) is the offered door applied to that
+route: the explanation route carries only the lessons whose declared
+coverage the ask names, plus the records-boundary lesson, always. This
+entry is the cheap live check the design put before the bank legs. The
+legs are the gate and are not yet run.
+
+**How it works.** Each lesson in `indigo-accord-v4` (and
+`pokemon-center-v4`) declares `covers`: the definitional phrasings that
+mean the lesson is wanted ("what is a gym leader", never "gym leader"
+alone) and a scope — `concept`, `orientation` (the game as a whole,
+offered only when no concept matched) or `boundary` (always offered,
+no aliases, exactly one). With `--lesson-door`, `lessonAskCheck` reads
+the ask against that before every answer call in the exchange; the
+prompt's lesson list and the grammar's `blockId` enum are built from the
+result, so a lesson outside the ask is unrepresentable at decode. A
+`route/narrowed` step records it. Two loader refusals fail closed
+(pack.test.ts); 1975 tests.
+
+**The reading.** `session:trace`, ten asks, five conversations each,
+both models, the door off (today's live page, every lever at its
+default) and on (`--lesson-door` and nothing else): the four porch
+openers, the five worst entries in the decline ledger, and "What is a
+Gym Leader?" — the definitional twin of the worst lesson miss, there to
+be protected. 200 conversations, $0.056, 0 provider errors, 1 truncated
+reply (off arm, strong).
+
+| strong `qwen/qwen3-235b-a22b-2507` | door off (50) | door on (50) |
+|---|---|---|
+| **the five worst: topical lesson certified** | **13/25 (52%)** | **0/25 (0%)** |
+| the five worst: boundary lesson alone | 5/25 (20%) | 7/25 (28%) |
+| the five worst: abstained | 4/25 (16%) | 14/25 (56%) |
+| the five worst: scope asked or card | 3/25 (12%) | 4/25 (16%) |
+| the five worst: calls per conversation | 2.32 | 2.00 |
+| openers: the `what-is-game` lesson alone | 18/20 (90%) | 20/20 (100%) |
+| openers: a lesson pile (three or more) | 1/20 (5%) | 0/20 (0%) |
+| openers: listing nominated first (held constant) | 19/20 | 19/20 |
+| "What is a Gym Leader?": its lesson | 5/5 | 5/5 |
+| model calls, all fifty | 108 | 97 |
+| cost | $0.0251 | $0.0186 |
+
+| weak `mistralai/mistral-nemo` | door off (50) | door on (50) |
+|---|---|---|
+| **the five worst: topical lesson certified** | **8/25 (32%)** | **0/25 (0%)** |
+| the five worst: boundary lesson alone | 1/25 (4%) | 12/25 (48%) |
+| the five worst: abstained | 5/25 (20%) | 4/25 (16%) |
+| the five worst: scope asked or card | 11/25 (44%) | 9/25 (36%) |
+| the five worst: calls per conversation | 2.00 | 1.76 |
+| openers: the `what-is-game` lesson alone | 20/20 | 20/20 |
+| "What is a Gym Leader?": its lesson | 5/5 | 5/5 |
+| model calls, all fifty | 75 | 70 |
+| cost | $0.0064 | $0.0061 |
+
+Per question, door off → on, topical lesson certified:
+
+| ask | strong | weak |
+|---|---|---|
+| "Who is the Pewter City gym leader?" | 2/5 → 0/5 | 5/5 → 0/5 |
+| "What strategy should I use against the next gym?" | 4/5 → 0/5 | 3/5 → 0/5 |
+| "How long does it take to finish the game?" | 5/5 → 0/5 | 0/5 → 0/5 |
+| "What does an Oran Berry do?" | 2/5 → 0/5 | 0/5 → 0/5 |
+| "Which move tutor teaches Body Slam?" | 0/5 → 0/5 | 0/5 → 0/5 |
+
+**What it says.** Four things, each a number.
+
+1. **The door closes the class.** Topical lessons on the five worst
+   entries went from 13 of 25 to 0 of 25 on the strong model and 8 of
+   25 to 0 of 25 on the weak one. That is the shape a grammar lever has:
+   both models, the same direction, to the floor. "How long does it take
+   to finish the game?" drew `what-is-game` 5 of 5 on the strong model
+   with the door off; with it on, no orientation alias matched, the
+   boundary lesson alone was offered, and the model abstained 5 of 5.
+2. **Nothing protected was lost.** The four openers drew the game lesson
+   20 of 20 on both models with the door on (18 of 20 strong with it
+   off), and "What is a Gym Leader?" drew its lesson 5 of 5 on both
+   arms, both models. The 12-lesson pile §22 recorded on one opener
+   phrasing is unrepresentable with two lessons in the enum: 1 of 20
+   off, 0 of 20 on.
+3. **Where the miss went differs by model.** On the weak model it became
+   the honest refusal: the boundary lesson alone rose from 1 of 25 to
+   12 of 25. On the strong model it mostly became an abstention — 4 of
+   25 to 14 of 25 — with the boundary lesson 5 to 7. Both are correct
+   declines by the bank's scorer; the design named the second the
+   smaller win, and on the strong model it is the larger share. The
+   strong model, offered only the boundary lesson, more often says
+   nothing than teaches it.
+4. **It costs less, not more.** Calls fell on both models (108 to 97
+   strong, 75 to 70 weak) and so did cost; a lesson the model cannot
+   name is a lesson the driver never has to drop and carry back.
+   "Which move tutor teaches Body Slam?" — the retrieval class, not a
+   lesson miss — moved nowhere, as it should not.
+
+**A bug the reading found, with its number.** The first on-arm run
+certified `what-is-gym-leader` on 3 of 50 strong-model conversations
+with the door on — all three on the carried-back retry, none on the
+first call. The trail read `route/narrowed: 1 of 24` and then
+`model/retry` naming a lesson not among the one: the first call was
+narrowed, the retry was not, and the precedent example for "What is a
+Gym Leader?" pointed the model straight at the catalogue that had come
+back. Every answer call in the exchange now carries the same set
+(`lessonsArg`, three retry sites), pinned by a test that reads the
+retry's grammar on both the discovery and answer paths and fails when
+either site is reverted. The on arms above are the re-run on the fixed
+build; the off arms are unaffected by the fix. The leaked run is not
+counted anywhere above.
+
+**Model errors:** the strong model's listing nomination on the openers
+(19 of 20, both arms — the listing door was held at today's default so
+the lesson door is read alone); one `profile` nomination on "What
+strategy…" with the door on (1 of 50), refused as the design predicted;
+one truncated reply (off arm). **Harness factors:** (a) **named** — the
+porch sets no profile, so "scope asked" and "scope card" outcomes
+(3–11 of 25 per cell) are the ladder doing its job on an ask that needed
+scope, not the door's; the bank runs with `--profile` and will not show
+them. (b) **named** — N=5 per cell is a porch sample; the bank legs (off
+and on, N=3, both models, under $0.70, beside S4a's own unrun gate in
+the same window) are the pre-registered gate, with the 18 protected
+lesson questions held at or above 306 of 324. (c) **named** — the
+aliases were written from the lesson text and the 18 bank questions; a
+definitional ask phrased in a way none anticipated draws the boundary
+lesson, which is the "coverage too narrow" case the gate's second item
+reads. (d) **named** — no prompt wording changed; the off arm is today's
+live page exactly.

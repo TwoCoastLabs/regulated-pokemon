@@ -135,6 +135,13 @@ export interface BankRun {
    * the door was an offer.
    */
   listingDoor?: { offered: boolean; nominated: boolean; served: boolean };
+  /**
+   * The lesson door's reading per sample (docs/lesson-door.md), on every
+   * leg the lever was on: whether the catalogue was narrowed on the first
+   * call, how many lessons that call offered (boundary included) and how
+   * many it withheld. Absent when the lever was off.
+   */
+  lessonDoor?: { narrowed: boolean; offered: number; withheld: number };
   /** One human line on how it ended, for the report's detail column. */
   detail: string;
 }
@@ -178,6 +185,9 @@ export interface BankRunOptions {
   /** The offered door (docs/offered-door.md): the listing route in the
    * grammar only when the driver would accept it. Recorded. */
   offeredDoors?: boolean;
+  /** The lesson door (docs/lesson-door.md): the explanation route carries
+   * only the lessons the ask is about, plus the boundary. */
+  lessonDoor?: boolean;
 }
 
 /** A bank run still carrying the whole record behind its verdict — transcript,
@@ -487,6 +497,7 @@ export async function runBankEntry(
     ...(options.prompt === undefined ? {} : { prompt: options.prompt }),
     ...(options.refusalFeedback === undefined ? {} : { refusalFeedback: options.refusalFeedback }),
     ...(options.offeredDoors === undefined ? {} : { offeredDoors: options.offeredDoors }),
+    ...(options.lessonDoor === undefined ? {} : { lessonDoor: options.lessonDoor }),
     ...(options.precedents === undefined
       ? {}
       : {
@@ -525,6 +536,9 @@ export async function runBankEntry(
     ...(state.nominationRetries > 0 ? { nominationRetried: true } : {}),
     promptTokens: state.usage.promptTokens,
     listingDoor: { offered: state.listingDoor.withheld === 0, nominated: state.listingDoor.nominated > 0, served: state.listingActivations.served > 0 },
+    ...(options.lessonDoor === true
+      ? { lessonDoor: { narrowed: state.lessonDoor.narrowed > 0, offered: state.lessonDoor.offered, withheld: state.lessonDoor.withheld } }
+      : {}),
     ...(state.linking.offTargetDropped > 0 ? { offTargetDropped: state.linking.offTargetDropped } : {}),
     ...(refused === undefined ? {} : { deniedDraftOnTarget: draftOnTarget(entry, refused) }),
     ...(options.clarify === true ? { clarified: { asked, picked, ignored, capped } } : {}),

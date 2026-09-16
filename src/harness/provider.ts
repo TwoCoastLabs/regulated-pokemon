@@ -71,6 +71,13 @@ export interface DoorState {
    * parsing the prose. Absent on the legacy prompt.
    */
   blocks?: readonly string[];
+  /**
+   * The lessons the explanation route could name on this call, when the
+   * lesson door narrowed them (docs/lesson-door.md) — the boundary lesson
+   * always among them. Absent when the door was shut and the whole
+   * catalogue was open, and on traces filed before the door existed.
+   */
+  lessons?: readonly string[];
 }
 
 export interface RequestHint {

@@ -144,9 +144,13 @@ describe("the decline ledger over the six filed M3 legs", () => {
   });
   const ledger = declineLedger(legs);
 
-  it("runs against the pack the artifacts pinned", () => {
+  it("classifies against the boundary lesson the artifacts' own pack names", () => {
+    // The M3 legs pin indigo-accord-v3 and the live path has since moved to
+    // v4; both name the same boundary lesson, which is the only thing the
+    // classification reads from the pack.
     expect(boundaryLessonId).toBe(BOUNDARY);
-    for (const { file } of M3_LEGS) expect(artifact(file).world.packId).toBe(world.pack.id);
+    for (const { file } of M3_LEGS) expect(artifact(file).world.packId).toBe("indigo-accord-v3");
+    expect(world.pack.recordsBoundary?.lessonId).toBe(BOUNDARY);
   });
 
   it("reads 204 of 810 samples as answered when they should have been declined", () => {

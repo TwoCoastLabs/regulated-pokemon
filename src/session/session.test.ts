@@ -2247,6 +2247,125 @@ describe("the driver's ledger — every step of an exchange, in fixed wording, b
     expect(off.listingDoor).toEqual({ withheld: 0, nominated: 1 });
   });
 
+  it("the lesson door: the explanation route carries only the lessons the ask is about, plus the boundary, and the narrowing is a step", async () => {
+    // docs/lesson-door.md (epic #118 S4b): the pack's declared coverage,
+    // read before the call. A definitional ask gets its lesson; a fact ask
+    // about the same concept gets the boundary alone; an ask about the game
+    // as a whole gets the orientation lessons only when no concept matched.
+    const seen: (readonly string[] | undefined)[] = [];
+    const enums: (readonly string[] | undefined)[] = [];
+    const provider = new ScriptedProvider("lesson-door", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      seen.push(request.hint.doors?.lessons);
+      // The grammar's explanation enum, read from the schema itself: what the
+      // model could actually say, not what the prompt claimed.
+      const claims = (request.schema?.schema as { properties: { claims: { items: { anyOf: { properties?: { kind?: { enum?: string[] }; blockId?: { enum?: string[] } } }[] } } } }).properties.claims.items.anyOf;
+      enums.push(claims.find((variant) => variant.properties?.kind?.enum?.[0] === "explanation")?.properties?.blockId?.enum);
+      // A model that names the first lesson it is allowed to.
+      const first = request.hint.doors?.lessons?.[0] ?? "what-is-pokemon";
+      return JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: first }] });
+    });
+    const d: SessionDeps = { ...deps(provider), lessonDoor: true, offeredDoors: true };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+
+    // The definitional ask: its lesson and the boundary, nothing else.
+    state = await say(state, "What is a Gym Leader?", d);
+    let trail = state.exchanges.at(-1)!;
+    expect(trail.outcome).toBe("answered");
+    expect(seen.at(-1)).toEqual(["what-is-gym-leader", "what-the-records-hold"]);
+    expect(enums.at(-1)).toEqual(["what-is-gym-leader", "what-the-records-hold"]);
+    const narrowed = trail.steps.find((entry) => entry.code === "route/narrowed")!;
+    expect(narrowed.lane).toBe("driver");
+    expect(narrowed.text).toContain("2 of 24 lessons offered");
+    expect(narrowed.text).toContain('the question is about "what-is-gym-leader"');
+    expect(narrowed.text).toContain("the other 22 were left out of the grammar");
+    expect(state.records.at(-1)?.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-gym-leader" }]);
+    expect(state.lessonDoor).toEqual({ narrowed: 1, offered: 2, withheld: 22 });
+
+    // The decline ledger's worst entry: the same words, a different ask. The
+    // lesson is not offered; only the boundary is, and the model teaches it.
+    state = await say(state, "Who is the Pewter City gym leader?", d);
+    trail = state.exchanges.at(-1)!;
+    expect(seen.at(-1)).toEqual(["what-the-records-hold"]);
+    expect(trail.steps.find((entry) => entry.code === "route/narrowed")?.text).toContain("the question names nothing a lesson explains");
+    expect(state.records.at(-1)?.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-the-records-hold" }]);
+
+    // The game as a whole: orientation lessons, boundary included, no concept.
+    state = await say(state, "tell me about the game", d);
+    expect(seen.at(-1)).toEqual(["what-is-game", "what-the-records-hold"]);
+    expect(state.exchanges.at(-1)!.steps.find((entry) => entry.code === "route/narrowed")?.text).toContain("about the game as a whole");
+
+    // A concept beats an orientation phrase in the same ask: "what's the
+    // point" is objective's alias, "leveling" is a concept, the concept wins.
+    state = await say(state, "What's the point of leveling up my Pokemon?", d);
+    expect(seen.at(-1)).toEqual(["leveling", "what-the-records-hold"]);
+
+    // Accents and curly apostrophes fold; a phrase inside a longer word does not match.
+    state = await say(state, "What’s a Poké Ball?", d);
+    expect(seen.at(-1)).toEqual(["what-is-poke-ball", "what-the-records-hold"]);
+
+    // The lever off: the whole catalogue, no door declared, no step.
+    const off = await say(await setProfile(startSession(), PROFILE_SCOPE, deps(provider)), "What is a Gym Leader?", deps(provider));
+    expect(seen.at(-1)).toBeUndefined();
+    expect(enums.at(-1)).toHaveLength(24);
+    expect(codes(off.exchanges.at(-1)!.steps)).not.toContain("route/narrowed");
+    expect(off.lessonDoor).toEqual({ narrowed: 0, offered: 0, withheld: 0 });
+  });
+
+  it("the lesson door holds on the carried-back retry too — the whole catalogue does not come back with the feedback", async () => {
+    // Found on the porch (2026-09-16): the first call was narrowed, the
+    // off-ask retry was not, and the strong model certified the withheld
+    // lesson on the retry, 3 of 50. Every answer call in the exchange now
+    // carries the same set; this reads the retry's grammar directly.
+    const offAsk = JSON.stringify({
+      asked: [{ phrase: "how many pp", entityId: "psychic", fieldId: "move-pp" }],
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "psychic", factId: "move-power" }],
+    });
+    const lessons: (readonly string[] | undefined)[] = [];
+    const enums: (readonly string[] | undefined)[] = [];
+    let calls = 0;
+    const provider = new ScriptedProvider("lesson-door-retry", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      lessons.push(request.hint.doors?.lessons);
+      const claims = (request.schema?.schema as { properties: { claims: { items: { anyOf: { properties?: { kind?: { enum?: string[] }; blockId?: { enum?: string[] } } }[] } } } }).properties.claims.items.anyOf;
+      enums.push(claims.find((variant) => variant.properties?.kind?.enum?.[0] === "explanation")?.properties?.blockId?.enum);
+      return (calls += 1) === 1 ? offAsk : JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-the-records-hold" }] });
+    });
+    const d: SessionDeps = { ...deps(provider), feedback: true, lessonDoor: true };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "How many PP does Psychic have?", d);
+    const sequence = codes(state.exchanges.at(-1)!.steps);
+    expect(sequence.indexOf("reply/carried-back")).toBeGreaterThan(-1);
+    expect(sequence[sequence.indexOf("reply/carried-back") + 1]).toBe("model/retry");
+    expect(lessons).toEqual([["what-the-records-hold"], ["what-the-records-hold"]]);
+    expect(enums).toEqual([["what-the-records-hold"], ["what-the-records-hold"]]);
+
+    // The same round before any scope is set — the discovery path, which is
+    // the one the porch runs — carries the set on its retry too.
+    lessons.length = 0;
+    enums.length = 0;
+    calls = 0;
+    await say(startSession(), "How many PP does Psychic have?", d);
+    expect(lessons).toEqual([["what-the-records-hold"], ["what-the-records-hold"]]);
+    expect(enums).toEqual([["what-the-records-hold"], ["what-the-records-hold"]]);
+  });
+
+  it("the lesson door on a pack that declares no coverage offers every lesson and says so on the trail", async () => {
+    // The pre-door packs still govern filed records; with the lever on
+    // against one, the door cannot narrow and the step names that, so a
+    // pack silently keeping the old behaviour is impossible.
+    const provider = new ScriptedProvider("lesson-door-none", (request) =>
+      request.purpose === "answer" ? JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-pokemon" }] }) : "decline",
+    );
+    const bare = { ...world, pack: { ...world.pack, curriculum: world.pack.curriculum.map(({ covers: _covers, ...lesson }) => lesson) } };
+    const d: SessionDeps = { ...deps(provider), world: bare, lessonDoor: true };
+    const state = await say(await setProfile(startSession(), PROFILE_SCOPE, d), "What is a Gym Leader?", d);
+    const step = state.exchanges.at(-1)!.steps.find((entry) => entry.code === "route/narrowed")!;
+    expect(step.text).toContain("every lesson was offered: the pack declares no lesson coverage");
+    expect(state.lessonDoor).toEqual({ narrowed: 0, offered: 24, withheld: 0 });
+  });
+
   it("the prompt lever builds the block-sequenced prompt on every answer call — discovery, answer and the carried-back retry alike", async () => {
     const prompts: string[] = [];
     const blocks: unknown[] = [];

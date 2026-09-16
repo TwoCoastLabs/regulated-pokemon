@@ -135,10 +135,16 @@ describe("refusing what it cannot classify", () => {
     expect(boundaryLessonFor("nope", BOUNDARIES)).toBe("unknown");
   });
 
-  it("carries both of this build's worlds, each with its boundary lesson", () => {
+  it("carries the whole pack shelf, so an artifact pinned to an older pack still classifies", () => {
     const carried = carriedBoundaries();
+    // The M3 legs pin v3; the live path is on v4. Both are on the shelf and
+    // both name the same boundary lesson.
     expect(carried.get("indigo-accord-v3")).toBe("what-the-records-hold");
-    expect(carried.size).toBe(2);
+    expect(carried.get("indigo-accord-v4")).toBe("what-the-records-hold");
+    expect(carried.get("pokemon-center-v4")).toBe("what-the-records-hold");
+    // v1 predates the boundary lesson: carried, with none.
+    expect(carried.has("indigo-accord-v1")).toBe(true);
+    expect(carried.get("indigo-accord-v1")).toBeUndefined();
   });
 });
 
