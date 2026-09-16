@@ -5682,3 +5682,84 @@ definitional ask phrased in a way none anticipated draws the boundary
 lesson, which is the "coverage too narrow" case the gate's second item
 reads. (d) **named** — no prompt wording changed; the off arm is today's
 live page exactly.
+
+### The activation ceiling (2026-09-17)
+
+**Goal.** The porch reading above protected the openers and "What is a
+Gym Leader?" — but those are the phrasings the aliases were written
+from, so they could not fail. The question the reading did not answer:
+on phrasings the alias lists did *not* anticipate, how often does the
+door offer the right lesson? A door that under-offers turns a right
+answer into a wrong decline, and nothing in a bank run says which door
+did it. The activation gauge (`src/harness/activation.ts`, hard-won
+lesson 6) exists for exactly this and now carries the lesson door as its
+fourth front door. Key-free, deterministic, seconds to run.
+
+**How it works.** For every bank entry whose answer is a lesson (18
+entries, `expectBlockIds`), the gauge runs `lessonAskCheck` over each
+wording the entry carries — the canonical intent and its reviewed
+`phrasings`, written for the robustness bank before the lesson door
+existed and never read while the aliases were written — and asks
+whether an acceptable lesson was among those offered. A miss records
+what was offered instead. Pinned in `activation.test.ts`.
+
+**The reading.**
+
+| the lesson door | canonical wording | paraphrases |
+|---|---:|---:|
+| offered an acceptable lesson | 18/18 (100%) | **15/25 (60%)** |
+
+The canonical column is trivial and is reported to say so. The
+paraphrase column is the number: **10 of 25 (40%) reviewed rephrasings
+of a lesson question would draw the boundary lesson, or the wrong
+lesson, with the door on.**
+
+| paraphrase | wanted | the door offered |
+|---|---|---|
+| "who are the gym leaders?" | `what-is-gym-leader` | boundary only |
+| "how does a Pokémon evolve?" | `what-is-evolution` | boundary only |
+| "what does evolving do?" | `what-is-evolution` | boundary only |
+| "what's the Elite Four?" | `what-is-league` | boundary only |
+| "what is HP and Attack?" | `what-are-stats` | boundary only |
+| "Can you explain what a gym badge is?" | `what-is-badge` | boundary only |
+| "what are a Pokémon's attacks?" | `what-is-move` | boundary only |
+| "what is a gym badg" | `what-is-badge` | `what-is-gym-leader` |
+| "how do i cath a pokemon" | `how-catch` | boundary only |
+| "whats this game evn about" | `what-is-game` | boundary only |
+
+**What it says.**
+
+1. **Seven of the ten are phrasings, three are typos.** "who are the gym
+   leaders?", "how does a Pokémon evolve?", "what's the Elite Four?",
+   "what are a Pokémon's attacks?" are ordinary ways to ask for the
+   lesson; no alias list written from the canonical intents anticipated
+   them. The other three ("badg", "cath", "evn") are spelling, which a
+   whole-phrase matcher cannot tolerate at all — and one of them lands
+   on a *different* lesson's alias, which is worse than the boundary.
+2. **This is the fork the design named, with its number.** Seven of ten
+   are fixable as data (more aliases). Three of ten are not: they need
+   either a matcher that tolerates a misspelling — driver code with
+   English heuristics, the class this project has been deleting — or a
+   retriever behind the S3 seam. At 40%, the matcher is the bottleneck
+   on paraphrase, and the design said that is when the search stack
+   earns its place.
+3. **The bank's paraphrases are now the held-out set.** The reason the
+   canonical column reads 100% is that the aliases were written from
+   it. If the aliases are widened, they must not be widened *from these
+   phrasings*, or this column goes the same way and measures nothing.
+   New coverage is written from the lesson text and fresh wordings;
+   this bank stays what the door is read against.
+
+**Consequence for the gate.** The bank legs run the canonical intents,
+so S4b's second gate item ("the 18 protected questions at or above 306
+of 324") would pass without saying anything about recall. The gate gains
+an item: the lesson door's paraphrase column on the activation gauge,
+not below today's 15 of 25 after any alias change, and the number to
+beat before the door becomes the default. The bank legs stay queued
+behind it.
+
+**Model errors:** none — no model was called. **Harness factors:**
+(a) **named** — 25 paraphrases over 18 lessons is a small held-out set;
+some lessons have none. (b) **named** — the gauge reads the matcher
+alone; whether the model, offered the right lesson, then takes it is
+the porch's and the bank's question, not this one's.

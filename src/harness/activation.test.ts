@@ -10,6 +10,7 @@ import { describe, expect, it } from "vitest";
 import { demoWorld } from "../demo/files.js";
 import {
   activationReport,
+  lessonReadings,
   loadScopePhrasings,
   nominationReadings,
   readScopePhrasings,
@@ -112,19 +113,60 @@ describe("the activation ceiling, pinned", () => {
     // the fall to the question) — the gate's recall improving is exactly
     // what this instrument exists to record.
     expect(report.scope).toEqual({ bound: 25, unbound: 12, "bound-wrong": 4, contradicted: 1, inert: 8 });
+    // The lesson door (2026-09-17, findings §24): every canonical intent,
+    // because the aliases were written from them; 15 of 25 reviewed
+    // paraphrases, which they were not. The second column is the number.
+    expect(report.lesson).toEqual({ canonical: { engaged: 18, total: 18 }, paraphrase: { engaged: 15, total: 25 } });
+    expect(report.lessonMisses).toHaveLength(10);
+    expect(report.lessonMisses.every((miss) => !miss.canonical)).toBe(true);
+  });
+
+  it("names what the lesson door offered instead, per miss", () => {
+    const byWording = new Map(report.lessonMisses.map((miss) => [miss.wording, miss.offered]));
+    // A typo that lands on another lesson's alias: the wrong lesson, not the boundary.
+    expect(byWording.get("what is a gym badg")).toEqual(["what-is-gym-leader"]);
+    // Natural rephrasings the alias lists did not anticipate: the boundary alone.
+    expect(byWording.get("who are the gym leaders?")).toEqual([]);
+    expect(byWording.get("how does a Pokémon evolve?")).toEqual([]);
+    expect(byWording.get("what's the Elite Four?")).toEqual([]);
   });
 
   it("renders as Markdown from the data", () => {
     const text = renderActivation(report);
     expect(text).toContain("| Retrieval pulled an acceptable entity |");
+    expect(text).toContain("| Lesson door offered an acceptable lesson | 18/18 (100%) | 15/25 (60%) |");
+    expect(text).toContain("Lesson door misses");
+    expect(text).toContain("“what is a gym badg” → `what-is-gym-leader`");
+    expect(text).toContain("“who are the gym leaders?” → boundary only");
     expect(text).toContain("Scope statements (");
     expect(text).toContain("**bound-wrong");
   });
 
   it("renders a report with no misses without the miss sections", () => {
-    const text = renderActivation({ ...report, retrievalMisses: [], nominationMisses: [] });
+    const text = renderActivation({ ...report, retrievalMisses: [], nominationMisses: [], lessonMisses: [] });
     expect(text).not.toContain("Retrieval misses:");
     expect(text).not.toContain("Nomination misses:");
+    expect(text).not.toContain("Lesson door misses");
+  });
+
+  it("has no lesson row for a pack that declares no coverage — a door that does not exist has no ceiling", () => {
+    const bare = { ...world.pack, curriculum: world.pack.curriculum.map(({ covers: _covers, ...lesson }) => lesson) };
+    const without = activationReport(world.registry, bare, bank, scopeBank);
+    expect(without.lesson).toBeUndefined();
+    expect(without.lessonMisses).toEqual([]);
+    expect(renderActivation(without)).not.toContain("Lesson door");
+  });
+
+  it("reads only entries whose answer is a lesson, every wording of each", () => {
+    const readings = lessonReadings(world, bank);
+    const entries = new Set(readings.map((reading) => reading.entryId));
+    expect(entries.size).toBe(18);
+    for (const reading of readings) {
+      const entry = bank.entries.find((candidate) => candidate.id === reading.entryId)!;
+      expect(entry.expectClaimKinds).toContain("explanation");
+      expect(entry.expectBlockIds?.length).toBeGreaterThan(0);
+    }
+    expect(readings.filter((reading) => reading.canonical)).toHaveLength(18);
   });
 });
 

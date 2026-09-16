@@ -240,6 +240,14 @@ number as count and percentage.
    2,466 today). A miss turned into an honest refusal is the win. A miss
    turned into an abstention is a smaller win, counted separately.
 6. **Enforcement.** 0 of N escalations, both models, denominator stated.
+7. **Recall on phrasings the aliases were not written from** (added
+   2026-09-17, findings §24 "The activation ceiling"). The lesson door's
+   paraphrase column on the activation gauge — the bank's reviewed
+   `phrasings` of the 18 lesson questions, which are the held-out set and
+   must never be the source of an alias — not below today's 15 of 25
+   (60%) after any change, and the number to raise before the door is
+   the default. Item 2 cannot read this: the bank runs the canonical
+   intents, which the aliases were written from.
 
 Cost: about $0.30 per strong leg, $0.04 per weak leg; under $0.70 for
 the four, after the live check for about three cents.
@@ -305,6 +313,11 @@ visible.
    the first call only; the porch reading caught the carried-back retry
    bringing the whole catalogue back, 3 of 50 on the strong model
    (findings §24). The three retry sites now recompute the same offer.
+
+The activation gauge reads the door's recall on the bank's reviewed
+paraphrases, which the aliases were not written from: 15 of 25 (60%) on
+2026-09-17, seven misses being phrasings and three being typos — the
+fork between more aliases and a real retriever, with its number.
 
 The porch reading is in findings §24: topical lessons on the five worst
 ledger entries from 13 of 25 to 0 of 25 (strong) and 8 of 25 to 0 of 25
