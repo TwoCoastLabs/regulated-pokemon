@@ -8,6 +8,12 @@ form (what the demo ships today, honest about 151 species) and its
 costly-general form (what a catalogue of millions requires), and the forge
 builds the general mechanism in the demo whenever a slice can prove it small.
 
+The empirical ranges behind those targets — WebQSP, CWQ, GrailQA, and public
+banking, pharma, and telecom proxies — are documented in
+[knowledge-scale.md](knowledge-scale.md). That note keeps benchmark slices,
+underlying graphs, schemas, and operational instances separate so the numbers
+are not compared as if they meant the same thing.
+
 The organizing fact is one the design already lives by: **the guarantee
 scales by construction; what does not scale is everything that helps the
 model be useful.** Verification is O(answer) — a manifest's claims against

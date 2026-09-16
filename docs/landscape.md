@@ -8,7 +8,9 @@ findings section that filed it (§N is a top-level section of findings.md;
 [architecture.md](architecture.md), the canon is
 [the-indigo-accord.md](the-indigo-accord.md), the boundary of the guarantee is
 [the assurance case](assurance-case.md), and the domain bridge is
-[generalization.md](generalization.md). This note does not repeat them; it
+[generalization.md](generalization.md). Comparative evidence for knowledge-base
+size and retrieval difficulty is in
+[knowledge-scale.md](knowledge-scale.md). This note does not repeat them; it
 connects them.*
 
 ---

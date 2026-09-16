@@ -258,6 +258,13 @@ crew at 2am.
 
 ## 4. Operating the knowledge base
 
+The comparative sizing evidence is in
+[knowledge-scale.md](knowledge-scale.md): the current 384-record world is
+contrasted with WebQSP/CWQ/GrailQA and with public banking, pharma, and telecom
+proxies. Its central warning applies throughout this section: entity count,
+schema breadth, relationship volume, query composition, and change rate are
+separate scale axes.
+
 The user-facing question — "who maintains the facts, and how do decisions stay
 defensible while the facts move?" — is answered in the demo by machinery that
 already runs, and each piece names the role a real deployment staffs.

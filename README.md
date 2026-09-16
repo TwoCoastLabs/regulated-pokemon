@@ -24,6 +24,10 @@ completeness, software correctness, and anything outside the governed surface
 remain explicit parts of the assurance case, never assumptions hidden inside
 the word "truth." See [the assurance case](docs/assurance-case.md) for the
 boundary, scorecard, falsification criteria, and research sequence.
+The [knowledge-base scale note](docs/knowledge-scale.md) compares this
+384-record world with WebQSP, CWQ, GrailQA, and public banking, pharma, and
+telecom proxies, including the retrieval results that motivate a separate
+coverage target.
 
 Getting a Pokémon fact wrong is harmless. That is exactly why Pokémon is the
 right vehicle: we can invite you to attack the agent, run deliberately weak
