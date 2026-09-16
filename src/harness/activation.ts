@@ -2,11 +2,13 @@
  * The activation ceiling (epic #94, slice 1): which deterministic front doors
  * engage on realistic wording, measured instead of assumed.
  *
- * Three deterministic layers stand in front of the model, and each trades
+ * Four deterministic layers stand in front of the model, and each trades
  * recall for specificity (CLAUDE.md lesson 6): **retrieval** pulls the
  * certified rows a question names; the **gated grammar** offers the filler
- * claim kinds a question nominates; and the **scope resolver** binds a
- * dimension when a value word meets a context word. A door that never engages
+ * claim kinds a question nominates; the **scope resolver** binds a
+ * dimension when a value word meets a context word; and the **lesson door**
+ * (docs/lesson-door.md, added 2026-09-17) offers a lesson when the ask
+ * contains one of its declared phrasings. A door that never engages
  * is a silent usefulness ceiling — the model is not helped, or is offered the
  * wrong grammar, or the trainer is asked a question their sentence already
  * answered — and nothing in a coverage run says which door failed. This module
@@ -38,6 +40,7 @@ import { AccordError, violation } from "../kernel/violation.js";
 import type { BankEntry, QuestionBank } from "./bank.js";
 import { type FillerKind, nominateFillerKinds } from "./grammar-gate.js";
 import { retrievalSelection } from "./reference.js";
+import { lessonAskCheck } from "../session/session.js";
 
 // --- the scope-phrasing bank ------------------------------------------------
 
@@ -121,6 +124,9 @@ export interface DoorReading {
   /** True for the canonical `intent`; false for a paraphrase. */
   canonical: boolean;
   engaged: boolean;
+  /** For the lesson door: what it offered instead, when it missed — the
+   * boundary alone reads as an empty list. Absent on the other doors. */
+  offered?: readonly string[];
 }
 
 /**
@@ -157,6 +163,30 @@ export function nominationReadings(bank: QuestionBank): DoorReading[] {
     wordingsOf(entry).forEach((wording, index) => {
       const nominated = nominateFillerKinds(wording);
       readings.push({ entryId: entry.id, wording, canonical: index === 0, engaged: wanted.every((kind) => nominated.has(kind)) });
+    });
+  }
+  return readings;
+}
+
+/**
+ * The lesson door: for every entry whose answer is a lesson, did the door
+ * offer one of the acceptable lessons for this wording? A miss means the
+ * lesson is *unrepresentable* for that wording with the door on — the model
+ * can teach only the boundary, so a right answer becomes a wrong decline.
+ * The canonical intents are the wordings the aliases were written from; the
+ * paraphrases are the ones they were not, and that column is the number.
+ */
+export function lessonReadings(world: { registry: CertifiedRegistry; pack: AccordPack }, bank: QuestionBank): DoorReading[] {
+  const boundary = world.pack.recordsBoundary?.lessonId;
+  const readings: DoorReading[] = [];
+  for (const entry of bank.entries) {
+    const acceptable = entry.expectBlockIds ?? [];
+    if (acceptable.length === 0 || !(entry.expectClaimKinds ?? []).includes("explanation")) continue;
+    wordingsOf(entry).forEach((wording, index) => {
+      const offer = lessonAskCheck(world, wording);
+      const engaged = acceptable.some((id) => offer.offered.includes(id));
+      const instead = offer.offered.filter((id) => id !== boundary);
+      readings.push({ entryId: entry.id, wording, canonical: index === 0, engaged, ...(engaged ? {} : { offered: instead }) });
     });
   }
   return readings;
@@ -215,10 +245,14 @@ export interface DoorRate {
 export interface ActivationReport {
   retrieval: DoorRate;
   nomination: DoorRate;
+  /** The lesson door; absent when the pack declares no lesson coverage,
+   * since a door that does not exist has no ceiling. */
+  lesson?: DoorRate;
   scope: Record<ScopeOutcome, number>;
   /** The readings behind every number, so a rate is never the only record. */
   retrievalMisses: readonly DoorReading[];
   nominationMisses: readonly DoorReading[];
+  lessonMisses: readonly DoorReading[];
   scopeReadings: readonly ScopeReading[];
 }
 
@@ -234,15 +268,19 @@ function rate(readings: readonly DoorReading[]): DoorRate {
 export function activationReport(registry: CertifiedRegistry, pack: AccordPack, bank: QuestionBank, scopeBank: ScopePhrasingBank): ActivationReport {
   const retrieval = retrievalReadings(registry, bank);
   const nomination = nominationReadings(bank);
+  const declares = pack.curriculum.some((lesson) => lesson.covers !== undefined);
+  const lesson = declares ? lessonReadings({ registry, pack }, bank) : [];
   const scope = scopeReadings(pack, scopeBank);
   const counts: Record<ScopeOutcome, number> = { bound: 0, unbound: 0, "bound-wrong": 0, contradicted: 0, inert: 0 };
   for (const reading of scope) counts[reading.outcome] += 1;
   return {
     retrieval: rate(retrieval),
     nomination: rate(nomination),
+    ...(declares ? { lesson: rate(lesson) } : {}),
     scope: counts,
     retrievalMisses: retrieval.filter((reading) => !reading.engaged),
     nominationMisses: nomination.filter((reading) => !reading.engaged),
+    lessonMisses: lesson.filter((reading) => !reading.engaged),
     scopeReadings: scope,
   };
 }
@@ -258,6 +296,9 @@ export function renderActivation(report: ActivationReport): string {
   lines.push("|---|---:|---:|");
   lines.push(`| Retrieval pulled an acceptable entity | ${pct(report.retrieval.canonical.engaged, report.retrieval.canonical.total)} | ${pct(report.retrieval.paraphrase.engaged, report.retrieval.paraphrase.total)} |`);
   lines.push(`| Grammar nominated the expected filler kind | ${pct(report.nomination.canonical.engaged, report.nomination.canonical.total)} | ${pct(report.nomination.paraphrase.engaged, report.nomination.paraphrase.total)} |`);
+  if (report.lesson !== undefined) {
+    lines.push(`| Lesson door offered an acceptable lesson | ${pct(report.lesson.canonical.engaged, report.lesson.canonical.total)} | ${pct(report.lesson.paraphrase.engaged, report.lesson.paraphrase.total)} |`);
+  }
   lines.push("");
   const total = report.scopeReadings.length;
   lines.push(`Scope statements (${total}): bound ${report.scope.bound} · unbound ${report.scope.unbound} · **bound-wrong ${report.scope["bound-wrong"]}** · contradicted ${report.scope.contradicted} · inert ${report.scope.inert}`);
@@ -272,6 +313,14 @@ export function renderActivation(report: ActivationReport): string {
     lines.push("Nomination misses:");
     lines.push("");
     for (const miss of report.nominationMisses) lines.push(`- \`${miss.entryId}\`${miss.canonical ? " (canonical)" : ""}: “${miss.wording}”`);
+    lines.push("");
+  }
+  if (report.lessonMisses.length > 0) {
+    lines.push("Lesson door misses (what the door offered instead; nothing means the boundary lesson alone):");
+    lines.push("");
+    for (const miss of report.lessonMisses) {
+      lines.push(`- \`${miss.entryId}\`${miss.canonical ? " (canonical)" : ""}: “${miss.wording}” → ${(miss.offered ?? []).map((id) => `\`${id}\``).join(", ") || "boundary only"}`);
+    }
     lines.push("");
   }
   lines.push("Scope readings that were not `bound` or `inert`:");

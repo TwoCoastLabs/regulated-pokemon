@@ -2345,7 +2345,7 @@ export interface LessonOffer {
  * A pack that declares no coverage cannot narrow, and says so: every
  * lesson is offered, exactly as before the door existed.
  */
-function lessonAskCheck(world: SessionWorld, ask: string): LessonOffer {
+export function lessonAskCheck(world: SessionWorld, ask: string): LessonOffer {
   const lessons = world.pack.curriculum;
   if (!declaresLessonCoverage(world.pack)) {
     return { offered: lessons.map((lesson) => lesson.id), withheld: [], reason: "the pack declares no lesson coverage — every lesson offered" };
