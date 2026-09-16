@@ -11,8 +11,9 @@ list stop the model answering unanswerable questions with a nearby
 lesson, without losing the lesson answers that are correct today?**
 
 *Written 2026-09-16, from the decline ledger's first reading (findings
-§23). Nothing here is built. Terms like leg, arm, band and porch are
-defined in the [glossary](glossary.md).*
+§23). Built the same day behind `--lesson-door`; the section "As built"
+at the end lists where the build departed from this design and why. Terms
+like leg, arm, band and porch are defined in the [glossary](glossary.md).*
 
 ## The problem, in numbers
 
@@ -263,6 +264,42 @@ against one baseline is fairer and costs one set of legs instead of two.
   close, and orientation lessons need a different treatment — offered
   only when nothing else is, or not on a first call.
 - **The band drops on one model.** Withdrawn, per the tuning rule.
+
+## As built
+
+Four departures from the design above, each forced by something found
+while building. The design text is left as written so the departures are
+visible.
+
+1. **Concept aliases are definitional phrasings, not nouns.** The design's
+   example was "gym leader", "gym leaders". But "Who is the Pewter City
+   gym leader?" — the ledger's worst entry — contains "gym leader", so a
+   noun alias would keep offering the lesson on exactly the ask it must
+   not. The alias is "what is a gym leader", "what are gym leaders",
+   "explain gym leaders" and so on; the noun alone is never an alias.
+   This makes the "coverage is too narrow" risk above the live one: a
+   definitional ask phrased in a way no alias anticipated draws the
+   boundary lesson. The gate's second item reads it.
+2. **Three scopes, not two.** The design said `concept | orientation` and
+   "the boundary lesson claiming concept coverage is refused" — but also
+   "a lesson with no coverage is refused", which the boundary lesson could
+   not satisfy both of. So `boundary` is its own scope: it declares no
+   aliases, is always offered, and exactly the lesson `recordsBoundary`
+   names carries it. The two loader refusals are as designed, stated in
+   those terms.
+3. **Coverage is required within a pack, not across all packs.** The
+   design said "required, not optional". But `indigo-accord-v1`, `v2` and
+   the Center's earlier packs still load, because filed records pin them
+   and must replay. So the loader follows the dictionary's rule: a pack
+   with no coverage on any lesson is the pre-door pack and loads as
+   before; one that declares coverage on some lessons and not others is
+   refused. With the lever on against a pack that declares none, the
+   driver offers every lesson and records that on the trail, so the door
+   is never silently off.
+4. **The trail step is always written when the lever is on**, not only
+   when something was withheld — `route/narrowed` says "N of 24 lessons
+   offered" or "every lesson was offered" with the reason either way, so
+   a reader can tell a door that opened wide from a door that was off.
 
 ## Deliberately not built
 

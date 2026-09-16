@@ -107,6 +107,9 @@ name defines it in plain words the first time.
   when the driver would accept a nomination of it
   ([docs/offered-door.md](docs/offered-door.md)); the bank records the
   door's funnel — offered, nominated, served — per sample either way.
+  `--lesson-door` (both tools) narrows the explanation route to the lessons
+  the ask is about, plus the records-boundary lesson, read from each
+  lesson's `covers` in the pack ([docs/lesson-door.md](docs/lesson-door.md)).
 - **The decline ledger:** `npm run decline-ledger -- <coverage artifact.json ...>`
   reads filed runs and lists every sample on a question that must not receive
   a certified answer which got one anyway, what the record certified instead,
@@ -115,8 +118,9 @@ name defines it in plain words the first time.
   Key-free, deterministic, no spend. Its first reading found that 61% of the
   misses are a pack lesson on the wrong subject; the fix is designed in
   [docs/lesson-door.md](docs/lesson-door.md) (offer a lesson only when the
-  ask is about it, with each lesson's coverage declared in the pack). Not
-  built yet; the gate is pre-registered there.
+  ask is about it, with each lesson's coverage declared in the pack). Built
+  behind `--lesson-door`; its bank gate is pre-registered there and not yet
+  run.
 - **Results page:** `npm run harness:results` renders a filed run artifact as
   Markdown (newest in `runs/` by default; `-- <artifact.json>` for one,
   `-- --out docs/results.md` to file it). Pure and key-free — it only reads an
