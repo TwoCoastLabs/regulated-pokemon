@@ -57,7 +57,7 @@ import { buildRoster } from "../kernel/roster.js";
 import { runTransaction, type Transaction } from "../kernel/transaction.js";
 import { renderAnswer } from "../render/reference.js";
 import { denialCode } from "../kernel/violation.js";
-import { type AnswerStep, phraseQuestion, type PromptShape, proposalDigest, proposeAnswer, proposeScope, usableQuestion } from "../harness/advisor.js";
+import { type AnswerStep, classifyLessonAsk, type LessonAskKind, phraseQuestion, type PromptShape, proposalDigest, proposeAnswer, proposeScope, usableQuestion } from "../harness/advisor.js";
 import { type AnswerDecode, NO_CLAIMS_REASON } from "../harness/decode.js";
 import { MAX_ANSWER_CLAIMS, type NominableRoute } from "../harness/schema.js";
 import { addUsage, emptyUsage, type ModelProvider, type Usage } from "../harness/provider.js";
@@ -207,6 +207,15 @@ export interface SessionDeps {
    * the declared aliases, or the BM25 index over the lesson text. Read
    * only with the door on. */
   lessonMatcher?: LessonMatcherId;
+  /**
+   * The lesson door's fallback (docs/lesson-door.md, the classifier): when
+   * the deterministic matcher offers the boundary alone, ask the model
+   * what kind of question this is, once, and offer the lesson it names
+   * beside the boundary. A model call on exactly the asks the
+   * deterministic door could not place, so its lift and its cost are
+   * read in isolation. Recorded as a step and on the trace; off by default.
+   */
+  lessonClassifier?: boolean;
 }
 
 /** What the session holds of the operator's memory. */
@@ -314,7 +323,15 @@ export interface SessionState {
   /** The lesson door per exchange (docs/lesson-door.md): how many answer
    * calls had the catalogue narrowed, how many lessons the last narrowed
    * call offered (the boundary lesson included), and how many it withheld. */
-  lessonDoor: { narrowed: number; offered: number; withheld: number };
+  lessonDoor: {
+    narrowed: number;
+    offered: number;
+    withheld: number;
+    /** The exchange's offer, so every retry call carries the same set. */
+    ids?: readonly string[];
+    /** The classifier's reading on this exchange, when it was asked. */
+    classified?: { kind: LessonAskKind; lessonId?: string; entity?: string } | "unusable";
+  };
   /** Answer-step calls repeated once with the route door closed, because
    * the model's whole reply was a nomination the driver refused — the
    * schema-steering misuse rate, as a number (see {@link withRouteFallback}). */
@@ -1303,12 +1320,28 @@ async function withRouteFallback(
   // records' boundary — recorded as a step whether or not anything was
   // withheld, so a pack that declares no coverage is visible on the trail
   // rather than a door that silently never closed.
-  const offer = deps.lessonDoor === true ? lessonAskCheck(world, openingAskOf(state), deps.lessonMatcher) : undefined;
+  let offer: LessonOffer | undefined;
+  let classified: SessionState["lessonDoor"]["classified"];
+  if (deps.lessonDoor === true) {
+    const decision = await lessonDoorDecision(world, deps.provider, openingAskOf(state), { matcher: deps.lessonMatcher, classifier: deps.lessonClassifier === true });
+    offer = decision.offer;
+    classified = decision.classified;
+    state = { ...state, usage: addUsage(state.usage, decision.usage), providerErrors: state.providerErrors + (decision.providerError ? 1 : 0) };
+    if (decision.asked) {
+      state = ledgerStep(state, deps.now(), "model", "route/classified", describeClassification(classified));
+    }
+  }
   if (offer !== undefined) {
     state = ledgerStep(
       {
         ...state,
-        lessonDoor: { narrowed: state.lessonDoor.narrowed + (offer.withheld.length > 0 ? 1 : 0), offered: offer.offered.length, withheld: offer.withheld.length },
+        lessonDoor: {
+          narrowed: state.lessonDoor.narrowed + (offer.withheld.length > 0 ? 1 : 0),
+          offered: offer.offered.length,
+          withheld: offer.withheld.length,
+          ids: offer.offered,
+          ...(classified === undefined ? {} : { classified }),
+        },
       },
       deps.now(),
       "driver",
@@ -2339,7 +2372,90 @@ export function lessonAskCheck(world: SessionWorld, ask: string, matcher: Lesson
  * from the step already on the trail.
  */
 function lessonsArg(world: SessionWorld, state: SessionState, deps: SessionDeps): { lessons?: readonly string[] } {
-  return deps.lessonDoor === true ? { lessons: lessonAskCheck(world, openingAskOf(state), deps.lessonMatcher).offered } : {};
+  if (deps.lessonDoor !== true) return {};
+  // The exchange's own offer when the first call set it — the classifier's
+  // reading included — else the deterministic check, which is the same
+  // function of the ask.
+  return { lessons: state.lessonDoor.ids ?? lessonAskCheck(world, openingAskOf(state), deps.lessonMatcher).offered };
+}
+
+/** What the lesson door decided for one exchange, the classifier included. */
+export interface LessonDoorDecision {
+  readonly offer: LessonOffer;
+  /** Whether the classifier was asked — only when the matcher found nothing. */
+  readonly asked: boolean;
+  readonly classified?: SessionState["lessonDoor"]["classified"];
+  readonly usage: Usage;
+  readonly providerError: boolean;
+}
+
+/**
+ * The lesson door's whole decision for an ask (docs/lesson-door.md): the
+ * deterministic matcher, then — with the classifier on and the matcher
+ * offering the boundary alone — one model call asking what kind of
+ * question this is. A lesson the model names is offered beside the
+ * boundary; anything else, an unusable reply or a provider failure leaves
+ * the boundary alone, so the door never widens past what the model said.
+ * One function, so the driver and the live reading measure the same thing.
+ */
+export async function lessonDoorDecision(
+  world: SessionWorld,
+  provider: ModelProvider,
+  ask: string,
+  options: { matcher?: LessonMatcherId | undefined; classifier: boolean },
+): Promise<LessonDoorDecision> {
+  const offer = lessonAskCheck(world, ask, options.matcher);
+  const none = { usage: emptyUsage(), providerError: false };
+  if (!options.classifier || offer.offered.length > 1) return { offer, asked: false, ...none };
+  const boundary = world.pack.recordsBoundary?.lessonId;
+  try {
+    const step = await classifyLessonAsk({
+      provider,
+      scenarioId: "session",
+      ask,
+      lessons: world.pack.curriculum
+        .filter((lesson) => lesson.covers !== undefined && lesson.covers.scope !== "boundary")
+        .map((lesson) => ({ id: lesson.id, scope: lesson.covers!.scope, gloss: firstSentence(lesson.block.content[0]?.text ?? "") })),
+    });
+    const classified = step.classification ?? "unusable";
+    if (step.classification?.kind === "lesson" && step.classification.lessonId !== undefined) {
+      const named = step.classification.lessonId;
+      const offeredSet = new Set([named, ...(boundary === undefined ? [] : [boundary])]);
+      return {
+        offer: {
+          offered: world.pack.curriculum.filter((lesson) => offeredSet.has(lesson.id)).map((lesson) => lesson.id),
+          withheld: world.pack.curriculum.filter((lesson) => !offeredSet.has(lesson.id)).map((lesson) => lesson.id),
+          reason: `no declared phrasing matched; asked, the model read the question as an ask for "${named}"`,
+        },
+        asked: true,
+        classified,
+        usage: step.usage,
+        providerError: false,
+      };
+    }
+    return { offer, asked: true, classified, usage: step.usage, providerError: false };
+  } catch {
+    return { offer, asked: true, classified: "unusable", usage: none.usage, providerError: true };
+  }
+}
+
+function describeClassification(classified: SessionState["lessonDoor"]["classified"]): string {
+  const lead = "the deterministic door offered only the boundary; asked what kind of question this is, the model";
+  if (classified === undefined || classified === "unusable") return `${lead} gave no usable reply — the boundary stays alone`;
+  if (classified.kind === "lesson") return `${lead} read it as an ask for the lesson "${classified.lessonId}" — offered beside the boundary`;
+  const kind =
+    classified.kind === "fact"
+      ? `a fact question${classified.entity === undefined ? "" : ` about "${classified.entity}"`}`
+      : classified.kind === "advice"
+        ? "a request for advice"
+        : "not a lesson question";
+  return `${lead} read it as ${kind} — the boundary stays alone`;
+}
+
+/** The lesson's first sentence, as its gloss in the classifier's prompt. */
+function firstSentence(text: string): string {
+  const match = /^(.*?[.!?])(\s|$)/.exec(text.trim());
+  return (match?.[1] ?? text).trim();
 }
 
 /**

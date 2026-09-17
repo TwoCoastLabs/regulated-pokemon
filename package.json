@@ -23,6 +23,7 @@
     "coverage:map": "npm run build && node dist/harness/coverage-cli.js",
     "harness:results": "npm run build && node dist/harness/results-cli.js",
     "decline-ledger": "npm run build && node dist/harness/decline-ledger-cli.js",
+    "lesson-door:read": "npm run build && node dist/harness/lesson-door-cli.js",
     "precedents:promote": "npm run build && node dist/memory/promote-cli.js",
     "relay": "npm run app:build && npm run build && node dist/relay/serve.js",
     "snapshot:fetch": "node --experimental-strip-types scripts/fetch-snapshot.ts"

@@ -2280,7 +2280,7 @@ describe("the driver's ledger — every step of an exchange, in fixed wording, b
     expect(narrowed.text).toContain('the question is about "what-is-gym-leader"');
     expect(narrowed.text).toContain("the other 22 were left out of the grammar");
     expect(state.records.at(-1)?.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-gym-leader" }]);
-    expect(state.lessonDoor).toEqual({ narrowed: 1, offered: 2, withheld: 22 });
+    expect(state.lessonDoor).toEqual({ narrowed: 1, offered: 2, withheld: 22, ids: ["what-is-gym-leader", "what-the-records-hold"] });
 
     // The decline ledger's worst entry: the same words, a different ask. The
     // lesson is not offered; only the boundary is, and the model teaches it.
@@ -2370,6 +2370,89 @@ describe("the driver's ledger — every step of an exchange, in fixed wording, b
     expect(state.exchanges.at(-1)!.steps.find((entry) => entry.code === "route/narrowed")?.text).toContain("how-catch");
   });
 
+  it("the lesson door's classifier: asked only when the matcher found nothing, the lesson it names offered beside the boundary, every retry carrying it", async () => {
+    // docs/lesson-door.md, the classifier. A misspelt definitional ask the
+    // alias matcher cannot read: the model is asked what kind of question
+    // it is, names the lesson, and the grammar carries that lesson and the
+    // boundary — on the first call and on the carried-back retry alike.
+    const lessons: (readonly string[] | undefined)[] = [];
+    const purposes: string[] = [];
+    let answers = 0;
+    const provider = new ScriptedProvider("lesson-classifier", (request) => {
+      purposes.push(request.purpose);
+      if (request.purpose === "lesson") {
+        // The schema's lesson-id enum is the pack's concept and orientation lessons, never the boundary.
+        const ids = (request.schema?.schema as { properties: { lessonId: { enum: string[] } } }).properties.lessonId.enum;
+        expect(ids).toContain("how-catch");
+        expect(ids).not.toContain("what-the-records-hold");
+        expect(request.prompt).toContain("how do i cath a pokemon");
+        return JSON.stringify({ kind: "lesson", lessonId: "how-catch" });
+      }
+      if (request.purpose !== "answer") return "decline";
+      lessons.push(request.hint.doors?.lessons);
+      answers += 1;
+      return answers === 1
+        ? JSON.stringify({ asked: [{ phrase: "how many pp", entityId: "psychic", fieldId: "move-pp" }], rosters: [], claims: [{ kind: "fact", entityId: "psychic", factId: "move-power" }] })
+        : JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "how-catch" }] });
+    });
+    const d: SessionDeps = { ...deps(provider), lessonDoor: true, lessonClassifier: true, feedback: true };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how do i cath a pokemon", d);
+    const trail = state.exchanges.at(-1)!;
+    const sequence = codes(trail.steps);
+    expect(sequence.indexOf("route/classified")).toBeGreaterThan(-1);
+    expect(sequence.indexOf("route/classified")).toBeLessThan(sequence.indexOf("route/narrowed"));
+    const classified = trail.steps.find((entry) => entry.code === "route/classified")!;
+    expect(classified.lane).toBe("model");
+    expect(classified.text).toContain('read it as an ask for the lesson "how-catch"');
+    expect(trail.steps.find((entry) => entry.code === "route/narrowed")?.text).toContain("asked, the model read the question");
+    // The first call and the carried-back retry both carried the classified set.
+    expect(lessons).toEqual([["how-catch", "what-the-records-hold"], ["how-catch", "what-the-records-hold"]]);
+    expect(state.records.at(-1)?.manifest?.claims).toEqual([{ kind: "explanation", blockId: "how-catch" }]);
+    expect(state.lessonDoor.classified).toEqual({ kind: "lesson", lessonId: "how-catch" });
+    expect(purposes.filter((purpose) => purpose === "lesson")).toHaveLength(1);
+
+    // An ask the matcher places: the classifier is never asked.
+    purposes.length = 0;
+    await say(await setProfile(startSession(), PROFILE_SCOPE, d), "What is a Gym Leader?", d);
+    expect(purposes).not.toContain("lesson");
+  });
+
+  it("the lesson door's classifier: a fact, an advice, an unusable reply or a failed call all leave the boundary alone, each named", async () => {
+    const replies: Record<string, string> = {};
+    const provider = new ScriptedProvider("lesson-classifier-no", (request) => {
+      if (request.purpose === "lesson") {
+        const reply = replies[request.prompt.match(/asked: "([^"]+)"/)![1]!];
+        if (reply === "throw") throw new Error("provider down");
+        return reply!;
+      }
+      return request.purpose === "answer" ? JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-the-records-hold" }] }) : "decline";
+    });
+    const d: SessionDeps = { ...deps(provider), lessonDoor: true, lessonClassifier: true };
+    const read = async (ask: string, reply: string) => {
+      replies[ask] = reply;
+      const state = await say(await setProfile(startSession(), PROFILE_SCOPE, d), ask, d);
+      return { state, step: state.exchanges.at(-1)!.steps.find((entry) => entry.code === "route/classified")!.text };
+    };
+    const fact = await read("Who is the Pewter City gym leader?", JSON.stringify({ kind: "fact", entity: "Pewter City gym" }));
+    expect(fact.step).toContain('read it as a fact question about "Pewter City gym" — the boundary stays alone');
+    expect(fact.state.lessonDoor.ids).toEqual(["what-the-records-hold"]);
+    expect(fact.state.lessonDoor.classified).toEqual({ kind: "fact", entity: "Pewter City gym" });
+    const advice = await read("Should I go for Mew?", JSON.stringify({ kind: "advice" }));
+    expect(advice.step).toContain("a request for advice — the boundary stays alone");
+    // A lesson id the pack does not carry is unusable, not offered.
+    const forged = await read("wat is a tm", JSON.stringify({ kind: "lesson", lessonId: "what-is-everything" }));
+    expect(forged.step).toContain("no usable reply");
+    expect(forged.state.lessonDoor.ids).toEqual(["what-the-records-hold"]);
+    expect(forged.state.lessonDoor.classified).toBe("unusable");
+    const garbage = await read("what is a mvoe", "not json at all");
+    expect(garbage.step).toContain("no usable reply");
+    const down = await read("what are stas", "throw");
+    expect(down.step).toContain("no usable reply");
+    expect(down.state.providerErrors).toBe(1);
+    expect(down.state.exchanges.at(-1)!.outcome).toBe("answered");
+  });
+
   it("the lesson door on a pack that declares no coverage offers every lesson and says so on the trail", async () => {
     // The pre-door packs still govern filed records; with the lever on
     // against one, the door cannot narrow and the step names that, so a
@@ -2382,7 +2465,8 @@ describe("the driver's ledger — every step of an exchange, in fixed wording, b
     const state = await say(await setProfile(startSession(), PROFILE_SCOPE, d), "What is a Gym Leader?", d);
     const step = state.exchanges.at(-1)!.steps.find((entry) => entry.code === "route/narrowed")!;
     expect(step.text).toContain("every lesson was offered: the pack declares no lesson coverage");
-    expect(state.lessonDoor).toEqual({ narrowed: 0, offered: 24, withheld: 0 });
+    expect(state.lessonDoor).toMatchObject({ narrowed: 0, offered: 24, withheld: 0 });
+    expect(state.lessonDoor.ids).toHaveLength(24);
   });
 
   it("the prompt lever builds the block-sequenced prompt on every answer call — discovery, answer and the carried-back retry alike", async () => {

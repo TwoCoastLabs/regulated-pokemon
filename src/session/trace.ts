@@ -100,6 +100,9 @@ export interface TraceArgs {
    * only the lessons the ask is about, plus the boundary. Off by default;
    * `--lesson-door` turns it on. */
   lessonDoor: boolean;
+  /** The lesson door's classifier fallback (docs/lesson-door.md): one model
+   * call when the matcher offers the boundary alone. `--lesson-classifier`. */
+  lessonClassifier: boolean;
 }
 
 export function parseTraceArgs(argv: readonly string[]): TraceArgs {
@@ -128,7 +131,8 @@ export function parseTraceArgs(argv: readonly string[]): TraceArgs {
     prompt,
     refusalFeedback: argv.includes("--refusal-feedback"),
     offeredDoors: argv.includes("--offered-doors"),
-    lessonDoor: argv.includes("--lesson-door"),
+    lessonDoor: argv.includes("--lesson-door") || argv.includes("--lesson-classifier"),
+    lessonClassifier: argv.includes("--lesson-classifier"),
   };
 }
 

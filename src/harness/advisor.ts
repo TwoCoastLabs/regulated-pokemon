@@ -959,6 +959,111 @@ export async function proposeAnswer(input: AnswerStepInput): Promise<AnswerStep>
   return { usage: completion.usage, decode, text: completion.text };
 }
 
+// --- the lesson classifier -------------------------------------------------
+
+const LESSON_SCHEMA_NAME = "lesson_ask";
+
+/** What the model may say a question is (docs/lesson-door.md, the classifier). */
+export type LessonAskKind = "lesson" | "fact" | "advice" | "other";
+export const LESSON_ASK_KINDS: readonly LessonAskKind[] = ["lesson", "fact", "advice", "other"];
+
+export interface LessonClassification {
+  kind: LessonAskKind;
+  /** The lesson asked for, when `kind` is `lesson`; always one the pack carries. */
+  lessonId?: string;
+  /** The named thing asked about, when `kind` is `fact` — the model's words, never certified. */
+  entity?: string;
+}
+
+export interface LessonClassifyInput {
+  provider: ModelProvider;
+  scenarioId: string;
+  /** The trainer's opening ask, verbatim. */
+  ask: string;
+  /** The lessons the model may name: id, scope and a one-line gloss — the
+   * lesson's own first sentence, reviewed pack text, never a paraphrase. */
+  lessons: readonly { id: string; scope: string; gloss: string }[];
+}
+
+export interface LessonClassifyStep {
+  usage: Usage;
+  /** Null when the reply was not a usable classification; counted, never guessed. */
+  classification: LessonClassification | null;
+}
+
+/**
+ * The lesson door's fallback (docs/lesson-door.md): when the deterministic
+ * matcher offered the boundary alone, ask the model what *kind* of question
+ * this is — the form the alias phrasings encode and a retriever discards.
+ * One structured call: the kind is an enum, the lesson id is an enum of the
+ * pack's lessons, so a fabricated lesson is unrepresentable and the reply
+ * is either usable or counted as not. The prompt is structural — the same
+ * on every model, lesson glosses from reviewed pack text — and names no
+ * example phrasing, so nothing here is tuned to a bank.
+ */
+export async function classifyLessonAsk(input: LessonClassifyInput): Promise<LessonClassifyStep> {
+  const ids = input.lessons.map((lesson) => lesson.id);
+  const request: CompletionRequest = {
+    purpose: "lesson",
+    prompt: [
+      `The trainer asked: "${input.ask}"`,
+      "",
+      "Decide what kind of question this is. Reply with one JSON object and nothing else.",
+      "",
+      '- "lesson": the trainer is asking what something is, or how something works in general — the',
+      '  answer is one of the explanations listed below. Give its id as "lessonId".',
+      '- "fact": the trainer is asking about one specific named thing — something with a name of its',
+      '  own, or a number about it — and wants a value, not an explanation. Give the thing as "entity".',
+      "  A question that names a specific thing is a fact question even if it uses a word from an",
+      "  explanation's title.",
+      '- "advice": the trainer is asking what they should do, pick, train or catch.',
+      '- "other": none of these, or not about the game at all.',
+      "",
+      "The explanations:",
+      ...input.lessons.map((lesson) => `  - ${lesson.id} (${lesson.scope}): ${lesson.gloss}`),
+      "",
+      'Reply as {"kind": "lesson" | "fact" | "advice" | "other", "lessonId"?: <id>, "entity"?: <name>}.',
+    ].join("\n"),
+    hint: { scenarioId: input.scenarioId },
+    schema: {
+      name: LESSON_SCHEMA_NAME,
+      schema: {
+        type: "object",
+        properties: {
+          kind: { type: "string", enum: [...LESSON_ASK_KINDS] },
+          ...(ids.length === 0 ? {} : { lessonId: { type: "string", enum: ids } }),
+          entity: { type: "string" },
+        },
+        required: ["kind"],
+        additionalProperties: false,
+      },
+    },
+  };
+  const completion = await input.provider.complete(request);
+  return { usage: completion.usage, classification: decodeLessonClassification(completion.text, ids) };
+}
+
+/** A reply is usable when its kind is one of the four and, for a lesson,
+ * its id is one the pack carries. Anything else is null — counted apart. */
+export function decodeLessonClassification(text: string, lessonIds: readonly string[]): LessonClassification | null {
+  const fenced = /```(?:json)?\s*([\s\S]*?)```/i.exec(text);
+  const body = fenced?.[1] ?? text;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(body);
+  } catch {
+    return null;
+  }
+  if (typeof parsed !== "object" || parsed === null) return null;
+  const { kind, lessonId, entity } = parsed as { kind?: unknown; lessonId?: unknown; entity?: unknown };
+  if (typeof kind !== "string" || !(LESSON_ASK_KINDS as readonly string[]).includes(kind)) return null;
+  if (kind === "lesson") {
+    if (typeof lessonId !== "string" || !lessonIds.includes(lessonId)) return null;
+    return { kind, lessonId };
+  }
+  return { kind: kind as LessonAskKind, ...(typeof entity === "string" && entity.trim().length > 0 ? { entity: entity.trim() } : {}) };
+}
+
 export interface PhraseStepInput {
   provider: ModelProvider;
   scenarioId: string;

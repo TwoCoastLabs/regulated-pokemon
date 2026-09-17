@@ -5961,3 +5961,107 @@ topic words and 66 concept forms are choices; the reading is of this
 pack's data, and a second world would write its own. (c) **named** —
 `v4` was widened in place, not versioned, because no filed record pins
 it; the moment one does, the next change is a `v5`.
+
+### The classifier: the model as the lesson door's fallback (2026-09-17)
+
+**Goal.** The deterministic door reached its ceiling at 20 of 25 and 48
+of 72 on held-out phrasings, with the residue mostly misspellings, and a
+lexical index lost on both sides because it reads topic and not form. A
+model reads form. So the question: when the matcher finds nothing, does
+one model call asking *what kind of question this is* lift recall — and
+what does it cost in precision, calls and money, per model? Cost is
+reported beside the lift, not weighed for the reader.
+
+**How it works.** `--lesson-classifier`. The alias matcher runs first.
+Only when it offers the boundary alone, one structured call asks the
+model to say `lesson` (which, from an enum of the pack's lessons, each
+glossed by its own first sentence), `fact` (about what), `advice`, or
+`other`; the four are defined by form and the prompt names no example
+phrasing. A lesson the model names is offered beside the boundary;
+anything else, a reply outside the schema or a failed call leaves the
+boundary alone. Recorded as a `route/classified` step, on the trace, and
+per sample in the bank. The reading is live, through the driver's own
+decision function, over the two held-out sets and every must-not-answer
+wording — 192 asks — at N=3 on each model; `npm run lesson-door:read`
+files it under `runs/lesson-door/`.
+
+**The reading.** Per repetition; the deterministic door alone is the
+gauge's number from the previous entry.
+
+| | strong `qwen/qwen3-235b-a22b-2507` | | weak `mistralai/mistral-nemo` | |
+|---|---:|---:|---:|---:|
+| | door alone | with the classifier | door alone | with the classifier |
+| recall, first held-out set (25) | 20 (80%) | **24, 24, 24 (96%)** | 20 (80%) | **24, 23, 23 (93%)** |
+| recall, second held-out set (72) | 48 (67%) | **70, 70, 69 (97%)** | 48 (67%) | **68, 65, 65 (92%)** |
+| precision, must-not-answer, canonical (45) | 44 (98%) | 42, 42, 41 (93%) | 44 (98%) | 38, 38, 38 (84%) |
+| precision, must-not-answer, paraphrases (32) | 32 (100%) | 32, 32, 32 (100%) | 32 (100%) | 32, 31, 31 (98%) |
+| the classifier's own asks, recall side, right | — | 77/81 (95%) | — | 64/81 (79%) |
+| the classifier's own asks, precision side, right | — | 221/228 (97%) | — | 208/228 (91%) |
+| what it said, over 309 asks: lesson / fact / advice / other / unusable | — | 88 / 85 / 81 / 55 / 0 | — | 96 / 120 / 91 / 2 / 0 |
+| calls, cost, provider errors | 0 | 309, $0.034, 0 | 0 | 309, $0.006, 0 |
+
+Artifacts: `runs/lesson-door/2026-09-17T00-27-21-672Z-lesson-door.json`
+(strong), `2026-09-17T00-36-48-341Z-lesson-door.json` (weak); the N=1
+strong fail-fast run at `00-24-10-105Z`.
+
+**What it says.**
+
+1. **The lift is large and holds on both models.** On the second
+   held-out set, 48 of 72 to 69–70 (strong) and 65–68 (weak); on the
+   first, 20 of 25 to 24 and 23–24. The misspellings the matcher could
+   not read — "what is evoluton", "what are badgs", "wat is a tm" — the
+   model reads; on the strong model 77 of its 81 recall-side asks ended
+   right. That is the lift the design reserved this seam for.
+2. **The cost is a precision trade, the same shape on both models and
+   larger on the weak one.** Strong: 44 to 41–42 of 45. Weak: 44 to 38
+   of 45, stably. A precision miss here is a topical lesson offered on a
+   question that must not be answered — the ledger's largest class,
+   which the door exists to close — so this is the number to weigh
+   against the recall. The tuning rule does not withdraw it: the lever
+   moves both models the same way. Whether the trade is worth it is a
+   product decision, and the bank legs read it in the currency that
+   matters — the correct-decline rate beside the resolution rate.
+3. **The weak model's losses have one shape: it will not say "other".**
+   Over 309 asks it said `other` twice; the strong model said it 55
+   times. So "How do I cook pasta?" became a `how-to-play` ask 3 of 3,
+   "Write me a poem about the ocean." a `what-is-pokemon` ask 3 of 3,
+   and the prompt injection a `what-can-you-ask` or `what-is-game` ask 3
+   of 3. Every one is an off-domain question the door alone kept at the
+   boundary. The strong model's stable losses are different: "What does
+   an Oran Berry do?" to `what-is-pokemon`, "What's the story of Pokemon
+   Red and Blue?" to `what-is-game` — game questions the records do not
+   hold, read as lesson asks, which is arguable rather than absurd.
+4. **The next lever is named by the two findings together.** The index
+   knows topic and not form; the model knows form and, on the weak
+   model, is careless about topic. A model-named lesson could be
+   required to have a lexical foothold in the ask — any indexable word
+   in common — before it is offered. "Pasta", "poem" and "ocean" share
+   nothing with any lesson; "evoluton" reads as "evolution". That is a
+   deterministic check on a model nomination, the shape this project
+   prefers, and it is the first thing to read next.
+5. **The call is on most exchanges, not most lessons.** The fallback
+   fires whenever the matcher offers the boundary alone — which is every
+   fact ask too, since a fact ask matches no lesson phrasing. On the bank
+   that is most entries. Money is small: $0.0001 per call on the strong
+   model, $0.00002 on the weak. Latency is one call on most exchanges,
+   and is the cost to report. The `fact` reply carries an entity the
+   driver does not yet use; when it does, the call buys more than the
+   door.
+
+**Consequence.** The classifier stays behind `--lesson-classifier`, off
+by default. The bank legs for both doors now have three arms worth
+reading — off, `--lesson-door`, `--lesson-classifier` — and the
+lexical-foothold check is the next free step before them.
+
+**Model errors:** 0 provider errors and 0 unusable replies on 618 calls;
+the weak model's under-use of `other` is a model behaviour, counted
+above. **Harness factors:** (a) **named** — the held-out sets are the
+same ones the data widening was read on, and the second was written by
+the same author; the classifier never saw them and the prompt names no
+phrasing, but the caveat stands. (b) **named** — three of the strong
+model's stable precision misses are on questions a reviewer might call
+lesson asks ("the story of Red and Blue", "the final boss"); the bank's
+oracle says needs-data, and the oracle decides. (c) **named** — the
+reading is of the door's decision, not of an exchange; whether the
+model, offered the right lesson, then takes it is the porch's and the
+bank's question.

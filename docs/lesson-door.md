@@ -291,6 +291,48 @@ against one baseline is fairer and costs one set of legs instead of two.
   only when nothing else is, or not on a first call.
 - **The band drops on one model.** Withdrawn, per the tuning rule.
 
+## The classifier: the model as the fallback
+
+Built 2026-09-17, after the data debt was paid and a lexical index had
+lost on both sides. The deterministic matcher reads *form* — "what is
+a…" against "who is the…" — through declared phrasings, and its ceiling
+is a misspelling or a phrasing nobody wrote down. A model reads form
+directly. So, behind `--lesson-classifier`:
+
+1. The alias matcher runs first, as always.
+2. **Only when it offers the boundary alone**, one structured call asks
+   the model what kind of question this is: `lesson` (which — an enum of
+   the pack's lessons, each with its own first sentence as gloss), `fact`
+   (about what), `advice`, or `other`. The prompt defines the four by
+   form and names no example phrasing.
+3. A lesson the model names is offered beside the boundary. A fact, an
+   advice, an other, a reply outside the schema or a failed call leaves
+   the boundary alone. The door never widens past what the model said,
+   and a fabricated lesson id is unrepresentable.
+4. A `route/classified` step on the model's lane says what it read; the
+   trace carries the call; the bank records the reading per sample.
+
+It is the fallback and not the first step on purpose. The model runs on
+exactly the asks the deterministic door could not place, so its lift,
+its precision and its cost are read in isolation; running it first on
+everything is one flag away and is a different reading. Two things
+follow from "only when the boundary alone": a wrong lesson from the
+matcher (a typo landing on another lesson's phrasing) is *not* handed to
+the model, and every must-not-answer ask the matcher correctly left at
+the boundary *is* — so precision is where the classifier is tested
+hardest.
+
+Its reading is live, not on the gauge: `npm run lesson-door:read` puts
+the two held-out sets and every must-not-answer wording through the
+driver's own decision function with the classifier on, per model, and
+files every ask with what the model said. Read 2026-09-17 at N=3 on both
+models (findings §24, "The classifier"): recall on the second held-out
+set from 48 of 72 to 69–70 (strong) and 65–68 (weak); precision on the
+must-not-answer questions from 44 of 45 to 41–42 (strong) and 38
+(weak). The same trade on both models, larger on the weak one, whose
+losses are all off-domain asks it called lessons. Off by default; the
+next lever is a lexical foothold required of a model-named lesson.
+
 ## As built
 
 Four departures from the design above, each forced by something found

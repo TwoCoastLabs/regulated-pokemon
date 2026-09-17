@@ -69,7 +69,7 @@ const world = args.center ? centerWorld() : demoWorld();
 // stops the tracer by name rather than tracing against half a memory.
 const store = args.memory ? readPrecedentStore(args.precedentStore ?? precedentStorePath(world.pack.id), world) : undefined;
 console.log(
-  `[config] model ${model}, world ${world.registry.snapshot.id} + ${world.pack.id}, grounding ${args.grounding}, grammar ${args.gatedGrammar ? "gated" : "loose"}, repair ${args.repair ? "on" : "off"}, feedback ${args.feedback ? "on" : "off"}, clarify ${args.clarify ? "on" : "off"}, suggest ${args.suggest ? "on" : "off"}, memory ${store === undefined ? (args.memory ? "off (no store shipped)" : "off") : `on (${store.precedents.length} precedents)`}, prompt ${args.prompt}, refused nomination ${args.refusalFeedback ? "fed back" : "withdrawn in silence"}, listing door ${args.offeredDoors ? "offered only when the driver would accept it" : "offered on every first call"}, lesson door ${args.lessonDoor ? "only the lessons the ask is about" : "the whole catalogue"}${args.adversarial ? ", adversarial" : ""}`,
+  `[config] model ${model}, world ${world.registry.snapshot.id} + ${world.pack.id}, grounding ${args.grounding}, grammar ${args.gatedGrammar ? "gated" : "loose"}, repair ${args.repair ? "on" : "off"}, feedback ${args.feedback ? "on" : "off"}, clarify ${args.clarify ? "on" : "off"}, suggest ${args.suggest ? "on" : "off"}, memory ${store === undefined ? (args.memory ? "off (no store shipped)" : "off") : `on (${store.precedents.length} precedents)`}, prompt ${args.prompt}, refused nomination ${args.refusalFeedback ? "fed back" : "withdrawn in silence"}, listing door ${args.offeredDoors ? "offered only when the driver would accept it" : "offered on every first call"}, lesson door ${args.lessonDoor ? `only the lessons the ask is about${args.lessonClassifier ? ", the model asked when none match" : ""}` : "the whole catalogue"}${args.adversarial ? ", adversarial" : ""}`,
 );
 
 runTrace(args.inputs, {
@@ -87,6 +87,7 @@ runTrace(args.inputs, {
   refusalFeedback: args.refusalFeedback,
   offeredDoors: args.offeredDoors,
   lessonDoor: args.lessonDoor,
+  lessonClassifier: args.lessonClassifier,
   ...(store === undefined ? {} : { precedents: { store } }),
 }).then((result) => {
   for (const line of result.lines) console.log(line);

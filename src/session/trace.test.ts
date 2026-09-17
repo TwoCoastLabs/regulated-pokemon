@@ -169,11 +169,11 @@ describe("runTrace narrates what the session did", () => {
 describe("parseTraceArgs keeps the entry point straight-line", () => {
   it("splits flags from inputs and honors --model over --weak", () => {
     const { parseTraceArgs } = trace;
-    expect(parseTraceArgs(["hi", "/confirm"])).toEqual({ inputs: ["hi", "/confirm"], weak: false, adversarial: false, grounding: "retrieval", gatedGrammar: true, repair: true, feedback: true, clarify: true, suggest: true, center: false, memory: true, prompt: "legacy", refusalFeedback: false, offeredDoors: false, lessonDoor: false });
+    expect(parseTraceArgs(["hi", "/confirm"])).toEqual({ inputs: ["hi", "/confirm"], weak: false, adversarial: false, grounding: "retrieval", gatedGrammar: true, repair: true, feedback: true, clarify: true, suggest: true, center: false, memory: true, prompt: "legacy", refusalFeedback: false, offeredDoors: false, lessonDoor: false, lessonClassifier: false });
     expect(parseTraceArgs(["--precedent-store", "m.json", "hi"])).toMatchObject({ inputs: ["hi"], precedentStore: "m.json" });
     expect(parseTraceArgs(["--no-memory", "hi"]).memory).toBe(false);
     expect(parseTraceArgs(["--lesson-door", "--offered-doors", "hi"]).lessonDoor).toBe(true);
-    expect(parseTraceArgs(["--weak", "hi"])).toEqual({ inputs: ["hi"], weak: true, adversarial: false, grounding: "retrieval", gatedGrammar: true, repair: true, feedback: true, clarify: true, suggest: true, center: false, memory: true, prompt: "legacy", refusalFeedback: false, offeredDoors: false, lessonDoor: false });
+    expect(parseTraceArgs(["--weak", "hi"])).toEqual({ inputs: ["hi"], weak: true, adversarial: false, grounding: "retrieval", gatedGrammar: true, repair: true, feedback: true, clarify: true, suggest: true, center: false, memory: true, prompt: "legacy", refusalFeedback: false, offeredDoors: false, lessonDoor: false, lessonClassifier: false });
     expect(parseTraceArgs(["--adversarial", "--model", "acme/z-1", "hi"])).toEqual({
       inputs: ["hi"],
       model: "acme/z-1",
@@ -186,7 +186,7 @@ describe("parseTraceArgs keeps the entry point straight-line", () => {
       clarify: true,
       suggest: true,
       center: false,
-      memory: true, prompt: "legacy", refusalFeedback: false, offeredDoors: false, lessonDoor: false,
+      memory: true, prompt: "legacy", refusalFeedback: false, offeredDoors: false, lessonDoor: false, lessonClassifier: false,
     });
   });
 
