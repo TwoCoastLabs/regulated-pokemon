@@ -87,17 +87,60 @@ function everyLesson(pack: AccordPack): LessonOffer {
 // --- alias ------------------------------------------------------------------
 
 /**
- * The alias matcher: a concept or orientation lesson matches when one of its
- * declared aliases is in the ask as a whole phrase — "what is a type" must
- * not match inside "what is a typewriter", so both ends sit on a non-letter
- * or the edge.
+ * Every phrasing a lesson's coverage stands for: its literal aliases, plus
+ * — for a concept lesson — the pack's concept forms over each of its nouns
+ * ("what is {a} {n}" × "gym leader" → "what is a gym leader"), and — for an
+ * orientation lesson — its own forms over the pack's topics ("is {t} hard"
+ * × "this game" → "is this game hard"). Computed per pack once; the pack is
+ * data and the expansion is arithmetic, so the phrasings are as reviewable
+ * as the few dozen forms and nouns that produce them.
+ */
+export function phrasingsOf(pack: AccordPack, lesson: CurriculumRule): readonly string[] {
+  const covers = lesson.covers;
+  if (covers === undefined) return [];
+  const out = new Set<string>(covers.aliases.map(foldAsk));
+  const forms = pack.lessonAskForms;
+  if (covers.scope === "concept" && forms !== undefined) {
+    for (const noun of covers.nouns ?? []) {
+      const article = /^[aeiou]/.test(noun) ? "an" : "a";
+      for (const form of forms.concept) out.add(foldAsk(form.replace(/\{a\}/g, article).replace(/\{n\}/g, noun)));
+    }
+  }
+  if (covers.scope === "orientation") {
+    for (const form of covers.forms ?? []) {
+      if (!form.includes("{t}")) {
+        out.add(foldAsk(form));
+        continue;
+      }
+      for (const topic of forms?.topics ?? []) out.add(foldAsk(form.replace(/\{t\}/g, topic)));
+    }
+  }
+  return [...out].filter((phrase) => phrase.length > 0);
+}
+
+const phrasingCache = new WeakMap<AccordPack, ReadonlyMap<string, readonly string[]>>();
+
+function phrasingTable(pack: AccordPack): ReadonlyMap<string, readonly string[]> {
+  const cached = phrasingCache.get(pack);
+  if (cached !== undefined) return cached;
+  const table = new Map(pack.curriculum.map((lesson) => [lesson.id, phrasingsOf(pack, lesson)]));
+  phrasingCache.set(pack, table);
+  return table;
+}
+
+/**
+ * The alias matcher: a concept or orientation lesson matches when one of
+ * its phrasings ({@link phrasingsOf}) is in the ask as a whole phrase —
+ * "what is a type" must not match inside "what is a typewriter", so both
+ * ends sit on a non-letter or the edge.
  */
 export function aliasOffer(world: LessonWorld, ask: string): LessonOffer {
   if (!declaresLessonCoverage(world.pack)) return everyLesson(world.pack);
   const haystack = foldAsk(ask);
   const escape = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const contains = (alias: string): boolean => new RegExp(`(^|[^a-z0-9])${escape(alias)}([^a-z0-9]|$)`).test(haystack);
-  return applyPolicy(world.pack.curriculum, (lesson) => (lesson.covers?.aliases ?? []).some(contains), "a declared phrasing is in the ask");
+  const table = phrasingTable(world.pack);
+  return applyPolicy(world.pack.curriculum, (lesson) => (table.get(lesson.id) ?? []).some(contains), "a declared phrasing is in the ask");
 }
 
 // --- bm25 -------------------------------------------------------------------

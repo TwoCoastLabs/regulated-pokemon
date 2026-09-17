@@ -112,7 +112,72 @@ export function readScopePhrasings(path: string = SCOPE_BANK_PATH): ScopePhrasin
   return loadScopePhrasings(parsed);
 }
 
-// --- the three doors --------------------------------------------------------
+// --- the lesson-paraphrase bank ---------------------------------------------
+
+export const LESSON_PARAPHRASES_PATH = resolve(import.meta.dirname, "../../data/playability/lesson-paraphrases.v1.json");
+export const LESSON_PARAPHRASES_SCHEMA_VERSION = 1;
+
+/** Fresh wordings of one lesson question — the second held-out set for the
+ * lesson door, written before the alias widening of 2026-09-17 and never
+ * the source of an alias. */
+export interface LessonParaphrase {
+  entryId: string;
+  expectBlockIds: readonly string[];
+  phrasings: readonly string[];
+}
+
+export interface LessonParaphraseBank {
+  bankVersion: typeof LESSON_PARAPHRASES_SCHEMA_VERSION;
+  id: string;
+  entries: readonly LessonParaphrase[];
+}
+
+export function loadLessonParaphrases(input: unknown, bank: QuestionBank): LessonParaphraseBank {
+  const fail = (rule: string, message: string, actual?: string): never => {
+    throw new AccordError([violation("IA-1", rule, message, actual === undefined ? undefined : { actual })]);
+  };
+  if (input === null || typeof input !== "object") fail("lesson-paraphrases-malformed", "the lesson-paraphrase bank is not an object");
+  const doc = input as Partial<LessonParaphraseBank>;
+  if (doc.bankVersion !== LESSON_PARAPHRASES_SCHEMA_VERSION) {
+    fail("lesson-paraphrases-schema-unsupported", "the lesson-paraphrase bank schema version is not supported", String(doc.bankVersion));
+  }
+  if (!Array.isArray(doc.entries) || doc.entries.length === 0) fail("lesson-paraphrases-malformed", "the lesson-paraphrase bank carries no entries");
+  const known = new Map(bank.entries.map((entry) => [entry.id, entry]));
+  const seen = new Set<string>();
+  for (const entry of doc.entries as LessonParaphrase[]) {
+    if (typeof entry.entryId !== "string" || !known.has(entry.entryId)) fail("lesson-paraphrase-unknown-entry", `paraphrases name "${String(entry.entryId)}", which the bank does not carry`, String(entry.entryId));
+    if (seen.has(entry.entryId)) fail("lesson-paraphrase-duplicate", `paraphrases for "${entry.entryId}" appear more than once`, entry.entryId);
+    seen.add(entry.entryId);
+    const expected = known.get(entry.entryId)?.expectBlockIds ?? [];
+    if (!Array.isArray(entry.expectBlockIds) || entry.expectBlockIds.join(",") !== expected.join(",")) {
+      // The lesson a wording is meant to draw is the bank's oracle, restated
+      // here so a reader sees it; it must not drift from the bank.
+      fail("lesson-paraphrase-oracle-drift", `paraphrases for "${entry.entryId}" expect lessons the bank does not`, entry.expectBlockIds?.join(","));
+    }
+    if (!Array.isArray(entry.phrasings) || entry.phrasings.length === 0 || entry.phrasings.some((text) => typeof text !== "string" || text.trim().length === 0)) {
+      fail("lesson-paraphrase-empty", `paraphrases for "${entry.entryId}" carry an empty wording`, entry.entryId);
+    }
+    // Held out means held out: a wording the bank already carries measures
+    // the same thing twice under a different name.
+    const bankWordings = new Set(wordingsOf(known.get(entry.entryId)!).map((text) => text.toLowerCase()));
+    for (const text of entry.phrasings) {
+      if (bankWordings.has(text.toLowerCase())) fail("lesson-paraphrase-not-held-out", `paraphrase "${text}" is already a wording of the bank entry`, text);
+    }
+  }
+  return doc as LessonParaphraseBank;
+}
+
+export function readLessonParaphrases(bank: QuestionBank, path: string = LESSON_PARAPHRASES_PATH): LessonParaphraseBank {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(readFileSync(path, "utf8"));
+  } catch (cause) {
+    throw new AccordError([violation("IA-1", "lesson-paraphrases-unreadable", `cannot read the lesson-paraphrase bank at ${path}: ${(cause as Error).message}`)]);
+  }
+  return loadLessonParaphrases(parsed, bank);
+}
+
+// --- the four doors ---------------------------------------------------------
 
 /** Every wording an entry carries: the canonical intent first, then its paraphrases. */
 export function wordingsOf(entry: BankEntry): readonly string[] {
@@ -189,6 +254,26 @@ export function lessonReadings(world: { registry: CertifiedRegistry; pack: Accor
       const instead = offer.offered.filter((id) => id !== boundary);
       readings.push({ entryId: entry.id, wording, canonical: index === 0, engaged, ...(engaged ? {} : { offered: instead }) });
     });
+  }
+  return readings;
+}
+
+/**
+ * The lesson door on the second held-out set: the same reading as
+ * {@link lessonReadings}, over wordings written after the aliases were
+ * first read and never since used to write one. Every reading here is a
+ * paraphrase; `canonical` is false throughout.
+ */
+export function lessonHeldOutReadings(world: { registry: CertifiedRegistry; pack: AccordPack }, paraphrases: LessonParaphraseBank, matcher: LessonMatcherId = "alias"): DoorReading[] {
+  const boundary = world.pack.recordsBoundary?.lessonId;
+  const readings: DoorReading[] = [];
+  for (const entry of paraphrases.entries) {
+    for (const wording of entry.phrasings) {
+      const offer = lessonOffer(matcher, world, wording);
+      const engaged = entry.expectBlockIds.some((id) => offer.offered.includes(id));
+      const instead = offer.offered.filter((id) => id !== boundary);
+      readings.push({ entryId: entry.entryId, wording, canonical: false, engaged, ...(engaged ? {} : { offered: instead }) });
+    }
   }
   return readings;
 }
@@ -278,12 +363,17 @@ export interface ActivationReport {
   /** The lesson door's precision — the boundary lesson alone offered on a
    * question that must not receive a certified answer. */
   lessonPrecision?: DoorRate;
+  /** The lesson door's recall on the second held-out set
+   * (data/playability/lesson-paraphrases.v1.json); absent when that bank
+   * was not given, or the pack declares no coverage. */
+  lessonHeldOut?: { engaged: number; total: number };
   scope: Record<ScopeOutcome, number>;
   /** The readings behind every number, so a rate is never the only record. */
   retrievalMisses: readonly DoorReading[];
   nominationMisses: readonly DoorReading[];
   lessonMisses: readonly DoorReading[];
   lessonPrecisionMisses: readonly DoorReading[];
+  lessonHeldOutMisses: readonly DoorReading[];
   scopeReadings: readonly ScopeReading[];
 }
 
@@ -302,12 +392,14 @@ export function activationReport(
   bank: QuestionBank,
   scopeBank: ScopePhrasingBank,
   lessonMatcher: LessonMatcherId = "alias",
+  lessonParaphrases?: LessonParaphraseBank,
 ): ActivationReport {
   const retrieval = retrievalReadings(registry, bank);
   const nomination = nominationReadings(bank);
   const declares = pack.curriculum.some((lesson) => lesson.covers !== undefined);
   const lesson = declares ? lessonReadings({ registry, pack }, bank, lessonMatcher) : [];
   const precision = declares ? lessonPrecisionReadings({ registry, pack }, bank, lessonMatcher) : [];
+  const heldOut = declares && lessonParaphrases !== undefined ? lessonHeldOutReadings({ registry, pack }, lessonParaphrases, lessonMatcher) : [];
   const scope = scopeReadings(pack, scopeBank);
   const counts: Record<ScopeOutcome, number> = { bound: 0, unbound: 0, "bound-wrong": 0, contradicted: 0, inert: 0 };
   for (const reading of scope) counts[reading.outcome] += 1;
@@ -316,11 +408,13 @@ export function activationReport(
     nomination: rate(nomination),
     lessonMatcher,
     ...(declares ? { lesson: rate(lesson), lessonPrecision: rate(precision) } : {}),
+    ...(declares && lessonParaphrases !== undefined ? { lessonHeldOut: { engaged: heldOut.filter((reading) => reading.engaged).length, total: heldOut.length } } : {}),
     scope: counts,
     retrievalMisses: retrieval.filter((reading) => !reading.engaged),
     nominationMisses: nomination.filter((reading) => !reading.engaged),
     lessonMisses: lesson.filter((reading) => !reading.engaged),
     lessonPrecisionMisses: precision.filter((reading) => !reading.engaged),
+    lessonHeldOutMisses: heldOut.filter((reading) => !reading.engaged),
     scopeReadings: scope,
   };
 }
@@ -341,6 +435,9 @@ export function renderActivation(report: ActivationReport): string {
   }
   if (report.lessonPrecision !== undefined) {
     lines.push(`| Lesson door (${report.lessonMatcher}) offered the boundary alone on a must-not-answer | ${pct(report.lessonPrecision.canonical.engaged, report.lessonPrecision.canonical.total)} | ${pct(report.lessonPrecision.paraphrase.engaged, report.lessonPrecision.paraphrase.total)} |`);
+  }
+  if (report.lessonHeldOut !== undefined) {
+    lines.push(`| Lesson door (${report.lessonMatcher}) offered an acceptable lesson, second held-out set | — | ${pct(report.lessonHeldOut.engaged, report.lessonHeldOut.total)} |`);
   }
   lines.push("");
   const total = report.scopeReadings.length;
@@ -363,6 +460,14 @@ export function renderActivation(report: ActivationReport): string {
     lines.push("");
     for (const miss of report.lessonMisses) {
       lines.push(`- \`${miss.entryId}\`${miss.canonical ? " (canonical)" : ""}: “${miss.wording}” → ${(miss.offered ?? []).map((id) => `\`${id}\``).join(", ") || "boundary only"}`);
+    }
+    lines.push("");
+  }
+  if (report.lessonHeldOutMisses.length > 0) {
+    lines.push("Lesson door misses on the second held-out set:");
+    lines.push("");
+    for (const miss of report.lessonHeldOutMisses) {
+      lines.push(`- \`${miss.entryId}\`: “${miss.wording}” → ${(miss.offered ?? []).map((id) => `\`${id}\``).join(", ") || "boundary only"}`);
     }
     lines.push("");
   }

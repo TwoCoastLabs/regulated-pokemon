@@ -9,7 +9,7 @@
 import { describe, expect, it } from "vitest";
 
 import { harnessWorld } from "../harness/corpus.js";
-import { aliasOffer, askWords, BM25_K, BM25_THRESHOLD, bm25Offer, bm25Share, bothOffer, foldAsk, lessonOffer, words } from "./lesson-matcher.js";
+import { aliasOffer, askWords, BM25_K, BM25_THRESHOLD, bm25Offer, bm25Share, bothOffer, foldAsk, lessonOffer, phrasingsOf, words } from "./lesson-matcher.js";
 
 const world = harnessWorld();
 const BOUNDARY = "what-the-records-hold";
@@ -28,6 +28,33 @@ describe("the alias matcher", () => {
   it("matches a declared phrasing as a whole phrase and applies the policy", () => {
     expect(aliasOffer(world, "What is a Gym Leader?").offered).toEqual(["what-is-gym-leader", BOUNDARY]);
     expect(aliasOffer(world, "Who is the Pewter City gym leader?").offered).toEqual([BOUNDARY]);
+  });
+
+  it("expands a concept lesson's nouns through the pack's shared forms, with the article chosen by the noun", () => {
+    const lesson = world.pack.curriculum.find((entry) => entry.id === "what-is-evolution")!;
+    const phrasings = phrasingsOf(world.pack, lesson);
+    expect(phrasings).toContain("what is evolution");
+    expect(phrasings).toContain("what is an evolution");
+    expect(phrasings).toContain("explain evolving");
+    expect(phrasings).toContain("how does evolution work");
+    // The literal aliases survive beside the expansion.
+    expect(phrasings).toContain("what does it mean to evolve");
+    expect(aliasOffer(world, "Can you explain evolution?").offered).toEqual(["what-is-evolution", "what-the-records-hold"]);
+  });
+
+  it("expands an orientation lesson's own forms over the pack's topics", () => {
+    const lesson = world.pack.curriculum.find((entry) => entry.id === "is-it-hard")!;
+    const phrasings = phrasingsOf(world.pack, lesson);
+    expect(phrasings).toContain("is this game hard");
+    expect(phrasings).toContain("how difficult is the game");
+    expect(phrasings).toContain("first-timer");
+    expect(aliasOffer(world, "How difficult is the game really?").offered).toEqual(["is-it-hard", "what-the-records-hold"]);
+  });
+
+  it("expands nothing for a pack without shared forms — literal aliases alone", () => {
+    const { lessonAskForms: _forms, ...bare } = world.pack;
+    const lesson = bare.curriculum.find((entry) => entry.id === "what-is-evolution")!;
+    expect(phrasingsOf(bare, lesson)).toEqual(lesson.covers!.aliases.map(foldAsk));
   });
 
   it("does not match inside a longer word", () => {

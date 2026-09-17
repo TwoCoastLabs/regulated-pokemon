@@ -260,6 +260,30 @@ describe("a pack that cannot be trusted is refused by name", () => {
       ).toContain("IA-6/pack-lesson-coverage-malformed");
     });
 
+    it("the shipped pack carries the shared ask forms, every concept form with its noun slot", () => {
+      expect(pack.lessonAskForms?.concept.every((form) => form.includes("{n}"))).toBe(true);
+      expect(pack.lessonAskForms?.topics.length).toBeGreaterThan(0);
+      expect(pack.curriculum.filter((lesson) => lesson.covers?.scope === "concept").every((lesson) => (lesson.covers?.nouns ?? []).length > 0)).toBe(true);
+      expect(pack.curriculum.filter((lesson) => lesson.covers?.scope === "orientation" && lesson.id !== "what-can-you-ask").every((lesson) => (lesson.covers?.forms ?? []).length > 0)).toBe(true);
+    });
+
+    it("refuses a concept form with no noun slot, and a malformed forms list", () => {
+      type WithForms = { lessonAskForms: { concept: string[]; topics: string[] } };
+      expect(denials(loadWith((draft) => (draft as unknown as WithForms).lessonAskForms.concept.push("explain everything")))).toContain("IA-6/pack-lesson-ask-forms-malformed");
+      expect(denials(loadWith((draft) => ((draft as unknown as WithForms).lessonAskForms.topics = [""])))).toContain("IA-6/pack-lesson-ask-forms-malformed");
+    });
+
+    it("refuses nouns on an orientation lesson, forms on a concept lesson, and either on the boundary", () => {
+      const withNouns = (draft: AccordPack, id: string) => {
+        const lesson = lessons(draft).find((entry) => entry.id === id)! as { covers?: { aliases: string[]; scope: string; nouns?: string[]; forms?: string[] } };
+        return lesson;
+      };
+      expect(denials(loadWith((draft) => (withNouns(draft, "what-is-game").covers!.nouns = ["game"])))).toContain("IA-6/pack-lesson-coverage-malformed");
+      expect(denials(loadWith((draft) => (withNouns(draft, "what-is-badge").covers!.forms = ["what is {t}"])))).toContain("IA-6/pack-lesson-coverage-malformed");
+      expect(denials(loadWith((draft) => (withNouns(draft, "what-the-records-hold").covers!.nouns = ["records"])))).toContain("IA-6/pack-lesson-coverage-malformed");
+      expect(denials(loadWith((draft) => (withNouns(draft, "what-is-badge").covers!.nouns = [" "])))).toContain("IA-6/pack-lesson-coverage-malformed");
+    });
+
     it("refuses a second lesson carrying the boundary scope", () => {
       expect(
         denials(

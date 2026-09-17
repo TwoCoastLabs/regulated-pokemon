@@ -214,8 +214,37 @@ export interface CurriculumRule {
  * `recordsBoundary` names — exactly one lesson may carry this scope.
  */
 export interface LessonCoverage {
+  /** Literal phrasings, matched as whole phrases. */
   aliases: readonly string[];
   scope: "concept" | "orientation" | "boundary";
+  /**
+   * For a concept lesson: the noun forms of the concept — "gym leader",
+   * "gym leaders", "gym". Each is put through every form in the pack's
+   * `lessonAskForms.concept` ("what is {a} {n}", "explain {n}") to make the
+   * phrasings the lesson answers, so a form written once serves every
+   * lesson and a lesson declares a few words rather than a few hundred
+   * strings. `{a}` is "a" or "an" by the noun's first letter.
+   */
+  nouns?: readonly string[];
+  /**
+   * For an orientation lesson: its own forms, each with an optional `{t}`
+   * that stands for every topic in `lessonAskForms.topics` ("the game",
+   * "this game") — "how do you play {t}", "is {t} hard".
+   */
+  forms?: readonly string[];
+}
+
+/**
+ * The shared shapes an ask for a lesson takes (docs/lesson-door.md) — the
+ * part of the language that is the same for every concept, written once.
+ * A pack that declares lesson coverage may leave this absent, in which
+ * case only the literal aliases match.
+ */
+export interface LessonAskForms {
+  /** Forms over a concept noun, `{n}`, with `{a}` for its article. */
+  concept: readonly string[];
+  /** The topic words an orientation form's `{t}` stands for. */
+  topics: readonly string[];
 }
 
 /**
@@ -518,6 +547,8 @@ export interface AccordPack {
    * for. Optional — a pack without it reports the boundary as a note alone.
    */
   recordsBoundary?: RecordsBoundaryRule;
+  /** The shared ask forms lesson coverage expands with (docs/lesson-door.md). */
+  lessonAskForms?: LessonAskForms;
   /** The data dictionary: every certified field, described (R3b). */
   dictionary: readonly DictionaryEntry[];
   presentation: Presentation;
@@ -757,12 +788,40 @@ function checkLessonCoverage(pack: AccordPack): Violation[] {
     if (covers.aliases.some((alias) => typeof alias !== "string" || alias.trim().length === 0)) {
       violations.push(bad(lesson.id, "an alias is empty or not a string"));
     }
-    if (covers.scope === "boundary" && covers.aliases.length > 0) {
-      violations.push(bad(lesson.id, "the boundary lesson declares aliases — it would be offered as a topical answer", covers.aliases.join(", ")));
+    if (covers.scope === "boundary" && (covers.aliases.length > 0 || covers.nouns !== undefined || covers.forms !== undefined)) {
+      violations.push(bad(lesson.id, "the boundary lesson declares aliases, nouns or forms — it would be offered as a topical answer", covers.aliases.join(", ")));
     }
-    if (covers.scope !== "boundary" && covers.aliases.length === 0) {
-      violations.push(bad(lesson.id, "a concept or orientation lesson declares no aliases — it could never be offered"));
+    if (covers.scope !== "boundary" && covers.aliases.length === 0 && (covers.nouns ?? []).length === 0 && (covers.forms ?? []).length === 0) {
+      violations.push(bad(lesson.id, "a concept or orientation lesson declares no aliases, nouns or forms — it could never be offered"));
     }
+    if (covers.nouns !== undefined && (!Array.isArray(covers.nouns) || covers.nouns.some((noun) => typeof noun !== "string" || noun.trim().length === 0))) {
+      violations.push(bad(lesson.id, "a noun is empty or not a string"));
+    }
+    if (covers.forms !== undefined && (!Array.isArray(covers.forms) || covers.forms.some((form) => typeof form !== "string" || form.trim().length === 0))) {
+      violations.push(bad(lesson.id, "a form is empty or not a string"));
+    }
+    if (covers.scope === "orientation" && covers.nouns !== undefined) {
+      violations.push(bad(lesson.id, "an orientation lesson declares nouns — the concept forms are not for it"));
+    }
+    if (covers.scope === "concept" && covers.forms !== undefined) {
+      violations.push(bad(lesson.id, "a concept lesson declares its own forms — it takes the pack's"));
+    }
+  }
+  const forms = pack.lessonAskForms;
+  if (forms !== undefined) {
+    const shape = (list: unknown, name: string, slot: string | undefined): void => {
+      if (!Array.isArray(list) || list.some((entry) => typeof entry !== "string" || entry.trim().length === 0)) {
+        violations.push(violation("IA-6", "pack-lesson-ask-forms-malformed", `lessonAskForms.${name} is not a list of phrasings`));
+        return;
+      }
+      if (slot !== undefined) {
+        for (const entry of list as string[]) {
+          if (!entry.includes(slot)) violations.push(violation("IA-6", "pack-lesson-ask-forms-malformed", `lessonAskForms.${name} form "${entry}" has no ${slot}`, { actual: entry }));
+        }
+      }
+    };
+    shape(forms.concept, "concept", "{n}");
+    shape(forms.topics, "topics", undefined);
   }
   const boundaryScoped = pack.curriculum.filter((lesson) => lesson.covers?.scope === "boundary").map((lesson) => lesson.id);
   const named = pack.recordsBoundary?.lessonId;
