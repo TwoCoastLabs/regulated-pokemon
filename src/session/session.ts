@@ -50,7 +50,7 @@ import type { AccordPack } from "../kernel/pack.js";
 import { planRender } from "../kernel/render.js";
 import type { CertifiedRegistry } from "../kernel/registry.js";
 import { NO_FIELD, restrictionsFor } from "../kernel/pack.js";
-import { type LessonMatcherId, type LessonOffer, lessonOffer } from "./lesson-matcher.js";
+import { type LessonMatcherId, type LessonOffer, lessonFoothold, lessonOffer } from "./lesson-matcher.js";
 import { clauseTexts, deriveScope, resolveScope, type ScopeContext, unmatchedClauses } from "../kernel/scope.js";
 import { requiredDimensionsFor } from "../kernel/scope-deps.js";
 import { buildRoster } from "../kernel/roster.js";
@@ -330,7 +330,7 @@ export interface SessionState {
     /** The exchange's offer, so every retry call carries the same set. */
     ids?: readonly string[];
     /** The classifier's reading on this exchange, when it was asked. */
-    classified?: { kind: LessonAskKind; lessonId?: string; entity?: string } | "unusable";
+    classified?: { kind: LessonAskKind; lessonId?: string; entity?: string; foothold?: readonly string[] } | "unusable";
   };
   /** Answer-step calls repeated once with the route door closed, because
    * the model's whole reply was a nomination the driver refused — the
@@ -2420,6 +2420,14 @@ export async function lessonDoorDecision(
     const classified = step.classification ?? "unusable";
     if (step.classification?.kind === "lesson" && step.classification.lessonId !== undefined) {
       const named = step.classification.lessonId;
+      // The foothold: the named lesson must share a word with the ask, or
+      // it is not offered. A model that reads form and not topic — the weak
+      // model calling "How do I cook pasta?" a how-to-play ask — is held
+      // to the pack's own words here, deterministically.
+      const foothold = lessonFoothold(world.pack, ask, named);
+      if (foothold.length === 0) {
+        return { offer, asked: true, classified: { ...step.classification, foothold: [] }, usage: step.usage, providerError: false };
+      }
       const offeredSet = new Set([named, ...(boundary === undefined ? [] : [boundary])]);
       return {
         offer: {
@@ -2428,7 +2436,7 @@ export async function lessonDoorDecision(
           reason: `no declared phrasing matched; asked, the model read the question as an ask for "${named}"`,
         },
         asked: true,
-        classified,
+        classified: { ...step.classification, foothold },
         usage: step.usage,
         providerError: false,
       };
@@ -2442,7 +2450,10 @@ export async function lessonDoorDecision(
 function describeClassification(classified: SessionState["lessonDoor"]["classified"]): string {
   const lead = "the deterministic door offered only the boundary; asked what kind of question this is, the model";
   if (classified === undefined || classified === "unusable") return `${lead} gave no usable reply — the boundary stays alone`;
-  if (classified.kind === "lesson") return `${lead} read it as an ask for the lesson "${classified.lessonId}" — offered beside the boundary`;
+  if (classified.kind === "lesson" && classified.foothold !== undefined && classified.foothold.length === 0) {
+    return `${lead} read it as an ask for the lesson "${classified.lessonId}", but the question shares no word with that lesson — not offered; the boundary stays alone`;
+  }
+  if (classified.kind === "lesson") return `${lead} read it as an ask for the lesson "${classified.lessonId}" (the question and the lesson share ${(classified.foothold ?? []).map((word) => `"${word}"`).join(", ") || "a word"}) — offered beside the boundary`;
   const kind =
     classified.kind === "fact"
       ? `a fact question${classified.entity === undefined ? "" : ` about "${classified.entity}"`}`

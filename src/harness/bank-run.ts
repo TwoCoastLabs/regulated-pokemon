@@ -559,7 +559,7 @@ export async function runBankEntry(
                     state.lessonDoor.classified === "unusable"
                       ? "unusable"
                       : state.lessonDoor.classified.kind === "lesson"
-                        ? `lesson:${state.lessonDoor.classified.lessonId}`
+                        ? `lesson:${state.lessonDoor.classified.lessonId}${state.lessonDoor.classified.foothold?.length === 0 ? ":no-foothold" : ""}`
                         : state.lessonDoor.classified.kind,
                 }),
           },

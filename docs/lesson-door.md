@@ -330,8 +330,12 @@ models (findings §24, "The classifier"): recall on the second held-out
 set from 48 of 72 to 69–70 (strong) and 65–68 (weak); precision on the
 must-not-answer questions from 44 of 45 to 41–42 (strong) and 38
 (weak). The same trade on both models, larger on the weak one, whose
-losses are all off-domain asks it called lessons. Off by default; the
-next lever is a lexical foothold required of a model-named lesson.
+losses were all off-domain asks it called lessons. So a lesson the model
+names is offered only if the ask shares a word with it — a title word,
+or a text word few lessons use (the **foothold**, findings §24). Re-read
+from the filed artifacts: precision back to 43–44 (strong) and 42–43
+(weak) of 45, for one recall point per set — the same two asks on both
+models, a compound misspelling and a synonym. Off by default.
 
 ## As built
 

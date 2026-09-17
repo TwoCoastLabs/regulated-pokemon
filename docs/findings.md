@@ -6065,3 +6065,77 @@ oracle says needs-data, and the oracle decides. (c) **named** — the
 reading is of the door's decision, not of an exchange; whether the
 model, offered the right lesson, then takes it is the porch's and the
 bank's question.
+
+### The foothold: a model-named lesson must share a word with the ask (2026-09-17)
+
+**Goal.** The classifier lifted recall by a third and cost precision —
+44 of 45 to 41–42 on the strong model and to 38 on the weak one — and
+the weak model's losses had one shape: off-domain questions it called
+lesson asks, "How do I cook pasta?" as `how-to-play`. The two readings
+before this one said, together, what to do about it: the index knows
+topic and not form; the model knows form and, on the weak model, is
+careless about topic. So a lesson the model names is offered only if
+the ask shares a word with it. A deterministic check on a model
+nomination, read from the filed artifacts at no cost.
+
+**How it works.** `lessonFoothold(pack, ask, lessonId)` returns the
+words the ask and the lesson share, as the index reads them, on two
+grounds: a word of the lesson's own **title** — read before the corpus
+stop list, because "pokemon" is in 20 of 24 lessons and is still the
+title of `what-is-pokemon`, with the typo fold applied so "pokmon" reads
+as "pokemon" (exact at any length, so "tm" counts; folded only when
+both sides are five letters or more, so "your" does not read as "you")
+— or a word of the lesson's **text that at most a quarter of the
+lessons use**, since "about", "your" and "of" are in a third of them
+and say nothing. Empty, and the lesson is not offered; the step says
+so, and the bank and the reading record `lesson:<id>:no-foothold`. The
+misspelling fold now reads a word as *every* vocabulary neighbour
+within an edit — "badgs" is one edit from "badge" and "badges" and
+means either — where it used to drop a word with two.
+
+**The reading.** Re-derived from the two N=3 artifacts of the previous
+entry (`rescoreWithFoothold`): the classifier's replies are on file and
+the foothold is a pure function of the pack and the ask, so what the
+door would have offered is read from the record. Per repetition.
+
+| | strong: door alone | + classifier | + classifier + foothold | weak: door alone | + classifier | + classifier + foothold |
+|---|---:|---:|---:|---:|---:|---:|
+| recall, first held-out set (25) | 20 | 24, 24, 24 | **23, 23, 23** | 20 | 24, 23, 23 | **23, 22, 22** |
+| recall, second held-out set (72) | 48 | 70, 70, 69 | **69, 69, 68** | 48 | 68, 65, 65 | **67, 64, 64** |
+| precision, must-not-answer, canonical (45) | 44 | 42, 42, 41 | **44, 44, 43** | 44 | 38, 38, 38 | **42, 42, 43** |
+| precision, must-not-answer, paraphrases (32) | 32 | 32, 32, 32 | **32, 32, 32** | 32 | 32, 31, 31 | **32, 31, 31** |
+| lessons the model named, withdrawn for no foothold | — | — | 12 of 88 | — | — | 23 of 96 |
+
+**What it says.**
+
+1. **Precision comes back to within one or two of the door alone, on
+   both models.** The weak model from 38 of 45 to 42–43; the strong
+   from 41–42 to 43–44. Every off-domain lesson the weak model named —
+   pasta, the poem, the prompt injection — shared no word with the
+   lesson and is withdrawn. So is "What does an Oran Berry do?" as
+   `what-is-pokemon` on both models.
+2. **The price is one recall point per set, and it is the same two
+   asks on both models.** "what is a pokebal" — a compound misspelling
+   the fold cannot reach, since no lesson writes "pokeball" as one word
+   — and "what are a Pokémon's attacks?", where the model correctly
+   read *attacks* as *moves* and no word says so. A lexical check cannot
+   know a synonym; that is the honest limit, and it costs 3 of 216 and
+   3 of 75 per model.
+3. **Net, against the door alone:** recall on the second set from 48 to
+   68–69 (strong) and 64–67 (weak), precision from 44 to 43–44 and
+   42–43. The trade the classifier made is now small on both models, and
+   the tuning rule is comfortably met.
+
+**Consequence.** The foothold is part of the classifier's decision, not a
+flag: a model-named lesson without one is never offered. The gate's
+seventh item reads the classifier arm at these numbers. The bank legs
+for both doors, with the classifier as a third arm, are the next
+billable step.
+
+**Model errors:** none — no model was called; the readings are the
+filed ones. **Harness factors:** (a) **named** — "a quarter of the
+lessons" and "five letters" are two constants, each stated with its
+reason in the code; a pack with many more lessons would want the first
+re-read. (b) **named** — the rescore assumes the classifier's reply
+would be the same with the foothold in place, which it would: the check
+runs after the call and changes nothing the model sees.

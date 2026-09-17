@@ -2404,12 +2404,12 @@ describe("the driver's ledger — every step of an exchange, in fixed wording, b
     expect(sequence.indexOf("route/classified")).toBeLessThan(sequence.indexOf("route/narrowed"));
     const classified = trail.steps.find((entry) => entry.code === "route/classified")!;
     expect(classified.lane).toBe("model");
-    expect(classified.text).toContain('read it as an ask for the lesson "how-catch"');
+    expect(classified.text).toContain('read it as an ask for the lesson "how-catch" (the question and the lesson share "catch")');
     expect(trail.steps.find((entry) => entry.code === "route/narrowed")?.text).toContain("asked, the model read the question");
     // The first call and the carried-back retry both carried the classified set.
     expect(lessons).toEqual([["how-catch", "what-the-records-hold"], ["how-catch", "what-the-records-hold"]]);
     expect(state.records.at(-1)?.manifest?.claims).toEqual([{ kind: "explanation", blockId: "how-catch" }]);
-    expect(state.lessonDoor.classified).toEqual({ kind: "lesson", lessonId: "how-catch" });
+    expect(state.lessonDoor.classified).toEqual({ kind: "lesson", lessonId: "how-catch", foothold: ["catch"] });
     expect(purposes.filter((purpose) => purpose === "lesson")).toHaveLength(1);
 
     // An ask the matcher places: the classifier is never asked.
@@ -2438,6 +2438,12 @@ describe("the driver's ledger — every step of an exchange, in fixed wording, b
     expect(fact.step).toContain('read it as a fact question about "Pewter City gym" — the boundary stays alone');
     expect(fact.state.lessonDoor.ids).toEqual(["what-the-records-hold"]);
     expect(fact.state.lessonDoor.classified).toEqual({ kind: "fact", entity: "Pewter City gym" });
+    // A lesson the model names that shares no word with the ask — the weak
+    // model's "How do I cook pasta?" → how-to-play — is not offered.
+    const pasta = await read("How do I cook pasta?", JSON.stringify({ kind: "lesson", lessonId: "how-to-play" }));
+    expect(pasta.step).toContain('read it as an ask for the lesson "how-to-play", but the question shares no word with that lesson — not offered');
+    expect(pasta.state.lessonDoor.ids).toEqual(["what-the-records-hold"]);
+    expect(pasta.state.lessonDoor.classified).toEqual({ kind: "lesson", lessonId: "how-to-play", foothold: [] });
     const advice = await read("Should I go for Mew?", JSON.stringify({ kind: "advice" }));
     expect(advice.step).toContain("a request for advice — the boundary stays alone");
     // A lesson id the pack does not carry is unusable, not offered.

@@ -8,7 +8,10 @@ import { describe, expect, it } from "vitest";
 import { demoWorld } from "../demo/files.js";
 import { readLessonParaphrases } from "./activation.js";
 import { BANK_PATH, readBank } from "./bank.js";
-import { type LessonDoorReadingArtifact, readingWordings, readingWorld, readLessonDoor, renderLessonDoorReading, summarize } from "./lesson-door-reading.js";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+import { type LessonDoorReadingArtifact, readingWordings, readingWorld, readLessonDoor, renderLessonDoorReading, rescoreWithFoothold, summarize } from "./lesson-door-reading.js";
 import { ScriptedProvider } from "./provider.js";
 
 const world = demoWorld();
@@ -104,5 +107,56 @@ describe("the reading with a scripted classifier", () => {
     expect(summary.providerErrors).toBe(summary.classifier.asked);
     expect(summary.classifier.unusable).toBe(summary.classifier.asked);
     expect(summary.rates["precision-canonical"].ok).toBe(44);
+  });
+});
+
+describe("the filed classifier readings, re-read under the foothold rule (the free leg)", () => {
+  const filed = (name: string) => JSON.parse(readFileSync(resolve(import.meta.dirname, "../../runs/lesson-door", name), "utf8")) as LessonDoorReadingArtifact;
+  const perRepetition = (readings: LessonDoorReadingArtifact["readings"], set: string) =>
+    [0, 1, 2].map((repetition) => readings.filter((reading) => reading.set === set && reading.repetition === repetition).filter((reading) => reading.ok).length);
+
+  it("strong model: precision back to 43–44 of 45, one recall point per set (findings §24, the foothold)", () => {
+    const artifact = filed("2026-09-17T00-27-21-672Z-lesson-door.json");
+    expect(artifact.model.slug).toBe("qwen/qwen3-235b-a22b-2507");
+    const rescored = rescoreWithFoothold(world.pack, artifact.readings);
+    expect(perRepetition(artifact.readings, "precision-canonical")).toEqual([42, 42, 41]);
+    expect(perRepetition(rescored, "precision-canonical")).toEqual([44, 44, 43]);
+    expect(perRepetition(artifact.readings, "recall-held-out")).toEqual([70, 70, 69]);
+    expect(perRepetition(rescored, "recall-held-out")).toEqual([69, 69, 68]);
+    expect(perRepetition(rescored, "recall-paraphrase")).toEqual([23, 23, 23]);
+    expect(perRepetition(rescored, "precision-paraphrase")).toEqual([32, 32, 32]);
+    expect(summarize(rescored).classifier.noFoothold).toBe(12);
+    // The two correct readings the check withdraws, three times each: a
+    // compound misspelling and a synonym — the price of a lexical check.
+    const withdrawn = rescored.filter((reading, index) => reading.ok !== artifact.readings[index]!.ok && !reading.ok).map((reading) => reading.wording);
+    expect(new Set(withdrawn)).toEqual(new Set(["what is a pokebal", "what are a Pokémon's attacks?"]));
+  });
+
+  it("weak model: precision from 38 to 42–43 of 45 — the off-domain lessons it named share no word with the ask", () => {
+    const artifact = filed("2026-09-17T00-36-48-341Z-lesson-door.json");
+    expect(artifact.model.slug).toBe("mistralai/mistral-nemo");
+    const rescored = rescoreWithFoothold(world.pack, artifact.readings);
+    expect(perRepetition(artifact.readings, "precision-canonical")).toEqual([38, 38, 38]);
+    expect(perRepetition(rescored, "precision-canonical")).toEqual([42, 42, 43]);
+    expect(perRepetition(rescored, "recall-held-out")).toEqual([67, 64, 64]);
+    expect(perRepetition(rescored, "recall-paraphrase")).toEqual([23, 22, 22]);
+    expect(summarize(rescored).classifier.noFoothold).toBe(23);
+    const recovered = rescored.filter((reading, index) => reading.ok !== artifact.readings[index]!.ok && reading.ok).map((reading) => reading.wording);
+    expect(recovered).toContain("How do I cook pasta?");
+    expect(recovered).toContain("Write me a poem about the ocean.");
+  });
+
+  it("leaves a reading alone unless its named lesson was offered without a foothold", () => {
+    const artifact = filed("2026-09-17T00-24-10-105Z-lesson-door.json");
+    const rescored = rescoreWithFoothold(world.pack, artifact.readings);
+    for (const [index, reading] of rescored.entries()) {
+      const before = artifact.readings[index]!;
+      if (reading === before) continue;
+      expect(before.classified?.startsWith("lesson:")).toBe(true);
+      expect(reading.classified?.endsWith(":no-foothold")).toBe(true);
+      expect(reading.offered).not.toContain(before.classified!.slice("lesson:".length));
+    }
+    // Idempotent: a reading already marked is not re-judged.
+    expect(rescoreWithFoothold(world.pack, rescored)).toEqual(rescored);
   });
 });
