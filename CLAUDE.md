@@ -113,7 +113,11 @@ name defines it in plain words the first time.
   `--lesson-classifier` adds one model call asking what kind of question an
   ask is, only where no lesson matched. `npm run lesson-door:read` is the
   live reading of that door on the held-out sets, filed under
-  `runs/lesson-door/`.
+  `runs/lesson-door/`. Both doors passed their bank gates on 2026-09-17
+  (findings §25): together they take the correct-decline rate from 117 to
+  135 of 174 on the strong model and 94 to 117 on the weak; the classifier
+  moved nothing the bank can see. Making the two doors the default is the
+  next change.
 - **The decline ledger:** `npm run decline-ledger -- <coverage artifact.json ...>`
   reads filed runs and lists every sample on a question that must not receive
   a certified answer which got one anyway, what the record certified instead,

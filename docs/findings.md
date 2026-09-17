@@ -6139,3 +6139,152 @@ reason in the code; a pack with many more lessons would want the first
 re-read. (b) **named** — the rescore assumes the classifier's reply
 would be the same with the foothold in place, which it would: the check
 runs after the call and changes nothing the model sees.
+
+## 25. Two doors, ten legs: S4a and S4b pass their gates, and the classifier buys nothing the bank can see (epic #118)
+
+**Goal.** Two levers had pre-registered gates and no bank reading: the
+offered door (S4a, [offered-door.md](offered-door.md), built 2026-09-15)
+and the lesson door (S4b, [lesson-door.md](lesson-door.md), built
+2026-09-16, with its classifier fallback and foothold of 2026-09-17).
+Both gates are read here, in one window against one baseline, so the
+two doors are compared to the same drift rather than to two. A third
+arm reads the classifier in the bank's own currency, and a raw arm
+re-measures the governance tax on the driver we ship now — the
+previous tax number (§18) was three weeks old.
+
+**How it works.** Ten legs of `coverage:map`, five arms on each model,
+N=3 over the 137-question bank, every lever at the M3 legs' setting
+(`--retrieval --gated-grammar --repair --profile --feedback --clarify
+--suggest --precedents nearest`) so the bands compare with §21:
+
+| arm | flags | reads |
+|---|---|---|
+| A | none (`--raw` on the strong model) | today's driver; the tax |
+| D | `--offered-doors` | S4a's gate |
+| L | `--lesson-door` | S4b's gate |
+| LC | `--lesson-classifier` | the classifier, with the foothold |
+| DLC | both doors and the classifier | what would ship |
+
+Both chains started 06:04 UTC on 2026-09-17 and ran in parallel; the
+strong chain finished at 11:51. Artifacts, in order: strong A
+`2026-09-17T06-04-43-453Z`, D `07-38-36-488Z`, L `08-20-39-908Z`, LC
+`09-33-28-043Z`, DLC `10-52-08-525Z`; weak A `06-04-49-672Z`, D
+`06-55-43-385Z`, L `07-39-21-887Z`, LC `08-34-47-190Z`, DLC
+`09-43-54-090Z`. $1.54 in all: $1.26 for the strong governed legs, $0.07
+for the raw arm, $0.21 for the weak legs.
+
+**Enforcement.** 0 escalations of 4,110 samples. 1 provider error
+(strong DLC), counted, not hidden.
+
+**The reading.** Per repetition where a band is given; the
+correct-decline rate is the pass count on the 174 non-answerable
+samples (§21's definition), "topical" is a lesson on the wrong subject
+certified on a must-not-resolve question (the ledger's class, §23), and
+"18 lesson Qs" is the pass count on the 54 samples of the eighteen
+questions whose answer is a lesson — the number S4b's gate protects.
+
+| strong `qwen/qwen3-235b-a22b-2507` | A | D | L | LC | DLC |
+|---|---:|---:|---:|---:|---:|
+| pass band, of 137 | 109–110 | 111–115 | 112–116 | 111–115 | **113–117** |
+| answerable, of 237 | 211 (89%) | 215 (91%) | 212 (89%) | 212 (89%) | 210 (89%) |
+| **correct-decline, of 174** | 117 (67%) | 123 (71%) | 130 (75%) | 129 (74%) | **135 (78%)** |
+| topical lesson certified | 21 | 15 | **0** | **0** | **0** |
+| the 18 lesson questions, of 54 | 52 | 54 | 53 | 52 | 50 |
+| listing nominated, of 411 | 226 | 21 | 272 | 288 | 23 |
+| listings served | 6 | 5 | 7 | 11 | 9 |
+| calls per sample | 1.73 | 1.24 | 1.87 | 2.76 | 2.09 |
+| cost | $0.27 | $0.19 | $0.26 | $0.31 | $0.24 |
+
+| weak `mistralai/mistral-nemo` | A | D | L | LC | DLC |
+|---|---:|---:|---:|---:|---:|
+| pass band, of 137 | 92–94 | 91–94 | 98–103 | 96–101 | **103–104** |
+| answerable, of 237 | 185 (78%) | 179 (76%) | 191 (81%) | 191 (81%) | 194 (82%) |
+| **correct-decline, of 174** | 94 (54%) | 97 (56%) | 110 (63%) | 105 (60%) | **117 (67%)** |
+| topical lesson certified | 13 | 12 | **0** | 2 | 2 |
+| the 18 lesson questions, of 54 | 41 | 40 | 50 | 50 | 48 |
+| listing nominated, of 411 | 0 | 0 | 0 | 1 | 0 |
+| calls per sample | 1.27 | 1.23 | 1.29 | 2.19 | 2.14 |
+| cost | $0.04 | $0.04 | $0.04 | $0.05 | $0.05 |
+
+**S4a, the offered door — the gate holds; ticked.** On the strong
+model: answer calls repeated after a refused listing nomination from 226
+of 411 to 16 — every one of the 16 the `n = 1` class, the executor's own
+residue the gate named; calls per sample 1.73 to 1.24; the band 109–110
+to 111–115; correct-decline 117 to 123; 0 escalations. Listings served
+went 6 to 5, and the gate said not fewer: read closely, both asks served
+under A and not under D (`kind-team-six`, `kind-tier-list`) were still
+*offered* the door under D — the pre-call check agreed with the executor
+— and the model did not nominate it on those repetitions; under A it
+had on 1 and 2 of 3. The offer withheld nothing the executor would have
+accepted, which is what the item was for. On the weak model the door is
+inert, as §22 predicted: it never nominates a listing.
+
+**S4b, the lesson door — the gate holds on every item, both models;
+ticked.** Topical lessons certified on must-not-resolve questions from
+21 to 0 (strong) and 13 to 0 (weak). Correct-decline 117 to 130 (67% to
+75%) and 94 to 110 (54% to 63%). Bands from 109–110 to 112–116 and from
+92–94 to 98–103 — above, not within. The eighteen lesson questions 52 to
+53 and 41 to 50 of 54 — up on both, and the item was "not down". 0
+escalations. Calls per sample up 0.14 on the strong model, from a
+side-effect worth its own line below. The lowest usefulness number in
+the project moved eight points on the strong model and nine on the weak
+one, from a grammar change and 441 lines of pack data.
+
+**The classifier — bought nothing the bank can see, at 0.9 calls per
+sample.** L to LC: correct-decline 130 to 129 (strong) and 110 to 105
+(weak), both inside the churn band; the band flat; calls 1.87 to 2.76
+and 1.29 to 2.19. This is not a contradiction of the previous entry: the
+bank runs the *canonical intents*, which are the phrasings the aliases
+were written from, so the deterministic door already places every
+lesson question here and the classifier's lift — misspellings and
+rephrasings, 48 to 68 of 72 on the held-out set — has nothing to lift.
+The design said this in advance ("item 2 cannot read this"). What the
+bank does read is the cost, and it is the cost predicted: one call on
+most exchanges. Its value is on traffic that is not canonical; the
+robustness bank (`--phrasings`) or the live page is where it would show.
+
+**DLC, what would ship — the best arm on both models, and the two doors
+are why.** Correct-decline 135 of 174 (78%) on the strong model and 117
+of 174 (67%) on the weak; bands 113–117 and 103–104, the highest of any
+arm. The lift over A is close to the sum of D's and L's on each model
+(strong: +6 and +13 against +18; weak: +3 and +16 against +23), which
+says the doors add and the classifier does not. There is an
+interaction, and it argues for shipping the two together: **the lesson
+door pushes the model toward the listing door.** With fewer lessons to
+reach for, the strong model nominated a listing on 272 and 288 of 411
+first calls (L, LC) against 226 (A) — and the offered door withholds it,
+23 under DLC. Each door closes a route the model drifts to when the
+other is shut.
+
+**The governance tax, on the driver we ship.** From the raw arm on
+strong A, the 57 answerable questions at N=3: governed **147 of 171
+(86%)** against the raw model's apparent **155 of 171 (91%)** — a tax of
+8 samples, 5 points, on the stable core 45 against 49 of 57. And the
+number beside it: the raw model's answers, checked against the
+certificate, are right on **69 of 171 (40%)**. On the 23 questions the
+records cannot ground, the governed driver declined correctly on 47 of
+69 samples; the raw model answered 49 of 69 of them. The tax is five
+points of apparent resolution, paid for the difference between 40% and
+86% true.
+
+**Consequence.** S4a and S4b are ticked on epic #118 with these numbers.
+The listing and lesson doors ship together as the default of the live
+page and the bank (a separate change: `--offered-doors --lesson-door`
+become the baseline, the flags kept as the off arms). The classifier
+stays a flag, read next on `--phrasings`. Two things to name for the
+ledger: under D and DLC the listing executor *served* a roster for
+"Who are the Elite Four?" on 2 of 3 — an entity the records do not
+hold, refused under A only because the model asked for n = 1 — which is
+the listing executor's own precision question; and on the strong model
+the eighteen lesson questions read 50 of 54 under DLC against 53 under
+L, four samples inside churn, watched.
+
+**Model errors:** the strong model's listing nominations on asks that
+name no set (226 of 411, A) and its drift toward them when lessons are
+narrowed (272, 288); 1 provider error. **Harness factors:** (a)
+**named** — N=3 on 137 entries; the weak model's correct-decline count
+moved 10 across the M3 prompt arms (§21) from churn alone, so its
+L-to-LC drop of 5 is not a reading. (b) **named** — the bank's wordings
+are canonical, so the classifier's recall cannot show here by
+construction. (c) **named** — the raw arm ran once, on the strong model;
+the weak model's tax is not re-measured.
