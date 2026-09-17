@@ -51,7 +51,7 @@ import {
 } from "../../src/session/session.js";
 import { agentReport, createDevTrace, type DevTrace, type DevTraceMeta, type ModelCallTrace } from "../../src/session/devtrace.js";
 import { adaptArtifact } from "../../src/ui/artifact-dom.js";
-import { plainCandidate, plainStage, plainViolation } from "../../src/ui/plain.js";
+import { plainCandidate, plainRefusalLead, plainStage, plainViolation } from "../../src/ui/plain.js";
 import { claimSource } from "./world.js";
 import { type SentBack, sentBack, trailsOfSession, withCalls } from "../../src/ui/trail.js";
 import { violationView } from "../../src/ui/viewmodel.js";
@@ -286,7 +286,8 @@ function RecordItem(props: {
         <Role who="advisor" />
         <SentBackNote rounds={props.rounds} />
         <div class="live-denial">
-          <p class="live-denial-lead">The League stepped in {plainStage(outcome.stage)}.</p>
+          <p class="live-denial-lead">{plainRefusalLead(outcome.stage)}</p>
+          <p class="live-denial-who">The League stepped in {plainStage(outcome.stage)}:</p>
           <ul>
             {denials.map((denial) => (
               <li>

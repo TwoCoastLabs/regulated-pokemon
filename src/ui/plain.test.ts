@@ -8,7 +8,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { Violation } from "../kernel/contracts.js";
-import { plainBinding, plainCandidate, plainStage, plainViolation } from "./plain.js";
+import { plainBinding, plainCandidate, plainRefusalLead, plainStage, plainViolation } from "./plain.js";
 
 const violation = (article: Violation["article"], rule: string): Violation => ({
   article,
@@ -49,6 +49,33 @@ describe("plainViolation", () => {
     for (const article of ["IA-1", "IA-2", "IA-3", "IA-4", "IA-5", "IA-6", "IA-7", "IA-8", "IA-9", "IA-10"] as const) {
       expect(plainViolation(violation(article, "no-such-rule")).plain).not.toContain("didn't survive");
     }
+  });
+});
+
+describe("plainRefusalLead", () => {
+  it("says what the reader is not getting, before any of why", () => {
+    // The dogfooding note of 2026-09-18: the panel used to open with who
+    // acted and when, and left the reader to infer that no answer was coming.
+    expect(plainRefusalLead("answer")).toBe("Sorry — I couldn't find an answer to this that the official records back.");
+    expect(plainRefusalLead("scope")).toBe("Sorry — I couldn't pin down what you were asking well enough to answer it.");
+    expect(plainRefusalLead("render")).toBe("Sorry — there was an answer, but it couldn't be shown the way the rules require.");
+    expect(plainRefusalLead("action")).toBe("Sorry — I couldn't carry that out.");
+  });
+
+  it("opens with an apology and needs no vocabulary — no article code, no kernel word", () => {
+    for (const stage of ["scope", "answer", "render", "action"] as const) {
+      const lead = plainRefusalLead(stage);
+      expect(lead.startsWith("Sorry — ")).toBe(true);
+      expect(lead.endsWith(".")).toBe(true);
+      expect(lead).not.toMatch(/IA-\d|manifest|kernel|claim|denied|violation/i);
+    }
+  });
+
+  it("promises no answer only where an answer was in question", () => {
+    // A scope refusal never reached a question; an action refusal was never
+    // about an answer. Saying "no answer to this" there would be wrong.
+    expect(plainRefusalLead("answer")).toContain("an answer to this");
+    expect(plainRefusalLead("action")).not.toContain("answer");
   });
 });
 
