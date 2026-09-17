@@ -360,3 +360,24 @@ describe("the precedent door (docs/precedent.md)", () => {
     expect((hints[2] as { precedents?: unknown }).precedents).toBeUndefined();
   });
 });
+
+describe("the lesson classifier's reply, decoded (docs/lesson-door.md)", async () => {
+  const { decodeLessonClassification } = await import("./advisor.js");
+  const ids = ["what-is-badge", "how-catch"];
+
+  it("takes the four kinds, a lesson only with an id the pack carries, an entity only as a non-empty string", () => {
+    expect(decodeLessonClassification('{"kind":"lesson","lessonId":"how-catch"}', ids)).toEqual({ kind: "lesson", lessonId: "how-catch" });
+    expect(decodeLessonClassification('{"kind":"fact","entity":" Pikachu "}', ids)).toEqual({ kind: "fact", entity: "Pikachu" });
+    expect(decodeLessonClassification('{"kind":"advice"}', ids)).toEqual({ kind: "advice" });
+    expect(decodeLessonClassification('{"kind":"other","entity":""}', ids)).toEqual({ kind: "other" });
+    expect(decodeLessonClassification('```json\n{"kind":"lesson","lessonId":"what-is-badge"}\n```', ids)).toEqual({ kind: "lesson", lessonId: "what-is-badge" });
+  });
+
+  it("is null — counted, never guessed — for a forged lesson, a lesson with no id, an unknown kind, or no JSON", () => {
+    expect(decodeLessonClassification('{"kind":"lesson","lessonId":"what-is-everything"}', ids)).toBeNull();
+    expect(decodeLessonClassification('{"kind":"lesson"}', ids)).toBeNull();
+    expect(decodeLessonClassification('{"kind":"question"}', ids)).toBeNull();
+    expect(decodeLessonClassification("lesson: how-catch", ids)).toBeNull();
+    expect(decodeLessonClassification("[]", ids)).toBeNull();
+  });
+});

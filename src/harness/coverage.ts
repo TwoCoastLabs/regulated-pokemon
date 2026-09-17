@@ -84,7 +84,16 @@ export interface CoverageMap {
    * explains), and the lessons offered summed over the runs — divided by
    * runs, the mean catalogue size the model saw.
    */
-  lessonDoor?: { runs: number; narrowed: number; boundaryOnly: number; offered: number };
+  lessonDoor?: {
+    runs: number;
+    narrowed: number;
+    boundaryOnly: number;
+    offered: number;
+    /** The classifier, when it ran: how many first calls asked it, how
+     * many of those it answered with a lesson, and how many replies were
+     * unusable. Absent when the lever was off. */
+    classified?: { asked: number; lesson: number; unusable: number };
+  };
   /**
    * The trainer-facing ceremony across the runs, present when the runs carry
    * it (epic #94, slice 5): clarifying questions asked, scope cards ruled on,
@@ -283,6 +292,15 @@ export function coverageMap(runs: readonly BankRun[]): CoverageMap {
           narrowed: lessoned.filter((run) => run.lessonDoor?.narrowed === true).length,
           boundaryOnly: lessoned.filter((run) => run.lessonDoor?.offered === 1).length,
           offered: lessoned.reduce((sum, run) => sum + (run.lessonDoor?.offered ?? 0), 0),
+          ...(lessoned.some((run) => run.lessonDoor?.classified !== undefined)
+            ? {
+                classified: {
+                  asked: lessoned.filter((run) => run.lessonDoor?.classified !== undefined).length,
+                  lesson: lessoned.filter((run) => run.lessonDoor?.classified?.startsWith("lesson:") === true).length,
+                  unusable: lessoned.filter((run) => run.lessonDoor?.classified === "unusable").length,
+                },
+              }
+            : {}),
         };
   return {
     total: runs.length,
@@ -483,6 +501,12 @@ export function renderCoverage(map: CoverageMap, heading = "Playability coverage
       `**The lesson door: the catalogue narrowed on ${door.narrowed}/${door.runs} (${pct(door.narrowed / door.runs)}) first calls, the boundary lesson alone on ${door.boundaryOnly}/${door.runs} (${pct(door.boundaryOnly / door.runs)}); ${(door.offered / door.runs).toFixed(1)} lessons offered per call on average** — ` +
         "a lesson left out of the grammar is one the ask is not about; the boundary lesson is always in.",
     );
+    if (door.classified !== undefined) {
+      lines.push(
+        `**The classifier: asked on ${door.classified.asked}/${door.runs} (${pct(door.classified.asked / door.runs)}) first calls, named a lesson on ${door.classified.lesson}/${door.classified.asked}, unusable on ${door.classified.unusable}/${door.classified.asked}** — ` +
+          "asked only where the deterministic matcher offered the boundary alone.",
+      );
+    }
     lines.push("");
   }
   // The prompt's cost, per call, read from the runs.

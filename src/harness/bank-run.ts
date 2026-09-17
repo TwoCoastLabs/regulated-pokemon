@@ -141,7 +141,14 @@ export interface BankRun {
    * call, how many lessons that call offered (boundary included) and how
    * many it withheld. Absent when the lever was off.
    */
-  lessonDoor?: { narrowed: boolean; offered: number; withheld: number };
+  lessonDoor?: {
+    narrowed: boolean;
+    offered: number;
+    withheld: number;
+    /** The classifier's reading when it was asked: the kind, or the lesson
+     * it named as `lesson:<id>`, or `unusable`. Absent when not asked. */
+    classified?: string;
+  };
   /** One human line on how it ended, for the report's detail column. */
   detail: string;
 }
@@ -188,6 +195,8 @@ export interface BankRunOptions {
   /** The lesson door (docs/lesson-door.md): the explanation route carries
    * only the lessons the ask is about, plus the boundary. */
   lessonDoor?: boolean;
+  /** The lesson door's classifier fallback (docs/lesson-door.md). */
+  lessonClassifier?: boolean;
 }
 
 /** A bank run still carrying the whole record behind its verdict — transcript,
@@ -498,6 +507,7 @@ export async function runBankEntry(
     ...(options.refusalFeedback === undefined ? {} : { refusalFeedback: options.refusalFeedback }),
     ...(options.offeredDoors === undefined ? {} : { offeredDoors: options.offeredDoors }),
     ...(options.lessonDoor === undefined ? {} : { lessonDoor: options.lessonDoor }),
+    ...(options.lessonClassifier === undefined ? {} : { lessonClassifier: options.lessonClassifier }),
     ...(options.precedents === undefined
       ? {}
       : {
@@ -537,7 +547,23 @@ export async function runBankEntry(
     promptTokens: state.usage.promptTokens,
     listingDoor: { offered: state.listingDoor.withheld === 0, nominated: state.listingDoor.nominated > 0, served: state.listingActivations.served > 0 },
     ...(options.lessonDoor === true
-      ? { lessonDoor: { narrowed: state.lessonDoor.narrowed > 0, offered: state.lessonDoor.offered, withheld: state.lessonDoor.withheld } }
+      ? {
+          lessonDoor: {
+            narrowed: state.lessonDoor.narrowed > 0,
+            offered: state.lessonDoor.offered,
+            withheld: state.lessonDoor.withheld,
+            ...(state.lessonDoor.classified === undefined
+              ? {}
+              : {
+                  classified:
+                    state.lessonDoor.classified === "unusable"
+                      ? "unusable"
+                      : state.lessonDoor.classified.kind === "lesson"
+                        ? `lesson:${state.lessonDoor.classified.lessonId}`
+                        : state.lessonDoor.classified.kind,
+                }),
+          },
+        }
       : {}),
     ...(state.linking.offTargetDropped > 0 ? { offTargetDropped: state.linking.offTargetDropped } : {}),
     ...(refused === undefined ? {} : { deniedDraftOnTarget: draftOnTarget(entry, refused) }),
