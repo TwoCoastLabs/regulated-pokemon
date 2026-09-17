@@ -109,7 +109,11 @@ name defines it in plain words the first time.
   door's funnel — offered, nominated, served — per sample either way.
   `--lesson-door` (both tools) narrows the explanation route to the lessons
   the ask is about, plus the records-boundary lesson, read from each
-  lesson's `covers` in the pack ([docs/lesson-door.md](docs/lesson-door.md)).
+  lesson's `covers` in the pack ([docs/lesson-door.md](docs/lesson-door.md));
+  `--lesson-classifier` adds one model call asking what kind of question an
+  ask is, only where no lesson matched. `npm run lesson-door:read` is the
+  live reading of that door on the held-out sets, filed under
+  `runs/lesson-door/`.
 - **The decline ledger:** `npm run decline-ledger -- <coverage artifact.json ...>`
   reads filed runs and lists every sample on a question that must not receive
   a certified answer which got one anyway, what the record certified instead,

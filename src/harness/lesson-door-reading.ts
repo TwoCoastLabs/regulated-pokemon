@@ -22,6 +22,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import type { DemoWorld } from "../demo/script.js";
+import type { ArtifactWorld } from "./artifact.js";
 import type { ModelProvider, Usage } from "./provider.js";
 import { addUsage, emptyUsage } from "./provider.js";
 import type { QuestionBank } from "./bank.js";
@@ -64,7 +65,9 @@ export interface LessonDoorReadingArtifact {
   label: "lesson-door-reading";
   startedAt: string;
   model: { id: string; slug: string };
-  world: { snapshotId: string; packId: string };
+  /** The same provenance block every filed artifact carries, so the replay
+   * sweep can tell which world these numbers were read against. */
+  world: ArtifactWorld;
   matcher: LessonMatcherId;
   classifier: boolean;
   repetitions: number;
@@ -190,6 +193,12 @@ export function renderLessonDoorReading(artifact: LessonDoorReadingArtifact): st
     lines.push("");
   }
   return lines.join("\n");
+}
+
+/** The world this reading was made against, pinned like every artifact. */
+export function readingWorld(world: DemoWorld): ArtifactWorld {
+  const { snapshot, document } = world.registry;
+  return { snapshotId: snapshot.id, snapshotDigest: document.contentDigest, sourceCommit: snapshot.sourceCommit, packId: world.pack.id };
 }
 
 export function fileLessonDoorReading(directory: string, artifact: LessonDoorReadingArtifact): string {

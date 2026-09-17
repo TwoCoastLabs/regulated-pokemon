@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 import { demoWorld } from "../demo/files.js";
 import { readLessonParaphrases } from "./activation.js";
 import { BANK_PATH, readBank } from "./bank.js";
-import { type LessonDoorReadingArtifact, readingWordings, readLessonDoor, renderLessonDoorReading, summarize } from "./lesson-door-reading.js";
+import { type LessonDoorReadingArtifact, readingWordings, readingWorld, readLessonDoor, renderLessonDoorReading, summarize } from "./lesson-door-reading.js";
 import { ScriptedProvider } from "./provider.js";
 
 const world = demoWorld();
@@ -81,7 +81,7 @@ describe("the reading with a scripted classifier", () => {
       label: "lesson-door-reading",
       startedAt: "2026-09-17T00:00:00.000Z",
       model: { id: "scripted", slug: "scripted" },
-      world: { snapshotId: world.registry.snapshot.id, packId: world.pack.id },
+      world: readingWorld(world),
       matcher: "alias",
       classifier: true,
       repetitions: 1,

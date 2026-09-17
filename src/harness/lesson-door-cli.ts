@@ -14,7 +14,7 @@
 import { demoWorld } from "../demo/files.js";
 import { readLessonParaphrases } from "./activation.js";
 import { BANK_PATH, readBank } from "./bank.js";
-import { fileLessonDoorReading, type LessonDoorReadingArtifact, readLessonDoor, renderLessonDoorReading, summarize } from "./lesson-door-reading.js";
+import { fileLessonDoorReading, type LessonDoorReadingArtifact, readingWorld, readLessonDoor, renderLessonDoorReading, summarize } from "./lesson-door-reading.js";
 import { loadEnv } from "./live.js";
 import { DEFAULT_STRONG_MODEL, DEFAULT_WEAK_MODEL, HONEST_PERSONA } from "./models.js";
 import { OpenRouterProvider } from "./openrouter.js";
@@ -48,7 +48,7 @@ const artifact: LessonDoorReadingArtifact = {
   label: "lesson-door-reading",
   startedAt,
   model: { id: `lesson-door:${model}`, slug: model },
-  world: { snapshotId: world.registry.snapshot.id, packId: world.pack.id },
+  world: readingWorld(world),
   matcher,
   classifier,
   repetitions,
