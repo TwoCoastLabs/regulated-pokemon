@@ -166,10 +166,10 @@ export function aliasOffer(world: LessonWorld, ask: string): LessonOffer {
  * question words lesson prose never uses and that would otherwise be the
  * rarest, and so heaviest, words in an ask. Typo tolerance is the
  * vocabulary itself: a word of four letters or more that no lesson
- * contains is read as the one vocabulary word within a single edit of it
- * that shares its first letter — "cath" as "catch", "badg" as "badge",
- * and by the same rule "leaders" as "leader". No neighbour, or more than
- * one, and the word is dropped.
+ * contains is read as every vocabulary word within a single edit of it
+ * that shares its first letter — "cath" as "catch", "badgs" as "badge" and
+ * "badges", and by the same rule "leaders" as "leader". No neighbour, and
+ * the word is dropped.
  */
 interface Bm25Index {
   readonly lessons: readonly CurriculumRule[];
@@ -272,8 +272,9 @@ export function askWords(pack: AccordPack, ask: string): string[] {
       continue;
     }
     if (word.length < 4) continue;
-    const near = index.vocabulary.filter((candidate) => candidate[0] === word[0] && editDistance(word, candidate) <= 1);
-    if (near.length === 1) read.push(near[0]!);
+    // Every vocabulary word within one edit that shares the first letter:
+    // "badgs" is one edit from both "badge" and "badges", and means either.
+    read.push(...index.vocabulary.filter((candidate) => candidate[0] === word[0] && editDistance(word, candidate) <= 1));
   }
   return read;
 }
@@ -304,6 +305,54 @@ export function bm25Share(pack: AccordPack, ask: string, lessonIndex: number): n
     if (tf > 0) score += weight * ((tf * (K1 + 1)) / (tf + K1 * norm));
   }
   return ceiling === 0 ? 0 : score / ceiling;
+}
+
+/**
+ * The words an ask and a lesson have in common, as the index reads them —
+ * stop words dropped, a misspelling folded to its neighbour, the lesson's
+ * id counted as its title. Empty when they share nothing.
+ *
+ * The lesson door's foothold check (docs/lesson-door.md): a lesson the
+ * model names is offered only if this is non-empty. The two readings of
+ * 2026-09-17 named it together — the index knows topic and not form; the
+ * model knows form and, on the weak model, is careless about topic, calling
+ * "How do I cook pasta?" a lesson ask. "Pasta" shares no word with any
+ * lesson; "evoluton" reads as "evolution". A deterministic check on a model
+ * nomination, which is the shape this project prefers.
+ */
+export function lessonFoothold(pack: AccordPack, ask: string, lessonId: string): readonly string[] {
+  const index = indexOf(pack);
+  const position = index.lessons.findIndex((lesson) => lesson.id === lessonId);
+  if (position < 0) return [];
+  const lesson = index.lessons[position]!;
+  const document = index.tf[position]!;
+  // A foothold has to say *which* lesson, not any lesson. Two ways:
+  //
+  // A word of the lesson's own title — read before the corpus stop list,
+  // because "pokemon" is in 20 of 24 lessons and still *is* the title of
+  // what-is-pokemon; only the pack's question-word markers are dropped. The
+  // typo fold applies here too: "pokmon" is one edit from "pokemon".
+  //
+  // Or a word of the lesson's text that at most a quarter of the lessons
+  // use. "about", "your" and "of" are in a third of them and say nothing.
+  const markers = pack.vocabulary.markers as Record<string, readonly string[] | undefined>;
+  const questionWords = new Set([...(markers.interrogative ?? []), ...(markers.conjunction ?? [])].flatMap(words));
+  const titleWords = words(lesson.id.replace(/-/g, " ")).filter((word) => !questionWords.has(word));
+  const read = askWords(pack, ask);
+  const found = new Set<string>();
+  // An exact title word, at any length ("tm" is a title), whether the ask
+  // wrote it or the index folded a misspelling to it ("cath" → "catch").
+  for (const word of [...words(ask), ...read]) if (titleWords.includes(word)) found.add(word);
+  // A misspelt title word: one edit, first letter kept, and both sides real
+  // words of five letters or more — "pokmon" reads as "pokemon", but "your"
+  // must not read as "you".
+  for (const raw of words(ask)) {
+    if (raw.length < 5) continue;
+    for (const title of titleWords) if (title.length >= 5 && title[0] === raw[0] && editDistance(raw, title) <= 1) found.add(title);
+  }
+  const distinctive = (word: string): boolean => (index.df.get(word) ?? 0) * 4 <= index.lessons.length;
+  for (const word of read) if (document.has(word) && distinctive(word)) found.add(word);
+  return [...found].sort();
 }
 
 /**

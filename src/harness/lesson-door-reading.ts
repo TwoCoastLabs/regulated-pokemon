@@ -28,7 +28,7 @@ import { addUsage, emptyUsage } from "./provider.js";
 import type { QuestionBank } from "./bank.js";
 import { type LessonParaphraseBank, wordingsOf } from "./activation.js";
 import { MUST_NOT_RESOLVE } from "./decline-ledger.js";
-import type { LessonMatcherId } from "../session/lesson-matcher.js";
+import { type LessonMatcherId, lessonFoothold } from "../session/lesson-matcher.js";
 import { lessonDoorDecision } from "../session/session.js";
 
 export type ReadingSet = "recall-canonical" | "recall-paraphrase" | "recall-held-out" | "precision-canonical" | "precision-paraphrase";
@@ -43,7 +43,9 @@ export interface LessonDoorReading {
   /** What the door offered, boundary excluded. */
   offered: readonly string[];
   asked: boolean;
-  /** The classifier's reading when asked: the kind, `lesson:<id>`, or `unusable`. */
+  /** The classifier's reading when asked: the kind, `lesson:<id>` (with
+   * `:no-foothold` when the named lesson shared no word with the ask and
+   * was not offered), or `unusable`. */
   classified?: string;
   /** Recall: an acceptable lesson was offered. Precision: nothing but the boundary was. */
   ok: boolean;
@@ -74,7 +76,7 @@ export interface LessonDoorReadingArtifact {
   readings: readonly LessonDoorReading[];
   summary: {
     rates: Record<ReadingSet, ReadingRate>;
-    classifier: { asked: number; lesson: number; fact: number; advice: number; other: number; unusable: number };
+    classifier: { asked: number; lesson: number; noFoothold: number; fact: number; advice: number; other: number; unusable: number };
     usage: Usage;
     providerErrors: number;
   };
@@ -113,7 +115,13 @@ export async function readLessonDoor(
       const offered = decision.offer.offered.filter((id) => id !== boundary);
       const ok = item.acceptable.length > 0 ? item.acceptable.some((id) => offered.includes(id)) : offered.length === 0;
       const classified =
-        decision.classified === undefined ? undefined : decision.classified === "unusable" ? "unusable" : decision.classified.kind === "lesson" ? `lesson:${decision.classified.lessonId}` : decision.classified.kind;
+        decision.classified === undefined
+          ? undefined
+          : decision.classified === "unusable"
+            ? "unusable"
+            : decision.classified.kind === "lesson"
+              ? `lesson:${decision.classified.lessonId}${decision.classified.foothold?.length === 0 ? ":no-foothold" : ""}`
+              : decision.classified.kind;
       readings.push({
         ...item,
         repetition,
@@ -127,6 +135,29 @@ export async function readLessonDoor(
     }
   }
   return readings;
+}
+
+/**
+ * A filed reading re-read under the foothold rule — the free leg (the
+ * rescore pattern, epic #94): the classifier's replies are in the artifact,
+ * the foothold is a pure function of the pack and the ask, so what the door
+ * would have offered under the rule is derivable from the record without a
+ * call. A reading whose named lesson shares no distinctive word with the
+ * ask has its offer withdrawn and its outcome re-judged; every other reading
+ * is returned as filed. Readings filed after the rule exist already carry
+ * `:no-foothold` and are left alone.
+ */
+export function rescoreWithFoothold(pack: DemoWorld["pack"], readings: readonly LessonDoorReading[]): readonly LessonDoorReading[] {
+  return readings.map((reading) => {
+    const classified = reading.classified;
+    if (classified === undefined || !classified.startsWith("lesson:") || classified.endsWith(":no-foothold")) return reading;
+    const named = classified.slice("lesson:".length);
+    if (!reading.offered.includes(named)) return reading;
+    if (lessonFoothold(pack, reading.wording, named).length > 0) return reading;
+    const offered = reading.offered.filter((id) => id !== named);
+    const ok = reading.acceptable.length > 0 ? reading.acceptable.some((id) => offered.includes(id)) : offered.length === 0;
+    return { ...reading, offered, ok, classified: `${classified}:no-foothold` };
+  });
 }
 
 const SETS: readonly ReadingSet[] = ["recall-canonical", "recall-paraphrase", "recall-held-out", "precision-canonical", "precision-paraphrase"];
@@ -145,6 +176,7 @@ export function summarize(readings: readonly LessonDoorReading[]): LessonDoorRea
     classifier: {
       asked: asked.length,
       lesson: count((c) => c?.startsWith("lesson:") === true),
+      noFoothold: count((c) => c?.endsWith(":no-foothold") === true),
       fact: count((c) => c === "fact"),
       advice: count((c) => c === "advice"),
       other: count((c) => c === "other"),
@@ -183,7 +215,11 @@ export function renderLessonDoorReading(artifact: LessonDoorReadingArtifact): st
     lines.push(`| ${SET_LABEL[set]} | ${pct(rate.ok, rate.total)} | ${pct(rate.asked, rate.total)} | ${pct(rate.askedOk, rate.asked)} |`);
   }
   const c = summary.classifier;
-  lines.push("", `The classifier, over the ${c.asked} asks it was asked on: lesson ${c.lesson}, fact ${c.fact}, advice ${c.advice}, other ${c.other}, unusable ${c.unusable}.`, "");
+  lines.push(
+    "",
+    `The classifier, over the ${c.asked} asks it was asked on: lesson ${c.lesson} (of which ${c.noFoothold} shared no distinctive word with the ask and were not offered), fact ${c.fact}, advice ${c.advice}, other ${c.other}, unusable ${c.unusable}.`,
+    "",
+  );
   const misses = artifact.readings.filter((reading) => !reading.ok);
   if (misses.length > 0) {
     lines.push("Misses:", "");

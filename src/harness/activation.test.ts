@@ -143,8 +143,9 @@ describe("the activation ceiling, pinned", () => {
     // one, and that residue is the classifier's to take (findings §24).
     expect(typos.filter((text) => missed.has(text))).toHaveLength(14);
     expect(renderActivation(report)).toContain("| Lesson door (alias) offered an acceptable lesson, second held-out set | — | 48/72 (67%) |");
-    // The index on the same set, for the record.
-    expect(activationReport(world.registry, world.pack, bank, scopeBank, "bm25", paraphrases).lessonHeldOut).toEqual({ engaged: 38, total: 72 });
+    // The index on the same set, for the record: 38 of 72 when first read,
+    // 41 once a misspelling folds to every neighbour — still far below.
+    expect(activationReport(world.registry, world.pack, bank, scopeBank, "bm25", paraphrases).lessonHeldOut).toEqual({ engaged: 41, total: 72 });
   });
 
   it("pins the lesson door's other half: the boundary alone on a must-not-answer question, and the one trade the widening made", () => {

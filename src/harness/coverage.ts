@@ -92,7 +92,7 @@ export interface CoverageMap {
     /** The classifier, when it ran: how many first calls asked it, how
      * many of those it answered with a lesson, and how many replies were
      * unusable. Absent when the lever was off. */
-    classified?: { asked: number; lesson: number; unusable: number };
+    classified?: { asked: number; lesson: number; unusable: number; noFoothold: number };
   };
   /**
    * The trainer-facing ceremony across the runs, present when the runs carry
@@ -298,6 +298,7 @@ export function coverageMap(runs: readonly BankRun[]): CoverageMap {
                   asked: lessoned.filter((run) => run.lessonDoor?.classified !== undefined).length,
                   lesson: lessoned.filter((run) => run.lessonDoor?.classified?.startsWith("lesson:") === true).length,
                   unusable: lessoned.filter((run) => run.lessonDoor?.classified === "unusable").length,
+                  noFoothold: lessoned.filter((run) => run.lessonDoor?.classified?.endsWith(":no-foothold") === true).length,
                 },
               }
             : {}),
@@ -503,7 +504,7 @@ export function renderCoverage(map: CoverageMap, heading = "Playability coverage
     );
     if (door.classified !== undefined) {
       lines.push(
-        `**The classifier: asked on ${door.classified.asked}/${door.runs} (${pct(door.classified.asked / door.runs)}) first calls, named a lesson on ${door.classified.lesson}/${door.classified.asked}, unusable on ${door.classified.unusable}/${door.classified.asked}** — ` +
+        `**The classifier: asked on ${door.classified.asked}/${door.runs} (${pct(door.classified.asked / door.runs)}) first calls, named a lesson on ${door.classified.lesson}/${door.classified.asked}, of which ${door.classified.noFoothold} shared no word with the ask and were not offered; unusable on ${door.classified.unusable}/${door.classified.asked}** — ` +
           "asked only where the deterministic matcher offered the boundary alone.",
       );
     }
