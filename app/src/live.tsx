@@ -49,9 +49,11 @@ import {
   type SessionState,
   startSession,
 } from "../../src/session/session.js";
-import { agentReport, createDevTrace, type DevTrace, type DevTraceMeta, type ModelCallTrace } from "../../src/session/devtrace.js";
+import { agentReport, createDevTrace, type DevTrace, type DevTraceMeta, type ModelCallStart, type ModelCallTrace } from "../../src/session/devtrace.js";
+import type { DriverStep } from "../../src/session/ledger.js";
 import { adaptArtifact } from "../../src/ui/artifact-dom.js";
 import { plainCandidate, plainRefusalLead, plainStage, plainViolation } from "../../src/ui/plain.js";
+import { progressLine } from "../../src/ui/progress.js";
 import { claimSource } from "./world.js";
 import { type SentBack, sentBack, trailsOfSession, withCalls } from "../../src/ui/trail.js";
 import { violationView } from "../../src/ui/viewmodel.js";
@@ -371,7 +373,7 @@ function ConsoleRecord(props: { record: Transaction }) {
   );
 }
 
-function LiveConsole(props: { state: SessionState; setup: LiveSetup }) {
+function LiveConsole(props: { state: SessionState; setup: LiveSetup; live?: SessionState }) {
   const { state, setup } = props;
   const cost = state.usage;
   return (
@@ -397,7 +399,8 @@ function LiveConsole(props: { state: SessionState; setup: LiveSetup }) {
           is the one that shipped. Read from the driver's ledger and the
           filed records; nothing here is narrated. */}
       <h4 class="console-heading">How each answer was made</h4>
-      <Trails trails={trailsOfSession(state, claimSource())} who="you" empty="No exchange has begun yet — each step lands here as the driver takes it." />
+      {props.live !== undefined && <InProgress />}
+      <Trails trails={trailsOfSession(props.live ?? state, claimSource())} who="you" empty="No exchange has begun yet — each step lands here as the driver takes it." />
       <h4 class="console-heading">The filed records</h4>
       {state.records.length === 0 ? (
         <p class="fine">No exchange has settled yet — records appear here as they are filed.</p>
@@ -452,6 +455,14 @@ export function Live() {
   /** The message currently on its way through the driver, echoed immediately
    * so the visitor's words never vanish while the model is consulted. */
   const [inFlight, setInFlight] = useState<string | null>(null);
+  // The exchange in progress (src/ui/progress.ts): the last step the driver
+  // reported, with the state as it stood after it, and the model call in
+  // flight. Both are observation — the driver reports each step as it takes
+  // it and the tap announces each call as it begins — so the busy line and
+  // the trail follow the exchange instead of waiting for it to return.
+  // Cleared when the exchange settles: the settled state is the record.
+  const [progress, setProgress] = useState<{ step: DriverStep; state: SessionState } | null>(null);
+  const [callInFlight, setCallInFlight] = useState<ModelCallStart | null>(null);
   const [trouble, setTrouble] = useState<string | null>(null);
   // The machinery beside the chat: two views on one side pane, switched by
   // tab. The dev view (the step trail with every model call disclosed under
@@ -505,6 +516,7 @@ export function Live() {
       ...(retrievalOn ? { retrieval: true } : {}),
       ...(gatedOn ? { gatedGrammar: true } : {}),
       ...(memoryOn && precedentStore() !== undefined ? { precedents: { store: precedentStore()! } } : {}),
+      onStep: (step, state) => setProgress({ step, state }),
     };
   }, [setup, clock, retrievalOn, gatedOn, memoryOn]);
 
@@ -537,7 +549,9 @@ export function Live() {
       const trace = createDevTrace({
         now: clock,
         elapsedMs: () => performance.now(),
+        onCallStart: (call) => setCallInFlight(call),
         onCall: (call) => {
+          setCallInFlight(null);
           if (MIRROR_TO_DEV_SINK) mirrorToDevSink({ type: "model-call", ...call });
         },
       });
@@ -573,6 +587,8 @@ export function Live() {
       .finally(() => {
         setBusy(false);
         setInFlight(null);
+        setProgress(null);
+        setCallInFlight(null);
       });
   };
 
@@ -934,7 +950,11 @@ export function Live() {
             </div>
           )}
 
-          {busy && <p class="live-busy">The Advisor is thinking…</p>}
+          {busy && (
+            <p class="live-busy" aria-live="polite">
+              {progressLine({ ...(progress === null ? {} : { step: progress.step }), ...(callInFlight === null ? {} : { call: callInFlight }) })}
+            </p>
+          )}
           {trouble !== null && <p class="refusal-banner">{trouble}</p>}
         </div>
 
@@ -966,6 +986,7 @@ export function Live() {
               <DevPanel
                 meta={meta}
                 state={state}
+                {...(busy && progress !== null ? { live: progress.state } : {})}
                 calls={setup.trace.calls}
                 retrieval={retrievalOn}
                 gated={gatedOn}
@@ -976,7 +997,7 @@ export function Live() {
                 now={clock}
               />
             ) : (
-              <LiveConsole state={state} setup={setup} />
+              <LiveConsole state={state} setup={setup} {...(busy && progress !== null ? { live: progress.state } : {})} />
             )}
           </aside>
         )}
@@ -1116,6 +1137,16 @@ function mirrorToDevSink(event: object): void {
   }
 }
 
+/** One line over the trail while an exchange is open: what is drawn is the
+ * driver's report so far, not a filed record. */
+function InProgress() {
+  return (
+    <p class="fine live-in-progress" aria-live="polite">
+      Exchange in progress — each step lands here as the driver takes it; nothing below the last one is filed yet.
+    </p>
+  );
+}
+
 /**
  * The dev view: the step trail with every model call the tap recorded
  * disclosed under the step it preceded (prompt, reply, latency), and the
@@ -1126,6 +1157,10 @@ function mirrorToDevSink(event: object): void {
 function DevPanel(props: {
   meta: DevTraceMeta;
   state: SessionState;
+  /** The state as the driver last reported it, while an exchange is open —
+   * the trail is drawn from it so the steps land as they are taken. The
+   * report stays on the settled state: what is copied is what was filed. */
+  live?: SessionState;
   calls: readonly ModelCallTrace[];
   retrieval: boolean;
   gated: boolean;
@@ -1140,7 +1175,7 @@ function DevPanel(props: {
   // Calls attach to the trail by time: each under the first step recorded
   // after it began. One in flight, or one that failed before any step could
   // be written, has no step yet and is listed after the trail instead.
-  const placed = withCalls(trailsOfSession(props.state, claimSource()), props.calls);
+  const placed = withCalls(trailsOfSession(props.live ?? props.state, claimSource()), props.calls);
   // The call before each, by sequence, so a door strip can mark the change.
   const bySeq = new Map(props.calls.map((call) => [call.seq, call] as const));
   const previousCall = (seq: number) => bySeq.get(seq);
@@ -1184,6 +1219,7 @@ function DevPanel(props: {
       </div>
       <DoorLegend />
       <MemoryPanel store={precedentStore()} state={props.state} on={props.memory} onToggle={props.onMemory} now={props.now} />
+      {props.live !== undefined && <InProgress />}
       <Trails
         trails={placed.trails}
         who="you"
