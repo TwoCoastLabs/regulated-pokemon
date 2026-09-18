@@ -1839,6 +1839,14 @@ body {
   color: var(--seal);
 }
 
+/* The who-and-when line, under the lead: secondary, because the lead is the
+   sentence a reader needs and this is the ruling's provenance. */
+.live-denial-who {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
 .live-denial ul {
   list-style: none;
   margin: 0;

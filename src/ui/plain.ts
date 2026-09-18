@@ -86,6 +86,34 @@ export function plainViolation(violation: Violation): PlainViolation {
 
 /** Where the League stepped in, as a phrase that finishes "The League stepped
  * in …". Stage names are console vocabulary; this is what they mean. */
+/**
+ * The first line of a refusal, in the reader's terms: what they are not
+ * getting, before any of why.
+ *
+ * Found dogfooding (2026-09-18): the panel opened on "The League stepped in
+ * before the answer could reach you", which says who acted and when but not
+ * what it means for the person reading — they had to infer "so there is no
+ * answer" from the absence of one. The lead says it outright, and the line
+ * that follows keeps the who and the when.
+ *
+ * Per stage, because the four are not the same refusal. Only the answer
+ * stage is "no answer to this"; a scope refusal never got as far as a
+ * question, a render refusal had an answer it could not show, and an action
+ * refusal was not about an answer at all.
+ */
+export function plainRefusalLead(stage: TransactionStage): string {
+  switch (stage) {
+    case "scope":
+      return "Sorry — I couldn't pin down what you were asking well enough to answer it.";
+    case "answer":
+      return "Sorry — I couldn't find an answer to this that the official records back.";
+    case "render":
+      return "Sorry — there was an answer, but it couldn't be shown the way the rules require.";
+    case "action":
+      return "Sorry — I couldn't carry that out.";
+  }
+}
+
 export function plainStage(stage: TransactionStage): string {
   switch (stage) {
     case "scope":
