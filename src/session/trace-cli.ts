@@ -76,6 +76,10 @@ runTrace(args.inputs, {
   world,
   provider,
   now: makeClock(),
+  // The exchange in progress, on stderr as the driver takes each step — the
+  // terminal's version of the live page's busy line. The summary on stdout
+  // is unchanged, so a piped trace reads as before.
+  onStep: (step) => console.error(`  … ${step.lane}: ${step.code} — ${step.text}`),
   grounded,
   retrieval,
   gatedGrammar: args.gatedGrammar,

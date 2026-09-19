@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CompletionRequest, ModelProvider } from "../harness/provider.js";
 import { ScriptedProvider } from "../harness/provider.js";
-import { agentReport, createDevTrace, type DevTraceMeta, type ModelCallTrace } from "./devtrace.js";
+import { agentReport, createDevTrace, type DevTraceMeta, type ModelCallStart, type ModelCallTrace } from "./devtrace.js";
 import { startSession } from "./session.js";
 
 const REQUEST: CompletionRequest = {
@@ -76,6 +76,34 @@ describe("the tap records the seam without changing it", () => {
 
     expect(mirrored).toHaveLength(1);
     expect(mirrored[0]).toBe(trace.calls[0]);
+  });
+
+  it("announces each call as it begins — before the provider is asked, with the same seq the record will carry", async () => {
+    const order: string[] = [];
+    const starts: ModelCallStart[] = [];
+    const trace = createDevTrace({
+      ...clocks(),
+      onCallStart: (call) => {
+        starts.push(call);
+        order.push(`start ${call.seq}`);
+      },
+      onCall: (call) => order.push(`done ${call.seq}`),
+    });
+    const doors = { reference: "retrieval", routes: [], clarify: false, suggest: false, feedback: [] } as const;
+    const provider = trace.tap(
+      new ScriptedProvider("scripted", (request) => {
+        order.push(`asked ${request.purpose}`);
+        return "fine";
+      }),
+    );
+    await provider.complete(REQUEST);
+    await provider.complete({ ...REQUEST, purpose: "answer", hint: { ...REQUEST.hint, doors } });
+
+    expect(order).toEqual(["start 1", "asked scope", "done 1", "start 2", "asked answer", "done 2"]);
+    expect(starts.map((call) => call.purpose)).toEqual(["scope", "answer"]);
+    expect(starts[0]).not.toHaveProperty("doors");
+    expect(starts[1]?.doors).toEqual(doors);
+    expect(starts[1]?.at).toBe(trace.calls[1]?.at);
   });
 });
 

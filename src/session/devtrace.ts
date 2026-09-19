@@ -15,7 +15,7 @@
  * coverage-counted code like everything else the app leans on.
  */
 
-import type { Completion, CompletionRequest, DoorState, ModelProvider, Usage } from "../harness/provider.js";
+import type { Completion, CompletionRequest, DoorState, ModelProvider, Purpose, Usage } from "../harness/provider.js";
 import { ledgerOf } from "./ledger.js";
 import type { SessionState } from "./session.js";
 
@@ -44,6 +44,18 @@ export interface ModelCallTrace {
   latencyMs: number;
 }
 
+/** A model call as it begins: what the tap knows before the reply — the
+ * step it belongs to and the doors it holds — for a view that draws the
+ * call while it is in flight. The completed call ({@link ModelCallTrace})
+ * carries the same `seq`. */
+export interface ModelCallStart {
+  kind: "model-call-start";
+  seq: number;
+  at: string;
+  purpose: Purpose;
+  doors?: DoorState;
+}
+
 export interface DevTrace {
   /** Every call so far, in order. A live view may render this directly. */
   readonly calls: readonly ModelCallTrace[];
@@ -61,6 +73,9 @@ export interface DevTraceDeps {
   /** Called once per completed (or failed) call, after it is recorded —
    * the live page's mirror-to-disk hook. */
   onCall?: (call: ModelCallTrace) => void;
+  /** Called as each call begins, before the provider is asked — the live
+   * page's "the model is being asked" signal. Observation only. */
+  onCallStart?: (call: ModelCallStart) => void;
 }
 
 /** A tap over the provider seam. One instance per session setup. */
@@ -79,6 +94,7 @@ export function createDevTrace(deps: DevTraceDeps): DevTrace {
       async complete(request: CompletionRequest): Promise<Completion> {
         const at = deps.now();
         const started = deps.elapsedMs();
+        deps.onCallStart?.({ kind: "model-call-start", seq: calls.length + 1, at, purpose: request.purpose, ...(request.hint.doors === undefined ? {} : { doors: request.hint.doors }) });
         const base = {
           at,
           purpose: request.purpose,

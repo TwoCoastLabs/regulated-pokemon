@@ -3587,3 +3587,37 @@ describe("the precedent door: memory the operator owns (docs/precedent.md, epic 
     expect(tap.hints[0]?.precedents).toBeUndefined();
   });
 });
+
+describe("the exchange in progress: every step is reported as the driver takes it", () => {
+  const fabricated = JSON.stringify({ rosters: [], claims: [{ kind: "fact", entityId: "gym-badge", factId: "types" }] });
+  const lesson = JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-badge" }] });
+  const correcting = new ScriptedProvider("correcting", (request) => {
+    if (request.purpose !== "answer") return "decline";
+    return request.prompt.includes("refused by the verifier") ? lesson : fabricated;
+  });
+
+  it("reports the steps that land, in order, with the state as it stood after each — and files the same record unobserved", async () => {
+    const seen: { code: string; open: number }[] = [];
+    const observed: SessionDeps = { ...deps(correcting), feedback: true, onStep: (step, state) => seen.push({ code: step.code, open: state.steps.length }) };
+    let state = await setProfile(startSession(), { version: "red-blue", region: "kanto", badgeLevel: 8 }, observed);
+    state = await say(state, "what's a gym badge?", observed);
+
+    // Everything the ledger holds was reported, in the order it was taken.
+    const filed = [...state.exchanges.flatMap((exchange) => exchange.steps), ...state.steps].map((step) => step.code);
+    expect(seen.map((entry) => entry.code)).toEqual(filed);
+    // The state handed over already carries the step — the last of the open exchange.
+    expect(seen.every((entry) => entry.open > 0)).toBe(true);
+    // The denial and the carry-back are visible before the retry's reply lands.
+    const denied = seen.findIndex((entry) => entry.code === "verdict/denied");
+    const retried = seen.findIndex((entry) => entry.code === "model/retry");
+    expect(denied).toBeGreaterThan(-1);
+    expect(retried).toBeGreaterThan(denied);
+
+    // Observation changes nothing: the same session unobserved files the same record.
+    const quiet = { ...deps(correcting), feedback: true };
+    let control = await setProfile(startSession(), { version: "red-blue", region: "kanto", badgeLevel: 8 }, quiet);
+    control = await say(control, "what's a gym badge?", quiet);
+    expect(control.records.map((record) => record.outcome.status)).toEqual(state.records.map((record) => record.outcome.status));
+    expect(control.records[0]!.manifest?.claims).toEqual(state.records[0]!.manifest?.claims);
+  });
+});

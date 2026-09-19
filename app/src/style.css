@@ -2466,3 +2466,11 @@ body {
 .memory-candidates pre {
   margin: 2px 0 0;
 }
+
+/* The exchange in progress (src/ui/progress.ts): the busy line follows the
+   driver's steps and the call in flight; the marker sits over a trail drawn
+   from the driver's report rather than a filed record. */
+.live-in-progress {
+  margin: 0 0 6px;
+  font-style: italic;
+}

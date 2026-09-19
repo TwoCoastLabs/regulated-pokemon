@@ -171,8 +171,15 @@ name defines it in plain words the first time.
   filing step opens onto the certified manifest (`src/ui/claims.ts`): each
   claim's scale in the record's own numbers ("1 of 9", "42 members", "2
   values") and the lines it was formed from — the ranked field, the set's
-  members, the two values compared. Dogfood a porch round from the trail
-  before reaching for the trace file.
+  members, the two values compared. While an exchange is open, the line
+  under the chat and the trail follow the driver as it works: the driver
+  reports each ledger step as it takes it (`SessionDeps.onStep`), the trace
+  tap announces each model call as it begins, and `src/ui/progress.ts`
+  turns the last step and the call in flight into the player's sentence
+  ("The League refused the Advisor's draft — asking again, with the
+  reason (call 2)…"). Observation only: a session observed files the same
+  record as one that is not. Dogfood a porch round from the trail before
+  reaching for the trace file.
   All four go through tested, coverage-counted code below `app/`; the app
   itself still ships with no model and no key — a key exists only when a
   visitor types theirs, and CI exercises the session driver with scripted
