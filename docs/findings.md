@@ -6288,3 +6288,71 @@ L-to-LC drop of 5 is not a reading. (b) **named** — the bank's wordings
 are canonical, so the classifier's recall cannot show here by
 construction. (c) **named** — the raw arm ran once, on the strong model;
 the weak model's tax is not re-measured.
+
+## 26. The compare table: a comparison is every world's, and one pair is one table
+
+**Goal.** Usefulness. On the live page (dogfood, 2026-09-19, 10:19 UTC)
+the trainer asked "how would you compare Ivysaur and Venusaur?" and the
+certified page was two profile cards — Ivysaur's five values, then
+Venusaur's five — with nothing on it that compared anything: no gap, no
+leader, the reader left to do five subtractions across two cards. The
+raw model answers that question with a side-by-side and the differences,
+so the gap was a governance tax paid in presentation, not in policy. This
+entry closes it in the layers the operator owns — the grammar and the
+page — and records what the porch showed after.
+
+**How it works.** Three things, one slice (PR: the compare table).
+First, the `comparison` claim kind — one numeric fact on two entities,
+the kernel deriving both values, the gap and which leads, refusing a
+non-number by name (`IA-2/incomparable-fact`) — had been offered only in
+a world that certifies items, a leftover of its arrival with the Center
+(iteration 36). It is offered in every world now (`schema.ts`,
+`advisor.ts`); only `treats` stays behind items. Second, the planner
+gathers comparison claims over one pair into one `compare` unit: a
+table, a row per fact, both values, the gap and the leader's name, every
+cell a slot the verifier recomputes by equality; a tie has no leader
+slot, so its cell can hold only the catalogued word "equal"; a lone
+comparison is a one-row table; the pair is unordered, so a fact stated
+in both orders is one row in the first order stated. It is pack policy
+(`presentation.grouping`, shipped as `indigo-accord-v5`; v4 stays on
+the shelf and its records replay as filed). Third, at decode, a
+comparison stated in both orders folds to its first statement, beside
+the self-pair fold — the kernel derives the same values either way, and
+which name comes first is presentation.
+
+**Enforcement.** The crucible gains one IA-6 mutation,
+`call-the-leader-a-tie` (25 of 25 IA-6 mutations denied by name): the
+leader's cell replaced by the catalogued tie word — approved copy in a
+slot's place — is `IA-6/slot-not-rendered`. A gap narrowed on the page is
+`IA-6/slot-value-mismatch`, pinned in `render.test.ts` (the crucible
+already spends that rule). 0 escalations in the 3 porch exchanges below.
+
+**The porch, before and after.** All on the same profile (Red/Blue,
+Kanto, 0 badges), retrieval, gated grammar, the precedent door on.
+
+| | model | calls | proposed | certified | what the page holds | cost |
+|---|---|---|---|---|---|---|
+| before (dogfood, 10:19 UTC) | strong | 2 | 12 fact | 10 of 12 (83%) | two profile cards, five rows each, no comparison | $0.0008 |
+| after, round 1 | strong | 2 | 12 comparison | 10 of 12 (83%) | one table (with the fold: 6 rows) | $0.0009 |
+| after, round 2 | strong | 2 | 6 comparison | 6 of 6 (100%) | one table, six rows: HP, Attack, Defense, Sp. Atk, Sp. Def, Speed | $0.0008 |
+| after, round 1 | weak | 1 | 6 (all dropped) | 1 lesson | the records-boundary lesson — a wrong decline | $0.0001 |
+
+Model errors, listed apart from the harness: the strong model nominated
+the listing door first on all three of its rounds (the known S4a
+question, §22/§25; one wasted call each, about 16 s); in round 1 it
+stated all six stats twice, once in each order (twelve claims for six
+comparisons — the reason for the decode fold, which is deterministic
+and pinned; round 2 did not repeat it, providers being nondeterministic);
+before the change it claimed a field it had not linked (2 of 12 dropped).
+The weak model, N=1, linked the whole question to no certified field
+and made six claims the driver dropped as off the asked fields, so the
+boundary lesson was taught on an answerable question — a wrong decline,
+the weak model's number to work on, and one sample. Harness factors:
+the grammar gap (closed here), the two-cards presentation (closed
+here), the reversed duplicate (folded here).
+
+**What this does not show.** A porch reading is N=2 and N=1. Offering a
+new kind can move a model's choices on other questions, so the bank on
+both models is the reading that counts, and it is owed: arm A at N=3 on
+both models beside §25's A, the pass band within or above it, the
+correct-decline rate not below it, 0 escalations with the denominator.

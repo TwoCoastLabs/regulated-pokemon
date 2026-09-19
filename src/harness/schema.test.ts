@@ -92,8 +92,12 @@ describe("the answer grammar tracks the kernel, not a copy of it", () => {
   });
 
   it("offers every claim kind the decoder accepts, so the grammar narrows nothing", () => {
+    // `comparison` is here in a world without items (2026-09-19): a numeric
+    // fact on two entities is every world's to compare, and the Kanto porch
+    // answered "compare Ivysaur and Venusaur" as two profile cards for want
+    // of it. Only `treats` stays behind items.
     expect(new Set(claimKinds)).toEqual(
-      new Set(["fact", "count", "typeCount", "gameRule", "membership", "ranking", "matchup", "eligibility", "explanation", "recommendation", "action"]),
+      new Set(["fact", "count", "typeCount", "gameRule", "membership", "comparison", "ranking", "matchup", "eligibility", "explanation", "recommendation", "action"]),
     );
   });
 
@@ -215,14 +219,17 @@ describe("the grammar is portable across providers", () => {
 
 describe("anything the grammar admits, the decoder reads", () => {
   it("decodes one well-formed instance of every claim kind", () => {
+    // One of each kind is exactly the claim budget (MAX_ANSWER_CLAIMS) since
+    // the comparison joined every world's grammar; the fact is the grounded
+    // shape — name it, and the kernel reads the value — and the asserted
+    // shape decodes in decode.test.ts.
     const claims = [
-      { kind: "fact", entityId: "pikachu", factId: "base-speed", asserted: { kind: "number", value: 90 } },
-      // The grounded fact shape: name it, and the kernel reads the value.
       { kind: "fact", entityId: "surf", factId: "machine" },
       { kind: "count", rosterId: "electric", reported: 9 },
       { kind: "typeCount" },
       { kind: "gameRule", ruleId: "party-size" },
       { kind: "membership", rosterId: "electric", entityId: "pikachu", asserted: true },
+      { kind: "comparison", factId: "base-speed", leftId: "pikachu", rightId: "raichu" },
       { kind: "ranking", rosterId: "electric", basis: "base-speed", direction: "highest", selectedEntityId: "electrode" },
       { kind: "matchup", subject: { kind: "species", entityId: "gengar" }, direction: "weak-to" },
       { kind: "eligibility", entityId: "mewtwo" },

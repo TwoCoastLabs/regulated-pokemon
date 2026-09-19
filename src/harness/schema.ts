@@ -180,18 +180,17 @@ function claimSchema(lessonIds: readonly string[], ruleIds: readonly string[], f
     // grammar would be advertising dead shapes. The verdict and the values
     // are the kernel's to derive, so neither is representable here — the
     // model names the pair, never the answer.
-    ...(items
-      ? [
-          variant("treats", { itemId: STRING, condition: { type: "string", enum: [...STATUS_CONDITIONS] } }),
-          // Only fact ids that can be numeric: the first paid Center run
-          // showed the model comparing prose with prose (cures, item-effect)
-          // 80+ times under the full enum, every one a named denial the
-          // grammar can simply stop admitting. The kernel's runtime check
-          // stays load-bearing for the cases the enum cannot see (a "full"
-          // where a number usually lives, a degenerate self-pair).
-          variant("comparison", { factId: { type: "string", enum: [...COMPARABLE_FACT_IDS] }, leftId: STRING, rightId: STRING }),
-        ]
-      : []),
+    ...(items ? [variant("treats", { itemId: STRING, condition: { type: "string", enum: [...STATUS_CONDITIONS] } })] : []),
+    // A comparison is one numeric fact on two entities, which every world
+    // has; it arrived with the Center and was offered only there until the
+    // Kanto porch showed "compare Ivysaur and Venusaur" answered as two
+    // profile cards (2026-09-19). Only fact ids that can be numeric: the
+    // first paid Center run showed the model comparing prose with prose
+    // (cures, item-effect) 80+ times under the full enum, every one a named
+    // denial the grammar can simply stop admitting. The kernel's runtime
+    // check stays load-bearing for the cases the enum cannot see (a "full"
+    // where a number usually lives, a degenerate self-pair).
+    variant("comparison", { factId: { type: "string", enum: [...COMPARABLE_FACT_IDS] }, leftId: STRING, rightId: STRING }),
     // No `selectedEntityId`: the model declares the set, the basis and the
     // direction, and the kernel picks the extreme. Like the count, a wrong
     // winner is not a reachable output under enforced decoding.

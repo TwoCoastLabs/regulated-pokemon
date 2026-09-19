@@ -160,8 +160,11 @@ describe("proposeAnswer", () => {
       // The diagnosis (docs/answer-prompt.md): the legacy prompt opened on
       // empty headers, stated the lesson rule three ways, and ran to 2,076
       // words on this ask. The pin is the fixture's own count, so a block
-      // that creeps back in fails the build by name.
-      const PINNED_WORDS = 1418;
+      // that creeps back in fails the build by name. 1418 → 1475 on
+      // 2026-09-19: the comparison shape, offered in every world now, is
+      // one more line under THE SHAPES — a shape the world lacked, not a
+      // block crept back.
+      const PINNED_WORDS = 1475;
       const { prompt } = await build("tell me about the game");
       const lines = prompt.split("\n");
       for (const [index, line] of lines.entries()) {

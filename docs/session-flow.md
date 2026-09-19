@@ -379,9 +379,19 @@ is covered by offline tests with scripted models:
   each value its own bound slot, the pair tied by the fact id in the slot
   names so a value cannot sit under another fact's label; a lone fact keeps
   its sentence. Same dogfood: nine "certify Charmander's X as Y" lines.
-  Both groupings are pack policy (`presentation.grouping`, shipped as
-  `indigo-accord-v3`): 23 filed pages were planned one sentence per claim
-  under v2 and replay that way under their pin
+- a comparison as one table (`compare` unit): comparison claims over one
+  pair of entities are shown as a table — a row per fact with the label,
+  both certified values, the gap and the leader's name, every cell a bound
+  slot and the arithmetic the kernel's; a tie has no leader slot, so its
+  cell can only hold the catalogued word "equal". A lone comparison is a
+  one-row table. Found by dogfood (2026-09-19): "how would you compare
+  Ivysaur and Venusaur?" read as two profile cards, the reader left to do
+  five subtractions — and the grammar had never offered the comparison
+  kind outside the Center, so the model could not have answered otherwise.
+  All three groupings are pack policy (`presentation.grouping`; listing and
+  profile shipped as `indigo-accord-v3`, compare as `indigo-accord-v5`): 23
+  filed pages were planned one sentence per claim under v2 and replay that
+  way under their pin
 - replay: a filed transaction re-verifies byte for byte with no model
 - the driver's ledger (`src/session/ledger.ts`, issue #158): every step
   above, as the driver took it, recorded per exchange in fixed wording —

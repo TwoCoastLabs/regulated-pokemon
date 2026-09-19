@@ -388,6 +388,32 @@ describe("the degenerate comparison folds to the fact it means (Center loop 2)",
     }
   });
 
+  it("a comparison stated in both orders is one statement: the second folds to the first as a duplicate (Kanto porch, 2026-09-19)", () => {
+    // The strong model stated all six stats as Venusaur-vs-Ivysaur and then
+    // again as Ivysaur-vs-Venusaur — twelve claims for six comparisons, the
+    // budget spent twice over. Which name comes first is presentation; the
+    // kernel derives both values and the leader either way.
+    const decoded = decodeAnswer(
+      JSON.stringify({
+        rosters: [],
+        claims: [
+          { kind: "comparison", factId: "move-power", leftId: "thunderbolt", rightId: "surf" },
+          { kind: "comparison", factId: "move-pp", leftId: "surf", rightId: "thunderbolt" },
+          { kind: "comparison", factId: "move-power", leftId: "surf", rightId: "thunderbolt" },
+        ],
+      }),
+      context,
+      "txn-reversed",
+    );
+    expect(decoded.ok).toBe(true);
+    if (decoded.ok) {
+      expect(decoded.draft.claims).toEqual([
+        { kind: "comparison", factId: "move-power", leftId: "thunderbolt", rightId: "surf" },
+        { kind: "comparison", factId: "move-pp", leftId: "surf", rightId: "thunderbolt" },
+      ]);
+    }
+  });
+
   it("an answer that is only a folded self-pair still counts as an answer, not an abstention", () => {
     const decoded = decodeAnswer(
       JSON.stringify({ rosters: [], claims: [{ kind: "comparison", factId: "move-pp", leftId: "surf", rightId: "surf" }] }),

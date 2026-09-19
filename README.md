@@ -225,7 +225,7 @@ crucible by test, so it cannot drift from what actually runs.
 | IA-3 | No Fabrication (the MissingNo Clause) | 9 |
 | IA-4 | Complete Answers Carry Certificates | 11 |
 | IA-5 | Restricted Species | 4 |
-| IA-6 | Disclosures Must Be Seen | 24 |
+| IA-6 | Disclosures Must Be Seen | 25 |
 | IA-7 | What Was Shown Is What Executes | 13 |
 | IA-8 | Only the Trainer Speaks for the Trainer | 8 |
 | IA-9 | Irreversible Acts Need Informed Consent | 4 |

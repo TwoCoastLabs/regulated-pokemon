@@ -159,13 +159,16 @@ describe("the Center kinds through the propose-side layers, arm by arm", () => {
     expect(certifiedReference(demoWorld().registry)).not.toContain("ITEMS ");
   });
 
-  it("offers the Center kinds in the grammar only where items exist", async () => {
+  it("offers treats in the grammar only where items exist; a comparison is every world's", async () => {
+    // `comparison` left the items gate on 2026-09-19: a numeric fact on two
+    // entities compares in Kanto as it does at the Center, and the porch had
+    // answered "compare Ivysaur and Venusaur" as two profile cards without it.
     const { answerSchema } = await import("./schema.js");
     const withItems = JSON.stringify(answerSchema(world.pack, undefined, true));
     const without = JSON.stringify(answerSchema(world.pack, undefined, false));
     expect(withItems).toContain('"treats"');
     expect(withItems).toContain('"comparison"');
     expect(without).not.toContain('"treats"');
-    expect(without).not.toContain('"comparison"');
+    expect(without).toContain('"comparison"');
   });
 });

@@ -36,11 +36,13 @@ import {
   COPY_ATTRIBUTE,
   TEMPLATE_ATTRIBUTE,
   type DomElement,
+  type DomNode,
   element,
   SLOT_ATTRIBUTE,
   text,
   UNIT_ATTRIBUTE,
 } from "../kernel/dom.js";
+import { compileManifest } from "../kernel/manifest.js";
 import { attestRender, planRender, verifyRender } from "../kernel/render.js";
 import { AccordError } from "../kernel/violation.js";
 import { renderAnswer } from "../render/reference.js";
@@ -77,6 +79,34 @@ function rendered(world: CrucibleWorld): Rendered {
   return { manifest, artifact, affidavit: attested.value };
 }
 
+/**
+ * A comparison, planned as one table (the `compare` grouping, pack v5):
+ * Ivysaur against Venusaur on HP and Attack, both values, the gap and the
+ * leader per row, every cell a slot the kernel filled from the certified
+ * numbers. The page's arithmetic is the sabotage surface here — a gap the
+ * renderer "corrected", a leader it moved — and it is caught the way a
+ * value is, by equality against the plan.
+ */
+const COMPARE_TABLE = "compare:ivysaur:venusaur";
+
+function comparedAnswer(world: CrucibleWorld): Rendered {
+  const compiled = compileManifest(world, {
+    transactionId: "txn-crucible-compare",
+    claims: [
+      { kind: "comparison", factId: "base-hp", leftId: "ivysaur", rightId: "venusaur" },
+      { kind: "comparison", factId: "base-attack", leftId: "ivysaur", rightId: "venusaur" },
+    ],
+    rosters: [],
+  });
+  if (!compiled.ok) throw new AccordError(compiled.violations);
+  const planned = planRender(world, compiled.value);
+  if (!planned.ok) throw new AccordError(planned.violations);
+  const artifact = renderAnswer(world.pack, planned.value);
+  const attested = attestRender(world, compiled.value, artifact, RENDERED_AT);
+  if (!attested.ok) throw new AccordError(attested.violations);
+  return { manifest: compiled.value, artifact, affidavit: attested.value };
+}
+
 /** What a mutation replaces. Anything it leaves out is the honest article. */
 type Sabotaged = Partial<Rendered>;
 
@@ -92,8 +122,8 @@ type Sabotaged = Partial<Rendered>;
  * first. Every attack on the page therefore arrives with a record that is
  * perfectly honest about the page, and has to be caught for what it did.
  */
-function sabotage(world: CrucibleWorld, change: (honest: Rendered) => Sabotaged): Verdict {
-  const honest = rendered(world);
+function sabotage(world: CrucibleWorld, change: (honest: Rendered) => Sabotaged, honestly: (world: CrucibleWorld) => Rendered = rendered): Verdict {
+  const honest = honestly(world);
   const changed = change(honest);
   const artifact = changed.artifact ?? honest.artifact;
   return verifyRender(
@@ -479,6 +509,37 @@ export const PHASE_4_MUTATIONS: readonly Mutation[] = [
         affidavit: honest.affidavit,
       })),
   },
+  {
+    id: "call-the-leader-a-tie",
+    title: "Show a tie where the records certify a leader",
+    description:
+      "A compare table's arithmetic is the kernel's — both values, the gap " +
+      "and the leader are slots it filled from the certified numbers, so a " +
+      "gap the page narrowed is a slot mismatch like any value (pinned in " +
+      "render.test.ts). This is the subtler edit: the leader's cell is " +
+      "replaced by the catalogued word for a tie — approved copy, in the " +
+      "place the plan reserved for a name. A tie is the one case with no " +
+      "leader slot, so a leader the page withholds is a planned slot the " +
+      "artifact does not render.",
+    article: "IA-6",
+    rule: "slot-not-rendered",
+    run: (world) =>
+      sabotage(
+        world,
+        (honest) => ({
+          artifact: edit(honest.artifact, COMPARE_TABLE, (found) => {
+            const tie = (node: DomNode): DomNode =>
+              node.kind === "text"
+                ? node
+                : node.attributes[SLOT_ATTRIBUTE] === "leader:base-hp"
+                  ? element("span", { [COPY_ATTRIBUTE]: "compare.tie" }, [text("equal")])
+                  : { ...node, children: node.children.map(tie) };
+            return tie(found);
+          }),
+        }),
+        comparedAnswer,
+      ),
+  },
 ];
 
 export const PHASE_4_CONTROLS: readonly Control[] = [
@@ -510,6 +571,19 @@ export const PHASE_4_CONTROLS: readonly Control[] = [
         // rebuilt the tree wrongly would make every mutation above pass.
         artifact: edit(honest.artifact, WARNING, (found) => found),
       })),
+  },
+  {
+    id: "compare-table-clean-path",
+    kind: "clean-path",
+    title: "Plan, render, attest and verify one compare table",
+    description:
+      "Two comparisons over one pair, through the reference renderer as one " +
+      "table: the names in the head, a row per fact with both values, the " +
+      "gap and the leader, every cell a slot and every other word catalogued.",
+    run: (world) => {
+      const { manifest, artifact, affidavit } = comparedAnswer(world);
+      return verifyRender(world, manifest, artifact, affidavit);
+    },
   },
 ];
 

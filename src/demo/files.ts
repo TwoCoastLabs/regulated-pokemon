@@ -17,7 +17,7 @@ import type { DemoWorld } from "./script.js";
 
 const DATA = resolve(import.meta.dirname, "../../data");
 export const SNAPSHOT_PATH = resolve(DATA, "snapshots/kanto-red-blue.json");
-export const PACK_PATH = resolve(DATA, "accord-pack/v4.json");
+export const PACK_PATH = resolve(DATA, "accord-pack/v5.json");
 
 let loaded: DemoWorld | undefined;
 

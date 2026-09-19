@@ -83,6 +83,9 @@ export type RenderUnitKind =
   | "profile"
   | "treats"
   | "comparison"
+  /** Comparison claims over one pair of entities, shown as one table: a
+   * row per fact, the two values, the gap and which leads. */
+  | "compare"
   | "selection"
   | "matchup"
   | "eligibility"
@@ -203,7 +206,46 @@ export function planRender(context: ManifestContext, manifest: AnswerManifest): 
   }
   const profiled = new Set<string>();
 
+  // And for comparisons (dogfood, 2026-09-19: "how would you compare Ivysaur
+  // and Venusaur?" read as two profile cards with the reader left to do
+  // five subtractions): comparison claims over one pair of entities are
+  // gathered into a `compare` unit — one table, a row per fact, both
+  // values, the gap and which leads, every cell a bound slot and the
+  // arithmetic the kernel's — placed where the first of them stood. A lone
+  // comparison is a one-row table rather than a sentence: a tie has no
+  // leader, and a sentence has to say so in words while a table's cell can
+  // hold the catalogued "equal". Pack policy like the two above (`compare`
+  // in `presentation.grouping`, pack v5): a pack without it presents each
+  // comparison as its own unit. The pair is unordered — "Venusaur vs
+  // Ivysaur" and "Ivysaur vs Venusaur" are one table, oriented as the first
+  // claim stated it, and a fact stated in both orders is one row.
+  const pairOf = (claim: Extract<Claim, { kind: "comparison" }>): string => [claim.leftId, claim.rightId].sort().join(":");
+  const comparisons = new Map<string, Array<Extract<Claim, { kind: "comparison" }>>>();
   for (const claim of manifest.claims) {
+    if (claim.kind !== "comparison" || !grouping.includes("compare")) continue;
+    const key = pairOf(claim);
+    const group = comparisons.get(key) ?? [];
+    if (!group.some((entry) => entry.factId === claim.factId)) group.push(claim);
+    comparisons.set(key, group);
+  }
+  const compared = new Set<string>();
+
+  for (const claim of manifest.claims) {
+    if (claim.kind === "comparison") {
+      const key = pairOf(claim);
+      const group = comparisons.get(key);
+      if (group !== undefined) {
+        if (compared.has(key)) continue;
+        compared.add(key);
+        const built = unitForCompare(context, manifest, claim.leftId, claim.rightId, group);
+        if (!built.ok) {
+          violations.push(...built.violations);
+          continue;
+        }
+        claimUnits.push(built.value);
+        continue;
+      }
+    }
     if (claim.kind === "fact") {
       const group = profiles.get(claim.entityId) ?? [];
       if (group.length >= 2) {
@@ -404,6 +446,63 @@ function unitForProfile(
     value: {
       unit: { id: `profile:${entityId}`, kind: "profile", slots: resolved.value, article: "IA-6" },
       mentions: [entityId],
+    },
+  };
+}
+
+/**
+ * Comparison claims over one pair of entities, as one unit: the two entities,
+ * then for each fact a label slot (the dictionary's everyday name, as a
+ * profile's), the two certified values, the gap between them, and the
+ * leader — an entity-name slot when one value is larger, no slot at all
+ * when they are equal, so the renderer's cell for a tie can only hold the
+ * catalogued word. Everything comparative is computed here from the
+ * certified values, never asserted by anyone: a rendered manifest is a
+ * verified one, so both sides resolve as numbers (`checkComparison`), and a
+ * side the model left unstated is read from the registry exactly as the
+ * lone comparison unit reads it. The slot names carry the fact id, so a
+ * page cannot show one row's gap under another row's label. A claim stated
+ * the other way round joins the table in the table's orientation: its
+ * stated values are read by entity, never by position.
+ */
+function unitForCompare(
+  context: ManifestContext,
+  manifest: AnswerManifest,
+  leftId: string,
+  rightId: string,
+  claims: ReadonlyArray<Extract<Claim, { kind: "comparison" }>>,
+): Resolution<{ unit: RenderUnit; mentions: readonly string[] }> {
+  const locale = manifest.locale;
+  const certified = (entityId: string, factId: string, stated: FactValue | undefined): FactValue => {
+    if (stated !== undefined) return stated;
+    const resolved = context.registry.resolve(entityId, factId);
+    return resolved.ok ? resolved.value : { kind: "absent" };
+  };
+  const resolved = slots(
+    slot(context, locale, "left", entity(leftId), "entity-name"),
+    slot(context, locale, "right", entity(rightId), "entity-name"),
+    ...claims.flatMap((claim) => {
+      const stated = claim.leftId === leftId ? { left: claim.left, right: claim.right } : { left: claim.right, right: claim.left };
+      const left = certified(leftId, claim.factId, stated.left);
+      const right = certified(rightId, claim.factId, stated.right);
+      const numeric = left.kind === "number" && right.kind === "number";
+      const gap: FactValue = numeric ? { kind: "number", value: Math.abs(left.value - right.value) } : { kind: "absent" };
+      const leader = numeric && left.value !== right.value ? (left.value > right.value ? leftId : rightId) : undefined;
+      return [
+        slot(context, locale, `fact:${claim.factId}`, entity(dictionaryEntry(context.pack, claim.factId)?.name ?? claim.factId), "plain-text"),
+        slot(context, locale, `left:${claim.factId}`, left),
+        slot(context, locale, `right:${claim.factId}`, right),
+        slot(context, locale, `gap:${claim.factId}`, gap),
+        ...(leader === undefined ? [] : [slot(context, locale, `leader:${claim.factId}`, entity(leader), "entity-name")]),
+      ];
+    }),
+  );
+  if (!resolved.ok) return resolved;
+  return {
+    ok: true,
+    value: {
+      unit: { id: `compare:${leftId}:${rightId}`, kind: "compare", slots: resolved.value, article: "IA-6" },
+      mentions: [leftId, rightId],
     },
   };
 }
