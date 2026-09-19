@@ -164,6 +164,7 @@ export function DevCall(props: { call: ModelCallTrace; previous?: ModelCallTrace
       <summary class="mono">
         #{call.seq} {call.purpose}
         {call.schema !== undefined ? ` (${call.schema})` : ""} · {Math.round(call.latencyMs)}ms
+        {call.servedBy !== undefined ? ` via ${call.servedBy}` : ""}
         {usage !== undefined ? ` · ${usage.promptTokens}→${usage.completionTokens} tok · $${usage.costUsd.toFixed(4)}` : ""}
         {call.error !== undefined ? " · FAILED" : ""}
       </summary>

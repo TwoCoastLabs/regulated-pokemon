@@ -160,6 +160,15 @@ export interface Completion {
    * Absent for scripted providers; nothing downstream may require it.
    */
   finishReason?: string;
+  /**
+   * Who actually served the call, when the gateway names them — OpenRouter
+   * routes one model id across several upstreams, and a 73-second call at
+   * 7 tok/s is one upstream having a moment, not the model (dogfood,
+   * 2026-09-20: six calls to one model ran 2.7 s to 73 s). Recorded so a
+   * latency can be attributed before a model is blamed for it. Absent for
+   * scripted providers; nothing downstream may require it.
+   */
+  servedBy?: string;
 }
 
 /**

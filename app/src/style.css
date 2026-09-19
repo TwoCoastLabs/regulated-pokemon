@@ -1268,19 +1268,10 @@ body {
   gap: 14px;
 }
 
-/* With the machinery shown, the page widens to seat both registers. */
-.live:has(.live-panes.with-console) {
-  max-width: 1480px;
-}
-
 .live-panes {
   display: grid;
   gap: 14px;
   align-items: start;
-}
-
-.live-panes.with-console {
-  grid-template-columns: minmax(420px, 1fr) minmax(380px, 1fr);
 }
 
 /* The side pane: two views, one tab strip. It keeps to the viewport and
@@ -1293,6 +1284,60 @@ body {
   top: 12px;
   max-height: calc(100vh - 24px);
   overflow: auto;
+}
+
+/* With the machinery shown, the page widens to seat both registers, and
+   the two become one viewport-tall frame: the chat column on the left
+   (transcript scrolling, the game panel and the composer pinned under it),
+   the machinery on the right spanning the same height. Before this the
+   side pane alone was viewport-tall while the chat grew from a short card,
+   so the two never lined up (dogfood, 2026-09-20). `display: contents`
+   lifts the two panes into this grid so the composer, which sits after
+   the panes in the markup, can share the chat's column. */
+.live:has(.live-panes.with-console) {
+  max-width: 1480px;
+  position: sticky;
+  top: 12px;
+  height: calc(100vh - 24px);
+  grid-template-columns: minmax(420px, 1fr) minmax(380px, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "meta meta"
+    "chat side"
+    "game side"
+    "say side";
+}
+
+.live-panes.with-console {
+  display: contents;
+}
+
+.live:has(.live-panes.with-console) > .live-meta {
+  grid-area: meta;
+}
+
+.live:has(.live-panes.with-console) .live-chat {
+  grid-area: chat;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.live:has(.live-panes.with-console) .live-side {
+  grid-area: side;
+  position: static;
+  max-height: none;
+  min-height: 0;
+}
+
+.live:has(.live-panes.with-console) > .live-profile,
+.live:has(.live-panes.with-console) > .live-profile-set {
+  grid-area: game;
+  margin: 0;
+}
+
+.live:has(.live-panes.with-console) > .live-composer {
+  grid-area: say;
 }
 
 .pane-tabs {

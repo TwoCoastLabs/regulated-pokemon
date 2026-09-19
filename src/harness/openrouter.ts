@@ -185,6 +185,8 @@ export interface ChatResponse {
   choices?: readonly { message?: { content?: unknown }; finish_reason?: unknown }[];
   usage?: { prompt_tokens?: unknown; completion_tokens?: unknown; cost?: unknown };
   error?: { message?: unknown; code?: unknown };
+  /** The upstream that served the call, as the gateway names it. */
+  provider?: unknown;
 }
 
 function isNumber(value: unknown): value is number {
@@ -350,6 +352,7 @@ export class OpenRouterProvider implements ModelProvider {
       text: content,
       usage: readUsage(payload, request, content),
       ...(typeof finishReason === "string" ? { finishReason } : {}),
+      ...(typeof payload.provider === "string" && payload.provider !== "" ? { servedBy: payload.provider } : {}),
     };
   }
 }
@@ -390,6 +393,7 @@ interface StreamChunk {
   choices?: readonly { delta?: { content?: unknown }; finish_reason?: unknown }[];
   usage?: ChatResponse["usage"];
   error?: ChatResponse["error"];
+  provider?: unknown;
 }
 
 /** One line of a server-sent event stream, read for what a chunk carries;
@@ -414,6 +418,7 @@ export function assembleStream(raw: string): ChatResponse {
   let finishReason: unknown;
   let usage: ChatResponse["usage"];
   let error: ChatResponse["error"];
+  let provider: unknown;
   let chunks = 0;
   for (const line of raw.split("\n")) {
     const read = streamLine(line.replace(/\r$/, ""));
@@ -424,11 +429,13 @@ export function assembleStream(raw: string): ChatResponse {
     if (typeof reason === "string") finishReason = reason;
     if (read.chunk.usage !== undefined) usage = read.chunk.usage;
     if (read.chunk.error !== undefined) error = read.chunk.error;
+    if (typeof read.chunk.provider === "string") provider = read.chunk.provider;
   }
   if (chunks === 0) throw new Error("no stream chunks");
   if (error !== undefined) return { error };
   return {
     choices: [{ message: { content }, ...(finishReason === undefined ? {} : { finish_reason: finishReason }) }],
     ...(usage === undefined ? {} : { usage }),
+    ...(provider === undefined ? {} : { provider }),
   };
 }

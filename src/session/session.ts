@@ -673,12 +673,18 @@ function ask(world: SessionWorld, state: SessionState, deps: StepSink, at: strin
   };
 }
 
-/** File a settled exchange and open the next one, with the default demands. */
-function file(state: SessionState, deps: StepSink, record: Transaction, page?: DomElement): SessionState {
+/** File a settled exchange and open the next one, with the default demands.
+ * The filing step is stamped by the driver's clock, as every step is — not
+ * with the record's own `committedAt`, which the kernel drew before the
+ * steps logged after the verdict (the memory reading) and so fell behind
+ * them, a backwards clock the trail reads as no working time at all
+ * (dogfood, 2026-09-20: no "took" line under an answer the precedent door
+ * had read). The record keeps its commit moment; the ledger keeps its order. */
+function file(state: SessionState, deps: StepSink & Pick<SessionDeps, "now">, record: Transaction, page?: DomElement): SessionState {
   const filed = ledgerStep(
     state,
     deps,
-    record.committedAt,
+    deps.now(),
     "kernel",
     `record/${record.outcome.status}`,
     record.outcome.status === "denied"
@@ -741,7 +747,14 @@ export async function say(state: SessionState, text: string, deps: SessionDeps):
     const social = socialReply(text);
     if (social !== undefined) {
       const open = state.phase.kind === "asking" || state.phase.kind === "clarifying" || state.phase.kind === "confirming-scope";
-      return note({ ...next, phase: open ? state.phase : { kind: "gathering" } }, deps, deps.now(), social, "social");
+      // A pleasantry that answers nothing open is spent: the ask pointer
+      // moves past it, so the next ask opens its own exchange under its
+      // own words. Left in place, the ledger titled the exchange after a
+      // greeting with the greeting (dogfood, 2026-09-20: "tell me about the
+      // game" filed under "3hey"). While a question is open, the
+      // pleasantry keeps it armed and the exchange keeps its ask.
+      const settled = open ? { ...next, phase: state.phase } : { ...next, phase: { kind: "gathering" as const }, askStart: next.transcript.length };
+      return note(settled, deps, deps.now(), social, "social");
     }
   }
   const driven = await drive(next, deps);
@@ -760,7 +773,17 @@ export async function say(state: SessionState, text: string, deps: SessionDeps):
  * pleasantry, so "thanks, and what about Onix?" still drives the machinery.
  */
 function socialReply(text: string): string | undefined {
-  const bare = text.trim().toLowerCase();
+  // Stray characters at either edge are not words: "3hey" (a key beside
+  // the h, dogfood 2026-09-20) cost a model call and earned the boundary
+  // redirect where "hey" earns a hello for free. Leniency here mints no
+  // value — a social note has no authority and files no record — so the
+  // context discipline the aliases need (lesson 1) does not apply; the
+  // whole-utterance rule below still does.
+  const bare = text
+    .trim()
+    .toLowerCase()
+    .replace(/^[^a-z]+/, "")
+    .replace(/[^a-z]+$/, "");
   if (/^(hi|hello|hey|yo|sup|howdy|good (morning|afternoon|evening)|yo whats up|whats up|hey there|hi there)[!?,. ]*$/.test(bare)) {
     return (
       "Hey! I'm the League's Advisor — ask me about any Pok\u00e9mon, a matchup, or how the game works, " +

@@ -42,6 +42,9 @@ export interface ModelCallTrace {
   error?: string;
   usage?: Usage;
   latencyMs: number;
+  /** The upstream that served the call, when the provider named it — so a
+   * slow call is attributed to its route before the model is blamed. */
+  servedBy?: string;
 }
 
 /** A model call as it begins: what the tap knows before the reply — the
@@ -104,7 +107,13 @@ export function createDevTrace(deps: DevTraceDeps): DevTrace {
         };
         try {
           const completion = await provider.complete(request);
-          record({ ...base, response: completion.text, usage: completion.usage, latencyMs: deps.elapsedMs() - started });
+          record({
+            ...base,
+            response: completion.text,
+            usage: completion.usage,
+            latencyMs: deps.elapsedMs() - started,
+            ...(completion.servedBy === undefined ? {} : { servedBy: completion.servedBy }),
+          });
           return completion;
         } catch (error) {
           record({

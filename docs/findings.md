@@ -6356,3 +6356,74 @@ new kind can move a model's choices on other questions, so the bank on
 both models is the reading that counts, and it is owed: arm A at N=3 on
 both models beside §25's A, the pass band within or above it, the
 correct-decline rate not below it, 0 escalations with the denominator.
+
+## 27. The porch, two nights running: the same model id at 3 tok/s and at 33 tok/s, and four things the page got wrong
+
+**Goal.** Usefulness as the trainer meets it. Two dogfood rounds on the
+live page (2026-09-19 21:43 UTC and 2026-09-20 21:59–22:07 UTC, strong
+model, the relay's key) raised four complaints — a greeting that cost a
+model call, calls that took a minute, two columns that never lined up,
+no time under each turn — and reading the traces found four defects
+behind them. This entry records what the numbers said and what changed.
+
+**Latency is the route, not the model.** Six calls to
+`qwen/qwen3-235b-a22b-2507` on the first night ran 2.7 s to 73 s: 37
+tokens in 11.6 s (3.2 tok/s), 55 in 12.2 s (4.5), 70 in 20.3 s (3.4),
+56 in 2.7 s (20.3), 110 in 31.4 s (3.4), 506 in 73.3 s (6.9). The one
+fast call proves the model can decode at 20 tok/s; the five slow ones
+were the upstream OpenRouter routed to, and the trace could not say
+which, because the gateway's `provider` field was never read. It is
+now (`servedBy` on the completion, the trace and the dev view). The
+next night's eight calls, same model, same prompt size (3.1–3.4k
+tokens): Novita 7.3 s and 5.1 s, Parasail 6.2 s, GMICloud 9.5 s (308
+tokens, 33 tok/s) and 10.4 s (484 tokens, 46 tok/s), Novita again
+23.4 s (18.6 tok/s), StreamLake 3.0 s (18.8 tok/s). So a 10× spread in
+throughput under one model id, now attributed by name per call. The
+model question stays open and is a measured change: a candidate list
+from OpenRouter's catalogue is in the PR, and a default moves only on a
+bank reading on both defaults' terms.
+
+**A greeting cost a call.** "3hey" — a key beside the h — missed the
+social gate, cost an 11.6 s model call, and earned the boundary
+redirect ("I couldn't line that up with anything I can certify") where
+"hey" earns a hello for free. The gate now strips stray non-letters at
+either edge; a social note mints no value, so the leniency carries no
+authority (lesson 1's context discipline is for aliases). Pinned:
+"3hey", "...hello", "hey!!!" are social with no call; "he3y" is not.
+
+**The ledger titled an ask after the greeting before it.** "tell me
+about the game" filed under the opening "3hey": a pleasantry never
+moved the ask pointer, so the next ask's exchange inherited its words.
+The pointer moves past a pleasantry that answers nothing open; while a
+question is open the pleasantry keeps it armed and the exchange keeps
+its ask. Pinned in session.test.ts.
+
+**No "took" line under an answer the precedent door had read.** The
+filing step was stamped with the record's `committedAt`, drawn before
+the memory step logged after the verdict, so it fell 2 ms behind the
+step before it; the work-time reader treats a backwards clock as no
+time at all and the line vanished. The filing step is stamped by the
+driver's clock like every other; the record keeps its commit moment.
+And a turn that made no call shows no line at all — "took 0.0s" under
+a hello read as a glitch.
+
+**The two columns.** The machinery pane was viewport-tall and the chat
+grew from a short card, so they never lined up. With the machinery
+shown, the page is now one viewport-tall frame: the transcript scrolls
+in its column with the game panel and the composer pinned under it, the
+machinery beside it at the same height. Read on the page at 1280×720:
+chat 17→562, composer 629→672, side 17→672; the transcript scrolled to
+its newest turn (240 of 783−543) as the reply arrived.
+
+**Model errors, apart.** The strong model nominated the listing door
+on "tell me about the game" (refused: the question names no set) and
+on every comparison ask (refused: one named thing); on "tell me about
+the game" it then claimed a fact on the entity "game", denied
+`IA-3/fabricated-entity`, and only on the carried-back round chose the
+lesson — three calls and 19–31 s for a lesson. The offered door (§25)
+would have spared the first call each time; it is still off on the
+live page.
+
+**Enforcement.** 0 escalations of 4 records across the two nights'
+sessions; every denial above was the kernel's, by name, and carried
+back.
