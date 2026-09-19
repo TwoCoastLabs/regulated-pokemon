@@ -177,8 +177,14 @@ name defines it in plain words the first time.
   tap announces each model call as it begins, and `src/ui/progress.ts`
   turns the last step and the call in flight into the player's sentence
   ("The League refused the Advisor's draft — asking again, with the
-  reason (call 2)…"). Observation only: a session observed files the same
-  record as one that is not. Dogfood a porch round from the trail before
+  reason (call 2)…"). Inside one call, the reply's own arrival is the only
+  event: on your own key the provider streams it and reports its length as
+  it lands (`OpenRouterProvider.onProgress`, off the wire unless watched),
+  and the line carries a meter — elapsed seconds, and roughly how much of
+  the reply has come. The League's relay answers whole, so there the meter
+  is seconds only. Observation only: a session observed files the same
+  record as one that is not, and an unwatched call is the same wire it
+  always was. Dogfood a porch round from the trail before
   reaching for the trace file.
   All four go through tested, coverage-counted code below `app/`; the app
   itself still ships with no model and no key — a key exists only when a

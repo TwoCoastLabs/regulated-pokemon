@@ -8,7 +8,9 @@
 
 import { describe, expect, it } from "vitest";
 
-import { foldSchemaFor,
+import { assembleStream,
+  type CallProgress,
+  foldSchemaFor,
   type FetchLike,
   type HttpResponse,
   OpenRouterProvider,
@@ -258,5 +260,115 @@ describe("foldSchemaFor: the grammar folded to what an upstream accepts", () => 
   it("hands every other family the grammar untouched", () => {
     expect(foldSchemaFor("qwen/qwen3-235b-a22b-2507", schema)).toBe(schema);
     expect(foldSchemaFor("mistralai/mistral-nemo", schema)).toBe(schema);
+  });
+});
+
+describe("a watched call: the reply as it arrives", () => {
+  const sse = (lines: readonly string[]) => lines.join("\n") + "\n";
+  const piece = (content: string, more: Record<string, unknown> = {}) =>
+    `data: ${JSON.stringify({ choices: [{ delta: { content }, ...more }] })}`;
+  const STREAM = [
+    ": OPENROUTER PROCESSING",
+    "",
+    piece("The "),
+    piece("fastest "),
+    piece("is Deoxys.", { finish_reason: "stop" }),
+    `data: ${JSON.stringify({ choices: [{ delta: {} }], usage: { prompt_tokens: 12, completion_tokens: 5, cost: 0.0003 } })}`,
+    "data: [DONE]",
+  ];
+
+  /** A response whose body arrives in the given pieces, cut wherever the caller says. */
+  function streamed(text: string, cuts: readonly number[]): HttpResponse {
+    const encoder = new TextEncoder();
+    const parts: string[] = [];
+    let from = 0;
+    for (const cut of cuts) {
+      parts.push(text.slice(from, cut));
+      from = cut;
+    }
+    parts.push(text.slice(from));
+    return {
+      ok: true,
+      status: 200,
+      text: () => Promise.resolve(text),
+      body: new ReadableStream<Uint8Array>({
+        start(controller) {
+          for (const part of parts) controller.enqueue(encoder.encode(part));
+          controller.close();
+        },
+      }),
+    };
+  }
+
+  function watched(responses: readonly HttpResponse[]) {
+    const stubbed = stub(responses);
+    const seen: CallProgress[] = [];
+    const instance = new OpenRouterProvider({
+      id: "live:strong",
+      model: "vendor/model-x",
+      apiKey: KEY,
+      system: "be honest",
+      fetch: stubbed.fetch,
+      sleep: () => Promise.resolve(),
+      onProgress: (progress) => seen.push(progress),
+    });
+    return { instance, seen, ...stubbed };
+  }
+
+  it("asks the endpoint to stream only when someone is watching", async () => {
+    const plain = provider([chat("ok")]);
+    await plain.instance.complete(request);
+    expect((plain.calls[0]?.body as Record<string, unknown>).stream).toBeUndefined();
+
+    const text = sse(STREAM);
+    const { instance, calls } = watched([streamed(text, [])]);
+    await instance.complete(request);
+    expect((calls[0]?.body as Record<string, unknown>).stream).toBe(true);
+  });
+
+  it("reports the reply's length as whole pieces land, and returns the same completion a whole reply would", async () => {
+    const text = sse(STREAM);
+    // Cut mid-line inside the second piece and again inside the third.
+    const cutA = text.indexOf("fastest") + 3;
+    const cutB = text.indexOf("Deoxys") + 3;
+    const { instance, seen } = watched([streamed(text, [cutA, cutB])]);
+    const completion = await instance.complete(request);
+
+    expect(completion.text).toBe("The fastest is Deoxys.");
+    expect(completion.finishReason).toBe("stop");
+    expect(completion.usage).toMatchObject({ promptTokens: 12, completionTokens: 5, costUsd: 0.0003, costedCalls: 1 });
+    // Monotone, whole-line counts: the half piece is not counted until it closes.
+    expect(seen.map((progress) => progress.chars)).toEqual([4, 12, 22]);
+  });
+
+  it("a transport that cannot stream still completes — a whole JSON reply reads as before", async () => {
+    const { instance, seen } = watched([chat("ok", { prompt_tokens: 1, completion_tokens: 1 })]);
+    const completion = await instance.complete(request);
+    expect(completion.text).toBe("ok");
+    expect(seen).toEqual([]);
+  });
+
+  it("an error chunk in the stream is a provider error, never an answer", async () => {
+    const text = sse([piece("The "), `data: ${JSON.stringify({ error: { message: "upstream fell over", code: 502 } })}`, "data: [DONE]"]);
+    // One fresh stream per attempt: a body can be read once.
+    const { instance } = watched([streamed(text, []), streamed(text, []), streamed(text, [])]);
+    const failure = await instance.complete(request).catch((cause: unknown) => cause);
+    expect(failure).toBeInstanceOf(ProviderError);
+    expect(String(failure)).toMatch(/provider error — .*upstream fell over/);
+  });
+
+  it("a stream cut off mid-chunk is a failure the run can count, not a truncated answer", async () => {
+    const text = sse([piece("The "), "data: {\"choices\":[{\"delta\":{\"content\":\"fast"]);
+    const { instance } = watched([streamed(text, []), streamed(text, []), streamed(text, [])]);
+    await expect(instance.complete(request)).rejects.toThrow(/not JSON|cut off/);
+  });
+
+  it("assembleStream: pieces in order, finish reason and usage from the chunks that carried them", () => {
+    expect(assembleStream(sse(STREAM))).toEqual({
+      choices: [{ message: { content: "The fastest is Deoxys." }, finish_reason: "stop" }],
+      usage: { prompt_tokens: 12, completion_tokens: 5, cost: 0.0003 },
+    });
+    expect(assembleStream(sse([piece("a"), piece("b")]))).toEqual({ choices: [{ message: { content: "ab" } }] });
+    expect(() => assembleStream("")).toThrow(/no stream chunks/);
   });
 });

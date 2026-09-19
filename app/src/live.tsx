@@ -53,7 +53,7 @@ import { agentReport, createDevTrace, type DevTrace, type DevTraceMeta, type Mod
 import type { DriverStep } from "../../src/session/ledger.js";
 import { adaptArtifact } from "../../src/ui/artifact-dom.js";
 import { plainCandidate, plainRefusalLead, plainStage, plainViolation } from "../../src/ui/plain.js";
-import { progressLine } from "../../src/ui/progress.js";
+import { progressLine, progressMeter } from "../../src/ui/progress.js";
 import { claimSource } from "./world.js";
 import { type SentBack, sentBack, trailsOfSession, withCalls } from "../../src/ui/trail.js";
 import { violationView } from "../../src/ui/viewmodel.js";
@@ -463,6 +463,19 @@ export function Live() {
   // Cleared when the exchange settles: the settled state is the record.
   const [progress, setProgress] = useState<{ step: DriverStep; state: SessionState } | null>(null);
   const [callInFlight, setCallInFlight] = useState<ModelCallStart | null>(null);
+  // Inside one call, the only events are the reply's own arrival: the
+  // provider reports the reply's length as it streams (own-key mode goes
+  // straight to the endpoint; the League's relay answers whole, so there it
+  // stays at zero), and a half-second tick keeps the elapsed time honest.
+  const [callChars, setCallChars] = useState(0);
+  const [callStartedMs, setCallStartedMs] = useState<number | null>(null);
+  const [nowMs, setNowMs] = useState(0);
+  useEffect(() => {
+    if (callStartedMs === null) return undefined;
+    setNowMs(performance.now());
+    const tick = setInterval(() => setNowMs(performance.now()), 500);
+    return () => clearInterval(tick);
+  }, [callStartedMs]);
   const [trouble, setTrouble] = useState<string | null>(null);
   // The machinery beside the chat: two views on one side pane, switched by
   // tab. The dev view (the step trail with every model call disclosed under
@@ -545,13 +558,19 @@ export function Live() {
         ...(mode === "league" ? { url: RELAY_CHAT_URL } : {}),
         system: persona === "honest" ? HONEST_PERSONA : ADVERSARY_PERSONA,
         structured: true,
+        onProgress: (progress) => setCallChars(progress.chars),
       });
       const trace = createDevTrace({
         now: clock,
         elapsedMs: () => performance.now(),
-        onCallStart: (call) => setCallInFlight(call),
+        onCallStart: (call) => {
+          setCallInFlight(call);
+          setCallChars(0);
+          setCallStartedMs(performance.now());
+        },
         onCall: (call) => {
           setCallInFlight(null);
+          setCallStartedMs(null);
           if (MIRROR_TO_DEV_SINK) mirrorToDevSink({ type: "model-call", ...call });
         },
       });
@@ -589,6 +608,7 @@ export function Live() {
         setInFlight(null);
         setProgress(null);
         setCallInFlight(null);
+        setCallStartedMs(null);
       });
   };
 
@@ -953,6 +973,9 @@ export function Live() {
           {busy && (
             <p class="live-busy" aria-live="polite">
               {progressLine({ ...(progress === null ? {} : { step: progress.step }), ...(callInFlight === null ? {} : { call: callInFlight }) })}
+              {callInFlight !== null && callStartedMs !== null && (
+                <span class="live-meter">{progressMeter({ elapsedMs: nowMs - callStartedMs, chars: callChars })}</span>
+              )}
             </p>
           )}
           {trouble !== null && <p class="refusal-banner">{trouble}</p>}

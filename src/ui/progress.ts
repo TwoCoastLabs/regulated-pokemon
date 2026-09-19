@@ -29,6 +29,32 @@ export interface Progress {
   call?: ModelCallStart;
 }
 
+/** What is known of the call in flight beyond that it is: how long it has
+ * been open and, once the reply starts to arrive, how much of it has. */
+export interface CallMeter {
+  /** Milliseconds since the call began. */
+  elapsedMs: number;
+  /** Characters of reply received so far; absent when the transport cannot
+   * stream (the League's relay), zero while the model has not begun. */
+  chars?: number;
+}
+
+/**
+ * The small meter beside the line: elapsed seconds, and the reply's rough
+ * length once it is arriving. Empty for the first moments, so a fast call
+ * never flickers a "0s". The length is in words the reader can picture,
+ * not characters — and "about", because a reply written as a grammar
+ * carries its punctuation too.
+ */
+export function progressMeter(meter: CallMeter): string {
+  const seconds = Math.floor(meter.elapsedMs / 1000);
+  if (seconds < 1) return "";
+  const chars = meter.chars ?? 0;
+  if (chars === 0) return `${seconds}s`;
+  const words = Math.max(1, Math.round(chars / 6));
+  return `${seconds}s · the reply is arriving, about ${words} word${words === 1 ? "" : "s"} so far`;
+}
+
 /** The line to show while the exchange is open — never empty. */
 export function progressLine(progress: Progress): string {
   const { step, call } = progress;
