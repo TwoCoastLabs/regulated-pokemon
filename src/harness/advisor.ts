@@ -251,7 +251,7 @@ function answerPromptBlocks(input: AnswerPromptInput): { text: string; blocks: r
       : [`  ${scopeLine(scope)}`]),
   ]);
 
-  const specific = ["fact", "count", ...(items ? ["comparison"] : []), "ranking", "matchup", ...(items ? ["treats"] : []), "eligibility"];
+  const specific = ["fact", "count", "comparison", "ranking", "matchup", ...(items ? ["treats"] : []), "eligibility"];
   const doorsOffered = routes !== undefined && routes.length > 0;
   let step = 0;
   const next = (): string => `  ${(step += 1)}.`;
@@ -320,9 +320,9 @@ function answerPromptBlocks(input: AnswerPromptInput): { text: string; blocks: r
     ...(items
       ? [
           `  treats: {"kind": "treats", "itemId": "<item-id>", "condition": "<condition>"} — does this item treat that condition; the system derives the certified yes or no, and a certified no is a real answer. A <condition> is one of: ${STATUS_CONDITIONS.join(", ")}.`,
-          '  comparison: {"kind": "comparison", "factId": "<numeric-fact-id>", "leftId": "<id>", "rightId": "<id>"} — one numeric fact on two different entities; the system derives both values, the gap and which leads. One entity\'s value is a fact claim.',
         ]
       : []),
+    '  comparison: {"kind": "comparison", "factId": "<numeric-fact-id>", "leftId": "<id>", "rightId": "<id>"} — one numeric fact on two different entities; the system derives both values, the gap and which leads. "Compare X and Y" is one comparison per numeric fact the question calls for; only numeric facts compare, never prose or lists; one entity\'s value is a fact claim.',
     '  ranking: {"kind": "ranking", "rosterId": "<id>", "basis": "<fact-id>", "direction": "highest"|"lowest"} — the system names the winner; name none.',
     '  matchup: {"kind": "matchup", "subject": {"kind": "species", "entityId": "<id>"} | {"kind": "type", "typeId": "<type>"}, "direction": "weak-to"|"resists"|"immune-to"|"strong-against"} — the system reads the chart.',
     '     Direction follows the question: "what beats X" asks what X is weak-to; "what does X beat" asks what X is strong-against. A species can be weak-to, resist or be immune-to; only a type can be strong-against.',
@@ -577,9 +577,9 @@ function answerPrompt(
     ...(items
       ? [
           '  {"kind": "treats", "itemId": "<item-id>", "condition": "<condition>"}  — does this item treat that condition? The system derives the certified yes or no from the item\'s closed effect set, so state neither; the certified *no* is a real answer. A <condition> must be one of: poison, burn, freeze, sleep, paralysis, confusion.',
-          '  {"kind": "comparison", "factId": "<numeric-fact-id>", "leftId": "<id>", "rightId": "<id>"}  — one certified numeric fact on two DIFFERENT entities; the system derives both values, the gap and which leads, so state none of them. Only numeric facts compare — cost, restores-hp, restores-pp, a base stat, move-power — never prose or lists (what an item does is a fact claim, not a comparison). Never compare a thing with itself: one entity\'s value is a fact claim.',
         ]
       : []),
+    '  {"kind": "comparison", "factId": "<numeric-fact-id>", "leftId": "<id>", "rightId": "<id>"}  — one certified numeric fact on two DIFFERENT entities; the system derives both values, the gap and which leads, so state none of them. "Compare X and Y" is one comparison per numeric fact the question calls for. Only numeric facts compare — a base stat, move-power, a cost — never prose or lists (what something is or does is a fact claim, not a comparison). Never compare a thing with itself: one entity\'s value is a fact claim.',
     '  {"kind": "ranking", "rosterId": "<id>", "basis": "<fact-id>", "direction": "highest"|"lowest"}  — defines a set and an ordering; the system names the winner, so name none',
     '  {"kind": "matchup", "subject": {"kind": "species", "entityId": "<id>"} | {"kind": "type", "typeId": "<type>"}, "direction": "weak-to"|"resists"|"immune-to"|"strong-against"}  — type effectiveness; the system reads the chart and lists the types, so list none. A species can be weak-to, resist or be immune-to; only a type can be strong-against.',
     'Matchup direction follows the QUESTION, not the subject: "what beats X" / "what is good against X" / "how do I counter X" asks what X is weak-to; "what does X beat" / "what is X good against" asks what X is strong-against. Getting this backwards certifies a true chart for the wrong question.',
@@ -681,9 +681,9 @@ function rawPrompt(asks: readonly string[], tools: readonly string[], items = fa
     ...(items
       ? [
           '  {"kind": "treats", "itemId": "<item-id>", "condition": "<condition>"}  — does this item treat that condition? The system derives the certified yes or no from the item\'s closed effect set, so state neither; the certified *no* is a real answer. A <condition> must be one of: poison, burn, freeze, sleep, paralysis, confusion.',
-          '  {"kind": "comparison", "factId": "<numeric-fact-id>", "leftId": "<id>", "rightId": "<id>"}  — one certified numeric fact on two DIFFERENT entities; the system derives both values, the gap and which leads, so state none of them. Only numeric facts compare — cost, restores-hp, restores-pp, a base stat, move-power — never prose or lists (what an item does is a fact claim, not a comparison). Never compare a thing with itself: one entity\'s value is a fact claim.',
         ]
       : []),
+    '  {"kind": "comparison", "factId": "<numeric-fact-id>", "leftId": "<id>", "rightId": "<id>"}  — one certified numeric fact on two DIFFERENT entities; the system derives both values, the gap and which leads, so state none of them. "Compare X and Y" is one comparison per numeric fact the question calls for. Only numeric facts compare — a base stat, move-power, a cost — never prose or lists (what something is or does is a fact claim, not a comparison). Never compare a thing with itself: one entity\'s value is a fact claim.',
     '  {"kind": "ranking", "rosterId": "<id>", "basis": "<fact-id>", "direction": "highest"|"lowest", "selectedEntityId": "<id>"}  — name the winner yourself',
     '  {"kind": "matchup", "subject": {"kind": "species", "entityId": "<id>"} | {"kind": "type", "typeId": "<type>"}, "direction": "weak-to"|"resists"|"immune-to"|"strong-against", "members": ["<type>", ...]}  — list the types yourself; nothing reads the chart for you',
     '  {"kind": "eligibility", "entityId": "<species-id>", "finding": {"eligible": <boolean>, "badgeLevel": <number>, "ruleId": "<id>", "minimumBadgeLevel": <number>}}  — state the verdict and thresholds yourself; nothing derives them for you',

@@ -328,7 +328,8 @@ export interface Presentation {
   /**
    * Which claims the planner may gather into one unit: several memberships
    * over one set as a `listing`, several facts about one entity as a
-   * `profile`. Presentation policy, so it lives here and is versioned with
+   * `profile`, comparison claims over one pair of entities as a `compare`
+   * table. Presentation policy, so it lives here and is versioned with
    * the pack: a record pinned to a pack without it replays one sentence
    * per claim, exactly as it was filed (IA-10). Absent in a pack document
    * means none.
@@ -338,8 +339,8 @@ export interface Presentation {
 }
 
 /** The groupings a pack may approve. */
-export type RenderGrouping = "listing" | "profile";
-export const RENDER_GROUPINGS: readonly RenderGrouping[] = ["listing", "profile"];
+export type RenderGrouping = "listing" | "profile" | "compare";
+export const RENDER_GROUPINGS: readonly RenderGrouping[] = ["listing", "profile", "compare"];
 
 /** One approved sentence, for one unit kind, in every approved locale. */
 export interface SentenceTemplate {

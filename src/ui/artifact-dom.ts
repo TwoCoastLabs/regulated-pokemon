@@ -53,6 +53,17 @@ const ALLOWED_TAGS: ReadonlySet<string> = new Set([
   "dl",
   "dt",
   "dd",
+  // A compare table (pack v5): the reference renderer's table, the names
+  // and column heads in the head row, a row per fact, each cell a marked
+  // span. Found on the live page the night it shipped (2026-09-19): the
+  // walker reads any tag, so the kernel signed the page and the mount
+  // refused it — three layers agree on tags, and only the mount lists them.
+  "table",
+  "thead",
+  "tbody",
+  "tr",
+  "th",
+  "td",
   "strong",
   "em",
   "details",

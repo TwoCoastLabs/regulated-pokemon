@@ -16,7 +16,7 @@ import type { SnapshotDocument } from "../kernel/snapshot-format.js";
 import { AccordError } from "../kernel/violation.js";
 
 export const SNAPSHOT_PATH = resolve(import.meta.dirname, "../../data/snapshots/kanto-red-blue.json");
-export const PACK_PATH = resolve(import.meta.dirname, "../../data/accord-pack/v4.json");
+export const PACK_PATH = resolve(import.meta.dirname, "../../data/accord-pack/v5.json");
 
 let cached: CertifiedRegistry | undefined;
 let cachedPack: AccordPack | undefined;

@@ -511,6 +511,38 @@ body {
   margin: 0;
 }
 
+/* A compare table is one pair's facts side by side: the label plain, each
+   value and the gap a certified chip, the leader's name a chip too, and a
+   tie the catalogue's plain word. Numbers line up as columns should. */
+.exhibit-page [data-unit^="compare:"] table {
+  border-collapse: collapse;
+  margin: 4px 0 0;
+  font-variant-numeric: tabular-nums;
+}
+.exhibit-page [data-unit^="compare:"] th,
+.exhibit-page [data-unit^="compare:"] td {
+  padding: 3px 14px 3px 0;
+  text-align: left;
+  vertical-align: baseline;
+}
+.exhibit-page [data-unit^="compare:"] th {
+  font-weight: 400;
+  color: #55503f;
+  border-bottom: 1px solid var(--certificate-line);
+}
+.exhibit-page [data-unit^="compare:"] td:first-child [data-slot],
+.exhibit-page [data-unit^="compare:"] td [data-copy] {
+  font-weight: 400;
+  border-bottom: none;
+  color: #55503f;
+}
+.exhibit-page [data-unit^="compare:"] td:nth-child(n + 2):nth-child(-n + 4) {
+  text-align: right;
+}
+.exhibit-page [data-unit^="compare:"] th:nth-child(n + 2):nth-child(-n + 4) {
+  text-align: right;
+}
+
 /* A count is an answer to "how many": the cardinality is the number and reads
    as one, and the set beside it is a plain label, not another certified chip. */
 .exhibit-page [data-unit^="count:"] [data-slot="count"] {

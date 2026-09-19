@@ -489,10 +489,15 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
   // reads as a stutter. Value-identical claims fold to their first statement:
   // deterministic, order-preserving, propose-side — the kernel still verifies
   // every survivor exactly as before. Canonical form first, so "Pikachu" and
-  // "pikachu" are the same statement here too.
+  // "pikachu" are the same statement here too. A comparison is the same
+  // statement in either order — the kernel derives both values and which
+  // leads, and which name comes first is presentation — so its key is the
+  // pair sorted: found on the Kanto porch (2026-09-19), the strong model
+  // stated all six stats as "Venusaur vs Ivysaur" and then again as
+  // "Ivysaur vs Venusaur", twelve claims for six comparisons.
   const seen = new Set<string>();
   const deduped = canonical.filter((claim) => {
-    const key = JSON.stringify(claim);
+    const key = claim.kind === "comparison" ? JSON.stringify({ kind: claim.kind, factId: claim.factId, pair: [claim.leftId, claim.rightId].sort() }) : JSON.stringify(claim);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;

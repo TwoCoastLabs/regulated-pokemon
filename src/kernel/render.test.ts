@@ -728,6 +728,144 @@ describe("a profile is one card of labelled values, not one sentence per fact (d
   });
 });
 
+describe("a compare table is one pair's facts side by side, not two cards (dogfood 2026-09-19: 'compare Ivysaur and Venusaur' as two profiles)", () => {
+  const PAIR: Claim[] = [
+    { kind: "comparison", factId: "base-hp", leftId: "ivysaur", rightId: "venusaur" },
+    { kind: "comparison", factId: "base-attack", leftId: "ivysaur", rightId: "venusaur" },
+  ];
+  function planned(context: ManifestContext, claims: readonly Claim[]) {
+    const compiled = compileManifest(context, { transactionId: "txn-render", claims, rosters: [] });
+    if (!compiled.ok) throw new Error(compiled.violations.map(denialCode).join(", "));
+    const plan = planRender(context, compiled.value);
+    if (!plan.ok) throw new Error(plan.violations.map(denialCode).join(", "));
+    return { manifest: compiled.value, plan: plan.value };
+  }
+  function find(node: DomNode, test: (element: DomElement) => boolean): DomElement[] {
+    if (node.kind === "text") return [];
+    return [...(test(node) ? [node] : []), ...node.children.flatMap((child) => find(child, test))];
+  }
+  /** Rewrite one named slot's text and nothing else — a name that also sits in the header is left alone. */
+  function rewriteSlot(node: DomElement, name: string, to: string): DomElement {
+    const walk = (child: DomNode): DomNode =>
+      child.kind === "text"
+        ? child
+        : child.attributes["data-slot"] === name
+          ? { ...child, children: [text(to)] }
+          : { ...child, children: child.children.map(walk) };
+    return walk(node) as DomElement;
+  }
+
+  it("gathers comparisons over one pair into one unit — both names, then a label, both values, the gap and the leader per fact, the arithmetic the kernel's", () => {
+    const { plan } = planned(world, [...PAIR, SPEED]);
+    const table = plan.units.find((unit) => unit.kind === "compare");
+    expect(table?.id).toBe("compare:ivysaur:venusaur");
+    expect(table?.sentence).toBeUndefined();
+    expect(table?.slots.map((slot) => [slot.name, slot.expected])).toEqual([
+      ["left", "Ivysaur"],
+      ["right", "Venusaur"],
+      ["fact:base-hp", "HP"],
+      ["left:base-hp", "60"],
+      ["right:base-hp", "80"],
+      ["gap:base-hp", "20"],
+      ["leader:base-hp", "Venusaur"],
+      ["fact:base-attack", "Attack"],
+      ["left:base-attack", "62"],
+      ["right:base-attack", "82"],
+      ["gap:base-attack", "20"],
+      ["leader:base-attack", "Venusaur"],
+    ]);
+    // No comparison unit survives on its own; Pikachu's fact keeps its sentence.
+    expect(plan.units.filter((unit) => unit.kind === "comparison")).toEqual([]);
+    expect(plan.units.filter((unit) => unit.kind === "fact").map((unit) => unit.id)).toEqual(["fact:pikachu:base-speed"]);
+  });
+
+  it("a tie has no leader slot, so the page's cell can only hold the catalogued word; a lone comparison is a one-row table", () => {
+    const { manifest, plan } = planned(world, [{ kind: "comparison", factId: "base-hp", leftId: "ivysaur", rightId: "raichu" }]);
+    const table = plan.units.find((unit) => unit.kind === "compare");
+    expect(table?.slots.map((slot) => [slot.name, slot.expected])).toEqual([
+      ["left", "Ivysaur"],
+      ["right", "Raichu"],
+      ["fact:base-hp", "HP"],
+      ["left:base-hp", "60"],
+      ["right:base-hp", "60"],
+      ["gap:base-hp", "0"],
+    ]);
+    const artifact = renderAnswer(world.pack, plan);
+    const attested = attestRender(world, manifest, artifact, RENDERED_AT);
+    expect(attested.ok, JSON.stringify(!attested.ok && attested.violations)).toBe(true);
+    const rows = find(artifact, (node) => node.tag === "tr");
+    expect(rows).toHaveLength(2);
+    const lastCell = find(rows[1]!, (node) => node.tag === "td").at(-1)!;
+    expect(find(lastCell, (node) => node.attributes["data-copy"] === "compare.tie")).toHaveLength(1);
+  });
+
+  it("signs the reference renderer's table — the heads are the two names and catalogued words — and denies a gap or a leader rewritten", () => {
+    const { manifest, plan } = planned(world, PAIR);
+    const artifact = renderAnswer(world.pack, plan);
+    const attested = attestRender(world, manifest, artifact, RENDERED_AT);
+    expect(attested.ok, JSON.stringify(!attested.ok && attested.violations)).toBe(true);
+    const heads = find(artifact, (node) => node.tag === "th");
+    expect(heads.map((head) => head.children[0])).toMatchObject([
+      undefined,
+      { attributes: { "data-slot": "left" } },
+      { attributes: { "data-slot": "right" } },
+      { attributes: { "data-copy": "compare.gap" } },
+      { attributes: { "data-copy": "compare.leads" } },
+    ]);
+    const affidavit = attested.ok ? attested.value : { transactionId: "txn-render", artifactDigest: "sha256:x", renderedAt: RENDERED_AT, units: [] };
+    // The first "20" on the page is HP's gap; a subtraction the page got wrong is a slot mismatch by name.
+    const narrowed = rewriteText(artifact, "20", "2");
+    const gapDenial = verifyRender(world, manifest, narrowed, affidavit).violations.find((entry) => entry.rule === "slot-value-mismatch");
+    expect(gapDenial?.message).toContain('"gap:base-hp"');
+    // A leader's name is a slot like any value: the crown cannot move.
+    const crowned = rewriteSlot(artifact, "leader:base-hp", "Ivysaur");
+    const crownDenial = verifyRender(world, manifest, crowned, affidavit).violations.find((entry) => entry.rule === "slot-value-mismatch");
+    expect(crownDenial?.message).toContain('"leader:base-hp"');
+    const relabelled = rewriteText(artifact, "HP", "Hit points");
+    expect(verifyRender(world, manifest, relabelled, affidavit).violations.map(denialCode)).toContain("IA-6/slot-value-mismatch");
+  });
+
+  it("the pair is unordered: a comparison stated the other way round joins the table in its orientation, and a fact stated in both orders is one row (porch, 2026-09-19: six stats stated twice)", () => {
+    const { manifest, plan } = planned(world, [
+      { kind: "comparison", factId: "base-hp", leftId: "venusaur", rightId: "ivysaur" },
+      { kind: "comparison", factId: "base-attack", leftId: "ivysaur", rightId: "venusaur" },
+      { kind: "comparison", factId: "base-hp", leftId: "ivysaur", rightId: "venusaur" },
+    ]);
+    expect(plan.units.filter((unit) => unit.kind === "compare" || unit.kind === "comparison").map((unit) => unit.id)).toEqual(["compare:venusaur:ivysaur"]);
+    const table = plan.units[0]!;
+    expect(table.slots.map((slot) => [slot.name, slot.expected])).toEqual([
+      ["left", "Venusaur"],
+      ["right", "Ivysaur"],
+      ["fact:base-hp", "HP"],
+      ["left:base-hp", "80"],
+      ["right:base-hp", "60"],
+      ["gap:base-hp", "20"],
+      ["leader:base-hp", "Venusaur"],
+      // Stated as Ivysaur-first; shown by entity, so Venusaur's 82 stays under Venusaur.
+      ["fact:base-attack", "Attack"],
+      ["left:base-attack", "82"],
+      ["right:base-attack", "62"],
+      ["gap:base-attack", "20"],
+      ["leader:base-attack", "Venusaur"],
+    ]);
+    const attested = attestRender(world, manifest, renderAnswer(world.pack, plan), RENDERED_AT);
+    expect(attested.ok, JSON.stringify(!attested.ok && attested.violations)).toBe(true);
+  });
+
+  it("is pack policy: a pack without the grouping presents each comparison as its own unit, as its filed records replay", () => {
+    const ungrouped: ManifestContext = {
+      ...world,
+      pack: { ...world.pack, presentation: { ...world.pack.presentation, grouping: ["listing", "profile"] } },
+    };
+    const { plan } = planned(ungrouped, PAIR);
+    expect(plan.units.filter((unit) => unit.kind === "compare")).toEqual([]);
+    expect(plan.units.filter((unit) => unit.kind === "comparison").map((unit) => unit.id)).toEqual([
+      "comparison:base-hp:ivysaur:venusaur",
+      "comparison:base-attack:ivysaur:venusaur",
+    ]);
+  });
+});
+
 describe("the suggestion register (R3b step 4): the model's words, attributed and held to the record", () => {
   const SUGGESTIONS = ["What is it weak to?", "How does it evolve?"];
 

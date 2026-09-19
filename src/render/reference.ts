@@ -56,6 +56,9 @@ const LEAD_IN: Record<RenderUnitKind, string | undefined> = {
   // ugly and safe — the pack that owns them is where their words live.
   treats: undefined,
   comparison: undefined,
+  // A compare table is comparisons over one pair, introduced once and laid
+  // out as rows — see `compareTable`.
+  compare: "lead-in.compare",
   selection: "lead-in.selection",
   matchup: "lead-in.matchup",
   eligibility: "lead-in.eligibility",
@@ -108,7 +111,9 @@ function card(pack: AccordPack, plan: RenderPlan, unit: RenderUnit, disclosures:
     ...block(pack, plan, unit),
     ...(unit.kind === "profile"
       ? profileCard(pack, plan, unit)
-      : unit.sentence !== undefined
+      : unit.kind === "compare"
+        ? compareTable(pack, plan, unit)
+        : unit.sentence !== undefined
         ? [sentence(pack, plan, unit)]
         : unit.slots.length === 0
           ? []
@@ -173,6 +178,54 @@ function profileCard(pack: AccordPack, plan: RenderPlan, unit: RenderUnit): DomN
         ];
       }),
     ),
+  ];
+}
+
+/**
+ * A compare table: the lead-in on one line, then a table whose header names
+ * the two entities (their slots) and the two derived columns (catalogued
+ * words), and whose rows are one fact each — the label, both values, the
+ * gap, and the leader's name or, for a tie, the catalogued "equal". Layout
+ * is the renderer's; every word in it is a catalogued string or a bound
+ * slot, and a tie's cell can hold nothing else because the plan gives it no
+ * slot.
+ */
+function compareTable(pack: AccordPack, plan: RenderPlan, unit: RenderUnit): DomNode[] {
+  const byName = new Map(unit.slots.map((slot) => [slot.name, slot]));
+  const mark = (slot: RenderSlot): DomElement => element("span", { [SLOT_ATTRIBUTE]: slot.name }, [text(slot.expected)]);
+  const cell = (name: string): DomElement => {
+    const slot = byName.get(name);
+    return element("td", {}, slot === undefined ? [] : [mark(slot)]);
+  };
+  const facts = unit.slots.filter((slot) => slot.name.startsWith("fact:")).map((slot) => slot.name.slice("fact:".length));
+  const left = byName.get("left");
+  const right = byName.get("right");
+  return [
+    element("p", {}, leadIn(pack, plan, unit)),
+    element("table", {}, [
+      element("thead", {}, [
+        element("tr", {}, [
+          element("th", {}, []),
+          element("th", {}, left === undefined ? [] : [mark(left)]),
+          element("th", {}, right === undefined ? [] : [mark(right)]),
+          element("th", {}, [copy(pack, plan, "compare.gap")]),
+          element("th", {}, [copy(pack, plan, "compare.leads")]),
+        ]),
+      ]),
+      element(
+        "tbody",
+        {},
+        facts.map((factId) =>
+          element("tr", {}, [
+            cell(`fact:${factId}`),
+            cell(`left:${factId}`),
+            cell(`right:${factId}`),
+            cell(`gap:${factId}`),
+            byName.has(`leader:${factId}`) ? cell(`leader:${factId}`) : element("td", {}, [copy(pack, plan, "compare.tie")]),
+          ]),
+        ),
+      ),
+    ]),
   ];
 }
 
