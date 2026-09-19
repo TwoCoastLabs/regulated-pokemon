@@ -201,6 +201,13 @@ name defines it in plain words the first time.
 
 - Keys live only in `.env` (gitignored; template in `.env.example`).
   `OPENROUTER_API_KEY` is the one required for live runs.
+- `OPENROUTER_UPSTREAM` (optional) is the routing preference among a
+  model's hosts — `throughput`, `latency`, `price`, and/or
+  `ignore=Host,Host`. An operator setting, not model tuning: the same model
+  id ran at 3 tok/s and 33 tok/s by host within a day (findings §27–§28).
+  Every live tool reads it and every artifact and trace records it; the
+  live page sends its own choice (fastest host by default) and the relay
+  forwards only a validated one.
 - Never place a key in a tracked file, a commit message, a log paste, or an
   error report. If a key leaks into history, rotate it — do not rewrite.
 

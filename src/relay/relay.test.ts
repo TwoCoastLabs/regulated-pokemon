@@ -132,6 +132,21 @@ describe("the built upstream request", () => {
     expect(oversized.status).toBe(400);
   });
 
+  it("forwards a validated upstream preference and refuses any other shape", async () => {
+    // The page's routing choice rides in the body (openrouter.ts,
+    // UpstreamPreference); the relay reads it to its shape and rebuilds it,
+    // as it does every field — a sort by name and short host names only.
+    const wire = upstream(() => ({ status: 200, body: priced(0.001) }));
+    const relay = createRelay({ config: config(), fetch: wire.fetch, now: clock().now });
+    expect((await relay(chat({}, { provider: { sort: "throughput", ignore: ["Novita"], order: ["smuggled"], allow_fallbacks: false } }))).status).toBe(200);
+    const sent = JSON.parse(wire.seen[0]!.init.body) as Record<string, unknown>;
+    expect(sent.provider).toEqual({ sort: "throughput", ignore: ["Novita"], allow_fallbacks: true });
+    expect((await relay(chat({}, { provider: { sort: "fastest" } }))).status).toBe(400);
+    expect((await relay(chat({}, { provider: { ignore: ["a".repeat(41)] } }))).status).toBe(400);
+    // From another address: the fourth request in one window is rate-limited, not read.
+    expect((await relay(chat({ ip: "203.0.113.8" }, { provider: "throughput" }))).status).toBe(400);
+  });
+
   it("answers only its two doors", async () => {
     const relay = createRelay({ config: config(), fetch: upstream(() => ({ status: 200, body: "" })).fetch, now: clock().now });
     expect((await relay({ method: "POST", path: "/api/relay/other", ip: "x", body: "" })).status).toBe(404);

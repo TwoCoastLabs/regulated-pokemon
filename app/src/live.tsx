@@ -32,7 +32,7 @@ import {
   DEFAULT_WEAK_MODEL,
   HONEST_PERSONA,
 } from "../../src/harness/models.js";
-import { OpenRouterProvider } from "../../src/harness/openrouter.js";
+import { describeUpstreamPreference, OpenRouterProvider } from "../../src/harness/openrouter.js";
 import type { ModelProvider } from "../../src/harness/provider.js";
 import type { DomElement } from "../../src/kernel/dom.js";
 import type { Transaction } from "../../src/kernel/transaction.js";
@@ -55,7 +55,7 @@ import { adaptArtifact } from "../../src/ui/artifact-dom.js";
 import { plainCandidate, plainRefusalLead, plainStage, plainViolation } from "../../src/ui/plain.js";
 import { plainDuration, progressLine, progressMeter } from "../../src/ui/progress.js";
 import { claimSource } from "./world.js";
-import { callsOf, exchangeAt, exchangeWorkMs, type SentBack, sentBack, trailsOfSession, withCalls } from "../../src/ui/trail.js";
+import { callsOf, exchangeAt, exchangeWorkMs, type SentBack, sentBack, trailsOfSession, turnTiming, withCalls } from "../../src/ui/trail.js";
 import { violationView } from "../../src/ui/viewmodel.js";
 import { browserFactory } from "./mount.js";
 import { DoorLegend } from "./doors.js";
@@ -84,6 +84,8 @@ interface LiveSetup {
   model: string;
   persona: Persona;
   mode: KeyMode;
+  /** How the calls are routed among the model's hosts, in plain words. */
+  upstream: string;
   /** The tap on the provider seam — always recording, in tab memory only.
    * The dev view decides whether it is *shown* (and mirrored), never whether
    * it exists, so a bug found late is still a bug with a trace. */
@@ -289,11 +291,31 @@ function Took(props: { exchange: ExchangeLedger | undefined; calls: readonly Mod
   // A turn that called no model took no time worth a line: "took 0.0s"
   // under a hello read as a glitch (dogfood, 2026-09-20).
   if (made.calls.length === 0) return null;
+  // Where the time went — the model's hosts or the League's checks — so a
+  // long wait is attributed and not left to look like the checks (§27: the
+  // same model id at 3 tok/s and 33 tok/s by route). A slow host is named.
+  const timing = turnTiming(props.exchange, props.calls);
+  const hosts = timing === undefined || timing.hosts.length === 0 ? "" : ` (${timing.hosts.join(", ")})`;
   return (
-    <p class="fine live-took">
-      took {plainDuration(ms)}
-      {made.calls.length > 0 && ` · ${made.calls.length} model call${made.calls.length === 1 ? "" : "s"} · $${made.costUsd.toFixed(4)}`}
-    </p>
+    <div class="live-took">
+      <p class="fine">
+        took {plainDuration(ms)}
+        {` · ${made.calls.length} model call${made.calls.length === 1 ? "" : "s"} · $${made.costUsd.toFixed(4)}`}
+      </p>
+      {timing !== undefined && timing.modelMs > 0 && (
+        <p class="fine">
+          {plainDuration(timing.modelMs)} of it was the model's host{hosts}; the League's checks took{" "}
+          {timing.checksMs < 1000 ? "under a second" : plainDuration(timing.checksMs)}.
+        </p>
+      )}
+      {timing?.slow !== undefined && (
+        <p class="fine live-slow-host">
+          Slow host: {timing.slow.host ?? "the model's host"} served call {timing.slow.seq} in {plainDuration(timing.slow.latencyMs)}
+          {timing.slow.tokensPerSec === undefined ? "" : ` at ${timing.slow.tokensPerSec.toFixed(0)} tokens a second`}. That is the route to
+          the model, not this page — the same model is served faster by other hosts, and the League's checks took what they took.
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -468,6 +490,10 @@ export function Live() {
   const [key, setKey] = useState("");
   const [model, setModel] = useState(DEFAULT_STRONG_MODEL);
   const [persona, setPersona] = useState<Persona>("honest");
+  // Which of the model's hosts to route to (openrouter.ts, UpstreamPreference).
+  // The fastest host by default: the wait a trainer feels is the host, and
+  // the gateway's own default picks the cheapest one (findings §27–§28).
+  const [routing, setRouting] = useState<"throughput" | "default">("throughput");
   const [state, setState] = useState<SessionState>(startSession);
   const [draft, setDraft] = useState("");
   // The trainer's profile panel (epic #145, R2): typed scope set once, recorded
@@ -568,6 +594,7 @@ export function Live() {
       model: setup.model,
       mode: setup.mode,
       persona: setup.persona,
+      upstream: setup.upstream,
       snapshotId: world.registry.snapshot.id,
       packId: world.pack.id,
     };
@@ -587,6 +614,7 @@ export function Live() {
         system: persona === "honest" ? HONEST_PERSONA : ADVERSARY_PERSONA,
         structured: true,
         onProgress: (progress) => setCallChars(progress.chars),
+        ...(routing === "throughput" ? { upstream: { sort: "throughput" as const } } : {}),
       });
       const trace = createDevTrace({
         now: clock,
@@ -602,7 +630,7 @@ export function Live() {
           if (MIRROR_TO_DEV_SINK) mirrorToDevSink({ type: "model-call", ...call });
         },
       });
-      setSetup({ provider, model, persona, mode, trace });
+      setSetup({ provider, model, persona, mode, trace, upstream: describeUpstreamPreference(routing === "throughput" ? { sort: "throughput" } : undefined) });
       setTrouble(null);
     } catch (error) {
       setTrouble(error instanceof Error ? error.message : String(error));
@@ -683,6 +711,17 @@ export function Live() {
                   </select>
                 </label>
               )}
+              <label>
+                Route to
+                <select value={routing} onInput={(event) => setRouting(event.currentTarget.value === "default" ? "default" : "throughput")}>
+                  <option value="throughput">the model's fastest host</option>
+                  <option value="default">the gateway's default host</option>
+                </select>
+              </label>
+              <p class="fine">
+                One model id is served by several hosts, and the wait you feel is mostly the host, not the League's
+                checks. The gateway's own default picks by price, which is how the slow host gets picked.
+              </p>
               {league ? (
                 <>
                   <p>
@@ -798,6 +837,7 @@ export function Live() {
       <div class="live-meta">
         <span class="mono">{setup.model}</span>
         <span class="live-persona">{setup.persona === "honest" ? "plays fair" : "cheats — watch the League"}</span>
+        <span title="which of the model's hosts the calls are routed to — an operator setting; the same model runs at very different speeds by host">routed {setup.upstream}</span>
         <span title={setup.mode === "league" ? "calls go through this site's relay; the key never enters your browser" : "your key, in this tab's memory only"}>
           {setup.mode === "league" ? "on the League's key" : "on your key"}
         </span>
@@ -1017,6 +1057,11 @@ export function Live() {
               {progressLine({ ...(progress === null ? {} : { step: progress.step }), ...(callInFlight === null ? {} : { call: callInFlight }) })}
               {callInFlight !== null && callStartedMs !== null && (
                 <span class="live-meter">{progressMeter({ elapsedMs: nowMs - callStartedMs, chars: callChars })}</span>
+              )}
+              {/* A long wait on one call is the model's host, and the page
+                  says so while it is happening — the checks have not run yet. */}
+              {callInFlight !== null && callStartedMs !== null && nowMs - callStartedMs >= 8_000 && (
+                <span class="live-meter"> — that wait is the model's host, not the League's checks</span>
               )}
             </p>
           )}

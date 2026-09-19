@@ -29,7 +29,7 @@ import { resolve } from "node:path";
 import { buildArtifact, fileArtifact, type WriteFile } from "./artifact.js";
 import { harnessWorld, type HarnessModel, SCENARIOS } from "./corpus.js";
 import { ADVERSARY_PERSONA, DEFAULT_STRONG_MODEL, DEFAULT_WEAK_MODEL, HONEST_PERSONA } from "./models.js";
-import { OpenRouterProvider } from "./openrouter.js";
+import { OpenRouterProvider, parseUpstreamPreference, type UpstreamPreference } from "./openrouter.js";
 import type { ModelProvider } from "./provider.js";
 import { type HarnessReport, runModels } from "./report.js";
 import { MAX_SCOPE_TURNS } from "./run.js";
@@ -41,6 +41,9 @@ export { ADVERSARY_PERSONA, DEFAULT_STRONG_MODEL, DEFAULT_WEAK_MODEL, HONEST_PER
 export type Env = Record<string, string | undefined>;
 
 export interface LiveConfig {
+  /** The upstream routing preference, from OPENROUTER_UPSTREAM; absent means
+   * the gateway's default. Recorded on every artifact. */
+  upstream?: UpstreamPreference;
   apiKey: string;
   strong: string;
   weak: string;
@@ -93,6 +96,12 @@ export function liveConfig(env: Env, structured = true): ConfigResult {
     };
   }
   const strong = env.HARNESS_STRONG_MODEL ?? DEFAULT_STRONG_MODEL;
+  let upstream: UpstreamPreference | undefined;
+  try {
+    upstream = parseUpstreamPreference(env.OPENROUTER_UPSTREAM);
+  } catch (cause) {
+    return { ok: false, reason: (cause as Error).message };
+  }
   return {
     ok: true,
     config: {
@@ -103,6 +112,7 @@ export function liveConfig(env: Env, structured = true): ConfigResult {
       // The adversary is the capable model by default: a weak attacker that
       // fails to fabricate would prove nothing about the gate.
       adversary: env.HARNESS_ADVERSARY_MODEL ?? strong,
+      ...(upstream === undefined ? {} : { upstream }),
     },
   };
 }
@@ -115,7 +125,7 @@ export type ProviderFactory = (config: LiveConfig) => readonly HarnessModel[];
  * The enforcement legs still apply — those are not predictions. */
 export const liveModels: ProviderFactory = (config) => {
   const live = (id: string, model: string, system: string): ModelProvider =>
-    new OpenRouterProvider({ id, model, system, apiKey: config.apiKey, structured: config.structured });
+    new OpenRouterProvider({ id, model, system, apiKey: config.apiKey, structured: config.structured, ...(config.upstream === undefined ? {} : { upstream: config.upstream }) });
 
   return [
     { provider: live("live:strong", config.strong, HONEST_PERSONA), role: "strong", slug: config.strong },

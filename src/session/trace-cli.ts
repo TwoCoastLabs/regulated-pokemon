@@ -28,7 +28,7 @@ import { centerWorld, demoWorld } from "../demo/files.js";
 import { loadEnv } from "../harness/live.js";
 import { precedentStorePath, readPrecedentStore } from "../memory/files.js";
 import { ADVERSARY_PERSONA, DEFAULT_STRONG_MODEL, DEFAULT_WEAK_MODEL, HONEST_PERSONA } from "../harness/models.js";
-import { OpenRouterProvider } from "../harness/openrouter.js";
+import { describeUpstreamPreference, OpenRouterProvider, parseUpstreamPreference } from "../harness/openrouter.js";
 import { createDevTrace } from "./devtrace.js";
 import { parseTraceArgs, runTrace } from "./trace.js";
 
@@ -42,12 +42,16 @@ if (apiKey === "") {
   process.exit(2);
 }
 
+// The operator's routing preference, from .env — the same setting the banks
+// read, so a probe here reads what a leg would run under.
+const upstream = parseUpstreamPreference(env.OPENROUTER_UPSTREAM);
 const provider = new OpenRouterProvider({
   id: `trace:${model}`,
   model,
   apiKey,
   system: args.adversarial ? ADVERSARY_PERSONA : HONEST_PERSONA,
   structured: true,
+  ...(upstream === undefined ? {} : { upstream }),
 });
 
 /** Strictly increasing, as the page's clock is: the kernel orders moments. */
@@ -70,7 +74,7 @@ const world = args.center ? centerWorld() : demoWorld();
 // stops the tracer by name rather than tracing against half a memory.
 const store = args.memory ? readPrecedentStore(args.precedentStore ?? precedentStorePath(world.pack.id), world) : undefined;
 console.log(
-  `[config] model ${model}, world ${world.registry.snapshot.id} + ${world.pack.id}, grounding ${args.grounding}, grammar ${args.gatedGrammar ? "gated" : "loose"}, repair ${args.repair ? "on" : "off"}, feedback ${args.feedback ? "on" : "off"}, clarify ${args.clarify ? "on" : "off"}, suggest ${args.suggest ? "on" : "off"}, memory ${store === undefined ? (args.memory ? "off (no store shipped)" : "off") : `on (${store.precedents.length} precedents)`}, prompt ${args.prompt}, refused nomination ${args.refusalFeedback ? "fed back" : "withdrawn in silence"}, listing door ${args.offeredDoors ? "offered only when the driver would accept it" : "offered on every first call"}, lesson door ${args.lessonDoor ? `only the lessons the ask is about${args.lessonClassifier ? ", the model asked when none match" : ""}` : "the whole catalogue"}${args.adversarial ? ", adversarial" : ""}`,
+  `[config] model ${model} routed ${describeUpstreamPreference(upstream)}, world ${world.registry.snapshot.id} + ${world.pack.id}, grounding ${args.grounding}, grammar ${args.gatedGrammar ? "gated" : "loose"}, repair ${args.repair ? "on" : "off"}, feedback ${args.feedback ? "on" : "off"}, clarify ${args.clarify ? "on" : "off"}, suggest ${args.suggest ? "on" : "off"}, memory ${store === undefined ? (args.memory ? "off (no store shipped)" : "off") : `on (${store.precedents.length} precedents)`}, prompt ${args.prompt}, refused nomination ${args.refusalFeedback ? "fed back" : "withdrawn in silence"}, listing door ${args.offeredDoors ? "offered only when the driver would accept it" : "offered on every first call"}, lesson door ${args.lessonDoor ? `only the lessons the ask is about${args.lessonClassifier ? ", the model asked when none match" : ""}` : "the whole catalogue"}${args.adversarial ? ", adversarial" : ""}`,
 );
 
 // Every call through the same tap the live page's dev view uses, so the

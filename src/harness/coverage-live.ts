@@ -54,7 +54,7 @@ import { ADVERSARIAL_BANK_PATH, readDialogues } from "./dialogues.js";
 import { centerWorld, demoWorld } from "../demo/files.js";
 import type { Env } from "./live.js";
 import { DEFAULT_STRONG_MODEL, DEFAULT_WEAK_MODEL, HONEST_PERSONA, RAW_PERSONA } from "./models.js";
-import { OpenRouterProvider } from "./openrouter.js";
+import { describeUpstreamPreference, OpenRouterProvider, parseUpstreamPreference } from "./openrouter.js";
 import { type Disposition, DISPOSITIONS } from "./playability.js";
 import type { ModelProvider } from "./provider.js";
 
@@ -590,6 +590,7 @@ async function runDialogueMode(args: CoverageArgs, options: CoverageOptions, mod
   }
 
   const apiKey = (options.env.OPENROUTER_API_KEY ?? "").trim();
+  const upstream = parseUpstreamPreference(options.env.OPENROUTER_UPSTREAM);
   if (apiKey === "") {
     return {
       lines: ["no OPENROUTER_API_KEY in the environment or .env — a live dialogue run needs a real model"],
@@ -599,7 +600,7 @@ async function runDialogueMode(args: CoverageArgs, options: CoverageOptions, mod
   const makeProvider =
     options.makeProvider ??
     (({ model: slug, apiKey: key }: { model: string; apiKey: string }): ModelProvider =>
-      new OpenRouterProvider({ id: `dialogue:${slug}`, model: slug, apiKey: key, system: HONEST_PERSONA, structured: true }));
+      new OpenRouterProvider({ id: `dialogue:${slug}`, model: slug, apiKey: key, system: HONEST_PERSONA, structured: true, ...(upstream === undefined ? {} : { upstream }) }));
   const provider = makeProvider({ model, apiKey });
   const world = args.center ? centerWorld() : demoWorld();
 
@@ -686,6 +687,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
   }
 
   const apiKey = (options.env.OPENROUTER_API_KEY ?? "").trim();
+  const upstream = parseUpstreamPreference(options.env.OPENROUTER_UPSTREAM);
   if (apiKey === "") {
     return {
       lines: ["no OPENROUTER_API_KEY in the environment or .env — a live coverage run needs a real model"],
@@ -695,7 +697,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
   const makeProvider =
     options.makeProvider ??
     (({ model: slug, apiKey: key, system, structured }: { model: string; apiKey: string; system?: string; structured?: boolean }): ModelProvider =>
-      new OpenRouterProvider({ id: `coverage:${slug}`, model: slug, apiKey: key, system: system ?? HONEST_PERSONA, structured: structured ?? true }));
+      new OpenRouterProvider({ id: `coverage:${slug}`, model: slug, apiKey: key, system: system ?? HONEST_PERSONA, structured: structured ?? true, ...(upstream === undefined ? {} : { upstream }) }));
   const provider = makeProvider({ model, apiKey });
   const world = args.center ? centerWorld() : demoWorld();
 
@@ -805,6 +807,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
     // Recorded either way since the door became the default (findings §25,
     // §27): an artifact that says nothing is one filed before the offer existed.
     offeredDoors: args.offeredDoors,
+    ...(upstream === undefined ? {} : { upstream: describeUpstreamPreference(upstream) }),
     ...(args.lessonDoor ? { lessonDoor: true } : {}),
     ...(args.lessonClassifier ? { lessonClassifier: true } : {}),
     repetitions: args.repetitions,

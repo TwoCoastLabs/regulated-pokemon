@@ -137,6 +137,9 @@ export interface DevTraceMeta {
   mode: string;
   /** "honest" or "adversarial" — which persona the Advisor was given. */
   persona: string;
+  /** How the calls were routed among the model's hosts, in plain words
+   * (openrouter.ts, describeUpstreamPreference); absent in older traces. */
+  upstream?: string;
   snapshotId: string;
   packId: string;
 }
