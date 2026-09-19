@@ -714,10 +714,14 @@ export function Live() {
               <label>
                 Route to
                 <select value={routing} onInput={(event) => setRouting(event.currentTarget.value === "default" ? "default" : "throughput")}>
-                  <option value="throughput">the model's fastest host — the wait you feel is the host, not the checks</option>
-                  <option value="default">the gateway's default host (usually the cheapest)</option>
+                  <option value="throughput">the model's fastest host</option>
+                  <option value="default">the gateway's default host</option>
                 </select>
               </label>
+              <p class="fine">
+                One model id is served by several hosts, and the wait you feel is mostly the host, not the League's
+                checks. The gateway's own default picks by price, which is how the slow host gets picked.
+              </p>
               {league ? (
                 <>
                   <p>
