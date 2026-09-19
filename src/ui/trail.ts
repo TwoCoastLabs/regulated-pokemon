@@ -354,6 +354,57 @@ export function sentBack(ledger: ExchangeLedger): readonly SentBack[] {
 }
 
 /**
+ * How long the Advisor took over an exchange, from the ledger's own clock:
+ * the time the driver was at work, which is every gap between one step and
+ * the next except those that end on the trainer's lane. Every entry into
+ * the driver begins with a trainer step (the words said, a card confirmed,
+ * a pick made), so a gap ending there is the trainer's — the minutes spent
+ * choosing an answer to the League's question are not the Advisor's time.
+ * Read from the record, so the run ledger can say it of a filed run as the
+ * live page says it of an exchange just settled; undefined for an exchange
+ * with no steps or a clock that ran backwards.
+ */
+export function exchangeWorkMs(ledger: ExchangeLedger): number | undefined {
+  if (ledger.steps.length === 0) return undefined;
+  let total = 0;
+  for (let i = 1; i < ledger.steps.length; i++) {
+    const previous = ledger.steps[i - 1]!;
+    const current = ledger.steps[i]!;
+    if (current.lane === "trainer") continue;
+    const gap = Date.parse(current.at) - Date.parse(previous.at);
+    if (!Number.isFinite(gap) || gap < 0) return undefined;
+    total += gap;
+  }
+  return total;
+}
+
+/**
+ * The model calls one exchange made: those that began within its ledger's
+ * span, by the same clock `withCalls` places them with — the trainer's words
+ * are recorded before the first call begins, the filing after the last
+ * returns. With the sum of their cost, so the chat can say what a turn cost
+ * beside what the session has cost so far.
+ */
+export function callsOf(ledger: ExchangeLedger, calls: readonly ModelCallTrace[]): { calls: readonly ModelCallTrace[]; costUsd: number } {
+  const first = ledger.steps[0];
+  const last = ledger.steps[ledger.steps.length - 1];
+  if (first === undefined || last === undefined) return { calls: [], costUsd: 0 };
+  const mine = calls.filter((call) => first.at <= call.at && call.at <= last.at);
+  return { calls: mine, costUsd: mine.reduce((sum, call) => sum + (call.usage?.costUsd ?? 0), 0) };
+}
+
+/** The closed exchange a moment falls within — the way a note, which
+ * carries only its time, finds the exchange that wrote it. */
+export function exchangeAt(exchanges: readonly ExchangeLedger[], at: string): ExchangeLedger | undefined {
+  const moment = Date.parse(at);
+  return exchanges.find((ledger) => {
+    const first = ledger.steps[0];
+    const last = ledger.steps[ledger.steps.length - 1];
+    return first !== undefined && last !== undefined && Date.parse(first.at) <= moment && moment <= Date.parse(last.at);
+  });
+}
+
+/**
  * Attach the dev view's model calls to the trails by time: each call lands
  * under the first step recorded at or after the moment the call began.
  * Calls that began after the last recorded step (one in flight, one that

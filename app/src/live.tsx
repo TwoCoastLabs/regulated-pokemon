@@ -50,12 +50,12 @@ import {
   startSession,
 } from "../../src/session/session.js";
 import { agentReport, createDevTrace, type DevTrace, type DevTraceMeta, type ModelCallStart, type ModelCallTrace } from "../../src/session/devtrace.js";
-import type { DriverStep } from "../../src/session/ledger.js";
+import { type DriverStep, type ExchangeLedger, ledgerOf } from "../../src/session/ledger.js";
 import { adaptArtifact } from "../../src/ui/artifact-dom.js";
 import { plainCandidate, plainRefusalLead, plainStage, plainViolation } from "../../src/ui/plain.js";
-import { progressLine, progressMeter } from "../../src/ui/progress.js";
+import { plainDuration, progressLine, progressMeter } from "../../src/ui/progress.js";
 import { claimSource } from "./world.js";
-import { type SentBack, sentBack, trailsOfSession, withCalls } from "../../src/ui/trail.js";
+import { callsOf, exchangeAt, exchangeWorkMs, type SentBack, sentBack, trailsOfSession, withCalls } from "../../src/ui/trail.js";
 import { violationView } from "../../src/ui/viewmodel.js";
 import { browserFactory } from "./mount.js";
 import { DoorLegend } from "./doors.js";
@@ -273,10 +273,33 @@ function SentBackNote(props: { rounds: readonly SentBack[] }) {
   );
 }
 
+/**
+ * How long the Advisor took, under the reply, with the calls it made and
+ * what they cost: the exchange's working time
+ * read from its ledger, so it is the number a replay of the record would
+ * show and counts the whole wait — every model call, every round sent back,
+ * the League's ruling — and not the trainer's own pauses over a question.
+ * Found wanted by dogfood (2026-09-19): with the line under the chat
+ * moving, the settled reply gave no total.
+ */
+function Took(props: { exchange: ExchangeLedger | undefined; calls: readonly ModelCallTrace[] }) {
+  const ms = props.exchange === undefined ? undefined : exchangeWorkMs(props.exchange);
+  if (props.exchange === undefined || ms === undefined) return null;
+  const made = callsOf(props.exchange, props.calls);
+  return (
+    <p class="fine live-took">
+      took {plainDuration(ms)}
+      {made.calls.length > 0 && ` · ${made.calls.length} model call${made.calls.length === 1 ? "" : "s"} · $${made.costUsd.toFixed(4)}`}
+    </p>
+  );
+}
+
 function RecordItem(props: {
   record: Transaction;
   page: DomElement | undefined;
   rounds: readonly SentBack[];
+  exchange: ExchangeLedger | undefined;
+  calls: readonly ModelCallTrace[];
   onSuggest?: (text: string) => void;
 }) {
   const { record, page } = props;
@@ -303,6 +326,7 @@ function RecordItem(props: {
             machinery”.
           </p>
         </div>
+        <Took exchange={props.exchange} calls={props.calls} />
       </div>
     );
   }
@@ -320,6 +344,7 @@ function RecordItem(props: {
             : "No problem — nothing was done. The answer above still stands."}
         </p>
       )}
+      <Took exchange={props.exchange} calls={props.calls} />
     </div>
   );
 }
@@ -918,6 +943,9 @@ export function Live() {
                             : "An honest pass, not a malfunction — nothing uncertified was shown."}
                         </p>
                       )}
+                      {/* A pass closes its ledger only at the next ask, so
+                          the note's exchange may still be the open one. */}
+                      <Took exchange={exchangeAt(ledgerOf(state, ""), item.note.at)} calls={setup.trace.calls} />
                     </div>
                   </div>
                 );
@@ -930,6 +958,8 @@ export function Live() {
                     record={item.record}
                     page={item.page}
                     rounds={exchange === undefined ? [] : sentBack(exchange)}
+                    exchange={exchange}
+                    calls={setup.trace.calls}
                     {...(latest && !busy ? { onSuggest: pick } : {})}
                   />
                 );
