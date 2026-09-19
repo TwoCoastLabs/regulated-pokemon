@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ModelCallStart } from "../session/devtrace.js";
 import { type DriverStep, LEDGER_CODES, type LedgerCode } from "../session/ledger.js";
-import { progressLine } from "./progress.js";
+import { progressLine, progressMeter } from "./progress.js";
 
 const step = (code: LedgerCode): DriverStep => ({ at: "2026-01-01T00:00:00.000Z", lane: "driver", code, text: code });
 const call = (purpose: ModelCallStart["purpose"], seq = 1, doors?: ModelCallStart["doors"]): ModelCallStart => ({
@@ -65,5 +65,14 @@ describe("the exchange in progress, as one line", () => {
     for (const line of lines) {
       expect(line).not.toMatch(/IA-\d|\w+\/\w+|manifest|ledger|nominat|kernel/i);
     }
+  });
+
+  it("the meter beside the line: nothing at first, then seconds, then the reply's rough length", () => {
+    expect(progressMeter({ elapsedMs: 0 })).toBe("");
+    expect(progressMeter({ elapsedMs: 900, chars: 300 })).toBe("");
+    expect(progressMeter({ elapsedMs: 1000 })).toBe("1s");
+    expect(progressMeter({ elapsedMs: 4200, chars: 0 })).toBe("4s");
+    expect(progressMeter({ elapsedMs: 4200, chars: 5 })).toBe("4s · the reply is arriving, about 1 word so far");
+    expect(progressMeter({ elapsedMs: 12900, chars: 720 })).toBe("12s · the reply is arriving, about 120 words so far");
   });
 });

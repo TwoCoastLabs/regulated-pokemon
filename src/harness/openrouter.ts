@@ -47,6 +47,9 @@ export interface HttpResponse {
   ok: boolean;
   status: number;
   text(): Promise<string>;
+  /** The body as it arrives, when the transport can hand it over piecewise
+   * (a real `fetch` Response can). Read only when a call is being watched. */
+  body?: ReadableStream<Uint8Array> | null;
 }
 export interface HttpRequest {
   method: string;
@@ -86,6 +89,22 @@ export interface OpenRouterConfig {
   backoffMs?: readonly number[];
   fetch?: FetchLike;
   sleep?: (ms: number) => Promise<void>;
+  /**
+   * Watch the reply arrive. When set, the call asks the endpoint to stream
+   * and reports the reply's length so far as each piece lands — a page can
+   * show that the model is writing, and roughly how much. Observation only:
+   * the completion returned is the same whole text, usage and finish reason
+   * it would be unstreamed, and nothing downstream can tell the difference.
+   * A transport that cannot stream (a test's stub) still completes; it just
+   * reports nothing until the end.
+   */
+  onProgress?: (progress: CallProgress) => void;
+}
+
+/** The reply so far, while a watched call is in flight. */
+export interface CallProgress {
+  /** Characters of reply content received so far. */
+  chars: number;
 }
 
 const DEFAULTS = {
@@ -199,9 +218,10 @@ export function readUsage(payload: ChatResponse, request: CompletionRequest, tex
 export class OpenRouterProvider implements ModelProvider {
   readonly id: string;
   readonly model: string;
-  private readonly config: Required<Omit<OpenRouterConfig, "fetch" | "sleep">> & {
+  private readonly config: Required<Omit<OpenRouterConfig, "fetch" | "sleep" | "onProgress">> & {
     fetch: FetchLike;
     sleep: (ms: number) => Promise<void>;
+    onProgress?: (progress: CallProgress) => void;
   };
 
   constructor(config: OpenRouterConfig) {
@@ -239,7 +259,7 @@ export class OpenRouterProvider implements ModelProvider {
   }
 
   private async attempt(request: CompletionRequest, attempt: number): Promise<Completion> {
-    const { url, apiKey, model, system, maxTokens, timeoutMs, structured, fetch: send } = this.config;
+    const { url, apiKey, model, system, maxTokens, timeoutMs, structured, fetch: send, onProgress } = this.config;
 
     // Shape only. The grammar cannot make a claim true, and nothing downstream
     // trusts it any more for having been well-formed.
@@ -261,6 +281,9 @@ export class OpenRouterProvider implements ModelProvider {
       max_tokens: maxTokens,
       // OpenRouter only prices the call when asked to.
       usage: { include: true },
+      // Only a watched call streams: unwatched, the wire is the plain,
+      // whole-body reply the relay and the harness have always read.
+      ...(onProgress === undefined ? {} : { stream: true }),
       ...format,
       messages: [
         { role: "system", content: system },
@@ -290,8 +313,8 @@ export class OpenRouterProvider implements ModelProvider {
       throw new ProviderError(`${this.id}: request failed (${redact(String(cause), apiKey)})`, attempt);
     }
 
-    const raw = await response.text().catch(() => "");
     if (!response.ok) {
+      const raw = await response.text().catch(() => "");
       throw new ProviderError(
         `${this.id}: HTTP ${response.status} — ${snippet(raw, apiKey)}`,
         attempt,
@@ -299,9 +322,13 @@ export class OpenRouterProvider implements ModelProvider {
       );
     }
 
+    const raw = await readBody(response, onProgress).catch((cause: unknown) => {
+      throw new ProviderError(`${this.id}: reply cut off (${redact(String(cause), apiKey)})`, attempt);
+    });
+
     let payload: ChatResponse;
     try {
-      payload = JSON.parse(raw) as ChatResponse;
+      payload = raw.trimStart().startsWith("{") ? (JSON.parse(raw) as ChatResponse) : assembleStream(raw);
     } catch {
       throw new ProviderError(`${this.id}: response was not JSON — ${snippet(raw, apiKey)}`, attempt);
     }
@@ -325,4 +352,83 @@ export class OpenRouterProvider implements ModelProvider {
       ...(typeof finishReason === "string" ? { finishReason } : {}),
     };
   }
+}
+
+// --- the reply as it arrives ------------------------------------------------
+
+/**
+ * The whole body, read piecewise when the transport allows and someone is
+ * watching, whole otherwise. While reading, every content piece of a streamed
+ * reply is counted and reported; the text returned is the raw wire body either
+ * way, so the caller parses one thing.
+ */
+async function readBody(response: HttpResponse, onProgress: ((progress: CallProgress) => void) | undefined): Promise<string> {
+  const body = response.body;
+  if (onProgress === undefined || body === undefined || body === null) return response.text();
+  const decoder = new TextDecoder();
+  const reader = body.getReader();
+  let raw = "";
+  let chars = 0;
+  let scanned = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    raw += decoder.decode(value, { stream: true });
+    // Count only whole lines: a JSON piece cut mid-line is counted once it
+    // closes, never guessed at.
+    const end = raw.lastIndexOf("\n");
+    if (end < scanned) continue;
+    for (const line of raw.slice(scanned, end).split("\n")) chars += streamLine(line)?.content.length ?? 0;
+    scanned = end + 1;
+    onProgress({ chars });
+  }
+  raw += decoder.decode();
+  return raw;
+}
+
+interface StreamChunk {
+  choices?: readonly { delta?: { content?: unknown }; finish_reason?: unknown }[];
+  usage?: ChatResponse["usage"];
+  error?: ChatResponse["error"];
+}
+
+/** One line of a server-sent event stream, read for what a chunk carries;
+ * comments, blanks and the terminator carry nothing. */
+function streamLine(line: string): { content: string; chunk: StreamChunk } | undefined {
+  if (!line.startsWith("data:")) return undefined;
+  const data = line.slice(5).trim();
+  if (data === "" || data === "[DONE]") return undefined;
+  const chunk = JSON.parse(data) as StreamChunk;
+  const piece = chunk.choices?.[0]?.delta?.content;
+  return { content: typeof piece === "string" ? piece : "", chunk };
+}
+
+/**
+ * A streamed reply folded back into the shape of a whole one: the content
+ * pieces in order, the finish reason and usage from whichever chunks carried
+ * them, an error from any chunk that did. Exported for the test that pins
+ * the fold.
+ */
+export function assembleStream(raw: string): ChatResponse {
+  let content = "";
+  let finishReason: unknown;
+  let usage: ChatResponse["usage"];
+  let error: ChatResponse["error"];
+  let chunks = 0;
+  for (const line of raw.split("\n")) {
+    const read = streamLine(line.replace(/\r$/, ""));
+    if (read === undefined) continue;
+    chunks += 1;
+    content += read.content;
+    const reason = read.chunk.choices?.[0]?.finish_reason;
+    if (typeof reason === "string") finishReason = reason;
+    if (read.chunk.usage !== undefined) usage = read.chunk.usage;
+    if (read.chunk.error !== undefined) error = read.chunk.error;
+  }
+  if (chunks === 0) throw new Error("no stream chunks");
+  if (error !== undefined) return { error };
+  return {
+    choices: [{ message: { content }, ...(finishReason === undefined ? {} : { finish_reason: finishReason }) }],
+    ...(usage === undefined ? {} : { usage }),
+  };
 }
