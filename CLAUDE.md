@@ -103,10 +103,11 @@ name defines it in plain words the first time.
   `--refusal-feedback` carries a refused nomination back to the model by
   name instead of withdrawing the door in silence. Prompts are structural,
   never tuned to one model: any prompt change runs on both models.
-  `--offered-doors` (both tools) puts the listing door in the grammar only
-  when the driver would accept a nomination of it
-  ([docs/offered-door.md](docs/offered-door.md)); the bank records the
-  door's funnel — offered, nominated, served — per sample either way.
+  The listing door is in the grammar only when the driver would accept a
+  nomination of it ([docs/offered-door.md](docs/offered-door.md)) — the
+  default since it passed its gate (findings §25); `--no-offered-doors`
+  (both tools) is the off arm. The bank records the door's funnel —
+  offered, nominated, served — per sample either way.
   `--lesson-door` (both tools) narrows the explanation route to the lessons
   the ask is about, plus the records-boundary lesson, read from each
   lesson's `covers` in the pack ([docs/lesson-door.md](docs/lesson-door.md));

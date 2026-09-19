@@ -176,7 +176,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     source?: string;
     help: boolean;
     errors: string[];
-  } = { live: false, render: false, weak: false, dialogues: false, adversarial: false, center: false, grounded: false, retrieval: false, gatedGrammar: false, repair: false, profile: false, feedback: false, clarify: false, suggest: false, raw: false, refusalFeedback: false, offeredDoors: false, lessonDoor: false, lessonClassifier: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
+  } = { live: false, render: false, weak: false, dialogues: false, adversarial: false, center: false, grounded: false, retrieval: false, gatedGrammar: false, repair: false, profile: false, feedback: false, clarify: false, suggest: false, raw: false, refusalFeedback: false, offeredDoors: true, lessonDoor: false, lessonClassifier: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
 
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index];
@@ -258,7 +258,12 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
         args.lessonClassifier = true;
         break;
       case "--offered-doors":
+        // The default since the door passed its gate (findings §25); kept
+        // so a filed command line still parses.
         args.offeredDoors = true;
+        break;
+      case "--no-offered-doors":
+        args.offeredDoors = false;
         break;
       case "--phrasings":
         args.phrasings = true;
@@ -352,7 +357,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
   if (args.repair && args.phrasings) {
     args.errors.push("--repair is not threaded through the robustness pass; run it on the coverage or dialogue banks");
   }
-  for (const [flag, on] of [["--profile", args.profile], ["--feedback", args.feedback], ["--clarify", args.clarify], ["--suggest", args.suggest], ["--raw", args.raw], ["--precedents", args.precedents !== undefined], ["--prompt", args.prompt !== undefined], ["--refusal-feedback", args.refusalFeedback], ["--offered-doors", args.offeredDoors], ["--lesson-door", args.lessonDoor], ["--lesson-classifier", args.lessonClassifier]] as const) {
+  for (const [flag, on] of [["--profile", args.profile], ["--feedback", args.feedback], ["--clarify", args.clarify], ["--suggest", args.suggest], ["--raw", args.raw], ["--precedents", args.precedents !== undefined], ["--prompt", args.prompt !== undefined], ["--refusal-feedback", args.refusalFeedback], ["--no-offered-doors", !args.offeredDoors], ["--lesson-door", args.lessonDoor], ["--lesson-classifier", args.lessonClassifier]] as const) {
     if (on && (args.phrasings || args.dialogues)) {
       args.errors.push(`${flag} is threaded through the single-turn coverage run only; the robustness and dialogue banks do not carry it`);
     }
@@ -797,7 +802,9 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
     ...(memory === undefined ? {} : { precedents: memory.lever }),
     ...(args.prompt === undefined ? {} : { prompt: args.prompt }),
     ...(args.refusalFeedback ? { refusalFeedback: true } : {}),
-    ...(args.offeredDoors ? { offeredDoors: true } : {}),
+    // Recorded either way since the door became the default (findings §25,
+    // §27): an artifact that says nothing is one filed before the offer existed.
+    offeredDoors: args.offeredDoors,
     ...(args.lessonDoor ? { lessonDoor: true } : {}),
     ...(args.lessonClassifier ? { lessonClassifier: true } : {}),
     repetitions: args.repetitions,

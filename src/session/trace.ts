@@ -130,7 +130,7 @@ export function parseTraceArgs(argv: readonly string[]): TraceArgs {
     memory: !argv.includes("--no-memory"),
     prompt,
     refusalFeedback: argv.includes("--refusal-feedback"),
-    offeredDoors: argv.includes("--offered-doors"),
+    offeredDoors: !argv.includes("--no-offered-doors"),
     lessonDoor: argv.includes("--lesson-door") || argv.includes("--lesson-classifier"),
     lessonClassifier: argv.includes("--lesson-classifier"),
   };
