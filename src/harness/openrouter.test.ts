@@ -371,4 +371,15 @@ describe("a watched call: the reply as it arrives", () => {
     expect(assembleStream(sse([piece("a"), piece("b")]))).toEqual({ choices: [{ message: { content: "ab" } }] });
     expect(() => assembleStream("")).toThrow(/no stream chunks/);
   });
+
+  it("names the upstream that served the call, whole or streamed, and nothing when the gateway is silent", async () => {
+    // One model id is routed across several upstreams, and the slow call has
+    // a name (dogfood, 2026-09-20: six calls to one model, 2.7 s to 73 s).
+    const { instance } = provider([reply({ choices: [{ message: { content: "ok" } }], provider: "Together" })]);
+    expect((await instance.complete(request)).servedBy).toBe("Together");
+    const named = `data: ${JSON.stringify({ choices: [{ delta: { content: "a" } }], provider: "DeepInfra" })}`;
+    expect(assembleStream(sse([named, piece("b")]))).toMatchObject({ choices: [{ message: { content: "ab" } }], provider: "DeepInfra" });
+    const { instance: silent } = provider([chat("ok")]);
+    expect((await silent.complete(request)).servedBy).toBeUndefined();
+  });
 });

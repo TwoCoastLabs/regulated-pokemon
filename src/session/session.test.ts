@@ -1059,6 +1059,35 @@ describe("porch round five: stale cards, social closes, rarity, direction", () =
     expect(calls).toBeGreaterThan(callsBefore);
   });
 
+  it("a greeting with a stray character at an edge is still a greeting — no model, no boundary redirect (dogfood 2026-09-20: '3hey')", async () => {
+    let calls = 0;
+    const provider = scripted("mute", () => { calls += 1; return "decline"; });
+    const d = deps(provider);
+    let state = await say(startSession(), "What is a badge?", d);
+    const callsBefore = calls;
+    for (const greeting of ["3hey", "...hello", "hey!!!", "  hi there?? "]) {
+      state = await say(state, greeting, d);
+      expect(calls, greeting).toBe(callsBefore);
+      expect(state.notes[state.notes.length - 1]?.tone, greeting).toBe("social");
+    }
+    // A stray character inside the words is not an edge: the machinery drives.
+    state = await say(state, "he3y", d);
+    expect(calls).toBeGreaterThan(callsBefore);
+  });
+
+  it("a greeting's words are spent: the ask after it opens its own exchange under its own words (dogfood 2026-09-20: an ask filed under '3hey')", async () => {
+    const provider = scripted("mute", () => "decline");
+    const d = deps(provider);
+    let state = await say(startSession(), "3hey", d);
+    state = await say(state, "What is a badge?", d);
+    const openings = [
+      ...state.exchanges.map((exchange) => exchange.opening),
+      ...(state.steps.length > 0 ? [state.steps.find((step) => step.code === "trainer/said")?.text ?? ""] : []),
+    ];
+    expect(openings).toContain("3hey");
+    expect(openings.at(-1)).toBe("What is a badge?");
+  });
+
   it("the confidence question gets the provenance answer", async () => {
     const provider = scripted("mute", () => "decline");
     const state = await say(await say(startSession(), "What is a badge?", deps(provider)), "are you sure?", deps(provider));

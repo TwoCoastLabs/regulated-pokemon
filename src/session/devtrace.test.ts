@@ -48,6 +48,8 @@ describe("the tap records the seam without changing it", () => {
     });
     expect(scope?.usage?.calls).toBe(1);
     expect(scope?.schema).toBeUndefined();
+    // A scripted provider names no upstream; the key is absent, not null.
+    expect("servedBy" in (scope ?? {})).toBe(false);
     expect(answer?.schema).toBe("answer-plan");
   });
 

@@ -23,7 +23,7 @@
  * anywhere else. Either way it is the same driver, the same session module,
  * the same kernel — the modes differ in one URL and who pays.
  */
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import { proposalDigest } from "../../src/harness/advisor.js";
 import {
@@ -286,6 +286,9 @@ function Took(props: { exchange: ExchangeLedger | undefined; calls: readonly Mod
   const ms = props.exchange === undefined ? undefined : exchangeWorkMs(props.exchange);
   if (props.exchange === undefined || ms === undefined) return null;
   const made = callsOf(props.exchange, props.calls);
+  // A turn that called no model took no time worth a line: "took 0.0s"
+  // under a hello read as a glitch (dogfood, 2026-09-20).
+  if (made.calls.length === 0) return null;
   return (
     <p class="fine live-took">
       took {plainDuration(ms)}
@@ -774,6 +777,15 @@ export function Live() {
   }
 
   const items = chatItems(state);
+  // With the machinery shown the transcript scrolls inside its column
+  // (style.css, the viewport-tall frame), so the newest turn — and the reply
+  // as it arrives — is kept in view the way a chat does; a page that scrolls
+  // whole needs nothing here, and scrollTo on a non-scrolling box is a no-op.
+  const transcript = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const box = transcript.current;
+    if (box !== null) box.scrollTo({ top: box.scrollHeight });
+  }, [items.length, busy, callChars]);
   const phase = state.phase;
   const cost = state.usage;
   // The profile on the record, latest first — what the next answer will be
@@ -805,7 +817,7 @@ export function Live() {
       </div>
 
       <div class={`live-panes${machinery ? " with-console" : ""}`}>
-        <div class="live-chat">
+        <div class="live-chat" ref={transcript}>
           {items.length === 0 && inFlight === null && (
             <p class="live-hint">
               Set your game below — version, region, badges — then ask away; the League certifies answers for that
@@ -1163,9 +1175,12 @@ function ModelLatency(props: { calls: readonly ModelCallTrace[] }) {
   const seconds = last.latencyMs / 1000;
   const completion = last.usage?.completionTokens ?? 0;
   const rate = seconds > 0 && completion > 0 ? ` · ${(completion / seconds).toFixed(1)} tok/s` : "";
+  // The upstream that served it, when the gateway said: one model id is
+  // routed across several, and the slow one has a name.
+  const via = last.servedBy === undefined ? "" : ` via ${last.servedBy}`;
   return (
-    <span class="mono" title="the last model call's wall time and decode throughput — slow calls at normal tok/s are the provider routing, not this page">
-      last call {seconds.toFixed(1)}s{rate}
+    <span class="mono" title="the last model call's wall time, decode throughput and the upstream that served it — slow calls at normal tok/s are the provider routing, not this page">
+      last call {seconds.toFixed(1)}s{rate}{via}
     </span>
   );
 }
