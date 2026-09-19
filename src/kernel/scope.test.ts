@@ -156,6 +156,18 @@ describe("an ask parameter binds inside the trainer's own question", () => {
     expect(bindingsOf(said("which pokemon is the fastest?"))).toEqual({ comparisonBasis: "base-speed" });
   });
 
+  it("re-binds from the latest ask — two asks with two bases are two asks, not a contradiction (dogfood 2026-09-20)", () => {
+    // "which pokemon is the fastest?" then "which one has the highest attack
+    // stats?" bound base-speed and base-attack, read as a contradiction, and
+    // fell to the model's card — which re-read the first ask. An ask
+    // parameter lives in its ask: the latest evidence wins, and the earlier
+    // one is set aside under its own name.
+    const derivation = deriveScope(pack, [said("which pokemon is the fastest?"), said("among all Pokemons, which one has highest attack stats?")]);
+    expect(derivation.contradicted).toEqual([]);
+    expect(derivation.bindings.map((binding) => [binding.dimension, binding.value])).toEqual([["comparisonBasis", "base-attack"]]);
+    expect(derivation.ignored.some((match) => match.dimension === "comparisonBasis" && match.value === "base-speed" && match.blockedBy === "superseded")).toBe(true);
+  });
+
   it("never lifts the question block for a world dimension", () => {
     expect(bindingsOf(said("Which of these games is the Yellow version?"))).toEqual({});
   });

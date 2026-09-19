@@ -281,6 +281,8 @@ function answerPromptBlocks(input: AnswerPromptInput): { text: string; blocks: r
           `    {"phrase": "<their words for the thing>", "entityId": "<the subject's id>", "fieldId": "<field-id>" | "${NO_FIELD}"}`,
           `  "${NO_FIELD}" is the honest link when the records certify no such field (a height, a weight, an ability, a cry, the story);`,
           "  a field that merely resembles the ask is not. A fact, comparison, ranking or matchup claim about a field not linked is dropped.",
+          '  "Compare X and Y" asks for their numbers side by side: link each numeric field you will compare once — the field is the',
+          "  thing asked for, under either subject — never the subjects themselves to none, and never the same field once per subject.",
         ]
       : []),
     "  Claim only what was asked; omit what you cannot support rather than guess. At most twelve claims and four rosters;",
@@ -482,6 +484,9 @@ function answerPrompt(
           `list. "${NO_FIELD}" is an honest answer and is reported to the trainer in your phrase;`,
           "linking a field that merely resembles the ask is not. Every fact, comparison, ranking",
           "or matchup claim must be about a field you linked here: the others are dropped.",
+          '"Compare X and Y" asks for their numbers side by side: link each numeric field you will',
+          "compare once — the field is the thing asked for, under either subject — never the subjects",
+          "themselves to none, and never the same field once per subject.",
         ]),
     "",
     ...(clarify && dictionary.length > 0

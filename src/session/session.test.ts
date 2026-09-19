@@ -11,6 +11,8 @@
 
 import { describe, expect, it } from "vitest";
 
+import { allSteps } from "./ledger.js";
+
 import { harnessWorld } from "../harness/corpus.js";
 import { type DoorState, FailingProvider, type ModelProvider, ScriptedProvider } from "../harness/provider.js";
 import type { Claim } from "../kernel/contracts.js";
@@ -152,13 +154,14 @@ describe("the ladder with a person on the end", () => {
     expect(verifyReplay(world, record).allowed).toBe(true);
   });
 
-  it("a rejection never binds, and the ladder budget falls to the pack's own question", async () => {
+  it("a rejection never binds, and a ladder that re-proposes the rejected card falls to the pack's own question at once", async () => {
+    // This scripted ladder always proposes base-speed. Before 2026-09-20 the
+    // driver spent the whole ladder budget re-showing it; a rejected
+    // candidate now ends the ladder on its first return (findings §30).
     const d = deps(provider);
     let state = await say(startSession(), `${PROFILE} Which of the Electric ones is the quickest?`, d);
-    for (let i = 0; i < MAX_LADDER_TURNS; i++) {
-      expect(state.phase.kind).toBe("confirming-scope");
-      state = await decideScope(state, "reject", d);
-    }
+    expect(state.phase.kind).toBe("confirming-scope");
+    state = await decideScope(state, "reject", d);
 
     expect(state.records).toHaveLength(0);
     expect(state.phase.kind).toBe("asking");
@@ -1812,6 +1815,21 @@ describe("porch round twelve: the terse trainer and the trust question", () => {
       state = await decideScope(state, "reject", d);
     }
     expect(state.phase.kind).toBe("asking");
+  });
+
+  it("a candidate rejected once is never re-proposed — the second identical card falls to the question at once (dogfood 2026-09-20)", async () => {
+    // The ladder proposed base-speed, the trainer rejected it, the ladder
+    // proposed base-speed again and the driver restated it as pending: three
+    // identical calls and no way out. One rejection is enough.
+    const speedCard = JSON.stringify({ candidate: { comparisonBasis: "base-speed" }, interpreting: "the quickest" });
+    const provider = scripted("stuck", (purpose) => (purpose === "scope" ? speedCard : rankingAnswer()));
+    const d = deps(provider);
+    let state = await say(startSession(), `${PROFILE} Which of the Electric ones is the quickest?`, d);
+    expect(state.phase.kind).toBe("confirming-scope");
+    state = await decideScope(state, "reject", d);
+    expect(state.phase.kind).toBe("asking");
+    expect(allSteps(state).map((step) => step.code)).toContain("scope/rejected-again");
+    expect(state.transcript.filter((event) => event.kind === "proposal")).toHaveLength(1);
   });
 
   it("the trust question earns the architecture answer, not a routed lesson", async () => {

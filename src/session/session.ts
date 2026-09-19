@@ -1294,6 +1294,24 @@ async function drive(
   // trainer's actual words unacknowledged. The pending card keeps its
   // identity (its id is what a confirmation names); the trainer gets the
   // card restated instead of duplicated.
+  // A candidate the trainer already rejected in this exchange is not a new
+  // reading either. Found live (dogfood, 2026-09-20): the ladder re-proposed
+  // the rejected basis, the driver restated it as pending, the trainer
+  // rejected it again — three identical calls and no way out. The fall goes
+  // to the pack's own question, which is deterministic and armed.
+  const rejected = new Set(
+    state.transcript
+      .slice(state.askStart)
+      .filter((event): event is Extract<ScopeEvent, { kind: "confirmation" }> => event.kind === "confirmation" && event.decision === "reject")
+      .map((confirmation) => {
+        const proposal = state.transcript.find((event) => event.kind === "proposal" && event.id === confirmation.proposalId);
+        return proposal?.kind === "proposal" ? JSON.stringify(proposal.candidate) : "";
+      }),
+  );
+  if (rejected.has(JSON.stringify(step.event.candidate))) {
+    const stepped = ledgerStep(spent, deps, deps.now(), "driver", "scope/rejected-again", "the ladder re-proposed a candidate the trainer rejected in this exchange — the pack's question instead");
+    return askOrRestateCard(stepped, deps, outcome.asking, outcome.question);
+  }
   if (
     state.phase.kind === "confirming-scope" &&
     JSON.stringify(state.phase.proposal.candidate) === JSON.stringify(step.event.candidate)

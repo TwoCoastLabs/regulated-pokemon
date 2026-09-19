@@ -237,8 +237,17 @@ export function deriveScope(pack: AccordPack, transcript: ScopeTranscript): Scop
     // contradiction, and the trainer is asked again. What is set aside is
     // recorded under its own name, so a grant resting on it is refused as
     // superseded rather than as wording that never bound.
+    // An ask parameter (the pack's `askParameter`, the comparison basis) is a
+    // parameter of the ask it lives in, not standing scope: "who's fastest?"
+    // and then "who has the highest attack?" are two asks, not a
+    // contradiction. Its latest evidence outranks everything before it,
+    // direct or not — found live (dogfood, 2026-09-20): the second ask fell
+    // to the model's card, which re-read the first ask's basis, was
+    // rejected, and was restated. World dimensions keep the rule below: a
+    // later direct statement against the record is a fresh contradiction.
+    const askParameter = pack.vocabulary.dimensions.find((rule) => rule.dimension === dimension)?.askParameter === true;
     const witness = believed.reduce<number | undefined>(
-      (latest, match) => (match.route === "direct" ? latest : Math.max(latest ?? -1, match.evidenceIndex)),
+      (latest, match) => (match.route === "direct" && !askParameter ? latest : Math.max(latest ?? -1, match.evidenceIndex)),
       undefined,
     );
     const live = witness === undefined ? believed : believed.filter((match) => match.evidenceIndex >= witness);

@@ -6550,3 +6550,68 @@ six stats — the `asked` cap of six entries spent on per-entity links
 
 **Enforcement.** 0 escalations of 8 records across the four rounds and
 the page's exchange.
+
+## 30. The compare linking miss, the ask parameter that lives in its ask, and the card that could not be refused
+
+**Goal.** Three defects from the 2026-09-20 dogfood thread (§27–§29),
+each a usefulness loss the harness owned. A "compare X and Y" ask was
+answered with three of six stats on the page and declined outright by
+four cheap models (§26–§28). A second ranking ask with a different basis
+("which pokemon is the fastest?" then "which one has the highest attack
+stats?") fell to the model's interpretation card, which re-read the
+first ask's basis. And a card the trainer rejected was proposed again,
+restated as pending, and rejected again — three identical calls with no
+way out.
+
+**How it works.**
+
+1. *Linking.* The prompt said "one entry per thing asked for", and the
+   models read a comparison as one entry per subject per field: six
+   entries for three fields, then the `asked` cap of six cut the rest;
+   or, on the cheap models, the subjects themselves linked to no field
+   and the ask declined. Both prompts now say it: a comparison links each
+   numeric field once — the field is the thing asked for, under either
+   subject — never the subjects to none, never a field once per subject.
+   Structural, the same on every model.
+2. *The ask parameter.* `resolveScope` read the whole transcript, and
+   a comparison basis bound in an earlier ask contradicted the one in
+   the latest: `scope-contradicted`, then the ladder. The pack already
+   declares `comparisonBasis` an `askParameter` — "who's faster?" is
+   where a basis lives — so the kernel now lets an ask parameter's latest
+   evidence outrank everything before it, direct or not, setting the
+   earlier binding aside as superseded under its own name. World
+   dimensions keep the rule: a later direct statement against the record
+   is a fresh contradiction. Pinned in scope.test.ts.
+3. *The rejected card.* A candidate the trainer rejected in this exchange
+   is never proposed again: the driver checks the ladder's candidate
+   against the exchange's rejections and falls to the pack's own question
+   (a `scope/rejected-again` step, in the ledger's fixed wording). The
+   ladder budget test now reads: one rejection of a re-proposed card ends
+   the ladder.
+
+**The porch, after** (2026-09-21, routed by throughput, N=1 each):
+
+| ask | model | before | after |
+|---|---|---|---|
+| compare Pikachu and Charmander | strong | 6 of 6 (tracer) / 3 of 6 (page, §29) | 6 of 6, 1 call, 6 links |
+| compare Pikachu and Charmander | `gemini-3.5-flash-lite` | wrong decline (§27) | 3 of 6 certified, 6 links, 3 claims dropped as off the linked fields |
+| compare Pikachu and Charmander | weak (`mistral-nemo`) | wrong decline (§26) | wrong decline — 2 phrases linked to no field, 6 claims dropped |
+| fastest among all → highest attack among all | strong | card (base-speed), rejected ×2, stuck (§29's thread) | both granted deterministically, no card, 1 call each, 5.9 s + 6.1 s |
+
+The wording moves the mid-tier model from a decline to a half answer
+and leaves the weakest where it was; the deterministic fixes take the
+second ranking ask from three stuck calls to one. The `asked` cap of six
+is still what cuts the mid-tier model's answer in half — the next lever
+on this ask, and a measured one.
+
+**Model errors, apart.** In the same thread the strong model answered
+"tell me more about Pikachu" with eight self-comparisons (folded to
+facts, three cut by the cap); read "which pokemon is the fastest?" after
+a comparison as the two just compared and built a roster that is
+electric *and* fire — empty, `IA-4/ranking-over-empty-roster`, twice
+(the grammar has no union, so the reading had no legal shape); and
+answered "can you try again?" as a fresh ask about Pikachu's speed and
+matchups rather than the ask before it. Harness factors: the three
+above, closed; the cap and the missing "try again" reading, open.
+
+**Enforcement.** 0 escalations of 5 records across the four probes.
