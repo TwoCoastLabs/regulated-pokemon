@@ -6427,3 +6427,66 @@ live page.
 **Enforcement.** 0 escalations of 4 records across the two nights'
 sessions; every denial above was the kernel's, by name, and carried
 back.
+
+## 28. The offered door is the default, and a five-model latency probe keeps the strong model where it is
+
+**Goal.** Two follow-ups from §27. First, the offered door passed its
+bank gate in §25 and was still off on the live page and the tracer, so
+every dogfood round since paid a wasted first call on the listing
+nomination; it is the default now, with `--no-offered-doors` as the off
+arm on both tools and `offeredDoors: false` in `SessionDeps`. Second,
+§27 attributed the strong model's 3–73 s calls to the upstream route
+rather than the model, and the question stood whether a newer model on
+OpenRouter would be faster at the same price. A porch probe answers
+that for N=1: it cannot pick a default — the bank does — but it can rule
+candidates out.
+
+**How it works.** `session:trace` now ends on every call it made — wall
+time, the upstream that served it, tokens, decode rate, cost — through
+the same tap the live page's dev view uses. Five models ran the same two
+asks on the same profile (Red/Blue, Kanto, 0 badges), door on, retrieval,
+gated grammar, the precedent door on: "tell me about the game" (a
+lesson) and "compare Pikachu and Charmander" (six comparisons, §26).
+Candidates were the four newest structured-output models under $1/M
+input from major providers in OpenRouter's catalogue on 2026-09-21.
+
+| model | released | lesson | compare | calls · time · cost | served by |
+|---|---|---|---|---|---|
+| `qwen/qwen3-235b-a22b-2507` (current) | 2025-07 | certified (3 calls: profile door refused, 4 × IA-3 carried back) | **6 of 6 certified**, 1 call | 4 · 22 s · $0.0019 | GMICloud ×3, StreamLake |
+| `deepseek/deepseek-v4.1-flash` | 2026-09 | certified, 1 call | **wrong decline** — both names linked to no field, 7 of 7 claims dropped, boundary lesson | 2 · 17 s · $0.0024 | Morph, Wafer |
+| `qwen/qwen3.8-flash` | 2026-08 | certified, 1 call, 38 s (1,821 completion tokens) | **provider error** — 84.5 s, reply carried no message content | 2 · 123 s · $0.0014 | Alibaba |
+| `z-ai/glm-5.3-flash` | 2026-08 | certified, 1 call, 54 s (822 tokens) | 6 of 7 certified, 1 call, 24 s (449 tokens) | 2 · 78 s · $0.0016 | Parasail, Reka |
+| `google/gemini-3.8-flash` | 2026-09 | certified, 1 call, 6 s | **abstention** — the reply hit the token cap at 2,034 tokens, not a JSON object | 2 · 21 s · $0.0222 | Google |
+
+**The reading.** No candidate beats the current model on this probe.
+Three of four lose the comparison outright — two by the same false
+decline the weak model and `gemini-3.5-flash-lite` made in §26 and §27
+(both names linked to no certified field: N=4 across four cheap models
+now, a harness question about the linking prompt on "compare X and Y",
+not one model's), one by truncation at ten times the price. The one
+that answers both (`glm-5.3-flash`) takes 3.5× the current model's
+time, spending 400–800 completion tokens on reasoning per reply. The
+current model's calls today ran 2.6–9.5 s at 24–51 tok/s on GMICloud and
+StreamLake — the same model id that ran 3–7 tok/s on Novita two nights
+ago — so the latency lever is the route, and the next step there is an
+upstream preference on the provider config (an operator setting, not
+model tuning), read on the bank before it ships. The default model
+stays; a candidate enters the bank only after passing a porch like this.
+
+**The door, on.** On the current model the listing door was withheld on
+both asks and nominated on neither (`listing door 2 withheld / 0
+nominated`), where §27's rounds paid a refused listing nomination on
+each. The lesson ask still cost three calls: with the listing door
+withheld the model nominated the *profile* door on "game" (refused: not
+a species), then claimed four facts on the entity "game"
+(`IA-3/fabricated-entity` ×4, carried back), then chose the lesson. The
+comparison was one call, six of six certified, 9.5 s.
+
+**Model errors, apart.** The profile nomination and the four fabricated
+"game" facts are the strong model's; the false declines are deepseek's
+and gemini-3.8-flash's; the truncation is gemini-3.8-flash's; the empty
+reply is qwen3.8-flash's upstream. Harness factors: the door default
+(closed here); the "compare" linking miss on cheap models (open, §26).
+
+**Enforcement.** 0 escalations of 8 records across the five runs; every
+denial was the kernel's, by name.

@@ -123,6 +123,17 @@ bare catalogue ask to the executor and is served when the nomination's
 it, so the test ask for a withheld door is the porch's "tell me about
 the game".
 
+*As shipped (2026-09-21).* The door passed its gate on the bank
+(findings §25), and two nights of dogfood after that still paid a
+wasted first call nominating the listing on "tell me about the game"
+and on every "compare" ask, because the live page and the tracer had
+never turned it on (§27). It is the default now — `SessionDeps.offeredDoors`
+is on unless set `false`, the live page inherits it, and
+`session:trace -- --no-offered-doors` / `coverage:map -- --no-offered-doors`
+are the off arm; every coverage artifact records `offeredDoors` either
+way, so an artifact that says nothing is one filed before the offer
+existed.
+
 ## The measurement, pre-registered
 
 The porch reading first, for pennies (`session:trace`, the four opening

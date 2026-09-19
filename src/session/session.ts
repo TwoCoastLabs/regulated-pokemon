@@ -1363,7 +1363,12 @@ async function withRouteFallback(
   // The offered door (docs/offered-door.md): with the lever on, the listing
   // door is in the grammar only when the executor's ask-only checks would
   // accept it — recorded as a step, so the trail and the tally read it.
-  const withheld = deps.offeredDoors === true ? listingAskCheck(world, openingAskOf(state)) : undefined;
+  // On unless shut (`offeredDoors: false`, the off arm): the door passed its
+  // pre-registered gate (findings §25), and two nights of dogfood after it
+  // still paid a wasted first call nominating the listing on "tell me about
+  // the game" and on every "compare" ask (§27) because the live page and
+  // the tracer never turned it on.
+  const withheld = deps.offeredDoors !== false ? listingAskCheck(world, openingAskOf(state)) : undefined;
   if (withheld !== undefined) {
     state = ledgerStep(
       { ...state, listingDoor: { ...state.listingDoor, withheld: state.listingDoor.withheld + 1 } },

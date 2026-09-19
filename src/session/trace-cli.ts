@@ -29,6 +29,7 @@ import { loadEnv } from "../harness/live.js";
 import { precedentStorePath, readPrecedentStore } from "../memory/files.js";
 import { ADVERSARY_PERSONA, DEFAULT_STRONG_MODEL, DEFAULT_WEAK_MODEL, HONEST_PERSONA } from "../harness/models.js";
 import { OpenRouterProvider } from "../harness/openrouter.js";
+import { createDevTrace } from "./devtrace.js";
 import { parseTraceArgs, runTrace } from "./trace.js";
 
 const args = parseTraceArgs(process.argv.slice(2));
@@ -72,9 +73,15 @@ console.log(
   `[config] model ${model}, world ${world.registry.snapshot.id} + ${world.pack.id}, grounding ${args.grounding}, grammar ${args.gatedGrammar ? "gated" : "loose"}, repair ${args.repair ? "on" : "off"}, feedback ${args.feedback ? "on" : "off"}, clarify ${args.clarify ? "on" : "off"}, suggest ${args.suggest ? "on" : "off"}, memory ${store === undefined ? (args.memory ? "off (no store shipped)" : "off") : `on (${store.precedents.length} precedents)`}, prompt ${args.prompt}, refused nomination ${args.refusalFeedback ? "fed back" : "withdrawn in silence"}, listing door ${args.offeredDoors ? "offered only when the driver would accept it" : "offered on every first call"}, lesson door ${args.lessonDoor ? `only the lessons the ask is about${args.lessonClassifier ? ", the model asked when none match" : ""}` : "the whole catalogue"}${args.adversarial ? ", adversarial" : ""}`,
 );
 
+// Every call through the same tap the live page's dev view uses, so the
+// tracer can end on the calls themselves — wall time, tokens and the
+// upstream that served each — the reading a latency probe is for
+// (findings §27: one model id, 3 to 33 tok/s by route).
+const trace = createDevTrace({ now: makeClock(), elapsedMs: () => performance.now() });
+
 runTrace(args.inputs, {
   world,
-  provider,
+  provider: trace.tap(provider),
   now: makeClock(),
   // The exchange in progress, on stderr as the driver takes each step — the
   // terminal's version of the live page's busy line. The summary on stdout
@@ -95,5 +102,14 @@ runTrace(args.inputs, {
   ...(store === undefined ? {} : { precedents: { store } }),
 }).then((result) => {
   for (const line of result.lines) console.log(line);
+  for (const call of trace.calls) {
+    const usage = call.usage;
+    console.log(
+      `[call #${call.seq}] ${call.purpose} ${(call.latencyMs / 1000).toFixed(1)}s` +
+        (call.servedBy === undefined ? "" : ` via ${call.servedBy}`) +
+        (usage === undefined ? "" : ` · ${usage.promptTokens}→${usage.completionTokens} tok · ${call.latencyMs > 0 ? ((usage.completionTokens * 1000) / call.latencyMs).toFixed(1) : "?"} tok/s · $${usage.costUsd.toFixed(4)}`) +
+        (call.error === undefined ? "" : ` · FAILED: ${call.error}`),
+    );
+  }
   process.exit(result.exitCode);
 });

@@ -569,10 +569,13 @@ describe("the precedent door rides as a lever (docs/precedent.md)", () => {
     expect(filed.map.lessonDoor).toBeUndefined();
   });
 
-  it("threads --offered-doors to the session, single-turn only, records it, and counts the door's funnel per sample", async () => {
+  it("offers the door by default, single-turn only, records it, and counts the door's funnel per sample; --no-offered-doors is the off arm", async () => {
+    // The default since the door passed its gate (findings §25); the off
+    // arm is the lever now, and it is the one the multi-turn banks refuse.
     expect(parseCoverageArgs(["--offered-doors"]).offeredDoors).toBe(true);
-    expect(parseCoverageArgs([]).offeredDoors).toBe(false);
-    expect(parseCoverageArgs(["--offered-doors", "--dialogues"]).errors[0]).toContain("single-turn");
+    expect(parseCoverageArgs([]).offeredDoors).toBe(true);
+    expect(parseCoverageArgs(["--no-offered-doors"]).offeredDoors).toBe(false);
+    expect(parseCoverageArgs(["--no-offered-doors", "--dialogues"]).errors[0]).toContain("single-turn");
     const plan = await runCoverage(options(["--ids", "ans-fact-speed-pikachu", "--offered-doors"]));
     expect(plan.lines.join("\n")).toContain("listing door:  offered only when the driver would accept it");
 
@@ -596,11 +599,11 @@ describe("the precedent door rides as a lever (docs/precedent.md)", () => {
     expect(artifact.map.listingDoor).toEqual({ runs: 1, offered: 0, nominated: 0, served: 0 });
     expect(renderCoverageArtifact(artifact)).toContain("**offered door**");
     expect(renderCoverageArtifact(artifact)).toContain("The listing door: offered on 0/1");
-    // Off: the door is offered, as today, and the run says so.
-    const plain = options(["--live", "--ids", "ans-fact-speed-pikachu"], { makeProvider: scripted(pikachuSpeed()) });
+    // Off: the door is offered on every first call, and the run says so.
+    const plain = options(["--live", "--ids", "ans-fact-speed-pikachu", "--no-offered-doors"], { makeProvider: scripted(pikachuSpeed()) });
     await runCoverage(plain);
     const filed = filedArtifact(plain.written).artifact;
-    expect(filed.offeredDoors).toBeUndefined();
+    expect(filed.offeredDoors).toBe(false);
     expect(filed.runs[0]!.listingDoor).toEqual({ offered: true, nominated: false, served: false });
   });
 

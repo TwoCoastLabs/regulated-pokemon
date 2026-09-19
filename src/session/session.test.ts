@@ -2087,10 +2087,11 @@ describe("the driver's ledger — every step of an exchange, in fixed wording, b
     const answered = state.exchanges[1]!;
     expect(answered.opening).toBe("What is Thunderbolt's power?");
     expect(answered.transactionId).toBe("session-1");
-    // The scripted reply links nothing, and the trail says so.
-    expect(codes(answered.steps)).toEqual(["trainer/said", "scope/granted", "model/answer", "linking/unlinked", "record/answered"]);
-    expect(answered.steps.map((entry) => entry.lane)).toEqual(["trainer", "kernel", "model", "driver", "kernel"]);
-    expect(answered.steps[4]!.text).toContain("1 claim(s) certified");
+    // The scripted reply links nothing, and the trail says so. The listing
+    // door is withheld on a one-thing ask — the offered door is the default.
+    expect(codes(answered.steps)).toEqual(["trainer/said", "scope/granted", "route/withheld", "model/answer", "linking/unlinked", "record/answered"]);
+    expect(answered.steps.map((entry) => entry.lane)).toEqual(["trainer", "kernel", "driver", "model", "driver", "kernel"]);
+    expect(answered.steps[5]!.text).toContain("1 claim(s) certified");
     expect(state.steps).toEqual([]);
   });
 
@@ -2121,13 +2122,13 @@ describe("the driver's ledger — every step of an exchange, in fixed wording, b
     let state = await setProfile(startSession(), PROFILE_SCOPE, d);
     state = await say(state, "how fast is Pikachu?", d);
     expect(state.phase.kind).toBe("clarifying");
-    expect(codes(state.steps)).toEqual(["trainer/said", "scope/granted", "model/answer", "linking/contradiction", "clarify/asked"]);
+    expect(codes(state.steps)).toEqual(["trainer/said", "scope/granted", "route/withheld", "model/answer", "linking/contradiction", "clarify/asked"]);
     state = await say(state, "Speed", d);
     const trail = state.exchanges.at(-1)!;
     expect(trail.outcome).toBe("answered");
     expect(codes(trail.steps)).toEqual([
-      "trainer/said", "scope/granted", "model/answer", "linking/contradiction", "clarify/asked",
-      "trainer/said", "clarify/picked", "scope/granted", "model/answer", "linking/off-ask-dropped", "record/answered",
+      "trainer/said", "scope/granted", "route/withheld", "model/answer", "linking/contradiction", "clarify/asked",
+      "trainer/said", "clarify/picked", "scope/granted", "route/withheld", "model/answer", "linking/off-ask-dropped", "record/answered",
     ]);
     expect(trail.steps.find((entry) => entry.code === "linking/off-ask-dropped")?.count).toBe(1);
     expect(trail.steps.find((entry) => entry.code === "clarify/picked")?.text).toContain("Speed");
@@ -2269,8 +2270,9 @@ describe("the driver's ledger — every step of an exchange, in fixed wording, b
     expect(codes(trail.steps)).toContain("route/served");
     expect(state.records.at(-1)?.manifest?.claims.filter((claim) => claim.kind === "membership")).toHaveLength(5);
     expect(state.listingDoor).toEqual({ withheld: 2, nominated: 1 });
-    // The lever off: every door on every first call, as today.
-    const off = await say(await setProfile(startSession(), PROFILE_SCOPE, deps(provider)), "tell me about the game", deps(provider));
+    // The off arm (`offeredDoors: false`): every door on every first call.
+    const shut: SessionDeps = { ...deps(provider), offeredDoors: false };
+    const off = await say(await setProfile(startSession(), PROFILE_SCOPE, shut), "tell me about the game", shut);
     expect(doors.at(-2)).toEqual({ routes: ["listing", "profile"] });
     expect(codes(off.exchanges.at(-1)!.steps)).toContain("route/withdrawn");
     expect(off.listingDoor).toEqual({ withheld: 0, nominated: 1 });
