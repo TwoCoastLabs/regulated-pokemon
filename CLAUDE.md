@@ -184,10 +184,12 @@ name defines it in plain words the first time.
   the reply has come. The League's relay answers whole, so there the meter
   is seconds only. Observation only: a session observed files the same
   record as one that is not, and an unwatched call is the same wire it
-  always was. Under every settled reply, the time the Advisor took
-  (`exchangeWorkMs`, `src/ui/trail.ts`): the exchange's working time read
-  from its ledger — every call and every round sent back, minus the
-  trainer's own pauses over a question. Dogfood a porch round from the trail before
+  always was. Under every settled reply, what that turn took
+  (`exchangeWorkMs` and `callsOf`, `src/ui/trail.ts`): the exchange's
+  working time read from its ledger — every call and every round sent
+  back, minus the trainer's own pauses over a question — and the model
+  calls made within its span, with their cost, beside the session totals
+  in the header. Dogfood a porch round from the trail before
   reaching for the trace file.
   All four go through tested, coverage-counted code below `app/`; the app
   itself still ships with no model and no key — a key exists only when a

@@ -378,6 +378,21 @@ export function exchangeWorkMs(ledger: ExchangeLedger): number | undefined {
   return total;
 }
 
+/**
+ * The model calls one exchange made: those that began within its ledger's
+ * span, by the same clock `withCalls` places them with — the trainer's words
+ * are recorded before the first call begins, the filing after the last
+ * returns. With the sum of their cost, so the chat can say what a turn cost
+ * beside what the session has cost so far.
+ */
+export function callsOf(ledger: ExchangeLedger, calls: readonly ModelCallTrace[]): { calls: readonly ModelCallTrace[]; costUsd: number } {
+  const first = ledger.steps[0];
+  const last = ledger.steps[ledger.steps.length - 1];
+  if (first === undefined || last === undefined) return { calls: [], costUsd: 0 };
+  const mine = calls.filter((call) => first.at <= call.at && call.at <= last.at);
+  return { calls: mine, costUsd: mine.reduce((sum, call) => sum + (call.usage?.costUsd ?? 0), 0) };
+}
+
 /** The closed exchange a moment falls within — the way a note, which
  * carries only its time, finds the exchange that wrote it. */
 export function exchangeAt(exchanges: readonly ExchangeLedger[], at: string): ExchangeLedger | undefined {

@@ -22,7 +22,7 @@ import type { Transaction } from "../kernel/transaction.js";
 import type { ModelCallTrace } from "../session/devtrace.js";
 import { type ExchangeLedger, LEDGER_CODES } from "../session/ledger.js";
 import { say, type SessionDeps, setProfile, startSession } from "../session/session.js";
-import { exchangeAt, exchangeWorkMs, laneLabel, sentBack, toneOf, trailFromLedger, trailFromRecord, trailsOfRun, trailsOfSession, withCalls, type Trail } from "./trail.js";
+import { callsOf, exchangeAt, exchangeWorkMs, laneLabel, sentBack, toneOf, trailFromLedger, trailFromRecord, trailsOfRun, trailsOfSession, withCalls, type Trail } from "./trail.js";
 
 const AT = "2026-01-01T00:00:00Z";
 
@@ -204,6 +204,22 @@ describe("how long the Advisor took, from the ledger's clock", () => {
     expect(exchangeWorkMs({ ...one, steps: [] })).toBeUndefined();
     expect(exchangeWorkMs({ ...one, steps: [...one.steps].reverse() })).toBeUndefined();
     expect(exchangeWorkMs({ ...one, steps: [one.steps[0]!, { ...one.steps[1]!, at: "t5" }] })).toBeUndefined();
+  });
+
+  it("the calls of one exchange: those that began within its span, with their cost summed", () => {
+    const call = (seq: number, at: string, costUsd?: number): ModelCallTrace => ({
+      kind: "model-call",
+      seq,
+      at,
+      purpose: "answer",
+      prompt: "",
+      latencyMs: 1,
+      ...(costUsd === undefined ? {} : { usage: { promptTokens: 1, completionTokens: 1, calls: 1, costedCalls: 1, costUsd } }),
+    });
+    const calls = [call(1, at(2), 0.001), call(2, at(6), 0.002), call(3, at(20)), call(4, at(21), 0.004)];
+    expect(callsOf(one, calls)).toEqual({ calls: [calls[0], calls[1]], costUsd: 0.003 });
+    expect(callsOf(two, calls)).toEqual({ calls: [calls[2], calls[3]], costUsd: 0.004 });
+    expect(callsOf({ ...one, steps: [] }, calls)).toEqual({ calls: [], costUsd: 0 });
   });
 
   it("a moment finds the exchange it falls within — a note's way home", () => {
