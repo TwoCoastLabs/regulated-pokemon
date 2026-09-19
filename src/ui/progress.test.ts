@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ModelCallStart } from "../session/devtrace.js";
 import { type DriverStep, LEDGER_CODES, type LedgerCode } from "../session/ledger.js";
-import { progressLine, progressMeter } from "./progress.js";
+import { plainDuration, progressLine, progressMeter } from "./progress.js";
 
 const step = (code: LedgerCode): DriverStep => ({ at: "2026-01-01T00:00:00.000Z", lane: "driver", code, text: code });
 const call = (purpose: ModelCallStart["purpose"], seq = 1, doors?: ModelCallStart["doors"]): ModelCallStart => ({
@@ -74,5 +74,14 @@ describe("the exchange in progress, as one line", () => {
     expect(progressMeter({ elapsedMs: 4200, chars: 0 })).toBe("4s");
     expect(progressMeter({ elapsedMs: 4200, chars: 5 })).toBe("4s · the reply is arriving, about 1 word so far");
     expect(progressMeter({ elapsedMs: 12900, chars: 720 })).toBe("12s · the reply is arriving, about 120 words so far");
+  });
+
+  it("a span of time in the player's register: tenths, then seconds, then minutes", () => {
+    expect(plainDuration(0)).toBe("0.0s");
+    expect(plainDuration(840)).toBe("0.8s");
+    expect(plainDuration(8_437)).toBe("8.4s");
+    expect(plainDuration(12_600)).toBe("13s");
+    expect(plainDuration(65_400)).toBe("1m 05s");
+    expect(plainDuration(-5)).toBe("0.0s");
   });
 });

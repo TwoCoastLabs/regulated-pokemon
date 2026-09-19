@@ -1881,6 +1881,12 @@ body {
   opacity: 0.7;
   font-variant-numeric: tabular-nums;
 }
+.live-took {
+  margin-top: 4px;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
 
 
 /* The trainer's profile panel (epic #145, R2): typed scope, open until set,

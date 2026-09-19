@@ -22,7 +22,7 @@ import type { Transaction } from "../kernel/transaction.js";
 import type { ModelCallTrace } from "../session/devtrace.js";
 import { type ExchangeLedger, LEDGER_CODES } from "../session/ledger.js";
 import { say, type SessionDeps, setProfile, startSession } from "../session/session.js";
-import { laneLabel, sentBack, toneOf, trailFromLedger, trailFromRecord, trailsOfRun, trailsOfSession, withCalls, type Trail } from "./trail.js";
+import { exchangeAt, exchangeWorkMs, laneLabel, sentBack, toneOf, trailFromLedger, trailFromRecord, trailsOfRun, trailsOfSession, withCalls, type Trail } from "./trail.js";
 
 const AT = "2026-01-01T00:00:00Z";
 
@@ -165,6 +165,52 @@ describe("a trail from the driver's ledger", () => {
     const passed = trailFromLedger({ opening: "hi", outcome: "passed", steps: [{ at: "t1", lane: "trainer", code: "trainer/said", text: "hi" }] }, [denied]);
     expect(passed).not.toHaveProperty("transactionId");
     expect(passed.steps[0]!.calls).toEqual([]);
+  });
+});
+
+describe("how long the Advisor took, from the ledger's clock", () => {
+  const at = (s: number) => `2026-09-19T06:33:${String(s).padStart(2, "0")}.500Z`;
+  const one: ExchangeLedger = {
+    opening: "hi",
+    outcome: "answered",
+    steps: [
+      { at: at(1), lane: "trainer", code: "trainer/said", text: "hi" },
+      { at: at(5), lane: "model", code: "model/answer", text: "…" },
+      { at: at(9), lane: "kernel", code: "record/answered", text: "filed" },
+    ],
+  };
+  const two: ExchangeLedger = { opening: "again", outcome: "passed", steps: [{ at: at(20), lane: "trainer", code: "trainer/said", text: "again" }, { at: at(21), lane: "driver", code: "note/abstention", text: "no" }] };
+  // A question asked and answered: the League asked at :03, the trainer
+  // took until :40 to pick, the answer filed at :44.
+  const asked: ExchangeLedger = {
+    opening: "which is fastest?",
+    outcome: "answered",
+    steps: [
+      { at: at(1), lane: "trainer", code: "trainer/said", text: "which is fastest?" },
+      { at: at(3), lane: "driver", code: "scope/asked", text: "which game?" },
+      { at: at(40), lane: "trainer", code: "trainer/said", text: "yellow" },
+      { at: at(44), lane: "kernel", code: "record/answered", text: "filed" },
+    ],
+  };
+
+  it("is the driver's working time — the trainer's own pauses are left out", () => {
+    expect(exchangeWorkMs(one)).toBe(8_000);
+    expect(exchangeWorkMs(two)).toBe(1_000);
+    expect(exchangeWorkMs(asked)).toBe(6_000);
+    expect(exchangeWorkMs({ ...one, steps: [one.steps[0]!] })).toBe(0);
+  });
+
+  it("is undefined with no steps or a clock that ran backwards", () => {
+    expect(exchangeWorkMs({ ...one, steps: [] })).toBeUndefined();
+    expect(exchangeWorkMs({ ...one, steps: [...one.steps].reverse() })).toBeUndefined();
+    expect(exchangeWorkMs({ ...one, steps: [one.steps[0]!, { ...one.steps[1]!, at: "t5" }] })).toBeUndefined();
+  });
+
+  it("a moment finds the exchange it falls within — a note's way home", () => {
+    expect(exchangeAt([one, two], at(21))).toBe(two);
+    expect(exchangeAt([one, two], at(5))).toBe(one);
+    expect(exchangeAt([one, two], at(15))).toBeUndefined();
+    expect(exchangeAt([], at(5))).toBeUndefined();
   });
 });
 

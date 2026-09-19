@@ -156,3 +156,17 @@ function afterStep(step: DriverStep): string {
       return "Working…";
   }
 }
+
+/**
+ * A span of time in the player's register: tenths under ten seconds, whole
+ * seconds under a minute, minutes and seconds beyond — never milliseconds,
+ * which read as a benchmark rather than a wait.
+ */
+export function plainDuration(ms: number): string {
+  const seconds = Math.max(0, ms) / 1000;
+  if (seconds < 10) return `${seconds.toFixed(1)}s`;
+  if (seconds < 60) return `${Math.round(seconds)}s`;
+  const minutes = Math.floor(seconds / 60);
+  const rest = Math.round(seconds - minutes * 60);
+  return `${minutes}m ${String(rest).padStart(2, "0")}s`;
+}
