@@ -8,17 +8,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { assembleStream,
-  type CallProgress,
-  foldSchemaFor,
-  type FetchLike,
-  type HttpResponse,
-  OpenRouterProvider,
-  OPENROUTER_URL,
-  ProviderError,
-  readUsage,
-  redact,
-} from "./openrouter.js";
+import { type CallProgress, type FetchLike, type HttpResponse, OPENROUTER_URL, OpenRouterProvider, ProviderError, assembleStream, describeUpstreamPreference, foldSchemaFor, parseUpstreamPreference, readUsage, redact } from "./openrouter.js";
 import type { CompletionRequest } from "./provider.js";
 
 const KEY = "sk-or-v1-secret-value";
@@ -94,6 +84,29 @@ describe("the request it sends", () => {
         { role: "user", content: "one two three four" },
       ],
     });
+  });
+
+  it("carries the operator's upstream preference on the wire, and nothing when none is set", async () => {
+    // One model id, several hosts, a 10× spread in decode rate by route
+    // (findings §27–§28): the preference is the request's, never model tuning.
+    const { fetch: send, calls } = stub([chat("ok")]);
+    const routed = new OpenRouterProvider({ id: "t", model: "vendor/model-x", apiKey: KEY, system: "be honest", fetch: send, upstream: { sort: "throughput", ignore: ["Novita"] } });
+    await routed.complete(request);
+    expect((calls[0]?.body as Record<string, unknown>).provider).toEqual({ sort: "throughput", ignore: ["Novita"], allow_fallbacks: true });
+    const plain = stub([chat("ok")]);
+    await new OpenRouterProvider({ id: "t", model: "vendor/model-x", apiKey: KEY, system: "be honest", fetch: plain.fetch }).complete(request);
+    expect((plain.calls[0]?.body as Record<string, unknown>).provider).toBeUndefined();
+  });
+
+  it("reads OPENROUTER_UPSTREAM as a sort and/or an ignore list, and refuses an unknown word by name", () => {
+    expect(parseUpstreamPreference(undefined)).toBeUndefined();
+    expect(parseUpstreamPreference("  ")).toBeUndefined();
+    expect(parseUpstreamPreference("throughput")).toEqual({ sort: "throughput" });
+    expect(parseUpstreamPreference("latency ignore=Novita,Parasail")).toEqual({ sort: "latency", ignore: ["Novita", "Parasail"] });
+    expect(parseUpstreamPreference("ignore=Novita")).toEqual({ ignore: ["Novita"] });
+    expect(() => parseUpstreamPreference("fastest")).toThrow(/"fastest" is not a sort/);
+    expect(describeUpstreamPreference(undefined)).toBe("the gateway's default (by price)");
+    expect(describeUpstreamPreference({ sort: "throughput", ignore: ["Novita"] })).toBe("by throughput, never Novita");
   });
 
   it("sends only ByteString-safe headers, so no attribution string can fail every call", async () => {

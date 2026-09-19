@@ -6490,3 +6490,63 @@ reply is qwen3.8-flash's upstream. Harness factors: the door default
 
 **Enforcement.** 0 escalations of 8 records across the five runs; every
 denial was the kernel's, by name.
+
+## 29. The upstream preference: the same model, three times faster by route — and the page says whose wait it is
+
+**Goal.** §27 and §28 attributed the strong model's slow calls to the
+host OpenRouter routed to, not the model: one id at 3 tok/s and 33
+tok/s within a day. Two things follow. The operator should be able to
+choose the host — a routing setting, never model tuning — and the page
+should say whose wait it is, so a trainer who sat through 20 seconds
+does not leave believing the League's checks took them.
+
+**How it works.** `OPENROUTER_UPSTREAM` names a sort (`throughput`,
+`latency`, `price`) and/or an `ignore=Host,Host` list; every live tool
+reads it, the request carries it as OpenRouter's `provider` field with
+fallbacks allowed, and every coverage artifact and dev trace records it
+in plain words. The live page sends its own choice (the fastest host by
+default; the gateway's default is by price, which is how the slow host
+gets picked) and the relay forwards only a validated shape. Under each
+reply the page now splits the turn's time — the model's hosts by name,
+the League's checks — and names a slow host outright: a call under 10
+tok/s on a reply long enough to rate, or over 15 s.
+
+**The A/B.** The current model, the same two asks, two rounds per arm,
+door on, precedents on, 2026-09-21 ~10:30 UTC:
+
+| arm | round | lesson calls · time | comparison call · host · rate | exchange time | cost |
+|---|---|---|---|---|---|
+| gateway default (price) | 1 | 3 · 13.4 s (GMICloud) | 17.7 s · Novita · 21.7 tok/s | 31.1 s | $0.0014 |
+| gateway default (price) | 2 | 3 · 9.0 s (GMICloud) | 16.0 s + 10.3 s retry · Novita · 27–28 tok/s | 35.3 s | $0.0014 |
+| `throughput` | 1 | 3 · 8.0 s (GMICloud) | 5.6 s · Google · 84 tok/s | 13.6 s | $0.0016 |
+| `throughput` | 2 | 3 · 11.4 s (GMICloud) | 4.8 s · Google · 100 tok/s | 16.2 s | $0.0014 |
+
+The long call — the comparison, 380–480 completion tokens — went from
+16.0–17.7 s on Novita to 4.8–5.6 s on Google: 3× faster, at 2× the cost
+of that one call ($0.0011 against $0.0005–0.0006) and no change worth
+naming per exchange. The short calls went to GMICloud under both arms.
+N=2 per arm; a bank leg under `OPENROUTER_UPSTREAM=throughput` is the
+reading that would move a default for the banks, and until then the
+banks run under the gateway's default as every filed leg did.
+
+**On the page.** With the machinery shown, one exchange on the relay
+read: "took 20s · 1 model call · $0.0008 — 20s of it was the model's
+host (Venice); the League's checks took under a second — Slow host:
+Venice served call 1 in 20s at 19 tokens a second. That is the route to
+the model, not this page." The meta bar says "routed by throughput" —
+and the call still went to Venice at 19 tok/s, because the relay serving
+that page was a process started on 2026-09-06 that predates the field
+and dropped it: the relay has to be restarted for the page's choice to
+reach the gateway. Restarted here.
+
+**Model errors, apart.** The lesson ask cost three calls on every round
+(the profile nomination on "game", the fabricated "game" facts carried
+back — §28); on the throughput round 1 the lesson ended in an abstention
+after the carried-back round; on the default round 2 the comparison
+came back as rosters (`IA-4/roster-not-in-manifest` ×2, carried back)
+and certified one claim. The comparison on the page certified three of
+six stats — the `asked` cap of six entries spent on per-entity links
+(§26's open item). None of it is the route's.
+
+**Enforcement.** 0 escalations of 8 records across the four rounds and
+the page's exchange.

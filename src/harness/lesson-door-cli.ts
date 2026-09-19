@@ -17,7 +17,7 @@ import { BANK_PATH, readBank } from "./bank.js";
 import { fileLessonDoorReading, type LessonDoorReadingArtifact, readingWorld, readLessonDoor, renderLessonDoorReading, summarize } from "./lesson-door-reading.js";
 import { loadEnv } from "./live.js";
 import { DEFAULT_STRONG_MODEL, DEFAULT_WEAK_MODEL, HONEST_PERSONA } from "./models.js";
-import { OpenRouterProvider } from "./openrouter.js";
+import { OpenRouterProvider, parseUpstreamPreference } from "./openrouter.js";
 import type { LessonMatcherId } from "../session/lesson-matcher.js";
 
 const argv = process.argv.slice(2);
@@ -35,7 +35,8 @@ if (apiKey === "") {
   console.error("no OPENROUTER_API_KEY in the environment or .env");
   process.exit(2);
 }
-const provider = new OpenRouterProvider({ id: `lesson-door:${model}`, model, apiKey, system: HONEST_PERSONA, structured: true });
+const upstream = parseUpstreamPreference(env.OPENROUTER_UPSTREAM);
+const provider = new OpenRouterProvider({ id: `lesson-door:${model}`, model, apiKey, system: HONEST_PERSONA, structured: true, ...(upstream === undefined ? {} : { upstream }) });
 
 const world = demoWorld();
 const bank = readBank(BANK_PATH);

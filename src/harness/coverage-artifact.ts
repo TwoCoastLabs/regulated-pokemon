@@ -100,6 +100,9 @@ export interface CoverageArtifact {
   /** Set when the listing door was offered only where the driver would
    * accept it (docs/offered-door.md). */
   offeredDoors?: boolean;
+  /** The upstream routing preference the calls were made under, in plain
+   * words (OPENROUTER_UPSTREAM); absent means the gateway's default. */
+  upstream?: string;
   /** Set when the explanation route carried only the lessons the ask is
    * about, plus the boundary (docs/lesson-door.md). */
   lessonDoor?: boolean;
@@ -168,6 +171,7 @@ export interface CoverageArtifactInput {
   refusalFeedback?: boolean;
   /** Set when the listing door was offered only where accepted (S4a). */
   offeredDoors?: boolean;
+  upstream?: string;
   lessonDoor?: boolean;
   lessonClassifier?: boolean;
   repetitions: number;
@@ -207,6 +211,7 @@ export function buildCoverageArtifact(input: CoverageArtifactInput): CoverageArt
     ...(input.prompt === undefined ? {} : { prompt: input.prompt }),
     ...(input.refusalFeedback === undefined ? {} : { refusalFeedback: input.refusalFeedback }),
     ...(input.offeredDoors === undefined ? {} : { offeredDoors: input.offeredDoors }),
+    ...(input.upstream === undefined ? {} : { upstream: input.upstream }),
     ...(input.lessonDoor === undefined ? {} : { lessonDoor: input.lessonDoor }),
     ...(input.lessonClassifier === undefined ? {} : { lessonClassifier: input.lessonClassifier }),
     repetitions: input.repetitions,

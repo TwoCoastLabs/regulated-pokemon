@@ -1962,6 +1962,16 @@ body {
   margin-top: 4px;
   opacity: 0.7;
   font-variant-numeric: tabular-nums;
+  display: grid;
+  gap: 2px;
+}
+.live-took p {
+  margin: 0;
+}
+/* The slow host, named: the one line under a reply that is about the route
+   to the model rather than the answer, so it reads apart. */
+.live-slow-host {
+  color: var(--model);
 }
 
 

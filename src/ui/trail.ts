@@ -393,6 +393,50 @@ export function callsOf(ledger: ExchangeLedger, calls: readonly ModelCallTrace[]
   return { calls: mine, costUsd: mine.reduce((sum, call) => sum + (call.usage?.costUsd ?? 0), 0) };
 }
 
+/**
+ * Where a turn's time went, for the line under the reply: the model's
+ * hosts, or the League's checks. The wait a trainer feels is almost all
+ * the model's host (findings §27: one model id at 3 tok/s and 33 tok/s by
+ * route), and a page that only says "took 31s" leaves them to blame the
+ * checks. Model time is the sum of the turn's call latencies; the rest of
+ * the working time is the driver and the kernel. A slow call is one under
+ * {@link SLOW_TOKENS_PER_SEC} on a reply long enough to measure, or over
+ * {@link SLOW_CALL_MS} — named by its host so the reading is attributable,
+ * never "the model is slow".
+ */
+export interface TurnTiming {
+  workMs: number;
+  modelMs: number;
+  checksMs: number;
+  /** The distinct hosts that served the turn's calls, in call order. */
+  hosts: readonly string[];
+  /** The slowest call, when it was slow. */
+  slow?: { seq: number; host: string | undefined; latencyMs: number; tokensPerSec: number | undefined };
+}
+
+export const SLOW_TOKENS_PER_SEC = 10;
+export const SLOW_CALL_MS = 15_000;
+
+export function turnTiming(ledger: ExchangeLedger, calls: readonly ModelCallTrace[]): TurnTiming | undefined {
+  const workMs = exchangeWorkMs(ledger);
+  if (workMs === undefined) return undefined;
+  const made = callsOf(ledger, calls).calls;
+  const modelMs = made.reduce((sum, call) => sum + call.latencyMs, 0);
+  const hosts: string[] = [];
+  for (const call of made) {
+    if (call.servedBy !== undefined && !hosts.includes(call.servedBy)) hosts.push(call.servedBy);
+  }
+  let slow: TurnTiming["slow"];
+  for (const call of made) {
+    const tokens = call.usage?.completionTokens ?? 0;
+    const tokensPerSec = call.latencyMs > 0 && tokens >= 20 ? (tokens * 1000) / call.latencyMs : undefined;
+    const isSlow = call.latencyMs >= SLOW_CALL_MS || (tokensPerSec !== undefined && tokensPerSec < SLOW_TOKENS_PER_SEC);
+    if (!isSlow) continue;
+    if (slow === undefined || call.latencyMs > slow.latencyMs) slow = { seq: call.seq, host: call.servedBy, latencyMs: call.latencyMs, tokensPerSec };
+  }
+  return { workMs, modelMs, checksMs: Math.max(0, workMs - modelMs), hosts, ...(slow === undefined ? {} : { slow }) };
+}
+
 /** The closed exchange a moment falls within — the way a note, which
  * carries only its time, finds the exchange that wrote it. */
 export function exchangeAt(exchanges: readonly ExchangeLedger[], at: string): ExchangeLedger | undefined {

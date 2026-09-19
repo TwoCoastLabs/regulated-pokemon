@@ -116,6 +116,8 @@ interface ChatBody {
   messages: readonly { role: "system" | "user"; content: string }[];
   maxTokens: number | undefined;
   responseFormat: unknown;
+  /** The routing preference the driver sent, validated to its shape. */
+  upstream?: Record<string, unknown>;
 }
 
 /** Accept exactly the request the Advisor's driver makes; name what fails.
@@ -166,8 +168,27 @@ function readChatBody(raw: string, config: RelayConfig): ChatBody | string {
     responseFormat = body.response_format;
   }
 
+  // The upstream preference (openrouter.ts, UpstreamPreference): a sort by
+  // name and/or a short list of host names, nothing else — the relay never
+  // forwards a field it has not read.
+  let upstream: Record<string, unknown> | undefined;
+  if (body.provider !== undefined) {
+    const sent = body.provider as Record<string, unknown>;
+    const sortOk = sent.sort === undefined || sent.sort === "throughput" || sent.sort === "latency" || sent.sort === "price";
+    const ignoreOk =
+      sent.ignore === undefined ||
+      (Array.isArray(sent.ignore) && sent.ignore.length <= 8 && sent.ignore.every((host) => typeof host === "string" && /^[A-Za-z0-9 ._-]{1,40}$/.test(host)));
+    if (typeof sent !== "object" || sent === null || !sortOk || !ignoreOk) {
+      return "provider, when present, must name a sort of throughput, latency or price, and/or an ignore list of host names";
+    }
+    upstream = {
+      ...(sent.sort === undefined ? {} : { sort: sent.sort }),
+      ...(sent.ignore === undefined ? {} : { ignore: sent.ignore }),
+      allow_fallbacks: true,
+    };
+  }
   const maxTokens = typeof body.max_tokens === "number" && body.max_tokens > 0 ? body.max_tokens : undefined;
-  return { model: body.model, messages, maxTokens, responseFormat };
+  return { model: body.model, messages, maxTokens, responseFormat, ...(upstream === undefined ? {} : { upstream }) };
 }
 
 /** UTC day key, so the daily caps roll over at a stated, testable moment. */
@@ -234,6 +255,7 @@ export function createRelay(deps: RelayDeps): RelayHandler {
       max_tokens: Math.min(read.maxTokens ?? config.maxTokens, config.maxTokens),
       usage: { include: true },
       ...(read.responseFormat === undefined ? {} : { response_format: read.responseFormat }),
+      ...(read.upstream === undefined ? {} : { provider: read.upstream }),
       messages: read.messages,
     });
 

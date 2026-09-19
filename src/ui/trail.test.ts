@@ -22,7 +22,7 @@ import type { Transaction } from "../kernel/transaction.js";
 import type { ModelCallTrace } from "../session/devtrace.js";
 import { type ExchangeLedger, LEDGER_CODES } from "../session/ledger.js";
 import { say, type SessionDeps, setProfile, startSession } from "../session/session.js";
-import { callsOf, exchangeAt, exchangeWorkMs, laneLabel, sentBack, toneOf, trailFromLedger, trailFromRecord, trailsOfRun, trailsOfSession, withCalls, type Trail } from "./trail.js";
+import { callsOf, exchangeAt, exchangeWorkMs, laneLabel, sentBack, toneOf, trailFromLedger, trailFromRecord, trailsOfRun, trailsOfSession, turnTiming, withCalls, type Trail } from "./trail.js";
 
 const AT = "2026-01-01T00:00:00Z";
 
@@ -192,6 +192,28 @@ describe("how long the Advisor took, from the ledger's clock", () => {
       { at: at(44), lane: "kernel", code: "record/answered", text: "filed" },
     ],
   };
+
+  it("splits a turn's time between the model's hosts and the League's checks, and names the slow host", () => {
+    // Two calls inside `one`'s 8 s of work: 5 s on Novita at 4 tok/s (slow
+    // by rate), 2 s on StreamLake (fine). The checks are what is left.
+    const call = (seq: number, at: string, latencyMs: number, tokens: number, servedBy?: string): ModelCallTrace => ({
+      kind: "model-call", seq, at, purpose: "answer", prompt: "", response: "{}", latencyMs,
+      usage: { promptTokens: 100, completionTokens: tokens, calls: 1, costedCalls: 1, costUsd: 0.001 },
+      ...(servedBy === undefined ? {} : { servedBy }),
+    });
+    const timing = turnTiming(one, [call(1, at(2), 5_000, 20, "Novita"), call(2, at(7), 2_000, 100, "StreamLake")]);
+    expect(timing).toMatchObject({ workMs: 8_000, modelMs: 7_000, checksMs: 1_000, hosts: ["Novita", "StreamLake"] });
+    expect(timing?.slow).toMatchObject({ seq: 1, host: "Novita", latencyMs: 5_000 });
+    expect(timing?.slow?.tokensPerSec).toBeCloseTo(4, 5);
+    // A long call is slow by wall time whatever its rate; a fast short one is not slow, and a call
+    // too short to rate (under 20 tokens) is never called slow by rate.
+    expect(turnTiming(one, [call(1, at(2), 16_000, 800, "Google")])?.slow).toMatchObject({ host: "Google", latencyMs: 16_000 });
+    expect(turnTiming(one, [call(1, at(2), 3_000, 5)])?.slow).toBeUndefined();
+    expect(turnTiming(one, [call(1, at(2), 3_000, 5)])?.hosts).toEqual([]);
+    // No calls: all of it is the checks. A backwards clock: nothing to say.
+    expect(turnTiming(two, [])).toMatchObject({ workMs: 1_000, modelMs: 0, checksMs: 1_000 });
+    expect(turnTiming({ ...one, steps: [one.steps[0]!, one.steps[2]!, one.steps[1]!] }, [])).toBeUndefined();
+  });
 
   it("is the driver's working time — the trainer's own pauses are left out", () => {
     expect(exchangeWorkMs(one)).toBe(8_000);

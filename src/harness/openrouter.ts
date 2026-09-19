@@ -99,12 +99,76 @@ export interface OpenRouterConfig {
    * reports nothing until the end.
    */
   onProgress?: (progress: CallProgress) => void;
+  /** Which upstream to route to ({@link UpstreamPreference}); absent means
+   * the gateway's own default. Recorded wherever the model is. */
+  upstream?: UpstreamPreference;
 }
 
 /** The reply so far, while a watched call is in flight. */
 export interface CallProgress {
   /** Characters of reply content received so far. */
   chars: number;
+}
+
+/**
+ * Which upstream OpenRouter should route a model id to — an operator setting,
+ * never model tuning. One model id is served by several hosts, and the same
+ * id ran at 3 tok/s on one and 33 tok/s on another within a day (findings
+ * §27, §28); the gateway's default sort is price, so the slow host is the
+ * one a cheap default picks. `sort` names what to route by; `ignore` names
+ * hosts never to use. Fallbacks stay allowed so a preference can never turn
+ * a served call into an outage.
+ */
+export type UpstreamSort = "throughput" | "latency" | "price";
+export interface UpstreamPreference {
+  sort?: UpstreamSort;
+  ignore?: readonly string[];
+}
+
+const UPSTREAM_SORTS: readonly UpstreamSort[] = ["throughput", "latency", "price"];
+
+/**
+ * Read a preference from one setting: `throughput`, `latency`, `price`,
+ * `ignore=Novita,Parasail`, or a sort and an ignore list separated by a
+ * space. Empty means no preference (the gateway's own default). An unknown
+ * word is refused by name rather than silently ignored — a routing setting
+ * that does nothing is the failure this exists to make visible.
+ */
+export function parseUpstreamPreference(text: string | undefined): UpstreamPreference | undefined {
+  const trimmed = (text ?? "").trim();
+  if (trimmed === "") return undefined;
+  const preference: { sort?: UpstreamSort; ignore?: string[] } = {};
+  for (const word of trimmed.split(/\s+/)) {
+    if ((UPSTREAM_SORTS as readonly string[]).includes(word)) {
+      preference.sort = word as UpstreamSort;
+      continue;
+    }
+    if (word.startsWith("ignore=")) {
+      const hosts = word.slice("ignore=".length).split(",").map((host) => host.trim()).filter((host) => host.length > 0);
+      if (hosts.length > 0) preference.ignore = hosts;
+      continue;
+    }
+    throw new Error(`OPENROUTER_UPSTREAM: "${word}" is not a sort (${UPSTREAM_SORTS.join(", ")}) or an ignore=host,host list`);
+  }
+  return preference;
+}
+
+/** The preference in plain words, for a config line or an artifact. */
+export function describeUpstreamPreference(preference: UpstreamPreference | undefined): string {
+  if (preference === undefined) return "the gateway's default (by price)";
+  const parts: string[] = [];
+  if (preference.sort !== undefined) parts.push(`by ${preference.sort}`);
+  if (preference.ignore !== undefined && preference.ignore.length > 0) parts.push(`never ${preference.ignore.join(", ")}`);
+  return parts.join(", ") || "the gateway's default (by price)";
+}
+
+/** The preference as the request carries it. */
+export function upstreamRequestField(preference: UpstreamPreference): Record<string, unknown> {
+  return {
+    ...(preference.sort === undefined ? {} : { sort: preference.sort }),
+    ...(preference.ignore === undefined || preference.ignore.length === 0 ? {} : { ignore: [...preference.ignore] }),
+    allow_fallbacks: true,
+  };
 }
 
 const DEFAULTS = {
@@ -220,10 +284,11 @@ export function readUsage(payload: ChatResponse, request: CompletionRequest, tex
 export class OpenRouterProvider implements ModelProvider {
   readonly id: string;
   readonly model: string;
-  private readonly config: Required<Omit<OpenRouterConfig, "fetch" | "sleep" | "onProgress">> & {
+  private readonly config: Required<Omit<OpenRouterConfig, "fetch" | "sleep" | "onProgress" | "upstream">> & {
     fetch: FetchLike;
     sleep: (ms: number) => Promise<void>;
     onProgress?: (progress: CallProgress) => void;
+    upstream?: UpstreamPreference;
   };
 
   constructor(config: OpenRouterConfig) {
@@ -261,7 +326,7 @@ export class OpenRouterProvider implements ModelProvider {
   }
 
   private async attempt(request: CompletionRequest, attempt: number): Promise<Completion> {
-    const { url, apiKey, model, system, maxTokens, timeoutMs, structured, fetch: send, onProgress } = this.config;
+    const { url, apiKey, model, system, maxTokens, timeoutMs, structured, fetch: send, onProgress, upstream } = this.config;
 
     // Shape only. The grammar cannot make a claim true, and nothing downstream
     // trusts it any more for having been well-formed.
@@ -286,6 +351,9 @@ export class OpenRouterProvider implements ModelProvider {
       // Only a watched call streams: unwatched, the wire is the plain,
       // whole-body reply the relay and the harness have always read.
       ...(onProgress === undefined ? {} : { stream: true }),
+      // The operator's routing preference, when one is set — the wait a
+      // trainer feels is mostly the host, and the host is a choice.
+      ...(upstream === undefined ? {} : { provider: upstreamRequestField(upstream) }),
       ...format,
       messages: [
         { role: "system", content: system },

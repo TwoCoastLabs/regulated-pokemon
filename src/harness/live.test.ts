@@ -46,6 +46,15 @@ describe("configuration", () => {
     expect(config.ok === false && config.reason).toContain("OPENROUTER_API_KEY");
   });
 
+  it("reads the upstream preference from OPENROUTER_UPSTREAM, and refuses an unknown word by name", () => {
+    const routed = liveConfig({ ...KEYED, OPENROUTER_UPSTREAM: "throughput ignore=Novita" });
+    expect(routed.ok === true && routed.config.upstream).toEqual({ sort: "throughput", ignore: ["Novita"] });
+    expect(liveConfig(KEYED).ok === true && "upstream" in liveConfig(KEYED)).toBe(false);
+    const wrong = liveConfig({ ...KEYED, OPENROUTER_UPSTREAM: "fastest" });
+    expect(wrong.ok).toBe(false);
+    expect(wrong.ok === false && wrong.reason).toContain("fastest");
+  });
+
   it("treats whitespace as no key at all", () => {
     expect(liveConfig({ OPENROUTER_API_KEY: "   " }).ok).toBe(false);
   });
