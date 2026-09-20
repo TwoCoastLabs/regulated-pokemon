@@ -146,9 +146,11 @@ the check.
 
 ## What the leg has read so far
 
-Findings §35: on 30 answerable entries per model, the first suggestion
-taken as the next ask was answered with the lesson or field promised on
-28 of 29 follow-ups (strong) and 25 of 28 (weak). "Them" after a count is
+Findings §36: over the whole answerable set, three repetitions, the
+first suggestion taken as the next ask was answered with the lesson or
+field promised on 207 of 211 follow-ups (98%) on the strong model and
+168 of 196 (86%) on the weak, at 1.02 and 1.07 calls per follow-up. The
+small run first (§35) found three harness gaps in 30 entries. "Them" after a count is
 the count's set (a roster serves a species field); the previous answer's
 roster criteria ride into an anaphoric follow-up's prompt; a roster's
 move id is read in its canonical spelling at decode; and a rank wording

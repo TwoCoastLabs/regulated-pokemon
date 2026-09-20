@@ -42,6 +42,17 @@ describe("the answerable check: a suggestion is shown only when the records woul
     expect(answerable(world, counted, "how much power does it have?")).toMatchObject({ kind: "none" });
   });
 
+  it("drops a question that would bind the comparison basis to another field — the denial the bank saw", () => {
+    const roster = { id: "all-kanto", snapshotId: world.registry.snapshot.id, criteria: { all: [{ kind: "has-type", type: "rock" }] }, memberIds: ["onix", "geodude"], count: 2 };
+    const ranked = { claims: [{ kind: "ranking", rosterId: roster.id, basis: "base-defense", direction: "highest" }] as Claim[], rosters: [roster as never] };
+    // "what about Special Defense?" reads as the special-defense field, but
+    // "defense" binds the basis to Defense (bank, 2026-09-20: denied under IA-1).
+    expect(answerable(world, ranked, "what about Special Defense?")).toMatchObject({ kind: "none", reason: expect.stringContaining("without binding the comparison basis") });
+    // Beside a single subject the same words ask for a fact, and bind nothing.
+    expect(answerable(world, pikachuSpeed, "what about Special Defense?")).toEqual({ kind: "field", fieldId: "base-special-defense" });
+    expect(answerable(world, ranked, "which of them has the highest HP?")).toEqual({ kind: "field", fieldId: "base-hp" });
+  });
+
   it("never answers with the boundary lesson", () => {
     const boundary = world.pack.recordsBoundary!.lessonId;
     for (const [, entry] of Object.entries(world.pack.presentation.nextAsks!.lessons)) {

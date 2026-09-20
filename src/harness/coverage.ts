@@ -130,7 +130,7 @@ export interface CoverageMap {
     /** The follow-through leg, when it ran: the first suggestion taken as the
      * next ask on `followed` runs, `answered` with a record, `kept` with the
      * lesson or field the answerable check predicted. */
-    followed?: { runs: number; answered: number; kept: number; calls: number };
+    followed?: { runs: number; answered: number; kept: number; calls: number; costUsd: number };
   };
   /** The per-entry stability reading, present when the runs span more than one
    * repetition. This is the §21 noise-floor instrument: at N=1 a topline is one
@@ -289,8 +289,9 @@ export function coverageMap(runs: readonly BankRun[]): CoverageMap {
             answered: sum.answered + (run.suggestions?.followed?.outcome === "answered" ? 1 : 0),
             kept: sum.kept + (run.suggestions?.followed?.kept === true ? 1 : 0),
             calls: sum.calls + (run.suggestions?.followed?.calls ?? 0),
+            costUsd: sum.costUsd + (run.suggestions?.followed?.costUsd ?? 0),
           }),
-          { runs: 0, answered: 0, kept: 0, calls: 0 },
+          { runs: 0, answered: 0, kept: 0, calls: 0, costUsd: 0 },
         );
   const suggestionsWithFollow = suggestions === undefined ? undefined : { ...suggestions, ...(followed === undefined ? {} : { followed }) };
   const prompted = runs.filter((run) => run.promptTokens !== undefined);
@@ -482,7 +483,7 @@ export function renderCoverage(map: CoverageMap, heading = "Playability coverage
           ? ""
           : ` **Follow-through:** the first suggestion taken as the next ask on ${s.followed.runs} run(s) — ` +
             `${s.followed.answered} of ${s.followed.runs} answered with a record, ${s.followed.kept} of ${s.followed.runs} with the lesson or field promised, ` +
-            `${s.followed.calls} call(s).`),
+            `${s.followed.calls} call(s), $${s.followed.costUsd.toFixed(4)}.`),
     );
   }
   lines.push("");

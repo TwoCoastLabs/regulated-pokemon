@@ -6981,3 +6981,74 @@ before its fix. *Strong:* the Selfdestruct miss only.
 answerable set, N=3, both models — pre-registered: promise kept over
 follow-ups asked, the basis question's share of follow-ups (the ceremony
 count says it), and cost per follow-up.
+
+## 36. The follow-through leg, full answerable set, N=3: 207 of 211 promises kept on the strong model, 168 of 196 on the weak
+
+**Claim.** Over the whole answerable set, three repetitions, both
+models, a suggestion offered is a promise kept on 207 of 211 follow-ups
+(98%) on the strong model and 168 of 196 (86%) on the weak; a follow-up
+costs one call almost always (1.02 and 1.07 calls per follow-up), so the
+pack's basis question is no longer the price of a click; and the misses
+are the models' — two harness readings aside, closed here. This is the
+number the register was rebuilt to earn ([suggestions.md](suggestions.md),
+§34), and the first time it has a denominator worth quoting.
+
+**Legs.** The §35 flags without `--limit`, `--repetitions 3`, both
+models launched three seconds apart, 2026-09-20 09:40–10:03 UTC; strong
+`runs/coverage/2026-09-20T09-40-23-558Z-coverage.json`, weak
+`…09-40-26-346Z…`. Enforcement: 0 escalations of 237 on each leg; 0
+provider errors of 953 calls.
+
+| | strong (qwen3-235b-a22b-2507) | weak (mistral-nemo) |
+|---|---|---|
+| entries passed | 223 of 237 | 188 of 237 |
+| answers carrying a next step | 211 of 237 | 196 of 237 |
+| the model's own suggestions offered / dropped as unanswerable | 50 / 21 | 2 / 2 |
+| the pack's next steps shown | 624 | 620 |
+| followed | 211 | 196 |
+| answered with a record | 208 of 211 (99%) | 190 of 196 (97%) |
+| promise kept | 207 of 211 (98%) | 168 of 196 (86%) |
+| follow-up calls, per follow-up | 215, 1.02 | 210, 1.07 |
+| follow-ups needing more than one call | 4 of 211 | 14 of 196 |
+| entry cost / follow-up cost (estimated at the entry's cost per call) | $0.233 / ~$0.20 | $0.036 / ~$0.03 |
+
+By promised field, strong: types 44 of 44, speed 35 of 36, lessons 55 of
+56, moves' power 15 of 15, learnset 8 of 9, everything else whole. Weak:
+lessons 48 of 54, types 36 of 39, speed 37 of 43, locations 0 of 3,
+moves' power 9 of 12.
+
+**The strong model's four misses.** One a reading, not a dead end: its
+own "What type is good against it?" beside a type-effectiveness answer
+was read as the types lesson and answered with a matchup — the better
+answer; the promise reading was wrong, the answer was not. One a real
+denial: its own "what about Special Defense?" after a ranking by Defense
+passed the check as the special-defense field, bound nothing on its way
+in (the vocabulary's basis terms need a context word), so the scope kept
+Defense and the ranking by Special Defense was denied under IA-1 — a
+suggestion offered, then refused, the outcome §34 named worst. Closed:
+beside a set with no other subject, a species field is a ranking, and
+the check now requires the text to bind the basis to that field, the
+rule the pack's rank wordings were already pinned to. The other two: a
+ranking that abstained once in three, and its own "how do I make it
+faster?", advice-shaped, declined — read as the speed field, answered as
+the advice it was.
+
+**The weak model's 28 misses, apart.** Six entries miss every
+repetition, twelve some. The stable ones are the model answering beside
+the question: "what can I ask you?" after a boundary lesson answered
+with facts about the previous subject (4 entries, 5 of 5 runs — the
+pack's way back in, ignored for the earlier ask); "where can I find it?"
+for Mewtwo answered with the boundary lesson 3 of 3 where the strong
+model certified the location 3 of 3; "which of them has the highest
+Speed?" after two listings answered with the boundary lesson 6 of 6. The
+flaky ones are move fields answered with the boundary lesson (power,
+PP, type — 5 runs), two abstentions and one denial. None is a dead end
+the register produced: every miss filed a record or an honest
+abstention, and the ask was one the strong model answers.
+
+**Harness readings closed here.** The follow-up's own cost is now
+recorded (`followed.costUsd`), so the next leg quotes it rather than
+estimating it; the basis rule above. Open: the "what type is good against
+it?" reading — a type question beside a species is a matchup, and the
+check reads it as the types lesson; the kept reading should accept a
+matchup for it.

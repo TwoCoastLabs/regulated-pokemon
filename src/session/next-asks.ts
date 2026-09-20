@@ -35,6 +35,7 @@ import { type AccordPack, carriesPhrase, declaresLessonCoverage, type Dictionary
 import type { CertifiedRegistry } from "../kernel/registry.js";
 import { MAX_SUGGESTIONS, suggestionProblem } from "../kernel/suggestion-rule.js";
 import type { PrecedentStore } from "../memory/precedent.js";
+import { deriveScope } from "../kernel/scope.js";
 import { lessonOffer } from "./lesson-matcher.js";
 
 export interface NextAskWorld {
@@ -125,7 +126,26 @@ export function answerable(world: NextAskWorld, draft: Pick<ManifestDraft, "clai
         : field.subject === "move"
           ? subjects.moves.length > 0
           : subjects.items.length > 0;
-  if (field !== undefined && served) return { kind: "field", fieldId: field.id };
+  if (field !== undefined && served) {
+    // A question asked beside a ranked or listed set will rank it, and a
+    // ranking binds the scope's comparison basis on its way in. The
+    // vocabulary's basis terms are single tokens and need a context word,
+    // so "what about Special Defense?" binds nothing and the basis stays
+    // the previous ranking's — and the ranking by Special Defense is then
+    // denied under IA-1 (bank, 2026-09-20: the model's own suggestion).
+    // Beside a set, a basis field must bind itself outright, the rule the
+    // pack's rank wordings are pinned to.
+    // "It" has no one to point at when the set is the only subject, so a
+    // species field there is a ranking, and a field the vocabulary holds no
+    // basis term for (Special Defense) cannot be ranked by at all.
+    if (listed && subjects.species.length === 0 && field.subject === "species") {
+      const basis = deriveScope(pack, [{ kind: "utterance", at: "1970-01-01T00:00:00.000Z", source: "trainer", text }]).bindings.find((binding) => binding.dimension === "comparisonBasis");
+      if (basis?.value !== field.id) {
+        return { kind: "none", reason: `asks to rank by ${field.name} without binding the comparison basis to it${basis === undefined ? "" : ` (it would bind ${String(basis.value)})`}, and would be denied` };
+      }
+    }
+    return { kind: "field", fieldId: field.id };
+  }
   if (declaresLessonCoverage(pack)) {
     const boundary = pack.recordsBoundary?.lessonId;
     const offered = lessonOffer("alias", { pack }, text).offered.filter((id) => id !== boundary);

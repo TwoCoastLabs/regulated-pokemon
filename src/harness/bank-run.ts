@@ -228,6 +228,8 @@ export interface FollowedSuggestion {
    * not kept says what came instead. Empty when nothing was filed. */
   answeredWith: readonly string[];
   calls: number;
+  /** What the follow-up cost, apart from the entry's own. */
+  costUsd: number;
 }
 
 /** A bank run still carrying the whole record behind its verdict — transcript,
@@ -498,7 +500,7 @@ async function followFirstSuggestion(world: DemoWorld, entry: BankEntry, settled
               ? `membership:${claim.entityId}`
               : claim.kind,
   );
-  return { ask: first, promise, outcome, kept, answeredWith, calls: state.usage.calls - settled.usage.calls };
+  return { ask: first, promise, outcome, kept, answeredWith, calls: state.usage.calls - settled.usage.calls, costUsd: state.usage.costUsd - settled.usage.costUsd };
 }
 
 /** Read a settled session as the minimal run the funnel needs. Exported so the
