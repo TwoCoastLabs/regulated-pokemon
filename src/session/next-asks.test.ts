@@ -35,6 +35,13 @@ describe("the answerable check: a suggestion is shown only when the records woul
     expect(answerable(world, badgeLesson, "how fast is it?")).toEqual({ kind: "none", reason: "asks for Speed of a species the answer did not name" });
   });
 
+  it("'them' after a count or a listing is the set, so a species field is served", () => {
+    const roster = { id: "electric-kanto", snapshotId: world.registry.snapshot.id, criteria: { all: [{ kind: "has-type", type: "electric" }] }, memberIds: ["pikachu", "raichu"], count: 2 };
+    const counted = { claims: [{ kind: "count", rosterId: roster.id }] as Claim[], rosters: [roster as never] };
+    expect(answerable(world, counted, "which of them has the highest Speed?")).toEqual({ kind: "field", fieldId: "base-speed" });
+    expect(answerable(world, counted, "how much power does it have?")).toMatchObject({ kind: "none" });
+  });
+
   it("never answers with the boundary lesson", () => {
     const boundary = world.pack.recordsBoundary!.lessonId;
     for (const [, entry] of Object.entries(world.pack.presentation.nextAsks!.lessons)) {

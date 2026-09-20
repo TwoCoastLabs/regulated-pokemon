@@ -162,6 +162,7 @@ describe("the live page's configuration runs as one leg", () => {
 
     const { artifact } = filedArtifact(opts.written);
     expect(artifact).toMatchObject({ profile: true, feedback: true, clarify: true, suggest: true });
+    expect(artifact.followSuggestion).toBe(false);
     // The profile was set on the panel: no pack question on the record.
     expect(artifact.runs[0]!.run.transcript[0]!.kind).toBe("profile");
     expect(artifact.runs[0]!.clarified).toEqual({ asked: 0, picked: 0, ignored: 0, capped: 0 });

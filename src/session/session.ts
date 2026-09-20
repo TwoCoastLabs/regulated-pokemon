@@ -43,6 +43,7 @@ import type {
   ScopeTranscript,
   UtteranceSource,
   Violation,
+  RosterCriteria,
 } from "../kernel/contracts.js";
 import { type DomElement, walkArtifact } from "../kernel/dom.js";
 import type { ManifestContext, ManifestDraft } from "../kernel/manifest.js";
@@ -1749,11 +1750,24 @@ function previousSubjects(world: SessionWorld, state: SessionState, ask: string)
   if (!isAnaphoric(world, ask)) return undefined;
   const last = [...state.records].reverse().find((record) => record.manifest !== undefined);
   if (last?.manifest === undefined) return undefined;
-  const ids = last.manifest.claims.flatMap((claim) => subjectsOfClaim(claim).map(canonicalId));
+  // A roster's criteria name the set "them" points back at — the move a
+  // count was of, say — and the model rebuilding that set from the
+  // conversation misspells the id (bank, 2026-09-20: "which of them is the
+  // fastest?" after a count of Selfdestruct learners was refused under
+  // IA-3/unknown-move on both models). The certified criteria ids ride with
+  // the subjects, so the set can be named again exactly.
+  const fromRosters = (last.manifest.rosters ?? []).flatMap((roster) => criteriaIds(roster.criteria));
+  const ids = [...last.manifest.claims.flatMap((claim) => subjectsOfClaim(claim).map(canonicalId)), ...fromRosters.map(canonicalId)];
   const certified = [...new Set(ids)].filter(
     (id) => world.registry.speciesIds.includes(id) || world.registry.moveIds.includes(id) || world.registry.itemIds.includes(id),
   );
   return certified.length === 0 ? undefined : certified.slice(0, 12);
+}
+
+/** The certified ids a roster's criteria name: the move of a learns-move
+ * criterion. Types and categories are values, not subjects, and stay out. */
+function criteriaIds(criteria: RosterCriteria): readonly string[] {
+  return criteria.all.flatMap((criterion) => (criterion.kind === "learns-move" ? [criterion.move] : []));
 }
 
 // The deflected-profile dispatch stood here from 2026-08-30 to 2026-09-06:

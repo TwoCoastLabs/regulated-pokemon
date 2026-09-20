@@ -31,7 +31,7 @@ import { type ManifestContext, type ManifestDraft, MAX_SUGGESTIONS } from "../ke
 import { buildRoster } from "../kernel/roster.js";
 import { type AccordPack, NO_FIELD } from "../kernel/pack.js";
 import { denialCode } from "../kernel/violation.js";
-import { canonicalizeClaims } from "./canonical.js";
+import { canonicalizeClaims, canonicalizeCriteria } from "./canonical.js";
 import { MAX_ANSWER_CLAIMS, MAX_ANSWER_ROSTERS, MAX_ASKED, MAX_CLARIFY_OPTIONS } from "./schema.js";
 
 // --- tiny typed predicates --------------------------------------------------
@@ -387,7 +387,7 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
     if (!isObject(entry) || !isString(entry.id) || !isObject(entry.criteria) || !Array.isArray(entry.criteria.all)) {
       return { ok: false, reason: "a roster is malformed" };
     }
-    const built = buildRoster(context.registry, entry.id, entry.criteria as unknown as RosterCriteria);
+    const built = buildRoster(context.registry, entry.id, canonicalizeCriteria(context.registry, entry.criteria as unknown as RosterCriteria));
     if (!built.ok) {
       return { ok: false, reason: `a roster was refused: ${built.violations.map(denialCode).join(", ")}` };
     }

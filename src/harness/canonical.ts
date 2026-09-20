@@ -30,7 +30,7 @@
  *    canonicalized run replays like any other.
  */
 
-import type { Claim } from "../kernel/contracts.js";
+import type { Claim, RosterCriteria } from "../kernel/contracts.js";
 import type { CertifiedRegistry } from "../kernel/registry.js";
 
 /**
@@ -88,6 +88,23 @@ function canonicalEntity(registry: CertifiedRegistry, index: ReadonlyMap<string,
  * ids are disjoint in the certified world, so this is the same name in the
  * right variant, not a guess.
  */
+/**
+ * Read a roster's criteria with their move ids in canonical form — the same
+ * fold as the claims', for the same reason: "Selfdestruct" is
+ * `self-destruct`, and a set defined by a surface form is the certified set
+ * spelled the trainer's way, not a different set (bank, 2026-09-20: the
+ * follow-up "which of them is the fastest?" rebuilt a learns-move roster
+ * under the surface form and was refused under IA-3/unknown-move on both
+ * models). A name that folds to no certified move passes through unchanged
+ * and earns its IA-3 exactly as before; every other criterion is untouched.
+ */
+export function canonicalizeCriteria(registry: CertifiedRegistry, criteria: RosterCriteria): RosterCriteria {
+  const index = canonicalIndex(registry);
+  return {
+    all: criteria.all.map((criterion) => (criterion.kind === "learns-move" ? { ...criterion, move: canonicalEntity(registry, index, criterion.move) } : criterion)),
+  };
+}
+
 export function canonicalizeClaims(registry: CertifiedRegistry, claims: readonly Claim[]): readonly Claim[] {
   const index = canonicalIndex(registry);
   const entity = (entityId: string): string => canonicalEntity(registry, index, entityId);

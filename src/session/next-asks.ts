@@ -113,11 +113,15 @@ export function answerable(world: NextAskWorld, draft: Pick<ManifestDraft, "clai
   const { pack } = world;
   const field = fieldAskedFor(pack, text);
   const subjects = answerSubjects(world.registry, draft);
+  // "Them" after a listing or a count is the set: a roster's members are
+  // species, so a species field is served (bank, 2026-09-20: "which of them
+  // is the fastest?" after a count read as a field of no one).
+  const listed = draft.rosters.length > 0 || draft.claims.some((claim) => claim.kind === "count" || claim.kind === "ranking" || claim.kind === "membership");
   const served =
     field === undefined
       ? false
       : field.subject === "species" || field.subject === "type"
-        ? subjects.species.length > 0
+        ? subjects.species.length > 0 || listed
         : field.subject === "move"
           ? subjects.moves.length > 0
           : subjects.items.length > 0;

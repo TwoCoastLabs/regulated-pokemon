@@ -224,6 +224,9 @@ export interface FollowedSuggestion {
   promise: { kind: "lesson"; lessonIds: readonly string[] } | { kind: "field"; fieldId: string };
   outcome: "answered" | "acted" | "denied" | "declined" | "clarifying" | "abstained" | "open";
   kept: boolean;
+  /** What the follow-up's record certified, as `kind:id` — so a promise
+   * not kept says what came instead. Empty when nothing was filed. */
+  answeredWith: readonly string[];
   calls: number;
 }
 
@@ -482,7 +485,20 @@ async function followFirstSuggestion(world: DemoWorld, entry: BankEntry, settled
             (claim.kind === "ranking" && claim.basis === promise.fieldId) ||
             (claim.kind === "matchup" && promise.fieldId === "type-chart"),
         ));
-  return { ask: first, promise, outcome, kept, calls: state.usage.calls - settled.usage.calls };
+  const answeredWith = claims.map((claim) =>
+    claim.kind === "fact"
+      ? `fact:${claim.entityId}.${claim.factId}`
+      : claim.kind === "explanation"
+        ? `lesson:${claim.blockId}`
+        : claim.kind === "comparison"
+          ? `comparison:${claim.factId}`
+          : claim.kind === "ranking"
+            ? `ranking:${claim.basis}`
+            : claim.kind === "membership"
+              ? `membership:${claim.entityId}`
+              : claim.kind,
+  );
+  return { ask: first, promise, outcome, kept, answeredWith, calls: state.usage.calls - settled.usage.calls };
 }
 
 /** Read a settled session as the minimal run the funnel needs. Exported so the

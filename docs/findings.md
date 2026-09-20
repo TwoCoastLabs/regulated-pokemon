@@ -6915,3 +6915,69 @@ say "I mean movement types"); "I mean movement types", after the
 clarification picked move types, was taught the Pokémon-types lesson —
 the nearest lesson, not the move field. Both are the model's routing;
 the kernel certified only true claims in each.
+
+## 35. The follow-through leg, small first: every promise the strong model keeps, and the three gaps the first pass found
+
+**Claim.** Taking the first suggestion as the next ask, on 30 answerable
+entries per model, the register keeps its promise on 28 of 29 follow-ups
+on the strong model and 25 of 28 on the weak, at 37 follow-up calls per
+leg; the one miss both models share was a harness gap, closed with two
+deterministic fixes. Run small first on purpose ([suggestions.md](suggestions.md)):
+the first pass found three harness gaps in 30 entries that a 400-entry
+leg would have found at thirteen times the price.
+
+**Legs.** `coverage:map --live --dispositions answerable --limit 30
+--repetitions 1 --retrieval --gated-grammar --repair --profile --feedback
+--clarify --suggest --follow-suggestion --precedents nearest`, both
+models, routed `throughput ignore=Novita`, 2026-09-20 07:07–07:19 UTC.
+Enforcement: 0 escalations of 30 on every leg; 0 provider errors of 236
+calls. Usefulness, per leg:
+
+| leg | pass | answers with a next step | followed | answered | promise kept | follow-up calls | entry cost |
+|---|---|---|---|---|---|---|---|
+| strong, first pass (`07-07-30-316Z`) | 28 of 30 | 29 of 30 | 23 | 23 of 23 | 23 of 23 | 23 | $0.033 |
+| weak, first pass (`07-07-30-315Z`) | 27 of 30 | 27 of 30 | 21 | 20 of 21 | 18 of 21 | 22 | $0.005 |
+| weak, after the fixes (`07-11-15-540Z`) | 27 of 30 | 28 of 30 | 28 | 26 of 28 | 25 of 28 | 37 | $0.004 |
+| strong, after the fixes (`07-15-39-964Z`) | 28 of 30 | 29 of 30 | 29 | 28 of 29 | 28 of 29 | 37 | $0.033 |
+
+Every suggestion shown was the pack's (87 and 84 per leg); neither model
+wrote a `suggest` entry on these entries, so `unanswerable` is 0 of 0.
+
+**The three gaps the first pass found, closed the same hour.** (1) *Six
+count answers per model were not followed at all*: after "how many
+Electric Pokémon are there?" the register offered "which of them is the
+fastest?", but the answerable check read "them" as a species field of no
+one — the count's roster was the subject and the check did not know it.
+A roster, a count, a ranking or a membership now serves a species field.
+(2) *The follow-up's own record was not kept*: a promise not kept said
+nothing about what came instead. `followed.answeredWith` now names the
+claims (`fact:mewtwo.locations`, `lesson:…`). (3) *Two legs launched in
+the same millisecond filed the same name* and the second overwrote the
+first (the strong second pass was lost and rerun); a run filed under a
+taken name now carries the process id between the stamp and the label.
+
+**The one miss both models share, read on the porch and closed.**
+`ans-count-selfdestruct` → "which of them is the fastest?" abstained on
+both models: each rebuilt the learns-move roster from the conversation
+as `selfdestruct`, and the decoder refused it under IA-3/unknown-move —
+the certified id is `self-destruct`. Two deterministic fixes: the
+previous answer's roster criteria ids ride with its subjects into an
+anaphoric follow-up's prompt ("was about: self-destruct"), and a roster
+criterion's move is read in its canonical spelling at decode, the same
+fold the claims already get. After both, the porch files the ranking —
+after the pack's basis question, which "which of them is the fastest?"
+did not bind ("fastest" and "which" sit too far apart for the vocabulary's
+window); the wording is now "which of them has the highest Speed?", which
+binds outright, "which of them has the most HP?" is "highest HP" for the
+same reason, and the session test requires every rank wording to bind.
+
+*Model errors, apart (weak, 3 of 28):* "where can I find it?" after
+Mewtwo's base stat total answered with the records-boundary lesson (the
+model linked the locations field to nothing); "how does it evolve?"
+after Eevee's Pokédex number abstained twice; the Selfdestruct miss above
+before its fix. *Strong:* the Selfdestruct miss only.
+
+**What the larger run will read.** The same flags over the full
+answerable set, N=3, both models — pre-registered: promise kept over
+follow-ups asked, the basis question's share of follow-ups (the ceremony
+count says it), and cost per follow-up.

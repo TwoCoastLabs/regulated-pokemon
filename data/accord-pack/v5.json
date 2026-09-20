@@ -408,7 +408,7 @@
         "base-speed": {
           "ask": "how fast is it?",
           "compare": "which of the two is faster?",
-          "rank": "which of them is the fastest?"
+          "rank": "which of them has the highest Speed?"
         },
         "evolves-to": {
           "ask": "what does it evolve into?"
@@ -431,7 +431,7 @@
         "base-hp": {
           "ask": "how much HP does it have?",
           "compare": "how does their HP compare?",
-          "rank": "which of them has the most HP?"
+          "rank": "which of them has the highest HP?"
         },
         "base-attack": {
           "ask": "what is its Attack stat?",

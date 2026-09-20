@@ -21,7 +21,7 @@
  * one place that reads a clock is the CLI that also spends the money.
  */
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 import type { ModelRole } from "./corpus.js";
@@ -163,8 +163,14 @@ const writeToDisk: WriteFile = (path, contents) => {
 
 /** File the artifact and return where it went. Pretty-printed: it is meant to
  * be read and diffed, and it is small next to what it cost to produce. */
-export function fileArtifact<T extends ArtifactAddress>(artifact: T, directory: string, write: WriteFile = writeToDisk): string {
-  const path = join(directory, artifactFilename(artifact));
+export function fileArtifact<T extends ArtifactAddress>(artifact: T, directory: string, write: WriteFile = writeToDisk, exists: (path: string) => boolean = existsSync): string {
+  const named = join(directory, artifactFilename(artifact));
+  // Two legs started in the same millisecond name the same file (2026-09-20:
+  // a strong and a weak leg launched together, and the second to finish
+  // overwrote the first). A name already taken gets this process's id
+  // between the stamp and the label, so it still sorts by time and still
+  // ends in the label every reader filters on.
+  const path = exists(named) ? join(directory, `${artifact.startedAt.replace(/[:.]/g, "-")}-${process.pid}-${artifact.label}.json`) : named;
   write(path, `${JSON.stringify(artifact, null, 2)}\n`);
   return path;
 }

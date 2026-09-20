@@ -9,7 +9,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { Claim } from "../kernel/contracts.js";
-import { canonicalizeClaims } from "./canonical.js";
+import { canonicalizeClaims, canonicalizeCriteria } from "./canonical.js";
 import { harnessWorld } from "./corpus.js";
 
 const world = harnessWorld();
@@ -61,5 +61,13 @@ describe("canonicalizeClaims never guesses — the doctrine's line", () => {
     // closed to IA-3: a miss, never a nearest-neighbour guess at pikachu.
     const read = one({ kind: "fact", entityId: "Pikáchu", factId: "base-speed" });
     expect(read).toEqual({ kind: "fact", entityId: "Pikáchu", factId: "base-speed" });
+  });
+});
+
+describe("canonicalizeCriteria reads a roster's move in its certified spelling", () => {
+  it("folds a learns-move surface form to the certified id, leaves the rest of the criteria alone, and passes an unknown through", () => {
+    const criteria = { all: [{ kind: "learns-move", move: "Selfdestruct" }, { kind: "has-type", type: "electric" }] } as const;
+    expect(canonicalizeCriteria(world.registry, criteria)).toEqual({ all: [{ kind: "learns-move", move: "self-destruct" }, { kind: "has-type", type: "electric" }] });
+    expect(canonicalizeCriteria(world.registry, { all: [{ kind: "learns-move", move: "Hyperbeam Deluxe" }] })).toEqual({ all: [{ kind: "learns-move", move: "Hyperbeam Deluxe" }] });
   });
 });
