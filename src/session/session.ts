@@ -52,7 +52,7 @@ import { planRender } from "../kernel/render.js";
 import type { CertifiedRegistry } from "../kernel/registry.js";
 import { NO_FIELD, restrictionsFor } from "../kernel/pack.js";
 import { type LessonMatcherId, type LessonOffer, lessonFoothold, lessonOffer } from "./lesson-matcher.js";
-import { offerNextAsks } from "./next-asks.js";
+import { certifiedIn, offerNextAsks } from "./next-asks.js";
 import { clauseTexts, deriveScope, resolveScope, type ScopeContext, unmatchedClauses } from "../kernel/scope.js";
 import { requiredDimensionsFor } from "../kernel/scope-deps.js";
 import { buildRoster } from "../kernel/roster.js";
@@ -2166,23 +2166,16 @@ function withSuggestions(
 ): { state: SessionState; draft: ManifestDraft } {
   const { suggestions: _carried, ...bare } = draft;
   if (deps.suggest !== true) return { state, draft: bare };
-  const excluded = [
-    ...state.records.flatMap((record) => record.manifest?.suggestions ?? []),
-    ...state.transcript.flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : [])),
-  ];
+  // What the trainer already asked is never offered again; what was shown
+  // and not taken may return (porch, 2026-09-20: after two clicks through
+  // the type chart the register had nothing left to offer). What the
+  // session already answered — a lesson taught, a field certified for the
+  // subject, a matchup direction shown — is the history, read the one way.
+  const excluded = state.transcript.flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : []));
   const answered = state.records.flatMap((record) => record.manifest?.claims ?? []);
   const history = {
     lessons: answered.flatMap((claim) => (claim.kind === "explanation" ? [claim.blockId] : [])),
-    fields: answered.flatMap((claim) =>
-      claim.kind === "fact"
-        ? [{ entityId: claim.entityId, factId: claim.factId }]
-        : claim.kind === "comparison"
-          ? [
-              { entityId: claim.leftId, factId: claim.factId },
-              { entityId: claim.rightId, factId: claim.factId },
-            ]
-          : [],
-    ),
+    fields: certifiedIn({ claims: answered }),
   };
   const offer = offerNextAsks(world, draft, proposed, {
     ...(deps.precedents === undefined ? {} : { store: deps.precedents.store }),

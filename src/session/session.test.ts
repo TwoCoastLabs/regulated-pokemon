@@ -3277,7 +3277,7 @@ describe("R3b step 4: follow-up suggestions — a next step beside every answer,
     }
   });
 
-  it("nothing shown or asked earlier in the session is suggested again", async () => {
+  it("nothing asked or certified earlier in the session is suggested again; a suggestion shown and not taken may return", async () => {
     const provider = scripted("suggesting", (purpose) => (purpose === "scope" ? "decline" : suggesting([])));
     const d = withSuggest(provider);
     let state = await setProfile(startSession(), PROFILE_SCOPE, d);
@@ -3289,10 +3289,10 @@ describe("R3b step 4: follow-up suggestions — a next step beside every answer,
     expect(state.suggestions.taken).toBe(1);
     const second = state.records[1]!.manifest?.suggestions ?? [];
     expect(second).not.toContain("what type is it?");
-    expect(second).not.toContain("what does it evolve into?");
+    // Shown and not taken: still a next step (porch, 2026-09-20).
+    expect(second).toContain("what does it evolve into?");
     // Speed was certified in the first answer: never a step back (porch, 2026-09-20).
     expect(second).not.toContain("how fast is it?");
-    expect(second.length).toBeGreaterThan(0);
   });
 
   it("after a listing the pack ranks the set; after a comparison, the same pair on another field", async () => {
@@ -3328,7 +3328,7 @@ describe("R3b step 4: follow-up suggestions — a next step beside every answer,
     const thunderbolt = { claims: [{ kind: "fact", entityId: "thunderbolt", factId: "move-power" }] as Claim[], rosters: [] };
     for (const [fieldId, entry] of Object.entries(table.fields)) {
       const subject = world.pack.dictionary.find((rule) => rule.id === fieldId)!.subject === "move" ? thunderbolt : pikachu;
-      for (const text of [entry.ask, entry.compare, entry.rank]) {
+      for (const text of [entry.ask, entry.compare, entry.rank, ...Object.values(entry.directions ?? {})]) {
         if (text === undefined) continue;
         expect({ fieldId, text, read: answerable(world, subject, text) }).toEqual({ fieldId, text, read: { kind: "field", fieldId } });
       }

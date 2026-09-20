@@ -53,6 +53,18 @@ describe("the answerable check: a suggestion is shown only when the records woul
     expect(answerable(world, ranked, "which of them has the highest HP?")).toEqual({ kind: "field", fieldId: "base-hp" });
   });
 
+  it("a type-chart ask beside a matchup about a type is a matchup, not the types lesson", () => {
+    const electric = { claims: [{ kind: "matchup", subject: { kind: "type", typeId: "electric" }, direction: "strong-against" }] as Claim[], rosters: [] };
+    expect(answerable(world, electric, "What type is good against it?")).toEqual({ kind: "field", fieldId: "type-chart" });
+    expect(answerSubjects(world.registry, electric)).toEqual({ species: [], moves: [], items: [], types: ["electric"] });
+    // After the matchup, the chart's other directions about the same type.
+    expect(packCandidates(world, electric).map((one) => one.text)).toEqual(["what is it weak to?", "what does it resist?", "what is it immune to?"]);
+    const pikachuWeak = { claims: [{ kind: "matchup", subject: { kind: "species", entityId: "pikachu" }, direction: "weak-to" }] as Claim[], rosters: [] };
+    const after = packCandidates(world, pikachuWeak).map((one) => one.text);
+    expect(after.slice(0, 3)).toEqual(["what does it resist?", "what is it immune to?", "what is it strong against?"]);
+    expect(after).toContain("what type is it?");
+  });
+
   it("never answers with the boundary lesson", () => {
     const boundary = world.pack.recordsBoundary!.lessonId;
     for (const [, entry] of Object.entries(world.pack.presentation.nextAsks!.lessons)) {
@@ -64,7 +76,7 @@ describe("the answerable check: a suggestion is shown only when the records woul
 
   it("reads subjects from the claims through the registry, so a stray id names nothing", () => {
     const draft = { claims: [{ kind: "fact", entityId: "not-a-species", factId: "base-speed" }, ...pikachuSpeed.claims] as Claim[], rosters: [] };
-    expect(answerSubjects(world.registry, draft)).toEqual({ species: ["pikachu"], moves: [], items: [] });
+    expect(answerSubjects(world.registry, draft)).toEqual({ species: ["pikachu"], moves: [], items: [], types: [] });
   });
 });
 

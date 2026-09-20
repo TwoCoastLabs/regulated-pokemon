@@ -36,7 +36,11 @@ it the way the ask itself would be read, with no model call:
 - a certified field, through the dictionary's aliases, with "it" resolved
   to a subject the answer just named — "how does its speed compare?" beside
   a Pikachu fact reads as the speed field of Pikachu; the same words beside
-  a lesson about badges read as a field of no one, and are dropped;
+  a lesson about badges read as a field of no one, and are dropped. A
+  type a matchup was about is a subject too, so "what type is good
+  against it?" beside "what beats Electric?" is the chart, not the types
+  lesson, and when a text carries two fields' words the answer's subject
+  decides between them;
 - a lesson, through the same alias matcher the lesson door uses
   ([lesson-door.md](lesson-door.md)), never the records-boundary lesson;
 - otherwise nothing, and the suggestion is dropped and counted as
@@ -57,8 +61,9 @@ each worded with a pronoun in place of the subject so the register's rule
   league and objective lessons;
 - for each certified field, the question that asks for it about the
   answer's subject ("how fast is it?"), about a pair just compared ("which
-  of the two is faster?"), and about a set just listed ("which of them is
-  the fastest?").
+  of the two is faster?"), and about a set just listed ("which of them has
+  the highest Speed?"); for the type chart, one question per matchup
+  direction, offered after a matchup for the directions not yet shown.
 
 Which table applies is read from the answer: after a lesson, its next
 lessons; after a comparison, the same pair on another field; after a
@@ -70,10 +75,12 @@ says which questions trainers ask.
 
 The model's suggestions that pass the check come first, because they are
 the conversation's own; the pack's fill the register to its cap of three.
-Nothing shown or asked earlier in the session is offered again, and a
-step back is no step: a suggestion that reads as the lesson this answer
-teaches, or as a field already certified for the subject, is dropped as
-already answered, whichever source wrote it.
+Nothing the trainer already asked is offered again, and a step back is
+no step: a suggestion that reads as a lesson already taught, a field
+already certified for the subject, or a matchup direction already shown,
+is dropped as already answered, whichever source wrote it. A suggestion
+shown and not taken may return: after two clicks through the type chart
+the remaining directions are still the next steps.
 
 On the live page every answer's register stays clickable, not only the
 latest: a denied or declined turn files no register of its own and leaves
