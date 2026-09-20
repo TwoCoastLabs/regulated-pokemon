@@ -6876,3 +6876,42 @@ rate on the live page (7 of 50 before this change), and variety —
 distinct suggestions per session and how often the suggestion's route
 differs from the answer's — so a high answer rate cannot be bought by
 suggesting the same safe question forever.
+
+**The first live thread on the new register (dev trace, 2026-09-20
+06:52 UTC, strong model, League relay routed by throughput never
+Novita, 12 calls, $0.0085, hosts Nebius 1.4–4.3 s).** Eleven asks, ten
+answered, one denied. Suggestions: the pack supplied 18, the model
+offered 6 of which 2 kept, 2 unanswerable ("how do types affect moves?",
+"which type is strong against this one?" — both read as a field of no
+one), 2 repeats; the visitor took 5 (plus one typed from an earlier
+turn's register, which the driver did not count — fixed below), 0 dead
+ends. The chain "tell me about the game → how do I play? → what does a
+Gym Leader do? → what do types do?" was four clicks, every one answered
+with the lesson promised.
+
+*Gaps, closed the same day:* (1) "which of them has the highest Special
+Defense?" — the pack's own rank wording — was **denied** under IA-1:
+the scope vocabulary's basis terms are single tokens, "defense" bound
+`base-defense`, and the ranking by `base-special-defense` failed
+`ranking-basis-not-established`, twice (once carried back). A
+suggestion offered and then refused is the worst outcome the register
+can produce; the two special stats now carry no rank or compare
+wording, and a session test pins every such wording against
+`deriveScope`. The vocabulary's inability to read a two-word basis is
+the underlying defect and stays open (CLAUDE.md lesson 1: the alias
+carried authority over the wrong field). (2) The denied turn left the
+previous answer's register on screen and unclickable; the visitor typed
+one of its questions and the driver counted it as a plain ask. Every
+answer's register is now live on the page and a suggestion said back
+from any earlier answer counts as taken. (3) The model's kept suggestion
+"what types are there?" beside the types lesson read as that very
+lesson — a step back the check let through; a model suggestion that
+reads as the lesson just taught or a field already certified is now
+dropped as already answered.
+
+*Model errors, apart:* "show me a list of types" was nominated as the
+species catalogue listing (12 species served, and the visitor had to
+say "I mean movement types"); "I mean movement types", after the
+clarification picked move types, was taught the Pokémon-types lesson —
+the nearest lesson, not the move field. Both are the model's routing;
+the kernel certified only true claims in each.

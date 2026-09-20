@@ -201,7 +201,9 @@ function Page(props: { artifact: DomElement; onSuggest?: (text: string) => void 
       {/* The suggestion register (R3b step 4) is plain list items on the
           certified page — the mount allows no button — so the click is the
           page's: a suggestion clicked is said back as the trainer's own
-          words, exactly as if typed. Live only under the latest answer. */}
+          words, exactly as if typed. Live under every answer, not only the
+          latest (dogfood, 2026-09-20: a denied turn left the previous
+          answer's suggestions on screen and unclickable). */}
       <div
         class={`exhibit-page${props.onSuggest === undefined ? "" : " suggestions-live"}`}
         ref={attach}
@@ -1022,7 +1024,7 @@ export function Live() {
                     rounds={exchange === undefined ? [] : sentBack(exchange)}
                     exchange={exchange}
                     calls={setup.trace.calls}
-                    {...(latest && !busy ? { onSuggest: pick } : {})}
+                    {...(busy ? {} : { onSuggest: pick })}
                   />
                 );
               }

@@ -145,7 +145,7 @@ export interface DroppedAsk {
   source: "model" | "pack";
   /** Which gate dropped it: the register's rule (`value`), a repeat
    * (`duplicate`), the records' reach (`unanswerable`), or the cap. */
-  cause: "value" | "duplicate" | "unanswerable" | "cap";
+  cause: "value" | "duplicate" | "unanswerable" | "answered" | "cap";
   reason: string;
 }
 
@@ -167,6 +167,21 @@ function foldText(text: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9']+/g, " ")
     .trim();
+}
+
+/** The fields a draft certifies, per subject — a comparison certifies its
+ * field for both. */
+export function certifiedIn(draft: Pick<ManifestDraft, "claims">): readonly { entityId: string; factId: string }[] {
+  return draft.claims.flatMap((claim) =>
+    claim.kind === "fact"
+      ? [{ entityId: claim.entityId, factId: claim.factId }]
+      : claim.kind === "comparison"
+        ? [
+            { entityId: claim.leftId, factId: claim.factId },
+            { entityId: claim.rightId, factId: claim.factId },
+          ]
+        : [],
+  );
 }
 
 /** What the session has already answered, so a next step is never a step
@@ -201,17 +216,7 @@ export function packCandidates(world: NextAskWorld, draft: Pick<ManifestDraft, "
   const history = options.history ?? { lessons: [], fields: [] };
   const taughtNow = draft.claims.flatMap((claim) => (claim.kind === "explanation" ? [claim.blockId] : []));
   const taught = new Set([...history.lessons, ...taughtNow]);
-  const certifiedNow = draft.claims.flatMap((claim) =>
-    claim.kind === "fact"
-      ? [{ entityId: claim.entityId, factId: claim.factId }]
-      : claim.kind === "comparison"
-        ? [
-            { entityId: claim.leftId, factId: claim.factId },
-            { entityId: claim.rightId, factId: claim.factId },
-          ]
-        : [],
-  );
-  const certified = [...history.fields, ...certifiedNow];
+  const certified = [...history.fields, ...certifiedIn(draft)];
   const has = (entityId: string, factId: string): boolean => certified.some((one) => one.entityId === entityId && one.factId === factId);
 
   // After the records-boundary lesson — a decline — the pack's own way in.
@@ -293,6 +298,15 @@ export function offerNextAsks(
   const cap = options.cap ?? MAX_SUGGESTIONS;
   const kept: NextAsk[] = [];
   const dropped: DroppedAsk[] = [];
+  const history = options.history ?? { lessons: [], fields: [] };
+  const taught = new Set([...history.lessons, ...draft.claims.flatMap((claim) => (claim.kind === "explanation" ? [claim.blockId] : []))]);
+  const certified = [...history.fields, ...certifiedIn(draft)];
+  const has = (entityId: string, factId: string): boolean => certified.some((one) => one.entityId === entityId && one.factId === factId);
+  const subjects = answerSubjects(world.registry, draft);
+  const subjectsOf = (fieldId: string): readonly string[] => {
+    const subject = world.pack.dictionary.find((entry) => entry.id === fieldId)?.subject;
+    return subject === "move" ? subjects.moves : subject === "item" ? subjects.items : subject === "type" ? [] : subjects.species;
+  };
   const seen = (text: string): boolean => kept.some((one) => sameAsk(one.text, text)) || (options.excluded ?? []).some((earlier) => sameAsk(earlier, text));
   const consider = (text: string, source: "model" | "pack", via?: NextAsk["via"]): void => {
     if (kept.length >= cap) {
@@ -311,6 +325,17 @@ export function offerNextAsks(
     const reading = via ?? answerable(world, draft, text);
     if (reading.kind === "none") {
       dropped.push({ text, source, cause: "unanswerable", reason: reading.reason });
+      return;
+    }
+    // A step back is no step: the lesson this very answer teaches, or a
+    // field already certified for the subject, asked again (dogfood,
+    // 2026-09-20: "what types are there?" beside the types lesson).
+    if (reading.kind === "lesson" && reading.lessonIds.every((id) => taught.has(id))) {
+      dropped.push({ text, source, cause: "answered", reason: "asks for a lesson this session already taught" });
+      return;
+    }
+    if (reading.kind === "field" && subjectsOf(reading.fieldId).length > 0 && subjectsOf(reading.fieldId).every((id) => has(id, reading.fieldId))) {
+      dropped.push({ text, source, cause: "answered", reason: "asks for a field this session already certified for the subject" });
       return;
     }
     kept.push({ text, source, via: reading });
