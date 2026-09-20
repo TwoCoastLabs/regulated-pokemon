@@ -21,6 +21,7 @@ import { digestText } from "./digest.js";
 import { normalise } from "./dom.js";
 import { formatCarriesLocale, type FormatId, IMPLEMENTED_LOCALES, isFormatId } from "./format.js";
 import { type CertifiedRegistry, fidelitySurfaces, ITEM_FACT_IDS, MOVE_FACT_IDS, SPECIES_FACT_IDS } from "./registry.js";
+import { suggestionProblem } from "./suggestion-rule.js";
 import { AccordError, violation } from "./violation.js";
 
 export const PACK_SCHEMA_VERSION = 7;
@@ -335,7 +336,53 @@ export interface Presentation {
    * means none.
    */
   grouping: readonly RenderGrouping[];
+  /**
+   * The operator's follow-up suggestions (docs/suggestions.md): the
+   * questions the driver may offer beside an answer, worded by the pack and
+   * answerable by construction — a lesson's own ask and the lessons that
+   * follow it, and for each certified field the question that asks for it
+   * with a pronoun in place of the subject. Presentation policy: the register
+   * they appear in is already the pack's, and which next step is worth
+   * offering is the operator's judgement, versioned here. Absent means the
+   * driver has nothing of its own to offer and shows only what the model
+   * suggested and the records can answer.
+   */
+  nextAsks?: NextAsks;
   display: DisplayPolicy;
+}
+
+/**
+ * The operator's follow-up suggestions, as reviewed pack data. Every wording
+ * is held to the register's own rule at load (a topic, never a value: no
+ * digit, no certified id) and to its promise: a lesson's wording must be one
+ * its lesson's declared coverage matches, and a field's wording must carry
+ * one of that field's dictionary aliases — so a suggestion shown from here
+ * is a question the same records answer.
+ */
+export interface NextAsks {
+  /** The lessons to offer after the records-boundary lesson — after a
+   * decline, the operator's own way back in. */
+  afterBoundary?: readonly string[];
+  /** Keyed by lesson id. */
+  lessons: Readonly<Record<string, LessonNextAsk>>;
+  /** Keyed by dictionary field id. */
+  fields: Readonly<Record<string, FieldNextAsk>>;
+}
+
+export interface LessonNextAsk {
+  /** The question, in the trainer's voice, that this lesson answers. */
+  ask: string;
+  /** The lessons worth offering after this one is taught, in order. */
+  next: readonly string[];
+}
+
+export interface FieldNextAsk {
+  /** The question that asks for this field about the answer's subject — "it". */
+  ask: string;
+  /** The question that asks for this field about the two subjects just compared — "their". */
+  compare?: string;
+  /** The question that ranks a set just listed by this field — "them". */
+  rank?: string;
 }
 
 /** The groupings a pack may approve. */
@@ -747,9 +794,116 @@ export function loadPack(input: unknown, registry: CertifiedRegistry): Resolutio
     ...checkVocabulary(pack.vocabulary),
     ...(document.dictionary === undefined ? [] : checkDictionary(pack.dictionary, registry)),
     ...checkLessonCoverage(pack),
+    ...checkNextAsks(pack, registry),
   ];
   if (violations.length > 0) return { ok: false, violations };
   return { ok: true, value: pack };
+}
+
+/** Whether a phrase occurs in a text, word-bounded, case-folded and with
+ * punctuation ignored — the one reading the pack's own aliases get. */
+export function carriesPhrase(text: string, phrase: string): boolean {
+  const fold = (value: string): string =>
+    ` ${value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()} `;
+  return phrase.trim().length > 0 && fold(text).includes(fold(phrase));
+}
+
+/**
+ * The operator's follow-up suggestions (docs/suggestions.md), when the pack
+ * declares any. Each wording is held to the register's rule (a topic, never
+ * a value) and to its promise: a lesson's ask carries one of that lesson's
+ * declared aliases or nouns, so the lesson door offers the lesson for it; a
+ * field's asks carry one of that field's dictionary aliases, so the
+ * linking reads the field in it. Ids must exist, the boundary lesson is
+ * never a suggestion, and a lesson does not follow itself. A wording that
+ * breaks its promise is a suggestion the records could not answer — the
+ * failure the register exists to prevent — so it is refused at load.
+ */
+function checkNextAsks(pack: AccordPack, registry: CertifiedRegistry): Violation[] {
+  const nextAsks = pack.presentation.nextAsks;
+  if (nextAsks === undefined) return [];
+  const violations: Violation[] = [];
+  const bad = (where: string, why: string, actual?: string): void => {
+    violations.push(violation("IA-6", "pack-next-ask-malformed", `next ask ${where}: ${why}`, actual === undefined ? {} : { actual }));
+  };
+  if (typeof nextAsks !== "object" || nextAsks === null || typeof nextAsks.lessons !== "object" || typeof nextAsks.fields !== "object") {
+    bad("declaration", "needs a `lessons` table and a `fields` table");
+    return violations;
+  }
+  const boundary = pack.recordsBoundary?.lessonId;
+  const wordingProblem = (where: string, text: unknown): text is string => {
+    if (typeof text !== "string" || text.trim().length === 0) {
+      bad(where, "the wording is not a non-empty string");
+      return false;
+    }
+    const problem = suggestionProblem(registry, text);
+    if (problem !== undefined) {
+      bad(where, `the wording ${problem} — a suggestion names a topic, never a value`, text);
+      return false;
+    }
+    return true;
+  };
+  for (const [lessonId, entry] of Object.entries(nextAsks.lessons)) {
+    const lesson = pack.curriculum.find((rule) => rule.id === lessonId);
+    if (lesson === undefined) {
+      bad(`for lesson "${lessonId}"`, "no such lesson in the curriculum", lessonId);
+      continue;
+    }
+    if (lessonId === boundary) {
+      bad(`for lesson "${lessonId}"`, "the boundary lesson is a refusal, never a next step", lessonId);
+      continue;
+    }
+    if (typeof entry !== "object" || entry === null || !Array.isArray(entry.next)) {
+      bad(`for lesson "${lessonId}"`, "needs an `ask` wording and a `next` list");
+      continue;
+    }
+    if (wordingProblem(`for lesson "${lessonId}"`, entry.ask)) {
+      const covers = lesson.covers;
+      const phrases = covers === undefined ? [] : [...covers.aliases, ...(covers.nouns ?? [])];
+      if (covers !== undefined && !phrases.some((phrase) => carriesPhrase(entry.ask, phrase))) {
+        bad(`for lesson "${lessonId}"`, "the wording carries none of the lesson's declared aliases or nouns, so the lesson door would not offer the lesson for it", entry.ask);
+      }
+    }
+    for (const followId of entry.next) {
+      if (typeof followId !== "string" || !pack.curriculum.some((rule) => rule.id === followId)) {
+        bad(`for lesson "${lessonId}"`, `follows a lesson that does not exist: "${String(followId)}"`, String(followId));
+      } else if (followId === boundary) {
+        bad(`for lesson "${lessonId}"`, "follows the boundary lesson, which is a refusal, never a next step", followId);
+      } else if (followId === lessonId) {
+        bad(`for lesson "${lessonId}"`, "follows itself", followId);
+      } else if (nextAsks.lessons[followId] === undefined) {
+        bad(`for lesson "${lessonId}"`, `follows "${followId}", which declares no wording to offer it by`, followId);
+      }
+    }
+  }
+  for (const lessonId of nextAsks.afterBoundary ?? []) {
+    if (typeof lessonId !== "string" || !pack.curriculum.some((rule) => rule.id === lessonId)) {
+      bad("after the boundary", `offers a lesson that does not exist: "${String(lessonId)}"`, String(lessonId));
+    } else if (lessonId === boundary) {
+      bad("after the boundary", "offers the boundary lesson itself", lessonId);
+    } else if (nextAsks.lessons[lessonId] === undefined) {
+      bad("after the boundary", `offers "${lessonId}", which declares no wording to offer it by`, lessonId);
+    }
+  }
+  for (const [fieldId, entry] of Object.entries(nextAsks.fields)) {
+    const field = pack.dictionary.find((rule) => rule.id === fieldId);
+    if (field === undefined) {
+      bad(`for field "${fieldId}"`, "no such field in the dictionary", fieldId);
+      continue;
+    }
+    if (typeof entry !== "object" || entry === null) {
+      bad(`for field "${fieldId}"`, "needs an `ask` wording");
+      continue;
+    }
+    for (const [form, text] of [["ask", entry.ask], ["compare", entry.compare], ["rank", entry.rank]] as const) {
+      if (form !== "ask" && text === undefined) continue;
+      if (!wordingProblem(`for field "${fieldId}" (${form})`, text)) continue;
+      if (!field.aliases.some((alias) => carriesPhrase(text, alias))) {
+        bad(`for field "${fieldId}" (${form})`, "the wording carries none of the field's dictionary aliases, so the linking would not read the field in it", text);
+      }
+    }
+  }
+  return violations;
 }
 
 /**

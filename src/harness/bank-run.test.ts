@@ -550,10 +550,29 @@ describe("R3b step 4 in the bank: suggestions are offered, shown and counted, ne
     const run = await runBankEntry(world, entry("ans-fact-speed-pikachu"), provider, clock(), undefined, 0, { profile: true, suggest: true });
     expect(prompts[0]).toContain('"kind": "suggest"');
     expect(run.stage.kind).toBe("resolved");
-    // The digit-bearing one states a value and was dropped before the kernel saw it.
-    expect(run.suggestions).toEqual({ shown: 1, dropped: 1 });
-    expect(run.run.transaction!.manifest!.suggestions).toEqual(["What is it weak to?"]);
+    // The digit-bearing one states a value and was dropped before the kernel
+    // saw it; the pack's own next steps fill the register (docs/suggestions.md).
+    expect(run.suggestions).toEqual({ shown: 3, dropped: 1, unanswerable: 0, supplied: 2, texts: ["What is it weak to?", "what type is it?", "what does it evolve into?"] });
+    expect(run.run.transaction!.manifest!.suggestions).toEqual(["What is it weak to?", "what type is it?", "what does it evolve into?"]);
     // The bank's trainer never takes one: the exchange ends with the answer.
+    expect(run.run.transcript.filter((event) => event.kind === "utterance" && event.source === "trainer")).toHaveLength(1);
+  });
+
+  it("with --follow-suggestion the trainer takes the first suggestion as the next ask, and the run says whether the promise was kept", async () => {
+    const provider = new ScriptedProvider("scripted:following", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      // The first answer suggests the type chart; the follow-up is answered
+      // with a matchup, which is that field's own answer for a species.
+      return request.prompt.includes("What is it weak to?")
+        ? JSON.stringify({ rosters: [], claims: [{ kind: "matchup", subject: { kind: "species", entityId: "pikachu" }, direction: "weak-to" }] })
+        : suggesting(["What is it weak to?"]);
+    });
+    const run = await runBankEntry(world, entry("ans-fact-speed-pikachu"), provider, clock(), undefined, 0, { profile: true, suggest: true, followSuggestion: true });
+    expect(run.stage.kind).toBe("resolved");
+    expect(run.suggestions?.followed).toMatchObject({ ask: "What is it weak to?", promise: { kind: "field", fieldId: "type-chart" }, outcome: "answered", kept: true });
+    expect(run.suggestions?.followed?.calls).toBeGreaterThan(0);
+    // The entry's own reading is untouched by the second exchange.
+    expect(run.run.transaction!.manifest!.claims[0]).toMatchObject({ kind: "fact", factId: "base-speed" });
     expect(run.run.transcript.filter((event) => event.kind === "utterance" && event.source === "trainer")).toHaveLength(1);
   });
 

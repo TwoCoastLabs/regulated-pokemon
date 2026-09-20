@@ -84,6 +84,8 @@ export interface CoverageArtifact {
   clarify?: boolean;
   /** Set when the model could offer follow-up suggestions (R3b step 4). */
   suggest?: boolean;
+  /** Set when the first suggestion was taken as the next ask (docs/suggestions.md). */
+  followSuggestion?: boolean;
   /**
    * The precedent door, when it was open (docs/precedent.md): which arm
    * (`nearest` retrieves per ask, `fixed` holds the same few on every call),
@@ -163,6 +165,8 @@ export interface CoverageArtifactInput {
   clarify?: boolean;
   /** Set when the model could offer follow-up suggestions (R3b step 4). */
   suggest?: boolean;
+  /** Set when the first suggestion was taken as the next ask (docs/suggestions.md). */
+  followSuggestion?: boolean;
   /** The precedent door, when it was open (docs/precedent.md). */
   precedents?: PrecedentLever;
   /** Which answer prompt the calls built (docs/answer-prompt.md). */

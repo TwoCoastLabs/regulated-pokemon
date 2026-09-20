@@ -300,7 +300,12 @@ describe("a pack that cannot be trusted is refused by name", () => {
     type Mutable = { dictionary: { id: string; subject: string; name: string; description: string; aliases: string[] }[] };
 
     it("loads a pack without a dictionary as one with none — the pre-R3b packs still govern filed runs — but refuses a partial one", () => {
-      const without = loadWith((draft) => delete (draft as unknown as Partial<Mutable>).dictionary);
+      // A pre-R3b pack declares no field wordings either: those promise a
+      // dictionary field, and are refused without one (the next-ask tests).
+      const without = loadWith((draft) => {
+        delete (draft as unknown as Partial<Mutable>).dictionary;
+        delete (draft as unknown as { presentation: { nextAsks?: unknown } }).presentation.nextAsks;
+      });
       expect(without.ok).toBe(true);
       if (without.ok) expect(without.value.dictionary).toEqual([]);
       expect(denials(loadWith((draft) => ((draft as unknown as Mutable).dictionary = [])))).toContain("IA-6/pack-dictionary-incomplete");
@@ -713,5 +718,57 @@ describe("sentence templates are policy, and the loader treats them as such (epi
     expect(
       denials(loadWith((draft) => ((draft.presentation as unknown as { templates: unknown[] }).templates = [{ id: "", kind: "fact", text: { "en-US": "{value}", "en-GB": "{value}" } }]))),
     ).toContain("IA-6/pack-template-unnamed");
+  });
+});
+
+describe("the operator's follow-up suggestions are held to their promise at load (docs/suggestions.md)", () => {
+  type NextAsksDraft = { presentation: { nextAsks: { lessons: Record<string, { ask: string; next: string[] }>; fields: Record<string, { ask: string; compare?: string; rank?: string }> } } };
+  const edit = (change: (table: NextAsksDraft["presentation"]["nextAsks"]) => void) =>
+    denials(
+      loadWith((draft) => {
+        const table = (draft as unknown as NextAsksDraft).presentation.nextAsks;
+        change(table);
+      }),
+    );
+
+  it("the shipped table loads", () => {
+    expect(loadWith(() => undefined).ok).toBe(true);
+  });
+
+  it("refuses a lesson that does not exist, the boundary lesson, and a lesson that follows itself or the boundary", () => {
+    expect(edit((table) => (table.lessons["no-such-lesson"] = { ask: "what is it?", next: [] }))).toContain("IA-6/pack-next-ask-malformed");
+    expect(edit((table) => (table.lessons["what-the-records-hold"] = { ask: "what do the records hold?", next: [] }))).toContain("IA-6/pack-next-ask-malformed");
+    expect(edit((table) => table.lessons["what-is-badge"]!.next.push("what-is-badge"))).toContain("IA-6/pack-next-ask-malformed");
+    expect(edit((table) => table.lessons["what-is-badge"]!.next.push("what-the-records-hold"))).toContain("IA-6/pack-next-ask-malformed");
+    expect(edit((table) => table.lessons["what-is-badge"]!.next.push("nowhere"))).toContain("IA-6/pack-next-ask-malformed");
+  });
+
+  it("refuses a wording that states a value, names a certified id, or carries none of its lesson's aliases", () => {
+    expect(edit((table) => (table.lessons["what-is-badge"]!.ask = "what are the 8 badges for?"))).toContain("IA-6/pack-next-ask-malformed");
+    expect(edit((table) => (table.lessons["what-is-badge"]!.ask = "what are badges for, pikachu?"))).toContain("IA-6/pack-next-ask-malformed");
+    expect(edit((table) => (table.lessons["what-is-badge"]!.ask = "how do I earn one?"))).toContain("IA-6/pack-next-ask-malformed");
+    expect(edit((table) => (table.lessons["what-is-badge"]!.ask = ""))).toContain("IA-6/pack-next-ask-malformed");
+  });
+
+  it("refuses a field that is not in the dictionary, and a field wording that reads no alias of its field", () => {
+    expect(edit((table) => (table.fields["base-luck"] = { ask: "how lucky is it?" }))).toContain("IA-6/pack-next-ask-malformed");
+    expect(edit((table) => (table.fields["base-speed"]!.ask = "how zippy is it?"))).toContain("IA-6/pack-next-ask-malformed");
+    expect(edit((table) => (table.fields["base-speed"]!.rank = "which of them is the zippiest?"))).toContain("IA-6/pack-next-ask-malformed");
+    expect(edit((table) => (table.fields["base-speed"]!.compare = "which of the two reaches 100 first?"))).toContain("IA-6/pack-next-ask-malformed");
+  });
+
+  it("the lessons offered after the boundary must exist, carry a wording, and not be the boundary", () => {
+    type WithAfter = { afterBoundary: string[] };
+    expect(edit((table) => ((table as unknown as WithAfter).afterBoundary = ["nowhere"]))).toContain("IA-6/pack-next-ask-malformed");
+    expect(edit((table) => ((table as unknown as WithAfter).afterBoundary = ["what-the-records-hold"]))).toContain("IA-6/pack-next-ask-malformed");
+    expect(edit((table) => ((table as unknown as WithAfter).afterBoundary = ["what-is-poke-ball"]))).toEqual([]);
+  });
+
+  it("a lesson may only follow one that declares a wording to offer it by", () => {
+    expect(
+      edit((table) => {
+        delete table.lessons["objective"];
+      }),
+    ).toContain("IA-6/pack-next-ask-malformed");
   });
 });

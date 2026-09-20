@@ -45,12 +45,13 @@ import type {
   Violation,
 } from "../kernel/contracts.js";
 import { type DomElement, walkArtifact } from "../kernel/dom.js";
-import { type ManifestContext, type ManifestDraft, MAX_SUGGESTIONS, suggestionProblem } from "../kernel/manifest.js";
+import type { ManifestContext, ManifestDraft } from "../kernel/manifest.js";
 import type { AccordPack } from "../kernel/pack.js";
 import { planRender } from "../kernel/render.js";
 import type { CertifiedRegistry } from "../kernel/registry.js";
 import { NO_FIELD, restrictionsFor } from "../kernel/pack.js";
 import { type LessonMatcherId, type LessonOffer, lessonFoothold, lessonOffer } from "./lesson-matcher.js";
+import { offerNextAsks } from "./next-asks.js";
 import { clauseTexts, deriveScope, resolveScope, type ScopeContext, unmatchedClauses } from "../kernel/scope.js";
 import { requiredDimensionsFor } from "../kernel/scope-deps.js";
 import { buildRoster } from "../kernel/roster.js";
@@ -406,14 +407,17 @@ export interface SessionState {
    */
   clarification: { asked: number; picked: number; ignored: number; capped: number; phrased: number; unphrased: number };
   /**
-   * The suggestion register's gauge (R3b step 4): `offered` counts every
-   * follow-up the model wrote, `kept` the ones that passed the
-   * topic-not-value rule into a draft, `dropped` the ones it refused, and
-   * `taken` the trainer utterances that were one of the previous answer's
+   * The suggestion register's gauge (R3b step 4; docs/suggestions.md):
+   * `offered` counts every follow-up the model wrote, `kept` the ones that
+   * passed both gates into a draft, `dropped` the ones the register's rule
+   * or a repeat refused, `unanswerable` the ones the records could not have
+   * answered (dropped too, counted apart: the answerable check's own number),
+   * `supplied` the pack's own next steps shown in their place, and `taken`
+   * the trainer utterances that were one of the previous answer's
    * suggestions, said back — the number that says whether a next step
    * offered is a next step taken.
    */
-  suggestions: { offered: number; kept: number; dropped: number; taken: number; deadEnded: number };
+  suggestions: { offered: number; kept: number; dropped: number; unanswerable: number; supplied: number; taken: number; deadEnded: number };
   /**
    * The precedent door's gauge (docs/precedent.md): `held` counts the
    * exchanges whose calls held precedents, `empty` those where the door was
@@ -514,7 +518,7 @@ export function startSession(idPrefix?: string): SessionState {
     feedbackDenials: [],
     linking: { mapped: 0, unlinked: 0, offTargetDropped: 0, contradictions: 0, staleDropped: 0, unions: 0 },
     clarification: { asked: 0, picked: 0, ignored: 0, capped: 0, phrased: 0, unphrased: 0 },
-    suggestions: { offered: 0, kept: 0, dropped: 0, taken: 0, deadEnded: 0 },
+    suggestions: { offered: 0, kept: 0, dropped: 0, unanswerable: 0, supplied: 0, taken: 0, deadEnded: 0 },
     memory: { held: 0, empty: 0, followed: 0, departed: 0, lastHeld: [] },
     listingActivations: { consulted: 0, served: 0, stoodDown: 0, guardDropped: 0 },
     listingDoor: { withheld: 0, nominated: 0 },
@@ -2076,7 +2080,7 @@ async function teachOrDiscover(
   // The follow-ups the model offered ride with whatever this hop composes
   // (R3b step 4), guarded once here; a route-composed or profile draft keeps
   // them too — the next step is about the subject, not the shape.
-  const suggested = withSuggestions(world, spentFolded, deps, decode, { ...decode.draft, claims: linked.claims });
+  const suggested = withSuggestions(world, spentFolded, deps, decode.suggestions ?? [], { ...decode.draft, claims: linked.claims });
   spentFolded = suggested.state;
   const draft: ManifestDraft = suggested.draft;
   const carry = draft.suggestions === undefined ? {} : { suggestions: draft.suggestions };
@@ -2125,36 +2129,88 @@ async function teachOrDiscover(
 }
 
 /**
- * The follow-ups a reply offered, guarded into the draft (R3b step 4). Each
- * is held to the kernel's own topic-not-value rule before it can reach a
- * manifest — the gate downstream would refuse the whole answer for one bad
- * suggestion, and a dropped follow-up should never cost a certified answer —
- * deduplicated, and capped at {@link MAX_SUGGESTIONS}. Counted either way.
- * With the door shut, whatever a reply carried is stripped: the register
- * exists only where a page labels it.
+ * The register for one answer (R3b step 4; docs/suggestions.md): the
+ * model's follow-ups and the pack's own next steps, each held to two gates
+ * before it can reach a manifest — the kernel's topic-not-value rule (a bad
+ * one would refuse the whole answer downstream, and a dropped follow-up
+ * should never cost a certified answer) and the records' reach, read as the
+ * ask itself would be read, so a suggestion shown is a question the same
+ * records answer. Nothing shown or asked earlier in the session is offered
+ * again. Counted either way, and each drop and each pack step said on the
+ * ledger. With the door shut, whatever a reply carried is stripped: the
+ * register exists only where a page labels it.
  */
 function withSuggestions(
   world: SessionWorld,
   state: SessionState,
   deps: SessionDeps,
-  decode: Extract<AnswerDecode, { ok: true }>,
+  proposed: readonly string[],
   draft: ManifestDraft,
 ): { state: SessionState; draft: ManifestDraft } {
   const { suggestions: _carried, ...bare } = draft;
   if (deps.suggest !== true) return { state, draft: bare };
-  if (decode.suggestions === undefined) return { state, draft };
-  const gauge = { ...state.suggestions, offered: state.suggestions.offered + decode.suggestions.length };
-  const kept: string[] = [];
-  for (const suggestion of decode.suggestions) {
-    const duplicate = kept.some((entry) => entry.toLowerCase() === suggestion.toLowerCase());
-    if (kept.length >= MAX_SUGGESTIONS || duplicate || suggestionProblem(world.registry, suggestion) !== undefined) {
-      gauge.dropped += 1;
-      continue;
-    }
-    kept.push(suggestion);
+  const excluded = [
+    ...state.records.flatMap((record) => record.manifest?.suggestions ?? []),
+    ...state.transcript.flatMap((event) => (event.kind === "utterance" && event.source === "trainer" ? [event.text] : [])),
+  ];
+  const answered = state.records.flatMap((record) => record.manifest?.claims ?? []);
+  const history = {
+    lessons: answered.flatMap((claim) => (claim.kind === "explanation" ? [claim.blockId] : [])),
+    fields: answered.flatMap((claim) =>
+      claim.kind === "fact"
+        ? [{ entityId: claim.entityId, factId: claim.factId }]
+        : claim.kind === "comparison"
+          ? [
+              { entityId: claim.leftId, factId: claim.factId },
+              { entityId: claim.rightId, factId: claim.factId },
+            ]
+          : [],
+    ),
+  };
+  const offer = offerNextAsks(world, draft, proposed, {
+    ...(deps.precedents === undefined ? {} : { store: deps.precedents.store }),
+    excluded,
+    history,
+  });
+  const fromModel = offer.kept.filter((one) => one.source === "model");
+  const fromPack = offer.kept.filter((one) => one.source === "pack");
+  const modelDropped = offer.dropped.filter((one) => one.source === "model");
+  const unanswerable = modelDropped.filter((one) => one.cause === "unanswerable");
+  const gauge = {
+    ...state.suggestions,
+    offered: state.suggestions.offered + proposed.length,
+    kept: state.suggestions.kept + fromModel.length,
+    dropped: state.suggestions.dropped + modelDropped.length,
+    unanswerable: state.suggestions.unanswerable + unanswerable.length,
+    supplied: state.suggestions.supplied + fromPack.length,
+  };
+  let next: SessionState = { ...state, suggestions: gauge };
+  if (unanswerable.length > 0) {
+    next = ledgerStep(
+      next,
+      deps,
+      deps.now(),
+      "driver",
+      "suggest/gated",
+      `${unanswerable.length} of the model's ${proposed.length} suggestion(s) dropped: nothing in the records would answer them`,
+      unanswerable.length,
+      unanswerable.map((one) => `"${one.text}" — ${one.reason}`),
+    );
   }
-  gauge.kept += kept.length;
-  return { state: { ...state, suggestions: gauge }, draft: kept.length === 0 ? bare : { ...bare, suggestions: kept } };
+  if (fromPack.length > 0) {
+    next = ledgerStep(
+      next,
+      deps,
+      deps.now(),
+      "driver",
+      "suggest/supplied",
+      `${fromPack.length} next step(s) offered from the pack, each a question the records answer`,
+      fromPack.length,
+      fromPack.map((one) => `"${one.text}" — ${one.via.kind === "lesson" ? `the ${one.via.lessonIds.join(" or ")} lesson` : `the ${one.via.fieldId} field`}`),
+    );
+  }
+  const kept = offer.kept.map((one) => one.text);
+  return { state: next, draft: kept.length === 0 ? bare : { ...bare, suggestions: kept } };
 }
 
 /** The listing gauge, now over nominations alone: `consulted` counts every
@@ -3058,11 +3114,10 @@ function teachRecordsBoundary(state: SessionState, deps: SessionDeps, transactio
   const lessonId = deps.world.pack.recordsBoundary?.lessonId;
   if (lessonId === undefined) return closeExchange(state);
   state = ledgerStep(state, deps, deps.now(), "driver", "boundary/taught", "the ask named what the records do not hold — the records-boundary lesson taught");
-  return commit(state, deps, {
-    transactionId,
-    establishedAt,
-    draft: { transactionId, claims: [{ kind: "explanation", blockId: lessonId }], rosters: [] },
-  });
+  // A decline is where a next step matters most: the pack's own way back in
+  // (docs/suggestions.md, `afterBoundary`) rides on the boundary lesson.
+  const suggested = withSuggestions(deps.world, state, deps, [], { transactionId, claims: [{ kind: "explanation", blockId: lessonId }], rosters: [] });
+  return commit(suggested.state, deps, { transactionId, establishedAt, draft: suggested.draft });
 }
 
 /** The reviewed block that owns the version boundary, when the pack carries
@@ -3192,11 +3247,10 @@ function teachBoundary(state: SessionState, deps: SessionDeps): SessionState {
   }
   const transactionId = nextTransactionId(state);
   const establishedAt = deps.now();
-  return commit(state, deps, {
-    transactionId,
-    establishedAt,
-    draft: { transactionId, claims: [{ kind: "explanation", blockId: BOUNDARY_LESSON }], rosters: [] },
-  });
+  // A decline is where a next step matters most: the pack's own way back in
+  // (docs/suggestions.md, `afterBoundary`) rides on the boundary lesson.
+  const suggested = withSuggestions(deps.world, state, deps, [], { transactionId, claims: [{ kind: "explanation", blockId: BOUNDARY_LESSON }], rosters: [] });
+  return commit(suggested.state, deps, { transactionId, establishedAt, draft: suggested.draft });
 }
 
 async function answer(
@@ -3605,7 +3659,7 @@ function groom(
   const draft = routed.length === 0 ? groomed : { ...groomed, claims: [...groomed.claims, ...routed] };
   // Last, the follow-ups (R3b step 4): guarded onto whatever shape the
   // guards settled on, so a next step rides with every certified answer.
-  const suggested = withSuggestions(world, state, deps, decode, draft);
+  const suggested = withSuggestions(world, state, deps, decode.suggestions ?? [], draft);
   return { kind: "draft", state: suggested.state, draft: suggested.draft };
 }
 

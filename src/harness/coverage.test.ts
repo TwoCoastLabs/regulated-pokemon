@@ -302,13 +302,13 @@ describe("the two R3b doors are reported when they were open, and not as zeros w
   it("sums the clarification gauge and the suggestion counts over the runs that carry them", () => {
     const map = coverageMap(withDoors);
     expect(map.clarification).toEqual({ runs: 3, asked: 2, picked: 1, ignored: 2, capped: 0 });
-    expect(map.suggestions).toEqual({ runs: 3, shown: 2, answersWith: 1, dropped: 1 });
+    expect(map.suggestions).toEqual({ runs: 3, shown: 2, answersWith: 1, dropped: 1, unanswerable: 0, supplied: 0 });
   });
 
   it("renders each as its own line naming its condition", () => {
     const md = renderCoverage(coverageMap(withDoors));
     expect(md).toContain("**Clarification (door open on 3 run(s)):** the model asked 2 question(s) — 1 answered from the oracle, 2 held no right option");
-    expect(md).toContain("**Suggestions (door open on 3 run(s)):** 2 shown on 1 certified answer(s), 1 dropped");
+    expect(md).toContain("**Suggestions (door open on 3 run(s)):** 2 shown on 1 certified answer(s) — 0 of them the pack's own next steps; 1 of the model's dropped, 0 of those because nothing in the records would answer them");
   });
 
   it("omits both when no run carried them — a shut door is not a zero", () => {
