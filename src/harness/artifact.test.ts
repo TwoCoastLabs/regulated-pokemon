@@ -71,6 +71,14 @@ describe("filing it", () => {
     expect(written[0]?.contents.split("\n").length).toBeGreaterThan(10);
   });
 
+  it("never overwrites a run filed under the same stamp — the second gets the process id, and still ends in its label", async () => {
+    const written: string[] = [];
+    const path = fileArtifact(await artifact(), "/tmp/runs", (target) => void written.push(target), () => true);
+    expect(path).toBe(`/tmp/runs/2026-08-06T09-30-00-123Z-${process.pid}-scripted.json`);
+    expect(path.endsWith("-scripted.json")).toBe(true);
+    expect(written).toEqual([path]);
+  });
+
   it("puts the timestamp first so runs sort by when they happened", async () => {
     const filed = await artifact();
     expect(artifactFilename({ ...filed, startedAt: "2026-01-02T03:04:05.000Z", label: "live" })).toBe(

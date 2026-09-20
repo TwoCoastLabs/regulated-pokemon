@@ -569,7 +569,7 @@ describe("R3b step 4 in the bank: suggestions are offered, shown and counted, ne
     });
     const run = await runBankEntry(world, entry("ans-fact-speed-pikachu"), provider, clock(), undefined, 0, { profile: true, suggest: true, followSuggestion: true });
     expect(run.stage.kind).toBe("resolved");
-    expect(run.suggestions?.followed).toMatchObject({ ask: "What is it weak to?", promise: { kind: "field", fieldId: "type-chart" }, outcome: "answered", kept: true });
+    expect(run.suggestions?.followed).toMatchObject({ ask: "What is it weak to?", promise: { kind: "field", fieldId: "type-chart" }, outcome: "answered", kept: true, answeredWith: ["matchup"] });
     expect(run.suggestions?.followed?.calls).toBeGreaterThan(0);
     // The entry's own reading is untouched by the second exchange.
     expect(run.run.transaction!.manifest!.claims[0]).toMatchObject({ kind: "fact", factId: "base-speed" });

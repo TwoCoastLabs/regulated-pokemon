@@ -3263,12 +3263,16 @@ describe("R3b step 4: follow-up suggestions — a next step beside every answer,
     // carry one.
     const table = world.pack.presentation.nextAsks!;
     for (const [fieldId, entry] of Object.entries(table.fields)) {
-      for (const text of [entry.compare, entry.rank]) {
+      for (const [form, text] of [["compare", entry.compare], ["rank", entry.rank]] as const) {
         if (text === undefined) continue;
         const bound = deriveScope(world.pack, [{ kind: "utterance", at: "2026-09-20T00:00:00.000Z", source: "trainer", text }]).bindings.find(
           (binding) => binding.dimension === "comparisonBasis",
         );
-        expect({ fieldId, text, basis: bound?.value ?? fieldId }).toEqual({ fieldId, text, basis: fieldId });
+        // A rank wording must bind its basis outright: unbound, every click
+        // costs the pack's basis question (porch, 2026-09-20: "which of them
+        // is the fastest?" asked it; "which of them has the highest Speed?"
+        // does not). A compare wording may leave it unbound.
+        expect({ fieldId, text, basis: bound?.value ?? (form === "rank" ? "unbound" : fieldId) }).toEqual({ fieldId, text, basis: fieldId });
       }
     }
   });
@@ -3307,7 +3311,7 @@ describe("R3b step 4: follow-up suggestions — a next step beside every answer,
     if (state.phase.kind === "asking") state = await say(state, "speed", withSuggest(provider));
     expect(state.records[0]!.outcome.status).toBe("answered");
     // Ranked by speed already: the other rank wordings, none about "it".
-    expect(state.records[0]!.manifest?.suggestions).toEqual(["which of them has the most HP?", "which of them has the highest Attack stat?", "which of them has the highest Defense?"]);
+    expect(state.records[0]!.manifest?.suggestions).toEqual(["which of them has the highest HP?", "which of them has the highest Attack stat?", "which of them has the highest Defense?"]);
     provider = scripted("comparing", (purpose) => (purpose === "scope" ? "decline" : comparison));
     state = await setProfile(startSession(), PROFILE_SCOPE, withSuggest(provider));
     state = await say(state, "compare Pikachu and Charmander by speed", withSuggest(provider));
@@ -3419,6 +3423,25 @@ describe("dogfood stop 3 (2026-09-06): the train wreck, three asks long", () => 
     // An ask that names its own subject is shown nothing of the sort.
     state = await say(state, "what type is Pikachu?", d);
     expect(prompts[2]).not.toContain("previous certified answer");
+  });
+
+  it("after a count, 'them' is shown the set's own criteria ids — the move a learns-move roster names", async () => {
+    // Bank, 2026-09-20: "which of them has the highest Speed?" after a count of
+    // Selfdestruct learners; both models rebuilt the roster with a
+    // misspelt move id and the reply was refused under IA-3/unknown-move.
+    const prompts: string[] = [];
+    const roster = { id: "learns-self-destruct", criteria: { all: [{ kind: "learns-move", move: "self-destruct" }] } };
+    const provider = new ScriptedProvider("counting", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      prompts.push(request.prompt);
+      return JSON.stringify({ rosters: [roster], claims: [{ kind: "count", rosterId: roster.id }] });
+    });
+    const d = deps(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "How many Pokemon learn Selfdestruct?", d);
+    expect(state.records[0]!.outcome.status).toBe("answered");
+    state = await say(state, "which of them has the highest Speed?", d);
+    expect(prompts[1]).toContain("The previous certified answer the trainer is looking at was about: self-destruct.");
   });
 });
 
