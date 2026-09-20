@@ -52,6 +52,8 @@ export const LEDGER_CODES = {
   "scope/granted": { tone: "ok" },
   "scope/asked": { tone: "open" },
   "scope/card": { tone: "open" },
+  /** The ladder re-proposed a candidate the trainer rejected in this exchange; the pack's question instead. */
+  "scope/rejected-again": { tone: "open" },
   "scope/refused": { tone: "refused" },
   // the model's replies
   "model/discovery": { tone: "plain" },

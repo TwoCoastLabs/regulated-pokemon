@@ -163,8 +163,11 @@ describe("proposeAnswer", () => {
       // that creeps back in fails the build by name. 1418 → 1475 on
       // 2026-09-19: the comparison shape, offered in every world now, is
       // one more line under THE SHAPES — a shape the world lacked, not a
-      // block crept back.
-      const PINNED_WORDS = 1475;
+      // block crept back. 1475 → 1520 on 2026-09-21: the two lines that
+      // say how a comparison links (the field once, never the subjects to
+      // none) — the false decline four cheap models made on "compare X and
+      // Y" (findings §26–§28).
+      const PINNED_WORDS = 1520;
       const { prompt } = await build("tell me about the game");
       const lines = prompt.split("\n");
       for (const [index, line] of lines.entries()) {
