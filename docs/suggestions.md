@@ -43,6 +43,10 @@ it the way the ask itself would be read, with no model call:
   decides between them;
 - a lesson, through the same alias matcher the lesson door uses
   ([lesson-door.md](lesson-door.md)), never the records-boundary lesson;
+- beside a pair and nothing else, a species field is a comparison, and
+  only the fields the pack declares a comparison for pass — a learnset is
+  a list, and "do they learn the same moves?" has no shape the grammar
+  answers (findings §37, the register's first dead end);
 - otherwise nothing, and the suggestion is dropped and counted as
   unanswerable.
 

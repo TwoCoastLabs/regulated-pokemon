@@ -65,6 +65,15 @@ describe("the answerable check: a suggestion is shown only when the records woul
     expect(after).toContain("what type is it?");
   });
 
+  it("beside a pair, a species field is a comparison, and only the fields the pack compares pass", () => {
+    const pair = { claims: [{ kind: "comparison", factId: "base-speed", leftId: "pikachu", rightId: "charmander" }] as Claim[], rosters: [] };
+    expect(answerable(world, pair, "do they learn the same moves?")).toMatchObject({ kind: "none", reason: expect.stringContaining("offers no comparison for") });
+    expect(answerable(world, pair, "what are their types?")).toEqual({ kind: "field", fieldId: "types" });
+    expect(answerable(world, pair, "how does their HP compare?")).toEqual({ kind: "field", fieldId: "base-hp" });
+    // Beside one subject the same field is a fact.
+    expect(answerable(world, pikachuSpeed, "what moves does it learn?")).toEqual({ kind: "field", fieldId: "learnset" });
+  });
+
   it("never answers with the boundary lesson", () => {
     const boundary = world.pack.recordsBoundary!.lessonId;
     for (const [, entry] of Object.entries(world.pack.presentation.nextAsks!.lessons)) {
