@@ -737,6 +737,24 @@ export async function say(state: SessionState, text: string, deps: SessionDeps):
     taken ? "trainer/took-suggestion" : "trainer/said",
     text,
   );
+  // "Try again" asks for the previous ask again, not for an answer about
+  // the words "try again". Found live (dogfood, 2026-09-20): after a denied
+  // ranking, "can you try again?" went to the model as a fresh ask and came
+  // back as Pikachu's speed and matchups. The request is recorded like every
+  // utterance and its words are spent; the previous ask's words are then
+  // said again as the trainer's own, so the re-ask opens its own exchange
+  // and the ledger names it a re-ask. Only when nothing is open — a card or
+  // a question waiting is answered, not retried — and only when there is a
+  // previous ask to repeat; otherwise the words are a pleasantry with
+  // nothing behind them.
+  if (state.phase.kind === "gathering" && isTryAgain(text)) {
+    const previous = previousAsk(next);
+    if (previous === undefined) {
+      return note({ ...next, askStart: next.transcript.length }, deps, deps.now(), "Nothing to try again yet — ask me something first.", "social", "\"try again\" with no previous ask to repeat");
+    }
+    const stepped = ledgerStep(next, deps, deps.now(), "driver", "ask/retried", `"try again" — the previous ask is asked again: ${previous}`);
+    return say({ ...stepped, askStart: stepped.transcript.length }, previous, deps);
+  }
   // Social closes and the confidence question get their own words, before any
   // machinery runs (porch round five, 2026-09-01: "thanks!" and "are you
   // sure?" each re-ran the ladder and drew a stale card). Recorded like every
@@ -764,6 +782,25 @@ export async function say(state: SessionState, text: string, deps: SessionDeps):
   // exchange closed, no record and nothing left open for the trainer.
   const deadEnded = taken && driven.records.length === state.records.length && driven.phase.kind === "gathering";
   return deadEnded ? { ...driven, suggestions: { ...driven.suggestions, deadEnded: driven.suggestions.deadEnded + 1 } } : driven;
+}
+
+/** The whole-utterance forms of "try again": the same discipline as the
+ * social gate, so "try again, and what about Onix?" is an ask. */
+function isTryAgain(text: string): boolean {
+  const bare = text.trim().toLowerCase().replace(/^[^a-z]+/, "").replace(/[^a-z]+$/, "");
+  return /^(?:(?:can|could|would|will) you |please )?(?:try (?:that |it |this )?again|try (?:once |one )?more(?: time)?|retry(?: that| it)?|again|one more time|do (?:that|it) again|(?:please )?repeat(?: that| it)?)(?: please)?$/.test(bare);
+}
+
+/** The previous ask's words: the last closed exchange whose opening was an
+ * ask — not a pleasantry, not a "try again" — read from the ledger the
+ * driver keeps, never from the model. */
+function previousAsk(state: SessionState): string | undefined {
+  for (let index = state.exchanges.length - 1; index >= 0; index--) {
+    const opening = state.exchanges[index]!.opening;
+    if (opening.length === 0 || isTryAgain(opening) || socialReply(opening) !== undefined) continue;
+    return opening;
+  }
+  return undefined;
 }
 
 /**

@@ -6615,3 +6615,47 @@ matchups rather than the ask before it. Harness factors: the three
 above, closed; the cap and the missing "try again" reading, open.
 
 **Enforcement.** 0 escalations of 5 records across the four probes.
+
+## 31. The asked cap raised to the claim budget, and "try again" reads as a re-ask
+
+**Goal.** Two open harness items from §30. The `asked` cap of six cut
+certified answers in half wherever a model linked a field per subject
+(a comparison) or an ask named more than six things ("tell me about
+X"); and "can you try again?" went to the model as a fresh ask and came
+back as something else.
+
+**How it works.** `MAX_ASKED` is twelve, the claim budget: one link per
+claim is the most an honest answer needs, and the schema's `maxItems`
+enforces it at decode as before. "Try again", in its whole-utterance
+forms ("can you try again?", "again", "one more time", "retry"), is
+read by the driver before any model call: the request is recorded like
+every utterance, its words are spent, and the previous ask's words —
+the last closed exchange whose opening was an ask, not a pleasantry —
+are said again as the trainer's own, so the re-ask opens its own
+exchange under those words with an `ask/retried` step naming it. Only
+when nothing is open (a card or a question waiting is answered, not
+retried), and with nothing before it the words earn a social note and
+no call. "Try again, and what about Onix?" is an ask, as with every
+social cue.
+
+**The porch, after** (2026-09-21, strong model routed by throughput,
+N=1 each):
+
+| ask | before (§30) | after |
+|---|---|---|
+| tell me more about Pikachu | 6 links, 8 claims, 3 dropped, 5 certified | 9 links, 7 claims, 0 dropped, 7 certified, 1 call |
+| which pokemon is the fastest? → can you try again? | the retry answered as a fresh ask about Pikachu's speed and matchups | ranking certified; the retry re-asked the same words, ranking certified again, `ask/retried` on the ledger, 1 call each |
+| compare Pikachu and Charmander, `gemini-3.5-flash-lite` | 6 links, 3 of 6 certified | 2 links, 1 of 6 certified |
+
+The cap did what it was raised for on the profile ask. On the mid-tier
+model's comparison it did nothing this time: the model linked two
+fields, not six, so the cap never bound — the same model linked six the
+run before (§30). One sample each way; that model's linking on
+"compare" is its own variance, and the bank is the reading for it.
+
+**Model errors, apart.** The mid-tier model's two links (its), and the
+strong model's 39.9 s profile call at 16.5 tok/s on Novita under a
+throughput preference (the route's — the sort is a preference, not a
+pin; an `ignore=Novita` is the next routing reading).
+
+**Enforcement.** 0 escalations of 4 records across the three probes.

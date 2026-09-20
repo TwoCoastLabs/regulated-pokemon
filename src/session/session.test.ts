@@ -1091,6 +1091,33 @@ describe("porch round five: stale cards, social closes, rarity, direction", () =
     expect(openings.at(-1)).toBe("What is a badge?");
   });
 
+  it("'try again' asks the previous ask again — a new exchange under the old words, named a re-ask (dogfood 2026-09-20)", async () => {
+    // After a denied ranking, "can you try again?" went to the model as a
+    // fresh ask and came back as Pikachu's speed and matchups.
+    let calls = 0;
+    const provider = scripted("again", (purpose) => { calls += 1; return purpose === "scope" ? "decline" : thunderboltAnswer(); });
+    const d = deps(provider);
+    let state = await say(startSession(), `${PROFILE} What is Thunderbolt's power?`, d);
+    expect(state.records).toHaveLength(1);
+    const before = calls;
+    state = await say(state, "can you try again?", d);
+    expect(calls).toBeGreaterThan(before);
+    expect(state.records).toHaveLength(2);
+    expect(state.exchanges.at(-1)?.opening).toBe(`${PROFILE} What is Thunderbolt's power?`);
+    expect(allSteps(state).map((step) => step.code)).toContain("ask/retried");
+    // The request itself is on the record, and the re-ask's words are the trainer's own.
+    const said = state.transcript.filter((event) => event.kind === "utterance" && event.source === "trainer").map((event) => (event as { text: string }).text);
+    expect(said.slice(-2)).toEqual(["can you try again?", `${PROFILE} What is Thunderbolt's power?`]);
+    // With nothing before it, "try again" is a pleasantry with nothing behind it: no call.
+    const fresh = await say(startSession(), "try again", d);
+    expect(fresh.notes.at(-1)?.tone).toBe("social");
+    expect(fresh.notes.at(-1)?.text).toContain("Nothing to try again");
+    // A "try again" with a payload is an ask, not a re-ask.
+    const mixed = await say(state, "try again, and what about Onix?", d);
+    expect(mixed.exchanges.at(-1)?.opening).not.toBe(`${PROFILE} What is Thunderbolt's power?`);
+    expect(allSteps(mixed).filter((step) => step.code === "ask/retried")).toHaveLength(1);
+  });
+
   it("the confidence question gets the provenance answer", async () => {
     const provider = scripted("mute", () => "decline");
     const state = await say(await say(startSession(), "What is a badge?", deps(provider)), "are you sure?", deps(provider));
