@@ -70,7 +70,24 @@ says which questions trainers ask.
 
 The model's suggestions that pass the check come first, because they are
 the conversation's own; the pack's fill the register to its cap of three.
-Nothing shown or asked earlier in the session is offered again.
+Nothing shown or asked earlier in the session is offered again, and a
+step back is no step: a suggestion that reads as the lesson this answer
+teaches, or as a field already certified for the subject, is dropped as
+already answered, whichever source wrote it.
+
+On the live page every answer's register stays clickable, not only the
+latest: a denied or declined turn files no register of its own and leaves
+the earlier one on screen, and a click there is a suggestion taken (the
+driver counts a suggestion said back from any earlier answer).
+
+One wording rule the table learned on the live page: a `rank` or
+`compare` wording must bind its own field through the scope vocabulary,
+or bind none. The vocabulary's basis terms are single tokens, so "which
+of them has the highest Special Defense?" bound the basis to Defense and
+the ranking by Special Defense was denied under IA-1 — a suggestion
+offered, then refused. The two special stats carry no rank or compare
+wording until the vocabulary can read a two-word basis; a session test
+pins every wording against `deriveScope`.
 
 **Held to its promise at load.** The loader refuses a table whose wording
 breaks the promise it will make: a lesson's question must carry one of

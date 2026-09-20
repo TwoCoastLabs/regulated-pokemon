@@ -138,6 +138,17 @@ describe("the register for one answer", () => {
     ]);
   });
 
+  it("a model suggestion that steps back — the lesson taught, the field certified — is dropped as answered", () => {
+    const lesson = { claims: [{ kind: "explanation", blockId: "what-is-type" }] as Claim[], rosters: [] };
+    const offer = offerNextAsks(world, lesson, ["what types are there?"], { history: { lessons: ["how-to-play"], fields: [] } });
+    expect(offer.dropped[0]).toMatchObject({ text: "what types are there?", cause: "answered" });
+    const facts = offerNextAsks(world, pikachuSpeed, ["how fast is it?", "what type is it?"], { history: { lessons: [], fields: [{ entityId: "pikachu", factId: "types" }] } });
+    expect(facts.dropped.map((one) => [one.text, one.cause])).toEqual([
+      ["how fast is it?", "answered"],
+      ["what type is it?", "answered"],
+    ]);
+  });
+
   it("a text shown or asked earlier is not offered again", () => {
     const offer = offerNextAsks(world, pikachuSpeed, ["What type is it?"], { excluded: ["what type is it?", "What does it evolve into?"] });
     expect(offer.kept.map((one) => one.text)).toEqual(["how does it evolve?", "what is its previous form?", "what is it weak to?"]);
