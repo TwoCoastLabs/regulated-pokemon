@@ -25,6 +25,7 @@ import {
   decideAct,
   decideScope,
   eligibilityClaims,
+  coveringLessonReason,
   lessonAskCheck,
   MAX_LADDER_TURNS,
   retry,
@@ -1496,7 +1497,9 @@ describe("R3b: the verifier-in-the-loop retry — a denial the kernel can name i
     expect(record.outcome.status).toBe("answered");
     expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-badge" }]);
     expect(state.feedbackRetries).toBe(1);
-    expect(state.feedbackDenials).toEqual(["IA-3/fabricated-entity"]);
+    // The ask names no certified subject and the pack's coverage names the
+    // badge lesson: the driver's own reason rides beside the kernel's.
+    expect(state.feedbackDenials).toEqual(["IA-3/fabricated-entity", "driver/covering-lesson"]);
     // The retry's prompt carries the denial by name, in fixed wording; the
     // first prompt carried nothing of the kind.
     expect(prompts).toHaveLength(2);
@@ -2596,15 +2599,22 @@ describe("the driver's ledger — every step of an exchange, in fixed wording, b
     const sequence = codes(trail.steps);
     const at = sequence.indexOf("verdict/denied");
     expect(at).toBeGreaterThan(sequence.indexOf("model/answer"));
-    expect(sequence[at + 1]).toBe("model/retry");
+    // The ask names no certified subject and the badge lesson covers it: the
+    // driver's reason is its own step on its own lane, between the kernel's
+    // denial and the model's retry, so the trail says whose words each were.
+    expect(sequence[at + 1]).toBe("lesson/named");
+    expect(sequence[at + 2]).toBe("model/retry");
     const denied = trail.steps[at]!;
     expect(denied.lane).toBe("kernel");
     expect(denied.text).toContain("IA-3/fabricated-entity");
     expect(denied.lines).toHaveLength(1);
     expect(denied.lines![0]).toMatch(/^IA-3\/fabricated-entity: /);
     expect(denied.lines![0]).toContain('"gym-badge"');
-    expect(trail.steps[at + 1]!.lane).toBe("model");
-    expect(trail.steps[at + 1]!.text).toContain("1 reason was fed back to the model");
+    const named = trail.steps[at + 1]!;
+    expect(named.lane).toBe("driver");
+    expect(named.lines).toEqual([expect.stringMatching(/^driver\/covering-lesson: .*what-is-badge/)]);
+    expect(trail.steps[at + 2]!.lane).toBe("model");
+    expect(trail.steps[at + 2]!.text).toContain("2 reasons were fed back to the model");
   });
 
   it("a reply the driver emptied is carried back with the driver's reasons on the step, and the retry's reply after it", async () => {
@@ -3567,8 +3577,11 @@ describe("dogfood stop 3, the dead end (2026-09-06): a reply the driver emptied 
     expect(record.outcome.status).toBe("answered");
     expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-pokemon" }]);
     expect(state.feedbackRetries).toBe(1);
-    expect(state.feedbackDenials).toEqual(["driver/no-subject", "driver/off-ask"]);
+    // "what are Pokémon?" names no certified subject and the pack's coverage
+    // names its lesson: the covering lesson rides beside the other reasons.
+    expect(state.feedbackDenials).toEqual(["driver/no-subject", "driver/off-ask", "driver/covering-lesson"]);
     expect(prompts[1]).toContain('a claim named "none" as its subject');
+    expect(prompts[1]).toContain("driver/covering-lesson: the ask names no species, move or item the records certify, and the reviewed lesson what-is-pokemon covers it");
     expect(state.usage.calls).toBe(2);
     expect(verifyReplay(world, record).allowed).toBe(true);
   });
@@ -3809,7 +3822,9 @@ describe("the precedent door: memory the operator owns (docs/precedent.md, epic 
     const tap = tapped((purpose) => (purpose === "answer" ? JSON.stringify({ rosters: [], claims: [] }) : "decline"));
     const state = await say(startSession(), "weather today", { world, provider: tap.provider, now: clock(), precedents: { store } });
     const empty = stepsOf(state).find((step) => step.code === "memory/empty");
-    expect(empty?.text).toBe("no earlier ask shared a word with this one — nothing was shown");
+    // The ask names no certified subject, so the one precedent about a
+    // species was set aside before scoring — counted on the step, not listed.
+    expect(empty?.text).toBe("no earlier ask shared a word with this one — nothing was shown (1 about a named subject set aside — this ask names none)");
     // Open and empty, not shut: the door is declared with nothing in it.
     expect(tap.hints[0]?.precedents).toEqual([]);
     expect(tap.prompts[0]).not.toContain("Earlier asks the records answered");
@@ -3897,5 +3912,64 @@ describe("the exchange in progress: every step is reported as the driver takes i
     control = await say(control, "what's a gym badge?", quiet);
     expect(control.records.map((record) => record.outcome.status)).toEqual(state.records.map((record) => record.outcome.status));
     expect(control.records[0]!.manifest?.claims).toEqual(state.records[0]!.manifest?.claims);
+  });
+});
+
+describe("dogfood 2026-09-20: the ask that names nothing — the covering lesson is said by name on the round back (findings §38)", () => {
+  const PROFILE_SCOPE = { version: "red-blue", region: "kanto", badgeLevel: 0 } as const;
+  const dump = JSON.stringify({
+    asked: [{ phrase: "tell me about this game", entityId: "game", fieldId: "none" }],
+    rosters: [],
+    claims: [
+      { kind: "fact", entityId: "bulbasaur", factId: "base-hp" },
+      { kind: "comparison", leftId: "bulbasaur", rightId: "charmander", factId: "pokedex-number" },
+    ],
+  });
+  const lesson = JSON.stringify({ asked: [{ phrase: "tell me about this game", entityId: "none", fieldId: "none" }], rosters: [], claims: [{ kind: "explanation", blockId: "what-is-game" }] });
+
+  it("reads the covering lesson deterministically: an ask naming no certified subject that the pack covers, and nothing else", () => {
+    expect(coveringLessonReason(world, "tell me about this game")).toBe(
+      "driver/covering-lesson: the ask names no species, move or item the records certify, and the reviewed lesson what-is-game covers it — teach it as an explanation claim, or reply with no claims at all",
+    );
+    // A named subject: the ask is about it, whatever lesson its words brush.
+    expect(coveringLessonReason(world, "how fast is pikachu, and how does leveling work?")).toBeUndefined();
+    // No lesson covers it: nothing to name.
+    expect(coveringLessonReason(world, "what's the weather like?")).toBeUndefined();
+    // The boundary lesson is the pass, never the answer named here.
+    expect(coveringLessonReason(world, "is this the same in yellow?")).toBeUndefined();
+  });
+
+  it("with the profile set first, a fact dump for the game is carried back with the lesson named, and the second reply teaches it", async () => {
+    let calls = 0;
+    const prompts: string[] = [];
+    const provider = new ScriptedProvider("dump-then-lesson", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      prompts.push(request.prompt);
+      return (calls += 1) === 1 ? dump : lesson;
+    });
+    const d: SessionDeps = { ...deps(provider), feedback: true, retrieval: true };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "tell me about this game", d);
+    const trail = state.exchanges.at(-1)!;
+    expect(trail.outcome).toBe("answered");
+    expect(state.records.at(-1)?.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-game" }]);
+    const back = trail.steps.find((step) => step.code === "reply/carried-back")!;
+    expect(back.lines?.map((line) => line.split(":")[0])).toEqual(["driver/off-ask", "driver/covering-lesson"]);
+    expect(prompts[1]).toContain("the reviewed lesson what-is-game covers it");
+    expect(state.usage.calls).toBe(2);
+    expect(state.feedbackDenials).toEqual(["driver/off-ask", "driver/covering-lesson"]);
+  });
+
+  it("names no lesson when the ask has a certified subject — the off-ask round reads as before", async () => {
+    let calls = 0;
+    const offAsk = JSON.stringify({ asked: [{ phrase: "how fast", entityId: "pikachu", fieldId: "base-speed" }], rosters: [], claims: [{ kind: "fact", entityId: "pikachu", factId: "base-hp" }] });
+    const answered = JSON.stringify({ asked: [{ phrase: "how fast", entityId: "pikachu", fieldId: "base-speed" }], rosters: [], claims: [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }] });
+    const provider = new ScriptedProvider("off-then-on", (request) => (request.purpose !== "answer" ? "decline" : (calls += 1) === 1 ? offAsk : answered));
+    const d: SessionDeps = { ...deps(provider), feedback: true, retrieval: true };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    const back = state.exchanges.at(-1)!.steps.find((step) => step.code === "reply/carried-back")!;
+    expect(back.lines?.map((line) => line.split(":")[0])).toEqual(["driver/off-ask"]);
+    expect(state.exchanges.at(-1)!.outcome).toBe("answered");
   });
 });

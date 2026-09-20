@@ -292,3 +292,14 @@ describe("the subject oracle is validated like the routing oracle (epic #87, sli
     }
   });
 });
+
+describe("lesson entries carry paraphrases (findings §38)", () => {
+  it("every answerable lesson entry has at least two frozen paraphrases, so a wording the lesson covers but the intent does not is measured", () => {
+    for (const entry of bank.entries) {
+      if (entry.disposition !== "answerable" || !(entry.expectClaimKinds ?? []).includes("explanation")) continue;
+      expect((entry.phrasings ?? []).length, `${entry.id} carries too few paraphrases`).toBeGreaterThanOrEqual(2);
+    }
+    // The dogfood wording that the bank never carried (2026-09-20).
+    expect(bank.entries.find((entry) => entry.id === "meta-what-is-game")?.phrasings).toContain("tell me about this game");
+  });
+});

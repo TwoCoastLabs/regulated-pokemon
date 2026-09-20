@@ -463,8 +463,11 @@ function answerPrompt(
     "question calls for, and never state the same claim twice.",
     "",
     "Prefer the most specific claim the question calls for: a \"how many\" is a",
-    "count, a stat question a fact, a weakness question a matchup. Reach for a",
-    "lesson only when no such claim fits.",
+    "count, a stat question a fact, a weakness question a matchup. A question",
+    "about what something is or how the game works, naming no certified subject,",
+    "is a lesson: teach the one that squarely answers it and claim nothing else —",
+    "no fact, comparison or door stands in for it. Reach for a lesson only when",
+    "no such claim fits a named subject.",
     "",
     ...(dictionary.length === 0
       ? ['Reply with one JSON object, {"rosters": [...], "claims": [...]}, and nothing else.']

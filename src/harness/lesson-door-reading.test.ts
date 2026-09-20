@@ -23,7 +23,7 @@ describe("the wordings the reading covers", () => {
     const wordings = readingWordings(bank, paraphrases);
     const by = (set: string) => wordings.filter((item) => item.set === set).length;
     expect(by("recall-canonical")).toBe(18);
-    expect(by("recall-paraphrase")).toBe(25);
+    expect(by("recall-paraphrase")).toBe(41);
     expect(by("recall-held-out")).toBe(72);
     expect(by("precision-canonical")).toBe(45);
     expect(by("precision-paraphrase")).toBe(32);
@@ -43,7 +43,7 @@ describe("the reading with a scripted classifier", () => {
 
   it("asks the classifier only where the matcher offered the boundary alone, and reads its share apart", async () => {
     const readings = await readLessonDoor(world, provider, bank, paraphrases, { classifier: true, repetitions: 1 });
-    expect(readings).toHaveLength(192);
+    expect(readings).toHaveLength(208);
     // Never asked where the deterministic door already placed the ask.
     const canonical = readings.filter((reading) => reading.set === "recall-canonical");
     expect(canonical.every((reading) => reading.ok && !reading.asked)).toBe(true);
@@ -72,7 +72,7 @@ describe("the reading with a scripted classifier", () => {
     const summary = summarize(readings);
     expect(summary.classifier.asked).toBe(0);
     expect(summary.usage.calls).toBe(0);
-    expect(summary.rates["recall-paraphrase"]).toEqual({ ok: 20, total: 25, asked: 0, askedOk: 0 });
+    expect(summary.rates["recall-paraphrase"]).toEqual({ ok: 36, total: 41, asked: 0, askedOk: 0 });
     expect(summary.rates["recall-held-out"]).toEqual({ ok: 48, total: 72, asked: 0, askedOk: 0 });
     expect(summary.rates["precision-canonical"]).toEqual({ ok: 44, total: 45, asked: 0, askedOk: 0 });
   });

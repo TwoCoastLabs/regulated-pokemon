@@ -294,6 +294,9 @@ export interface Retrieval {
   /** The best score under the threshold, when the door came up empty — so a
    * reader sees what the retriever almost offered. */
   nearestMiss?: { id: string; score: number; ask: string };
+  /** Precedents about a named subject set aside because this ask names none
+   * (only when the caller read the ask); absent when none were. */
+  setAside?: number;
 }
 
 /**
@@ -358,11 +361,26 @@ export function retrievePrecedents(
   const tokens = askTokens(ask);
   const withheld: { id: string; reason: string }[] = [];
   const scored: { precedent: Precedent; score: number; shared: boolean }[] = [];
+  // An ask that names no certified subject (the retriever selected nothing)
+  // is shown no precedent that was about one. Found live (dogfood
+  // 2026-09-20, findings §38): "tell me about this game" shares one carrying
+  // word with "Tell me everything about Pikachu.", scored exactly the
+  // threshold, and was shown a six-fact profile as the door to take; the
+  // strong model took it, for the game. A lesson, a rule, a count over a
+  // type are about no named thing and are still offered. Only when the
+  // caller read the ask (`entities` given): a retrieval that never looked
+  // withholds nothing.
+  const bare = options.entities !== undefined && options.entities.size === 0;
+  let setAside = 0;
   for (const precedent of store.precedents) {
     if (precedent.snapshotId !== options.snapshotId) continue;
     const reason = withheldReason(precedent, options.holdOut);
     if (reason !== undefined) {
       withheld.push({ id: precedent.id, reason });
+      continue;
+    }
+    if (bare && namesSubject(precedent)) {
+      setAside += 1;
       continue;
     }
     const score = overlap(tokens, askTokens(precedent.ask));
@@ -376,8 +394,22 @@ export function retrievePrecedents(
   return {
     held,
     withheld,
+    ...(setAside > 0 ? { setAside } : {}),
     ...(held.length === 0 && miss !== undefined ? { nearestMiss: { id: miss.precedent.id, score: round(miss.score), ask: miss.precedent.ask } } : {}),
   };
+}
+
+/** Whether a precedent's shape is about a named subject — a species, move
+ * or item id under any claim — as against a lesson, a rule or a set defined
+ * by criteria, which are about no one thing. */
+function namesSubject(precedent: Precedent): boolean {
+  return precedent.shape.claims.some((claim) => {
+    for (const field of ["entityId", "leftId", "rightId", "itemId"]) {
+      if (typeof claim[field] === "string") return true;
+    }
+    const subject = claim.subject as { entityId?: string } | undefined;
+    return subject?.entityId !== undefined;
+  });
 }
 
 /** The precedents named by id — the fixed arm of the measurement: the same

@@ -92,6 +92,8 @@ export const LEDGER_CODES = {
   "linking/stale-dropped": { tone: "plain" },
   "linking/carried-back": { tone: "plain", sentBack: "fed-back" },
   "reply/carried-back": { tone: "plain", sentBack: "fed-back" },
+  /** The ask names no certified subject and the pack's own coverage names the lesson(s) that answer it; said beside the reasons a round carries back. */
+  "lesson/named": { tone: "plain", sentBack: "fed-back" },
   "guard/direction-flipped": { tone: "plain" },
   "guard/eligibility-appended": { tone: "plain" },
   "guard/padding-trimmed": { tone: "plain" },

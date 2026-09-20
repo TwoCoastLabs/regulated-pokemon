@@ -1618,17 +1618,21 @@ function consultMemory(state: SessionState, deps: SessionDeps, ask: string): Ses
       found.withheld.map((one) => `${one.id} — ${one.reason}`),
     );
   }
+  // The bare-ask rule (retrievePrecedents): an ask naming no certified
+  // subject is shown no precedent about one; how many were set aside is
+  // said on the step, not listed, so the trail stays one line.
+  const aside = found.setAside === undefined ? "" : ` (${found.setAside} about a named subject set aside — this ask names none)`;
   if (found.held.length === 0) {
     const miss = found.nearestMiss;
     return miss === undefined
-      ? memoryEmpty(next, deps, "no earlier ask shared a word with this one — nothing was shown", [])
-      : memoryEmpty(next, deps, `no earlier ask was near enough to show (best overlap ${miss.score}, threshold ${levers.threshold})`, [`nearest: "${miss.ask}" — overlap ${miss.score}`]);
+      ? memoryEmpty(next, deps, `no earlier ask shared a word with this one — nothing was shown${aside}`, [])
+      : memoryEmpty(next, deps, `no earlier ask was near enough to show (best overlap ${miss.score}, threshold ${levers.threshold})${aside}`, [`nearest: "${miss.ask}" — overlap ${miss.score}`]);
   }
   return memoryHeld(
     next,
     deps,
     found.held,
-    `${found.held.length} earlier answered ask(s) were shown as examples of which door to take; none carried a value`,
+    `${found.held.length} earlier answered ask(s) were shown as examples of which door to take; none carried a value${aside}`,
     found.held.map((one) => `"${one.ask}" — overlap ${one.score}`),
   );
 }
@@ -2583,6 +2587,32 @@ export function lessonAskCheck(world: SessionWorld, ask: string, matcher: Lesson
 }
 
 /**
+ * The lesson(s) that cover an ask naming no certified subject, as the reason
+ * a carried-back round names beside the refusal — so the model is told what
+ * the driver already read instead of being told only what was wrong. Found
+ * live (dogfood 2026-09-20, findings §38): with the profile set before the
+ * first ask, "tell me about this game" drew a creature profile for the game,
+ * an action pile on the entity "game" and a twelve-claim fact dump on the
+ * strong model, three rounds each, while the pack's own coverage named the
+ * what-is-game lesson the whole time and the carry-back said only which
+ * claims were dropped. Deterministic and pack-owned: the row retriever's
+ * selection says whether a species, move or item was named, the lesson
+ * door's alias reading says which lessons cover the words; only an ask
+ * that names nothing and matches something speaks. The boundary lesson is
+ * never named — it is the pass, not an answer. Feedback only: a lesson
+ * named here still has to be the model's claim, and the kernel pins it.
+ */
+export function coveringLessonReason(world: SessionWorld, ask: string): string | undefined {
+  const selection = retrievalSelection(world.registry, ask);
+  if (selection.species.size + selection.moves.size + selection.items.size > 0) return undefined;
+  const boundary = new Set([BOUNDARY_LESSON, ...world.pack.curriculum.filter((lesson) => lesson.covers?.scope === "boundary").map((lesson) => lesson.id)]);
+  const offered = lessonAskCheck(world, ask).offered.filter((id) => !boundary.has(id));
+  if (offered.length === 0) return undefined;
+  const plural = offered.length > 1;
+  return `driver/covering-lesson: the ask names no species, move or item the records certify, and the reviewed lesson${plural ? "s" : ""} ${offered.join(", ")} cover${plural ? "" : "s"} it — teach ${plural ? "one of them" : "it"} as an explanation claim, or reply with no claims at all`;
+}
+
+/**
  * The lesson door's set for this exchange, as the argument every answer call
  * takes — the first call, the nomination retry and each carried-back retry
  * alike. Found on the porch (2026-09-16): with only the first call narrowed,
@@ -2956,6 +2986,7 @@ function applyLinking(
     // nothing, and there is nothing to correct.
     const emptied = (decode.draft.claims.length > 0 || routeRefused) && !aboutRecords;
     if (retryable && emptied) {
+      const covering = coveringLessonReason(world, openingAskOf(state));
       const reasons = [
         ...(routeRefused && decode.route !== undefined
           ? [`driver/refused-route: the nomination "${decode.route.routeId}" was refused — answer the ask directly, as claims about the subject asked`]
@@ -2966,6 +2997,10 @@ function applyLinking(
         ...(linked.dropped > 0
           ? [`driver/off-ask: ${linked.dropped} claim(s) were about a field the mapping did not link, or a subject not asked about`]
           : []),
+        // The ask named nothing the records certify and the pack's coverage
+        // names what answers it: said here by name (`coveringLessonReason`),
+        // so the second round is told what to teach, not only what to drop.
+        ...(covering === undefined ? [] : [covering]),
         "If a reviewed lesson squarely answers the question, teach that lesson; if a certified subject and field answer it, name them and link the field; otherwise reply with no claims at all.",
       ];
       const named = reasons.filter((line) => line.startsWith("driver/"));
@@ -3521,6 +3556,16 @@ async function answer(
       undefined,
       violations.map((item) => `${denialCode(item)}: ${item.message}`),
     );
+    // Beside the kernel's reasons, the driver's own: the ask named no
+    // certified subject and the pack's coverage says which lesson answers
+    // it (`coveringLessonReason`). Its own step on the driver's lane, so
+    // the trail shows whose words each line was.
+    const covering = coveringLessonReason(world, openingWords);
+    if (covering !== undefined) {
+      withUsage = ledgerStep(withUsage, deps, deps.now(), "driver", "lesson/named", `the ask names no certified subject and the pack's coverage names the lesson that answers it — fed back beside the kernel's reasons`, undefined, [covering]);
+    }
+    const fedBackLines = [...violations.map((item) => `${denialCode(item)}: ${item.message}`), ...(covering === undefined ? [] : [covering])];
+    const fedBackCodes = [...codes, ...(covering === undefined ? [] : ["driver/covering-lesson"])];
     let again: AnswerStep | undefined;
     try {
       again = await proposeAnswer({
@@ -3532,7 +3577,7 @@ async function answer(
         ...precedentArg(state),
         ...(previously === undefined ? {} : { previously }),
         ...(about === undefined ? {} : { previousSubjects: about }),
-        feedback: violations.map((item) => `${denialCode(item)}: ${item.message}`),
+        feedback: fedBackLines,
         ...lessonsArg(world, state, deps),
         ...(deps.grounded === undefined ? {} : { grounded: deps.grounded }),
         ...(deps.retrieval === undefined ? {} : { retrieval: deps.retrieval }),
@@ -3553,13 +3598,13 @@ async function answer(
           usage: addUsage(withUsage.usage, again.usage),
           folds: withUsage.folds + (again.decode.ok ? again.decode.folds : 0),
           feedbackRetries: withUsage.feedbackRetries + 1,
-          feedbackDenials: [...withUsage.feedbackDenials, ...codes],
+          feedbackDenials: [...withUsage.feedbackDenials, ...fedBackCodes],
         },
         deps,
         deps.now(),
         "model",
         "model/retry",
-        `${describeReply(again)} — the reply after ${fedBack(codes.length)}`,
+        `${describeReply(again)} — the reply after ${fedBack(fedBackCodes.length)}`,
       );
       const regroomed = groom(world, withUsage, deps, again, currentAsk, openingWords, exchange, false);
       if (regroomed.kind === "settled") return regroomed.state;
