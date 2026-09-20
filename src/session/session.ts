@@ -723,7 +723,10 @@ export async function say(state: SessionState, text: string, deps: SessionDeps):
   // A suggestion said back (R3b step 4) — by click or by typing it — is
   // counted as taken before anything reads it; it is then the trainer's own
   // ask like any other, and nothing downstream treats it differently.
-  const offered = state.records[state.records.length - 1]?.manifest?.suggestions ?? [];
+  // Any answer's suggestions, not only the latest: a denied or declined
+  // turn leaves the earlier register on screen, and a click there is a
+  // suggestion taken too (dogfood, 2026-09-20).
+  const offered = state.records.flatMap((record) => record.manifest?.suggestions ?? []);
   const taken = offered.some((suggestion) => suggestion.trim().toLowerCase() === text.trim().toLowerCase());
   // A fresh ask closes the previous exchange's ledger (an exchange that
   // filed a record closed its own); the words are the first step of the new.

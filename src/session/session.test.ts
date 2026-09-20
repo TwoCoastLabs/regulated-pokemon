@@ -18,6 +18,7 @@ import { harnessWorld } from "../harness/corpus.js";
 import { type DoorState, FailingProvider, type ModelProvider, ScriptedProvider } from "../harness/provider.js";
 import type { Claim } from "../kernel/contracts.js";
 import { verifyReplay } from "../kernel/replay.js";
+import { deriveScope } from "../kernel/scope.js";
 import { type Precedent, type PrecedentStore, shapeOf } from "../memory/precedent.js";
 import { sentBack } from "../ui/trail.js";
 import {
@@ -3221,6 +3222,55 @@ describe("R3b step 4: follow-up suggestions — a next step beside every answer,
     expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-the-records-hold" }]);
     expect(record.manifest?.suggestions).toEqual(["what can I ask you?", "what is this game?"]);
     expect(verifyReplay(world, record).allowed).toBe(true);
+  });
+
+  it("a suggestion from an earlier answer, said after a later turn, is still counted as taken", async () => {
+    // Dogfood (2026-09-20): a denied turn left the previous answer's
+    // suggestions on screen; the trainer typed one and it read as a plain ask.
+    const provider = scripted("suggesting", (purpose) => (purpose === "scope" ? "decline" : suggesting([])));
+    const d = withSuggest(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    const first = state.records[0]!.manifest?.suggestions ?? [];
+    expect(first.length).toBe(3);
+    state = await say(state, "hello", d); // a pleasantry: no record, no register
+    expect(state.records).toHaveLength(1);
+    state = await say(state, first[2]!, d);
+    expect(state.suggestions.taken).toBe(1);
+    expect(allSteps(state).map((step) => step.code)).toContain("trainer/took-suggestion");
+  });
+
+  it("a model suggestion that asks for the lesson just taught, or a field already certified, is dropped as a step back", async () => {
+    const lesson = JSON.stringify({
+      rosters: [],
+      claims: [{ kind: "explanation", blockId: "what-is-type" }, { kind: "suggest", asks: ["what types are there?", "what do moves do?"] }],
+    });
+    const provider = scripted("teaching", (purpose) => (purpose === "scope" ? "decline" : lesson));
+    const state = await say(startSession(), "what do types do?", withSuggest(provider));
+    const record = state.records[0]!;
+    expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-is-type" }]);
+    // "what types are there?" reads as the types lesson — the one just taught (dogfood, 2026-09-20).
+    expect(record.manifest?.suggestions?.[0]).toBe("what do moves do?");
+    expect(record.manifest?.suggestions).not.toContain("what types are there?");
+    expect(state.suggestions).toMatchObject({ offered: 2, kept: 1, dropped: 1, unanswerable: 0 });
+  });
+
+  it("every rank and compare wording binds its own basis through the scope vocabulary, or none — never another field's", () => {
+    // Dogfood (2026-09-20): "which of them has the highest Special Defense?"
+    // bound the basis to Defense (the vocabulary's terms are single tokens),
+    // and the ranking by Special Defense was denied under IA-1. Such a
+    // wording is a suggestion that cannot be answered, so the table may not
+    // carry one.
+    const table = world.pack.presentation.nextAsks!;
+    for (const [fieldId, entry] of Object.entries(table.fields)) {
+      for (const text of [entry.compare, entry.rank]) {
+        if (text === undefined) continue;
+        const bound = deriveScope(world.pack, [{ kind: "utterance", at: "2026-09-20T00:00:00.000Z", source: "trainer", text }]).bindings.find(
+          (binding) => binding.dimension === "comparisonBasis",
+        );
+        expect({ fieldId, text, basis: bound?.value ?? fieldId }).toEqual({ fieldId, text, basis: fieldId });
+      }
+    }
   });
 
   it("nothing shown or asked earlier in the session is suggested again", async () => {

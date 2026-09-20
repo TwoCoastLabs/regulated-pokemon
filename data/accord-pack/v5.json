@@ -444,14 +444,10 @@
           "rank": "which of them has the highest Defense?"
         },
         "base-special-attack": {
-          "ask": "what is its Special Attack?",
-          "compare": "how does their Special Attack compare?",
-          "rank": "which of them has the highest Special Attack?"
+          "ask": "what is its Special Attack?"
         },
         "base-special-defense": {
-          "ask": "what is its Special Defense?",
-          "compare": "how does their Special Defense compare?",
-          "rank": "which of them has the highest Special Defense?"
+          "ask": "what is its Special Defense?"
         },
         "base-stat-total": {
           "ask": "what is its base stat total?",
