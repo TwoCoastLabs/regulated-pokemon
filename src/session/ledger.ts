@@ -42,6 +42,8 @@ export type SentBackMode = "fed-back" | "withdrawn" | "stood";
 export const LEDGER_CODES = {
   // the trainer's moves
   "trainer/said": { tone: "plain" },
+  /** "Try again": the previous ask is asked again in the trainer's own words. */
+  "ask/retried": { tone: "plain" },
   "trainer/took-suggestion": { tone: "plain" },
   "trainer/profile": { tone: "plain" },
   "trainer/card-confirmed": { tone: "ok" },

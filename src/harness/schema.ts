@@ -253,8 +253,12 @@ export const MAX_ANSWER_CLAIMS = 12;
  * two. Bounded for the same reason as {@link MAX_ANSWER_CLAIMS}. */
 export const MAX_ANSWER_ROSTERS = 4;
 
-/** Things one ask can ask for; a question rarely names more than three. */
-export const MAX_ASKED = 6;
+/** Things one ask can ask for. Six until 2026-09-21: a comparison links a
+ * field per subject on the mid-tier models (three fields, six entries) and
+ * a "tell me about" ask names eight, so the cap cut certified answers in
+ * half (findings §30). Twelve matches the claim budget — one link per
+ * claim is the most an honest answer needs. */
+export const MAX_ASKED = 12;
 
 /**
  * The schema linking the model performs (docs/routing.md, R3b): per thing
