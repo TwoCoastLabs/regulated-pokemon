@@ -7108,3 +7108,120 @@ second reply was unusable too — an honest pass at 2 calls, no record.
 *Model errors, apart:* a set built from a list where two facts would
 have certified, twice; re-answering the comparison on "alright"; the
 misspelt move id. *Harness factors:* the three above, closed with tests.
+
+## 38. The ask that names nothing: with the profile set first, "tell me about this game" drew a profile, an action pile and a fact dump — four fixes, and the porch goes from 0 of 5 to 5 of 5
+
+**Goal.** Usefulness on the live page, on the first thing a newcomer
+types. Two dogfood threads on 2026-09-20 (22:05–22:08 UTC, the strong
+model through the League relay, profile set on the panel before the
+first ask) opened with "tell me about this game" and got stuck: 3 calls
+in 3 of 3 sessions, answered in 1 of 3, denied (IA-3/fabricated-entity
+on the entity "game") in 2 of 3. The question this entry answers: what
+in the page's condition — and not in the tracer's — sends a strong model
+past a lesson the pack covers by name, and which layer owes the fix.
+
+**What happened, from the trace.** Each session the same way: call 1
+nominated the profile door with "red-blue" as the creature; the driver
+refused it ("red-blue" is not a species the records certify) and
+withdrew the door in silence; call 2 was twelve add-to-team and release
+actions on the entity "game", denied by the kernel and carried back;
+call 3 one more action (denied, 2 of 3) or the what-is-game lesson (1 of
+3). About 14 s and $0.0025 each. The second session then took three
+suggestions: "how do I play?" and "how do I catch a Pokémon?" answered
+at 1 call each; "what happens when a Pokémon faints?", a pack suggestion
+promising the fainting lesson, got a Pikachu-vs-Rattata dex-number
+comparison twice, dropped as off-ask, an honest pass at 2 calls — dead
+end 1 of 3 taken.
+
+**Why, reproduced.** The page's prompt and the tracer's are
+byte-identical once the tracer sets the profile first (`/profile
+version=red-blue,region=kanto,badgeLevel=0`), and the relay sends the
+same request as a direct call (temperature 0, the same messages and
+grammar). The profile order is the whole difference: with scope
+established the legacy prompt drops the discovery paragraph that says
+what a lesson is for, leaving "reach for a lesson only when no such claim
+fits"; "tell me about" is the profile door's own shape ("the rundown of
+ONE named creature"); and the precedent door held "Tell me everything
+about Pikachu." at exactly the threshold (overlap 0.25, one shared word)
+as the example of which door to take. The bank never sees this: it runs
+with the profile set, but its wording for the lesson is "What is
+Pokemon?" and no lesson entry carried a "tell me about" phrasing —
+`meta-what-is-game` passes 3 of 3 on both models.
+
+Porch before the fix, "tell me about this game", strong model, N per
+cell, about $0.08 in all:
+
+| arm | profile set first | no profile |
+|---|---|---|
+| the page's setting | 0 of 5 answered, 2 calls each (a 12-claim fact dump dropped, carried back, dumped again, honest pass) | 5 of 5 (2 of 5 needed a second call after nominating the profile door with no species) |
+| `--lesson-door` | 0 of 3 (1 denied, 2 passed) | 3 of 3 |
+| `--lesson-door --refusal-feedback` | 0 of 3 | 3 of 3 |
+| `--no-memory` | 2 of 3 | 3 of 3 |
+
+The weak model with the profile first: 3 of 3 at 1 call under the page's
+setting, 2 of 3 with the lesson door, 0 of 3 with both levers. The
+faints thread with the profile first answered 3 of 3 on the strong model
+(one at 2 calls): the page's dead end was one draw of a smaller rate
+with the same cause.
+
+**Model errors, apart:** a creature profile nominated for a game; an
+action pile on the entity "game"; a twelve-claim fact dump for a
+question naming no subject, repeated after the reason was fed back; a
+dex-number comparison for a fainting question.
+
+**Harness factors, and the fix for each (built 2026-09-21).**
+
+1. *The established-scope prompt carried no lesson guidance*
+   (`src/harness/advisor.ts`, the legacy shape). The contract paragraph
+   both branches share now says it: a question about what something is
+   or how the game works, naming no certified subject, is a lesson —
+   teach the one that squarely answers it and claim nothing else; no
+   fact, comparison or door stands in for it. Structural, one sentence,
+   the same on both models; the blocks prompt already had its own line.
+2. *The carry-back named what was dropped, never what covers the ask.*
+   When the row retriever selects no species, move or item and the
+   lesson door's alias reading names lessons that cover the words, the
+   round back carries `driver/covering-lesson: … the reviewed lesson
+   what-is-game covers it — teach it as an explanation claim, or reply
+   with no claims at all`, on the driver's own round beside
+   `driver/off-ask` and on the kernel's round as its own driver-lane
+   step (`lesson/named`) beside the kernel's reasons. Deterministic,
+   pack-owned, feedback only: the boundary lesson is never named, and
+   the lesson remains the model's claim and the kernel's to pin.
+3. *A precedent about a named species was shown for an ask naming
+   none.* The retriever now sets aside every precedent whose shape is
+   about a species, move or item when the ask selected none — 53 of the
+   store's 102 on this ask — counted on the memory step, never listed;
+   lessons, rules and criteria-defined sets are still offered, and a
+   caller that never read the ask sets nothing aside
+   ([precedent.md](precedent.md)).
+4. *The bank could not see the class.* "tell me about this game" and
+   "Tell me about the game." join `meta-what-is-game`'s phrasings, and
+   the seven lesson entries that carried none (how-to-play, objective,
+   what-is-type, first-steps, leveling, red-vs-blue, is-it-hard) carry
+   two each; every answerable lesson entry now has at least two, pinned.
+   One candidate, "How does leveling work?", was already a held-out
+   paraphrase and was replaced. The activation ceiling's pinned numbers
+   move with the bank: alias door on paraphrases 20 of 25 (80%) → 36 of
+   41 (88%), BM25 control 16 of 25 → 27 of 41 — a caveat, not a gain:
+   the sixteen new wordings were written to carry an alias, so the
+   bank's own paraphrases read the door more kindly than before; the
+   held-out sets, unchanged (48 of 72 on the second), remain the honest
+   reading of the ceiling.
+
+**Porch after the fix, profile set first, both models, about $0.02.**
+"tell me about this game": strong 5 of 5 answered (4 at 1 call; 1 at 2
+calls, the covering lesson named on the round back), weak 3 of 3 at 1
+call; with `--lesson-door`, strong 3 of 3 (2 at 2 calls). The faints
+thread: strong 3 of 3 and weak 3 of 3, every answer at 1 call. The
+memory step reads "no earlier ask was near enough to show (best overlap
+0.2, threshold 0.25) (53 about a named subject set aside — this ask names
+none)": the Pikachu profile is no longer the example.
+
+**Held.** The fifth option — teaching a taken pack suggestion's lesson
+with no call at all — is not built: it is lesson 1 of the engineering
+notes applied, but it contradicts the lesson door's recorded decision
+that the door narrows and never chooses, and the four fixes above reach
+5 of 5 without it. The prompt sentence is a change to every entry's
+prompt; the porch is its first reading and the bank gate on both models
+is the next, on the operator's say-so.

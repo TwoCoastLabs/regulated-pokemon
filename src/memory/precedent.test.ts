@@ -240,3 +240,30 @@ describe("the verifier never reads the store", () => {
     expect(offenders).toEqual([]);
   });
 });
+
+describe("the bare-ask rule (findings §38): an ask naming no certified subject is shown no precedent about one", () => {
+  const all = store([GAME, SPEED, CATCH]);
+
+  it("sets aside precedents about a named subject when the caller read the ask and found none, and counts them", () => {
+    // "what is the speed" overlaps "what is pikachu's speed" well above the
+    // threshold; about Pikachu, it is not offered for an ask about no one.
+    const bare = retrievePrecedents(all, "what is the speed", { snapshotId: SNAPSHOT, entities: new Set() });
+    expect(bare.held).toEqual([]);
+    expect(bare.setAside).toBe(1);
+    expect(bare.withheld).toEqual([]);
+    expect(bare.nearestMiss).toBeUndefined();
+    // The same ask, read as naming Pikachu: offered, and first among equals.
+    const named = retrievePrecedents(all, "what is the speed", { snapshotId: SNAPSHOT, entities: new Set(["pikachu"]) });
+    expect(named.held.map((held) => held.id)).toEqual(["p-speed"]);
+    expect(named.setAside).toBeUndefined();
+  });
+
+  it("still offers a lesson for a bare ask, and withholds nothing when the caller never read the ask", () => {
+    const bare = retrievePrecedents(all, "tell me about this game", { snapshotId: SNAPSHOT, entities: new Set() });
+    expect(bare.held.map((held) => held.id)).toEqual(["p-game"]);
+    expect(bare.setAside).toBe(1);
+    const unread = retrievePrecedents(all, "what is the speed", { snapshotId: SNAPSHOT });
+    expect(unread.held.map((held) => held.id)).toEqual(["p-speed"]);
+    expect(unread.setAside).toBeUndefined();
+  });
+});

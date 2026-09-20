@@ -245,6 +245,16 @@ selected the same entity ids for the ask and for a precedent (a species
 named in both), that precedent ranks first among equals. This is the only
 place the two retrievers touch, and it is a preference, not a filter.
 
+One filter does come from the same selection, added 2026-09-21 (findings
+§38): an ask for which the row retriever selected nothing — no species,
+move or item named — is shown no precedent whose shape is about one. "Tell
+me about this game" shares one carrying word with "Tell me everything about
+Pikachu.", scored exactly the threshold, and was shown a six-fact profile as
+the door to take; the strong model took it, for the game. A lesson, a rule
+or a set defined by criteria is about no named thing and is still offered.
+The step says how many were set aside, and never lists them; a caller that
+did not read the ask (no selection passed) sets nothing aside.
+
 **Is lexical retrieval scalable, and is an embedding tier the long-term
 answer?** Two different questions, and the honest answer to each is a
 number the door now reports.

@@ -88,6 +88,7 @@ describe("tone and lane", () => {
       "route/refused-back",
       "linking/carried-back",
       "reply/carried-back",
+      "lesson/named",
       "verdict/denied",
     ]);
     expect(["trainer", "driver", "kernel", "model"].map((lane) => laneLabel(lane as "trainer"))).toEqual(["trainer", "driver", "kernel", "model"]);

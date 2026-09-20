@@ -1766,7 +1766,9 @@
       "phrasings": [
         "Explain Pokemon to me.",
         "I've never heard of this — what is Pokemon?",
-        "whats this game evn about"
+        "whats this game evn about",
+        "tell me about this game",
+        "Tell me about the game."
       ],
       "expectClaimKinds": [
         "explanation"
@@ -1793,6 +1795,10 @@
       "expectBlockIds": [
         "how-to-play",
         "first-steps"
+      ],
+      "phrasings": [
+        "how do I play?",
+        "How does it work?"
       ]
     },
     {
@@ -1810,6 +1816,10 @@
       ],
       "expectBlockIds": [
         "objective"
+      ],
+      "phrasings": [
+        "what is the goal of the game?",
+        "What am I supposed to do?"
       ]
     },
     {
@@ -1849,6 +1859,10 @@
       ],
       "expectBlockIds": [
         "what-is-type"
+      ],
+      "phrasings": [
+        "what are types?",
+        "What does a Pokémon's type mean?"
       ]
     },
     {
@@ -1906,6 +1920,10 @@
       ],
       "expectBlockIds": [
         "first-steps"
+      ],
+      "phrasings": [
+        "where do I start?",
+        "What should I do first?"
       ]
     },
     {
@@ -1923,6 +1941,10 @@
       ],
       "expectBlockIds": [
         "leveling"
+      ],
+      "phrasings": [
+        "how do Pokémon gain levels?",
+        "What does leveling up do?"
       ]
     },
     {
@@ -1940,6 +1962,10 @@
       ],
       "expectBlockIds": [
         "red-vs-blue"
+      ],
+      "phrasings": [
+        "what is the difference between Red and Blue?",
+        "Red or Blue, which one should I get?"
       ]
     },
     {
@@ -1957,6 +1983,10 @@
       ],
       "expectBlockIds": [
         "is-it-hard"
+      ],
+      "phrasings": [
+        "is this game hard?",
+        "Is it beginner friendly?"
       ]
     },
     {

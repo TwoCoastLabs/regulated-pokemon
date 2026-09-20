@@ -123,7 +123,7 @@ describe("the activation ceiling, pinned", () => {
     // 15 of 25 before the widening of 2026-09-17 (nouns and forms as pack
     // data, findings §24); 20 of 25 after. The five left are three typos
     // and two rephrasings.
-    expect(report.lesson).toEqual({ canonical: { engaged: 18, total: 18 }, paraphrase: { engaged: 20, total: 25 } });
+    expect(report.lesson).toEqual({ canonical: { engaged: 18, total: 18 }, paraphrase: { engaged: 36, total: 41 } });
     expect(report.lessonMisses).toHaveLength(5);
     expect(report.lessonMisses.every((miss) => !miss.canonical)).toBe(true);
   });
@@ -167,15 +167,15 @@ describe("the activation ceiling, pinned", () => {
     // words; the alias matcher encodes it. Pinned so the same lesson is
     // not bought again.
     const bm25 = activationReport(world.registry, world.pack, bank, scopeBank, "bm25");
-    expect(bm25.lesson).toEqual({ canonical: { engaged: 12, total: 18 }, paraphrase: { engaged: 16, total: 25 } });
+    expect(bm25.lesson).toEqual({ canonical: { engaged: 12, total: 18 }, paraphrase: { engaged: 27, total: 41 } });
     expect(bm25.lessonPrecision).toEqual({ canonical: { engaged: 8, total: 45 }, paraphrase: { engaged: 8, total: 32 } });
     const reopened = bm25.lessonPrecisionMisses.find((miss) => miss.wording === "Who is the Pewter City gym leader?");
     expect(reopened?.offered).toEqual(["what-is-gym-leader"]);
-    // The union: recall rises to 22 of 25 and precision is the index's.
+    // The union: recall rises above the alias door alone (22 of 25 before the 2026-09-21 paraphrases, 16 of which carry an alias by construction) and precision is the index's.
     const both = activationReport(world.registry, world.pack, bank, scopeBank, "both");
     expect(both.lesson?.paraphrase.engaged).toBeGreaterThanOrEqual(22);
     expect(both.lessonPrecision).toEqual({ canonical: { engaged: 8, total: 45 }, paraphrase: { engaged: 8, total: 32 } });
-    expect(renderActivation(bm25)).toContain("| Lesson door (bm25) offered an acceptable lesson | 12/18 (67%) | 16/25 (64%) |");
+    expect(renderActivation(bm25)).toContain("| Lesson door (bm25) offered an acceptable lesson | 12/18 (67%) | 27/41 (66%) |");
     expect(renderActivation(bm25)).toContain("| Lesson door (bm25) offered the boundary alone on a must-not-answer | 8/45 (18%) | 8/32 (25%) |");
     expect(renderActivation(bm25)).toContain("Lesson door offered a lesson on a question that must not be answered:");
   });
@@ -195,7 +195,7 @@ describe("the activation ceiling, pinned", () => {
   it("renders as Markdown from the data", () => {
     const text = renderActivation(report);
     expect(text).toContain("| Retrieval pulled an acceptable entity |");
-    expect(text).toContain("| Lesson door (alias) offered an acceptable lesson | 18/18 (100%) | 20/25 (80%) |");
+    expect(text).toContain("| Lesson door (alias) offered an acceptable lesson | 18/18 (100%) | 36/41 (88%) |");
     expect(text).toContain("| Lesson door (alias) offered the boundary alone on a must-not-answer | 44/45 (98%) | 32/32 (100%) |");
     expect(text).toContain("Lesson door misses");
     expect(text).toContain("“what is a gym badg” → `what-is-gym-leader`");

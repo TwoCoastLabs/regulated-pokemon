@@ -329,7 +329,14 @@ carried lesson answers.
   the ask or about no subject, where the model had written something — is
   carried back the same way (`driver/no-subject`, `driver/off-ask`), on the
   discovery hop as well as the answer hop; a reply the model itself left
-  empty is not, since there is nothing to correct. Still one round: the
+  empty is not, since there is nothing to correct. *Extended 2026-09-21
+  (findings §38):* when the ask names no species, move or item the records
+  certify and the pack's own coverage names the lesson that answers it,
+  either round — the driver's or the kernel's — also carries that lesson
+  by name (`driver/covering-lesson`; on the kernel's round its own step,
+  `lesson/named`, on the driver's lane), so the second reply is told what
+  to teach, not only what was dropped. Feedback only: the lesson is still
+  the model's claim to make and the kernel's to pin. Still one round: the
   second reply is read by the same step with no further retry, and the
   kernel's own round does not run after it. Counted as `feedbackRetries`, reported beside
   `repairs` and `nominationRetries`; first-attempt, post-repair and
