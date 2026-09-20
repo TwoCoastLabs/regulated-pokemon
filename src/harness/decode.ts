@@ -389,7 +389,9 @@ export function decodeAnswer(text: string, context: ManifestContext, transaction
     }
     const built = buildRoster(context.registry, entry.id, canonicalizeCriteria(context.registry, entry.criteria as unknown as RosterCriteria));
     if (!built.ok) {
-      return { ok: false, reason: `a roster was refused: ${built.violations.map(denialCode).join(", ")}` };
+      // The message rides with the code — "x" is not a move certified by
+      // … — so a carry-back can name what to fix (session.ts, the refused-roster round).
+      return { ok: false, reason: `a roster was refused: ${built.violations.map((one) => `${denialCode(one)} (${one.message})`).join(", ")}` };
     }
     rosters.push(built.value);
   }

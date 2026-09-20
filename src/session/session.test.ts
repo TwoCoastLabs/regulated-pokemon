@@ -3277,6 +3277,47 @@ describe("R3b step 4: follow-up suggestions — a next step beside every answer,
     }
   });
 
+  it("a set the records refuse at decode is carried back once with the refusal named, and the second reply stands", async () => {
+    // Dogfood (2026-09-20): "do they learn the same moves?" built a roster
+    // under a misspelt move id; the decoder refused it and the reply was
+    // thrown away without a word to the model.
+    const prompts: string[] = [];
+    const bad = JSON.stringify({ rosters: [{ id: "pikachu_moves", criteria: { all: [{ kind: "learns-move", move: "thunder-zap" }] } }], claims: [{ kind: "count", rosterId: "pikachu_moves" }] });
+    const good = JSON.stringify({ rosters: [], claims: [{ kind: "fact", entityId: "pikachu", factId: "learnset" }] });
+    const provider = new ScriptedProvider("refused-set", (request) => (request.purpose === "scope" ? "decline" : request.prompt.includes("driver/refused-roster") ? good : bad));
+    const d: SessionDeps = { ...deps(provider), feedback: true };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "what moves does Pikachu learn?", d);
+    const record = state.records[0]!;
+    expect(record.outcome.status).toBe("answered");
+    expect(record.manifest?.claims).toMatchObject([{ kind: "fact", entityId: "pikachu", factId: "learnset" }]);
+    expect(state.feedbackRetries).toBe(1);
+    expect(state.feedbackDenials).toContain("driver/refused-roster");
+    const carried = allSteps(state).find((step) => step.code === "reply/carried-back")!;
+    expect(carried.text).toContain("IA-3/unknown-move");
+    expect(carried.lines?.[0]).toContain('"thunder-zap" is not a move certified by');
+    expect(state.usage.calls).toBe(2);
+    // With feedback off, the first reply's reading stands: nothing filed.
+    const off = deps(provider);
+    let plain = await setProfile(startSession(), PROFILE_SCOPE, off);
+    plain = await say(plain, "what moves does Pikachu learn?", off);
+    expect(plain.records).toHaveLength(0);
+    expect(plain.feedbackRetries).toBe(0);
+  });
+
+  it("an acknowledgement is a pleasantry: no model call, no record", async () => {
+    const provider = scripted("suggesting", (purpose) => (purpose === "scope" ? "decline" : suggesting([])));
+    const d = withSuggest(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    const calls = state.usage.calls;
+    for (const word of ["alright", "Sure!", "cheers", "sounds good", "yep"]) {
+      state = await say(state, word, d);
+      expect(state.usage.calls).toBe(calls);
+      expect(state.records).toHaveLength(1);
+    }
+  });
+
   it("nothing asked or certified earlier in the session is suggested again; a suggestion shown and not taken may return", async () => {
     const provider = scripted("suggesting", (purpose) => (purpose === "scope" ? "decline" : suggesting([])));
     const d = withSuggest(provider);

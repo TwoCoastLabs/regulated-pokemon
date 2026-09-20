@@ -7068,3 +7068,43 @@ clicks through the chart the register was empty — now only what the
 trainer asked is excluded, and "what beats electric types?" walks
 weak-to, resists, immune-to with the remaining directions offered each
 time (3 calls, $0.0023).
+## 37. Dogfood after the register: a dead end from the model's own suggestion, and an acknowledgement that cost a call
+
+**The thread (dev trace, 2026-09-20 10:26 UTC, strong model, League
+relay, 10 calls, $0.008, hosts Nebius 1.3–6.2 s).** Eleven asks, ten
+answered, one dead end. Six lesson clicks in a row from "tell me about
+this game", every promise kept, no question asked; "compare Pikachu and
+another Pokemon" drew the model's clarification (the three starters),
+Charmander picked, six stat comparisons as one table. Suggestions taken:
+6; the pack supplied 20; the model offered 3, 1 kept.
+
+**Three gaps, closed the same day.** (1) *A dead end from the model's
+own suggestion* — the register's first since it was rebuilt. "Do they
+learn the same moves?" passed the check (the learnset field, both
+subjects named); taken, the model answered with a roster defined by
+every move Pikachu learns, one id misspelt, and the decoder refused it
+under IA-3/unknown-move — a refusal that, unlike the kernel's, was never
+carried back, so the trainer got the pass note. Two fixes: beside a
+pair and nothing else, a species field is a comparison and only the
+fields the pack declares a comparison for pass the check (a learnset is
+a list; the grammar compares one number); and a set the records refuse
+at decode is carried back once with the refused id named
+(`reply/carried-back`, `driver/refused-roster`), the round the kernel's
+denials already get. (2) *"Alright" cost a model call and filed a
+duplicate record*: the social gate knew "ok" and "okay", not "alright";
+the model re-emitted the previous comparison and the kernel certified
+the same six claims again. Acknowledgements are pleasantries now
+("alright", "sure", "fine", "cheers", "sounds good", "yep" and the
+like) — no call, no record. (3) After the six-stat comparison the
+register held two: the table's reach, not a bug, noted.
+
+**Porch after the fixes, strong model, 3 calls, $0.003.** The model
+still suggested the learnset question and the check dropped it
+(`suggest/gated`, 1 of 3); "alright" earned the social note for free;
+typed anyway, "do they learn the same moves?" was carried back with
+`"scary-face" is not a move certified by kanto-red-blue` named, and the
+second reply was unusable too — an honest pass at 2 calls, no record.
+
+*Model errors, apart:* a set built from a list where two facts would
+have certified, twice; re-answering the comparison on "alright"; the
+misspelt move id. *Harness factors:* the three above, closed with tests.

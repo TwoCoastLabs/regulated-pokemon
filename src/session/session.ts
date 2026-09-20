@@ -545,6 +545,9 @@ function openingOf(state: SessionState): string {
 }
 
 /** The ledger's one line for a carried-back round the provider dropped. */
+/** The decoder's reason prefix for a set the records refused (harness/decode.ts). */
+const REFUSED_ROSTER = "a roster was refused";
+
 const RETRY_FAILED = "the provider failed on the carried-back round — the first reply stands";
 
 /** "N reason(s) were fed back to the model" — the retry step's suffix, so a
@@ -835,7 +838,9 @@ function socialReply(text: string): string | undefined {
       "and everything I answer is checked against the official records first."
     );
   }
-  if (/^(thanks|thank you|thankyou|ty|thx|cool|nice|great|awesome|ok|okay|got it|perfect)[!. ]*$/.test(bare)) {
+  // Acknowledgements too (dogfood, 2026-09-20: "alright" cost a model call
+  // and the model re-answered the previous ask as a second record).
+  if (/^(thanks|thank you|thankyou|thanks a lot|ty|thx|cool|nice|great|awesome|ok|okay|alright|all right|sure|fine|cheers|sounds good|understood|gotcha|got it|perfect|yep|yeah|no worries|will do|ok then|okay then|alright then)[!. ]*$/.test(bare)) {
     return "You're welcome! Ask away whenever you're ready — a Pokémon, a matchup, or how the game works.";
   }
   if (/^(what data (do|are) you (use|using)|whats? your (data|source)s?|where (do|does) (your|the) (data|answers?|information) come from|how do you know( that| this)?)[?!. ]*$/.test(bare)) {
@@ -1480,7 +1485,28 @@ async function withRouteFallback(
     );
   }
   const lessons = offer?.offered;
-  const first = await call(withheld === undefined ? SESSION_ROUTES : SESSION_ROUTES.filter((route) => route.id !== "listing"), undefined, lessons);
+  const routes = withheld === undefined ? SESSION_ROUTES : SESSION_ROUTES.filter((route) => route.id !== "listing");
+  let first = await call(routes, undefined, lessons);
+  // A set the records refused at decode (an unknown move id, say) is the
+  // one reply that never reached the kernel and so was never carried back
+  // (dogfood, 2026-09-20: "do they learn the same moves?" built a roster
+  // under a misspelt id and dead-ended). With feedback on, one round with
+  // the refusal named — the same code the emptied-reply round uses.
+  if (!first.decode.ok && first.decode.reason.startsWith(REFUSED_ROSTER) && deps.feedback === true) {
+    const named = `driver/refused-roster: ${first.decode.reason} — define a set only by ids the records certify, or answer with facts about the subjects instead`;
+    state = ledgerStep(
+      { ...state, feedbackRetries: state.feedbackRetries + 1, feedbackDenials: [...state.feedbackDenials, "driver/refused-roster"] },
+      deps,
+      deps.now(),
+      "driver",
+      "reply/carried-back",
+      `the reply defined a set the records refused (${first.decode.reason}) — carried back to the model once`,
+      undefined,
+      [named],
+    );
+    const again = await call(routes, [named], lessons);
+    first = { ...again, usage: addUsage(first.usage, again.usage) };
+  }
   const decode = first.decode;
   // A clarification beside the refused nomination is something the reply
   // carried (R3b step 3): the model asked, and the question goes through —

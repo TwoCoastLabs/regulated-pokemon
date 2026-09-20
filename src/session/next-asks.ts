@@ -137,6 +137,15 @@ export function answerable(world: NextAskWorld, draft: Pick<ManifestDraft, "clai
   const field = carried.find(servedBy) ?? carried[0];
   const served = field !== undefined && servedBy(field);
   if (field !== undefined && served) {
+    // Beside a pair and nothing else, a species field is a comparison, and
+    // the pack says which fields it compares — a learnset is a list, and
+    // "do they learn the same moves?" has no shape the grammar answers
+    // (dogfood, 2026-09-20: the model built a set instead, and dead-ended).
+    const table = pack.presentation.nextAsks;
+    const pair = subjects.species.length === 2 && subjects.moves.length === 0 && !listed;
+    if (pair && field.subject === "species" && table !== undefined && table.fields[field.id]?.compare === undefined) {
+      return { kind: "none", reason: `asks to compare ${field.name}, which the pack offers no comparison for` };
+    }
     // A question asked beside a ranked or listed set will rank it, and a
     // ranking binds the scope's comparison basis on its way in. The
     // vocabulary's basis terms are single tokens and need a context word,
