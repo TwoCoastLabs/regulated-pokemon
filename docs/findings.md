@@ -6659,3 +6659,50 @@ throughput preference (the route's — the sort is a preference, not a
 pin; an `ignore=Novita` is the next routing reading).
 
 **Enforcement.** 0 escalations of 4 records across the three probes.
+
+## 32. The routing reading: one host ruled out, and the relay applies the operator's veto for everyone
+
+**Goal.** §29 made the host a choice and found the `throughput` sort
+still routing the strong model to Novita at 12–19 tok/s (§30, §31: a
+39.9 s profile call). A sort is a preference the gateway weighs; an
+ignore list is a veto. This entry reads the veto, and puts it where the
+live page gets it.
+
+**How it works.** `OPENROUTER_UPSTREAM` already took `ignore=Host`.
+The relay now reads the same setting: its ignore list applies to every
+call the relay serves (a host the operator ruled out is ruled out for
+everyone), its sort applies when the page sends none, and health
+reports it in plain words, which the page shows under the model beside
+its own choice. The page's validated preference and the operator's
+merge into one `provider` field, fallbacks allowed. Tested: the page's
+sort wins, the ignore lists join, a page that sends nothing gets the
+operator's whole, an unknown word is refused at startup by name.
+
+**The reading** (2026-09-21 ~12:00 UTC, strong model, the same two asks
+— "tell me more about Pikachu", "compare Pikachu and Charmander" — two
+rounds per arm, door on, precedents on):
+
+| arm | round | profile call | comparison call | exchanges |
+|---|---|---|---|---|
+| `throughput` | 1 | **185.0 s, timed out** (provider error, 1 of 1) | 113.8 s · Novita · 4.7 tok/s | 1 of 2 answered |
+| `throughput` | 2 | 170.0 s · Novita · 4.0 tok/s | 37.0 s · Novita · 15.1 tok/s | 2 of 2 |
+| `throughput ignore=Novita` | 1 | 4.4 s · Nebius · 108.7 tok/s | 3.4 s · Nebius · 166.2 tok/s | 2 of 2 |
+| `throughput ignore=Novita` | 2 | 3.0 s · Nebius · 141.3 tok/s | 3.1 s · Nebius · 180.0 tok/s | 2 of 2 |
+
+Four calls on Novita: 37–170 s at 4–15 tok/s, and one 185 s timeout
+that cost an answer. Four calls on Nebius: 3.0–4.4 s at 109–180 tok/s.
+A 30–50× spread in wall time on the same model id, the same prompts,
+within one hour — and the `throughput` sort chose the slow host every
+time, so whatever the gateway weighs, it is not what this project
+measures. Cost per call: Nebius $0.0009–0.0010 against Novita
+$0.0006–0.0007, 1.5× for the calls that finished. N=2 per arm, one
+hour, one model: the veto is set in this deployment's `.env`
+(`OPENROUTER_UPSTREAM=throughput ignore=Novita`) and the relay restarted
+on it; the banks stay on the gateway's default until a leg reads the
+setting, and a host name is a moving target — the reading is dated.
+
+**On the page.** Health reports "by throughput, never Novita"; the line
+under the model reads "routed by throughput; the League's relay adds:
+by throughput, never Novita".
+
+**Enforcement.** 0 escalations of 7 records; 1 provider error, counted.

@@ -30,7 +30,7 @@
  * hide a bug in.
  */
 
-import { type FetchLike, OPENROUTER_URL, redact } from "../harness/openrouter.js";
+import { describeUpstreamPreference, type FetchLike, OPENROUTER_URL, parseUpstreamPreference, redact, type UpstreamPreference } from "../harness/openrouter.js";
 
 export interface RelayConfig {
   /** Empty means "not configured": health reports it and chat refuses. */
@@ -45,6 +45,11 @@ export interface RelayConfig {
   /** Ceiling on the summed message content of one request, in characters. */
   maxContentChars: number;
   upstreamUrl: string;
+  /** The operator's routing preference among a model's hosts
+   * (OPENROUTER_UPSTREAM): its sort applies when the page sends none, and
+   * its ignore list applies to every call — a host the operator has ruled
+   * out is ruled out for everyone the relay serves. Reported on health. */
+  upstream?: UpstreamPreference;
 }
 
 export const RELAY_DEFAULTS = {
@@ -66,6 +71,8 @@ export function relayConfigFromEnv(env: Record<string, string | undefined>, defa
     const parsed = raw === undefined ? Number.NaN : Number(raw);
     return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
   };
+  // An unknown word is refused by name at startup, as every live tool does.
+  const upstream = parseUpstreamPreference(env.OPENROUTER_UPSTREAM);
   return {
     apiKey: env.OPENROUTER_API_KEY ?? "",
     models: env.RELAY_MODELS === undefined ? defaultModels : env.RELAY_MODELS.split(",").map((slug) => slug.trim()).filter(Boolean),
@@ -76,6 +83,7 @@ export function relayConfigFromEnv(env: Record<string, string | undefined>, defa
     dailyCallCap: number("RELAY_DAILY_CALL_CAP", RELAY_DEFAULTS.dailyCallCap),
     maxContentChars: number("RELAY_MAX_CONTENT_CHARS", RELAY_DEFAULTS.maxContentChars),
     upstreamUrl: env.RELAY_UPSTREAM_URL ?? RELAY_DEFAULTS.upstreamUrl,
+    ...(upstream === undefined ? {} : { upstream }),
   };
 }
 
@@ -191,6 +199,16 @@ function readChatBody(raw: string, config: RelayConfig): ChatBody | string {
   return { model: body.model, messages, maxTokens, responseFormat, ...(upstream === undefined ? {} : { upstream }) };
 }
 
+/** The page's validated preference and the operator's, as one `provider`
+ * field: the page's sort when it sent one, else the operator's; the ignore
+ * lists joined; nothing at all when neither says anything. */
+function mergeRouting(sent: Record<string, unknown> | undefined, operator: UpstreamPreference | undefined): Record<string, unknown> | undefined {
+  const sort = sent?.sort ?? operator?.sort;
+  const ignore = [...new Set([...((sent?.ignore as readonly string[] | undefined) ?? []), ...(operator?.ignore ?? [])])];
+  if (sort === undefined && ignore.length === 0) return undefined;
+  return { ...(sort === undefined ? {} : { sort }), ...(ignore.length === 0 ? {} : { ignore }), allow_fallbacks: true };
+}
+
 /** UTC day key, so the daily caps roll over at a stated, testable moment. */
 function dayOf(epochMs: number): string {
   return new Date(epochMs).toISOString().slice(0, 10);
@@ -215,7 +233,7 @@ export function createRelay(deps: RelayDeps): RelayHandler {
       if (request.method !== "GET") return refuse(405, "health is read-only");
       return config.apiKey === ""
         ? json(503, { ok: false })
-        : json(200, { ok: true, models: config.models });
+        : json(200, { ok: true, models: config.models, ...(config.upstream === undefined ? {} : { upstream: describeUpstreamPreference(config.upstream) }) });
     }
 
     if (request.path !== "/api/relay/chat") return refuse(404, "no such door");
@@ -248,14 +266,17 @@ export function createRelay(deps: RelayDeps): RelayHandler {
 
     // Built, never forwarded: only the understood fields cross, and the
     // relay's own discipline (temperature, usage accounting) is not the
-    // caller's to set.
+    // caller's to set. The routing is the page's sort or the operator's,
+    // and the operator's ignore list on top of either — the veto is the
+    // relay's to apply, never the page's to drop.
+    const routing = mergeRouting(read.upstream, config.upstream);
     const upstreamBody = JSON.stringify({
       model: read.model,
       temperature: 0,
       max_tokens: Math.min(read.maxTokens ?? config.maxTokens, config.maxTokens),
       usage: { include: true },
       ...(read.responseFormat === undefined ? {} : { response_format: read.responseFormat }),
-      ...(read.upstream === undefined ? {} : { provider: read.upstream }),
+      ...(routing === undefined ? {} : { provider: routing }),
       messages: read.messages,
     });
 
