@@ -6448,7 +6448,7 @@ asks on the same profile (Red/Blue, Kanto, 0 badges), door on, retrieval,
 gated grammar, the precedent door on: "tell me about the game" (a
 lesson) and "compare Pikachu and Charmander" (six comparisons, §26).
 Candidates were the four newest structured-output models under $1/M
-input from major providers in OpenRouter's catalogue on 2026-09-21.
+input from major providers in OpenRouter's catalogue on 2026-09-20.
 
 | model | released | lesson | compare | calls · time · cost | served by |
 |---|---|---|---|---|---|
@@ -6512,7 +6512,7 @@ the League's checks — and names a slow host outright: a call under 10
 tok/s on a reply long enough to rate, or over 15 s.
 
 **The A/B.** The current model, the same two asks, two rounds per arm,
-door on, precedents on, 2026-09-21 ~10:30 UTC:
+door on, precedents on, 2026-09-20 ~10:30 UTC:
 
 | arm | round | lesson calls · time | comparison call · host · rate | exchange time | cost |
 |---|---|---|---|---|---|
@@ -6589,7 +6589,7 @@ way out.
    ladder budget test now reads: one rejection of a re-proposed card ends
    the ladder.
 
-**The porch, after** (2026-09-21, routed by throughput, N=1 each):
+**The porch, after** (2026-09-20, routed by throughput, N=1 each):
 
 | ask | model | before | after |
 |---|---|---|---|
@@ -6638,7 +6638,7 @@ retried), and with nothing before it the words earn a social note and
 no call. "Try again, and what about Onix?" is an ask, as with every
 social cue.
 
-**The porch, after** (2026-09-21, strong model routed by throughput,
+**The porch, after** (2026-09-20, strong model routed by throughput,
 N=1 each):
 
 | ask | before (§30) | after |
@@ -6678,7 +6678,7 @@ merge into one `provider` field, fallbacks allowed. Tested: the page's
 sort wins, the ignore lists join, a page that sends nothing gets the
 operator's whole, an unknown word is refused at startup by name.
 
-**The reading** (2026-09-21 ~12:00 UTC, strong model, the same two asks
+**The reading** (2026-09-20 ~12:00 UTC, strong model, the same two asks
 — "tell me more about Pikachu", "compare Pikachu and Charmander" — two
 rounds per arm, door on, precedents on):
 
@@ -6706,3 +6706,74 @@ under the model reads "routed by throughput; the League's relay adds:
 by throughput, never Novita".
 
 **Enforcement.** 0 escalations of 7 records; 1 provider error, counted.
+
+## 33. The bank under the routing setting: both legs in half the time, the strong model's band up, the weak model's up too
+
+**Goal.** §29–§32 chose the host on the porch. The bank is the reading
+that counts: the full 137-question bank at N=3 on both models under
+`OPENROUTER_UPSTREAM=throughput ignore=Novita`, today's driver (the
+offered door on by default, the lesson door off — the shape of §25's
+arm D, the nearest filed baseline), so the pass band, the
+correct-decline rate, the calls, the cost and the wall time can be set
+beside a leg that ran under the gateway's default routing.
+
+**How it works.** Two legs of `coverage:map --live --repetitions 3
+--retrieval --gated-grammar --repair --profile --feedback --clarify
+--suggest --precedents nearest`, launched together at 01:11 UTC on
+2026-09-20 with the setting read from `.env` and recorded on each
+artifact (`upstream: "by throughput, never Novita"`). Artifacts: strong
+`2026-09-20T01-11-18-212Z`, weak `2026-09-20T01-11-20-749Z`.
+
+**Enforcement.** 0 escalations of 822 samples. 0 provider errors of
+1,007 calls.
+
+**The reading**, beside §25 D (2026-09-17, gateway default routing):
+
+| strong `qwen/qwen3-235b-a22b-2507` | §25 D | this leg |
+|---|---:|---:|
+| pass band, of 137 | 111–115 | **116–122** |
+| answerable, of 237 | 215 (91%) | **224 (95%)** |
+| **correct-decline, of 174** | 123 (71%) | **136 (78%)** |
+| listing nominated, of 411 | 21 | 2 |
+| calls per sample | 1.24 | 1.18 |
+| cost | $0.19 | $0.41 |
+| wall time, the leg | ~42 min | **19 min** |
+
+| weak `mistralai/mistral-nemo` | §25 D | this leg |
+|---|---:|---:|
+| pass band, of 137 | 91–94 | **95–98** |
+| answerable, of 237 | 179 (76%) | 188 (79%) |
+| **correct-decline, of 174** | 97 (56%) | 102 (59%) |
+| calls per sample | 1.23 | 1.27 |
+| cost | $0.04 | $0.07 |
+| wall time, the leg | ~44 min | **23 min** |
+
+**What the routing bought, and what it did not.** The wall time halved
+on both models — 19 and 23 minutes for 411 samples each — with no
+provider error where §25's chain had one, and the cost rose 2.2× on the
+strong model and 1.6× on the weak: the fast hosts charge more per token,
+as §32 read per call. The pass bands rose on both models, the
+correct-decline rate with them (78% and 59%, the highest of any arm D
+has been set beside), and the strong model's answerable resolution
+reached 224 of 237 — but this leg is not a routing A/B. Between §25 D
+and today the driver gained the compare table (§26), the comparison
+linking wording and the ask-parameter re-binding (§30), the raised asked
+cap and the try-again reading (§31), and a rejected card that ends the
+ladder (§30); the strong model's two refused listing nominations
+against D's 21 is the offered door's default plus those, not the
+route's. What the route can claim is the time, the absence of provider
+errors, and the price; the band is the driver's, and a same-day pair
+under both routings would be the reading that separates them.
+
+**The stable core.** Strong: 116 of 137 pass on every repetition, 13
+fail on every one, 8 flaky (`ans-member-pikachu-selfdestruct`,
+`ans-rec-eligible-snorlax`, `ans-rec-eligible-generic`,
+`data-elite-four`, `data-move-tutor`, `kind-better-pikachu-raichu`,
+`refuse-zapdos-vs-3`, `refuse-articuno-1`). Weak: 290 of 411 passes,
+band 95–98.
+
+**Model errors, apart.** The strong model's 13 stable failures and the
+weak model's 72 missed correct-declines are the models'; which host
+served each call the bank does not yet record (the tap that names it is
+the tracer's and the page's, not the bank's — a harness gap to close so
+the next leg can say it).
