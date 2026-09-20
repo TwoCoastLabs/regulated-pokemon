@@ -80,9 +80,19 @@ name defines it in plain words the first time.
   usefulness north star's number; a usefulness leg without it reports a
   count, not the tax.
 - **Debug a conversation without a browser:** `npm run session:trace --
-  "message" [/confirm|/reject|/act|/decline|/retry] ...` drives the real live
-  session (model from `.env`, billable pennies) and prints every phase,
-  question, proposal, denial and cost. Reach for it before driving the web UI.
+  "message" [/confirm|/reject|/act|/decline|/retry|/next] ...` drives the real
+  live session (model from `.env`, billable pennies) and prints every phase,
+  question, proposal, denial and cost; `/next` takes the latest answer's
+  first suggestion as the trainer's next words. Reach for it before driving
+  the web UI.
+- **Follow-up suggestions are a promise** ([docs/suggestions.md](docs/suggestions.md)):
+  the model's suggestions and the pack's own next steps
+  (`presentation.nextAsks`, held to their wording at load) are shown only
+  when the records would answer them, read deterministically as the ask
+  would be. The bank records shown, unanswerable and supplied per run;
+  `coverage:map -- --suggest --follow-suggestion` takes the first
+  suggestion as the next ask and records whether the promised lesson or
+  field came back.
 - **Findings log:** [docs/findings.md](docs/findings.md) — every claim this
   project can defend, with the measurement behind it. When a live run teaches
   something, record it there *with its numbers* in the same change; a claim

@@ -504,6 +504,12 @@ wrong order for a "feels dumb" problem.
    `suggestions.{offered, kept, dropped, taken}`. The mount allows no
    button, so the register is list items the page wires. Numbers in
    findings §19 ("R3b step 4").
+   *As shipped on 2026-09-20 ([suggestions.md](suggestions.md)): the
+   register is a promise, so a second check reads each suggestion as the
+   ask would be read and drops what the records could not answer
+   (`unanswerable`), and the pack's own next steps fill it (`supplied`);
+   `/next` on the porch and `--follow-suggestion` in the bank read whether
+   the promise is kept.*
 5. **Delete the dispatch doors one at a time**, a bank leg after each so a
    regression names its door. → **Dogfood stop 4** after the listing door
    goes (the porch's most-trodden path). *The listing cue door went first,

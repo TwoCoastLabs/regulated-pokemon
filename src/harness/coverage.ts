@@ -118,7 +118,20 @@ export interface CoverageMap {
    * whether the conversation has a shape — and `dropped` the offenders the
    * topic-not-value rule removed before the kernel saw them.
    */
-  suggestions?: { runs: number; shown: number; answersWith: number; dropped: number };
+  suggestions?: {
+    runs: number;
+    shown: number;
+    answersWith: number;
+    dropped: number;
+    /** The model's suggestions the records could not have answered, dropped (docs/suggestions.md). */
+    unanswerable: number;
+    /** The pack's own next steps shown. */
+    supplied: number;
+    /** The follow-through leg, when it ran: the first suggestion taken as the
+     * next ask on `followed` runs, `answered` with a record, `kept` with the
+     * lesson or field the answerable check predicted. */
+    followed?: { runs: number; answered: number; kept: number; calls: number };
+  };
   /** The per-entry stability reading, present when the runs span more than one
    * repetition. This is the §21 noise-floor instrument: at N=1 a topline is one
    * draw from an unmeasured churn band; at N≥2 the band is measured and a delta
@@ -261,9 +274,25 @@ export function coverageMap(runs: readonly BankRun[]): CoverageMap {
             shown: sum.shown + (run.suggestions?.shown ?? 0),
             answersWith: sum.answersWith + ((run.suggestions?.shown ?? 0) > 0 ? 1 : 0),
             dropped: sum.dropped + (run.suggestions?.dropped ?? 0),
+            unanswerable: sum.unanswerable + (run.suggestions?.unanswerable ?? 0),
+            supplied: sum.supplied + (run.suggestions?.supplied ?? 0),
           }),
-          { runs: 0, shown: 0, answersWith: 0, dropped: 0 },
+          { runs: 0, shown: 0, answersWith: 0, dropped: 0, unanswerable: 0, supplied: 0 },
         );
+  const followedRuns = suggested.filter((run) => run.suggestions?.followed !== undefined);
+  const followed =
+    followedRuns.length === 0
+      ? undefined
+      : followedRuns.reduce(
+          (sum, run) => ({
+            runs: sum.runs + 1,
+            answered: sum.answered + (run.suggestions?.followed?.outcome === "answered" ? 1 : 0),
+            kept: sum.kept + (run.suggestions?.followed?.kept === true ? 1 : 0),
+            calls: sum.calls + (run.suggestions?.followed?.calls ?? 0),
+          }),
+          { runs: 0, answered: 0, kept: 0, calls: 0 },
+        );
+  const suggestionsWithFollow = suggestions === undefined ? undefined : { ...suggestions, ...(followed === undefined ? {} : { followed }) };
   const prompted = runs.filter((run) => run.promptTokens !== undefined);
   const prompting =
     prompted.length === 0
@@ -320,7 +349,7 @@ export function coverageMap(runs: readonly BankRun[]): CoverageMap {
     ...(lessonDoor === undefined ? {} : { lessonDoor }),
     ...(ceremony === undefined ? {} : { ceremony }),
     ...(clarification === undefined ? {} : { clarification }),
-    ...(suggestions === undefined ? {} : { suggestions }),
+    ...(suggestionsWithFollow === undefined ? {} : { suggestions: suggestionsWithFollow }),
     ...(repetition === undefined ? {} : { repetition }),
   };
 }
@@ -446,8 +475,14 @@ export function renderCoverage(map: CoverageMap, heading = "Playability coverage
   if (map.suggestions !== undefined) {
     const s = map.suggestions;
     lines.push(
-      `**Suggestions (door open on ${s.runs} run(s)):** ${s.shown} shown on ${s.answersWith} certified answer(s), ` +
-        `${s.dropped} dropped by the topic-not-value rule before the kernel saw them. Never certified; shown in their own register.`,
+      `**Suggestions (door open on ${s.runs} run(s)):** ${s.shown} shown on ${s.answersWith} certified answer(s) — ` +
+        `${s.supplied} of them the pack's own next steps; ${s.dropped} of the model's dropped, ${s.unanswerable} of those because ` +
+        `nothing in the records would answer them. Never certified; shown in their own register.` +
+        (s.followed === undefined
+          ? ""
+          : ` **Follow-through:** the first suggestion taken as the next ask on ${s.followed.runs} run(s) — ` +
+            `${s.followed.answered} of ${s.followed.runs} answered with a record, ${s.followed.kept} of ${s.followed.runs} with the lesson or field promised, ` +
+            `${s.followed.calls} call(s).`),
     );
   }
   lines.push("");

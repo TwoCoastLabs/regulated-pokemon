@@ -165,9 +165,10 @@ describe("the live page's configuration runs as one leg", () => {
     // The profile was set on the panel: no pack question on the record.
     expect(artifact.runs[0]!.run.transcript[0]!.kind).toBe("profile");
     expect(artifact.runs[0]!.clarified).toEqual({ asked: 0, picked: 0, ignored: 0, capped: 0 });
-    expect(artifact.runs[0]!.suggestions).toEqual({ shown: 0, dropped: 0 });
+    // The pack's own next steps fill the register even when the model offers none.
+    expect(artifact.runs[0]!.suggestions).toMatchObject({ shown: 3, dropped: 0, unanswerable: 0, supplied: 3 });
     expect(artifact.map.clarification).toEqual({ runs: 1, asked: 0, picked: 0, ignored: 0, capped: 0 });
-    expect(artifact.map.suggestions).toEqual({ runs: 1, shown: 0, answersWith: 0, dropped: 0 });
+    expect(artifact.map.suggestions).toEqual({ runs: 1, shown: 3, answersWith: 1, dropped: 0, unanswerable: 0, supplied: 3 });
     const page = renderCoverageArtifact(artifact);
     expect(page).toContain("**profile**");
     expect(page).toContain("**feedback**");

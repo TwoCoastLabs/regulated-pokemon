@@ -34,7 +34,7 @@ import { allSteps } from "./ledger.js";
 
 /** The inputs a trace understands: visitor words, or one of these commands
  * standing in for the page's buttons. */
-export const TRACE_COMMANDS = ["/confirm", "/reject", "/act", "/decline", "/retry", "/profile"] as const;
+export const TRACE_COMMANDS = ["/confirm", "/reject", "/act", "/decline", "/retry", "/profile", "/next"] as const;
 
 /**
  * How the proposer is grounded in a live trace.
@@ -205,6 +205,15 @@ async function press(state: SessionState, command: string, deps: SessionDeps): P
       return decideAct(state, "decline", deps);
     case "/retry":
       return retry(state, deps);
+    case "/next": {
+      // The page's click on the latest answer's first suggestion, said back
+      // as the trainer's own words (docs/suggestions.md): the porch's way to
+      // read whether a suggestion offered is a promise kept.
+      const latest = [...state.records].reverse().find((record) => record.manifest !== undefined);
+      const first = latest?.manifest?.suggestions?.[0];
+      if (first === undefined) throw new Error("/next: the latest answer offered no suggestion to take");
+      return say(state, first, deps);
+    }
     default:
       throw new Error(`unknown command "${command}" — one of ${TRACE_COMMANDS.join(", ")}`);
   }

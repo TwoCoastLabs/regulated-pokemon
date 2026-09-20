@@ -6777,3 +6777,102 @@ weak model's 72 missed correct-declines are the models'; which host
 served each call the bank does not yet record (the tap that names it is
 the tracer's and the page's, not the bank's — a harness gap to close so
 the next leg can say it).
+
+## 34. Follow-up suggestions as a promise: shown only when the records would answer, and the pack's own next steps beside every answer
+
+**Claim.** A follow-up suggestion is a promise the system makes, and
+the shipped register (R3b step 4, §19) checked only that a suggestion
+states no value — never that it could be answered. Reading two weeks of
+the live page shows the cost, and one deterministic check plus one pack
+table close it: every suggestion shown is now one the same records
+answer, every answer carries a next step, and no model call is added
+([docs/suggestions.md](suggestions.md)). Compliance is untouched: the
+kernel's gate on the register is the same one, and the pack's wordings
+pass it.
+
+**The evidence, from the live page (dev trace, 2026-09-06 to 09-20,
+strong model unless noted).**
+
+| what | count |
+|---|---|
+| answers filed / carrying suggestions | 126 / 16 (13%) — strong 13 of 106, weak 3 of 20 |
+| by answer kind: lessons / listings / facts / comparisons / rankings | 10 of 69 / 2 of 17 / 2 of 11 / 1 of 6 / 0 of 7 |
+| suggestions shown / clicked | 50 / 7 (14%) |
+| clicked and answered with a record | 7 of 7 — but 1 of 6 on the wrong subject ("which ones are rare?" → twelve starter facts; rarity is not a certified field) |
+| shown with no lesson or field behind them, judged by hand against the pack | about 15 of 50 |
+| lesson answers whose three suggestions were the same two ("how do I catch Pokémon?", "what are types for?") plus one | 9 of 13 |
+
+The bank agrees on the rate: under the routing leg (§33) the strong
+model offered suggestions on 47 of 412 samples (11%), the weak on 3 of
+412 (1%); the bank recorded no texts, so answerability could not be read
+from a filed run — closed here (`suggestions.texts` per run).
+
+**What landed.** (1) *The answerable check*, in the driver, no model:
+each suggestion — the model's or the pack's — is read as the ask would
+be read: a dictionary field about a subject the answer named ("it" is
+the answer's subject; "how does its speed compare?" beside a Pikachu
+fact is the speed field, the same words beside a badge lesson are a
+field of no one), else a lesson through the lesson door's alias matcher,
+never the boundary lesson; else dropped and counted `unanswerable`. Of
+the five dead-end wordings the live page showed, all five are dropped
+by the check (`next-asks.test.ts`). (2) *The pack's own next steps*,
+`presentation.nextAsks` in pack v5 (in place, as `covers` was): 23
+lessons with a question each and the lessons that follow, 23 fields
+with a question about "it", and for stats about "the two" and "them";
+after the records-boundary lesson, the operator's way back in. The
+loader refuses a wording that breaks its promise (no alias of its
+lesson, no alias of its field, a digit, a certified id); a session test
+pins that every lesson wording is offered its lesson by the live matcher
+and every field wording reads its field. (3) Never a step back: a lesson
+taught or a field certified for the subject anywhere in the session, and
+any text shown or asked before, is not offered again. (4) The readings:
+`suggest/gated` and `suggest/supplied` on the trail; `/next` on the
+porch; `--follow-suggestion` in the bank, which takes the first
+suggestion as the next ask and records whether the promised lesson or
+field came back.
+
+**Porch, 2026-09-20 UTC, both models (qwen3-235b-a22b-2507 strong,
+mistral-nemo weak), routed `throughput ignore=Novita`, `/next` after
+each answer.** 11 follow-ups taken; 11 of 11 answered with a record; 9 of
+11 answered with the lesson or field the check promised; 0 of 11
+dead-ended. Every answer carried a next step (2 or 3), all of them the
+pack's: neither model wrote a `suggest` entry in these rounds, so the
+model side of the register was 0 offered, 0 unanswerable. About $0.02
+in all.
+
+| round | model | answer → its suggestions | `/next` → what came back | promise kept |
+|---|---|---|---|---|
+| "tell me about the game" | both | what-is-game → how do I play? / the goal / what is a Pokémon? | how-to-play → 2 more (the goal already shown, excluded) → how-catch | yes, 2 of 2 each |
+| "how fast is Pikachu?" | both | speed → what type is it? / what moves does it learn? / where can I find it? (the three the precedent store has answered for Pikachu, first) | types → HP, Attack, Defense (speed never re-offered) → HP | yes, 2 of 2 strong, 1 of 1 weak |
+| "compare Pikachu and Charmander" | strong | six stat comparisons → what are their types? / base stat total | both types certified; nothing left to offer the pair | yes, 1 of 1 |
+| same | weak | the model linked the ask to nothing → boundary lesson → what can I ask you? / what is this game? | a base-stat-total comparison of the pair — the model answered the earlier ask, not the lesson | **no** |
+| "which electric pokemon is the fastest?" | strong | the model linked "electric pokemon" to nothing → boundary lesson → what can I ask you? / what is this game? | what-can-you-ask → what should I do first? | yes, 1 of 1 |
+| same | weak | ranking by speed → most HP? / highest Attack? / highest Defense? | two memberships in "fastest electric" — a listing, not the HP ranking asked | **no** |
+
+**What the porch found, before the fix went in.** Two gaps in the first
+cut of the table, closed the same day: the second answer about Pikachu
+offered "how fast is it?" after speed had been certified one turn
+earlier (history now excludes it), and a decline carried no suggestion
+at all — the records-boundary lesson was filed on its own path, and a
+decline is where a next step matters most (`afterBoundary`, now on
+every boundary lesson). One reading, not a gap: after both types of a
+compared pair, the pair has nothing left the table can offer, so the
+register is empty rather than filled with a step about no one.
+
+*Model errors:* the weak model answered "what can I ask you?" with a
+comparison of the previous pair, and "which of them has the most HP?"
+with a two-member listing of the fastest electric set — both certified,
+both not the question; the strong model linked "electric pokemon" to no
+field and declined an answerable ranking (the weak model ranked it) —
+the linking variance §30 already names. *Harness factors:* the two
+table gaps above, both closed with tests; and the follow-through
+`kept` reading will count the weak model's two misses as promises not
+kept, which is the number the bank leg exists to read.
+
+**What is pre-registered.** The bank leg with `--suggest
+--follow-suggestion` on both models: promise kept over follow-ups asked
+(target: every one; a miss names a wording or a reading), the click
+rate on the live page (7 of 50 before this change), and variety —
+distinct suggestions per session and how often the suggestion's route
+differs from the answer's — so a high answer rate cannot be bought by
+suggesting the same safe question forever.

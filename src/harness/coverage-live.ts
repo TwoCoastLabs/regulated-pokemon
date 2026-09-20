@@ -101,6 +101,9 @@ export interface CoverageArgs {
   clarify: boolean;
   /** The model may offer follow-up suggestions (R3b step 4). Recorded. */
   suggest: boolean;
+  /** The follow-through leg (docs/suggestions.md): the bank's trainer takes
+   * the first suggestion as the next ask; what came of it is recorded. */
+  followSuggestion: boolean;
   /** Pay for the raw arm too: the same entries, the same model, no kernel —
    * published as-is and metered afterwards — so the artifact carries the
    * governance tax (docs/generalization.md §11). Recorded. */
@@ -156,6 +159,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     feedback: boolean;
     clarify: boolean;
     suggest: boolean;
+    followSuggestion: boolean;
     raw: boolean;
     precedents?: "nearest" | "fixed";
     precedentStore?: string;
@@ -176,7 +180,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     source?: string;
     help: boolean;
     errors: string[];
-  } = { live: false, render: false, weak: false, dialogues: false, adversarial: false, center: false, grounded: false, retrieval: false, gatedGrammar: false, repair: false, profile: false, feedback: false, clarify: false, suggest: false, raw: false, refusalFeedback: false, offeredDoors: true, lessonDoor: false, lessonClassifier: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
+  } = { live: false, render: false, weak: false, dialogues: false, adversarial: false, center: false, grounded: false, retrieval: false, gatedGrammar: false, repair: false, profile: false, feedback: false, clarify: false, suggest: false, followSuggestion: false, raw: false, refusalFeedback: false, offeredDoors: true, lessonDoor: false, lessonClassifier: false, phrasings: false, repetitions: 1, out: "runs/coverage", help: false, errors: [] };
 
   for (let index = 0; index < argv.length; index++) {
     const flag = argv[index];
@@ -223,6 +227,9 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
         break;
       case "--suggest":
         args.suggest = true;
+        break;
+      case "--follow-suggestion":
+        args.followSuggestion = true;
         break;
       case "--raw":
         args.raw = true;
@@ -357,7 +364,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
   if (args.repair && args.phrasings) {
     args.errors.push("--repair is not threaded through the robustness pass; run it on the coverage or dialogue banks");
   }
-  for (const [flag, on] of [["--profile", args.profile], ["--feedback", args.feedback], ["--clarify", args.clarify], ["--suggest", args.suggest], ["--raw", args.raw], ["--precedents", args.precedents !== undefined], ["--prompt", args.prompt !== undefined], ["--refusal-feedback", args.refusalFeedback], ["--no-offered-doors", !args.offeredDoors], ["--lesson-door", args.lessonDoor], ["--lesson-classifier", args.lessonClassifier]] as const) {
+  for (const [flag, on] of [["--profile", args.profile], ["--feedback", args.feedback], ["--clarify", args.clarify], ["--suggest", args.suggest], ["--follow-suggestion", args.followSuggestion], ["--raw", args.raw], ["--precedents", args.precedents !== undefined], ["--prompt", args.prompt !== undefined], ["--refusal-feedback", args.refusalFeedback], ["--no-offered-doors", !args.offeredDoors], ["--lesson-door", args.lessonDoor], ["--lesson-classifier", args.lessonClassifier]] as const) {
     if (on && (args.phrasings || args.dialogues)) {
       args.errors.push(`${flag} is threaded through the single-turn coverage run only; the robustness and dialogue banks do not carry it`);
     }
@@ -391,6 +398,7 @@ export function parseCoverageArgs(argv: readonly string[]): CoverageArgs {
     feedback: args.feedback,
     clarify: args.clarify,
     suggest: args.suggest,
+    followSuggestion: args.followSuggestion,
     raw: args.raw,
     refusalFeedback: args.refusalFeedback,
     offeredDoors: args.offeredDoors,
@@ -448,7 +456,10 @@ const USAGE = [
   "                      other than the repair's class, is carried back to the model once by name. Counted apart.",
   "  --clarify           the model may ask its own clarifying question (R3b step 3); the truthful trainer answers",
   "                      it from the entry's oracle, or says no option is right. Asked/picked/ignored are counted.",
-  "  --suggest           the model may offer follow-up suggestions (R3b step 4); shown and dropped are counted.",
+  "  --suggest           the model may offer follow-up suggestions (R3b step 4); shown, dropped, unanswerable and",
+  "                      the pack's own are counted (docs/suggestions.md).",
+  "  --follow-suggestion the follow-through leg: the trainer takes the first suggestion as the next ask, and the",
+  "                      run records whether it was answered with the lesson or field promised. Needs --suggest.",
   "                      The live page runs with --profile --feedback --clarify --suggest; a leg comparing to it",
   "                      needs all four.",
   "  --raw               also run the raw arm: the same entries, the same model, no kernel — each reply",
@@ -671,7 +682,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
         `  profile:       ${args.profile ? "yes — version, region and badges set on the panel before the opener" : "no — the trainer answers the pack's questions in prose"}`,
         `  feedback:      ${args.feedback ? "yes — a named denial is carried back to the model once" : "no — the first denial files"}`,
         `  clarify:       ${args.clarify ? "yes — the model may ask its own question; the trainer answers from the oracle" : "no — the pack's questions only"}`,
-        `  suggest:       ${args.suggest ? "yes — the model may offer follow-ups, shown uncertified" : "no — answers end where the certificate ends"}`,
+        `  suggest:       ${args.suggest ? "yes — the model may offer follow-ups, shown uncertified" : "no — answers end where the certificate ends"}${args.followSuggestion ? " — and the first is taken as the next ask" : ""}`,
         `  raw arm:       ${args.raw ? "yes — the same entries asked ungoverned beside it, for the governance tax (a second leg's cost)" : "no — governed only"}`,
         `  precedents:    ${args.precedents === undefined ? "no — the door is shut" : args.precedents === "nearest" ? "nearest — the store's closest accepted exchanges shown per ask, the entry's own withheld" : "fixed — the same few accepted exchanges shown on every call"}`,
         `  prompt:        ${args.prompt === "blocks" ? "blocks — the fixed block sequence, each rule once" : "legacy — the prompt as it accreted"}`,
@@ -750,6 +761,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
         feedback: args.feedback,
         clarify: args.clarify,
         suggest: args.suggest,
+        followSuggestion: args.followSuggestion,
         ...(memory === undefined ? {} : { precedents: memory.options }),
         ...(args.prompt === undefined ? {} : { prompt: args.prompt }),
         refusalFeedback: args.refusalFeedback,
@@ -801,6 +813,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
     feedback: args.feedback,
     clarify: args.clarify,
     suggest: args.suggest,
+    followSuggestion: args.followSuggestion,
     ...(memory === undefined ? {} : { precedents: memory.lever }),
     ...(args.prompt === undefined ? {} : { prompt: args.prompt }),
     ...(args.refusalFeedback ? { refusalFeedback: true } : {}),

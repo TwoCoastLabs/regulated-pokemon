@@ -12,6 +12,7 @@
 import { describe, expect, it } from "vitest";
 
 import { allSteps } from "./ledger.js";
+import { answerable } from "./next-asks.js";
 
 import { harnessWorld } from "../harness/corpus.js";
 import { type DoorState, FailingProvider, type ModelProvider, ScriptedProvider } from "../harness/provider.js";
@@ -23,6 +24,7 @@ import {
   decideAct,
   decideScope,
   eligibilityClaims,
+  lessonAskCheck,
   MAX_LADDER_TURNS,
   retry,
   say,
@@ -3120,14 +3122,16 @@ describe("R3b step 4: follow-up suggestions — a next step beside every answer,
     state = await say(state, "how fast is Pikachu?", d);
     const record = state.records[state.records.length - 1]!;
     expect(record.outcome.status).toBe("answered");
-    expect(record.manifest?.suggestions).toEqual(["What is it weak to?", "How does it evolve?"]);
+    // The model's two pass both gates (the type chart and the evolution
+    // method are fields of the species named); the pack fills the third.
+    expect(record.manifest?.suggestions).toEqual(["What is it weak to?", "How does it evolve?", "what type is it?"]);
     expect(verifyReplay(world, record).allowed).toBe(true);
     const page = JSON.stringify(state.pages[record.id]);
     expect(page).toContain('"data-unit":"suggestions"');
     expect(page).toContain('"data-suggestion":"1"');
     expect(page).toContain("What is it weak to?");
     expect(page).toContain("suggestions.lead");
-    expect(state.suggestions).toMatchObject({ offered: 2, kept: 2, dropped: 0 });
+    expect(state.suggestions).toMatchObject({ offered: 2, kept: 2, dropped: 0, unanswerable: 0, supplied: 1 });
   });
 
   it("a suggestion that states a number or names a certified id is dropped, and the answer still certifies", async () => {
@@ -3140,8 +3144,9 @@ describe("R3b step 4: follow-up suggestions — a next step beside every answer,
     state = await say(state, "how fast is Pikachu?", d);
     const record = state.records[state.records.length - 1]!;
     expect(record.outcome.status).toBe("answered");
-    expect(record.manifest?.suggestions).toEqual(["What is it weak to?"]);
-    expect(state.suggestions).toMatchObject({ offered: 3, kept: 1, dropped: 2 });
+    // The pack's next steps fill the register — never the field just certified.
+    expect(record.manifest?.suggestions).toEqual(["What is it weak to?", "what type is it?", "what does it evolve into?"]);
+    expect(state.suggestions).toMatchObject({ offered: 3, kept: 1, dropped: 2, unanswerable: 0, supplied: 2 });
   });
 
   it("a suggestion said back is counted as taken and answered like any ask", async () => {
@@ -3164,7 +3169,7 @@ describe("R3b step 4: follow-up suggestions — a next step beside every answer,
     const record = state.records[state.records.length - 1]!;
     expect(record.outcome.status).toBe("answered");
     expect(record.manifest?.suggestions).toBeUndefined();
-    expect(state.suggestions).toEqual({ offered: 0, kept: 0, dropped: 0, taken: 0, deadEnded: 0 });
+    expect(state.suggestions).toEqual({ offered: 0, kept: 0, dropped: 0, unanswerable: 0, supplied: 0, taken: 0, deadEnded: 0 });
   });
 
   it("the answer reached through the version question carries suggestions too", async () => {
@@ -3175,22 +3180,105 @@ describe("R3b step 4: follow-up suggestions — a next step beside every answer,
     state = await say(state, "red-blue", d);
     const record = state.records[state.records.length - 1]!;
     expect(record.outcome.status).toBe("answered");
-    expect(record.manifest?.suggestions).toEqual(["What is it weak to?"]);
+    expect(record.manifest?.suggestions).toEqual(["What is it weak to?", "what type is it?", "what does it evolve into?"]);
     // Discovery, then the answer hop after the question intervened.
     expect(state.usage.calls).toBe(2);
   });
 
-  it("a grantless lesson carries its suggestions too", async () => {
+  it("a grantless lesson carries suggestions too — the model's dead end dropped, the pack's next lessons in its place", async () => {
     const lesson = JSON.stringify({
       rosters: [],
-      claims: [{ kind: "explanation", blockId: "what-is-badge" }, { kind: "suggest", asks: ["How do I earn one?"] }],
+      claims: [{ kind: "explanation", blockId: "what-is-badge" }, { kind: "suggest", asks: ["How do I earn one?", "how do I catch them?"] }],
     });
     const provider = scripted("teaching", (purpose) => (purpose === "scope" ? "decline" : lesson));
     const state = await say(startSession(), "what's a badge?", withSuggest(provider));
     const record = state.records[0]!;
     expect(record.outcome.status).toBe("answered");
-    expect(record.manifest?.suggestions).toEqual(["How do I earn one?"]);
+    // "How do I earn one?" reaches no lesson and no field: a click on it would
+    // dead-end, so it is dropped and counted apart. "how do I catch them?"
+    // is the catching lesson's own ask, and stays. The badge lesson's
+    // declared next steps fill the register.
+    expect(record.manifest?.suggestions).toEqual(["how do I catch them?", "what does a Gym Leader do?", "what is the League?"]);
+    expect(state.suggestions).toMatchObject({ offered: 2, kept: 1, dropped: 1, unanswerable: 1, supplied: 2 });
+    const codes = allSteps(state).map((step) => step.code);
+    expect(codes).toContain("suggest/gated");
+    expect(codes).toContain("suggest/supplied");
+    const gated = allSteps(state).find((step) => step.code === "suggest/gated")!;
+    expect(gated.lines?.[0]).toContain("How do I earn one?");
     expect(verifyReplay(world, record).allowed).toBe(true);
+  });
+
+  it("the records-boundary lesson — a decline — carries the pack's own way back in", async () => {
+    // The model links the ask to nothing the records hold; the driver
+    // teaches the boundary lesson. Found on the porch (2026-09-20): a decline
+    // carried no suggestion, where a next step matters most.
+    const nothing = JSON.stringify({ asked: [{ phrase: "how rare", entityId: "pikachu", fieldId: "none" }], rosters: [], claims: [] });
+    const provider = scripted("linking-nothing", (purpose) => (purpose === "scope" ? "decline" : nothing));
+    const d = withSuggest(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how rare is Pikachu?", d);
+    const record = state.records[0]!;
+    expect(record.manifest?.claims).toEqual([{ kind: "explanation", blockId: "what-the-records-hold" }]);
+    expect(record.manifest?.suggestions).toEqual(["what can I ask you?", "what is this game?"]);
+    expect(verifyReplay(world, record).allowed).toBe(true);
+  });
+
+  it("nothing shown or asked earlier in the session is suggested again", async () => {
+    const provider = scripted("suggesting", (purpose) => (purpose === "scope" ? "decline" : suggesting([])));
+    const d = withSuggest(provider);
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    const first = state.records[0]!.manifest?.suggestions ?? [];
+    expect(first).toEqual(["what type is it?", "what does it evolve into?", "how does it evolve?"]);
+    // The trainer takes the first; the next answer's register moves on.
+    state = await say(state, "what type is it?", d);
+    expect(state.suggestions.taken).toBe(1);
+    const second = state.records[1]!.manifest?.suggestions ?? [];
+    expect(second).not.toContain("what type is it?");
+    expect(second).not.toContain("what does it evolve into?");
+    // Speed was certified in the first answer: never a step back (porch, 2026-09-20).
+    expect(second).not.toContain("how fast is it?");
+    expect(second.length).toBeGreaterThan(0);
+  });
+
+  it("after a listing the pack ranks the set; after a comparison, the same pair on another field", async () => {
+    const listing = JSON.stringify({
+      rosters: [ELECTRIC],
+      claims: [{ kind: "ranking", rosterId: ELECTRIC.id, basis: "base-speed", direction: "highest" }],
+    });
+    const comparison = JSON.stringify({
+      rosters: [],
+      claims: [{ kind: "comparison", factId: "base-speed", leftId: "pikachu", rightId: "charmander" }],
+    });
+    let provider = scripted("listing", (purpose) => (purpose === "scope" ? "decline" : listing));
+    let state = await setProfile(startSession(), PROFILE_SCOPE, withSuggest(provider));
+    state = await say(state, "which electric type is the fastest?", withSuggest(provider));
+    // A ranking escalates its basis into scope; the pack's question, answered.
+    if (state.phase.kind === "asking") state = await say(state, "speed", withSuggest(provider));
+    expect(state.records[0]!.outcome.status).toBe("answered");
+    // Ranked by speed already: the other rank wordings, none about "it".
+    expect(state.records[0]!.manifest?.suggestions).toEqual(["which of them has the most HP?", "which of them has the highest Attack stat?", "which of them has the highest Defense?"]);
+    provider = scripted("comparing", (purpose) => (purpose === "scope" ? "decline" : comparison));
+    state = await setProfile(startSession(), PROFILE_SCOPE, withSuggest(provider));
+    state = await say(state, "compare Pikachu and Charmander by speed", withSuggest(provider));
+    expect(state.records[0]!.outcome.status).toBe("answered");
+    expect(state.records[0]!.manifest?.suggestions).toEqual(["what are their types?", "how does their HP compare?", "how does their Attack stat compare?"]);
+  });
+
+  it("the pack's own wordings are pinned: every lesson ask is offered its lesson, every field ask reads its field", () => {
+    const table = world.pack.presentation.nextAsks!;
+    for (const [lessonId, entry] of Object.entries(table.lessons)) {
+      expect({ lessonId, offered: lessonAskCheck(world, entry.ask).offered }).toMatchObject({ lessonId, offered: expect.arrayContaining([lessonId]) });
+    }
+    const pikachu = { claims: [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }] as Claim[], rosters: [] };
+    const thunderbolt = { claims: [{ kind: "fact", entityId: "thunderbolt", factId: "move-power" }] as Claim[], rosters: [] };
+    for (const [fieldId, entry] of Object.entries(table.fields)) {
+      const subject = world.pack.dictionary.find((rule) => rule.id === fieldId)!.subject === "move" ? thunderbolt : pikachu;
+      for (const text of [entry.ask, entry.compare, entry.rank]) {
+        if (text === undefined) continue;
+        expect({ fieldId, text, read: answerable(world, subject, text) }).toEqual({ fieldId, text, read: { kind: "field", fieldId } });
+      }
+    }
   });
 });
 

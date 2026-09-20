@@ -32,6 +32,7 @@ import {
 } from "../session/session.js";
 import { candidateIsTrue } from "./trainer.js";
 import { ledgerOf } from "../session/ledger.js";
+import { answerable } from "../session/next-asks.js";
 import { defaultFixedIds, type PrecedentLevers, type PrecedentStore } from "../memory/precedent.js";
 import type { BankEntry, ClaimKind } from "./bank.js";
 import { type Ceremony, ceremonyOf } from "./ceremony.js";
@@ -106,11 +107,15 @@ export interface BankRun {
    * whose answers did not include the right one — and `capped` when the
    * driver refused a third. Present when the clarify door was open. */
   clarified?: { asked: number; picked: number; ignored: number; capped: number };
-  /** Follow-up suggestions (R3b step 4): `shown` is read from the record —
-   * the certified answer's manifest — and `dropped` from the driver's gauge,
-   * the offenders the topic-not-value rule removed. Present when the suggest
-   * door was open. */
-  suggestions?: { shown: number; dropped: number };
+  /** Follow-up suggestions (R3b step 4; docs/suggestions.md): `shown` is
+   * read from the record — the certified answer's manifest — and `texts`
+   * are the suggestions themselves; `dropped` from the driver's gauge, the
+   * offenders the register's rule or a repeat removed, `unanswerable` the
+   * model's that the records could not have answered (dropped too, counted
+   * apart), `supplied` the pack's own next steps shown. `followed` is the
+   * follow-through reading, when the leg took the first suggestion as the
+   * next ask. Present when the suggest door was open. */
+  suggestions?: { shown: number; dropped: number; unanswerable?: number; supplied?: number; texts?: readonly string[]; followed?: FollowedSuggestion };
   /**
    * The precedent door's reading (docs/precedent.md), present when the door
    * was open: `held` is the precedents the exchange's calls carried, by id
@@ -172,9 +177,14 @@ export interface BankRunOptions {
   /** The model may ask its own clarifying question (R3b step 3); the truthful
    * trainer answers it from the entry's oracle ({@link truthfulPick}). */
   clarify?: boolean;
-  /** The model may offer follow-up suggestions (R3b step 4); the bank's
-   * trainer never takes one — what is measured is whether they are offered. */
+  /** The model may offer follow-up suggestions (R3b step 4); what is
+   * measured is whether they are offered — and, with `followSuggestion`,
+   * whether the first is a promise kept. */
   suggest?: boolean;
+  /** The follow-through leg (docs/suggestions.md): the bank's trainer takes
+   * the first suggestion the answer offered as the next ask, and the run
+   * records what came of it, apart from the entry's own reading. */
+  followSuggestion?: boolean;
   /**
    * The precedent door (docs/precedent.md): the operator's store, held on
    * every answer call as worked examples. `nearest` retrieves per ask;
@@ -197,6 +207,24 @@ export interface BankRunOptions {
   lessonDoor?: boolean;
   /** The lesson door's classifier fallback (docs/lesson-door.md). */
   lessonClassifier?: boolean;
+}
+
+/**
+ * The follow-through reading (docs/suggestions.md): the first suggestion the
+ * answer offered, asked back as the next turn by the bank's trainer, and
+ * what came of it. `promise` is what the answerable check said the records
+ * would answer it with (a lesson or a field); `kept` whether the record
+ * filed for it carries that lesson or that field — a suggestion is a
+ * promise, and this is whether it was kept. `outcome` is the record's
+ * status, or `abstained` when none was filed; `calls` what the follow-up
+ * cost, apart from the entry's own.
+ */
+export interface FollowedSuggestion {
+  ask: string;
+  promise: { kind: "lesson"; lessonIds: readonly string[] } | { kind: "field"; fieldId: string };
+  outcome: "answered" | "acted" | "denied" | "declined" | "clarifying" | "abstained" | "open";
+  kept: boolean;
+  calls: number;
 }
 
 /** A bank run still carrying the whole record behind its verdict — transcript,
@@ -392,6 +420,14 @@ async function play(entry: BankEntry, opening: string, deps: SessionDeps, profil
       )
     : startSession();
   state = await say(state, opening, deps);
+  return settle(entry, opening, state, deps);
+}
+
+/** The truthful trainer's side of one exchange after its opening: every
+ * question answered from the entry's oracle, every card decided by it, until
+ * the exchange settles — a record filed, or an abstention noted. */
+async function settle(entry: BankEntry, opening: string, opened: SessionState, deps: SessionDeps): Promise<SessionState> {
+  let state = opened;
   const acts = wantsAct(entry);
 
   for (let step = 0; step < MAX_STEPS; step += 1) {
@@ -414,6 +450,39 @@ async function play(entry: BankEntry, opening: string, deps: SessionDeps, profil
     }
   }
   return state;
+}
+
+/**
+ * The follow-through (docs/suggestions.md): the first suggestion the settled
+ * answer offered, said back as the trainer's next ask and settled the same
+ * way. What the answerable check predicted is read from the answer's own
+ * manifest before the follow-up is asked; whether the record filed for the
+ * follow-up carries that lesson or field is the reading. Nothing when the
+ * answer offered no suggestion.
+ */
+async function followFirstSuggestion(world: DemoWorld, entry: BankEntry, settled: SessionState, deps: SessionDeps): Promise<FollowedSuggestion | undefined> {
+  const record = settled.records.at(-1);
+  const first = record?.manifest?.suggestions?.[0];
+  if (record?.manifest === undefined || first === undefined) return undefined;
+  const promise = answerable(world, { claims: record.manifest.claims, rosters: record.manifest.rosters ?? [] }, first);
+  if (promise.kind === "none") return undefined; // cannot happen for a shown suggestion; the gate ran before it was shown
+  let state = await say(settled, first, deps);
+  state = await settle(entry, first, state, deps);
+  const filed = state.records.length > settled.records.length ? state.records.at(-1) : undefined;
+  const outcome: FollowedSuggestion["outcome"] = filed === undefined ? (state.phase.kind === "gathering" ? "abstained" : "open") : filed.outcome.status;
+  const claims = filed?.manifest?.claims ?? [];
+  const kept =
+    outcome === "answered" &&
+    (promise.kind === "lesson"
+      ? claims.some((claim) => claim.kind === "explanation" && promise.lessonIds.includes(claim.blockId))
+      : claims.some(
+          (claim) =>
+            (claim.kind === "fact" && claim.factId === promise.fieldId) ||
+            (claim.kind === "comparison" && claim.factId === promise.fieldId) ||
+            (claim.kind === "ranking" && claim.basis === promise.fieldId) ||
+            (claim.kind === "matchup" && promise.fieldId === "type-chart"),
+        ));
+  return { ask: first, promise, outcome, kept, calls: state.usage.calls - settled.usage.calls };
 }
 
 /** Read a settled session as the minimal run the funnel needs. Exported so the
@@ -524,6 +593,9 @@ export async function runBankEntry(
   };
   const state = await play(entry, opening, deps, options.profile ?? false);
   const run = asRun(entry, state, world, repetition);
+  // The follow-through, after the entry's own reading is taken: the second
+  // exchange never touches the run's status, turns or usage.
+  const followed = options.suggest === true && options.followSuggestion === true ? await followFirstSuggestion(world, entry, state, deps) : undefined;
   const { asked, picked, ignored, capped } = state.clarification;
   const shown = run.transaction?.manifest?.suggestions?.length ?? 0;
   const stage = funnelOf(run, wantsAct(entry));
@@ -568,7 +640,18 @@ export async function runBankEntry(
     ...(state.linking.offTargetDropped > 0 ? { offTargetDropped: state.linking.offTargetDropped } : {}),
     ...(refused === undefined ? {} : { deniedDraftOnTarget: draftOnTarget(entry, refused) }),
     ...(options.clarify === true ? { clarified: { asked, picked, ignored, capped } } : {}),
-    ...(options.suggest === true ? { suggestions: { shown, dropped: state.suggestions.dropped } } : {}),
+    ...(options.suggest === true
+      ? {
+          suggestions: {
+            shown,
+            dropped: state.suggestions.dropped,
+            unanswerable: state.suggestions.unanswerable,
+            supplied: state.suggestions.supplied,
+            ...(shown === 0 ? {} : { texts: run.transaction?.manifest?.suggestions ?? [] }),
+            ...(followed === undefined ? {} : { followed }),
+          },
+        }
+      : {}),
     // The door's reading per run (docs/precedent.md): which precedents the
     // exchange held (empty: the door was open and engaged nothing), and
     // whether the accepted answer took one's shape — absent when no record

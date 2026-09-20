@@ -78,6 +78,11 @@ export const LEDGER_CODES = {
   "memory/held-out": { tone: "plain" },
   "memory/followed": { tone: "ok" },
   "memory/departed": { tone: "plain" },
+  // the suggestion register (docs/suggestions.md)
+  /** The model's suggestions the records could not have answered, dropped. */
+  "suggest/gated": { tone: "plain" },
+  /** The pack's own next steps, shown beside the answer. */
+  "suggest/supplied": { tone: "plain" },
   // the driver's reading of a reply
   "linking/unlinked": { tone: "plain" },
   "linking/union": { tone: "plain" },

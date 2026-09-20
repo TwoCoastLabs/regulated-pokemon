@@ -222,3 +222,27 @@ describe("parseTraceArgs keeps the entry point straight-line", () => {
     expect(parseTraceArgs(["--loose-grammar", "hi"]).gatedGrammar).toBe(false);
   });
 });
+
+describe("/next takes the latest answer's first suggestion as the trainer's own words (docs/suggestions.md)", () => {
+  it("says the first suggestion back, counts it taken, and narrates the next exchange", async () => {
+    const speed = JSON.stringify({
+      rosters: [],
+      claims: [{ kind: "fact", entityId: "pikachu", factId: "base-speed" }, { kind: "suggest", asks: ["What is it weak to?"] }],
+    });
+    const provider = new ScriptedProvider("scripted:suggesting", (request) => (request.purpose === "scope" ? "decline" : speed));
+    const result = await runTrace([`${PROFILE} how fast is Pikachu?`, "/next"], { ...deps(provider), suggest: true });
+    expect(result.exitCode).toBe(0);
+    const text = result.lines.join("\n");
+    expect(text).toContain("suggests: What is it weak to?");
+    expect(text).toContain("[button] /next");
+    expect(result.state.suggestions.taken).toBe(1);
+    expect(result.state.records).toHaveLength(2);
+  });
+
+  it("refuses when the latest answer offered nothing to take", async () => {
+    const provider = new ScriptedProvider("scripted:mute", () => "decline");
+    const result = await runTrace(["/next"], deps(provider));
+    expect(result.exitCode).toBe(2);
+    expect(result.lines.join("\n")).toContain("offered no suggestion to take");
+  });
+});

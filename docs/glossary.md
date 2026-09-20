@@ -41,6 +41,11 @@ or a PR is not here, that is a bug in this file.
   [offered-door.md](offered-door.md)
 - **Nomination.** The model asking to use a route rather than composing
   claims itself.
+- **Follow-up suggestion.** A question offered beside an answer, shown in
+  its own labelled register and never certified. Since 2026-09-20 shown
+  only when the records would answer it (the answerable check), and drawn
+  from the model's reply and from the pack's own next steps
+  ([suggestions.md](suggestions.md)).
 - **Lesson door.** The explanation route narrowed to the lessons the ask is
   about, plus the records-boundary lesson, read from each lesson's declared
   coverage in the pack. `--lesson-door`. [lesson-door.md](lesson-door.md)

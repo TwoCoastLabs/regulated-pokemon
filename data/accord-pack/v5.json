@@ -217,6 +217,276 @@
       }
     ],
     "grouping": ["listing", "profile", "compare"],
+    "nextAsks": {
+      "afterBoundary": ["what-can-you-ask", "what-is-game"],
+      "lessons": {
+        "what-is-game": {
+          "ask": "what is this game?",
+          "next": [
+            "how-to-play",
+            "objective",
+            "what-is-pokemon"
+          ]
+        },
+        "what-can-you-ask": {
+          "ask": "what can I ask you?",
+          "next": [
+            "what-is-game",
+            "first-steps"
+          ]
+        },
+        "how-to-play": {
+          "ask": "how do I play?",
+          "next": [
+            "objective",
+            "how-catch",
+            "what-is-gym-leader"
+          ]
+        },
+        "objective": {
+          "ask": "what is the goal of the game?",
+          "next": [
+            "what-is-gym-leader",
+            "what-is-league",
+            "what-is-badge"
+          ]
+        },
+        "what-is-badge": {
+          "ask": "what are badges for?",
+          "next": [
+            "what-is-gym-leader",
+            "what-is-league",
+            "objective"
+          ]
+        },
+        "what-is-type": {
+          "ask": "what do types do?",
+          "next": [
+            "what-is-move",
+            "what-are-stats",
+            "what-is-evolution"
+          ]
+        },
+        "how-catch": {
+          "ask": "how do I catch a Pokémon?",
+          "next": [
+            "what-is-poke-ball",
+            "leveling",
+            "fainting-and-healing"
+          ]
+        },
+        "first-steps": {
+          "ask": "what should I do first?",
+          "next": [
+            "choosing-a-starter",
+            "how-catch",
+            "what-is-gym-leader"
+          ]
+        },
+        "choosing-a-starter": {
+          "ask": "which starter should I pick?",
+          "next": [
+            "what-is-type",
+            "what-is-evolution",
+            "red-vs-blue"
+          ]
+        },
+        "leveling": {
+          "ask": "how does leveling work?",
+          "next": [
+            "what-is-evolution",
+            "what-are-stats",
+            "fainting-and-healing"
+          ]
+        },
+        "fainting-and-healing": {
+          "ask": "what happens when a Pokémon faints?",
+          "next": [
+            "leveling",
+            "what-is-move",
+            "how-catch"
+          ]
+        },
+        "red-vs-blue": {
+          "ask": "what is the difference between Red and Blue?",
+          "next": [
+            "red-blue-vs-yellow",
+            "how-to-trade",
+            "choosing-a-starter"
+          ]
+        },
+        "how-to-trade": {
+          "ask": "how does trading work?",
+          "next": [
+            "red-vs-blue",
+            "what-is-evolution"
+          ]
+        },
+        "red-blue-vs-yellow": {
+          "ask": "how is Yellow different?",
+          "next": [
+            "red-vs-blue",
+            "choosing-a-starter"
+          ]
+        },
+        "is-it-hard": {
+          "ask": "is this game hard?",
+          "next": [
+            "first-steps",
+            "how-to-play",
+            "choosing-a-starter"
+          ]
+        },
+        "what-is-pokemon": {
+          "ask": "what is a Pokémon?",
+          "next": [
+            "what-is-type",
+            "how-catch",
+            "what-is-evolution"
+          ]
+        },
+        "what-is-move": {
+          "ask": "what do moves do?",
+          "next": [
+            "what-is-type",
+            "what-is-tm-hm",
+            "what-are-stats"
+          ]
+        },
+        "what-is-evolution": {
+          "ask": "how does evolution work?",
+          "next": [
+            "leveling",
+            "what-is-type",
+            "how-to-trade"
+          ]
+        },
+        "what-is-gym-leader": {
+          "ask": "what does a Gym Leader do?",
+          "next": [
+            "what-is-badge",
+            "what-is-league",
+            "what-is-type"
+          ]
+        },
+        "what-is-league": {
+          "ask": "what is the League?",
+          "next": [
+            "what-is-gym-leader",
+            "what-is-badge",
+            "objective"
+          ]
+        },
+        "what-are-stats": {
+          "ask": "what do stats mean?",
+          "next": [
+            "leveling",
+            "what-is-type",
+            "what-is-move"
+          ]
+        },
+        "what-is-poke-ball": {
+          "ask": "how do Poké Balls work?",
+          "next": [
+            "how-catch",
+            "what-is-pokemon"
+          ]
+        },
+        "what-is-tm-hm": {
+          "ask": "what are TMs and HMs?",
+          "next": [
+            "what-is-move",
+            "what-are-stats"
+          ]
+        }
+      },
+      "fields": {
+        "types": {
+          "ask": "what type is it?",
+          "compare": "what are their types?"
+        },
+        "base-speed": {
+          "ask": "how fast is it?",
+          "compare": "which of the two is faster?",
+          "rank": "which of them is the fastest?"
+        },
+        "evolves-to": {
+          "ask": "what does it evolve into?"
+        },
+        "evolution-methods": {
+          "ask": "how does it evolve?"
+        },
+        "evolves-from": {
+          "ask": "what is its previous form?"
+        },
+        "type-chart": {
+          "ask": "what is it weak to?"
+        },
+        "learnset": {
+          "ask": "what moves does it learn?"
+        },
+        "locations": {
+          "ask": "where can I find it?"
+        },
+        "base-hp": {
+          "ask": "how much HP does it have?",
+          "compare": "how does their HP compare?",
+          "rank": "which of them has the most HP?"
+        },
+        "base-attack": {
+          "ask": "what is its Attack stat?",
+          "compare": "how does their Attack stat compare?",
+          "rank": "which of them has the highest Attack stat?"
+        },
+        "base-defense": {
+          "ask": "what is its Defense stat?",
+          "compare": "how does their Defense compare?",
+          "rank": "which of them has the highest Defense?"
+        },
+        "base-special-attack": {
+          "ask": "what is its Special Attack?",
+          "compare": "how does their Special Attack compare?",
+          "rank": "which of them has the highest Special Attack?"
+        },
+        "base-special-defense": {
+          "ask": "what is its Special Defense?",
+          "compare": "how does their Special Defense compare?",
+          "rank": "which of them has the highest Special Defense?"
+        },
+        "base-stat-total": {
+          "ask": "what is its base stat total?",
+          "compare": "how does their base stat total compare?",
+          "rank": "which of them has the highest base stat total?"
+        },
+        "pokedex-number": {
+          "ask": "what is its Pokédex number?"
+        },
+        "is-legendary": {
+          "ask": "is it legendary?"
+        },
+        "move-power": {
+          "ask": "how much power does it have?"
+        },
+        "move-type": {
+          "ask": "what type of move is it?"
+        },
+        "move-accuracy": {
+          "ask": "how accurate is it?"
+        },
+        "move-pp": {
+          "ask": "how many times can it be used?"
+        },
+        "move-effect": {
+          "ask": "what does it do?"
+        },
+        "move-damage-class": {
+          "ask": "is it physical or special?"
+        },
+        "machine": {
+          "ask": "is it a TM or HM?"
+        }
+      }
+    },
     "display": {
       "minLegiblePx": 12,
       "minLegibleOpacity": 0.5,
