@@ -420,7 +420,13 @@
           "ask": "what is its previous form?"
         },
         "type-chart": {
-          "ask": "what is it weak to?"
+          "ask": "what is it weak to?",
+          "directions": {
+            "weak-to": "what is it weak to?",
+            "resists": "what does it resist?",
+            "immune-to": "what is it immune to?",
+            "strong-against": "what is it strong against?"
+          }
         },
         "learnset": {
           "ask": "what moves does it learn?"

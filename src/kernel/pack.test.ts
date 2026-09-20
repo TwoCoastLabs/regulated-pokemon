@@ -764,6 +764,12 @@ describe("the operator's follow-up suggestions are held to their promise at load
     expect(edit((table) => ((table as unknown as WithAfter).afterBoundary = ["what-is-poke-ball"]))).toEqual([]);
   });
 
+  it("a type-chart direction must be a matchup direction, and its wording must read the chart", () => {
+    type WithDirections = { directions: Record<string, string> };
+    expect(edit((table) => ((table.fields["type-chart"] as unknown as WithDirections).directions["sideways"] = "what is it weak to?"))).toContain("IA-6/pack-next-ask-malformed");
+    expect(edit((table) => ((table.fields["type-chart"] as unknown as WithDirections).directions["resists"] = "what is its favourite colour?"))).toContain("IA-6/pack-next-ask-malformed");
+  });
+
   it("a lesson may only follow one that declares a wording to offer it by", () => {
     expect(
       edit((table) => {

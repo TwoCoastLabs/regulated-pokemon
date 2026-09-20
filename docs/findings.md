@@ -7048,7 +7048,23 @@ abstention, and the ask was one the strong model answers.
 
 **Harness readings closed here.** The follow-up's own cost is now
 recorded (`followed.costUsd`), so the next leg quotes it rather than
-estimating it; the basis rule above. Open: the "what type is good against
-it?" reading — a type question beside a species is a matchup, and the
-check reads it as the types lesson; the kept reading should accept a
-matchup for it.
+estimating it; the basis rule above. Closed the same day: the "what type is
+good against it?" reading. The answer it followed was a matchup about a
+*type* ("what beats Electric?"), and the check knew species, moves and
+items as subjects but not types, so "it" pointed at nothing and the text
+fell to the types lesson; the text also carries two fields' words ("what
+type is" and "good against", the same length) and the first won. A type
+a matchup was about is now a subject, and among the fields a text
+carries the answer's subject decides. The same answer carried no next
+step at all in 2 of 3 runs — the pack had nothing to offer after a
+matchup — so the chart now has a wording per direction, offered after a
+matchup for the directions not yet shown ("what beats Electric?" is
+followed by what Electric is weak to, resists and is immune to). The
+porch walk of that fix found two more steps back, closed the same way:
+the session's history read facts and comparisons but not matchups, so
+"what is it weak to?" was re-offered after it was certified; and a
+wording shown and not taken was never offered again, so after two
+clicks through the chart the register was empty — now only what the
+trainer asked is excluded, and "what beats electric types?" walks
+weak-to, resists, immune-to with the remaining directions offered each
+time (3 calls, $0.0023).

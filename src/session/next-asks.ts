@@ -21,7 +21,8 @@
  *    on another field; after a listing, the set ranked by a field; after
  *    facts about one subject, its other fields — the ones an earlier
  *    accepted exchange asked for first, when the precedent store holds one.
- *    Never a text already shown or already asked in this session.
+ *    Never a text already asked in this session, and never a step back
+ *    (a lesson taught, a field certified for the subject).
  *
  * The model's suggestions that pass come first — they are the
  * conversation's own — and the pack's fill the register to its cap. Nothing
@@ -58,6 +59,8 @@ export interface AnswerSubjects {
   species: readonly string[];
   moves: readonly string[];
   items: readonly string[];
+  /** The types a matchup was about — "it" after "what beats Electric?" */
+  types: readonly string[];
 }
 
 function subjectIdsOf(claim: Claim): readonly string[] {
@@ -81,24 +84,25 @@ function subjectIdsOf(claim: Claim): readonly string[] {
 
 export function answerSubjects(registry: CertifiedRegistry, draft: Pick<ManifestDraft, "claims" | "rosters">): AnswerSubjects {
   const ids = new Set(draft.claims.flatMap(subjectIdsOf));
+  const typeIds = new Set(draft.claims.flatMap((claim) => (claim.kind === "matchup" && claim.subject.kind === "type" ? [claim.subject.typeId] : [])));
   return {
     species: registry.speciesIds.filter((id) => ids.has(id)),
     moves: registry.moveIds.filter((id) => ids.has(id)),
     items: registry.itemIds.filter((id) => ids.has(id)),
+    types: [...registry.typeNames].filter((id) => typeIds.has(id)),
   };
 }
 
-/** The dictionary field a text asks for, by its longest alias carried;
- * nothing when it carries none. */
-function fieldAskedFor(pack: AccordPack, text: string): DictionaryEntry | undefined {
-  let best: { entry: DictionaryEntry; length: number } | undefined;
+/** The dictionary fields a text asks for, longest alias carried first —
+ * "What type is good against it?" carries both the types field ("what type
+ * is") and the chart ("good against"), and the answer's subject decides. */
+function fieldsAskedFor(pack: AccordPack, text: string): readonly DictionaryEntry[] {
+  const carried: { entry: DictionaryEntry; length: number }[] = [];
   for (const entry of pack.dictionary) {
-    for (const alias of entry.aliases) {
-      if (!carriesPhrase(text, alias)) continue;
-      if (best === undefined || alias.length > best.length) best = { entry, length: alias.length };
-    }
+    const longest = Math.max(0, ...entry.aliases.filter((alias) => carriesPhrase(text, alias)).map((alias) => alias.length));
+    if (longest > 0) carried.push({ entry, length: longest });
   }
-  return best?.entry;
+  return carried.sort((a, b) => b.length - a.length).map((one) => one.entry);
 }
 
 /**
@@ -112,20 +116,26 @@ function fieldAskedFor(pack: AccordPack, text: string): DictionaryEntry | undefi
  */
 export function answerable(world: NextAskWorld, draft: Pick<ManifestDraft, "claims" | "rosters">, text: string): Answerability {
   const { pack } = world;
-  const field = fieldAskedFor(pack, text);
   const subjects = answerSubjects(world.registry, draft);
   // "Them" after a listing or a count is the set: a roster's members are
   // species, so a species field is served (bank, 2026-09-20: "which of them
   // is the fastest?" after a count read as a field of no one).
   const listed = draft.rosters.length > 0 || draft.claims.some((claim) => claim.kind === "count" || claim.kind === "ranking" || claim.kind === "membership");
-  const served =
-    field === undefined
-      ? false
-      : field.subject === "species" || field.subject === "type"
+  // A type-chart ask beside a species or a type is a matchup about it
+  // (bank, 2026-09-20: "What type is good against it?" beside "what beats
+  // Electric?" read as the types lesson, and the matchup that answered it
+  // counted as a promise not kept).
+  const servedBy = (entry: DictionaryEntry): boolean =>
+    entry.subject === "type"
+      ? subjects.species.length > 0 || subjects.types.length > 0 || listed
+      : entry.subject === "species"
         ? subjects.species.length > 0 || listed
-        : field.subject === "move"
+        : entry.subject === "move"
           ? subjects.moves.length > 0
           : subjects.items.length > 0;
+  const carried = fieldsAskedFor(pack, text);
+  const field = carried.find(servedBy) ?? carried[0];
+  const served = field !== undefined && servedBy(field);
   if (field !== undefined && served) {
     // A question asked beside a ranked or listed set will rank it, and a
     // ranking binds the scope's comparison basis on its way in. The
@@ -204,7 +214,9 @@ export function certifiedIn(draft: Pick<ManifestDraft, "claims">): readonly { en
             { entityId: claim.leftId, factId: claim.factId },
             { entityId: claim.rightId, factId: claim.factId },
           ]
-        : [],
+        : claim.kind === "matchup"
+          ? [{ entityId: claim.subject.kind === "species" ? claim.subject.entityId : claim.subject.typeId, factId: `type-chart:${claim.direction}` }]
+          : [],
   );
 }
 
@@ -258,6 +270,18 @@ export function packCandidates(world: NextAskWorld, draft: Pick<ManifestDraft, "
       if (taught.has(followId)) continue;
       const wording = table.lessons[followId]?.ask;
       if (wording !== undefined) push(wording, { kind: "lesson", lessonIds: [followId] });
+    }
+  }
+
+  // After a matchup: the chart's other directions about the same subject —
+  // "what beats Electric?" is followed by what Electric resists, and so on.
+  const matched = [...new Set(draft.claims.flatMap((claim) => (claim.kind === "matchup" ? [claim.subject.kind === "species" ? claim.subject.entityId : claim.subject.typeId] : [])))];
+  const chart = Object.entries(table.fields).find(([fieldId]) => world.pack.dictionary.find((entry) => entry.id === fieldId)?.subject === "type");
+  if (matched.length === 1 && chart !== undefined && chart[1].directions !== undefined) {
+    const subject = matched[0]!;
+    for (const [direction, wording] of Object.entries(chart[1].directions)) {
+      if (has(subject, `type-chart:${direction}`)) continue;
+      push(wording, { kind: "field", fieldId: chart[0] });
     }
   }
 

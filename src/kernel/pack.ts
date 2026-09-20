@@ -383,7 +383,14 @@ export interface FieldNextAsk {
   compare?: string;
   /** The question that ranks a set just listed by this field — "them". */
   rank?: string;
+  /** For the type chart: the question for each matchup direction, keyed by
+   * the direction (`weak-to`, `resists`, `immune-to`, `strong-against`),
+   * offered after a matchup for the directions not yet shown. */
+  directions?: Readonly<Record<string, string>>;
 }
+
+/** The matchup directions a type-chart wording may be keyed by. */
+export const MATCHUP_DIRECTIONS: readonly string[] = ["weak-to", "resists", "immune-to", "strong-against"];
 
 /** The groupings a pack may approve. */
 export type RenderGrouping = "listing" | "profile" | "compare";
@@ -895,7 +902,18 @@ function checkNextAsks(pack: AccordPack, registry: CertifiedRegistry): Violation
       bad(`for field "${fieldId}"`, "needs an `ask` wording");
       continue;
     }
-    for (const [form, text] of [["ask", entry.ask], ["compare", entry.compare], ["rank", entry.rank]] as const) {
+    const forms: (readonly [string, unknown])[] = [["ask", entry.ask], ["compare", entry.compare], ["rank", entry.rank]];
+    if (entry.directions !== undefined) {
+      if (typeof entry.directions !== "object" || entry.directions === null) {
+        bad(`for field "${fieldId}"`, "`directions` is not a table keyed by matchup direction");
+      } else {
+        for (const [direction, text] of Object.entries(entry.directions)) {
+          if (!MATCHUP_DIRECTIONS.includes(direction)) bad(`for field "${fieldId}" (${direction})`, `not a matchup direction: one of ${MATCHUP_DIRECTIONS.join(", ")}`, direction);
+          else forms.push([direction, text]);
+        }
+      }
+    }
+    for (const [form, text] of forms) {
       if (form !== "ask" && text === undefined) continue;
       if (!wordingProblem(`for field "${fieldId}" (${form})`, text)) continue;
       if (!field.aliases.some((alias) => carriesPhrase(text, alias))) {
