@@ -147,6 +147,27 @@ describe("the built upstream request", () => {
     expect((await relay(chat({ ip: "203.0.113.8" }, { provider: "throughput" }))).status).toBe(400);
   });
 
+  it("applies the operator's routing on top of the page's: the page's sort or the operator's, the ignore lists joined, reported on health", async () => {
+    // OPENROUTER_UPSTREAM on the relay is the operator's veto and default:
+    // a host ruled out is ruled out for everyone the relay serves, and a
+    // page that sends no sort gets the operator's (findings §32).
+    const operator = config({ upstream: { sort: "latency", ignore: ["Novita"] } });
+    const wire = upstream(() => ({ status: 200, body: priced(0.001) }));
+    const relay = createRelay({ config: operator, fetch: wire.fetch, now: clock().now });
+    const health = await relay({ method: "GET", path: "/api/relay/health", ip: "x", body: "" });
+    expect(JSON.parse(health.body)).toEqual({ ok: true, models: MODELS, upstream: "by latency, never Novita" });
+    // The page's sort wins; the operator's ignore rides along, joined with the page's.
+    expect((await relay(chat({}, { provider: { sort: "throughput", ignore: ["Parasail"] } }))).status).toBe(200);
+    expect((JSON.parse(wire.seen[0]!.init.body) as Record<string, unknown>).provider).toEqual({ sort: "throughput", ignore: ["Parasail", "Novita"], allow_fallbacks: true });
+    // A page that sends nothing gets the operator's preference whole.
+    expect((await relay(chat({ ip: "203.0.113.9" }))).status).toBe(200);
+    expect((JSON.parse(wire.seen[1]!.init.body) as Record<string, unknown>).provider).toEqual({ sort: "latency", ignore: ["Novita"], allow_fallbacks: true });
+    // The env reads the same setting every live tool reads, and refuses an unknown word by name.
+    expect(relayConfigFromEnv({ OPENROUTER_UPSTREAM: "throughput ignore=Novita" }, MODELS).upstream).toEqual({ sort: "throughput", ignore: ["Novita"] });
+    expect(relayConfigFromEnv({}, MODELS).upstream).toBeUndefined();
+    expect(() => relayConfigFromEnv({ OPENROUTER_UPSTREAM: "fastest" }, MODELS)).toThrow(/"fastest" is not a sort/);
+  });
+
   it("answers only its two doors", async () => {
     const relay = createRelay({ config: config(), fetch: upstream(() => ({ status: 200, body: "" })).fetch, now: clock().now });
     expect((await relay({ method: "POST", path: "/api/relay/other", ip: "x", body: "" })).status).toBe(404);

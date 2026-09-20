@@ -96,6 +96,8 @@ interface LiveSetup {
 interface RelayStatus {
   ready: boolean;
   models: readonly string[];
+  /** The operator's routing on the relay, in plain words, when one is set. */
+  upstream?: string;
 }
 
 /** The relay lives on the same origin as the served app; a static deployment
@@ -109,7 +111,10 @@ async function probeRelay(): Promise<RelayStatus> {
     if (!reply.ok) return { ready: false, models: [] };
     const body = (await reply.json()) as { ok?: unknown; models?: unknown };
     const models = Array.isArray(body.models) ? body.models.filter((m): m is string => typeof m === "string") : [];
-    return body.ok === true && models.length > 0 ? { ready: true, models } : { ready: false, models: [] };
+    const described = (body as { upstream?: unknown }).upstream;
+    return body.ok === true && models.length > 0
+      ? { ready: true, models, ...(typeof described === "string" ? { upstream: described } : {}) }
+      : { ready: false, models: [] };
   } catch {
     return { ready: false, models: [] };
   }
@@ -630,7 +635,12 @@ export function Live() {
           if (MIRROR_TO_DEV_SINK) mirrorToDevSink({ type: "model-call", ...call });
         },
       });
-      setSetup({ provider, model, persona, mode, trace, upstream: describeUpstreamPreference(routing === "throughput" ? { sort: "throughput" } : undefined) });
+      // In league mode the relay applies the operator's routing on top of
+      // this page's choice (its ignore list always, its sort when the page
+      // sends none), so the line under the model says both.
+      const chosen = describeUpstreamPreference(routing === "throughput" ? { sort: "throughput" } : undefined);
+      const league = mode === "league" && relay?.upstream !== undefined ? `${chosen}; the League's relay adds: ${relay.upstream}` : chosen;
+      setSetup({ provider, model, persona, mode, trace, upstream: league });
       setTrouble(null);
     } catch (error) {
       setTrouble(error instanceof Error ? error.message : String(error));
