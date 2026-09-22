@@ -86,6 +86,7 @@ describe("tone and lane", () => {
       "route/refused",
       "route/withdrawn",
       "route/refused-back",
+      "clarify/refused",
       "linking/carried-back",
       "reply/carried-back",
       "lesson/named",

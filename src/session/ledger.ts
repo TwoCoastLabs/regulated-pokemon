@@ -73,6 +73,10 @@ export const LEDGER_CODES = {
   "route/classified": { tone: "plain" },
   "clarify/asked": { tone: "open" },
   "clarify/picked": { tone: "ok" },
+  /** The model asked a question the driver would not put to the trainer —
+   * fewer than two options survived typing, so there was nothing to pick
+   * between. The trainer never sees it, so the trail must. */
+  "clarify/refused": { tone: "refused", sentBack: "stood" },
   "memory/held": { tone: "plain" },
   "memory/empty": { tone: "plain" },
   "memory/held-out": { tone: "plain" },

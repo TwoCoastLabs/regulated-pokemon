@@ -3609,10 +3609,19 @@ describe("dogfood stop 3, the dead end (2026-09-06): a reply the driver emptied 
     const d = deps(provider);
     let state = await setProfile(startSession(), PROFILE_SCOPE, d);
     state = await say(state, "tell me about the game", d);
+    // "what are Pokémon?" is squarely inside what the deployment covers —
+    // the what-is-pokemon lesson is about exactly it — so the capability
+    // menu would be telling a trainer already in the right place to go
+    // somewhere else (dogfood 2026-09-22, findings §40). The decline says
+    // the ask landed and the answer did not.
     state = await say(state, "what are Pokémon?", d);
-    expect(state.notes[state.notes.length - 1]?.text).toContain("couldn't line that up");
+    expect(state.notes[state.notes.length - 1]?.text).toContain("That's the kind of thing I cover");
+    expect(state.notes[state.notes.length - 1]?.text).not.toContain("try one of those");
     state = await say(state, "what are they good for?", d);
     expect(state.notes[state.notes.length - 1]?.text).toContain("I lost the thread");
+    // The menu still stands for an ask no lesson covers and no record names.
+    const off = await say(await setProfile(startSession(), PROFILE_SCOPE, d), "what's the weather like today?", d);
+    expect(off.notes[off.notes.length - 1]?.text).toContain("couldn't line that up");
   });
 
   it("a suggestion taken and then dead-ended is counted", async () => {
@@ -3971,5 +3980,146 @@ describe("dogfood 2026-09-20: the ask that names nothing — the covering lesson
     const back = state.exchanges.at(-1)!.steps.find((step) => step.code === "reply/carried-back")!;
     expect(back.lines?.map((line) => line.split(":")[0])).toEqual(["driver/off-ask"]);
     expect(state.exchanges.at(-1)!.outcome).toBe("answered");
+  });
+});
+
+describe("dogfood 2026-09-22: the driver's own clarification answers to the door it asked through (findings §40)", () => {
+  const PROFILE_SCOPE = { version: "red-blue", region: "kanto", badgeLevel: 0 } as const;
+  const codes = (steps: readonly { code: string }[]) => steps.map((entry) => entry.code);
+  /** Every step the session has written, closed exchanges and the open one:
+   * a clarified exchange spans two rounds, so its first round's steps sit in
+   * the same trail as its second. */
+  const allSteps = (state: SessionState) => [...state.exchanges.flatMap((exchange) => exchange.steps), ...state.steps];
+  /** The steps taken after the trainer's pick bound — the second round. */
+  const afterPick = (state: SessionState) => {
+    const steps = allSteps(state);
+    return steps.slice(steps.findIndex((step) => step.code === "clarify/picked") + 1);
+  };
+  /** The live thread's words, typo and conversational opener included: the
+   * bareness remainder keeps "actually i want to know" and "specifies", so
+   * the opening ask names no set the vocabulary can read. */
+  const MUDDLED = "Actually I want to know about specifies of all pokemons";
+  const asking = JSON.stringify({
+    asked: [{ phrase: "specifies of all pokemons", entityId: "all", fieldId: "none" }],
+    rosters: [],
+    claims: [
+      {
+        kind: "clarify",
+        about: "specifies of all pokemons",
+        question: "Did you mean the list of all Pokémon species, or details like types and stats for each?",
+        options: [
+          { kind: "field", label: "list species", fieldId: "none" },
+          { kind: "field", label: "types and stats", fieldId: "types" },
+        ],
+      },
+    ],
+  });
+  const nominating = JSON.stringify({ rosters: [], claims: [{ kind: "route", routeId: "listing", subject: "catalogue", n: 5 }] });
+
+  it("the option the trainer picked opens the listing door the opening words could not", async () => {
+    // The live miss: the driver asked which was meant, the trainer picked the
+    // option the driver had itself written, and the door stayed shut because
+    // both the offer and the executor read only the exchange's first words.
+    // The model then composed the catalogue by hand and the wrong-set guard
+    // dropped all twelve certified-true members.
+    const doors: (readonly string[])[] = [];
+    const provider = new ScriptedProvider("asks-then-nominates", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      doors.push(request.hint.doors?.routes ?? []);
+      return doors.length === 1 ? asking : nominating;
+    });
+    const d: SessionDeps = { ...deps(provider), clarify: true, offeredDoors: true };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, MUDDLED, d);
+    // The opening words name no set the vocabulary can read, so the door is
+    // withheld on the first call — the behaviour that stands unchanged.
+    expect(doors[0]).toEqual(["profile"]);
+    state = await say(state, "list species", d);
+    expect(codes(allSteps(state))).toContain("clarify/picked");
+    // The pick is the ask the door reads, so on the round after it the door
+    // is offered and served — where the opening words alone withheld it.
+    expect(doors[1]).toEqual(["listing", "profile"]);
+    expect(codes(afterPick(state))).not.toContain("route/withheld");
+    expect(codes(afterPick(state))).toContain("route/served");
+    // And the guard, reading the same words, keeps what the door composed.
+    expect(codes(afterPick(state))).not.toContain("guard/wrong-set-dropped");
+    expect(state.exchanges.at(-1)?.outcome).toBe("answered");
+    expect(state.records.at(-1)?.manifest?.claims.filter((claim) => claim.kind === "membership")).toHaveLength(5);
+  });
+
+  it("a pick cannot turn a named subject into a set: the door stays shut on an ask about one thing", async () => {
+    const aboutPikachu = JSON.stringify({
+      asked: [{ phrase: "how fast is Pikachu", entityId: "pikachu", fieldId: "base-speed" }],
+      rosters: [],
+      claims: [
+        {
+          kind: "clarify",
+          about: "how fast is Pikachu",
+          question: "Which did you mean?",
+          options: [
+            { kind: "field", label: "list species", fieldId: "none" },
+            { kind: "field", label: "types and stats", fieldId: "types" },
+          ],
+        },
+      ],
+    });
+    const doors: (readonly string[])[] = [];
+    const provider = new ScriptedProvider("named-subject", (request) => {
+      if (request.purpose !== "answer") return "decline";
+      doors.push(request.hint.doors?.routes ?? []);
+      return doors.length === 1 ? aboutPikachu : nominating;
+    });
+    const d: SessionDeps = { ...deps(provider), clarify: true, offeredDoors: true };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "how fast is Pikachu?", d);
+    state = await say(state, "list species", d);
+    expect(doors[1]).toEqual(["profile"]);
+    expect(afterPick(state).find((step) => step.code === "route/withheld")?.text).toContain("the question is about one named thing");
+  });
+
+  it("a question the driver would not put to the trainer is a step of its own", async () => {
+    // The live miss: "what are all the types of Pokemons?" drew a question
+    // carrying the single option "all types", and the trail read model/answer
+    // straight into note/abstention with nothing between.
+    const lonely = JSON.stringify({
+      asked: [{ phrase: "what are all the types of Pokemons?", entityId: "none", fieldId: "none" }],
+      rosters: [],
+      claims: [{ kind: "clarify", about: "all the types", question: "Do you want all the types that exist?", options: [{ kind: "field", label: "all types", fieldId: "none" }] }],
+    });
+    const provider = scripted("one-option", (purpose) => (purpose === "scope" ? "decline" : lonely));
+    const d: SessionDeps = { ...deps(provider), clarify: true };
+    let state = await setProfile(startSession(), PROFILE_SCOPE, d);
+    state = await say(state, "what are all the types of Pokemons?", d);
+    expect(codes(allSteps(state))).toContain("clarify/refused");
+    const refused = allSteps(state).find((step) => step.code === "clarify/refused")!;
+    expect(refused.lane).toBe("driver");
+    expect(refused.text).toContain("one option is nothing to pick between");
+    expect(codes(allSteps(state))).not.toContain("clarify/asked");
+    expect(state.records).toHaveLength(0);
+  });
+
+  it("an ask a reviewed lesson covers is asked again; one no lesson covers still gets the menu", async () => {
+    // The menu — "I answer questions about specific Pokémon … try one of
+    // those" — told a trainer already inside the domain to go elsewhere, and
+    // they retyped the same words for a second call and the same dead end.
+    // The reading is the pack's declared coverage, nothing lexical here.
+    const nothing = JSON.stringify({ asked: [{ phrase: "the ask", entityId: "none", fieldId: "none" }], rosters: [], claims: [] });
+    const provider = scripted("empty", (purpose) => (purpose === "scope" ? "decline" : nothing));
+    const d = deps(provider);
+    const covered = await say(await setProfile(startSession(), PROFILE_SCOPE, d), "what are Pokémon?", d);
+    expect(covered.notes.at(-1)?.tone).toBe("abstention");
+    expect(covered.notes.at(-1)?.text).toContain("That's the kind of thing I cover");
+    expect(covered.notes.at(-1)?.detail).toContain("an ask the reviewed lessons cover");
+    expect(covered.records).toHaveLength(0);
+    const off = await say(await setProfile(startSession(), PROFILE_SCOPE, d), "what's the weather like today?", d);
+    expect(off.notes.at(-1)?.text).toContain("try one of those");
+    // And the live thread's own ask is in neither camp by the pack as it
+    // stands: what-is-type's declared coverage is definitional ("what is a
+    // type", "how do types work"), and an ask to enumerate the types is not
+    // that. The menu stands, and broadening the lesson to swallow an
+    // enumeration ask would be the wrong-subject miss the lesson door exists
+    // to stop — recorded here so the boundary is pinned, not assumed.
+    const types = await say(await setProfile(startSession(), PROFILE_SCOPE, d), "what are all the types of Pokemons?", d);
+    expect(types.notes.at(-1)?.text).toContain("try one of those");
   });
 });

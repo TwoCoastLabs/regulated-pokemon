@@ -134,6 +134,27 @@ are the off arm; every coverage artifact records `offeredDoors` either
 way, so an artifact that says nothing is one filed before the offer
 existed.
 
+*The words the door reads (2026-09-22, findings §40).* The offer and the
+executor read the exchange's opening ask — and, since this change, the
+option the trainer picked from the driver's own clarification, when the
+opening words named no set at all. Found live: "Actually I want to know
+about specifies of all pokemons" left "actually i want to know" and the
+misspelled "specifies" in the bareness remainder, so the door was
+withheld; the driver asked which was meant, the trainer picked the option
+the driver had itself written, "list species" — a phrase the same check
+admits — and the door stayed shut, because both the offer and the
+executor read only the first words. The model composed the catalogue by
+hand and the wrong-set guard, reading the same first words, dropped all
+twelve certified-true members. `listingDoorAsk(world, state)` is the one
+function all three now read: the opening ask, unless a pick is bound and
+the opening words name neither a certified subject nor a set, in which
+case the pick's label. Strictly additive — a door that was open cannot be
+closed by it, an ask naming a type keeps its own set, and an ask about
+one named thing stays about it, so no pick turns a subject into a set
+(lesson 3). The leniency is lesson 1's: the question and the pick are
+both in the transcript, so a reviewer can see exactly what widened the
+ask. Pinned in `session.test.ts` ("dogfood 2026-09-22").
+
 ## The measurement, pre-registered
 
 The porch reading first, for pennies (`session:trace`, the four opening

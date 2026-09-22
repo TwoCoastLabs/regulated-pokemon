@@ -681,6 +681,16 @@ export function Live() {
       // Follow-up suggestions (R3b step 4): a next step beside every answer,
       // in a register the page labels as the Advisor's own, uncertified.
       suggest: true,
+      // The lesson door (docs/lesson-door.md) stays off here on purpose. It
+      // passed its bank gate (findings §25), but the bank's lesson wordings
+      // match the pack's declared coverage and a visitor's need not: "what
+      // are all the types of Pokemons?" on this page's own path (profile
+      // set first, strong model) answered 0 of 3 with the door on and 3 of
+      // 3 with it off — the door read only the boundary lesson and took
+      // what-is-type out of the grammar (findings §40). The alias reading's
+      // recall on held-out phrasings is the ceiling; until that is lifted,
+      // the whole catalogue is the safer default for a page that cannot
+      // predict its phrasings.
       ...(retrievalOn ? { retrieval: true } : {}),
       ...(gatedOn ? { gatedGrammar: true } : {}),
       ...(memoryOn && precedentStore() !== undefined ? { precedents: { store: precedentStore()! } } : {}),
