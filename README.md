@@ -99,18 +99,21 @@ Private, work in progress.
       artifacts
 - [x] Explicit assurance envelope, correctness taxonomy, scorecard and
       falsification criteria (`docs/assurance-case.md`)
-- [x] Demo UI: the filed run replayed as pages (chat, certified page,
-      compliance console), and the crucible with buttons on it — every
-      sabotage below runnable in the browser, against the real kernel
+- [x] Demo UI: a live session with the visitor as the trainer and the kernel
+      in the tab, its compliance console beside the chat, and the crucible
+      with buttons on it — every sabotage below runnable in the browser,
+      against the real kernel, in the scope the visitor's own exchange
+      certified
 
 ## Seeing it
 
-In a browser: `npm run app:dev`, then the **run ledger** replays a filed
-live-model run page by page, and **the crucible** puts buttons on the
-failure-injection suite — one sabotage per Accord article, run live in the
-tab and refused under the article it names, next to the untampered control
-that must pass. The same exchange without the theatre is the compliance
-trace:
+In a browser: `npm run app:dev` opens a **live session** — you as the
+trainer, a real model as the Advisor, the kernel in the tab — with the
+**compliance console** beside the chat: the step trail, every model call,
+the filed records, and **the crucible** with buttons on it — one sabotage per
+Accord article, run live against the scope your own exchange certified and
+refused under the article it names, next to the untampered control that must
+pass. The same exchange without the theatre is the compliance trace:
 
 ```
 npm run demo                                  # every scripted conversation

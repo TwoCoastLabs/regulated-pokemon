@@ -12,20 +12,21 @@ import { describe, expect, it } from "vitest";
 
 import { ACCORD_ARTICLES } from "../kernel/accord.js";
 import { PACK_PATH, SNAPSHOT_PATH } from "../demo/files.js";
-import { loadDemoWorld, sabotageWorld } from "../demo/script.js";
+import { CONVERSATIONS, loadDemoWorld, playConversation, sabotageWorld } from "../demo/script.js";
 import {
   HONEST_CONTROL,
   honestCard,
   runHonest,
   runSabotage,
   SABOTAGE_MENU,
+  crucibleFit,
   sabotageCards,
+  sabotageContextOf,
 } from "./sabotage.js";
 
 // Built the way the app builds it: parsed bytes in, no fixture machinery.
-const world = sabotageWorld(
-  loadDemoWorld(JSON.parse(readFileSync(SNAPSHOT_PATH, "utf8")), JSON.parse(readFileSync(PACK_PATH, "utf8"))),
-);
+const demo = loadDemoWorld(JSON.parse(readFileSync(SNAPSHOT_PATH, "utf8")), JSON.parse(readFileSync(PACK_PATH, "utf8")));
+const world = sabotageWorld(demo);
 
 describe("the menu", () => {
   it("carries exactly one sabotage per Accord article, in article order", () => {
@@ -78,5 +79,48 @@ describe("the honest run beside them", () => {
 
   it("walks the whole chain untampered and is allowed, nothing denied", () => {
     expect(runHonest(world)).toEqual({ allowed: true, violations: [] });
+  });
+});
+
+describe("the crucible in a filed exchange's own scope", () => {
+  const clean = playConversation(demo, CONVERSATIONS[0]!);
+
+  it("reads the record's grant, locale and commit moment into the world the mutations take", () => {
+    const context = sabotageContextOf(demo, clean);
+    expect(context.grant).toBe(clean.grant);
+    expect(context.locale).toBe(clean.locale);
+    expect(context.at).toBe(clean.committedAt);
+    expect(context.registry).toBe(demo.registry);
+    expect(context.pack).toBe(demo.pack);
+  });
+
+  it("denies every menu button as declared in that scope, and lets the honest control through", () => {
+    const context = sabotageContextOf(demo, clean);
+    for (const card of sabotageCards()) {
+      expect(runSabotage(context, card.id).deniedAsDeclared, card.id).toBe(true);
+    }
+    expect(runHonest(context).allowed).toBe(true);
+  });
+
+  it("refuses a record that established no scope", () => {
+    const asked = CONVERSATIONS.map((entry) => playConversation(demo, entry)).find((entry) => entry.grant === undefined);
+    expect(asked, "the demo has no conversation that stops short of a grant").toBeDefined();
+    expect(() => sabotageContextOf(demo, asked!)).toThrow("established no scope");
+  });
+
+  it("says whether a scope hosts the crucible's honest answer, naming the denial when it does not", () => {
+    expect(crucibleFit(sabotageContextOf(demo, clean))).toEqual({ hosts: true });
+    // A grant that never established the badge level — what a filed exchange
+    // about speed carries — cannot host a recommendation.
+    const grant = world.grant!;
+    const { badgeLevel: _dropped, ...scope } = grant.scope;
+    const lazy = { ...world, grant: { ...grant, scope: scope as typeof grant.scope } };
+    const fit = crucibleFit(lazy);
+    expect(fit.hosts).toBe(false);
+    if (!fit.hosts) expect(fit.violations.map((entry) => entry.code)).toContain("IA-1/scope-dimension-missing");
+  });
+
+  it("refuses a record certified against another world", () => {
+    expect(() => sabotageContextOf(demo, { ...clean, snapshotId: "another-snapshot" })).toThrow("not this world");
   });
 });

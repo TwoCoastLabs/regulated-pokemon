@@ -35,6 +35,7 @@ import {
 import { describeUpstreamPreference, OpenRouterProvider } from "../../src/harness/openrouter.js";
 import type { ModelProvider } from "../../src/harness/provider.js";
 import type { DomElement } from "../../src/kernel/dom.js";
+import type { ManifestContext } from "../../src/kernel/manifest.js";
 import type { Transaction } from "../../src/kernel/transaction.js";
 import {
   decideAct,
@@ -54,14 +55,15 @@ import { type DriverStep, type ExchangeLedger, ledgerOf } from "../../src/sessio
 import { adaptArtifact } from "../../src/ui/artifact-dom.js";
 import { plainCandidate, plainRefusalLead, plainStage, plainViolation } from "../../src/ui/plain.js";
 import { plainDuration, progressLine, progressMeter } from "../../src/ui/progress.js";
-import { claimSource } from "./world.js";
+import { sabotageContextOf } from "../../src/ui/sabotage.js";
 import { callsOf, exchangeAt, exchangeWorkMs, type SentBack, sentBack, trailsOfSession, turnTiming, withCalls } from "../../src/ui/trail.js";
 import { violationView } from "../../src/ui/viewmodel.js";
+import { Crucible } from "./crucible.js";
 import { browserFactory } from "./mount.js";
 import { DoorLegend } from "./doors.js";
 import { MemoryPanel } from "./memory.js";
 import { DevCall, Trails } from "./trail.js";
-import { demoWorld, precedentStore } from "./world.js";
+import { claimSource, demoWorld, precedentStore, sabotageContext } from "./world.js";
 
 /** Strictly increasing, because the kernel orders the moments it records and
  * a wall clock is allowed to repeat a millisecond. */
@@ -385,16 +387,28 @@ function RecordItem(props: {
 
 /** One settled exchange, in the League's own words: the formal identity the
  * player register deliberately leaves out. */
-function ConsoleRecord(props: { record: Transaction }) {
-  const { record } = props;
+function ConsoleRecord(props: { record: Transaction; ordinal: number; sabotaging: boolean; onSabotage: () => void }) {
+  const { record, ordinal, sabotaging, onSabotage } = props;
   const pins = Object.entries(record.grant?.scope ?? {});
   return (
     <section class="console-record">
-      <h4 class="mono">{record.id}</h4>
+      <h4 class="mono">
+        <span class="console-ordinal">exchange {ordinal}</span> {record.id}
+      </h4>
       <p class="console-line mono">outcome: {record.outcome.status}</p>
       {pins.length > 0 && (
         <p class="console-line mono" title="the scope this answer was certified under">
           {pins.map(([dimension, value]) => `${dimension}=${String(value)}`).join(" · ")}
+          {" "}
+          <button
+            type="button"
+            class={`console-sabotage${sabotaging ? " current" : ""}`}
+            aria-pressed={sabotaging}
+            title="run the crucible's mutations against the scope this exchange certified"
+            onClick={onSabotage}
+          >
+            {sabotaging ? "the crucible runs in this scope" : "sabotage in this scope"}
+          </button>
         </p>
       )}
       <ul class="console-stages">
@@ -430,9 +444,49 @@ function ConsoleRecord(props: { record: Transaction }) {
   );
 }
 
+/**
+ * The crucible's scope on the live page: the exchange the visitor chose, else
+ * the latest exchange that certified a scope, else — while none has — the
+ * demo's clean conversation. Said in plain words beside the buttons, so a
+ * verdict is never read without knowing whose scope it was ruled for.
+ */
+type CrucibleChoice = { kind: "latest" } | { kind: "record"; id: string } | { kind: "demo" };
+
+const DEMO_SCOPE = "the demo's scope — the Kanto trainer of the clean conversation, eight badges";
+
+function crucibleScope(
+  records: readonly Transaction[],
+  choice: CrucibleChoice,
+): { record?: Transaction; ordinal?: number; scope: string } {
+  if (choice.kind === "demo") return { scope: DEMO_SCOPE };
+  const granted = records.map((record, index) => ({ record, ordinal: index + 1 })).filter(({ record }) => record.grant !== undefined);
+  const chosen = choice.kind === "record" ? granted.find(({ record }) => record.id === choice.id) : granted[granted.length - 1];
+  if (chosen === undefined || chosen.record.grant === undefined) {
+    return { scope: `${DEMO_SCOPE}, since no exchange of yours has certified a scope yet` };
+  }
+  return {
+    record: chosen.record,
+    ordinal: chosen.ordinal,
+    scope: `your scope from exchange ${chosen.ordinal} — ${plainCandidate(chosen.record.grant.scope)}`,
+  };
+}
+
 function LiveConsole(props: { state: SessionState; setup: LiveSetup; live?: SessionState }) {
   const { state, setup } = props;
   const cost = state.usage;
+  // Which scope the crucible runs in: the latest filed exchange with one
+  // unless a record's button or the fold's own chooser said otherwise.
+  // Choosing a record opens the fold.
+  const [choice, setChoice] = useState<CrucibleChoice>({ kind: "latest" });
+  const [crucibleOpen, setCrucibleOpen] = useState(false);
+  const chosen = crucibleScope(state.records, choice);
+  const granted = state.records.map((record, index) => ({ record, ordinal: index + 1 })).filter(({ record }) => record.grant !== undefined);
+  // Memoised on the record's identity: a fresh context object per render
+  // would read as a scope change and clear the verdicts on every keystroke.
+  const world = useMemo<ManifestContext>(
+    () => (chosen.record === undefined ? sabotageContext() : sabotageContextOf(demoWorld(), chosen.record)),
+    [chosen.record?.id],
+  );
   return (
     <section class="live-console" aria-label="Compliance console">
       <p class="fine">The same session, in the League's own words. Everything here is read from the filed records.</p>
@@ -462,7 +516,17 @@ function LiveConsole(props: { state: SessionState; setup: LiveSetup; live?: Sess
       {state.records.length === 0 ? (
         <p class="fine">No exchange has settled yet — records appear here as they are filed.</p>
       ) : (
-        state.records.map((record) => <ConsoleRecord record={record} />)
+        state.records.map((record, index) => (
+          <ConsoleRecord
+            record={record}
+            ordinal={index + 1}
+            sabotaging={crucibleOpen && chosen.record?.id === record.id}
+            onSabotage={() => {
+              setChoice({ kind: "record", id: record.id });
+              setCrucibleOpen(true);
+            }}
+          />
+        ))
       )}
       <button
         type="button"
@@ -476,6 +540,36 @@ function LiveConsole(props: { state: SessionState; setup: LiveSetup; live?: Sess
         The download carries the transcript and every filed record against the named snapshot and pack — enough for
         anyone to re-execute each exchange and reproduce these verdicts bit-for-bit.
       </p>
+      {/* The crucible, in the visitor's own scope: the mutations CI runs,
+          with buttons on them, run against the scope one of these records
+          certified — so the named denial lands for the trainer at the
+          keyboard, not for a canned one. */}
+      <h4 class="console-heading">The crucible</h4>
+      <details class="console-crucible" open={crucibleOpen} onToggle={(event) => setCrucibleOpen(event.currentTarget.open)}>
+        <summary>
+          Run the failure-injection suite here, in {chosen.record === undefined ? "the demo's scope" : `the scope of exchange ${chosen.ordinal}`}
+        </summary>
+        {crucibleOpen && (
+          <>
+            <label class="console-scope-choice">
+              Run it in
+              <select
+                value={chosen.record === undefined ? "demo" : chosen.record.id}
+                onInput={(event) => {
+                  const picked = event.currentTarget.value;
+                  setChoice(picked === "demo" ? { kind: "demo" } : { kind: "record", id: picked });
+                }}
+              >
+                {granted.map(({ record, ordinal }) => (
+                  <option value={record.id}>the scope of exchange {ordinal} — {plainCandidate(record.grant!.scope)}</option>
+                ))}
+                <option value="demo">the demo's scope</option>
+              </select>
+            </label>
+            <Crucible world={world} scope={chosen.scope} />
+          </>
+        )}
+      </details>
     </section>
   );
 }
@@ -649,6 +743,18 @@ export function Live() {
     }
   };
 
+  // On the League's key nothing has to be typed, so the session opens on
+  // the first prompt instead of a form: begun as soon as the relay answers,
+  // and begun again — a fresh provider and trace, nothing lost — whenever a
+  // choice changes before the first model call. Bring-your-own-key waits for
+  // the key. Dogfood (2026-09-22): the first screen was three dropdowns and a
+  // paragraph about who pays, not an Advisor.
+  const fresh = setup === null || (setup.trace.calls.length === 0 && !busy);
+  useEffect(() => {
+    if (mode === "league" && fresh) begin();
+    // begin reads the choices it closes over; the deps are those choices.
+  }, [mode, model, persona, routing]);
+
   const run = (step: (previous: SessionState) => Promise<SessionState> | SessionState) => {
     if (deps === null || busy) return;
     setBusy(true);
@@ -696,8 +802,84 @@ export function Live() {
     run((previous) => say(previous, label, deps));
   };
 
+  /**
+   * The session's choices — who pays, the model, the Advisor's disposition,
+   * the route — one form, drawn on the setup page when a key has to be typed
+   * and in the fold under the header while no model call has been made.
+   */
+  const choices = (
+    <div class="live-choices">
+      {relay?.ready === true && (
+        <label>
+          Who pays for the model
+          <select value={mode ?? "league"} onInput={(event) => setMode(event.currentTarget.value === "own" ? "own" : "league")}>
+            <option value="league">the League — free, rate-limited, capped for everyone daily</option>
+            <option value="own">you — bring your own OpenRouter key</option>
+          </select>
+        </label>
+      )}
+      {mode === "own" ? (
+        <>
+          <p class="fine">
+            Your key powers the Advisor, stays in this tab's memory, is sent only to <span class="mono">openrouter.ai</span>,
+            and is never stored or logged. Live calls bill your OpenRouter account (a short session costs well under a
+            cent).
+          </p>
+          <label>
+            OpenRouter API key
+            <input type="password" value={key} placeholder="sk-or-…" onInput={(event) => setKey(event.currentTarget.value)} />
+          </label>
+          <label>
+            Model
+            <input value={model} onInput={(event) => setModel(event.currentTarget.value)} list="live-models" />
+            <datalist id="live-models">
+              <option value={DEFAULT_STRONG_MODEL}>the measured strong model</option>
+              <option value={DEFAULT_WEAK_MODEL}>the measured weak model</option>
+            </datalist>
+          </label>
+        </>
+      ) : (
+        <label>
+          Model
+          <select value={model} onInput={(event) => setModel(event.currentTarget.value)}>
+            {(relay?.models ?? []).map((slug) => (
+              <option value={slug}>{slug}</option>
+            ))}
+          </select>
+        </label>
+      )}
+      <label>
+        Your Advisor
+        <select value={persona} onInput={(event) => setPersona(event.currentTarget.value === "adversarial" ? "adversarial" : "honest")}>
+          <option value="honest">plays fair — answers as well as it can</option>
+          <option value="adversarial">cheats — instructed to lie to you; watch the League catch it</option>
+        </select>
+      </label>
+      <p class="fine">
+        The cheating Advisor is the fun one: it is under orders to slip a lie past the League in every answer. It
+        hasn't managed it yet — not because models are bad at lying, but because the League looks every value up
+        itself.
+      </p>
+      <label>
+        Route to
+        <select value={routing} onInput={(event) => setRouting(event.currentTarget.value === "default" ? "default" : "throughput")}>
+          <option value="throughput">the model's fastest host</option>
+          <option value="default">the gateway's default host</option>
+        </select>
+      </label>
+      <p class="fine">
+        One model id is served by several hosts, and the wait you feel is mostly the host, not the League's checks.
+        The gateway's own default picks by price, which is how the slow host gets picked.
+      </p>
+      {mode === "own" && (
+        <button type="button" class="live-begin" disabled={key.trim() === ""} onClick={begin}>
+          {setup === null ? "Start the session" : "Use this key"}
+        </button>
+      )}
+    </div>
+  );
+
   if (setup === null || deps === null) {
-    const league = mode === "league";
     return (
       <div class="live">
         <section class="live-setup">
@@ -709,120 +891,26 @@ export function Live() {
           </p>
           {mode === null ? (
             <p class="fine">Checking whether this site carries the League's own key…</p>
+          ) : mode === "league" ? (
+            <p class="fine">Opening the session on the League's key…</p>
           ) : (
             <>
-              {relay?.ready === true && (
-                <label>
-                  Who pays for the model
-                  <select
-                    value={mode}
-                    onInput={(event) => setMode(event.currentTarget.value === "own" ? "own" : "league")}
-                  >
-                    <option value="league">the League — free, rate-limited, capped for everyone daily</option>
-                    <option value="own">you — bring your own OpenRouter key</option>
-                  </select>
-                </label>
-              )}
-              <label>
-                Route to
-                <select value={routing} onInput={(event) => setRouting(event.currentTarget.value === "default" ? "default" : "throughput")}>
-                  <option value="throughput">the model's fastest host</option>
-                  <option value="default">the gateway's default host</option>
-                </select>
-              </label>
-              <p class="fine">
-                One model id is served by several hosts, and the wait you feel is mostly the host, not the League's
-                checks. The gateway's own default picks by price, which is how the slow host gets picked.
+              <p>
+                This deployment is not carrying the League's key right now, so the Advisor has no model to speak
+                with. Everything else here runs without one — the crucible below runs the League's checks in this tab
+                with no model at all.
               </p>
-              {league ? (
-                <>
-                  <p>
-                    Nothing to bring: this site carries the League's own key. Your conversation goes from this tab to
-                    the site's relay and on to the model — the key never enters your browser, and the relay rations
-                    it so everyone gets a turn.
-                  </p>
-                  <label>
-                    Model
-                    <select value={model} onInput={(event) => setModel(event.currentTarget.value)}>
-                      {(relay?.models ?? []).map((slug) => (
-                        <option value={slug}>{slug}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    Your Advisor
-                    <select
-                      value={persona}
-                      onInput={(event) =>
-                        setPersona(event.currentTarget.value === "adversarial" ? "adversarial" : "honest")
-                      }
-                    >
-                      <option value="honest">plays fair — answers as well as it can</option>
-                      <option value="adversarial">cheats — instructed to lie to you; watch the League catch it</option>
-                    </select>
-                  </label>
-                  <button type="button" class="live-begin" onClick={begin}>
-                    Start the session
-                  </button>
-                </>
-              ) : (
-                <>
-                  <p>
-                    This deployment is not carrying the League's key right now, so the Advisor has no model to speak
-                    with. Everything else here runs without one — the crucible's sabotages and the filed records are
-                    one tab away.
-                  </p>
-                  <details class="live-byok">
-                    <summary>I have my own OpenRouter key</summary>
-                    <p>
-                      Your key powers the Advisor, stays in this tab's memory, is sent only to{" "}
-                      <span class="mono">openrouter.ai</span>, and is never stored or logged. Live calls bill your
-                      OpenRouter account (a short session costs well under a cent).
-                    </p>
-                    <label>
-                      OpenRouter API key
-                      <input
-                        type="password"
-                        value={key}
-                        placeholder="sk-or-…"
-                        onInput={(event) => setKey(event.currentTarget.value)}
-                      />
-                    </label>
-                    <label>
-                      Model
-                      <input value={model} onInput={(event) => setModel(event.currentTarget.value)} list="live-models" />
-                      <datalist id="live-models">
-                        <option value={DEFAULT_STRONG_MODEL}>the measured strong model</option>
-                        <option value={DEFAULT_WEAK_MODEL}>the measured weak model</option>
-                      </datalist>
-                    </label>
-                    <label>
-                      Your Advisor
-                      <select
-                        value={persona}
-                        onInput={(event) =>
-                          setPersona(event.currentTarget.value === "adversarial" ? "adversarial" : "honest")
-                        }
-                      >
-                        <option value="honest">plays fair — answers as well as it can</option>
-                        <option value="adversarial">cheats — instructed to lie to you; watch the League catch it</option>
-                      </select>
-                    </label>
-                    <button type="button" class="live-begin" disabled={key.trim() === ""} onClick={begin}>
-                      Start the session
-                    </button>
-                  </details>
-                </>
-              )}
+              {choices}
             </>
           )}
           {trouble !== null && <p class="refusal-banner">{trouble}</p>}
-          <p class="fine">
-            The cheating Advisor is the fun one: it is under orders to slip a lie past the League in every answer. It
-            hasn't managed it yet — not because models are bad at lying, but because the League looks every value up
-            itself. Come watch it try.
-          </p>
         </section>
+        {mode === "own" && (
+          <section class="live-console live-console-alone" aria-label="The crucible">
+            <h4 class="console-heading">The crucible</h4>
+            <Crucible world={sabotageContext()} scope={crucibleScope([], { kind: "demo" }).scope} />
+          </section>
+        )}
       </div>
     );
   }
@@ -866,6 +954,17 @@ export function Live() {
         >
           {machinery ? "Hide the machinery" : "Show the machinery"}
         </button>
+        {!fresh && (
+          <button type="button" class="console-toggle" title="a new session, with the choices open again" onClick={() => window.location.reload()}>
+            Start over
+          </button>
+        )}
+        {fresh && (
+          <details class="live-settings">
+            <summary>Change who pays, the model, the Advisor or the route — open until your first model call</summary>
+            {choices}
+          </details>
+        )}
       </div>
 
       <div class={`live-panes${machinery ? " with-console" : ""}`}>

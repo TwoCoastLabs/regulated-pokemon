@@ -1,9 +1,11 @@
 /**
  * The crucible, with buttons on it. Every card in the first grid is a mutation
- * out of `ALL_MUTATIONS` — the value CI runs, not a re-enactment — let loose in
- * the world the demo's clean conversation establishes, live in this tab. The
- * projection (src/ui/sabotage.ts) decides what a card and a verdict look like;
- * this file only renders and remembers which buttons were pressed.
+ * out of `ALL_MUTATIONS` — the value CI runs, not a re-enactment — let loose
+ * live in this tab, in the world the caller hands it: the scope one of the
+ * visitor's own exchanges certified (src/ui/sabotage.ts, `sabotageContextOf`),
+ * or the demo's clean conversation while no exchange has. The projection
+ * (src/ui/sabotage.ts) decides what a card and a verdict look like; this file
+ * only renders and remembers which buttons were pressed.
  *
  * The second grid is a different kind of attack. Those mutations change the
  * document; these leave the certified markup untouched and change only how the
@@ -16,6 +18,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 
+import type { ManifestContext } from "../../src/kernel/manifest.js";
 import { adaptArtifact } from "../../src/ui/artifact-dom.js";
 import { attestGeometry } from "../../src/ui/browser-affidavit.js";
 import {
@@ -26,6 +29,7 @@ import {
   type GeometrySabotageCard,
 } from "../../src/ui/geometry-sabotage.js";
 import {
+  crucibleFit,
   honestCard,
   runHonest,
   runSabotage,
@@ -34,17 +38,44 @@ import {
   type SabotageOutcome,
 } from "../../src/ui/sabotage.js";
 import type { ViolationView } from "../../src/ui/viewmodel.js";
-import { Stamp } from "./console.js";
 import { browserFactory, browserGeometry, resolveNode } from "./mount.js";
-import { sabotageContext } from "./world.js";
 
 interface HonestOutcome {
   allowed: boolean;
   violations: readonly ViolationView[];
 }
 
-function Card(props: { card: SabotageCard; outcome: SabotageOutcome | undefined; onRun: () => void }) {
-  const { card, outcome, onRun } = props;
+/** A denial as a stamp: the article code, the kernel's message, what it
+ * expected against what it found, and the real-world rule the article
+ * stands in for. */
+export function Stamp(props: { violation: ViolationView }) {
+  const { violation } = props;
+  return (
+    <div class="stamp">
+      <span class="stamp-code mono" title={`${violation.articleTitle} — real-world analog: ${violation.analog}`}>
+        {violation.code}
+      </span>
+      <p class="stamp-message">{violation.message}</p>
+      {(violation.expected !== undefined || violation.actual !== undefined) && (
+        <p class="stamp-diff mono">
+          {violation.expected !== undefined && <span>expected {violation.expected}</span>}
+          {violation.actual !== undefined && <span>actual {violation.actual}</span>}
+        </p>
+      )}
+      <p class="stamp-analog">{violation.analog}</p>
+    </div>
+  );
+}
+
+/** What a thrown error says, for the note under a button that could not
+ * run: the crucible builds every sabotage on its own honest answer, and a
+ * scope in which that answer does not compile has nothing to sabotage. */
+function reason(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function Card(props: { card: SabotageCard; outcome: SabotageOutcome | undefined; refused: string | undefined; onRun: () => void }) {
+  const { card, outcome, refused, onRun } = props;
   return (
     <article class="sabotage-card" aria-label={`Sabotage: ${card.title}`}>
       <header>
@@ -58,6 +89,7 @@ function Card(props: { card: SabotageCard; outcome: SabotageOutcome | undefined;
       <button type="button" class="sabotage-trigger" onClick={onRun}>
         {outcome === undefined ? "Let it loose" : "Run it again"}
       </button>
+      {refused !== undefined && <p class="sabotage-breach">Could not run in this scope: {refused}</p>}
       {outcome !== undefined &&
         (outcome.allowed ? (
           <p class="sabotage-breach">ALLOWED — the gate did not fire. This is a kernel bug; the crucible in CI fails on exactly this.</p>
@@ -160,25 +192,51 @@ function coverElement(target: HTMLElement, container: HTMLElement, style: Readon
  * the geometry back — so the verdict is about the page on the screen, and
  * pressing one button never leaves the last one's damage behind.
  */
-function GeometryCrucible() {
-  const scene = useMemo(() => geometryScene(sabotageContext()), []);
+function GeometryCrucible(props: { world: ManifestContext }) {
+  const { world } = props;
+  // The scene is the crucible's honest answer, planned and painted in this
+  // scope; a scope in which it does not compile is named, not crashed on.
+  const built = useMemo<{ scene: ReturnType<typeof geometryScene> } | { refused: string }>(() => {
+    try {
+      return { scene: geometryScene(world) };
+    } catch (error) {
+      return { refused: reason(error) };
+    }
+  }, [world]);
+  const scene = "scene" in built ? built.scene : undefined;
   const host = useRef<HTMLDivElement>(null);
   const [outcomes, setOutcomes] = useState<Readonly<Record<string, GeometryOutcome>>>({});
   const [cleanRun, setCleanRun] = useState<boolean | undefined>(undefined);
 
   /** Mount the untouched certified page and hand back its root element. */
   const mountClean = (): Element | null => {
-    if (host.current === null) return null;
+    if (host.current === null || scene === undefined) return null;
     const root = adaptArtifact(scene.artifact, browserFactory) as Element;
     host.current.replaceChildren(root);
     return root;
   };
 
-  // Show the clean certified page as soon as the section appears. The scene is
-  // memoised for the tab's lifetime, so this runs once and needs no deps.
+  // Show the clean certified page as soon as the section appears, and again
+  // whenever the scope it is built in changes.
   useEffect(() => {
+    setOutcomes({});
+    setCleanRun(undefined);
     mountClean();
-  }, []);
+  }, [scene]);
+
+  if (scene === undefined) {
+    return (
+      <section class="geometry-crucible" aria-label="The browser-backed affidavit">
+        <div class="crucible-intro">
+          <h2>The paint layer</h2>
+          <p class="sabotage-breach">
+            The paint layer cannot be attacked in this scope: the crucible's honest answer does not compile here, and
+            every paint sabotage is measured against it. {"refused" in built ? built.refused : ""}
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   const press = (card: GeometrySabotageCard) => {
     const root = mountClean();
@@ -270,28 +328,74 @@ function GeometryCrucible() {
   );
 }
 
-export function Crucible() {
+/**
+ * The crucible in one scope. `world` is what every button runs against;
+ * `scope` says in plain words whose scope that is (the visitor's, from a named
+ * exchange, or the demo's), so a verdict is never read without knowing what
+ * trainer it was ruled for.
+ */
+export function Crucible(props: { world: ManifestContext; scope: string }) {
+  const { world, scope } = props;
   const cards = useMemo(() => sabotageCards(), []);
   const honest = useMemo(() => honestCard(), []);
+  const fit = useMemo(() => crucibleFit(world), [world]);
   const [outcomes, setOutcomes] = useState<Readonly<Record<string, SabotageOutcome>>>({});
   const [honestOutcome, setHonestOutcome] = useState<HonestOutcome | undefined>(undefined);
+  // A press that threw: the crucible's own honest answer failed to compile in
+  // this scope, so the mutation built on it never ran. Said under the card.
+  const [refusals, setRefusals] = useState<Readonly<Record<string, string>>>({});
 
-  // Built on first press, not on mount: recomputing the snapshot digest is
-  // work this tab should not owe until a visitor actually runs something.
+  // A verdict is ruled in one scope; when the scope changes, the old verdicts
+  // come down rather than standing beside a new label.
+  useEffect(() => {
+    setOutcomes({});
+    setHonestOutcome(undefined);
+    setRefusals({});
+  }, [world]);
+
   const press = (id: string) => {
-    setOutcomes((current) => ({ ...current, [id]: runSabotage(sabotageContext(), id) }));
+    try {
+      const outcome = runSabotage(world, id);
+      setOutcomes((current) => ({ ...current, [id]: outcome }));
+    } catch (error) {
+      setRefusals((current) => ({ ...current, [id]: reason(error) }));
+    }
+  };
+
+  const pressHonest = () => {
+    try {
+      setHonestOutcome(runHonest(world));
+    } catch (error) {
+      setRefusals((current) => ({ ...current, [honest.id]: reason(error) }));
+    }
   };
 
   return (
     <div class="crucible" aria-label="The crucible">
       <section class="crucible-intro">
+        <p class="crucible-scope">
+          <span class="crucible-scope-label">Running in</span> {scope}
+        </p>
         <p>
           Each card below is a mutation from the crucible — the failure-injection suite CI runs — imported value for
-          value, never re-enacted. Pressing a button loads the certified registry (digest recomputed here, in this
-          tab), plays the clean conversation for its scope grant, applies the sabotage, and shows the kernel's real
-          verdict. Every denial names its Accord article; hover a stamp's code for the real-world rule it stands in
-          for.
+          value, never re-enacted. Pressing a button runs the sabotage against the certified registry (digest
+          recomputed here, in this tab) in the scope named above, and shows the kernel's real verdict. Every denial
+          names its Accord article; hover a stamp's code for the real-world rule it stands in for.
         </p>
+        {!fit.hosts && (
+          <div class="crucible-unfit" role="note">
+            <p>
+              This scope cannot host the crucible's own honest answer — a recommendation, which the pack gates on the
+              badge level — so the sabotages built on that answer, and the untampered control, will refuse before
+              they run. A scope is lazy: it establishes only what its own answer needed. The sabotages on the
+              registry itself still run. For the full set, ask the Advisor for a recommendation and choose that
+              exchange, or run in the demo's scope.
+            </p>
+            {fit.violations.map((violation) => (
+              <Stamp violation={violation} />
+            ))}
+          </div>
+        )}
       </section>
 
       <article class="sabotage-card honest" aria-label={`Control: ${honest.title}`}>
@@ -303,13 +407,10 @@ export function Crucible() {
         </header>
         <p class="sabotage-description">{honest.description}</p>
         <p class="sabotage-promise mono">must be allowed, with nothing denied at all</p>
-        <button
-          type="button"
-          class="sabotage-trigger"
-          onClick={() => setHonestOutcome(runHonest(sabotageContext()))}
-        >
+        <button type="button" class="sabotage-trigger" onClick={pressHonest}>
           {honestOutcome === undefined ? "Run it untampered" : "Run it again"}
         </button>
+        {refusals[honest.id] !== undefined && <p class="sabotage-breach">Could not run in this scope: {refusals[honest.id]}</p>}
         {honestOutcome !== undefined &&
           (honestOutcome.allowed ? (
             <p class="sabotage-allowed">
@@ -328,11 +429,11 @@ export function Crucible() {
 
       <div class="sabotage-grid">
         {cards.map((card) => (
-          <Card card={card} outcome={outcomes[card.id]} onRun={() => press(card.id)} />
+          <Card card={card} outcome={outcomes[card.id]} refused={refusals[card.id]} onRun={() => press(card.id)} />
         ))}
       </div>
 
-      <GeometryCrucible />
+      <GeometryCrucible world={world} />
     </div>
   );
 }

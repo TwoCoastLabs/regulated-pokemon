@@ -53,7 +53,7 @@ body {
   outline-offset: 2px;
 }
 
-.ledger {
+.page {
   max-width: 1480px;
   margin: 0 auto;
   padding: 20px 24px 48px;
@@ -62,10 +62,6 @@ body {
 /* --- masthead ------------------------------------------------------------ */
 
 .masthead {
-  display: grid;
-  grid-template-columns: minmax(260px, 1.2fr) minmax(280px, 1fr) auto;
-  gap: 16px 32px;
-  align-items: start;
   border-bottom: 3px double var(--indigo);
   padding-bottom: 16px;
   margin-bottom: 20px;
@@ -92,105 +88,6 @@ body {
   max-width: 46ch;
 }
 
-.provenance {
-  margin: 4px 0 0;
-  display: grid;
-  gap: 4px;
-  align-content: start;
-}
-
-.provenance div {
-  display: grid;
-  grid-template-columns: 72px 1fr;
-  gap: 8px;
-}
-
-.provenance dt {
-  color: var(--muted);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding-top: 2px;
-}
-
-.provenance dd {
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-
-.counters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: stretch;
-  grid-column: 1 / -1;
-}
-
-.counter {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 8px 14px;
-  display: grid;
-  justify-items: start;
-  min-width: 110px;
-}
-
-.counter-value {
-  font-family: var(--mono);
-  font-size: 22px;
-  font-weight: 600;
-}
-
-.counter.zero .counter-value {
-  color: var(--ledger);
-}
-
-.counter.broken {
-  border-color: var(--seal);
-  background: var(--seal-tint);
-}
-
-.counter.broken .counter-value {
-  color: var(--seal);
-}
-
-.counter-label {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.selfcheck {
-  align-self: center;
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.selfcheck.ok {
-  background: var(--ledger-tint);
-  color: var(--ledger);
-}
-
-.selfcheck.failed {
-  background: var(--seal-tint);
-  color: var(--seal);
-}
-
-.open-record {
-  grid-column: 1 / -1;
-  justify-self: start;
-  color: var(--indigo);
-  font-size: 13px;
-  cursor: pointer;
-  text-decoration: underline;
-}
-
-.open-record input {
-  display: none;
-}
-
 .refusal-banner {
   grid-column: 1 / -1;
   margin: 0;
@@ -202,36 +99,7 @@ body {
   font-size: 13px;
 }
 
-/* --- the three panes ----------------------------------------------------- */
-
-.panes {
-  display: grid;
-  grid-template-columns: 250px minmax(0, 1fr) 370px;
-  gap: 20px;
-  align-items: start;
-}
-
 /* --- picker -------------------------------------------------------------- */
-
-.picker {
-  display: grid;
-  gap: 14px;
-}
-
-.picker-group h2 {
-  margin: 0 0 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
-}
-
-.picker-group ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 4px;
-}
 
 .pick {
   width: 100%;
@@ -256,20 +124,6 @@ body {
 .pick.current {
   border-left-color: var(--indigo);
   background: var(--indigo-tint);
-}
-
-.pick-model {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.pick-rep {
-  color: var(--muted);
-  margin-left: auto;
-  flex-shrink: 0;
 }
 
 .status {
@@ -327,58 +181,12 @@ body {
   gap: 10px;
 }
 
-.bubble {
-  max-width: 60ch;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  justify-self: start;
-}
-
-.bubble p {
-  margin: 0;
-}
-
-.bubble.trainer {
-  justify-self: end;
-  background: var(--indigo);
-  border-color: var(--indigo-deep);
-  color: #fff;
-  border-bottom-right-radius: 2px;
-}
-
-.bubble.advisor {
-  border-bottom-left-radius: 2px;
-}
-
-.bubble.quoted-document,
-.bubble.third-party,
-.bubble.tool {
-  justify-self: center;
-  border-style: dashed;
-  background: transparent;
-  color: var(--muted);
-  font-size: 14px;
-}
-
-.bubble.confirmation {
-  padding: 6px 12px;
-  font-size: 13px;
-}
-
 .channel {
   display: block;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin-bottom: 4px;
-}
-
-.bubble-detail {
-  margin-top: 4px !important;
-  font-size: 13px;
-  opacity: 0.75;
 }
 
 .outcome {
@@ -583,22 +391,6 @@ body {
   color: #6b6552;
 }
 
-.exhibit-strip {
-  margin-top: 12px;
-  padding-top: 8px;
-  border-top: 1px solid var(--certificate-line);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 18px;
-  font-size: 11px;
-  color: var(--muted);
-  overflow-wrap: anywhere;
-}
-
-.exhibit-confirmed {
-  color: var(--ledger);
-}
-
 /* --- console ------------------------------------------------------------- */
 
 .console {
@@ -649,79 +441,11 @@ body {
   padding-bottom: 4px;
 }
 
-.pin-dimension {
-  color: var(--muted);
-}
-
-.ladder {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 8px;
-}
-
-.ladder li {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 2px 10px;
-  padding: 6px 10px;
-  border-radius: 4px;
-  animation: rise 0.3s ease both;
-}
-
-.ladder li:nth-child(2) {
-  animation-delay: 0.08s;
-}
-
-.ladder li:nth-child(3) {
-  animation-delay: 0.16s;
-}
-
-.ladder li:nth-child(4) {
-  animation-delay: 0.24s;
-}
-
 @keyframes rise {
   from {
     opacity: 0;
     transform: translateY(4px);
   }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ladder li {
-    animation: none;
-  }
-}
-
-.ladder li.passed {
-  background: var(--ledger-tint);
-}
-
-.ladder li.denied {
-  background: var(--seal-tint);
-}
-
-.ladder-stage {
-  font-family: var(--mono);
-  font-size: 13px;
-}
-
-.ladder-verdict {
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  justify-self: end;
-}
-
-.passed .ladder-verdict {
-  color: var(--ledger);
-}
-
-.denied .ladder-verdict {
-  color: var(--seal);
 }
 
 .stamp {
@@ -767,92 +491,10 @@ body {
   font-style: normal;
 }
 
-.claims,
-.rosters,
-.units,
-.obligations {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 5px;
-}
-
-.rosters,
-.obligations {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px dotted var(--line);
-}
-
-.claims li {
-  overflow-wrap: anywhere;
-}
-
-.claims.proposed li {
-  color: var(--seal);
-  text-decoration: line-through;
-  text-decoration-thickness: 1px;
-}
-
-.obligations li {
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
-  flex-wrap: wrap;
-}
-
-.owed {
-  font-size: 12px;
-  color: var(--indigo);
-}
-
-.units li {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 13px;
-}
-
-.units li.visible > span:last-child {
-  color: var(--ledger);
-}
-
-.units li.hidden-unit > span:last-child {
-  color: var(--seal);
-  font-weight: 700;
-}
-
 .grant {
   margin: 8px 0 0;
   font-size: 12px;
   overflow-wrap: anywhere;
-}
-
-/* --- the page tabs ------------------------------------------------------- */
-
-.views {
-  margin-top: 12px;
-  display: flex;
-  gap: 8px;
-}
-
-.view-tab {
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 5px 14px;
-  border: 1px solid var(--indigo);
-  border-radius: 3px;
-  background: var(--card);
-  color: var(--indigo);
-  cursor: pointer;
-}
-
-.view-tab.current {
-  background: var(--indigo-deep);
-  border-color: var(--indigo-deep);
-  color: #fff;
 }
 
 /* --- the crucible -------------------------------------------------------- */
@@ -1024,239 +666,6 @@ body {
   margin: 0;
   font-size: 12px;
   color: var(--muted);
-}
-
-/* --- the scoreboard ------------------------------------------------------ */
-
-.scoreboard {
-  display: grid;
-  gap: 18px;
-}
-
-.thesis {
-  background: var(--card);
-  border: 1px solid var(--ledger);
-  border-left: 4px solid var(--ledger);
-  border-radius: 6px;
-  padding: 14px 16px;
-  display: grid;
-  gap: 12px;
-}
-
-.thesis.broken {
-  border-color: var(--seal);
-  background: var(--seal-tint);
-}
-
-.thesis-line {
-  margin: 0;
-  max-width: 100ch;
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.thesis.broken .thesis-line {
-  color: var(--seal);
-  font-weight: 600;
-}
-
-/* The A/B's other side: the governed band is ruled green because its zeros
- * are a guarantee; the raw band is ruled red because its numbers were
- * published. The two never share a rule. */
-.thesis.raw-arm {
-  border-color: var(--seal);
-  border-left-color: var(--seal);
-  background: var(--card);
-}
-
-.counter.harm {
-  border-color: var(--seal);
-  background: var(--seal-tint);
-}
-
-.counter.harm .counter-value {
-  color: var(--seal);
-}
-
-.leg-toggle {
-  display: flex;
-  gap: 8px;
-}
-
-.leg-tab {
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 5px 14px;
-  border: 1px solid var(--indigo);
-  border-radius: 3px;
-  background: var(--card);
-  color: var(--indigo);
-  cursor: pointer;
-}
-
-.leg-tab.current {
-  background: var(--indigo-deep);
-  border-color: var(--indigo-deep);
-  color: #fff;
-}
-
-.leg-tab.raw {
-  border-color: var(--seal);
-  color: var(--seal);
-}
-
-.leg-tab.raw.current {
-  background: var(--seal);
-  color: #fff;
-}
-
-/* Raw clean is an outcome, never a guarantee: quiet, not green. */
-.model-enforcement.unguaranteed {
-  color: var(--muted);
-  background: transparent;
-  border: 1px dashed var(--line);
-  font-weight: 400;
-}
-
-.score-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 14px;
-  align-items: stretch;
-}
-
-.model-card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 14px 16px;
-  display: grid;
-  gap: 10px;
-  align-content: start;
-}
-
-.model-card.failed {
-  border-color: var(--seal);
-  background: var(--seal-tint);
-}
-
-.model-card header {
-  display: flex;
-  gap: 10px;
-  align-items: baseline;
-  flex-wrap: wrap;
-}
-
-.model-card h3 {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
-.role-chip {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 2px 8px;
-  border-radius: 2px;
-  color: #fff;
-  background: var(--indigo);
-}
-
-.role-chip.weak {
-  background: var(--muted);
-}
-
-.role-chip.adversarial {
-  background: var(--seal);
-}
-
-.model-enforcement {
-  margin: 0;
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--ledger);
-  background: var(--ledger-tint);
-  border-radius: 3px;
-  padding: 5px 8px;
-}
-
-.model-enforcement.unattributed {
-  color: var(--seal);
-  background: var(--seal-tint);
-  font-weight: 400;
-}
-
-.model-usefulness {
-  display: flex;
-  gap: 10px;
-  align-items: baseline;
-  flex-wrap: wrap;
-}
-
-.model-rate {
-  font-size: 26px;
-  font-weight: 600;
-}
-
-.model-rate-label {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.model-outcomes {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 14px;
-  font-size: 13px;
-}
-
-.model-outcomes li {
-  display: flex;
-  gap: 6px;
-  align-items: baseline;
-}
-
-.model-denials ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 4px;
-}
-
-.model-denials li {
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
-}
-
-.denial-count {
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.vacuous {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--seal);
-}
-
-.model-meter {
-  margin: 0;
-  border-top: 1px dotted var(--line);
-  padding-top: 8px;
-  font-size: 12px;
-  color: var(--muted);
-  overflow-wrap: anywhere;
 }
 
 /* --- the live session ---------------------------------------------------- */
@@ -1715,22 +1124,6 @@ body {
 
 /* Bring-your-own-key, folded away: the visitor is never asked for a key —
  * the expander is there for the one who arrives holding one. */
-.live-byok {
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 10px 12px;
-}
-
-.live-byok summary {
-  cursor: pointer;
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.live-byok[open] {
-  display: grid;
-  gap: 12px;
-}
 
 .live-begin {
   font: inherit;
@@ -1980,8 +1373,6 @@ body {
   color: var(--model);
 }
 
-
-
 /* The trainer's profile panel (epic #145, R2): typed scope, open until set,
    then one line with a "change". */
 .live-profile {
@@ -2123,13 +1514,9 @@ body {
     grid-template-columns: 1fr;
   }
 
-  .panes {
-    grid-template-columns: 1fr;
-  }
+  
 
-  .picker {
-    grid-auto-flow: row;
-  }
+  
 }
 
 /* --- the dev view (dogfooding: model calls, prompts, latency) ------------- */
@@ -2578,4 +1965,179 @@ body {
 .live-in-progress {
   margin: 0 0 6px;
   font-style: italic;
+}
+
+/* --- the session's choices, folded under the header ---------------------- */
+
+/* On the League's key the session opens on the first prompt; the choices —
+ * who pays, the model, the Advisor, the route — fold to one line until the
+ * first model call, then give way to "Start over". The same form is drawn
+ * open on the setup page when a key has to be typed. */
+.live-settings {
+  /* A full row of the meta line, wrapped under the rest of it. */
+  flex-basis: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  padding: 8px 12px;
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.live-settings > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.live-settings[open] > summary {
+  margin-bottom: 10px;
+}
+
+.live-choices {
+  display: grid;
+  gap: 12px;
+  max-width: 560px;
+}
+
+.live-choices label {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.live-choices input,
+.live-choices select {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 13px;
+  text-transform: none;
+  letter-spacing: normal;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.live-choices p {
+  margin: 0;
+}
+
+/* --- the crucible in the console ---------------------------------------- */
+
+/* A filed record's scope button: pressing it points the crucible below at
+ * that exchange's grant and opens the fold. */
+.console-sabotage {
+  font: inherit;
+  font-size: 11px;
+  padding: 1px 8px;
+  margin-left: 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--indigo);
+  cursor: pointer;
+}
+
+.console-sabotage.current {
+  background: var(--indigo);
+  border-color: var(--indigo);
+  color: var(--paper);
+}
+
+.console-ordinal {
+  color: var(--muted);
+  font-weight: 400;
+  margin-right: 4px;
+}
+
+.console-crucible {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  padding: 8px 12px;
+}
+
+.console-crucible > summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.console-crucible[open] > summary {
+  margin-bottom: 12px;
+}
+
+/* Whose scope the buttons run in — said before any button, in plain words. */
+.crucible-scope {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.crucible-scope-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--indigo);
+  margin-right: 6px;
+}
+
+/* The crucible under the setup page, when no model is available: the
+ * League's checks need no key, so the compliance story never waits on one. */
+.live-console-alone {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* A scope that cannot host the crucible's honest answer: said once, up top,
+ * with the denial the answer would meet, before any button is pressed. */
+.crucible-unfit {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--seal);
+  border-radius: 6px;
+  background: var(--card);
+}
+
+.crucible-unfit p {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.console-scope-choice {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.console-scope-choice select {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: normal;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--paper);
+  color: var(--ink);
 }

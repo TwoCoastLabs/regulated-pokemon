@@ -106,9 +106,9 @@ jobs:
 
       # The web app's emit check, exactly as for the demo: its projections are
       # covered by src/ui/*.test.ts, and this is the only path that bundles
-      # them for a browser and resolves the filed artifact in runs/ for real.
+      # them for a browser with the snapshot, the pack and the crucible.
       # Deterministic and offline — the build's one input is the repository.
-      - name: the run ledger still builds
+      - name: the live page still builds
         run: npm run app:build
 
   # Forward check, deliberately separate from the gate. The kernel is Node

@@ -144,8 +144,11 @@ model evaluation is a separate, explicitly billable harness that measures
 - TypeScript, Node 22, vitest. Kernel first, UI later.
 - Data: vendored snapshot from `PokeAPI/api-data`, pinned by commit, BSD-3
   attribution preserved (`data/` + `scripts/fetch-snapshot`). No artwork.
-- UI (later): single web app — chat pane + live compliance console + sabotage
-  buttons + governed-vs-raw toggle + strong-vs-weak model scoreboard.
+- UI: single web app, one page — the live session's chat pane, the
+  compliance console beside it, and the crucible's sabotage buttons run in
+  the visitor's own scope. The governed-vs-raw numbers and the model
+  comparison are read from the filed bank artifacts (`docs/findings.md`,
+  `npm run harness:results`), not drawn by the app.
 - LLM access (later): OpenRouter; cheap models by design — the weak model is
   a feature, not a compromise.
 

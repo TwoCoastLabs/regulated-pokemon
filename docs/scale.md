@@ -117,7 +117,7 @@ DOM. A partial display that does not disclose its bounds is the pagination
 cousin of the hidden warning.
 
 *Gate:* two mutations — a page presented without its bounds, and a page
-ordered by an unconfirmed basis — each denied by name; the run ledger's
+ordered by an unconfirmed basis — each denied by name; the live page's
 roster views paginate off the same mechanism.
 
 ### S6 — The record economy
