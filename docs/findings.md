@@ -7109,7 +7109,7 @@ second reply was unusable too — an honest pass at 2 calls, no record.
 have certified, twice; re-answering the comparison on "alright"; the
 misspelt move id. *Harness factors:* the three above, closed with tests.
 
-## 38. The ask that names nothing: with the profile set first, "tell me about this game" drew a profile, an action pile and a fact dump — four fixes, and the porch goes from 0 of 5 to 5 of 5
+## 38. The ask that names nothing: with the profile set first, "tell me about this game" drew a profile, an action pile and a fact dump — three driver fixes take the porch from 0 of 5 to 5 of 5, and the prompt sentence is withdrawn at the bank gate
 
 **Goal.** Usefulness on the live page, on the first thing a newcomer
 types. Two dogfood threads on 2026-09-20 (22:05–22:08 UTC, the strong
@@ -7172,12 +7172,16 @@ dex-number comparison for a fainting question.
 **Harness factors, and the fix for each (built 2026-09-21).**
 
 1. *The established-scope prompt carried no lesson guidance*
-   (`src/harness/advisor.ts`, the legacy shape). The contract paragraph
-   both branches share now says it: a question about what something is
-   or how the game works, naming no certified subject, is a lesson —
-   teach the one that squarely answers it and claim nothing else; no
-   fact, comparison or door stands in for it. Structural, one sentence,
-   the same on both models; the blocks prompt already had its own line.
+   (`src/harness/advisor.ts`, the legacy shape). Tried and **withdrawn
+   the same day**: one sentence in the contract paragraph both branches
+   share — a question about what something is or how the game works,
+   naming no certified subject, is a lesson; no fact, comparison or door
+   stands in for it — took the porch to 5 of 5, and the bank gate below
+   refused it: "naming no certified subject" also describes a ranking
+   over a type, a team recommendation, a gym leader, a Poké Ball's price
+   and a plate of pasta, and the strong model taught a lesson for each.
+   The established-scope branch stays as it was; the ask that names
+   nothing is answered by fix 2.
 2. *The carry-back named what was dropped, never what covers the ask.*
    When the row retriever selects no species, move or item and the
    lesson door's alias reading names lessons that cover the words, the
@@ -7209,7 +7213,7 @@ dex-number comparison for a fainting question.
    held-out sets, unchanged (48 of 72 on the second), remain the honest
    reading of the ceiling.
 
-**Porch after the fix, profile set first, both models, about $0.02.**
+**Porch with all four, profile set first, both models, about $0.02.**
 "tell me about this game": strong 5 of 5 answered (4 at 1 call; 1 at 2
 calls, the covering lesson named on the round back), weak 3 of 3 at 1
 call; with `--lesson-door`, strong 3 of 3 (2 at 2 calls). The faints
@@ -7218,10 +7222,85 @@ memory step reads "no earlier ask was near enough to show (best overlap
 0.2, threshold 0.25) (53 about a named subject set aside — this ask names
 none)": the Pikachu profile is no longer the example.
 
+**The bank gate, both models, N=3, the §33 setting — eight legs on
+2026-09-20/21, all on the same day's host.** The first pair (22:56 UTC;
+strong `2026-09-20T22-56-56-208Z`, weak `…-208Z-93761`) ran all four
+fixes. The second (23:42; strong `2026-09-20T23-42-20-661Z`, weak
+`…-660Z`) ran fixes 2–4 with the sentence withdrawn. The third (00:14;
+strong `2026-09-21T00-14-42-154Z`, weak `…-153Z`) ran the narrowed
+precedent rule, beside a **same-hour baseline built from the merge
+before this work** (`57d7ad1`; strong `2026-09-21T00-14-42-155Z`, weak
+`…-155Z-15952`). $2.32 in all. Enforcement: 0 escalations of 3,288
+samples. Provider errors: 15 of 4,229 calls, all one burst on the first
+weak leg, on repetition 2 across fifteen entries, counted apart.
+
+**The host, first.** The strong model's first-call prompts are
+byte-equivalent between §33 and these legs (identical prompt-token counts
+on the same single-call entries: 7837, 3371, 4353, 3324), and the
+same-hour baseline of the old code lands at 310 of 411 where §33 read 360.
+The tracer settles it: "What's the slowest Water type?" with the profile
+set, the same 7015-token prompt, gets a listing-door nomination for a
+list of one from Google 3 of 3 (then a ranking on the third call) and a
+ranking after a scope card from Nebius 3 of 3
+(`OPENROUTER_UPSTREAM="throughput ignore=Novita,Google"`). The
+throughput sort landed on Google all day; §33 at 01:11 UTC was served
+elsewhere. So §33 is not the comparison; the same-hour baseline is, and
+the bank artifact does not record the host per call — the gap is filed
+as a task. Findings §27 said this about speed; it holds for the door the
+model takes.
+
+| strong `qwen/qwen3-235b-a22b-2507` | §33 (other host) | baseline, old code, today | all four fixes | fixes 2–4, broad rule | fixes 2–4, narrowed rule (shipped) |
+|---|---:|---:|---:|---:|---:|
+| pass, of 411 | 360 | **310** | 300 | 319 | **312** |
+| band, of 137 | 116–122 | 102–106 | 98–101 | 105–108 | 102–105 |
+| answerable, of 237 | 224 | 192 | 192 | 199 | 198 |
+| correct-decline, of 174 | 136 | 118 | 108 | 120 | 114 |
+| calls per sample | 1.18 | 1.32 | 1.34 | 1.31 | 1.32 |
+| three-call samples | 13 | 14 | 27 | 9 | 17 |
+
+| weak `mistralai/mistral-nemo` | §33 | baseline, today | all four | 2–4, broad | 2–4, narrowed (shipped) |
+|---|---:|---:|---:|---:|---:|
+| pass, of 411 | 290 | **286** | 271 | 285 | **280** |
+| band, of 137 | 95–98 | 94–98 | 88–92 | 92–98 | 92–95 |
+| answerable, of 237 | 188 | 187 | 185 | 182 | 189 |
+| correct-decline, of 174 | 102 | 99 | 86 | 103 | 91 |
+
+**What the gate says.** (1) *The sentence is withdrawn.* Against the
+same-host leg without it, it cost the strong model 19 of 411 (300 against
+319; answerable 192 against 199, needs-data 47 against 52, advisory 2
+against 6) and the weak model 14 (271 against 285, off-domain 19 of 30
+against 30 of 30): "resolved, but committed no ranking / recommendation /
+membership — prose where a structured answer was expected" on the
+rankings, the team asks and the movesets, "certified an answer to a
+question the snapshot cannot ground" on a gym leader and a Poké Ball's
+price, and the weak model taught a lesson for `off-pasta`, `off-poem`
+and `off-injection`, 3 of 3 each. "Naming no certified subject" describes
+a set, a team, a person, a price and a poem; the discovery branch could
+say it because before scope only a lesson certifies. (2) *Fixes 2–4 read
+as noise against the same-hour baseline*: strong 312 against 310, 15
+entries moved (+12, −10 runs); weak 280 against 286, 16 moved (+7, −13).
+The covering-lesson reason fired on 5 strong runs and 4 weak of 411 — the
+bank's asks name their subjects; the page's opening ask does not. (3)
+*The broad rule was narrowed on mechanism, not on a number*: its first
+cut set aside every precedent naming a subject, so `kind-team-six` and
+`kind-best-team-elite` ran with no example where the baseline held a
+recommendation precedent, and `ans-rec-eligible-generic` lost its
+eligibility example (2 of 3 → 0 of 3). The narrowed rule sets aside only
+the profile bundle (facts and comparisons about a named subject), and
+those three hold the same examples as the baseline again. The broad and
+narrowed legs are 319 and 312, adjacent bands at N=3; the narrowed one
+ships because it keeps the door a team ask needs.
+
+**Porch with the shipped fixes, profile set first, about $0.02.** "tell
+me about this game": strong 5 of 5 answered — 1 at 1 call, 4 at 2 calls,
+each second round carrying `driver/covering-lesson` (two also
+`driver/refused-route`, the profile door nominated for the game and
+refused); weak 3 of 3 at 1 call. The faints thread: strong 3 of 3 (one
+at 2 calls), weak 3 of 3 at 1 call. The prompt untouched, the page's
+case is answered by the round back saying what covers it.
+
 **Held.** The fifth option — teaching a taken pack suggestion's lesson
 with no call at all — is not built: it is lesson 1 of the engineering
 notes applied, but it contradicts the lesson door's recorded decision
-that the door narrows and never chooses, and the four fixes above reach
-5 of 5 without it. The prompt sentence is a change to every entry's
-prompt; the porch is its first reading and the bank gate on both models
-is the next, on the operator's say-so.
+that the door narrows and never chooses, and fixes 2–4 reach 5 of 5
+without it.

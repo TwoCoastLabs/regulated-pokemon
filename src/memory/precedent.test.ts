@@ -267,3 +267,16 @@ describe("the bare-ask rule (findings §38): an ask naming no certified subject 
     expect(unread.setAside).toBeUndefined();
   });
 });
+
+describe("the bare-ask rule sets aside only the profile bundle", () => {
+  const TEAM = precedent("p-team", "build me a team of six", [{ kind: "recommendation", entityId: "pikachu" }, { kind: "recommendation", entityId: "snorlax" }]);
+  const GATE = precedent("p-gate", "can I use a legendary bird", [{ kind: "eligibility", entityId: "zapdos" }]);
+  const PAIR = precedent("p-pair", "which of the two is faster", [{ kind: "comparison", leftId: "pikachu", rightId: "raichu", factId: "base-speed" }]);
+
+  it("keeps a recommendation or an eligibility precedent for a bare ask — those doors are about no one thing the ask must name", () => {
+    const bare = retrievePrecedents(store([TEAM, GATE, SPEED, PAIR]), "build me a team, which is faster and can I use a bird", { snapshotId: SNAPSHOT, entities: new Set() });
+    expect(bare.held.map((held) => held.id).sort()).toEqual(["p-gate", "p-team"]);
+    // The fact and the comparison — the profile bundle — are the two set aside.
+    expect(bare.setAside).toBe(2);
+  });
+});

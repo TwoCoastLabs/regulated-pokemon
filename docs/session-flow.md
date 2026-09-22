@@ -242,13 +242,15 @@ In order:
 5. **The contract.** Answer what was asked and assert nothing unrequested
    (an unrequested claim is one more thing that can be wrong, and one
    wrong claim refuses the whole answer); omit rather than guess; at most
-   twelve claims and four rosters; prefer the most specific claim kind —
-   and, whether or not scope is established, a question about what
-   something is or how the game works that names no certified subject is
-   a lesson, never a fact, comparison or door (added 2026-09-21, findings
-   §38: the discovery branch said so and the established-scope branch did
-   not, and "tell me about this game" with the profile set drew a creature
-   profile, an action pile and a fact dump instead of the lesson).
+   twelve claims and four rosters; prefer the most specific claim kind.
+   (A sentence making a question that names no certified subject a
+   lesson in both scope branches was tried on 2026-09-21 and withdrawn
+   at the bank gate, findings §38: against the same-host leg without it,
+   it cost the strong model 19 of 411 samples and the weak 14, to lessons
+   taught where a ranking, a recommendation or an honest pass was owed.
+   The established-scope branch stays as it is;
+   the ask that names nothing is answered by the carry-back naming the
+   covering lesson instead.)
 6. **The shape**: one JSON object `{rosters, claims}`; the roster
    criteria vocabulary (`has-type`, `learns-move`, `rarity`,
    `stat-at-least`…; `{"all": []}` is the whole certified set).

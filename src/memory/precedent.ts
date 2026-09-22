@@ -399,17 +399,25 @@ export function retrievePrecedents(
   };
 }
 
-/** Whether a precedent's shape is about a named subject — a species, move
- * or item id under any claim — as against a lesson, a rule or a set defined
- * by criteria, which are about no one thing. */
+/** Whether a precedent's shape is the profile bundle — every claim a fact
+ * or a comparison about a named species, move or item, and nothing else.
+ * Only that shape is set aside for a bare ask: it is the door an ask about
+ * no one thing cannot take. A recommendation, an eligibility finding, a
+ * ranking or a membership names a subject too, but is exactly the door
+ * "build me a team" or "can I use a legendary" should be shown — the first
+ * cut of this rule (2026-09-21, findings §38) set those aside as well, and
+ * the team asks ran with no example at all; a lesson, a rule and a set
+ * defined by criteria never named one. */
 function namesSubject(precedent: Precedent): boolean {
-  return precedent.shape.claims.some((claim) => {
-    for (const field of ["entityId", "leftId", "rightId", "itemId"]) {
-      if (typeof claim[field] === "string") return true;
-    }
-    const subject = claim.subject as { entityId?: string } | undefined;
-    return subject?.entityId !== undefined;
-  });
+  const claims = precedent.shape.claims;
+  return (
+    claims.length > 0 &&
+    claims.every((claim) => {
+      if (claim.kind === "fact") return typeof claim.entityId === "string";
+      if (claim.kind === "comparison") return typeof claim.leftId === "string" || typeof claim.rightId === "string";
+      return false;
+    })
+  );
 }
 
 /** The precedents named by id — the fixed arm of the measurement: the same

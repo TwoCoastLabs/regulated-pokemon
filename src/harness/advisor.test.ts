@@ -387,24 +387,3 @@ describe("the lesson classifier's reply, decoded (docs/lesson-door.md)", async (
     expect(decodeLessonClassification("[]", ids)).toBeNull();
   });
 });
-
-describe("the lesson rule is stated whether or not scope is established (findings §38)", () => {
-  it("the legacy prompt says a question about what something is or how the game works, naming no subject, is a lesson — with scope set and without", async () => {
-    const prompts: string[] = [];
-    const provider = new ScriptedProvider("m", (request) => {
-      prompts.push(request.prompt);
-      return JSON.stringify({ rosters: [], claims: [{ kind: "explanation", blockId: "what-is-game" }] });
-    });
-    const transcript = [{ kind: "utterance", at: AT, source: "trainer", text: "tell me about this game" }] as const;
-    await proposeAnswer({ provider, context, scenarioId: "s", transactionId: "txn-1", transcript: [...transcript], retrieval: true, gatedGrammar: true });
-    const { grant: _scoped, ...unscoped } = context;
-    void _scoped;
-    await proposeAnswer({ provider, context: unscoped, scenarioId: "s", transactionId: "txn-1", transcript: [...transcript], retrieval: true, gatedGrammar: true });
-    expect(prompts[0]).toContain("Scope is established:");
-    expect(prompts[1]).toContain("Scope is NOT established yet");
-    for (const prompt of prompts) {
-      expect(prompt).toContain("A question\nabout what something is or how the game works, naming no certified subject,\nis a lesson: teach the one that squarely answers it and claim nothing else");
-      expect(prompt).toContain("Reach for a lesson only when\nno such claim fits a named subject.");
-    }
-  });
-});
