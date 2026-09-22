@@ -7361,3 +7361,128 @@ registry-level buttons live, and offers the demo's scope beside the
 visitor's. The fuller reading — a recommendation asked first, so the
 exchange's grant carries the badge level and the whole grid runs in the
 visitor's scope — is the next dogfood, not this entry's number.
+## 40. The driver's own clarification answers to the door it asked through: a picked option now opens the listing door, a refused question is a step, an in-domain dead end is asked again — and the lesson door, flipped on for the page, is withdrawn at the porch
+
+**Goal.** Usefulness on the live page, on the asks a newcomer makes once
+the first one lands. One dogfood thread on 2026-09-22 (03:08–03:28 UTC,
+the strong model through the League relay, profile set on the panel
+before the first ask): 14 asks, 17 calls, $0.0133, 0 provider errors.
+The question this entry answers: which of its four dead ends were the
+model's, which were the driver's, and what each fix is worth on the
+porch before anything is claimed.
+
+**Enforcement, apart.** 10 records filed, 28 claims certified, both
+stages allowed with 0 violations on all 10 — the kernel never denied,
+because the driver's deterministic guards emptied the two bad drafts
+first: 12 off-ask claims on the opening ask, and 12 whole-catalogue
+membership claims — every one certified-true, the set not the one the
+words picked — on the twelfth. 0 enforcement escalations of 10.
+
+**Usefulness, apart.** 9 of 14 asks answered; 4 abstentions, 1 of them
+the trainer typing `retry` on a dead end and getting the identical dead
+end. Every dead end was a deterministic door reading the trainer's raw
+words and closing on one typo or one filler word — none was a weak
+model.
+
+*The catalogue ask, three ways.* The same intent, worked or failed on
+wording alone:
+
+| ask | listing door | what came back |
+|---|---|---|
+| "what about species of Pokemons?" | offered | the model asked "Pikachu or Eevee?" instead of nominating; the trainer picked Pikachu; 2 Pikachu claims |
+| "Actually I want to know about specifies of all pokemons" | **withheld** | 12 hand-written membership claims, all dropped by the wrong-set guard; abstention |
+| "list of species" | offered | nominated and served: 11 species and the certified count of 151 |
+
+`bareCatalogueAsk` strips `species|types|pokemon` and a stopword list;
+the typo "specifies" and the words "actually i want to know" survive, so
+the ask read as qualified, the door was withheld, and — the same check
+arming the wrong-set guard — the model's hand-composed catalogue lost all
+12 claims. The sharp part: on that exchange the driver had asked which
+was meant, and the trainer picked the option the driver itself wrote,
+**"list species"**, a phrase the same check admits. Both the offer and
+the executor read `openingAskOf(state)`, the exchange's first words; the
+pick never entered the decision.
+
+*"what are all the types of Pokemons?", twice.* The model, with the
+listing route offered, asked a question carrying one option (`{label:
+"all types", fieldId: "none"}`); one option is not a choice and the
+two-option rule dropped it. The trail then read `model/answer` straight
+into `note/abstention` with nothing between — no step said the model had
+asked. The decline was the capability menu ("I answer questions about
+specific Pokémon … try one of those"), which sent the trainer back to
+retype the same words for a second call and the same outcome.
+
+*"tell me about game"*, the opening ask: recovered — 12 claims dropped
+off-ask, carried back once, 1 claim certified — but the §38 covering-
+lesson reason did not fire: `what-is-game`'s form is `tell me about {t}`,
+and with "the" missing the alias read found nothing. Same class.
+
+*Working.* The precedent door scored `what-is-gym-leader` at 1.0 on
+"what does a Gym Leader do?" and `memory/followed` fired 2 of 7 held;
+§38's bare-ask filter set aside 29 named-subject precedents on 8
+exchanges. The pack's supplied next steps were taken 5 of 22; the
+model's own 3 suggestions dropped 3 of 3 as unanswerable.
+
+**Model errors, apart:** a "Pikachu or Eevee?" question on an ask about
+all species, with the listing door open; a one-option question on the
+types ask; a hand-composed whole-catalogue roster with the phrase bound
+to `pikachu` from the exchange before.
+
+**Harness factors, apart:** the door and the guard reading the opening
+words past a recorded pick; a refused question with no step; the
+capability menu on an in-domain ask; an alias form one article away from
+silence.
+
+**Built (this PR).** (1) *The pick opens the door.*
+`listingDoorAsk(world, state)` is the one string the offer, the executor
+and the wrong-set guard read: the opening ask, unless a pick is bound and
+the opening words name neither a certified subject nor a set — then the
+pick's label. Strictly additive: a door that was open cannot be closed by
+it, an ask naming a type keeps its own set, and an ask about one named
+thing stays about it. Pinned: the live words plus a picked "list species"
+→ door offered, served, 5 members, no guard step; "how fast is Pikachu?"
+plus the same pick → withheld, "one named thing". (2) *`clarify/refused`*
+is a registered step (tone refused, mode stood): the model asked, the
+driver would not put it, and the text says why — no typed option, or one.
+(3) *An in-domain dead end is asked again.* `redirect` takes a fourth
+reading, `inDomainAsk` (the retriever found a subject, or a non-boundary
+lesson's declared coverage matches): "That's the kind of thing I cover,
+but I couldn't put together an answer the records certify for it as
+asked. Try it again in one line…" instead of the menu. The menu stands
+for an ask nothing covers (the weather). The clarify branch's null-link
+fall-through is unchanged: a lone null option still teaches the boundary
+lesson, as the 2026-09-06 test pins.
+
+**Withdrawn (this PR): the lesson door as the page's default.** Flipped
+on for the live page and the tracer, then read on the porch on the page's
+own path (`/profile` first, strong model, Nebius), "what are all the
+types of Pokemons?", about $0.01 for the ten runs:
+
+| path | lesson door on | lesson door off |
+|---|---|---|
+| profile set first (the page's) | **0 of 3** — 2 the menu, 1 a question asked | **3 of 3** — `what-is-type` ×2, a species membership ×1 |
+| no profile (discovery) | 1 of 1, the boundary lesson taught | 1 of 1, `what-is-type` |
+
+The mechanism is the door's own design: concept coverage is definitional
+on purpose (lesson-door.md, "as built" 1), so "what are all the types"
+matches nothing, the door offers the boundary lesson alone, and
+`what-is-type` — the lesson the model reaches for when the catalogue is
+whole — is unrepresentable at decode. The bank's lesson wordings match
+the declared coverage; a visitor's need not, and the alias reading's
+recall on held-out phrasings is 48 of 72 (§24). The door stays a lever on
+the page and the tracer; the correction to this entry's own first
+reading is that `what-is-type` does *not* cover the types ask by the
+door's reading, and the door would not have rescued it. (One of the
+three door-off answers was a species listing certified for a question
+about types — certified-true, wrong shape: the bare-catalogue reading
+strips "types" as noise. Recorded, not fixed.)
+
+**Held.** Carrying an in-domain empty reply back to the model with the
+covering lesson named, as §38 does for the off-ask case — one more call
+where the decline now costs none; wants the bank. Reading a pick that
+*names a subject* as closing the listing door on a bare ask — withholding
+is always safe, but it is a second rule with its own measurement. The
+tracer's scope sentence ("I'm playing Red, in Kanto, no badges yet.")
+matching `how-to-play` through "playing" and drawing the new in-domain
+decline: a tracer artifact — the page sets the profile on the panel —
+and the alias form's looseness, not this change's.

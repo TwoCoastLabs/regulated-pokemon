@@ -127,8 +127,11 @@ name defines it in plain words the first time.
   `runs/lesson-door/`. Both doors passed their bank gates on 2026-09-17
   (findings §25): together they take the correct-decline rate from 117 to
   135 of 174 on the strong model and 94 to 117 on the weak; the classifier
-  moved nothing the bank can see. Making the two doors the default is the
-  next change.
+  moved nothing the bank can see. The offered door is the default; the
+  lesson door is not, and the porch says why (findings §40): on the page's
+  own path a phrasing its definitional coverage misses answered 0 of 3
+  with the door on and 3 of 3 off. Lifting the alias reading's recall on
+  held-out phrasings comes before making it the default.
 - **The decline ledger:** `npm run decline-ledger -- <coverage artifact.json ...>`
   reads filed runs and lists every sample on a question that must not receive
   a certified answer which got one anyway, what the record certified instead,

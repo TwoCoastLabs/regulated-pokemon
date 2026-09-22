@@ -209,7 +209,15 @@ S3 with the same two-sided reading to clear.
 4. **Nothing else changes.** Not the prompt wording, the executor, the
    kernel, or the oracle. The lever sits behind `SessionDeps.lessonDoor`
    and a `--lesson-door` flag on the tracer and `coverage:map`, so both
-   arms run in one window.
+   arms run in one window. *Still a lever on 2026-09-22 (findings §40):
+   flipped on for the live page and the tracer in one change and withdrawn
+   in the same change, because on the page's own path (profile set first,
+   strong model) "what are all the types of Pokemons?" — a phrasing the
+   definitional coverage does not match — answered 0 of 3 with the door
+   on and 3 of 3 with it off: the door offered the boundary lesson alone
+   and took `what-is-type` out of the grammar. The alias reading's recall
+   on held-out phrasings (48 of 72, above) is the page's cost, and a page
+   cannot choose its phrasings the way the bank does.*
 
 ## What fails closed, and what does not
 

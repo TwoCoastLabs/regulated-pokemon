@@ -190,6 +190,17 @@ describe("parseTraceArgs keeps the entry point straight-line", () => {
     });
   });
 
+  it("the lesson door stays a lever, off unless asked — the tracer stands in for the live page, which keeps it off (findings §40)", () => {
+    // Flipped on and withdrawn in one change: on the page's own path a
+    // phrasing the coverage misses answered 0 of 3 with the door on, 3 of 3
+    // off — the door narrowed the grammar to the boundary lesson alone.
+    const { parseTraceArgs } = trace;
+    expect(parseTraceArgs(["hi"]).lessonDoor).toBe(false);
+    expect(parseTraceArgs(["--lesson-door", "hi"]).lessonDoor).toBe(true);
+    // The classifier implies the door.
+    expect(parseTraceArgs(["--lesson-classifier", "hi"]).lessonDoor).toBe(true);
+  });
+
   it("clarification defaults on and --no-clarify asks the pack's fixed lines", () => {
     const { parseTraceArgs } = trace;
     expect(parseTraceArgs(["hi"]).clarify).toBe(true);

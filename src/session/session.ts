@@ -1231,7 +1231,7 @@ async function drive(
     state = attempt.state;
     if (attempt.result === "taught" || attempt.result === "closed") return state;
     if (attempt.result === "off-domain")
-      return redirect(state, deps, pointsBack(world, state, lastSaid.text));
+      return redirect(state, deps, pointsBack(world, state, lastSaid.text), inDomainAsk(world, lastSaid.text, deps.lessonMatcher));
     // "needs-scope": gather exactly the dimensions the proposed claims depend
     // on. "unusable" (the model gave no readable shape): fall to a version
     // floor and let the answer-time escalation add anything more the eventual
@@ -1436,7 +1436,7 @@ async function withRouteFallback(
   // still paid a wasted first call nominating the listing on "tell me about
   // the game" and on every "compare" ask (§27) because the live page and
   // the tracer never turned it on.
-  const withheld = deps.offeredDoors !== false ? listingAskCheck(world, openingAskOf(state)) : undefined;
+  const withheld = deps.offeredDoors !== false ? listingAskCheck(world, listingDoorAsk(world, state)) : undefined;
   if (withheld !== undefined) {
     state = ledgerStep(
       { ...state, listingDoor: { ...state.listingDoor, withheld: state.listingDoor.withheld + 1 } },
@@ -1929,24 +1929,40 @@ function looksLikeFreshAsk(registry: CertifiedRegistry, text: string): boolean {
  * only end in an abstention, so the visitor gets an honest pointer at what the
  * Advisor can answer. Like an abstention, it files no record.
  */
-function redirect(state: SessionState, deps: SessionDeps, anaphoric = false): SessionState {
+function redirect(state: SessionState, deps: SessionDeps, anaphoric = false, covered = false): SessionState {
   // A generic capability menu right after answered exchanges about a subject
   // reads as amnesia (found live, porch round twelve: "which evolution is
   // best?" straight after two Eevee answers drew the menu). When the ask
   // pointed back at something and the model still couldn't read it, the
   // honest, actionable line is to ask for the antecedent by name.
+  //
+  // The menu is just as wrong for an ask a reviewed lesson covers: "what are
+  // all the types of Pokemons?" is squarely inside "how the game works", and
+  // being told to try one of those is what sent a dogfooding trainer back to
+  // retype the same words verbatim, for a second call and the same dead end
+  // (2026-09-22, findings §40). Telling them it landed and the answer did not
+  // is both true and actionable. Read from the pack's declared coverage, so a
+  // deployment with no lessons never reaches it.
   const text = anaphoric
     ? "I lost the thread of that one — it seems to point back at something we discussed. Name the " +
       "Pokémon or move you mean and ask again in one line, and I'll answer what the records certify."
-    : "I couldn't line that up with anything I can certify. I answer questions about specific " +
-      "Pokémon, their moves and matchups, League eligibility, and how the game works — try one of those.";
+    : covered
+      ? "That's the kind of thing I cover, but I couldn't put together an answer the records " +
+        "certify for it as asked. Try it again in one line, naming the subject and the one thing " +
+        "about it you want."
+      : "I couldn't line that up with anything I can certify. I answer questions about specific " +
+        "Pokémon, their moves and matchups, League eligibility, and how the game works — try one of those.";
   return note(
     closeExchange(state),
     deps,
     deps.now(),
     text,
     "abstention",
-    ...(anaphoric ? ["discovery declined an anaphoric ask — antecedent re-requested"] : []),
+    ...(anaphoric
+      ? ["discovery declined an anaphoric ask — antecedent re-requested"]
+      : covered
+        ? ["nothing linked on an ask the reviewed lessons cover — re-asked in plainer words, not redirected"]
+        : []),
   );
 }
 
@@ -2503,9 +2519,13 @@ function executeRoute(
     // The ask-only checks, shared with the offer (docs/offered-door.md) so
     // the two cannot drift: a nomination the offer withholds is exactly one
     // the executor would refuse here.
-    const askOnly = listingAskCheck(world, currentAsk);
+    // Read from the same words the offer read — the opening ask, or the
+    // option the trainer picked from the driver's own clarification when the
+    // opening words named no set at all ({@link listingDoorAsk}).
+    const listingAsk = listingDoorAsk(world, state);
+    const askOnly = listingAskCheck(world, listingAsk);
     if (askOnly !== undefined) return refuse(askOnly);
-    const haystack = ` ${currentAsk.toLowerCase()} `;
+    const haystack = ` ${listingAsk.toLowerCase()} `;
     const typesNamed = [...world.registry.typeNames].filter((type) => new RegExp(`\\b${type}\\b`).test(haystack));
     // Subject-correct by construction: the set comes from the ask's own
     // qualifiers, never from the nomination's say-so — a catalogue-subject
@@ -2514,7 +2534,7 @@ function executeRoute(
     // legendaries, not the fire roster of the exchange before (found live,
     // 2026-09-05, the first run without the cue door). The prior roster
     // answers only an ask that qualifies nothing itself.
-    const qualified = qualifiedSet(world, currentAsk);
+    const qualified = qualifiedSet(world, listingAsk);
     const qualifies = typesNamed.length === 1 || (qualified !== undefined && qualified.criteria.all.length > 0);
     const roster = route.subject === "prior-roster" && !qualifies ? (priorRoster(state) ?? qualified) : qualified;
     // An enumeration of one is not an enumeration. Found live (dogfood,
@@ -2575,6 +2595,40 @@ function listingAskCheck(world: SessionWorld, ask: string): string | undefined {
 }
 
 /**
+ * The words the listing door's checks read: the exchange's opening ask, or —
+ * when those words name no set at all and the trainer has since picked an
+ * option from the driver's own clarification — the label they picked.
+ *
+ * Found live (dogfood 2026-09-22, findings §40): "Actually I want to know
+ * about specifies of all pokemons" left "actually i want to know" and the
+ * misspelled "specifies" in the bareness remainder, so the door was withheld;
+ * the driver then asked which was meant and the trainer picked the option the
+ * driver had itself written, "list species" — a phrase the same check admits.
+ * The door stayed shut anyway, the model composed the catalogue by hand, and
+ * the wrong-set guard (which reads these same words) dropped all twelve
+ * certified-true members. Two exchanges later "list of species" was served.
+ *
+ * The leniency is the one lesson 1 allows: a recorded clarifying question is
+ * context, the driver wrote the options, and both the question and the pick
+ * sit in the transcript, so a reviewer can see exactly what widened the ask.
+ * It is strictly additive — a pick is read only where the opening words are
+ * refused, so an ask that already names a type or a subject keeps its own
+ * qualifier and no door that was open can be closed by this.
+ */
+function listingDoorAsk(world: SessionWorld, state: SessionState): string {
+  const opening = openingAskOf(state);
+  const pick = state.bound;
+  if (pick === undefined) return opening;
+  // An ask about one named thing stays about it. No pick turns a subject
+  // into a set — that is lesson 3's trap, a candidate committing on a
+  // dimension nobody checked — so the pick is read only where the opening
+  // words name neither a subject nor a set.
+  if (namesCertifiedSubject(world.registry, opening)) return opening;
+  if (listingAskCheck(world, opening) === undefined) return opening;
+  return listingAskCheck(world, pick.label) === undefined ? pick.label : opening;
+}
+
+/**
  * The lesson door's ask-only check (docs/lesson-door.md): which lessons
  * this ask is about, by the matcher the session runs — the declared aliases
  * by default, or the BM25 index over the lesson text (`deps.lessonMatcher`).
@@ -2603,13 +2657,39 @@ export function lessonAskCheck(world: SessionWorld, ask: string, matcher: Lesson
  * named here still has to be the model's claim, and the kernel pins it.
  */
 export function coveringLessonReason(world: SessionWorld, ask: string): string | undefined {
-  const selection = retrievalSelection(world.registry, ask);
-  if (selection.species.size + selection.moves.size + selection.items.size > 0) return undefined;
-  const boundary = new Set([BOUNDARY_LESSON, ...world.pack.curriculum.filter((lesson) => lesson.covers?.scope === "boundary").map((lesson) => lesson.id)]);
-  const offered = lessonAskCheck(world, ask).offered.filter((id) => !boundary.has(id));
+  if (namesRecordedSubject(world, ask)) return undefined;
+  const offered = coveringLessons(world, ask);
   if (offered.length === 0) return undefined;
   const plural = offered.length > 1;
   return `driver/covering-lesson: the ask names no species, move or item the records certify, and the reviewed lesson${plural ? "s" : ""} ${offered.join(", ")} cover${plural ? "" : "s"} it — teach ${plural ? "one of them" : "it"} as an explanation claim, or reply with no claims at all`;
+}
+
+/** Whether the row retriever's selection found a certified subject in the
+ * ask — a species, a move or an item it names. */
+function namesRecordedSubject(world: SessionWorld, ask: string): boolean {
+  const selection = retrievalSelection(world.registry, ask);
+  return selection.species.size + selection.moves.size + selection.items.size > 0;
+}
+
+/** The reviewed lessons whose declared coverage this ask matches, the
+ * boundary lesson excluded — it is what the records do *not* hold, so it is
+ * the pass, never a sign the ask landed somewhere. */
+function coveringLessons(world: SessionWorld, ask: string, matcher: LessonMatcherId = "alias"): readonly string[] {
+  const boundary = new Set([BOUNDARY_LESSON, ...world.pack.curriculum.filter((lesson) => lesson.covers?.scope === "boundary").map((lesson) => lesson.id)]);
+  return lessonAskCheck(world, ask, matcher).offered.filter((id) => !boundary.has(id));
+}
+
+/**
+ * Whether the ask is about something this deployment holds: a certified
+ * subject the retriever found, or a reviewed lesson whose coverage the words
+ * match. Not a claim that the answer exists — "what are all the types?" is
+ * covered by the what-is-type lesson and the records hold no catalogue of
+ * types — only that the trainer is inside the domain, which is what decides
+ * whether a decline should redirect them elsewhere or ask them to say it
+ * again more plainly (dogfood 2026-09-22, findings §40).
+ */
+function inDomainAsk(world: SessionWorld, ask: string, matcher: LessonMatcherId = "alias"): boolean {
+  return namesRecordedSubject(world, ask) || coveringLessons(world, ask, matcher).length > 0;
 }
 
 /**
@@ -2781,6 +2861,20 @@ function applyLinking(
     // one thing) a pick could bind to. The claims beside it stand as they
     // would have; a reply with nothing beside it is the honest pass, naming
     // the phrase.
+    //
+    // The refusal is a step of its own (dogfood 2026-09-22, findings §40):
+    // "what are all the types of Pokemons?" drew a question carrying the
+    // single option "all types", and the trail read model/answer straight
+    // into note/abstention with nothing between — a dogfooder could not see
+    // that the model had asked at all, let alone why it never reached them.
+    state = ledgerStep(
+      state,
+      deps,
+      deps.now(),
+      "driver",
+      "clarify/refused",
+      `the model asked which was meant by "${decode.clarify.about}", and the question was not put to the trainer: ${options.length === 0 ? "no option it offered was a field or a subject the records know" : "it offered one option, and one option is nothing to pick between"}`,
+    );
     if (decode.draft.claims.length === 0 && decode.route === undefined && decode.asked.every((entry) => entry.fieldId !== null)) {
       return {
         state: note(
@@ -3220,7 +3314,8 @@ async function foreignVersion(state: SessionState, deps: SessionDeps): Promise<S
   }
   const attempt = await teachOrDiscover(state, deps, true);
   if (attempt.result === "taught" || attempt.result === "closed") return attempt.state;
-  if (attempt.result === "off-domain") return redirect(attempt.state, deps);
+  if (attempt.result === "off-domain")
+    return redirect(attempt.state, deps, false, inDomainAsk(deps.world, openingAskOf(attempt.state), deps.lessonMatcher));
   return teachBoundary(attempt.state, deps);
 }
 
@@ -3458,7 +3553,7 @@ async function answer(
   const openingWords = openingAsk?.kind === "utterance" ? openingAsk.text : currentAsk;
   const exchange = { transactionId, establishedAt };
 
-  let groomed = groom(world, withUsage, deps, step, currentAsk, openingWords, exchange, reuse === undefined && deps.feedback === true);
+  let groomed = groom(world, withUsage, deps, step, currentAsk, exchange, reuse === undefined && deps.feedback === true);
   let carriedBack = false;
   if (groomed.kind === "retry") {
     // The driver emptied the reply: one more call with the refusal named,
@@ -3496,7 +3591,7 @@ async function answer(
     carriedBack = true;
     if (again === undefined) {
       // The provider failed on the round: the first reply's honest reading stands.
-      groomed = groom(world, withUsage, deps, step, currentAsk, openingWords, exchange, false);
+      groomed = groom(world, withUsage, deps, step, currentAsk, exchange, false);
     } else {
       withUsage = ledgerStep(
         { ...withUsage, usage: addUsage(withUsage.usage, again.usage), folds: withUsage.folds + (again.decode.ok ? again.decode.folds : 0) },
@@ -3506,7 +3601,7 @@ async function answer(
         "model/retry",
         `${describeReply(again)} — the reply after ${fedBack(groomed.feedback.filter((line) => line.startsWith("driver/")).length)}`,
       );
-      groomed = groom(world, withUsage, deps, again, currentAsk, openingWords, exchange, false);
+      groomed = groom(world, withUsage, deps, again, currentAsk, exchange, false);
     }
     if (groomed.kind === "retry") throw new Error("unreachable: an un-retryable groom asked to retry");
   }
@@ -3606,7 +3701,7 @@ async function answer(
         "model/retry",
         `${describeReply(again)} — the reply after ${fedBack(fedBackCodes.length)}`,
       );
-      const regroomed = groom(world, withUsage, deps, again, currentAsk, openingWords, exchange, false);
+      const regroomed = groom(world, withUsage, deps, again, currentAsk, exchange, false);
       if (regroomed.kind === "settled") return regroomed.state;
       if (regroomed.kind === "retry") throw new Error("unreachable: an un-retryable groom asked to retry");
       withUsage = regroomed.state;
@@ -3652,7 +3747,6 @@ function groom(
   deps: SessionDeps,
   step: AnswerStep,
   ask: string,
-  openingWords: string,
   exchange: { transactionId: string; establishedAt: string },
   /** Whether an emptied reply may be carried back once (see {@link applyLinking}). */
   retryable = false,
@@ -3685,7 +3779,8 @@ function groom(
   if (linked.verdict === "closed" || linked.verdict === "clarifying") return { kind: "settled", state };
   // The anaphoric redirect names what is missing — the antecedent — the way
   // the discovery hop's does; the answer hop had fallen to the generic menu.
-  if (linked.verdict === "off-domain") return { kind: "settled", state: redirect(state, deps, pointsBack(world, state, ask)) };
+  if (linked.verdict === "off-domain")
+    return { kind: "settled", state: redirect(state, deps, pointsBack(world, state, ask), inDomainAsk(world, ask, deps.lessonMatcher)) };
   if (linked.verdict === "boundary") return { kind: "settled", state: teachRecordsBoundary(state, deps, transactionId, establishedAt) };
   const decode = { ...step.decode, draft: { ...step.decode.draft, claims: linked.claims } };
 
@@ -3720,7 +3815,12 @@ function groom(
   // alone, so the route never softens a denial the gate has earned.
   const routed = eligibilityClaims(world, ask, decoded.claims);
   const directed = correctMatchupDirections(world, ask, decoded.claims);
-  const rightSet = dropWrongSetClaims(world, openingWords, { claims: directed.claims, rosters: decoded.rosters });
+  // The guard reads the door's own words, not the opening ones: a trainer
+  // who picked "list species" from the driver's clarification has asked for
+  // the catalogue as plainly as one who typed it, and a guard that disagreed
+  // with the door would drop exactly what the door had just composed
+  // (dogfood 2026-09-22, findings §40).
+  const rightSet = dropWrongSetClaims(world, listingDoorAsk(world, state), { claims: directed.claims, rosters: decoded.rosters });
   if (directed.flips > 0) state = ledgerStep(state, deps, deps.now(), "driver", "guard/direction-flipped", `${directed.flips} matchup direction(s) held to the ask's word order`, directed.flips);
   if (rightSet.claims.length < directed.claims.length) {
     state = tallyListing(state, "guardDropped");

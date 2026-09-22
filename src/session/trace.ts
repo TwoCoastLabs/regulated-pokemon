@@ -97,8 +97,10 @@ export interface TraceArgs {
    * `--offered-doors` turns it on. */
   offeredDoors: boolean;
   /** The lesson door (docs/lesson-door.md): the explanation route carries
-   * only the lessons the ask is about, plus the boundary. Off by default;
-   * `--lesson-door` turns it on. */
+   * only the lessons the ask is about, plus the boundary. Off by default,
+   * as on the live page the tracer stands in for (findings §40: on the
+   * page's path a phrasing the coverage misses answered 0 of 3 with the door
+   * on, 3 of 3 off); `--lesson-door` turns it on. */
   lessonDoor: boolean;
   /** The lesson door's classifier fallback (docs/lesson-door.md): one model
    * call when the matcher offers the boundary alone. `--lesson-classifier`. */
