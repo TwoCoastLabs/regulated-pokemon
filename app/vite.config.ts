@@ -1,7 +1,8 @@
-// The web app's build. The app is chrome around the kernel's record types:
-// it imports the pure projections in src/ui/ and type-only contracts from the
-// kernel, and bundles the filed artifact in runs/ as its default input — so a
-// production build is a static, offline replay of a published run.
+// The web app's build. The app is chrome around the kernel: it imports the
+// pure projections in src/ui/, the session driver and the kernel itself, and
+// bundles the certified world (snapshot, pack, precedents) — so a production
+// build runs the League's checks and the crucible offline, and needs a model
+// only when a visitor sits down with the Advisor.
 import { appendFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { defineConfig, type Plugin } from "vite";
@@ -46,7 +47,7 @@ function devTraceSink(): Plugin {
 export default defineConfig({
   plugins: [devTraceSink()],
   root: import.meta.dirname,
-  // The app reaches up for src/ (pure modules) and runs/ (the filed record).
+  // The app reaches up for src/ (the kernel and its projections) and data/.
   // The /api proxy is dev-only convenience: `npm run relay` on :8080 beside
   // `app:dev` gives the League's-key mode with hot reload; without a relay
   // running the probe fails and the page falls back to bring-your-own-key.

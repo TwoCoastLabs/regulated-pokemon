@@ -409,10 +409,10 @@ is covered by offline tests with scripted models:
 - the step trail (`src/ui/trail.ts`, issue #158): the ledger and the
   record projected into one laned sequence per exchange, drawn in the live
   page's side pane — the dev view (each model call's prompt and reply under
-  the step it preceded) and the compliance console, on tabs — and beside
-  the run ledger's console — reconstructed from the record alone, and
-  labelled so, for runs filed before the ledger existed; every filed run
-  in `runs/` renders without a missing step
+  the step it preceded) and the compliance console, on tabs — and, for a
+  filed run (`trailsOfRun`), reconstructed from the record alone and
+  labelled so when the run predates the ledger; every filed run in `runs/`
+  renders without a missing step
 - a round sent back (the nomination the driver refused and re-asked with
   the door withdrawn, the denial the kernel carried back, the reply the
   driver emptied): three steps on three lanes — the reply, the refusal in

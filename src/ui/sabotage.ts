@@ -15,9 +15,12 @@
  */
 
 import { expectedDenial, type Mutation } from "../crucible/harness.js";
+import { honestAnswer } from "../crucible/phase2.js";
 import { ALL_CONTROLS, ALL_MUTATIONS, worldOf } from "../crucible/phases.js";
+import { AccordError } from "../kernel/violation.js";
 import { ACCORD_ARTICLES, article, type ArticleId } from "../kernel/accord.js";
 import type { ManifestContext } from "../kernel/manifest.js";
+import type { Transaction } from "../kernel/transaction.js";
 import { violationView, type ViolationView } from "./viewmodel.js";
 
 /**
@@ -103,6 +106,49 @@ export function sabotageCards(menu: readonly { article: ArticleId; mutation: str
       expectedDenial: expectedDenial(mutation),
     };
   });
+}
+
+/**
+ * The world a filed exchange was certified in, as the crucible takes it: the
+ * registry and pack the session ran against, the scope that exchange
+ * established, its locale, and the moment it committed — so a mutation
+ * pressed on the live page runs against the visitor's own scope, not the
+ * demo's canned one, and a validity window is checked at the moment the
+ * record says the answer was made. A record that established no scope is
+ * refused: the mutations need a grant to sabotage against.
+ */
+export function sabotageContextOf(
+  world: Pick<ManifestContext, "registry" | "pack">,
+  record: Transaction,
+): ManifestContext {
+  if (record.grant === undefined) {
+    throw new Error(`record ${record.id} established no scope (${record.outcome.status}), so there is nothing to sabotage against`);
+  }
+  if (record.snapshotId !== world.registry.snapshot.id || record.packId !== world.pack.id) {
+    throw new Error(`record ${record.id} was certified against ${record.snapshotId}/${record.packId}, not this world`);
+  }
+  return { registry: world.registry, pack: world.pack, grant: record.grant, locale: record.locale, at: record.committedAt };
+}
+
+/**
+ * Whether a scope can host the crucible at all. Every answer-level sabotage
+ * is built on the crucible's own honest answer — a recommendation, which the
+ * pack gates on the badge level — and a grant is lazy: it establishes only
+ * what its own answer required (IA-1's material half), so a filed exchange
+ * about speed may carry no badge level at all. Said once, before any button,
+ * naming the denial the honest answer would meet; the registry-level
+ * sabotages run regardless, and the page says which.
+ */
+export type CrucibleFit = { hosts: true } | { hosts: false; violations: readonly ViolationView[] };
+
+export function crucibleFit(world: ManifestContext): CrucibleFit {
+  try {
+    honestAnswer(world);
+    return { hosts: true };
+  } catch (error) {
+    if (error instanceof AccordError) return { hosts: false, violations: error.violations.map(violationView) };
+    throw error;
+  }
 }
 
 /** Press one button: run the real mutation and project the kernel's verdict. */

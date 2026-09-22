@@ -377,11 +377,14 @@ examples of how to answer, with no values in them", and for the
 follow/depart step, whether the answer took an example's shape. The console
 never shows a score.
 
-**What the run ledger shows.** A replayed artifact draws the same door and
-the same panel from the per-run precedent ids and the artifact's store
-digest, so a filed leg can be read precedent by precedent after the fact;
-the scoreboard adds one column per arm, *door engaged* (held / empty / off)
-as count and percentage, beside the stable core.
+**What a filed leg carries.** Each run in a coverage artifact records the
+precedent ids its calls held and the artifact records the store's digest, so
+a filed leg can be read precedent by precedent after the fact, and the
+results page reports *door engaged* (held / empty / off) per arm as count and
+percentage, beside the stable core. (Until 2026-09-22 the app's run-ledger
+and scoreboard pages drew these from the filed record; both pages were
+retired for showing a record the project had moved past — see the live
+session's console for the door and panel on a live exchange.)
 
 ## Doctrine, checked line by line
 

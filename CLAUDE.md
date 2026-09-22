@@ -146,26 +146,29 @@ name defines it in plain words the first time.
   artifact, so a published number is always traceable to the run that produced
   it, never hand-transcribed.
 - **Web app:** `npm run app:dev` serves the Phase 8 UI; `app:build` bundles
-  it (CI does, so it cannot rot). Four pages, split by where truth comes
-  from. The **run ledger** replays the filed artifact in `runs/` as pages —
-  chat, certified page, compliance console — and never recomputes: everything
-  on that screen is read from the record. The **scoreboard** lays that same
-  record's models side by side, with a governed-vs-raw toggle when the record
-  carries the control arm — the A/B as two legs that never share a band. The
-  **crucible** page is the opposite on purpose: it runs the real kernel live
-  in the tab — the same mutation values CI runs, against the bundled snapshot
-  and pack — so a visitor can press a sabotage and watch its named denial.
-  The **live session** page puts a real model behind that same kernel with
-  the visitor as the trainer (`src/session/`, driven bring-your-own-key: the
-  visitor's OpenRouter key stays in tab memory, goes only to openrouter.ai,
-  and bills them); every settled exchange files a replayable `Transaction`.
+  it (CI does, so it cannot rot). One page, the **live session**: a real
+  model behind the kernel with the visitor as the trainer (`src/session/`;
+  on the League's relayed key the session opens on the first prompt and the
+  choices — who pays, model, Advisor, route — fold under the header until
+  the first model call; bring-your-own-key keeps the visitor's OpenRouter
+  key in tab memory, sends it only to openrouter.ai, and bills them); every
+  settled exchange files a replayable `Transaction`. The **crucible** lives
+  in the compliance console: the same mutation values CI runs, against the
+  bundled snapshot and pack, run in the scope one of the visitor's own
+  filed exchanges certified (`sabotageContextOf`, chosen per record; the
+  demo's clean scope until one has), so a visitor presses a sabotage and
+  watches its named denial land for the trainer at the keyboard. The
+  earlier run-ledger and scoreboard pages, which replayed the filed
+  artifact in `runs/`, were retired on 2026-09-22: the record they showed
+  predated the coverage bank, and the bank's numbers are read from its
+  artifacts (`harness:results`, findings) rather than drawn by the app.
   Beside the chat, a side pane with two tabs — the **dev view** (default:
   the step trail with each model call disclosed under its step, the recall
   doors, the trace export) and the **compliance console** (the same trail in
   the League's words, plus the filed records) — draws the **step trail**
   (`src/ui/trail.ts`): every move of every exchange on its lane — trainer,
   driver, kernel, model — read from the driver's ledger and the record,
-  never narrated; the run ledger draws the same trail beside its console. A
+  never narrated. A
   round sent back to the model (a nomination the driver refused, a denial
   the kernel carried back) is its own steps on the trail, in plain words,
   saying whether the model was told; the chat says so under the answer

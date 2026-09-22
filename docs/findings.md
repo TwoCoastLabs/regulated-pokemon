@@ -7304,3 +7304,60 @@ with no call at all — is not built: it is lesson 1 of the engineering
 notes applied, but it contradicts the lesson door's recorded decision
 that the door narrows and never chooses, and fixes 2–4 reach 5 of 5
 without it.
+
+## 39. The page is one page: the run ledger and scoreboard retired, the crucible run in the visitor's own scope, and the first lazy grant it met
+
+**Goal.** Both north stars, as a visitor meets them. The app had four
+tabs and two of them showed a record the project had moved past: the
+run ledger and the scoreboard replayed the newest file in `runs/`, filed
+2026-08-12 — 72 runs of the pre-#94 scripted harness across three
+models, 41 days old on 2026-09-22 — and reported resolution rate and
+turns to answer, while the north stars are the governance tax and the
+correct-decline rate, both of which live only in the coverage bank
+(`runs/coverage/`, findings §24–§38), which the app could not read. The
+question this entry answers: what a visitor should see instead, and
+what the first live reading of the replacement found.
+
+**What changed.** The two tabs were removed rather than re-pointed (the
+dev view already shows every call and every record of a live session;
+the bank's numbers stay where they are read from the artifacts). The
+crucible moved from its own tab into the compliance console, and its
+world is no longer the demo's canned grant: `sabotageContextOf` reads a
+filed exchange's registry, pack, grant, locale and commit moment into
+the `ManifestContext` the mutations take, a button on each filed record
+points the buttons at that exchange's scope, and a chooser in the fold
+takes any granted exchange or the demo's scope. The landing changed
+too: on the League's relayed key the session opens on the first prompt,
+and the four choices (who pays, model, Advisor, route) fold to one line
+under the header until the first model call. Footprint: 18 files, 677
+lines added and 1,692 removed, of which 96 stylesheet rules belonged to
+the retired pages.
+
+**First reading, 2026-09-22, two sessions on the strong model through
+the League relay (Nebius, Alibaba, Google by route), about $0.007.**
+Each session the same ask ("I'm playing Red and Blue … 8 badges. Which
+of the Electric ones is the quickest?"): a comparison-basis card, then
+a certified answer at 4 model calls — 46 s and $0.0038 the first, 25 s
+and $0.0036 the second, the League's checks under a second in both.
+
+The crucible in that exchange's scope: the grant the record carries is
+`version=red-blue, comparisonBasis=base-speed` — the lazy half of IA-1,
+which establishes only what the answer required — and the crucible's
+own honest answer is a recommendation, which the pack gates on the
+badge level. So the untampered control and every answer-level sabotage
+refused before running, under `IA-1/scope-dimension-missing` ("this
+answer's claims require badgeLevel and the grant does not establish
+it"), while the registry-level sabotage pressed (IA-3, MissingNo)
+refused as declared. In the demo's scope every button pressed refused
+as declared (IA-1 and IA-3 pressed) and the control was allowed.
+
+**What it taught.** A filed grant is narrower than a crucible needs
+more often than not: a question about speed never establishes a badge
+level, and the crucible cannot be handed a fuller scope than the record
+certified without minting a grant outside the kernel. The page now says
+so once, before any button (`crucibleFit`: the honest answer compiled
+in that scope, the denial named when it does not), keeps the
+registry-level buttons live, and offers the demo's scope beside the
+visitor's. The fuller reading — a recommendation asked first, so the
+exchange's grant carries the badge level and the whole grid runs in the
+visitor's scope — is the next dogfood, not this entry's number.
