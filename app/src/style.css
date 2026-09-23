@@ -61,31 +61,32 @@ body {
 
 /* --- masthead ------------------------------------------------------------ */
 
+/* One row: the name on the left, the lead beside it at reading width, the
+   rule under both. Before this the lead wrapped to four short lines under a
+   page-wide title and the block took a quarter of a 900px window before the
+   chat began (reviewed 2026-09-23). */
 .masthead {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 60ch);
+  gap: 6px 32px;
+  align-items: end;
   border-bottom: 3px double var(--indigo);
-  padding-bottom: 16px;
-  margin-bottom: 20px;
-}
-
-.eyebrow {
-  margin: 0;
-  font-size: 12px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--indigo);
-  font-weight: 600;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .masthead h1 {
-  margin: 2px 0 6px;
-  font-size: 30px;
+  margin: 0;
+  font-size: 26px;
   letter-spacing: -0.01em;
+  line-height: 1.2;
 }
 
 .lead {
   margin: 0;
   color: var(--muted);
-  max-width: 46ch;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 .refusal-banner {

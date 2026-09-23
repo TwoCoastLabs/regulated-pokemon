@@ -895,8 +895,6 @@ export function Live() {
       <div class="live-meta">
         <span class="mono">{setup.model}</span>
         <span class="live-persona">{setup.persona === "honest" ? "plays fair" : "cheats — watch the League"}</span>
-        <span title="which of the model's hosts the calls are routed to — an operator setting; the same model runs at very different speeds by host">routed {setup.upstream}</span>
-        <span title="calls go through this site's relay; the key never enters your browser">on the League's key</span>
         <span>
           {cost.calls} model call{cost.calls === 1 ? "" : "s"} · ${cost.costUsd.toFixed(4)} so far
         </span>
@@ -917,8 +915,11 @@ export function Live() {
         )}
         {fresh && (
           <details class="live-settings">
-            <summary>Change the model, the Advisor or the route — open until your first model call</summary>
+            <summary>Change the model, the Advisor or the route</summary>
             {choices}
+            <p class="fine" title="which of the model's hosts the calls are routed to — an operator setting; the same model runs at very different speeds by host">
+              Now routed {setup.upstream}.
+            </p>
           </details>
         )}
       </div>
@@ -927,9 +928,8 @@ export function Live() {
         <div class="live-chat" ref={transcript}>
           {items.length === 0 && inFlight === null && (
             <p class="live-hint">
-              Set your game below — version, region, badges — then ask away; the League certifies answers for that
-              game and no other. You can also just say it: “I'm playing Red and Blue, travelling around the Kanto
-              region, and I have 8 badges. Which of the Electric ones is the quickest?”
+              Try: “I'm playing Red and Blue, travelling around the Kanto region, and I have 8 badges. Which of the
+              Electric ones is the quickest?” Or set your game below, then ask.
             </p>
           )}
           {items.map((item, index) => {
@@ -1198,8 +1198,8 @@ export function Live() {
           )}
         </p>
         <p class="fine">
-          Version, region and badges are scope: they decide what the League may tell you. Set them here and they go
-          on the record as your own setting — typed, checked against the approved list, and never a guess.
+          Your version and badges decide what the League may tell you. Set them here and they go on the record as
+          your own setting, never a guess.
         </p>
         <div class="live-profile-fields">
           <label>
