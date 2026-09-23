@@ -1,6 +1,6 @@
 # Regulated Pokémon
 
-[![ci](https://github.com/smartnose/regulated-pokemon/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/smartnose/regulated-pokemon/actions/workflows/ci.yml)
+[![ci](https://github.com/TwoCoastLabs/regulated-pokemon/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/TwoCoastLabs/regulated-pokemon/actions/workflows/ci.yml)
 
 **What if a Pokémon assistant were regulated like a bank?**
 
@@ -73,7 +73,9 @@ whole point, and it comes from engineering, not from model capability.
 
 ## Status
 
-Private, work in progress.
+Work in progress. Every claim the project makes is in the findings log with
+the run that measured it ([docs/findings.md](docs/findings.md)); a claim
+without a number there is not yet a claim.
 
 - [x] Repo scaffold, the Indigo Accord (draft), architecture note
 - [x] Mini-kernel: typed contracts + commit gate

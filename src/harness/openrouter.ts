@@ -372,7 +372,7 @@ export class OpenRouterProvider implements ModelProvider {
           // Header values are ByteString: ASCII only, so no em dash here — a
           // character > 255 makes `fetch` reject every call at the transport
           // layer, which reads downstream as a total provider outage.
-          "http-referer": "https://github.com/smartnose/regulated-pokemon",
+          "http-referer": "https://github.com/TwoCoastLabs/regulated-pokemon",
           "x-title": "Regulated Pokemon - Indigo Accord harness",
         },
         body,

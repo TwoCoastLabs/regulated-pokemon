@@ -644,4 +644,16 @@ describe("the precedent door rides as a lever (docs/precedent.md)", () => {
     expect(refused.lines[0]).toContain("precedent-pack-mismatch");
     expect(broken.written.size).toBe(0);
   });
+
+  it("records the default store by its place in the repository, never by the machine's path", async () => {
+    const opts = options(["--live", "--ids", "ans-fact-speed-pikachu", "--precedents", "nearest"], {
+      makeProvider: scripted(pikachuSpeed()),
+      fs: memoryFs(storeJson),
+    });
+    const result = await runCoverage(opts);
+    expect(result.exitCode).toBe(0);
+    const { artifact } = filedArtifact(opts.written);
+    expect(artifact.precedents?.store).toMatch(/^data\/precedents\/[^/]+\.v1\.json$/);
+    expect(artifact.precedents?.store).not.toContain(process.cwd());
+  });
 });
