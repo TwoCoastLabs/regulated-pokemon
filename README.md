@@ -4,6 +4,11 @@
 
 **What if a Pokémon assistant were regulated like a bank?**
 
+**Try it: [indigo-accord.fly.dev](https://indigo-accord.fly.dev)** — a real
+model as the Advisor, the League's checks running in your tab, nothing to
+sign up for and no key to bring. The first request after a quiet spell
+takes a few seconds while the machine wakes.
+
 This project is a reference architecture and falsification harness for a
 question that matters far beyond games: how do you make invalid commitments
 unreachable in a customer-facing or mission-critical AI agent, rather than
