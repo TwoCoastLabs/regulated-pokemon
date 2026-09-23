@@ -696,18 +696,32 @@ body {
 }
 
 /* With the machinery shown, the page widens to seat both registers, and
-   the two become one viewport-tall frame: the chat column on the left
-   (transcript scrolling, the game panel and the composer pinned under it),
-   the machinery on the right spanning the same height. Before this the
-   side pane alone was viewport-tall while the chat grew from a short card,
-   so the two never lined up (dogfood, 2026-09-20). `display: contents`
-   lifts the two panes into this grid so the composer, which sits after
-   the panes in the markup, can share the chat's column. */
+   the two become one frame filling the viewport under the masthead: the
+   chat column on the left (transcript scrolling, the game panel and the
+   composer pinned under it), the machinery on the right spanning the same
+   height. Before this the side pane alone was viewport-tall while the chat
+   grew from a short card, so the two never lined up (dogfood, 2026-09-20).
+   `display: contents` lifts the two panes into this grid so the composer,
+   which sits after the panes in the markup, can share the chat's column.
+   The frame's height is what the viewport leaves under the masthead, not a
+   viewport's worth: a frame sized to 100vh and placed under a 200px
+   masthead put the composer 200px below the fold on every first open, and
+   the visitor had to scroll to find where to type (reported 2026-09-23,
+   the hosted page). So the page itself becomes a viewport-tall grid —
+   masthead, then the frame — and nothing scrolls but the transcript and
+   the side pane. */
+.page:has(.live-panes.with-console) {
+  box-sizing: border-box;
+  height: 100vh;
+  padding-bottom: 12px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
 .live:has(.live-panes.with-console) {
   max-width: 1480px;
-  position: sticky;
-  top: 12px;
-  height: calc(100vh - 24px);
+  width: 100%;
+  min-height: 0;
   grid-template-columns: minmax(420px, 1fr) minmax(380px, 1fr);
   grid-template-rows: auto minmax(0, 1fr) auto auto;
   grid-template-areas:
