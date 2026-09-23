@@ -18,7 +18,20 @@
  *  - **Abuse is bounded twice.** A per-IP rate limit answers the fast
  *    visitor; a daily spend cap *and* a daily call cap answer everyone at
  *    once — the call cap is the backstop for the calls a provider declines
- *    to price, which would otherwise walk straight past a dollar cap.
+ *    to price, which would otherwise walk straight past a dollar cap. A
+ *    call in flight is already counted: it holds a reservation against
+ *    the spend cap until its price is known, so a burst arriving together
+ *    cannot all pass the check at once and settle over it.
+ *  - **The caps are not the ceiling.** They live in memory and start over
+ *    on every restart, and the hosted machine stops when idle, so a day's
+ *    cap is really a per-wake cap. The hard ceiling is the key itself: the
+ *    relay is served by a dedicated provider key carrying its own credit
+ *    limit, which the provider enforces before any call is priced. The
+ *    caps here keep one wake cheap; the key keeps the month bounded.
+ *  - **It says what it did.** One line per refusal, with the reason and
+ *    the request's origin, and one line when the UTC day rolls over with
+ *    the day's tallies — enough to read abuse from the log instead of
+ *    guessing at it, never a body and never the key.
  *  - **The key never leaves.** It is added at the upstream hop and scrubbed
  *    from every body that comes back, exactly as the driver scrubs its own.
  *  - **Refusals are plain.** A visitor who hits a limit is told what
@@ -42,8 +55,17 @@ export interface RelayConfig {
   perIpWindowMs: number;
   dailySpendCapUsd: number;
   dailyCallCap: number;
-  /** Ceiling on the summed message content of one request, in characters. */
+  /** Ceiling on the summed message content of one request, in characters.
+   * The default is a small multiple of the largest prompt the page has
+   * sent: 14,457 characters over 353 model calls in the dev trace of
+   * 2026-09-04 to 2026-09-23, so 60,000 leaves room for a longer turn
+   * and none for a pasted novel. */
   maxContentChars: number;
+  /** What a call in flight is assumed to cost until its price comes back,
+   * held against the spend cap so concurrent calls cannot all pass the
+   * check together. The default is about three times the most expensive
+   * page call measured ($0.0038 over 352 priced calls, same trace). */
+  callReserveUsd: number;
   upstreamUrl: string;
   /** The operator's routing preference among a model's hosts
    * (OPENROUTER_UPSTREAM): its sort applies when the page sends none, and
@@ -58,7 +80,8 @@ export const RELAY_DEFAULTS = {
   perIpWindowMs: 5 * 60_000,
   dailySpendCapUsd: 1,
   dailyCallCap: 2_000,
-  maxContentChars: 200_000,
+  maxContentChars: 60_000,
+  callReserveUsd: 0.01,
   upstreamUrl: OPENROUTER_URL,
 } as const;
 
@@ -82,6 +105,7 @@ export function relayConfigFromEnv(env: Record<string, string | undefined>, defa
     dailySpendCapUsd: number("RELAY_DAILY_SPEND_CAP_USD", RELAY_DEFAULTS.dailySpendCapUsd),
     dailyCallCap: number("RELAY_DAILY_CALL_CAP", RELAY_DEFAULTS.dailyCallCap),
     maxContentChars: number("RELAY_MAX_CONTENT_CHARS", RELAY_DEFAULTS.maxContentChars),
+    callReserveUsd: number("RELAY_CALL_RESERVE_USD", RELAY_DEFAULTS.callReserveUsd),
     upstreamUrl: env.RELAY_UPSTREAM_URL ?? RELAY_DEFAULTS.upstreamUrl,
     ...(upstream === undefined ? {} : { upstream }),
   };
@@ -93,6 +117,9 @@ export interface RelayDeps {
   /** Epoch milliseconds, injected: rate windows and daily caps must replay
    * in tests without waiting for tomorrow. */
   now: () => number;
+  /** One line per refusal and per UTC day rollover; the operator's log.
+   * Absent means silent, which is what the tests want by default. */
+  log?: (line: string) => void;
 }
 
 export interface RelayRequest {
@@ -100,6 +127,10 @@ export interface RelayRequest {
   path: string;
   ip: string;
   body: string;
+  /** The browser's stated origin (the Origin or Referer header), carried
+   * for the log only: whether the door needs an origin check is decided
+   * from what the log shows, not assumed. */
+  origin?: string;
 }
 
 export interface RelayResponse {
@@ -214,6 +245,9 @@ function dayOf(epochMs: number): string {
   return new Date(epochMs).toISOString().slice(0, 10);
 }
 
+/** The reasons a request can be turned away, as the log names them. */
+type RefusalReason = "no-key" | "budget" | "rate" | "body" | "unreachable";
+
 export type RelayHandler = (request: RelayRequest) => Promise<RelayResponse>;
 
 /**
@@ -223,46 +257,79 @@ export type RelayHandler = (request: RelayRequest) => Promise<RelayResponse>;
  */
 export function createRelay(deps: RelayDeps): RelayHandler {
   const { config } = deps;
+  const log = deps.log ?? (() => undefined);
   const hitsByIp = new Map<string, number[]>();
   let day = "";
   let spentUsd = 0;
+  /** Calls admitted today, in flight or settled: counted at the door, so
+   * a burst cannot pass the call cap together. */
   let calls = 0;
+  /** Calls admitted and not yet priced; each holds `callReserveUsd`. */
+  let inFlight = 0;
+  const refusals = new Map<RefusalReason, number>();
+
+  const caps = {
+    dailySpendCapUsd: config.dailySpendCapUsd,
+    dailyCallCap: config.dailyCallCap,
+    perIpLimit: config.perIpLimit,
+    perIpWindowMs: config.perIpWindowMs,
+    maxContentChars: config.maxContentChars,
+    maxTokens: config.maxTokens,
+    callReserveUsd: config.callReserveUsd,
+  };
+
+  /** A refusal, tallied and logged by reason — never the body, never the key. */
+  const deny = (request: RelayRequest, reason: RefusalReason, status: number, message: string): RelayResponse => {
+    refusals.set(reason, (refusals.get(reason) ?? 0) + 1);
+    log(`relay refused ${reason} ${status} ip=${request.ip} origin=${request.origin ?? "-"}`);
+    return refuse(status, message);
+  };
+
+  const tallies = (): string => {
+    const refused = [...refusals].map(([reason, n]) => `${reason}=${n}`).join(" ");
+    return `${calls} calls, $${spentUsd.toFixed(4)} spent, ${refused === "" ? "0 refused" : `refused ${refused}`}`;
+  };
 
   return async (request) => {
     if (request.path === "/api/relay/health") {
       if (request.method !== "GET") return refuse(405, "health is read-only");
       return config.apiKey === ""
         ? json(503, { ok: false })
-        : json(200, { ok: true, models: config.models, ...(config.upstream === undefined ? {} : { upstream: describeUpstreamPreference(config.upstream) }) });
+        : json(200, { ok: true, models: config.models, caps, ...(config.upstream === undefined ? {} : { upstream: describeUpstreamPreference(config.upstream) }) });
     }
 
     if (request.path !== "/api/relay/chat") return refuse(404, "no such door");
     if (request.method !== "POST") return refuse(405, "chat is POST-only");
     if (config.apiKey === "") {
-      return refuse(503, "This deployment carries no key — bring your own on the session page.");
+      return deny(request, "no-key", 503, "This deployment carries no key — bring your own on the session page.");
     }
 
     const at = deps.now();
     const today = dayOf(at);
     if (today !== day) {
+      // The closing day's tallies go to the log before the counters reset;
+      // the first day the process sees has nothing to close. A restart
+      // resets the same counters without a line — the caps guard a wake.
+      if (day !== "") log(`relay day ${day} closed: ${tallies()}; caps reset for ${today}`);
       day = today;
       spentUsd = 0;
       calls = 0;
+      refusals.clear();
     }
-    if (spentUsd >= config.dailySpendCapUsd || calls >= config.dailyCallCap) {
-      return refuse(503, "The League's free budget for today is spent. Come back tomorrow — or bring your own key.");
+    if (spentUsd + inFlight * config.callReserveUsd >= config.dailySpendCapUsd || calls >= config.dailyCallCap) {
+      return deny(request, "budget", 503, "The League's free budget for today is spent. Come back tomorrow — or bring your own key.");
     }
 
     const hits = (hitsByIp.get(request.ip) ?? []).filter((t) => at - t < config.perIpWindowMs);
     if (hits.length >= config.perIpLimit) {
       hitsByIp.set(request.ip, hits);
-      return refuse(429, "You're going a little fast — free sessions are rate-limited. Give it a minute and try again.");
+      return deny(request, "rate", 429, "You're going a little fast — free sessions are rate-limited. Give it a minute and try again.");
     }
     hits.push(at);
     hitsByIp.set(request.ip, hits);
 
     const read = readChatBody(request.body, config);
-    if (typeof read === "string") return refuse(400, read);
+    if (typeof read === "string") return deny(request, "body", 400, read);
 
     // Built, never forwarded: only the understood fields cross, and the
     // relay's own discipline (temperature, usage accounting) is not the
@@ -280,6 +347,10 @@ export function createRelay(deps: RelayDeps): RelayHandler {
       messages: read.messages,
     });
 
+    // Admitted: counted and reserved before the wire, released after it,
+    // so every call that is out is a call the next check can see.
+    calls += 1;
+    inFlight += 1;
     let upstream;
     try {
       upstream = await deps.fetch(config.upstreamUrl, {
@@ -293,15 +364,16 @@ export function createRelay(deps: RelayDeps): RelayHandler {
         body: upstreamBody,
       });
     } catch {
-      return refuse(502, "The model provider could not be reached. Try again in a moment.");
+      inFlight -= 1;
+      return deny(request, "unreachable", 502, "The model provider could not be reached. Try again in a moment.");
     }
 
     const raw = await upstream.text().catch(() => "");
+    inFlight -= 1;
     // Belt and braces, same as the driver: nothing that came back crosses to
     // a browser with the key still in it.
     const scrubbed = redact(raw, config.apiKey);
 
-    calls += 1;
     if (upstream.ok) {
       try {
         const payload = JSON.parse(scrubbed) as { usage?: { cost?: unknown } };
