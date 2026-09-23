@@ -14,14 +14,11 @@ export function App() {
   return (
     <div class="page">
       <header class="masthead">
-        <div class="masthead-title">
-          <p class="eyebrow">The Indigo Accord</p>
-          <h1>Live session</h1>
-          <p class="lead">
-            You as the trainer, a real AI as the Advisor, and the League's checks running right here in your tab.
-            Nothing counts until you confirm it, and every exchange leaves a record anyone can re-run.
-          </p>
-        </div>
+        <h1>The Indigo Accord</h1>
+        <p class="lead">
+          A Pokémon assistant that cannot make things up. A real AI answers your questions; the League checks every
+          fact against the certified records before you see it, and refuses anything it cannot prove.
+        </p>
       </header>
       <Live />
     </div>

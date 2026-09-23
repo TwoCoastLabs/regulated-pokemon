@@ -58,7 +58,7 @@ export function MemoryPanel(props: { store: PrecedentStore | undefined; state: S
   };
 
   return (
-    <details class="memory-panel" open>
+    <details class="memory-panel">
       <summary>
         Memory · {store === undefined ? "no store shipped for this world" : `${store.precedents.length} precedents, ${props.on ? "door open" : "door shut"}`}
       </summary>
