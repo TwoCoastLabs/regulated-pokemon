@@ -151,11 +151,12 @@ name defines it in plain words the first time.
 - **Web app:** `npm run app:dev` serves the Phase 8 UI; `app:build` bundles
   it (CI does, so it cannot rot). One page, the **live session**: a real
   model behind the kernel with the visitor as the trainer (`src/session/`;
-  on the League's relayed key the session opens on the first prompt and the
-  choices — who pays, model, Advisor, route — fold under the header until
-  the first model call; bring-your-own-key keeps the visitor's OpenRouter
-  key in tab memory, sends it only to openrouter.ai, and bills them); every
-  settled exchange files a replayable `Transaction`. The **crucible** lives
+  the model is always the League's relayed key — `npm run relay` beside
+  `app:dev` — and the session opens on the first prompt with the choices
+  — model, Advisor, route — folded under the header until the first model
+  call; bring-your-own-key was withdrawn on 2026-09-23, since nobody brings
+  a provider key to a demo and hosting one costs pennies); every settled
+  exchange files a replayable `Transaction`. The **crucible** lives
   in the compliance console: the same mutation values CI runs, against the
   bundled snapshot and pack, run in the scope one of the visitor's own
   filed exchanges certified (`sabotageContextOf`, chosen per record; the
@@ -195,11 +196,10 @@ name defines it in plain words the first time.
   turns the last step and the call in flight into the player's sentence
   ("The League refused the Advisor's draft — asking again, with the
   reason (call 2)…"). Inside one call, the reply's own arrival is the only
-  event: on your own key the provider streams it and reports its length as
-  it lands (`OpenRouterProvider.onProgress`, off the wire unless watched),
-  and the line carries a meter — elapsed seconds, and roughly how much of
-  the reply has come. The League's relay answers whole, so there the meter
-  is seconds only. Observation only: a session observed files the same
+  event, and the League's relay answers whole, so the line carries a meter
+  of elapsed seconds (the provider can report a reply's length as it
+  streams, `OpenRouterProvider.onProgress`, off the wire unless watched;
+  nothing on the page streams). Observation only: a session observed files the same
   record as one that is not, and an unwatched call is the same wire it
   always was. Under every settled reply, what that turn took
   (`exchangeWorkMs` and `callsOf`, `src/ui/trail.ts`): the exchange's

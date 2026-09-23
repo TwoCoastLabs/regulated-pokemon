@@ -1122,25 +1122,6 @@ body {
   color: var(--ink);
 }
 
-/* Bring-your-own-key, folded away: the visitor is never asked for a key —
- * the expander is there for the one who arrives holding one. */
-
-.live-begin {
-  font: inherit;
-  font-weight: 600;
-  padding: 9px 16px;
-  border: none;
-  border-radius: 4px;
-  background: var(--indigo);
-  color: #fff;
-  cursor: pointer;
-}
-
-.live-begin:disabled {
-  background: var(--line);
-  cursor: not-allowed;
-}
-
 .live-meta {
   display: flex;
   flex-wrap: wrap;
@@ -1969,10 +1950,9 @@ body {
 
 /* --- the session's choices, folded under the header ---------------------- */
 
-/* On the League's key the session opens on the first prompt; the choices —
- * who pays, the model, the Advisor, the route — fold to one line until the
- * first model call, then give way to "Start over". The same form is drawn
- * open on the setup page when a key has to be typed. */
+/* The session opens on the first prompt; the choices — the model, the
+ * Advisor, the route — fold to one line until the first model call, then
+ * give way to "Start over". */
 .live-settings {
   /* A full row of the meta line, wrapped under the rest of it. */
   flex-basis: 100%;

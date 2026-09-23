@@ -133,8 +133,6 @@ export function createDevTrace(deps: DevTraceDeps): DevTrace {
 /** What the report says about where it came from. */
 export interface DevTraceMeta {
   model: string;
-  /** "league" (relayed) or "own" (bring-your-own-key). */
-  mode: string;
   /** "honest" or "adversarial" — which persona the Advisor was given. */
   persona: string;
   /** How the calls were routed among the model's hosts, in plain words

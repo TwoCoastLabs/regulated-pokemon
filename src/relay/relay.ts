@@ -301,7 +301,7 @@ export function createRelay(deps: RelayDeps): RelayHandler {
     if (request.path !== "/api/relay/chat") return refuse(404, "no such door");
     if (request.method !== "POST") return refuse(405, "chat is POST-only");
     if (config.apiKey === "") {
-      return deny(request, "no-key", 503, "This deployment carries no key — bring your own on the session page.");
+      return deny(request, "no-key", 503, "This deployment carries no key, so the Advisor has no model to speak with.");
     }
 
     const at = deps.now();
@@ -317,7 +317,7 @@ export function createRelay(deps: RelayDeps): RelayHandler {
       refusals.clear();
     }
     if (spentUsd + inFlight * config.callReserveUsd >= config.dailySpendCapUsd || calls >= config.dailyCallCap) {
-      return deny(request, "budget", 503, "The League's free budget for today is spent. Come back tomorrow — or bring your own key.");
+      return deny(request, "budget", 503, "The League's budget for today is spent. Come back tomorrow.");
     }
 
     const hits = (hitsByIp.get(request.ip) ?? []).filter((t) => at - t < config.perIpWindowMs);
