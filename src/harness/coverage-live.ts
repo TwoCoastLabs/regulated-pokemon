@@ -28,7 +28,7 @@
  */
 
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { relative, resolve } from "node:path";
 
 import type { PromptShape } from "./advisor.js";
 import { fileArtifact, type WriteFile } from "./artifact.js";
@@ -725,6 +725,10 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
   if (args.precedents !== undefined) {
     const fs = options.fs ?? diskFs;
     const path = args.precedentStore ?? resolve("data/precedents", `${world.pack.id}.v1.json`);
+    // Recorded relative to the working directory: the artifact is filed
+    // under runs/ and read anywhere, so it names the store by its place in
+    // the repository, never by the machine it ran on.
+    const recorded = relative(process.cwd(), path) || path;
     let store: PrecedentStore;
     try {
       store = loadPrecedentStore(JSON.parse(fs.readFile(path)), world);
@@ -736,7 +740,7 @@ export async function runCoverage(options: CoverageOptions): Promise<CoverageRes
       options: { store, mode: args.precedents, levers: DEFAULT_PRECEDENT_LEVERS, ...(fixed === undefined ? {} : { fixed }) },
       lever: {
         mode: args.precedents,
-        store: path,
+        store: recorded,
         digest: precedentStoreDigest(store),
         k: DEFAULT_PRECEDENT_LEVERS.k,
         threshold: DEFAULT_PRECEDENT_LEVERS.threshold,

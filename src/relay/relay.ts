@@ -287,7 +287,7 @@ export function createRelay(deps: RelayDeps): RelayHandler {
         headers: {
           authorization: `Bearer ${config.apiKey}`,
           "content-type": "application/json",
-          "http-referer": "https://github.com/smartnose/regulated-pokemon",
+          "http-referer": "https://github.com/TwoCoastLabs/regulated-pokemon",
           "x-title": "Regulated Pokemon - Indigo Accord live session relay",
         },
         body: upstreamBody,
