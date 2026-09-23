@@ -29,9 +29,20 @@ const config = (over: Partial<RelayConfig> = {}): RelayConfig => ({
   dailySpendCapUsd: 0.1,
   dailyCallCap: 100,
   maxContentChars: 10_000,
+  callReserveUsd: 0.01,
   upstreamUrl: "https://upstream.test/v1/chat",
   ...over,
 });
+
+/** An upstream that answers only when the test says so, for calls in flight. */
+function deferredUpstream() {
+  const pending: ((reply: { status: number; body: string }) => void)[] = [];
+  const fetch = (_url: string, _init: HttpRequest) =>
+    new Promise<{ ok: boolean; status: number; text: () => Promise<string> }>((resolve) => {
+      pending.push((reply) => resolve({ ok: reply.status < 400, status: reply.status, text: () => Promise.resolve(reply.body) }));
+    });
+  return { pending, fetch };
+}
 
 /** An upstream that records requests and answers from a script. */
 function upstream(replies: () => { status: number; body: string }) {
@@ -75,7 +86,7 @@ describe("health", () => {
     const ready = createRelay({ config: config(), fetch: upstream(() => ({ status: 200, body: priced(0) })).fetch, now: clock().now });
     const health = await ready({ method: "GET", path: "/api/relay/health", ip: "x", body: "" });
     expect(health.status).toBe(200);
-    expect(JSON.parse(health.body)).toEqual({ ok: true, models: MODELS });
+    expect(JSON.parse(health.body)).toMatchObject({ ok: true, models: MODELS });
 
     const bare = createRelay({ config: config({ apiKey: "" }), fetch: upstream(() => ({ status: 200, body: "" })).fetch, now: clock().now });
     expect((await bare({ method: "GET", path: "/api/relay/health", ip: "x", body: "" })).status).toBe(503);
@@ -155,7 +166,7 @@ describe("the built upstream request", () => {
     const wire = upstream(() => ({ status: 200, body: priced(0.001) }));
     const relay = createRelay({ config: operator, fetch: wire.fetch, now: clock().now });
     const health = await relay({ method: "GET", path: "/api/relay/health", ip: "x", body: "" });
-    expect(JSON.parse(health.body)).toEqual({ ok: true, models: MODELS, upstream: "by latency, never Novita" });
+    expect(JSON.parse(health.body)).toMatchObject({ ok: true, models: MODELS, upstream: "by latency, never Novita" });
     // The page's sort wins; the operator's ignore rides along, joined with the page's.
     expect((await relay(chat({}, { provider: { sort: "throughput", ignore: ["Parasail"] } }))).status).toBe(200);
     expect((JSON.parse(wire.seen[0]!.init.body) as Record<string, unknown>).provider).toEqual({ sort: "throughput", ignore: ["Parasail", "Novita"], allow_fallbacks: true });
@@ -209,6 +220,56 @@ describe("limits", () => {
     expect((await relay(chat())).status).toBe(200);
   });
 
+  it("holds a reservation for every call in flight, so a burst cannot pass the spend cap together", async () => {
+    const wire = deferredUpstream();
+    const relay = createRelay({
+      config: config({ perIpLimit: 1_000, dailySpendCapUsd: 0.1, callReserveUsd: 0.05 }),
+      fetch: wire.fetch,
+      now: clock().now,
+    });
+
+    // Nothing is spent yet, but two calls are out and each may cost the
+    // reserve: the third is refused before the first has answered.
+    const first = relay(chat());
+    const second = relay(chat());
+    expect(wire.pending).toHaveLength(2);
+    const third = await relay(chat());
+    expect(third.status).toBe(503);
+    expect(JSON.parse(third.body).error.message).toContain("budget");
+
+    // The answers come back cheaper than the reserve; the reservations are
+    // released and the real spend is what counts from here.
+    wire.pending[0]!({ status: 200, body: priced(0.01) });
+    wire.pending[1]!({ status: 200, body: priced(0.01) });
+    expect((await first).status).toBe(200);
+    expect((await second).status).toBe(200);
+    const fourth = relay(chat());
+    expect(wire.pending).toHaveLength(3);
+    wire.pending[2]!({ status: 200, body: priced(0.01) });
+    expect((await fourth).status).toBe(200);
+  });
+
+  it("counts a call against the call cap when it is admitted, not when it returns", async () => {
+    const wire = deferredUpstream();
+    const relay = createRelay({ config: config({ perIpLimit: 1_000, dailyCallCap: 1 }), fetch: wire.fetch, now: clock().now });
+    const first = relay(chat());
+    expect((await relay(chat())).status).toBe(503);
+    wire.pending[0]!({ status: 200, body: priced(0) });
+    expect((await first).status).toBe(200);
+  });
+
+  it("releases the reservation when the upstream cannot be reached", async () => {
+    let reachable = false;
+    const relay = createRelay({
+      config: config({ perIpLimit: 1_000, dailySpendCapUsd: 0.1, callReserveUsd: 0.1 }),
+      fetch: (url, init) => (reachable ? upstream(() => ({ status: 200, body: priced(0) })).fetch(url, init) : Promise.reject(new Error("reset"))),
+      now: clock().now,
+    });
+    expect((await relay(chat())).status).toBe(502);
+    reachable = true;
+    expect((await relay(chat())).status).toBe(200);
+  });
+
   it("counts unpriced calls against the call cap, so silence cannot bypass the budget", async () => {
     const time = clock();
     const relay = createRelay({
@@ -219,6 +280,49 @@ describe("limits", () => {
     expect((await relay(chat())).status).toBe(200);
     expect((await relay(chat())).status).toBe(200);
     expect((await relay(chat())).status).toBe(503);
+  });
+});
+
+describe("what it says", () => {
+  it("logs each refusal by reason with the request's origin, and the day's tallies at the UTC rollover — never the key", async () => {
+    const time = clock();
+    const lines: string[] = [];
+    const relay = createRelay({
+      config: config({ perIpLimit: 1 }),
+      fetch: upstream(() => ({ status: 200, body: priced(0.06) })).fetch,
+      now: time.now,
+      log: (line) => lines.push(line),
+    });
+
+    expect((await relay(chat({ origin: "https://page.test" }))).status).toBe(200);
+    expect(lines).toEqual([]); // an admitted call is not a line; the first day has nothing to close
+
+    expect((await relay(chat({ origin: "https://page.test" }))).status).toBe(429);
+    expect((await relay(chat({ ip: "198.51.100.2" }, { model: "vendor/none" }))).status).toBe(400);
+    expect(lines).toEqual([
+      "relay refused rate 429 ip=203.0.113.7 origin=https://page.test",
+      "relay refused body 400 ip=198.51.100.2 origin=-",
+    ]);
+
+    time.advance(24 * 3_600_000);
+    expect((await relay(chat({ ip: "198.51.100.3" }))).status).toBe(200);
+    expect(lines[2]).toBe("relay day 2026-01-01 closed: 1 calls, $0.0600 spent, refused rate=1 body=1; caps reset for 2026-01-02");
+    expect(lines).toHaveLength(3);
+    for (const line of lines) expect(line).not.toContain(KEY);
+  });
+
+  it("reports its caps on health, so a deployment can be read without its config", async () => {
+    const relay = createRelay({ config: config(), fetch: upstream(() => ({ status: 200, body: "" })).fetch, now: clock().now });
+    const body = JSON.parse((await relay({ method: "GET", path: "/api/relay/health", ip: "x", body: "" })).body);
+    expect(body.caps).toEqual({
+      dailySpendCapUsd: 0.1,
+      dailyCallCap: 100,
+      perIpLimit: 3,
+      perIpWindowMs: 60_000,
+      maxContentChars: 10_000,
+      maxTokens: 2048,
+      callReserveUsd: 0.01,
+    });
   });
 });
 
@@ -258,6 +362,11 @@ describe("configuration from the environment", () => {
     expect(bare.models).toEqual(MODELS);
     expect(bare.maxTokens).toBe(RELAY_DEFAULTS.maxTokens);
     expect(bare.upstreamUrl).toBe(RELAY_DEFAULTS.upstreamUrl);
+    // The content ceiling and the reserve are set from measurement (the
+    // comments on RelayConfig say which); the numbers are pinned here so a
+    // change to either is a deliberate one.
+    expect(bare.maxContentChars).toBe(60_000);
+    expect(bare.callReserveUsd).toBe(0.01);
 
     const set = relayConfigFromEnv(
       {
@@ -265,6 +374,7 @@ describe("configuration from the environment", () => {
         RELAY_MODELS: " a/one , b/two ",
         RELAY_MAX_TOKENS: "512",
         RELAY_DAILY_SPEND_CAP_USD: "not-a-number",
+        RELAY_CALL_RESERVE_USD: "0.02",
       },
       MODELS,
     );
@@ -272,6 +382,7 @@ describe("configuration from the environment", () => {
     expect(set.models).toEqual(["a/one", "b/two"]);
     expect(set.maxTokens).toBe(512);
     expect(set.dailySpendCapUsd).toBe(RELAY_DEFAULTS.dailySpendCapUsd);
+    expect(set.callReserveUsd).toBe(0.02);
   });
 });
 

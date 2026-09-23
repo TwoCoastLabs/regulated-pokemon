@@ -36,6 +36,7 @@ const relay = createRelay({
   config,
   fetch: (url, init) => fetch(url, init),
   now: Date.now,
+  log: (line) => console.log(`${new Date().toISOString()} ${line}`),
 });
 
 const server = createServer((request, response) => {
@@ -51,7 +52,9 @@ const server = createServer((request, response) => {
     request.on("end", () => {
       const forwarded = request.headers["fly-client-ip"];
       const ip = (Array.isArray(forwarded) ? forwarded[0] : forwarded) ?? request.socket.remoteAddress ?? "unknown";
-      void relay({ method: request.method ?? "GET", path, ip, body }).then((reply) => {
+      const stated = request.headers.origin ?? request.headers.referer;
+      const origin = Array.isArray(stated) ? stated[0] : stated;
+      void relay({ method: request.method ?? "GET", path, ip, body, ...(origin === undefined ? {} : { origin }) }).then((reply) => {
         response.writeHead(reply.status, { "content-type": reply.contentType });
         response.end(reply.body);
       });
