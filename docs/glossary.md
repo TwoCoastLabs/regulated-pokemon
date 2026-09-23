@@ -11,8 +11,8 @@ or a PR is not here, that is a bug in this file.
   names one (`IA-3/fabricated-entity`). [the-indigo-accord.md](the-indigo-accord.md)
 - **Pack (Accord pack).** The versioned data file that holds the rules,
   lessons, dictionary, restrictions and presentation policy
-  (`data/accord-pack/v3.json`). Older versions are frozen because filed
-  records pin them. [architecture.md](architecture.md)
+  (`data/accord-pack/v5.json`; `center-v4.json` for the Center world).
+  Older versions are frozen because filed records pin them. [architecture.md](architecture.md)
 - **Snapshot.** The certified data — the Pokémon records — pinned by
   digest. A **world** is a snapshot plus a pack.
 - **Kernel.** The deterministic verifier. No model runs inside it. Nothing
@@ -23,8 +23,8 @@ or a PR is not here, that is a bug in this file.
 - **Executor.** Driver code that carries out a route the model asked for
   (for example, builds the listing).
 - **Trainer.** The user. The game's word for a player.
-- **Scope / profile.** The trainer's game version, region and badge count.
-  Some answers depend on it.
+- **Scope / profile.** The trainer's game version, region and badge level,
+  and for a ranking its comparison basis. Some answers depend on it.
 
 ## Answers
 
