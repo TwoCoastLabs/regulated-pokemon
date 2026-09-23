@@ -591,7 +591,8 @@ export function Live() {
   const [draft, setDraft] = useState("");
   // The trainer's profile panel (epic #145, R2): typed scope set once, recorded
   // on the trainer channel as a profile event — no version question, no card.
-  const [profileDraft, setProfileDraft] = useState({ version: "red-blue", region: "kanto", badgeLevel: 0 });
+  const certifiedVersion = demoWorld().registry.document.scope.versionGroup;
+  const [profileDraft, setProfileDraft] = useState({ version: certifiedVersion, region: "kanto", badgeLevel: 0 });
   // The profile form is open until a profile is on the record, then folds
   // to one line with a "change" — a later profile supersedes the earlier on
   // the record (kernel/scope.ts), so changing games mid-session costs no
@@ -1203,12 +1204,18 @@ export function Live() {
         <div class="live-profile-fields">
           <label>
             Version
+            {/* The picker offers only the version these records certify, read
+                from the snapshot itself. Yellow stays in the pack's vocabulary
+                on purpose — a trainer who says "I play Yellow" binds it
+                honestly and is told, in the boundary lesson, that these
+                records cover Red/Blue — but a dropdown promises that every
+                option works, and picking Yellow here led to that lesson
+                instead of an answer, which read as a fault (2026-09-23). */}
             <select
               value={profileDraft.version}
               onInput={(event) => setProfileDraft({ ...profileDraft, version: event.currentTarget.value })}
             >
-              <option value="red-blue">Red / Blue</option>
-              <option value="yellow">Yellow</option>
+              <option value={certifiedVersion}>{certifiedVersion === "red-blue" ? "Red / Blue" : certifiedVersion}</option>
             </select>
           </label>
           <label>
