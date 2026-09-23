@@ -29,10 +29,11 @@ completeness, software correctness, and anything outside the governed surface
 remain explicit parts of the assurance case, never assumptions hidden inside
 the word "truth." See [the assurance case](docs/assurance-case.md) for the
 boundary, scorecard, falsification criteria, and research sequence.
-The [knowledge-base scale note](docs/knowledge-scale.md) compares this
-384-record world with WebQSP, CWQ, GrailQA, and public banking, pharma, and
-telecom proxies, including the retrieval results that motivate a separate
-coverage target. The repo uses a number of terms with a specific meaning
+The [knowledge-base scale note](docs/knowledge-scale.md) compares the
+384-record Center world (151 species, 163 moves, 70 items; the demo and the
+crucible run the 314-record Red/Blue snapshot beside it) with WebQSP, CWQ,
+GrailQA, and public banking, pharma, and telecom proxies, including the
+retrieval results that motivate a separate coverage target. The repo uses a number of terms with a specific meaning
 (leg, arm, porch, door, crucible, governance tax); the
 [glossary](docs/glossary.md) defines them in a line each.
 
@@ -86,8 +87,9 @@ without a number there is not yet a claim.
 - [x] Mini-kernel: typed contracts + commit gate
 - [x] Certified snapshot vendoring from PokeAPI (pinned, attributed)
 - [x] Mutation crucible: failure injections that must be denied with the
-      article's named violation, gating CI. Which articles it denies today,
-      and which are still owed, is the table below
+      article's named violation, gating CI. Every article is denied by name
+      today (the table below); the list of articles owed to a future phase
+      is empty, and a test still checks it
 - [x] Answer compilation and manifest verification
 - [x] Scope resolution and the propose/confirm ladder
 - [x] A headless compliance trace you can run: `npm run demo`
@@ -103,30 +105,58 @@ without a number there is not yet a claim.
       adversarial line-up, cost reported apart from both other metrics, and a
       filed run artifact (`npm run harness:live`)
 - [x] Filed two-model numbers and generated the results page from those
-      artifacts
+      artifacts ([docs/results.md](docs/results.md), the 2026-08-12 run;
+      the current evidence is the coverage bank below)
 - [x] Explicit assurance envelope, correctness taxonomy, scorecard and
       falsification criteria (`docs/assurance-case.md`)
 - [x] Demo UI: a live session with the visitor as the trainer and the kernel
-      in the tab, its compliance console beside the chat, and the crucible
-      with buttons on it — every sabotage below runnable in the browser,
-      against the real kernel, in the scope the visitor's own exchange
-      certified
+      in the tab, a side pane beside the chat (the dev view with every model
+      call, and the compliance console with the filed records), and the
+      crucible with buttons on it — every mutation below runnable in the
+      browser, against the real kernel, in the scope the visitor's own
+      exchange certified
+- [x] The coverage bank and the governance tax: the same entries run
+      governed and raw on the same model, so usefulness is reported as the
+      tax beside the ungoverned rate, never as a count alone
+      ([docs/coverage.md](docs/coverage.md), findings §18)
+- [x] Three recall doors, each measured before it opened: the precedent
+      door, memory the operator owns and nothing on the live path writes
+      ([docs/precedent.md](docs/precedent.md), §21); the offered listing
+      door, in the grammar only when the driver would accept it, the default
+      since it passed its gate ([docs/offered-door.md](docs/offered-door.md),
+      §22, §28); the lesson door, a lesson offered only when the ask is about
+      it — passed its bank gate, not yet the page default, and §40 says why
+      ([docs/lesson-door.md](docs/lesson-door.md), §24, §25)
+- [x] The decline ledger: every filed run read for the questions that must
+      not get a certified answer and did, with the layer that owes the fix
+      ([docs/decline-ledger.md](docs/decline-ledger.md), §23)
+- [x] Follow-up suggestions as a promise: shown only when the records would
+      answer them, and measured for whether the promised answer came back
+      ([docs/suggestions.md](docs/suggestions.md), §34–§36)
+- [x] One page, hosted: the earlier run-ledger and scoreboard pages retired
+      (§39), the session opening on the first prompt, and the live page
+      served at [indigo-accord.fly.dev](https://indigo-accord.fly.dev) on
+      the League's own bounded key — nothing for a visitor to bring
 
 ## Seeing it
 
 In a browser: `npm run relay` (the built app and the League's key relay on
-one port, reading `.env`) opens a **live session** — you as the
-trainer, a real model as the Advisor, the kernel in the tab — with the
-**compliance console** beside the chat: the step trail, every model call,
-the filed records, and **the crucible** with buttons on it — one sabotage per
-Accord article, run live against the scope your own exchange certified and
-refused under the article it names, next to the untampered control that must
-pass. The same exchange without the theatre is the compliance trace:
+one port, reading `.env`; with no key the page still opens on the crucible
+alone) opens a **live session** — you as the trainer, a real model as the
+Advisor, the kernel in the tab — with a side pane beside the chat in two
+tabs: the **dev view**, the step trail with every model call's prompt, reply
+and latency under the step it preceded, and the **compliance console**, the
+same trail in the League's words with the filed records and **the crucible**
+with buttons on it — every mutation CI runs, let loose live against the
+scope your own exchange certified and refused under the article it names,
+next to the untampered control that must pass, plus the paint-layer
+sabotages only the browser can catch. The same exchange without the theatre
+is the compliance trace:
 
 ```
 npm run demo                                  # every scripted conversation
 npm run demo -- --list                        # and every sabotage
-npm run demo -- --sabotage recommend-missingno
+npm run demo -- --sabotage recommend-past-the-gate
 ```
 
 Four conversations: one that establishes scope and gets a certified answer,
@@ -136,8 +166,8 @@ walkthrough, a relayed rival and an injected tool result all try to move the
 trainer's scope — and it reaches the identical answer to the clean one,
 because none of them ever had the authority to move anything.
 
-`--sabotage` runs a mutation out of the crucible against the scope that
-conversation actually established. It is the same value CI runs, not a
+`--sabotage` runs a mutation out of the crucible against the scope the clean
+conversation established. It is the same value CI runs, not a
 re-enactment, and the trace shows the article, the real-world rule it stands
 in for, and the evidence:
 
@@ -224,10 +254,11 @@ a pass.
 
 So the coverage that counts is *article* coverage, not a percentage. Line
 coverage can be total while an article has no mutation denying it by name.
-Every article below is either denied by name in at least one mutation, or
-listed as owed to a phase that has not landed — there is no third state, and a
-phase cannot be marked done while it still owes one. The table is pinned to the
-crucible by test, so it cannot drift from what actually runs.
+Every article is either denied by name in at least one mutation, or listed as
+owed to a phase that has not landed — there is no third state, and a phase
+cannot be marked done while it still owes one. Today the owed list is empty
+and every article below is denied by name; the empty list is itself checked
+by test, as is the table, so neither can drift from what actually runs.
 
 | Article | Title | Mutations |
 | --- | --- | --- |
