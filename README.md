@@ -109,7 +109,8 @@ without a number there is not yet a claim.
 
 ## Seeing it
 
-In a browser: `npm run app:dev` opens a **live session** — you as the
+In a browser: `npm run relay` (the built app and the League's key relay on
+one port, reading `.env`) opens a **live session** — you as the
 trainer, a real model as the Advisor, the kernel in the tab — with the
 **compliance console** beside the chat: the step trail, every model call,
 the filed records, and **the crucible** with buttons on it — one sabotage per

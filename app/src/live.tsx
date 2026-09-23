@@ -12,16 +12,15 @@
  * register (an article chip on a refusal), it carries its explanation as a
  * widget, reusing the article registry's real-world analogs.
  *
- * Two ways to power the Advisor. When the deployment carries the League's
- * relay (src/relay — probed via its health door), a visitor needs nothing:
- * calls go browser → relay → provider, the hosted key never enters the tab,
- * and the relay's own caps do the rationing. Bring-your-own-key stays as the
- * other mode, and the only one on a static deployment: the key lives in
- * component state for the duration of the session, is sent only to
- * openrouter.ai by the same driver the billable harness uses (which scrubs it
- * from every error it raises), and is never persisted, logged, or sent
- * anywhere else. Either way it is the same driver, the same session module,
- * the same kernel — the modes differ in one URL and who pays.
+ * One way to power the Advisor: the League's relay (src/relay — probed via
+ * its health door). A visitor needs nothing: calls go browser → relay →
+ * provider, the hosted key never enters the tab, and the relay's own caps
+ * do the rationing. A deployment without the relay (a static build, or
+ * `app:dev` with no relay beside it) has no model at all, and the page says
+ * so: the crucible still runs, because the League's checks need no model.
+ * Bring-your-own-key was the other mode until 2026-09-23 and was withdrawn:
+ * nobody brings a provider key to a demo, and the cost of hosting one is
+ * pennies (fly.toml states the numbers).
  */
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 
@@ -29,7 +28,6 @@ import { proposalDigest } from "../../src/harness/advisor.js";
 import {
   ADVERSARY_PERSONA,
   DEFAULT_STRONG_MODEL,
-  DEFAULT_WEAK_MODEL,
   HONEST_PERSONA,
 } from "../../src/harness/models.js";
 import { describeUpstreamPreference, OpenRouterProvider } from "../../src/harness/openrouter.js";
@@ -78,14 +76,10 @@ function makeClock(): () => string {
 
 type Persona = "honest" | "adversarial";
 
-/** Who pays for the model: the deployment's relay, or the visitor's key. */
-type KeyMode = "league" | "own";
-
 interface LiveSetup {
   provider: ModelProvider;
   model: string;
   persona: Persona;
-  mode: KeyMode;
   /** How the calls are routed among the model's hosts, in plain words. */
   upstream: string;
   /** The tap on the provider seam — always recording, in tab memory only.
@@ -103,7 +97,7 @@ interface RelayStatus {
 }
 
 /** The relay lives on the same origin as the served app; a static deployment
- * simply has no such door, and the probe falls back to bring-your-own-key. */
+ * simply has no such door, and the page has no model. */
 const RELAY_HEALTH = "/api/relay/health";
 export const RELAY_CHAT_URL = "/api/relay/chat";
 
@@ -587,8 +581,6 @@ const MIRROR_TO_DEV_SINK = import.meta.env.DEV;
 export function Live() {
   const [setup, setSetup] = useState<LiveSetup | null>(null);
   const [relay, setRelay] = useState<RelayStatus | null>(null);
-  const [mode, setMode] = useState<KeyMode | null>(null);
-  const [key, setKey] = useState("");
   const [model, setModel] = useState(DEFAULT_STRONG_MODEL);
   const [persona, setPersona] = useState<Persona>("honest");
   // Which of the model's hosts to route to (openrouter.ts, UpstreamPreference).
@@ -618,11 +610,10 @@ export function Live() {
   // Cleared when the exchange settles: the settled state is the record.
   const [progress, setProgress] = useState<{ step: DriverStep; state: SessionState } | null>(null);
   const [callInFlight, setCallInFlight] = useState<ModelCallStart | null>(null);
-  // Inside one call, the only events are the reply's own arrival: the
-  // provider reports the reply's length as it streams (own-key mode goes
-  // straight to the endpoint; the League's relay answers whole, so there it
-  // stays at zero), and a half-second tick keeps the elapsed time honest.
-  const [callChars, setCallChars] = useState(0);
+  // Inside one call, the only event is the reply's own arrival, and the
+  // League's relay answers whole — so the meter is seconds, kept honest by
+  // a half-second tick. (The provider can report a reply's length as it
+  // streams, `OpenRouterProvider.onProgress`; nothing on this page streams.)
   const [callStartedMs, setCallStartedMs] = useState<number | null>(null);
   const [nowMs, setNowMs] = useState(0);
   useEffect(() => {
@@ -662,7 +653,6 @@ export function Live() {
       // The relay's model list is the allowlist; starting on it means the
       // default choice is one the relay will accept.
       if (status.ready && status.models[0] !== undefined) setModel(status.models[0]);
-      setMode(status.ready ? "league" : "own");
     });
   }, []);
 
@@ -703,7 +693,6 @@ export function Live() {
     const world = demoWorld();
     return {
       model: setup.model,
-      mode: setup.mode,
       persona: setup.persona,
       upstream: setup.upstream,
       snapshotId: world.registry.snapshot.id,
@@ -712,19 +701,18 @@ export function Live() {
   }, [setup]);
 
   const begin = () => {
-    if (mode === null) return;
+    if (relay?.ready !== true) return;
     try {
       const provider = new OpenRouterProvider({
         id: "live:session",
         model,
-        // In league mode no key exists in this tab at all: the placeholder
-        // satisfies the driver's fail-closed constructor, the relay ignores
-        // it, and the real key is added server-side and scrubbed on return.
-        apiKey: mode === "league" ? "league-relay" : key,
-        ...(mode === "league" ? { url: RELAY_CHAT_URL } : {}),
+        // No key exists in this tab at all: the placeholder satisfies the
+        // driver's fail-closed constructor, the relay ignores it, and the
+        // real key is added server-side and scrubbed on return.
+        apiKey: "league-relay",
+        url: RELAY_CHAT_URL,
         system: persona === "honest" ? HONEST_PERSONA : ADVERSARY_PERSONA,
         structured: true,
-        onProgress: (progress) => setCallChars(progress.chars),
         ...(routing === "throughput" ? { upstream: { sort: "throughput" as const } } : {}),
       });
       const trace = createDevTrace({
@@ -732,7 +720,6 @@ export function Live() {
         elapsedMs: () => performance.now(),
         onCallStart: (call) => {
           setCallInFlight(call);
-          setCallChars(0);
           setCallStartedMs(performance.now());
         },
         onCall: (call) => {
@@ -741,29 +728,28 @@ export function Live() {
           if (MIRROR_TO_DEV_SINK) mirrorToDevSink({ type: "model-call", ...call });
         },
       });
-      // In league mode the relay applies the operator's routing on top of
-      // this page's choice (its ignore list always, its sort when the page
-      // sends none), so the line under the model says both.
+      // The relay applies the operator's routing on top of this page's
+      // choice (its ignore list always, its sort when the page sends none),
+      // so the line under the model says both.
       const chosen = describeUpstreamPreference(routing === "throughput" ? { sort: "throughput" } : undefined);
-      const league = mode === "league" && relay?.upstream !== undefined ? `${chosen}; the League's relay adds: ${relay.upstream}` : chosen;
-      setSetup({ provider, model, persona, mode, trace, upstream: league });
+      const league = relay.upstream !== undefined ? `${chosen}; the League's relay adds: ${relay.upstream}` : chosen;
+      setSetup({ provider, model, persona, trace, upstream: league });
       setTrouble(null);
     } catch (error) {
       setTrouble(error instanceof Error ? error.message : String(error));
     }
   };
 
-  // On the League's key nothing has to be typed, so the session opens on
-  // the first prompt instead of a form: begun as soon as the relay answers,
-  // and begun again — a fresh provider and trace, nothing lost — whenever a
-  // choice changes before the first model call. Bring-your-own-key waits for
-  // the key. Dogfood (2026-09-22): the first screen was three dropdowns and a
-  // paragraph about who pays, not an Advisor.
+  // Nothing has to be typed, so the session opens on the first prompt
+  // instead of a form: begun as soon as the relay answers, and begun again
+  // — a fresh provider and trace, nothing lost — whenever a choice changes
+  // before the first model call. Dogfood (2026-09-22): the first screen was
+  // three dropdowns and a paragraph about who pays, not an Advisor.
   const fresh = setup === null || (setup.trace.calls.length === 0 && !busy);
   useEffect(() => {
-    if (mode === "league" && fresh) begin();
+    if (fresh) begin();
     // begin reads the choices it closes over; the deps are those choices.
-  }, [mode, model, persona, routing]);
+  }, [relay, model, persona, routing]);
 
   const run = (step: (previous: SessionState) => Promise<SessionState> | SessionState) => {
     if (deps === null || busy) return;
@@ -813,51 +799,20 @@ export function Live() {
   };
 
   /**
-   * The session's choices — who pays, the model, the Advisor's disposition,
-   * the route — one form, drawn on the setup page when a key has to be typed
-   * and in the fold under the header while no model call has been made.
+   * The session's choices — the model, the Advisor's disposition, the route
+   * — one form, in the fold under the header while no model call has been
+   * made. The model list is the relay's allowlist: the measured models.
    */
   const choices = (
     <div class="live-choices">
-      {relay?.ready === true && (
-        <label>
-          Who pays for the model
-          <select value={mode ?? "league"} onInput={(event) => setMode(event.currentTarget.value === "own" ? "own" : "league")}>
-            <option value="league">the League — free, rate-limited, capped for everyone daily</option>
-            <option value="own">you — bring your own OpenRouter key</option>
-          </select>
-        </label>
-      )}
-      {mode === "own" ? (
-        <>
-          <p class="fine">
-            Your key powers the Advisor, stays in this tab's memory, is sent only to <span class="mono">openrouter.ai</span>,
-            and is never stored or logged. Live calls bill your OpenRouter account (a short session costs well under a
-            cent).
-          </p>
-          <label>
-            OpenRouter API key
-            <input type="password" value={key} placeholder="sk-or-…" onInput={(event) => setKey(event.currentTarget.value)} />
-          </label>
-          <label>
-            Model
-            <input value={model} onInput={(event) => setModel(event.currentTarget.value)} list="live-models" />
-            <datalist id="live-models">
-              <option value={DEFAULT_STRONG_MODEL}>the measured strong model</option>
-              <option value={DEFAULT_WEAK_MODEL}>the measured weak model</option>
-            </datalist>
-          </label>
-        </>
-      ) : (
-        <label>
-          Model
-          <select value={model} onInput={(event) => setModel(event.currentTarget.value)}>
-            {(relay?.models ?? []).map((slug) => (
-              <option value={slug}>{slug}</option>
-            ))}
-          </select>
-        </label>
-      )}
+      <label>
+        Model
+        <select value={model} onInput={(event) => setModel(event.currentTarget.value)}>
+          {(relay?.models ?? []).map((slug) => (
+            <option value={slug}>{slug}</option>
+          ))}
+        </select>
+      </label>
       <label>
         Your Advisor
         <select value={persona} onInput={(event) => setPersona(event.currentTarget.value === "adversarial" ? "adversarial" : "honest")}>
@@ -881,11 +836,6 @@ export function Live() {
         One model id is served by several hosts, and the wait you feel is mostly the host, not the League's checks.
         The gateway's own default picks by price, which is how the slow host gets picked.
       </p>
-      {mode === "own" && (
-        <button type="button" class="live-begin" disabled={key.trim() === ""} onClick={begin}>
-          {setup === null ? "Start the session" : "Use this key"}
-        </button>
-      )}
     </div>
   );
 
@@ -899,23 +849,20 @@ export function Live() {
             answer against the official Pokédex records before you see it. The Advisor can charm; nothing it makes up
             can reach you.
           </p>
-          {mode === null ? (
+          {relay === null ? (
             <p class="fine">Checking whether this site carries the League's own key…</p>
-          ) : mode === "league" ? (
+          ) : relay.ready ? (
             <p class="fine">Opening the session on the League's key…</p>
           ) : (
-            <>
-              <p>
-                This deployment is not carrying the League's key right now, so the Advisor has no model to speak
-                with. Everything else here runs without one — the crucible below runs the League's checks in this tab
-                with no model at all.
-              </p>
-              {choices}
-            </>
+            <p>
+              This deployment is not carrying the League's key right now, so the Advisor has no model to speak with.
+              Everything else here runs without one — the crucible below runs the League's checks in this tab with no
+              model at all.
+            </p>
           )}
           {trouble !== null && <p class="refusal-banner">{trouble}</p>}
         </section>
-        {mode === "own" && (
+        {relay !== null && !relay.ready && (
           <section class="live-console live-console-alone" aria-label="The crucible">
             <h4 class="console-heading">The crucible</h4>
             <Crucible world={sabotageContext()} scope={crucibleScope([], { kind: "demo" }).scope} />
@@ -934,7 +881,7 @@ export function Live() {
   useEffect(() => {
     const box = transcript.current;
     if (box !== null) box.scrollTo({ top: box.scrollHeight });
-  }, [items.length, busy, callChars]);
+  }, [items.length, busy]);
   const phase = state.phase;
   const cost = state.usage;
   // The profile on the record, latest first — what the next answer will be
@@ -948,9 +895,7 @@ export function Live() {
         <span class="mono">{setup.model}</span>
         <span class="live-persona">{setup.persona === "honest" ? "plays fair" : "cheats — watch the League"}</span>
         <span title="which of the model's hosts the calls are routed to — an operator setting; the same model runs at very different speeds by host">routed {setup.upstream}</span>
-        <span title={setup.mode === "league" ? "calls go through this site's relay; the key never enters your browser" : "your key, in this tab's memory only"}>
-          {setup.mode === "league" ? "on the League's key" : "on your key"}
-        </span>
+        <span title="calls go through this site's relay; the key never enters your browser">on the League's key</span>
         <span>
           {cost.calls} model call{cost.calls === 1 ? "" : "s"} · ${cost.costUsd.toFixed(4)} so far
         </span>
@@ -971,7 +916,7 @@ export function Live() {
         )}
         {fresh && (
           <details class="live-settings">
-            <summary>Change who pays, the model, the Advisor or the route — open until your first model call</summary>
+            <summary>Change the model, the Advisor or the route — open until your first model call</summary>
             {choices}
           </details>
         )}
@@ -1177,7 +1122,7 @@ export function Live() {
             <p class="live-busy" aria-live="polite">
               {progressLine({ ...(progress === null ? {} : { step: progress.step }), ...(callInFlight === null ? {} : { call: callInFlight }) })}
               {callInFlight !== null && callStartedMs !== null && (
-                <span class="live-meter">{progressMeter({ elapsedMs: nowMs - callStartedMs, chars: callChars })}</span>
+                <span class="live-meter">{progressMeter({ elapsedMs: nowMs - callStartedMs })}</span>
               )}
               {/* A long wait on one call is the model's host, and the page
                   says so while it is happening — the checks have not run yet. */}

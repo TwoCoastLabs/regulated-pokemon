@@ -76,6 +76,6 @@ const server = createServer((request, response) => {
 const port = Number(env.PORT ?? 8080);
 server.listen(port, () => {
   console.log(
-    `serving app/dist and /api/relay on :${port} — relay ${config.apiKey === "" ? "NOT configured (no key); the page falls back to bring-your-own-key" : `ready for ${config.models.join(", ")}`}`,
+    `serving app/dist and /api/relay on :${port} — relay ${config.apiKey === "" ? "NOT configured (no key); the page has no model and shows the crucible only" : `ready for ${config.models.join(", ")}`}`,
   );
 });

@@ -112,7 +112,6 @@ describe("the tap records the seam without changing it", () => {
 describe("the agent report", () => {
   const META: DevTraceMeta = {
     model: "test/model",
-    mode: "league",
     persona: "adversarial",
     snapshotId: "kanto-red-blue",
     packId: "indigo-accord-v2",

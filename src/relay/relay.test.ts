@@ -351,7 +351,7 @@ describe("what comes back", () => {
     const relay = createRelay({ config: config({ apiKey: "" }), fetch: upstream(() => ({ status: 200, body: "" })).fetch, now: clock().now });
     const reply = await relay(chat());
     expect(reply.status).toBe(503);
-    expect(JSON.parse(reply.body).error.message).toContain("bring your own");
+    expect(JSON.parse(reply.body).error.message).toContain("no model");
   });
 });
 
