@@ -39,6 +39,16 @@
 app = "indigo-accord"
 primary_region = "sjc"
 
+[env]
+  # The operator's routing veto (src/harness/openrouter.ts, OPENROUTER_UPSTREAM):
+  # the relay applies the ignore list to every call it serves and reports it on
+  # health. Measured on the public page on 2026-09-24 without it: every answer
+  # call went to Novita at 11.7, 17.7 and 17.8 s; the same call with the veto
+  # goes to Nebius in about 7 s (findings §32–§33: the throughput sort alone
+  # chooses the slow host; the veto halved the bank's wall time). Not a secret,
+  # so it is versioned here rather than set with `fly secrets`.
+  OPENROUTER_UPSTREAM = "throughput ignore=Novita"
+
 [http_service]
   internal_port = 8080
   force_https = true
