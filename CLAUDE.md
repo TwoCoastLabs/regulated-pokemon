@@ -33,11 +33,13 @@ term coined in new work goes there in the same change.
 
 ## Publication posture (read first)
 
-This repo is private but **may be open-sourced later, with history**. Write
-every commit as if it will be published: no secrets, no internal references
-to other projects (this is a standalone, from-first-principles work), no
-"temporary" content that would need scrubbing. If something shouldn't be
-public, it doesn't go in the repo at all.
+This repo is **public and open source**, under Apache-2.0 ([LICENSE](LICENSE);
+third-party attributions in [NOTICE](NOTICE)), with its full history. Every
+commit, branch, pull request, issue and filed run artifact is published the
+moment it is pushed. So: no secrets, no internal references to other projects
+(this is a standalone, from-first-principles work), no product plans, pricing
+or go-to-market material, and no "temporary" content that would need
+scrubbing. If something shouldn't be public, it doesn't go in the repo at all.
 
 ## Describing work
 
